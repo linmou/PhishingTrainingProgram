@@ -1,0 +1,174 @@
+{
+    "projectName": "Online Tutor System",
+    "description": "1v1 tutor-student training platform with role-based access and real-time communication using Supabase",
+    "version": "1.0.0",
+    "tags": {
+        "master": {
+            "description": "Main development tasks",
+            "tasks": [
+                {
+                    "id": 1,
+                    "title": "Project Setup & Architecture (Supabase)",
+                    "description": "Initialize Supabase-based project structure and set up development environment",
+                    "status": "done",
+                    "priority": "high",
+                    "dependencies": [],
+                    "details": "Set up Supabase-based architecture for the online tutor system. Tech Stack: React.js frontend with Supabase SDK, PostgreSQL database via Supabase, Supabase Auth for authentication, Supabase Storage for images, Supabase Edge Functions for server logic, standard web hosting (Vercel/Netlify). Created React app with TypeScript, installed Supabase SDK, configured project structure with Supabase integration, set up database schema with migrations, and configured TypeScript types. Project structure is complete with AuthContext, RoomContext, and basic components.",
+                    "testStrategy": "Verify React app builds successfully, Supabase services are properly configured, and basic Supabase connection works"
+                },
+                {
+                    "id": 2,
+                    "title": "PostgreSQL Database Design & Schema",
+                    "description": "Design PostgreSQL database schema and tables for users, rooms, messages, and sessions",
+                    "status": "done",
+                    "priority": "high",
+                    "dependencies": [
+                        1
+                    ],
+                    "details": "Create PostgreSQL database schema via Supabase: users table (id, display_name, email, current_role, status, joined_at), rooms table (id, tutor_id, title, description, image_url, created_at, is_active), messages table (id, user_id, room_id, content, created_at, user_role), sessions table (id, tutor_id, student_id, room_id, status, start_time). Set up Row Level Security (RLS) policies for role-based access. Configure database indexes for efficient queries. Schema migration is complete at supabase/migrations/001_initial_schema.sql.",
+                    "testStrategy": "Test database schema creation, RLS policies, and basic CRUD operations with proper access control"
+                },
+                {
+                    "id": 3,
+                    "title": "Supabase Authentication System",
+                    "description": "Implement Supabase Auth with user login and role selection (student, tutor, observer)",
+                    "status": "done",
+                    "priority": "high",
+                    "dependencies": [
+                        2
+                    ],
+                    "details": "Implement Supabase Authentication with email/password and Google OAuth. Create user role selection interface that updates user record in PostgreSQL. Use Supabase Auth state listeners for session persistence. Implement role switching with capacity validation via Edge Functions or database triggers. Store current role in users table and use Supabase RLS policies for secure role verification. AuthContext component structure is already in place.",
+                    "testStrategy": "Test Supabase Auth login/logout, role selection updates database, auth state persistence across page refresh"
+                },
+                {
+                    "id": 4,
+                    "title": "Edge Functions Capacity Management",
+                    "description": "Implement Supabase Edge Functions for limited capacity control (1 tutor + 1 student max)",
+                    "status": "pending",
+                    "priority": "high",
+                    "dependencies": [
+                        3
+                    ],
+                    "details": "Create Supabase Edge Functions to manage capacity limits. Implement setUserRole function that checks current active tutors/students before allowing role assignment. Use PostgreSQL transactions for atomic operations. Create real-time subscriptions in frontend to update UI when capacity changes. Allow unlimited observers while enforcing 1 tutor + 1 student limit. Functions trigger on user role changes and session updates via database triggers or direct API calls.",
+                    "testStrategy": "Test Edge Functions prevent multiple tutors/students, verify atomic transactions work correctly, test real-time capacity updates"
+                },
+                {
+                    "id": 5,
+                    "title": "Supabase Storage Room Management",
+                    "description": "Enable tutors to create rooms with content and Supabase Storage image uploads",
+                    "status": "pending",
+                    "priority": "medium",
+                    "dependencies": [
+                        4
+                    ],
+                    "details": "Create interface for tutors to create rooms with title, description text, and image upload using Supabase Storage. Implement direct browser-to-Storage uploads with progress indicators. Configure Storage RLS policies to allow only tutors to upload. Generate secure download URLs for images. Store image metadata in rooms table. Include image compression and validation (file type, size limits).",
+                    "testStrategy": "Test room creation, Supabase Storage image upload with progress, verify Storage RLS policies, test image display from secure URLs"
+                },
+                {
+                    "id": 6,
+                    "title": "Room Discovery & Joining",
+                    "description": "Allow students/observers to browse and join available rooms",
+                    "status": "pending",
+                    "priority": "medium",
+                    "dependencies": [
+                        5
+                    ],
+                    "details": "Create interface for students and observers to view available rooms and join them. Show waiting message when no rooms are available. Display room information including tutor name, description, and image.",
+                    "testStrategy": "Test room browsing, joining, and waiting state when no rooms exist"
+                },
+                {
+                    "id": 7,
+                    "title": "PostgreSQL Real-time Chat System",
+                    "description": "Implement chat functionality using Supabase real-time subscriptions with role-based permissions",
+                    "status": "pending",
+                    "priority": "high",
+                    "dependencies": [
+                        6
+                    ],
+                    "details": "Create real-time chat system using Supabase real-time subscriptions on messages table for each room. Allow tutors and students to add messages, restrict observers to read-only via RLS policies. Implement optimistic UI updates and automatic message synchronization. Include message persistence, real-time delivery via PostgreSQL LISTEN/NOTIFY, and typing indicators using Supabase real-time presence system.",
+                    "testStrategy": "Test real-time message delivery between tutor and student, verify RLS policies prevent observer message creation, test offline message sync"
+                },
+                {
+                    "id": 8,
+                    "title": "Chat History & Room Info Download",
+                    "description": "Enable all users to download chat history and room information",
+                    "status": "pending",
+                    "priority": "medium",
+                    "dependencies": [
+                        7
+                    ],
+                    "details": "Create functionality to export chat history and room information as downloadable files (PDF/TXT/JSON). Include room details, participant information, and complete message history with timestamps.",
+                    "testStrategy": "Test download functionality for different file formats and verify data completeness"
+                },
+                {
+                    "id": 9,
+                    "title": "User Interface - Student View",
+                    "description": "Create responsive UI for student users",
+                    "status": "pending",
+                    "priority": "medium",
+                    "dependencies": [
+                        3
+                    ],
+                    "details": "Design and implement student-specific interface including: role selection, room browsing, room joining, chat interface, and download functionality. Ensure responsive design for mobile/desktop.",
+                    "testStrategy": "Test all student features across different devices and screen sizes"
+                },
+                {
+                    "id": 10,
+                    "title": "User Interface - Tutor View",
+                    "description": "Create responsive UI for tutor users",
+                    "status": "pending",
+                    "priority": "medium",
+                    "dependencies": [
+                        3
+                    ],
+                    "details": "Design and implement tutor-specific interface including: role selection, room creation, content upload, chat interface, and download functionality. Include room management features.",
+                    "testStrategy": "Test all tutor features including room creation and management"
+                },
+                {
+                    "id": 11,
+                    "title": "User Interface - Observer View",
+                    "description": "Create responsive UI for observer users",
+                    "status": "pending",
+                    "priority": "low",
+                    "dependencies": [
+                        3
+                    ],
+                    "details": "Design and implement observer-specific interface including: role selection, room browsing, read-only chat view, and download functionality. Ensure clear indication of read-only status.",
+                    "testStrategy": "Test observer features and verify they cannot interact with chat"
+                },
+                {
+                    "id": 12,
+                    "title": "Testing & Quality Assurance",
+                    "description": "Comprehensive testing of all system features",
+                    "status": "pending",
+                    "priority": "high",
+                    "dependencies": [
+                        8,
+                        9,
+                        10,
+                        11
+                    ],
+                    "details": "Perform thorough testing including: unit tests, integration tests, end-to-end testing, capacity limit testing, concurrent user testing, and browser compatibility testing.",
+                    "testStrategy": "All tests pass, system handles edge cases gracefully, performance meets requirements"
+                },
+                {
+                    "id": 13,
+                    "title": "Production Deployment",
+                    "description": "Deploy React app to production hosting with Supabase configuration",
+                    "status": "pending",
+                    "priority": "medium",
+                    "dependencies": [
+                        12
+                    ],
+                    "details": "Deploy React app to production hosting (Vercel/Netlify) with production build optimization. Configure Supabase project for production with proper RLS policies, Storage policies, and Edge Functions deployment. Set up custom domain with SSL. Configure environment variables for production Supabase config. Implement backup strategies for PostgreSQL data and monitoring via Supabase dashboard.",
+                    "testStrategy": "Production deployment successful, all Supabase services work correctly, SSL certificate active, performance optimized"
+                }
+            ]
+        }
+    },
+    "metadata": {
+        "created": "2024-01-08",
+        "lastModified": "2025-01-08",
+        "currentTag": "master"
+    }
+}

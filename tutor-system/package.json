@@ -1,0 +1,76 @@
+{
+    "name": "tutor-system",
+    "version": "1.0.0",
+    "description": "1v1 tutor-student training platform with Supabase backend",
+    "private": true,
+    "dependencies": {
+        "@types/node": "^16.18.68",
+        "@types/react": "^18.2.45",
+        "@types/react-dom": "^18.2.18",
+        "@supabase/supabase-js": "^2.39.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-router-dom": "^6.20.1",
+        "react-scripts": "5.0.1",
+        "typescript": "^4.9.5",
+        "web-vitals": "^2.1.4"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "test:coverage": "react-scripts test --coverage --watchAll=false",
+        "test:tasks": "npm run test:task1 && npm run test:task2 && npm run test:task3",
+        "test:task1": "react-scripts test --testPathPattern=\"supabase.test.ts\" --watchAll=false",
+        "test:task2": "react-scripts test --testPathPattern=\"database.test.ts\" --watchAll=false",
+        "test:task3": "react-scripts test --testPathPattern=\"AuthContext.test.tsx\" --watchAll=false",
+        "eject": "react-scripts eject",
+        "deploy": "npm run build"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "jest": {
+        "collectCoverageFrom": [
+            "src/**/*.{js,jsx,ts,tsx}",
+            "!src/index.tsx",
+            "!src/reportWebVitals.ts",
+            "!src/**/*.d.ts",
+            "!src/**/__tests__/**",
+            "!src/**/node_modules/**"
+        ],
+        "coverageReporters": [
+            "text",
+            "lcov",
+            "html"
+        ],
+        "coverageThreshold": {
+            "global": {
+                "branches": 75,
+                "functions": 80,
+                "lines": 80,
+                "statements": 80
+            }
+        }
+    },
+    "devDependencies": {
+        "@testing-library/jest-dom": "^5.17.0",
+        "@testing-library/react": "^13.4.0",
+        "@testing-library/user-event": "^13.5.0"
+    }
+}
