@@ -18,6 +18,15 @@ Feature: Real-time Chat System
     Then the tutor should see the message "Hi, glad to be here." from the student
     And the observer should see the message "Hi, glad to be here." from the student
 
+  Scenario: Messages appear immediately without page refresh
+    Given the tutor and student are both viewing the same room
+    When the tutor sends the message "Real-time test message"
+    Then the student should see the message "Real-time test message" immediately without refreshing
+    And the message should appear in the student's chat window within 2 seconds
+    When the student sends the message "I can see it!"
+    Then the tutor should see the message "I can see it!" immediately without refreshing
+    And the message should appear in the tutor's chat window within 2 seconds
+
   Scenario: Observer has read-only access to the chat
     Then the chat input should be disabled for the observer
     And the send message button should be disabled for the observer

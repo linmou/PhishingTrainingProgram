@@ -12,10 +12,13 @@ const RoomPage: React.FC = () => {
         currentRoom,
         messages,
         loading,
+        typingUsers,
         joinRoom,
         leaveRoom,
         sendMessage,
         generateAIResponse,
+        startTyping,
+        stopTyping,
         aiConfig,
         loadingAI
     } = useRoom();
@@ -50,6 +53,8 @@ const RoomPage: React.FC = () => {
         if (!messageText.trim() || sendingMessage) return;
 
         setSendingMessage(true);
+        stopTyping(); // Stop typing when message is sent
+        
         try {
             await sendMessage(messageText.trim());
             setMessageText('');
@@ -59,6 +64,22 @@ const RoomPage: React.FC = () => {
         } finally {
             setSendingMessage(false);
         }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setMessageText(value);
+        
+        // Start typing indicator when user starts typing
+        if (value.length > 0 && !sendingMessage) {
+            startTyping();
+        } else if (value.length === 0) {
+            stopTyping();
+        }
+    };
+
+    const handleInputBlur = () => {
+        stopTyping();
     };
 
     const handleGenerateAIResponse = async (parentMessageId?: string) => {
@@ -166,12 +187,29 @@ const RoomPage: React.FC = () => {
                                 <ChatMessage
                                     key={message.id}
                                     message={message}
+                                    displayName={message.display_name}
                                     onGenerateAIResponse={canUseAI && isAIEnabled ? handleGenerateAIResponseToMessage : undefined}
                                     canGenerateAI={canUseAI && isAIEnabled}
                                     isGeneratingAI={loadingAI}
                                 />
                             ))
                         )}
+                        {/* Typing indicators */}
+                        {typingUsers.length > 0 && (
+                            <div className="typing-indicators">
+                                {typingUsers.map(typingUser => (
+                                    <div key={typingUser.userId} className="typing-indicator">
+                                        <span className="typing-user">{typingUser.displayName}</span> is typing...
+                                        <div className="typing-dots">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -180,7 +218,8 @@ const RoomPage: React.FC = () => {
                             <input
                                 type="text"
                                 value={messageText}
-                                onChange={(e) => setMessageText(e.target.value)}
+                                onChange={handleInputChange}
+                                onBlur={handleInputBlur}
                                 placeholder="Type your message..."
                                 disabled={sendingMessage}
                             />

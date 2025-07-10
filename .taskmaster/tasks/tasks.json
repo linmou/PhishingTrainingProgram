@@ -80,7 +80,7 @@
                     "id": 7,
                     "title": "PostgreSQL Real-time Chat System",
                     "description": "Implement chat functionality using Supabase real-time subscriptions with role-based permissions",
-                    "status": "pending",
+                    "status": "done",
                     "priority": "high",
                     "dependencies": [
                         6

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -25,14 +25,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(false);
     const [aiConfig, setAiConfig] = useState<AIAssistantConfig | null>(null);
     const [loadingAI, setLoadingAI] = useState(false);
+    const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const channelRef = useRef<any>(null);
     const { user } = useAuth();
 
-    // Real-time subscription for messages
+    // Real-time subscription for messages and typing indicators
     useEffect(() => {
         if (!currentRoom) return;
 
-        const subscription = supabase
-            .channel(`room_${currentRoom.id}`)
+        console.log('🔴 Setting up real-time subscription for room:', currentRoom.id);
+
+        const channel = supabase.channel(`room_${currentRoom.id}`);
+        
+        channel
             .on(
                 'postgres_changes',
                 {
@@ -42,16 +48,106 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     filter: `room_id=eq.${currentRoom.id}`
                 },
                 (payload) => {
-                    const newMessage = payload.new as Message;
-                    setMessages(prev => [...prev, newMessage]);
+                    console.log('🟢 Real-time message received:', payload);
+                    const newMessage = payload.new as any;
+                    
+                    // Add display_name based on user_role and current user context
+                    const messageWithDisplayName = {
+                        ...newMessage,
+                        display_name: newMessage.user_id === user?.id ? (user?.display_name || 'User') : 
+                                     newMessage.user_role === 'tutor' ? 'Tutor' :
+                                     newMessage.user_role === 'student' ? 'Student' : 'Observer'
+                    } as Message;
+                    
+                    setMessages(prev => {
+                        console.log('📝 Adding message to state:', messageWithDisplayName);
+                        return [...prev, messageWithDisplayName];
+                    });
                 }
             )
-            .subscribe();
+            .on('broadcast', { event: 'typing_start' }, (payload) => {
+                const { userId, displayName } = payload.payload;
+                if (userId !== user?.id) {
+                    setTypingUsers(prev => {
+                        const filtered = prev.filter(t => t.userId !== userId);
+                        return [...filtered, { userId, displayName, timestamp: Date.now() }];
+                    });
+                }
+            })
+            .on('broadcast', { event: 'typing_stop' }, (payload) => {
+                const { userId } = payload.payload;
+                setTypingUsers(prev => prev.filter(t => t.userId !== userId));
+            })
+            .subscribe((status) => {
+                console.log('📡 Subscription status:', status);
+            });
+
+        // Store channel reference
+        channelRef.current = channel;
 
         return () => {
-            subscription.unsubscribe();
+            console.log('🔴 Unsubscribing from real-time channel');
+            channel.unsubscribe();
+            channelRef.current = null;
         };
-    }, [currentRoom]);
+    }, [currentRoom, user?.id]);
+
+    // Polling mechanism for messages (temporary until real-time replication is available)
+    useEffect(() => {
+        if (!currentRoom) return;
+
+        console.log('🔄 Starting message polling for room:', currentRoom.id);
+
+        const pollMessages = async () => {
+            try {
+                const { data: messagesData, error } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .eq('room_id', currentRoom.id)
+                    .order('created_at', { ascending: true });
+
+                if (error) {
+                    console.error('Failed to poll messages:', error);
+                    return;
+                }
+
+                if (messagesData) {
+                    // Add display_name to messages
+                    const messagesWithDisplayName = messagesData.map(message => ({
+                        ...message,
+                        display_name: message.user_id === user?.id ? (user?.display_name || 'User') : 
+                                     message.user_role === 'tutor' ? 'Tutor' :
+                                     message.user_role === 'student' ? 'Student' : 'Observer'
+                    }));
+
+                    setMessages(messagesWithDisplayName);
+                }
+            } catch (error) {
+                console.error('Error polling messages:', error);
+            }
+        };
+
+        // Poll immediately
+        pollMessages();
+
+        // Set up interval to poll every 2 seconds
+        const interval = setInterval(pollMessages, 2000);
+
+        return () => {
+            console.log('🔄 Stopping message polling');
+            clearInterval(interval);
+        };
+    }, [currentRoom, user?.id, user?.display_name]);
+
+    // Clean up stale typing indicators
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = Date.now();
+            setTypingUsers(prev => prev.filter(t => now - t.timestamp < 5000)); // 5 second timeout
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Load AI configuration when room changes
     useEffect(() => {
@@ -142,8 +238,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (messagesError) throw messagesError;
 
+            // Add display_name to existing messages
+            const messagesWithDisplayName = (messagesData || []).map(message => ({
+                ...message,
+                display_name: message.user_role === 'tutor' ? 'Tutor' :
+                             message.user_role === 'student' ? 'Student' : 'Observer'
+            }));
+
             setCurrentRoom(roomData);
-            setMessages(messagesData || []);
+            setMessages(messagesWithDisplayName);
         } finally {
             setLoading(false);
         }
@@ -164,16 +267,54 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('Observers cannot send messages');
         }
 
-        const { error } = await supabase
+        console.log('Sending message:', { roomId: currentRoom.id, userId: user.id, content });
+
+        // Create optimistic message
+        const optimisticMessage: Message = {
+            id: `temp-${Date.now()}`, // Temporary ID
+            room_id: currentRoom.id,
+            user_id: user.id,
+            content,
+            user_role: user.current_role as UserRole,
+            is_ai_generated: false,
+            ai_model_used: null,
+            ai_response_time_ms: null,
+            parent_message_id: null,
+            created_at: new Date().toISOString(),
+            display_name: user.display_name || 'User'
+        };
+
+        // Add message optimistically
+        setMessages(prev => [...prev, optimisticMessage]);
+
+        const { data, error } = await supabase
             .from('messages')
             .insert({
                 room_id: currentRoom.id,
                 user_id: user.id,
                 content,
                 user_role: user.current_role as UserRole
-            });
+            })
+            .select()
+            .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Failed to send message:', error);
+            // Remove optimistic message on error
+            setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+            throw error;
+        }
+        
+        console.log('Message sent successfully');
+        
+        // Replace optimistic message with real message
+        if (data) {
+            setMessages(prev => prev.map(msg => 
+                msg.id === optimisticMessage.id 
+                    ? { ...data, display_name: user.display_name || 'User' }
+                    : msg
+            ));
+        }
     };
 
     const generateAIResponse = async (prompt?: string): Promise<void> => {
@@ -289,16 +430,70 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const startTyping = () => {
+        if (!user || !currentRoom || user.current_role === 'observer' || !channelRef.current) return;
+
+        // Clear existing timeout
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        // Broadcast typing start using the existing channel
+        try {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'typing_start',
+                payload: {
+                    userId: user.id,
+                    displayName: user.display_name
+                }
+            });
+        } catch (error) {
+            console.warn('Failed to send typing start broadcast:', error);
+        }
+
+        // Auto-stop typing after 3 seconds
+        typingTimeoutRef.current = setTimeout(() => {
+            stopTyping();
+        }, 3000);
+    };
+
+    const stopTyping = () => {
+        if (!user || !currentRoom || user.current_role === 'observer' || !channelRef.current) return;
+
+        // Clear timeout
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null;
+        }
+
+        // Broadcast typing stop using the existing channel
+        try {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'typing_stop',
+                payload: {
+                    userId: user.id
+                }
+            });
+        } catch (error) {
+            console.warn('Failed to send typing stop broadcast:', error);
+        }
+    };
+
     const value: RoomContextType = {
         currentRoom,
         messages,
         loading,
+        typingUsers,
         createRoom,
         joinRoom,
         leaveRoom,
         sendMessage,
         generateAIResponse,
         toggleAIAssistant,
+        startTyping,
+        stopTyping,
         aiConfig,
         loadingAI
     };

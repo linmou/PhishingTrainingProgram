@@ -42,6 +42,7 @@ export interface Message {
     ai_response_time_ms: number | null;
     parent_message_id: string | null;
     created_at: string;
+    display_name?: string; // Added for UI display
 }
 
 // Session interface
@@ -99,17 +100,27 @@ export interface AuthContextType {
     setUserRole: (role: UserRole) => Promise<void>;
 }
 
+// Typing indicator type
+export interface TypingIndicator {
+    userId: string;
+    displayName: string;
+    timestamp: number;
+}
+
 // Room context type
 export interface RoomContextType {
     currentRoom: Room | null;
     messages: Message[];
     loading: boolean;
+    typingUsers: TypingIndicator[];
     createRoom: (title: string, description?: string, imageFile?: File) => Promise<void>;
     joinRoom: (roomId: string) => Promise<void>;
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
+    startTyping: () => void;
+    stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
 } 
