@@ -6,8 +6,8 @@ export type UserStatus = 'active' | 'inactive';
 
 export interface User {
     id: string;
-    email: string;
-    display_name: string | null;
+    email?: string; // Made optional since we're not using email authentication
+    display_name: string;
     current_role: UserRole | null;
     status: UserStatus;
     created_at: string;
@@ -92,8 +92,8 @@ export interface AIResponse {
 export interface AuthContextType {
     user: User | null;
     loading: boolean;
-    signIn: (email: string, password: string) => Promise<void>;
-    signUp: (email: string, password: string, displayName: string) => Promise<void>;
+    // Simplified authentication - just join with name and role
+    joinWithNameAndRole: (displayName: string, role: UserRole) => Promise<void>;
     signOut: () => Promise<void>;
     setUserRole: (role: UserRole) => Promise<void>;
 }

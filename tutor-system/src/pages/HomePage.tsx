@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import LoginForm from '../components/LoginForm';
-import SignupForm from '../components/SignupForm';
+import SimpleLogin from '../components/SimpleLogin';
 import RoleSelection from '../components/RoleSelection';
 import { runAuthDiagnostics, DiagnosticResult } from '../utils/authDiagnostics';
 
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
     const { user, loading } = useAuth();
-    const [isLoginMode, setIsLoginMode] = useState(true);
     const [showDiagnostics, setShowDiagnostics] = useState(false);
     const [diagnosticResults, setDiagnosticResults] = useState<DiagnosticResult[]>([]);
 
     // Redirect based on user role
     useEffect(() => {
+        console.log('🏠 HomePage: useEffect triggered', {
+            hasUser: !!user,
+            role: user?.current_role,
+            userId: user?.id
+        });
         if (user?.current_role) {
+            console.log('🚀 HomePage: Navigating to role page:', user.current_role);
             navigate(`/${user.current_role}`);
         }
     }, [user, navigate]);
-
-    const toggleAuthMode = () => {
-        setIsLoginMode(!isLoginMode);
-    };
 
     const handleRunDiagnostics = async () => {
         console.log('🔍 Running authentication diagnostics...');
@@ -80,7 +80,10 @@ const HomePage: React.FC = () => {
     };
 
     // Show loading state
+    console.log('🏠 HomePage: Render state', { loading, hasUser: !!user, role: user?.current_role });
+
     if (loading) {
+        console.log('⏳ HomePage: Showing loading state');
         return (
             <div className="container">
                 <div className="card">
@@ -95,22 +98,15 @@ const HomePage: React.FC = () => {
         return <RoleSelection />;
     }
 
-    // Show authentication forms for unauthenticated users
+    // Show simple login for unauthenticated users
     if (!user) {
         return (
-            <div className="container">
-                <div className="card">
-                    <h1>Welcome to Tutor System</h1>
-                    <p>1v1 Online Tutor-Student Training Platform</p>
+            <>
+                <SimpleLogin />
 
-                    {isLoginMode ? (
-                        <LoginForm onToggleMode={toggleAuthMode} />
-                    ) : (
-                        <SignupForm onToggleMode={toggleAuthMode} />
-                    )}
-
-                    {/* Diagnostics Section */}
-                    <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                {/* Optional Diagnostics Section - keep for debugging */}
+                <div className="container" style={{ marginTop: '20px' }}>
+                    <div className="card" style={{ textAlign: 'center' }}>
                         <button
                             onClick={handleRunDiagnostics}
                             style={{
@@ -123,16 +119,15 @@ const HomePage: React.FC = () => {
                                 fontSize: '0.9em'
                             }}
                         >
-                            🔧 Run Auth Diagnostics
+                            🔧 Run Connection Diagnostics
                         </button>
                         <p style={{ fontSize: '0.8em', color: '#666', margin: '5px 0' }}>
-                            Having trouble signing in/up? Click to diagnose issues.
+                            Having trouble connecting? Click to diagnose issues.
                         </p>
+                        {renderDiagnostics()}
                     </div>
-
-                    {renderDiagnostics()}
                 </div>
-            </div>
+            </>
         );
     }
 

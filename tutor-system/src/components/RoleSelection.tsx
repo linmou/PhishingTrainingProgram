@@ -37,20 +37,52 @@ const RoleSelection: React.FC = () => {
                         type="button"
                         className="sign-out-button"
                         onClick={handleSignOut}
+                        style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
                     >
-                        Sign Out
+                        Leave Session
                     </button>
                 </div>
 
                 <p>1v1 Online Tutor-Student Training Platform</p>
 
-                <h2>Choose Your Role</h2>
-                {error && <div className="error-message">{error}</div>}
+                {user?.current_role ? (
+                    <>
+                        <p>Your current role: <strong>{user.current_role.charAt(0).toUpperCase() + user.current_role.slice(1)}</strong></p>
+                        <h2>Change Your Role</h2>
+                    </>
+                ) : (
+                    <h2>Choose Your Role</h2>
+                )}
+
+                {error && <div className="error-message" style={{
+                    color: 'red',
+                    marginBottom: '15px',
+                    padding: '10px',
+                    backgroundColor: '#ffe6e6',
+                    border: '1px solid #ff9999',
+                    borderRadius: '4px'
+                }}>{error}</div>}
 
                 <div className="role-selection">
                     <div
-                        className={`role-card ${isLoading ? 'disabled' : ''}`}
+                        className={`role-card ${isLoading ? 'disabled' : ''} ${user?.current_role === 'student' ? 'selected' : ''}`}
                         onClick={() => !isLoading && handleRoleSelect('student')}
+                        style={{
+                            padding: '20px',
+                            border: user?.current_role === 'student' ? '2px solid #007bff' : '1px solid #ddd',
+                            borderRadius: '8px',
+                            margin: '10px',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            backgroundColor: user?.current_role === 'student' ? '#f0f8ff' : '#fff',
+                            opacity: isLoading ? 0.6 : 1
+                        }}
                     >
                         <h3>Student</h3>
                         <p>Join rooms and participate in learning sessions</p>
@@ -58,8 +90,17 @@ const RoleSelection: React.FC = () => {
                     </div>
 
                     <div
-                        className={`role-card ${isLoading ? 'disabled' : ''}`}
+                        className={`role-card ${isLoading ? 'disabled' : ''} ${user?.current_role === 'tutor' ? 'selected' : ''}`}
                         onClick={() => !isLoading && handleRoleSelect('tutor')}
+                        style={{
+                            padding: '20px',
+                            border: user?.current_role === 'tutor' ? '2px solid #007bff' : '1px solid #ddd',
+                            borderRadius: '8px',
+                            margin: '10px',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            backgroundColor: user?.current_role === 'tutor' ? '#f0f8ff' : '#fff',
+                            opacity: isLoading ? 0.6 : 1
+                        }}
                     >
                         <h3>Tutor</h3>
                         <p>Create rooms and teach students</p>
@@ -67,8 +108,17 @@ const RoleSelection: React.FC = () => {
                     </div>
 
                     <div
-                        className={`role-card ${isLoading ? 'disabled' : ''}`}
+                        className={`role-card ${isLoading ? 'disabled' : ''} ${user?.current_role === 'observer' ? 'selected' : ''}`}
                         onClick={() => !isLoading && handleRoleSelect('observer')}
+                        style={{
+                            padding: '20px',
+                            border: user?.current_role === 'observer' ? '2px solid #007bff' : '1px solid #ddd',
+                            borderRadius: '8px',
+                            margin: '10px',
+                            cursor: isLoading ? 'not-allowed' : 'pointer',
+                            backgroundColor: user?.current_role === 'observer' ? '#f0f8ff' : '#fff',
+                            opacity: isLoading ? 0.6 : 1
+                        }}
                     >
                         <h3>Observer</h3>
                         <p>Watch sessions and learn</p>
@@ -77,7 +127,11 @@ const RoleSelection: React.FC = () => {
                 </div>
 
                 {isLoading && (
-                    <div className="loading-message">
+                    <div className="loading-message" style={{
+                        marginTop: '15px',
+                        textAlign: 'center',
+                        color: '#666'
+                    }}>
                         Setting your role...
                     </div>
                 )}
