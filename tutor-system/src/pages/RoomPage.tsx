@@ -117,6 +117,15 @@ const RoomPage: React.FC = () => {
                         <p className="room-description">{currentRoom.description}</p>
                     )}
 
+                    {/* Room Info */}
+                    {currentRoom.observer_count && currentRoom.observer_count > 0 && (
+                        <div className="room-info">
+                            <span className="observer-count">
+                                👁️ {currentRoom.observer_count} observer{currentRoom.observer_count !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                    )}
+
                     {/* AI Status and Controls */}
                     {canUseAI && (
                         <div className="ai-controls">

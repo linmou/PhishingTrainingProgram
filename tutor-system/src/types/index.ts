@@ -25,6 +25,7 @@ export interface Room {
     ai_assistant_enabled: boolean;
     ai_assistant_model: string | null;
     ai_assistant_prompt: string | null;
+    observer_count?: number; // Number of active observers in the room
     created_at: string;
     updated_at: string;
 }

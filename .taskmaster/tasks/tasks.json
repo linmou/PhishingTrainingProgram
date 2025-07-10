@@ -68,7 +68,7 @@
                     "id": 6,
                     "title": "Room Discovery & Joining",
                     "description": "Allow students/observers to browse and join available rooms",
-                    "status": "pending",
+                    "status": "done",
                     "priority": "medium",
                     "dependencies": [
                         5
@@ -121,7 +121,7 @@
                     "dependencies": [
                         3
                     ],
-                    "details": "Design and implement tutor-specific interface including: role selection, room creation, content upload, chat interface, and download functionality. Include room management features.",
+                    "details": "Design and implement tutor-specific interface including: role selection, room creation, content upload, chat interface, and download functionality. Include room management features and entering the room tutor created.",
                     "testStrategy": "Test all tutor features including room creation and management"
                 },
                 {
