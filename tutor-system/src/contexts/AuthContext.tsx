@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // Test Supabase connection first
             console.log('🔗 AuthContext: Testing Supabase connection...');
-            const { data: testData, error: testError } = await supabase
+            const { error: testError } = await supabase
                 .from('users')
                 .select('count')
                 .limit(1);
@@ -76,39 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
             console.log('✅ AuthContext: Supabase connection successful');
 
-            // Check capacity limits for tutor and student roles only
-            if (role === 'tutor' || role === 'student') {
-                console.log('📊 AuthContext: Checking role capacity...');
-                const { data: currentUsers, error } = await supabase
-                    .from('users')
-                    .select('id, current_role')
-                    .eq('status', 'active')
-                    .not('current_role', 'is', null);
-
-                if (error) {
-                    console.error('❌ AuthContext: Error checking capacity:', error);
-                    throw new Error(`Failed to check capacity: ${error.message}`);
-                }
-
-                console.log('📋 AuthContext: Current users:', currentUsers);
-
-                const activeTutors = currentUsers.filter(u => u.current_role === 'tutor').length;
-                const activeStudents = currentUsers.filter(u => u.current_role === 'student').length;
-
-                console.log('📊 AuthContext: Role capacity check:', {
-                    activeTutors,
-                    activeStudents,
-                    requestedRole: role
-                });
-
-                if (role === 'tutor' && activeTutors >= 1) {
-                    throw new Error('Maximum number of tutors (1) already reached');
-                }
-
-                if (role === 'student' && activeStudents >= 1) {
-                    throw new Error('Maximum number of students (1) already reached');
-                }
-            }
+            // No capacity limits - users can join with any role
 
             // Create user object
             const newUser: User = {
@@ -198,43 +166,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         console.log('🎭 AuthContext: Setting user role to:', role);
 
-        // Check capacity limits for tutor and student roles only
-        if (role === 'tutor' || role === 'student') {
-            console.log('📊 AuthContext: Checking role capacity...');
-            const { data: currentUsers, error } = await supabase
-                .from('users')
-                .select('id, current_role')
-                .eq('status', 'active')
-                .not('current_role', 'is', null);
-
-            if (error) {
-                console.error('❌ AuthContext: Error checking capacity:', error);
-                throw error;
-            }
-
-            // Filter out the current user from the count
-            const otherUsers = currentUsers.filter(u => u.id !== user.id);
-            const activeTutors = otherUsers.filter(u => u.current_role === 'tutor').length;
-            const activeStudents = otherUsers.filter(u => u.current_role === 'student').length;
-
-            console.log('📊 AuthContext: Role capacity check:', {
-                activeTutors,
-                activeStudents,
-                requestedRole: role
-            });
-
-            if (role === 'tutor' && activeTutors >= 1) {
-                throw new Error('Maximum number of tutors (1) already reached');
-            }
-
-            if (role === 'student' && activeStudents >= 1) {
-                throw new Error('Maximum number of students (1) already reached');
-            }
-        }
+        // No capacity limits - users can switch to any role
 
         // Update user role in database
         console.log('📝 AuthContext: Updating user role in database...');
-        const { data: updatedUsers, error } = await supabase
+        const { error } = await supabase
             .from('users')
             .update({
                 current_role: role,

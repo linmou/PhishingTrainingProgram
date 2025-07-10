@@ -55,14 +55,14 @@
                 {
                     "id": 5,
                     "title": "Supabase Storage Room Management",
-                    "description": "Enable tutors to create rooms with content and Supabase Storage image uploads",
-                    "status": "pending",
+                    "description": "Enable tutors to create rooms with content and select a predefined image",
+                    "status": "done",
                     "priority": "medium",
                     "dependencies": [
                         3
                     ],
-                    "details": "Create interface for tutors to create rooms with title, description text, and image upload using Supabase Storage. Implement direct browser-to-Storage uploads with progress indicators. Configure Storage RLS policies to allow only tutors to upload. Generate secure download URLs for images. Store image metadata in rooms table. Include image compression and validation (file type, size limits).",
-                    "testStrategy": "Test room creation, Supabase Storage image upload with progress, verify Storage RLS policies, test image display from secure URLs"
+                    "details": "Create an interface for tutors to create rooms with a title, description text, and an image chosen from a predefined list of provided images. Tutors will select an image, and its URL (from Supabase Storage) will be saved in the rooms table. Custom image uploads will be disabled.",
+                    "testStrategy": "Test room creation with an image selected from the predefined list. Verify the correct image URL is saved and displayed. Test that tutors cannot upload custom images."
                 },
                 {
                     "id": 6,

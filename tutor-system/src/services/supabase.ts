@@ -86,4 +86,72 @@ export const updateUserProfile = async (userId: string, updates: any) => {
         updatedFields: Object.keys(updates)
     });
     return data
+}
+
+// Room management functions
+export const createRoom = async (roomData: {
+    title: string;
+    description: string;
+    tutor_id: string;
+    image_url?: string;
+}) => {
+    console.log('🏠 Supabase Service: Creating room:', roomData);
+    const { data, error } = await supabase
+        .from('rooms')
+        .insert([{
+            ...roomData,
+            is_active: true
+        }])
+        .select()
+        .single()
+
+    if (error) {
+        console.error('❌ Supabase Service: Create room error:', error);
+        throw error;
+    }
+    console.log('✅ Supabase Service: Room created:', {
+        id: data.id,
+        title: data.title
+    });
+    return data
+}
+
+export const uploadImage = async (file: File, path: string) => {
+    console.log('📸 Supabase Service: Uploading image:', { fileName: file.name, path });
+    const { data, error } = await supabase.storage
+        .from('room-images')
+        .upload(path, file)
+
+    if (error) {
+        console.error('❌ Supabase Service: Upload image error:', error);
+        throw error;
+    }
+    console.log('✅ Supabase Service: Image uploaded:', { path: data.path });
+    return data
+}
+
+export const getImageUrl = async (path: string) => {
+    console.log('🔗 Supabase Service: Getting image URL for:', path);
+    const { data } = supabase.storage
+        .from('room-images')
+        .getPublicUrl(path)
+
+    console.log('✅ Supabase Service: Image URL generated:', { url: data.publicUrl });
+    return data.publicUrl
+}
+
+export const getRoomsByTutor = async (tutorId: string) => {
+    console.log('🏠 Supabase Service: Getting rooms for tutor:', tutorId);
+    const { data, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('tutor_id', tutorId)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('❌ Supabase Service: Get rooms error:', error);
+        throw error;
+    }
+    console.log('✅ Supabase Service: Rooms retrieved:', { count: data?.length || 0 });
+    return data || []
 } 
