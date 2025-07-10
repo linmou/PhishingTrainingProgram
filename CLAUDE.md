@@ -81,3 +81,14 @@ The system includes a dummy AI assistant feature for tutors:
 - **State Management**: React Context API for auth and room state
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Type Safety**: Full TypeScript coverage with strict mode enabled
+
+## Troubleshooting
+
+### npm Commands Not Working
+If npm commands appear to fail:
+1. Check npm is in PATH: `which npm`
+2. Verify npm version: `npm --version`
+3. Check current directory: `pwd`
+4. Ensure you're in the correct subdirectory (e.g., `cd tutor-system` for this project)
+
+Note: Conda environments (like base) don't interfere with npm/node. They manage separate package ecosystems.

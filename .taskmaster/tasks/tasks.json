@@ -44,7 +44,7 @@
                     "id": 4,
                     "title": "Edge Functions Capacity Management",
                     "description": "Implement Supabase Edge Functions for limited capacity control (1 tutor + 1 student max)",
-                    "status": "pending",
+                    "status": "cancelled",
                     "priority": "high",
                     "dependencies": [
                         3
@@ -59,7 +59,7 @@
                     "status": "pending",
                     "priority": "medium",
                     "dependencies": [
-                        4
+                        3
                     ],
                     "details": "Create interface for tutors to create rooms with title, description text, and image upload using Supabase Storage. Implement direct browser-to-Storage uploads with progress indicators. Configure Storage RLS policies to allow only tutors to upload. Generate secure download URLs for images. Store image metadata in rooms table. Include image compression and validation (file type, size limits).",
                     "testStrategy": "Test room creation, Supabase Storage image upload with progress, verify Storage RLS policies, test image display from secure URLs"
