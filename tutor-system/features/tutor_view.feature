@@ -1,3 +1,4 @@
+@tutor-ui
 Feature: Tutor User Interface
 
   As a tutor, I want a clear and functional interface to select my role,
