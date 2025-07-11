@@ -1,12 +1,15 @@
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import App from '../App';
+import { AuthProvider } from '../contexts/AuthContext';
+import { RoomProvider } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
+import StudentView from '../pages/StudentView';
+import RoomPage from '../pages/RoomPage';
 
 const feature = loadFeature('./features/student_view.feature');
 
@@ -25,6 +28,19 @@ const LocationDisplay = () => {
     location = useLocation();
     return null;
 };
+
+// Test App without Router
+const TestApp = () => (
+    <AuthProvider>
+        <RoomProvider>
+            <Routes>
+                <Route path="/student" element={<StudentView />} />
+                <Route path="/room/:roomId" element={<RoomPage />} />
+            </Routes>
+            <LocationDisplay />
+        </RoomProvider>
+    </AuthProvider>
+);
 
 // Helper for mocking the query chain
 const mockQuery = (data: any[] | null, error: any = null) => ({
@@ -64,24 +80,29 @@ defineFeature(feature, test => {
                 if (config.table === 'rooms' || config.table === 'sessions') {
                     realtimeCallback = callback;
                 }
-                return { subscribe: jest.fn() };
+                return mockSubscription;
             }),
-            subscribe: jest.fn(),
+            subscribe: jest.fn().mockReturnValue({
+                unsubscribe: jest.fn()
+            }),
         };
         mockSupabaseClient.channel.mockReturnValue(mockSubscription as any);
     });
 
     const renderStudentView = () => {
         render(
-            <MemoryRouter initialEntries={ ['/student']} >
-            <App />
-            < LocationDisplay />
-        </MemoryRouter>
+            <MemoryRouter initialEntries={['/student']}>
+                <TestApp />
+            </MemoryRouter>
         );
     };
 
     // Scenario Implementations
-    test('Student selects their role and sees the dashboard with a loading state', ({ when, then, and }) => {
+    test('Student selects their role and sees the dashboard with a loading state', ({ given, when, then, and }) => {
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        
         when('the user logs in and selects the "Student" role', () => {
             renderStudentView();
         });
@@ -98,7 +119,12 @@ defineFeature(feature, test => {
     });
 
     test('Student sees a list of available rooms', ({ given, and, when, then }) => {
-        given('a user is logged in as a "Student"', () => { });
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        given('the user is logged in as a "Student"', () => {
+            // Already handled by useAuth mock in beforeEach
+        });
         and('a tutor has created a room with title "Phishing 101"', () => {
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
         });
@@ -113,8 +139,12 @@ defineFeature(feature, test => {
     });
 
     test('Student sees an updated message when no rooms are available', ({ given, and, when, then }) => {
-        given('a user is logged in as a "Student"', () => { });
-
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        given('the user is logged in as a "Student"', () => {
+            // Already handled by useAuth mock in beforeEach
+        });
         and('no active rooms are available', () => {
             mockRoomsData = [];
         });
@@ -137,6 +167,10 @@ defineFeature(feature, test => {
     });
 
     test('Student sees a new room appear in real-time', ({ given, when, then }) => {
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        
         given('the student is on the dashboard viewing an empty list of rooms', () => {
             renderStudentView();
         });
@@ -153,8 +187,12 @@ defineFeature(feature, test => {
     });
 
     test('Student sees a room is full', ({ given, and, when, then }) => {
-        given('the user is logged in as a "Student"', () => { });
-
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        given('the user is logged in as a "Student"', () => {
+            // Already handled by useAuth mock in beforeEach
+        });
         and('the "Phishing 101" room is full', () => {
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
             mockSessionsData = [
@@ -187,8 +225,12 @@ defineFeature(feature, test => {
     });
 
     test('Student fails to join a room due to an error', ({ given, and, when, then }) => {
-        given('the user is logged in as a "Student"', () => { });
-
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        given('the user is logged in as a "Student"', () => {
+            // Already handled by useAuth mock in beforeEach
+        });
         and('the system will produce an error when they try to join "Phishing 101"', () => {
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
             const mockInsert = jest.fn().mockResolvedValue({ error: { message: 'Insert failed' } });
@@ -217,10 +259,26 @@ defineFeature(feature, test => {
     });
 
     test('Student joins a room successfully', ({ given, and, when, then }) => {
-        given('a user is logged in as a "Student"', () => { });
+        given('a user is authenticated', () => {
+            // User is already mocked as authenticated in beforeEach
+        });
+        given('a user is logged in as a "Student"', () => {
+            // Already handled by useAuth mock in beforeEach
+        });
         and('the "Phishing 101" room is available and not full', () => {
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
             mockSessionsData = null;
+            
+            // Mock successful insert for joining
+            const mockInsert = jest.fn().mockResolvedValue({ error: null });
+            mockSupabaseClient.from.mockImplementation((tableName: string) => {
+                if (tableName === 'rooms') return mockQuery(mockRoomsData);
+                if (tableName === 'sessions') {
+                    const query = mockQuery(null, { code: 'PGRST116' }); // No existing session
+                    return { ...query, insert: mockInsert };
+                }
+                return mockQuery([]);
+            });
         });
         when('the student clicks the "Join" button for the "Phishing 101" room', async () => {
             renderStudentView();

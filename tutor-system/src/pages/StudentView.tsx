@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Database } from '../types/database';
 import RoomCard from '../components/RoomCard';
+import { useAuth } from '../contexts/AuthContext';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
@@ -18,8 +19,10 @@ interface RoomWithStatus extends RoomWithTutor {
 
 const StudentView: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [rooms, setRooms] = useState<RoomWithStatus[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchRooms = useCallback(async () => {
         try {
@@ -114,8 +117,77 @@ const StudentView: React.FC = () => {
         };
     }, [fetchRooms]);
 
-    const handleJoinRoom = (roomId: string) => {
-        navigate(`/room/${roomId}`);
+    const handleJoinRoom = async (roomId: string) => {
+        try {
+            setError(null);
+            
+            if (!user) {
+                setError('You must be logged in to join a room.');
+                return;
+            }
+            
+            // First, get the room details to find the tutor_id
+            const room = rooms.find(r => r.id === roomId);
+            if (!room) {
+                setError('Room not found.');
+                return;
+            }
+            
+            // Debug logging
+            console.log('Attempting to join room:', {
+                roomId,
+                tutorId: room.tutor_id,
+                studentId: user.id,
+                userObject: user
+            });
+            
+            // First verify the user exists in the database
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+                
+            if (userError || !userData) {
+                console.error('User not found in database:', userError);
+                setError('User not found. Please log out and log back in.');
+                return;
+            }
+            
+            console.log('User found in database:', userData);
+            
+            // Check if we can join by attempting to create a session
+            const { data: sessionData, error: joinError } = await supabase
+                .from('sessions')
+                .insert({ 
+                    room_id: roomId,
+                    tutor_id: room.tutor_id,
+                    student_id: user.id,
+                    status: 'active'
+                })
+                .select();
+                
+            if (joinError) {
+                console.error('Join error:', joinError);
+                // Provide more specific error messages
+                if (joinError.code === '23503') {
+                    setError('User not found. Please ensure you are properly logged in.');
+                } else if (joinError.code === '23505') {
+                    setError('You are already in this room.');
+                } else if (joinError.code === '42501') {
+                    setError('Permission denied. Please check your access rights.');
+                } else {
+                    setError(`Failed to join the room: ${joinError.message || 'Unknown error'}`);
+                }
+                return;
+            }
+            
+            console.log('Session created successfully:', sessionData);
+            navigate(`/room/${roomId}`);
+        } catch (err) {
+            console.error('Error joining room:', err);
+            setError('Failed to join the room. Please try again.');
+        }
     };
 
     return (
@@ -129,6 +201,7 @@ const StudentView: React.FC = () => {
                 </div>
 
                 <h2>Available Rooms</h2>
+                {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
                 {loading ? (
                     <p>Loading rooms...</p>
                 ) : rooms.length > 0 ? (
@@ -147,7 +220,7 @@ const StudentView: React.FC = () => {
                 ) : (
                     <div className="waiting-message">
                         <p>No rooms available</p>
-                        <p>Please wait for a tutor to create a room</p>
+                        <p>Please wait for a tutor to create a room.</p>
                     </div>
                 )}
 

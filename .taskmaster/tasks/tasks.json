@@ -104,7 +104,7 @@
                     "id": 9,
                     "title": "User Interface - Student View",
                     "description": "Create responsive UI for student users",
-                    "status": "pending",
+                    "status": "done",
                     "priority": "medium",
                     "dependencies": [
                         3

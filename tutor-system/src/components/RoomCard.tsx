@@ -46,6 +46,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
             <p><strong>Tutor:</strong> {tutor?.display_name || 'Unknown'}</p>
             {room.description && <p><strong>Description:</strong> {room.description}</p>}
             <p><strong>Status:</strong> {roomStatus}</p>
+            {roomStatus === 'Room Full' && <span>Full</span>}
             <button
                 onClick={() => onJoin(room.id)}
                 disabled={isJoinDisabled}
