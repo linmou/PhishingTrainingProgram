@@ -24,7 +24,7 @@ Feature: Room Management with Preset Images
     When I navigate to the room creation page
     And I enter room title "Advanced JavaScript"
     And I enter room description "Advanced JavaScript concepts and patterns"
-    And I select a preset image "javascript-classroom.jpg"
+    And I select a preset image "phishing_1.png"
     And I submit the room creation form
     Then a new room should be created with the selected preset image
     And the room should display the selected preset image
@@ -74,7 +74,7 @@ Feature: Room Management with Preset Images
   Scenario: Image selection feedback
     Given I am logged in as a tutor
     When I navigate to the room creation page
-    And I select a preset image "coding-workspace.jpg"
+    And I select a preset image "privacy_1.png"
     Then the selected image should be highlighted
     And I should see a preview of the selected image
     And the image name should be displayed

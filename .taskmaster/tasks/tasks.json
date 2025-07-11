@@ -92,7 +92,7 @@
                     "id": 8,
                     "title": "Chat History & Room Info Download",
                     "description": "Enable all users to download chat history and room information",
-                    "status": "pending",
+                    "status": "done",
                     "priority": "medium",
                     "dependencies": [
                         7

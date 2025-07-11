@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
 import ChatMessage from '../components/ChatMessage';
 import AIAssistantSettings from '../components/AIAssistantSettings';
+import jsPDF from 'jspdf';
+import { supabase } from '../services/supabase';
 
 const RoomPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -26,6 +28,7 @@ const RoomPage: React.FC = () => {
     const [messageText, setMessageText] = useState('');
     const [showAISettings, setShowAISettings] = useState(false);
     const [sendingMessage, setSendingMessage] = useState(false);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Join room on component mount
@@ -40,7 +43,7 @@ const RoomPage: React.FC = () => {
         return () => {
             leaveRoom();
         };
-    }, [roomId]);
+    }, [roomId, joinRoom, leaveRoom]);
 
     // Scroll to bottom when new messages arrive
     useEffect(() => {
@@ -103,6 +106,110 @@ const RoomPage: React.FC = () => {
         }
     };
 
+    const downloadAsText = async () => {
+        if (!currentRoom) return;
+
+        const roomTitle = currentRoom.title.replace(/\s+/g, '_');
+        const content = [
+            `Room: ${currentRoom.title}`,
+            `Created: ${new Date(currentRoom.created_at).toISOString()}`,
+            '',
+            'Messages:',
+            '=========',
+            ...messages.map(message => 
+                `[${message.created_at}] ${message.display_name} (${message.user_role}): ${message.content}`
+            )
+        ].join('\n');
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${roomTitle}_chat_history.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const downloadAsJson = async () => {
+        if (!currentRoom) return;
+
+        const uniqueUserIds = Array.from(new Set(messages.map(m => m.user_id)));
+        const { data: allParticipants } = await supabase
+            .from('users')
+            .select('id, display_name, current_role')
+            .in('id', uniqueUserIds);
+
+        const roomTitle = currentRoom.title.replace(/\s+/g, '_');
+        const jsonData = {
+            room: {
+                title: currentRoom.title,
+                created_at: currentRoom.created_at
+            },
+            participants: allParticipants?.map(p => ({
+                id: p.id,
+                display_name: p.display_name,
+                role: p.current_role
+            })) || [],
+            messages: messages.map(message => ({
+                id: message.id,
+                content: message.content,
+                display_name: message.display_name,
+                user_role: message.user_role,
+                created_at: message.created_at
+            }))
+        };
+
+        const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${roomTitle}_chat_history.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const downloadAsPdf = async () => {
+        if (!currentRoom) return;
+
+        const pdf = new jsPDF();
+        const roomTitle = currentRoom.title.replace(/\s+/g, '_');
+        
+        pdf.setFontSize(16);
+        pdf.text(`Room: ${currentRoom.title}`, 20, 20);
+        
+        pdf.setFontSize(12);
+        pdf.text(`Created: ${new Date(currentRoom.created_at).toLocaleString()}`, 20, 30);
+        
+        let yPosition = 50;
+        
+        pdf.setFontSize(14);
+        pdf.text('Messages:', 20, yPosition);
+        yPosition += 10;
+        
+        pdf.setFontSize(10);
+        messages.forEach(message => {
+            const messageText = `[${new Date(message.created_at).toLocaleString()}] ${message.display_name} (${message.user_role}): ${message.content}`;
+            const lines = pdf.splitTextToSize(messageText, 170);
+            
+            if (yPosition + (lines.length * 5) > 280) {
+                pdf.addPage();
+                yPosition = 20;
+            }
+            
+            lines.forEach((line: string) => {
+                pdf.text(line, 20, yPosition);
+                yPosition += 5;
+            });
+            yPosition += 2;
+        });
+
+        pdf.save(`${roomTitle}_chat_history.pdf`);
+    };
+
     const canSendMessages = user && user.current_role !== 'observer';
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
@@ -130,28 +237,27 @@ const RoomPage: React.FC = () => {
     }
 
     return (
-        <div className="container">
-            <div className="card">
-                <div className="room-header">
+        <div className="room-layout">
+            {/* Header with room info and controls */}
+            <div className="room-header-bar">
+                <div className="room-title-section">
                     <h1>{currentRoom.title}</h1>
                     {currentRoom.description && (
                         <p className="room-description">{currentRoom.description}</p>
                     )}
-
-                    {/* Room Info */}
                     {currentRoom.observer_count && currentRoom.observer_count > 0 && (
-                        <div className="room-info">
-                            <span className="observer-count">
-                                👁️ {currentRoom.observer_count} observer{currentRoom.observer_count !== 1 ? 's' : ''}
-                            </span>
-                        </div>
+                        <span className="observer-count">
+                            👁️ {currentRoom.observer_count} observer{currentRoom.observer_count !== 1 ? 's' : ''}
+                        </span>
                     )}
-
+                </div>
+                
+                <div className="room-controls">
                     {/* AI Status and Controls */}
                     {canUseAI && (
                         <div className="ai-controls">
                             <div className={`ai-status ${isAIEnabled ? 'ai-status-enabled' : 'ai-status-disabled'}`}>
-                                🤖 AI Assistant: {isAIEnabled ? 'Enabled' : 'Disabled'}
+                                🤖 AI: {isAIEnabled ? 'On' : 'Off'}
                                 {isAIEnabled && aiConfig && (
                                     <span className="ai-model-info">({aiConfig.model_name})</span>
                                 )}
@@ -169,15 +275,42 @@ const RoomPage: React.FC = () => {
                                     disabled={loadingAI || messages.length === 0}
                                     className="btn btn-ai btn-small"
                                 >
-                                    {loadingAI ? 'Generating...' : '🤖 Generate Response'}
+                                    {loadingAI ? 'Generating...' : '🤖 Generate'}
                                 </button>
                             )}
                         </div>
                     )}
+                    
+                    <div className="room-actions">
+                        <button 
+                            className="btn btn-secondary btn-small"
+                            onClick={() => setShowDownloadModal(true)}
+                        >
+                            Download Chat
+                        </button>
+                        <Link to="/" className="btn btn-secondary btn-small">
+                            Leave Room
+                        </Link>
+                    </div>
                 </div>
+            </div>
 
-                <div className="chat-container">
-                    <div className="chat-messages">
+            {/* Main content area with image and chat side by side */}
+            <div className="room-main-content">
+                {/* Left side - Room Image */}
+                {currentRoom.image_url && (
+                    <div className="room-image-section">
+                        <img 
+                            src={currentRoom.image_url} 
+                            alt={currentRoom.title}
+                            className="room-image-fullsize"
+                        />
+                    </div>
+                )}
+
+                {/* Right side - Chat */}
+                <div className={`chat-section ${!currentRoom.image_url ? 'chat-section-full' : ''}`}>
+                    <div className="chat-messages-container">
                         {messages.length === 0 ? (
                             <div className="waiting-message">
                                 <p>No messages yet. Start the conversation!</p>
@@ -214,7 +347,7 @@ const RoomPage: React.FC = () => {
                     </div>
 
                     {canSendMessages && (
-                        <form onSubmit={handleSendMessage} className="chat-input">
+                        <form onSubmit={handleSendMessage} className="chat-input-form">
                             <input
                                 type="text"
                                 value={messageText}
@@ -222,6 +355,7 @@ const RoomPage: React.FC = () => {
                                 onBlur={handleInputBlur}
                                 placeholder="Type your message..."
                                 disabled={sendingMessage}
+                                className="chat-input-field"
                             />
                             <button
                                 type="submit"
@@ -239,20 +373,56 @@ const RoomPage: React.FC = () => {
                         </div>
                     )}
                 </div>
-
-                <div className="room-actions">
-                    <button className="btn btn-secondary" disabled>
-                        Download Chat History [Task 8]
-                    </button>
-                    <Link to="/" className="btn btn-secondary">
-                        Leave Room
-                    </Link>
-                </div>
             </div>
 
             {/* AI Settings Modal */}
             {showAISettings && (
                 <AIAssistantSettings onClose={() => setShowAISettings(false)} />
+            )}
+
+            {/* Download Modal */}
+            {showDownloadModal && (
+                <div className="modal-overlay" onClick={() => setShowDownloadModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Download Chat History</h3>
+                        <p>Choose a format to download the chat history:</p>
+                        <div className="download-options">
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    downloadAsText();
+                                    setShowDownloadModal(false);
+                                }}
+                            >
+                                TXT
+                            </button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    downloadAsJson();
+                                    setShowDownloadModal(false);
+                                }}
+                            >
+                                JSON
+                            </button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    downloadAsPdf();
+                                    setShowDownloadModal(false);
+                                }}
+                            >
+                                PDF
+                            </button>
+                        </div>
+                        <button 
+                            className="btn btn-secondary"
+                            onClick={() => setShowDownloadModal(false)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
             )}
         </div>
     );

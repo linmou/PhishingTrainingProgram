@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
@@ -30,6 +30,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const channelRef = useRef<any>(null);
     const { user } = useAuth();
 
+    // Stable function to add display names to messages
+    const addDisplayNameToMessage = useCallback((message: any): Message => {
+        return {
+            ...message,
+            display_name: message.user_id === user?.id ? (user?.display_name || 'User') : 
+                         message.user_role === 'tutor' ? 'Tutor' :
+                         message.user_role === 'student' ? 'Student' : 'Observer'
+        };
+    }, [user?.id, user?.display_name]);
+
     // Real-time subscription for messages and typing indicators
     useEffect(() => {
         if (!currentRoom) return;
@@ -50,14 +60,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 (payload) => {
                     console.log('🟢 Real-time message received:', payload);
                     const newMessage = payload.new as any;
-                    
-                    // Add display_name based on user_role and current user context
-                    const messageWithDisplayName = {
-                        ...newMessage,
-                        display_name: newMessage.user_id === user?.id ? (user?.display_name || 'User') : 
-                                     newMessage.user_role === 'tutor' ? 'Tutor' :
-                                     newMessage.user_role === 'student' ? 'Student' : 'Observer'
-                    } as Message;
+                    const messageWithDisplayName = addDisplayNameToMessage(newMessage);
                     
                     setMessages(prev => {
                         console.log('📝 Adding message to state:', messageWithDisplayName);
@@ -90,42 +93,39 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoom, user?.id]);
+    }, [currentRoom, user?.id, addDisplayNameToMessage]);
+
+    // Stable polling function to prevent infinite loops
+    const pollMessages = useCallback(async () => {
+        if (!currentRoom) return;
+        
+        try {
+            const { data: messagesData, error } = await supabase
+                .from('messages')
+                .select('*')
+                .eq('room_id', currentRoom.id)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error('Failed to poll messages:', error);
+                return;
+            }
+
+            if (messagesData) {
+                // Add display_name to messages using stable function
+                const messagesWithDisplayName = messagesData.map(addDisplayNameToMessage);
+                setMessages(messagesWithDisplayName);
+            }
+        } catch (error) {
+            console.error('Error polling messages:', error);
+        }
+    }, [currentRoom, addDisplayNameToMessage]);
 
     // Polling mechanism for messages (temporary until real-time replication is available)
     useEffect(() => {
         if (!currentRoom) return;
 
         console.log('🔄 Starting message polling for room:', currentRoom.id);
-
-        const pollMessages = async () => {
-            try {
-                const { data: messagesData, error } = await supabase
-                    .from('messages')
-                    .select('*')
-                    .eq('room_id', currentRoom.id)
-                    .order('created_at', { ascending: true });
-
-                if (error) {
-                    console.error('Failed to poll messages:', error);
-                    return;
-                }
-
-                if (messagesData) {
-                    // Add display_name to messages
-                    const messagesWithDisplayName = messagesData.map(message => ({
-                        ...message,
-                        display_name: message.user_id === user?.id ? (user?.display_name || 'User') : 
-                                     message.user_role === 'tutor' ? 'Tutor' :
-                                     message.user_role === 'student' ? 'Student' : 'Observer'
-                    }));
-
-                    setMessages(messagesWithDisplayName);
-                }
-            } catch (error) {
-                console.error('Error polling messages:', error);
-            }
-        };
 
         // Poll immediately
         pollMessages();
@@ -137,7 +137,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('🔄 Stopping message polling');
             clearInterval(interval);
         };
-    }, [currentRoom, user?.id, user?.display_name]);
+    }, [currentRoom, pollMessages]);
 
     // Clean up stale typing indicators
     useEffect(() => {
@@ -216,7 +216,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const joinRoom = async (roomId: string): Promise<void> => {
+    const joinRoom = useCallback(async (roomId: string): Promise<void> => {
         setLoading(true);
         try {
             // Get room details
@@ -239,24 +239,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (messagesError) throw messagesError;
 
             // Add display_name to existing messages
-            const messagesWithDisplayName = (messagesData || []).map(message => ({
-                ...message,
-                display_name: message.user_role === 'tutor' ? 'Tutor' :
-                             message.user_role === 'student' ? 'Student' : 'Observer'
-            }));
+            const messagesWithDisplayName = (messagesData || []).map(addDisplayNameToMessage);
 
             setCurrentRoom(roomData);
             setMessages(messagesWithDisplayName);
         } finally {
             setLoading(false);
         }
-    };
+    }, [addDisplayNameToMessage]);
 
-    const leaveRoom = async (): Promise<void> => {
+    const leaveRoom = useCallback(async (): Promise<void> => {
         setCurrentRoom(null);
         setMessages([]);
         setAiConfig(null);
-    };
+    }, []);
 
     const sendMessage = async (content: string): Promise<void> => {
         if (!user || !currentRoom) {

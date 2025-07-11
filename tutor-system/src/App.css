@@ -4,6 +4,250 @@
     flex-direction: column;
 }
 
+/* Ensure full height layout */
+html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Modal styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.download-options {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+.download-options .btn {
+    flex: 1;
+    min-width: 80px;
+}
+
+/* Room Layout Styles */
+.room-layout {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+}
+
+.room-header-bar {
+    background: white;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+.room-title-section h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.room-title-section .room-description {
+    margin: 0 0 0.5rem 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.room-title-section .observer-count {
+    font-size: 0.8rem;
+    color: #007bff;
+    background: #e3f2fd;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}
+
+.room-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.room-controls .ai-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.room-controls .room-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.room-controls .btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+}
+
+.room-main-content {
+    flex: 1;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+}
+
+.room-image-section {
+    flex: 0 0 50%;
+    background: white;
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.room-image-fullsize {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: calc(100vh - 120px);
+}
+
+.chat-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    min-width: 0;
+}
+
+.chat-section-full {
+    flex: 1;
+}
+
+.chat-messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: calc(100vh - 200px);
+}
+
+.chat-input-form {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    display: flex;
+    gap: 0.75rem;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.chat-input-field {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.chat-input-field:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.waiting-message {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 2rem;
+}
+
+.observer-notice {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem;
+    background: #fff3cd;
+    text-align: center;
+    color: #856404;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .room-main-content {
+        flex-direction: column;
+    }
+    
+    .room-image-section {
+        flex: 0 0 40%;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .room-header-bar {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .room-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .chat-messages-container {
+        max-height: calc(60vh - 140px);
+    }
+}
+
+@media (max-width: 480px) {
+    .room-header-bar {
+        padding: 0.75rem 1rem;
+    }
+    
+    .room-title-section h1 {
+        font-size: 1.25rem;
+    }
+    
+    .room-controls .ai-controls {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .room-image-section {
+        flex: 0 0 35%;
+        padding: 0.5rem;
+    }
+    
+    .chat-input-form {
+        padding: 0.75rem;
+        gap: 0.5rem;
+    }
+}
+
 /* Typing indicators */
 .typing-indicators {
     padding: 0.5rem 1rem;

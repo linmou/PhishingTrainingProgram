@@ -67,6 +67,15 @@ Comprehensive unit tests exist for completed features:
 
 Tests use mocked Supabase clients to avoid external dependencies. Coverage thresholds are enforced at 80% for lines/functions/statements and 75% for branches.
 
+### Real-time Messaging Implementation
+The real-time chat feature uses a hybrid approach due to Supabase replication limitations:
+- **WebSocket subscription**: Set up for future real-time support when Supabase enables replication
+- **Polling mechanism**: Currently polls the database every 2 seconds for new messages
+- **Optimistic updates**: Messages appear immediately in the UI when sent, with automatic rollback on errors
+- **Display names**: Automatically added to messages based on user roles (Student/Tutor/Observer)
+
+**Note**: Once Supabase replication is enabled for the `messages` table, real-time events will work automatically without code changes.
+
 ### AI Assistant Module
 The system includes a dummy AI assistant feature for tutors:
 - Configurable per room (model, temperature, max tokens)
@@ -77,10 +86,11 @@ The system includes a dummy AI assistant feature for tutors:
 
 ### Key Implementation Patterns
 - **Authentication**: Supabase Auth with role-based access control and capacity limits (1 tutor + 1 student max)
-- **Real-time**: Supabase subscriptions for live chat and room updates
+- **Real-time**: Hybrid approach using Supabase subscriptions (ready for when replication is enabled) + polling fallback
 - **State Management**: React Context API for auth and room state
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Type Safety**: Full TypeScript coverage with strict mode enabled
+- **Performance**: Uses React useCallback hooks to prevent unnecessary re-renders in polling loops
 
 ## Troubleshooting
 

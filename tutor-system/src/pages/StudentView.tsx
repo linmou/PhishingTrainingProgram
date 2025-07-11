@@ -6,7 +6,6 @@ import RoomCard from '../components/RoomCard';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
-type Session = Database['public']['Tables']['sessions']['Row'];
 
 interface RoomWithTutor extends Room {
     tutor?: User;
