@@ -1,23 +1,30 @@
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
-import App from '../../App'; // Using App to get the full routing context
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabase';
+import App from '../App';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabase';
 
-const feature = loadFeature('./src/features/student_view.feature');
+const feature = loadFeature('./features/student_view.feature');
 
 // --- Mocks ---
-jest.mock('../../services/supabase');
-jest.mock('../../contexts/AuthContext', () => ({
-    ...jest.requireActual('../../contexts/AuthContext'),
+jest.mock('../services/supabase');
+jest.mock('../contexts/AuthContext', () => ({
+    ...jest.requireActual('../contexts/AuthContext'),
     useAuth: jest.fn(),
 }));
 
 const mockSupabaseClient = supabase as jest.Mocked<typeof supabase>;
+
+// Helper to track navigation
+let location: any;
+const LocationDisplay = () => {
+    location = useLocation();
+    return null;
+};
 
 // Helper for mocking the query chain
 const mockQuery = (data: any[] | null, error: any = null) => ({
@@ -30,41 +37,80 @@ const mockQuery = (data: any[] | null, error: any = null) => ({
 defineFeature(feature, test => {
     let mockUser: any;
     let mockRoomsData: any[];
-    let mockSessionsData: any; // Can be a single session or null
+    let mockSessionsData: any;
+    let realtimeCallback: ((payload: any) => void) | null = null;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        mockUser = { id: 'student-id-123', email: 'student@test.com', user_metadata: { role: 'student' } };
+        mockUser = { id: 's-1', email: 'student@test.com' };
         mockRoomsData = [];
         mockSessionsData = null;
+        realtimeCallback = null;
+        location = null;
 
-        // Default auth state
         (useAuth as jest.Mock).mockReturnValue({ user: mockUser, loading: false, userRole: 'student' });
 
-        // Default Supabase mock implementation
         mockSupabaseClient.from.mockImplementation((tableName: string) => {
-            if (tableName === 'rooms') {
-                return mockQuery(mockRoomsData);
-            }
+            if (tableName === 'rooms') return mockQuery(mockRoomsData);
             if (tableName === 'sessions') {
-                // The PGRST116 error for .single() when no row is found is a specific behavior we need to mock
                 const error = mockSessionsData ? null : { code: 'PGRST116' };
                 return mockQuery(mockSessionsData, error);
             }
             return mockQuery([]);
         });
 
-        const mockSubscription = { on: jest.fn().mockReturnThis(), subscribe: jest.fn() };
-        mockSupabaseClient.channel.mockReturnValue(mockSubscription);
+        const mockSubscription = {
+            on: jest.fn().mockImplementation((event, config, callback) => {
+                if (config.table === 'rooms' || config.table === 'sessions') {
+                    realtimeCallback = callback;
+                }
+                return { subscribe: jest.fn() };
+            }),
+            subscribe: jest.fn(),
+        };
+        mockSupabaseClient.channel.mockReturnValue(mockSubscription as any);
     });
 
     const renderStudentView = () => {
-        return render(
+        render(
             <MemoryRouter initialEntries={ ['/student']} >
             <App />
+            < LocationDisplay />
         </MemoryRouter>
         );
     };
+
+    // Scenario Implementations
+    test('Student selects their role and sees the dashboard with a loading state', ({ when, then, and }) => {
+        when('the user logs in and selects the "Student" role', () => {
+            renderStudentView();
+        });
+
+        then('the student dashboard should initially display a "Loading rooms..." message', () => {
+            expect(screen.getByText(/Loading/i)).toBeInTheDocument();
+        });
+
+        and('then the page should display "Available Rooms"', async () => {
+            await waitFor(() => {
+                expect(screen.getByText("Available Rooms")).toBeInTheDocument();
+            });
+        });
+    });
+
+    test('Student sees a list of available rooms', ({ given, and, when, then }) => {
+        given('a user is logged in as a "Student"', () => { });
+        and('a tutor has created a room with title "Phishing 101"', () => {
+            mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
+        });
+        when('the student is on the dashboard', () => {
+            renderStudentView();
+        });
+        then('the student should see the room "Phishing 101" in the list', async () => {
+            await waitFor(() => {
+                expect(screen.getByText("Phishing 101")).toBeInTheDocument();
+            });
+        });
+    });
 
     test('Student sees an updated message when no rooms are available', ({ given, and, when, then }) => {
         given('a user is logged in as a "Student"', () => { });
@@ -83,8 +129,26 @@ defineFeature(feature, test => {
             });
         });
 
-        and('the student should see the message "Please wait for a tutor to create a room."', () => {
-            expect(screen.getByText("Please wait for a tutor to create a room.")).toBeInTheDocument();
+        and('the student should see the message "Please wait for a tutor to create a room."', async () => {
+            await waitFor(() => {
+                expect(screen.getByText("Please wait for a tutor to create a room.")).toBeInTheDocument();
+            });
+        });
+    });
+
+    test('Student sees a new room appear in real-time', ({ given, when, then }) => {
+        given('the student is on the dashboard viewing an empty list of rooms', () => {
+            renderStudentView();
+        });
+        when('a tutor creates a new room with title "Live Hacking Demo"', async () => {
+            expect(realtimeCallback).toBeDefined();
+            mockRoomsData = [{ id: 'r-2', title: 'Live Hacking Demo', is_active: true }];
+            await act(async () => realtimeCallback!({ eventType: 'INSERT', new: mockRoomsData[0] }));
+        });
+        then('the "Live Hacking Demo" room should appear in the list automatically without a page refresh', async () => {
+            await waitFor(() => {
+                expect(screen.getByText("Live Hacking Demo")).toBeInTheDocument();
+            });
         });
     });
 
@@ -92,9 +156,16 @@ defineFeature(feature, test => {
         given('the user is logged in as a "Student"', () => { });
 
         and('the "Phishing 101" room is full', () => {
-            mockRoomsData = [{ id: 'room-1', title: 'Phishing 101', is_active: true }];
-            // Simulate a full room by having an active session for it
-            mockSessionsData = { id: 'session-1', room_id: 'room-1', status: 'active' };
+            mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
+            mockSessionsData = [
+                { user_id: 'tutor-1', role: 'tutor' },
+                { user_id: 'student-2', role: 'student' }
+            ];
+            mockSupabaseClient.from.mockImplementation((tableName: string) => {
+                if (tableName === 'rooms') return mockQuery(mockRoomsData);
+                if (tableName === 'sessions') return mockQuery(mockSessionsData);
+                return mockQuery([]);
+            });
         });
 
         when('the student views the list of available rooms', () => {
@@ -102,8 +173,6 @@ defineFeature(feature, test => {
         });
 
         then('the "Join" button for the "Phishing 101" room should be disabled', async () => {
-            // StudentView fetches rooms, then fetches sessions for each room.
-            // We need to wait for this process to complete.
             await waitFor(() => {
                 const joinButton = screen.getByRole('button', { name: /join/i });
                 expect(joinButton).toBeDisabled();
@@ -112,8 +181,7 @@ defineFeature(feature, test => {
 
         and('the student should see a "Room Full" status indicator for that room', async () => {
             await waitFor(() => {
-                // The component shows "Room Full" text as part of the RoomCard
-                expect(screen.getByText(/Room Full/i)).toBeInTheDocument();
+                expect(screen.getByText('Full')).toBeInTheDocument();
             });
         });
     });
@@ -122,24 +190,47 @@ defineFeature(feature, test => {
         given('the user is logged in as a "Student"', () => { });
 
         and('the system will produce an error when they try to join "Phishing 101"', () => {
-            // This is harder to test without modifying code, as the error happens on navigation.
-            // A true test for this would involve mocking the navigation or the component on the target page (`RoomPage`).
-            // For now, we'll focus on UI feedback if an error were to be displayed on the StudentView itself.
-            // This scenario highlights a potential need for better error handling in the component.
-            console.log("This scenario is pending a more robust error handling implementation in the StudentView UI.");
+            mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
+            const mockInsert = jest.fn().mockResolvedValue({ error: { message: 'Insert failed' } });
+
+            mockSupabaseClient.from.mockImplementation((tableName: string) => {
+                if (tableName === 'rooms') return mockQuery(mockRoomsData);
+                if (tableName === 'sessions') {
+                    const query = mockQuery(null, { code: 'PGRST116' }); // No existing session
+                    return { ...query, insert: mockInsert };
+                }
+                return mockQuery([]);
+            });
         });
 
-        when('the student clicks the "Join" button for the "Phishing 101" room', () => {
-            mockRoomsData = [{ id: 'room-1', title: 'Phishing 101', is_active: true }];
-            mockSessionsData = null; // Room is available
+        when('the student clicks the "Join" button for the "Phishing 101" room', async () => {
             renderStudentView();
-            // In a real implementation, we'd fireEvent.click here, but since we can't test the outcome yet, we'll skip.
+            await waitFor(() => screen.getByText("Phishing 101"));
+            fireEvent.click(screen.getByRole('button', { name: /join/i }));
         });
 
-        then('the student should see an error message "Failed to join the room. Please try again."', () => {
-            // This assertion would fail, as there is currently no logic to display such an error on this page.
-            // This is a correct RED phase failure.
-            expect(screen.queryByText("Failed to join the room. Please try again.")).not.toBeInTheDocument();
+        then('the student should see an error message "Failed to join the room. Please try again."', async () => {
+            await waitFor(() => {
+                expect(screen.getByText("Failed to join the room. Please try again.")).toBeInTheDocument();
+            });
+        });
+    });
+
+    test('Student joins a room successfully', ({ given, and, when, then }) => {
+        given('a user is logged in as a "Student"', () => { });
+        and('the "Phishing 101" room is available and not full', () => {
+            mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
+            mockSessionsData = null;
+        });
+        when('the student clicks the "Join" button for the "Phishing 101" room', async () => {
+            renderStudentView();
+            await waitFor(() => screen.getByText("Phishing 101"));
+            fireEvent.click(screen.getByRole('button', { name: /join/i }));
+        });
+        then('the user should be navigated to the room page for "Phishing 101"', async () => {
+            await waitFor(() => {
+                expect(location.pathname).toBe('/room/r-1');
+            });
         });
     });
 }); 

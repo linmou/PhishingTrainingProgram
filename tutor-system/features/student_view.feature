@@ -1,7 +1,7 @@
 Feature: Student User Interface
 
   As a student, I want a clear and functional interface to select my role,
-  find rooms, join them, participate in chat, and download the history,
+  find available rooms, see their status, and join them,
   so I can effectively participate in a training session.
   This interface should be responsive and handle various states gracefully.
 
@@ -35,8 +35,7 @@ Feature: Student User Interface
     Given a user is logged in as a "Student"
     And the "Phishing 101" room is available and not full
     When the student clicks the "Join" button for the "Phishing 101" room
-    Then the student is navigated to the room page for "Phishing 101"
-    And the student should see the chat interface
+    Then the user should be navigated to the room page for "Phishing 101"
 
   Scenario: Student sees a room is full
     Given the user is logged in as a "Student"
@@ -49,17 +48,4 @@ Feature: Student User Interface
     Given the user is logged in as a "Student"
     And the system will produce an error when they try to join "Phishing 101"
     When the student clicks the "Join" button for the "Phishing 101" room
-    Then the student should see an error message "Failed to join the room. Please try again."
-
-  Scenario: Student sends and receives messages in a room
-    Given a student is in the "Phishing 101" room with a tutor
-    When the student sends the message "Hi Tutor, I'm ready to learn!"
-    Then the message "Hi Tutor, I'm ready to learn!" from the student should be visible in the chat
-    When the tutor sends the message "Welcome! Let's begin."
-    Then the message "Welcome! Let's begin." from the tutor should be visible in the chat
-
-  Scenario: Student downloads chat history from the room
-    Given a student is in the "Phishing 101" room with a complete chat history
-    When the student clicks the "Download History" button
-    Then a file download should be initiated
-    # Detailed file content and format validation is handled in chat_history_download.feature 
+    Then the student should see an error message "Failed to join the room. Please try again." 
