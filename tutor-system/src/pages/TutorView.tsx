@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createRoom, getRoomsByTutor } from '../services/supabase';
 import { Database } from '../types/database';
@@ -14,12 +14,14 @@ interface PresetImage {
 
 const TutorView: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [showCreateForm, setShowCreateForm] = useState(false);
     
     // Preset images data
     const presetImages: PresetImage[] = [
@@ -31,13 +33,7 @@ const TutorView: React.FC = () => {
         { id: 'default', name: 'Default Room', url: '/images/room-presets/privacy_3.png' }
     ];
 
-    useEffect(() => {
-        if (user?.id) {
-            loadRooms();
-        }
-    }, [user]);
-
-    const loadRooms = async () => {
+    const loadRooms = useCallback(async () => {
         try {
             if (user?.id) {
                 const userRooms = await getRoomsByTutor(user.id);
@@ -46,7 +42,13 @@ const TutorView: React.FC = () => {
         } catch (err) {
             console.error('Error loading rooms:', err);
         }
-    };
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (user?.id) {
+            loadRooms();
+        }
+    }, [user, loadRooms]);
 
     const handleImageSelect = (imageId: string) => {
         setSelectedImageId(imageId);
@@ -88,15 +90,16 @@ const TutorView: React.FC = () => {
                 image_url: imageUrl
             };
 
-            await createRoom(roomData);
+            const newRoom = await createRoom(roomData);
 
             // Reset form
             setTitle('');
             setDescription('');
             setSelectedImageId(null);
+            setShowCreateForm(false);
 
-            // Reload rooms
-            await loadRooms();
+            // Navigate to the new room
+            navigate(`/room/${newRoom.id}`);
         } catch (err: any) {
             setError(err.message || 'Failed to create room');
         } finally {
@@ -114,8 +117,19 @@ const TutorView: React.FC = () => {
                     <p>Capacity Status: [Will be implemented in Task 4]</p>
                 </div>
 
-                <h2>Create New Room</h2>
-                <form aria-label="Create room form" onSubmit={handleSubmit}>
+                {!showCreateForm && (
+                    <button 
+                        className="btn btn-primary"
+                        onClick={() => setShowCreateForm(true)}
+                    >
+                        Create a new Room
+                    </button>
+                )}
+
+                {showCreateForm && (
+                    <>
+                        <h2>Create New Room</h2>
+                        <form aria-label="Create room form" onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label htmlFor="room-title">Room Title</label>
                         <input 
@@ -212,6 +226,8 @@ const TutorView: React.FC = () => {
                         {isCreating ? 'Creating Room...' : 'Create Room'}
                     </button>
                 </form>
+                    </>
+                )}
 
                 <h2>Your Rooms</h2>
                 {rooms.length > 0 ? (
@@ -229,6 +245,12 @@ const TutorView: React.FC = () => {
                                 )}
                                 <p>Status: {room.is_active ? 'Active' : 'Inactive'}</p>
                                 <p>Created: {new Date(room.created_at).toLocaleDateString()}</p>
+                                <Link 
+                                    to={`/room/${room.id}`}
+                                    className="btn btn-primary"
+                                >
+                                    Enter Room
+                                </Link>
                             </div>
                         ))}
                     </div>

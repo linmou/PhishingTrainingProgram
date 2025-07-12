@@ -13,6 +13,7 @@ const RoomPage: React.FC = () => {
     const {
         currentRoom,
         messages,
+        participants,
         loading,
         typingUsers,
         joinRoom,
@@ -22,7 +23,8 @@ const RoomPage: React.FC = () => {
         startTyping,
         stopTyping,
         aiConfig,
-        loadingAI
+        loadingAI,
+        downloadChatHistory
     } = useRoom();
 
     const [messageText, setMessageText] = useState('');
@@ -250,6 +252,23 @@ const RoomPage: React.FC = () => {
                             👁️ {currentRoom.observer_count} observer{currentRoom.observer_count !== 1 ? 's' : ''}
                         </span>
                     )}
+                    
+                    {/* Participant List */}
+                    {participants && participants.length > 0 && (
+                        <div className="participants-section">
+                            <p className="participants-title">Participants:</p>
+                            <div className="participants-list">
+                                {participants.map(participant => (
+                                    <span key={participant.id} className="participant-item">
+                                        {participant.display_name}
+                                        {participant.current_role && (
+                                            <span className="participant-role"> ({participant.current_role})</span>
+                                        )}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
                 
                 <div className="room-controls">
@@ -284,9 +303,9 @@ const RoomPage: React.FC = () => {
                     <div className="room-actions">
                         <button 
                             className="btn btn-secondary btn-small"
-                            onClick={() => setShowDownloadModal(true)}
+                            onClick={downloadChatHistory}
                         >
-                            Download Chat
+                            Download History
                         </button>
                         <Link to="/" className="btn btn-secondary btn-small">
                             Leave Room
@@ -353,7 +372,7 @@ const RoomPage: React.FC = () => {
                                 value={messageText}
                                 onChange={handleInputChange}
                                 onBlur={handleInputBlur}
-                                placeholder="Type your message..."
+                                placeholder="Type a message..."
                                 disabled={sendingMessage}
                                 className="chat-input-field"
                             />

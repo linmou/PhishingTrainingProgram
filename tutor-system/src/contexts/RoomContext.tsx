@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -22,6 +22,7 @@ export const useRoom = () => {
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [participants, setParticipants] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [aiConfig, setAiConfig] = useState<AIAssistantConfig | null>(null);
     const [loadingAI, setLoadingAI] = useState(false);
@@ -238,19 +239,41 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (messagesError) throw messagesError;
 
+            // Get unique user IDs from messages and room
+            const userIds = new Set<string>();
+            if (roomData.tutor_id) userIds.add(roomData.tutor_id);
+            if (messagesData) {
+                messagesData.forEach(msg => userIds.add(msg.user_id));
+            }
+            
+            // Always include current user if they're not already in the list
+            if (user?.id) {
+                userIds.add(user.id);
+            }
+
+            // Fetch user details for all participants
+            const { data: participantsData, error: participantsError } = await supabase
+                .from('users')
+                .select('*')
+                .in('id', Array.from(userIds));
+
+            if (participantsError) throw participantsError;
+
             // Add display_name to existing messages
             const messagesWithDisplayName = (messagesData || []).map(addDisplayNameToMessage);
 
             setCurrentRoom(roomData);
             setMessages(messagesWithDisplayName);
+            setParticipants(participantsData || []);
         } finally {
             setLoading(false);
         }
-    }, [addDisplayNameToMessage]);
+    }, [addDisplayNameToMessage, user?.id]);
 
     const leaveRoom = useCallback(async (): Promise<void> => {
         setCurrentRoom(null);
         setMessages([]);
+        setParticipants([]);
         setAiConfig(null);
     }, []);
 
@@ -477,9 +500,36 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const downloadChatHistory = () => {
+        if (!currentRoom || !messages) return;
+
+        const roomTitle = currentRoom.title.replace(/\s+/g, '_');
+        const content = [
+            `Room: ${currentRoom.title}`,
+            `Created: ${new Date(currentRoom.created_at).toISOString()}`,
+            '',
+            'Messages:',
+            '=========',
+            ...messages.map(message => 
+                `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}`
+            )
+        ].join('\n');
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${roomTitle}_chat_history.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const value: RoomContextType = {
         currentRoom,
         messages,
+        participants,
         loading,
         typingUsers,
         createRoom,
@@ -491,7 +541,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         startTyping,
         stopTyping,
         aiConfig,
-        loadingAI
+        loadingAI,
+        downloadChatHistory
     };
 
     return (

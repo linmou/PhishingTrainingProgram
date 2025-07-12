@@ -26,11 +26,14 @@ jest.mock('../../services/supabase', () => ({
 
 // Mock navigation
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-  Link: ({ children, to }: any) => <a href={to}>{children}</a>,
-}));
+jest.mock('react-router-dom', () => {
+  const React = require('react');
+  return {
+    ...jest.requireActual('react-router-dom'),
+    useNavigate: () => mockNavigate,
+    Link: jest.fn(({ children, to }) => React.createElement('a', { href: to }, children)),
+  };
+});
 
 // Mock AuthContext
 let mockAuthUser: any = null;
@@ -50,15 +53,20 @@ jest.mock('../../contexts/AuthContext', () => ({
 let mockRoomContextValue: any = {
   currentRoom: null,
   messages: [],
+  participants: [],
   loading: false,
+  typingUsers: [],
   createRoom: jest.fn(),
   joinRoom: jest.fn(),
   leaveRoom: jest.fn(),
   sendMessage: jest.fn(),
   generateAIResponse: jest.fn(),
   toggleAIAssistant: jest.fn(),
+  startTyping: jest.fn(),
+  stopTyping: jest.fn(),
   aiConfig: null,
   loadingAI: false,
+  downloadChatHistory: jest.fn(),
 };
 
 jest.mock('../../contexts/RoomContext', () => ({
@@ -117,9 +125,25 @@ const setupSupabaseMocks = (rooms = [], sessions = null) => {
       return {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        insert: jest.fn(() => ({
+          select: jest.fn().mockResolvedValue({
+            data: [{ id: 'session-123', room_id: '2', student_id: 'jane-student-id' }],
+            error: null,
+          }),
+        })),
         single: jest.fn().mockResolvedValue({
           data: sessions,
           error: sessions ? null : { code: 'PGRST116' },
+        }),
+      };
+    }
+    if (table === 'users') {
+      return {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: mockAuthUser,
+          error: null,
         }),
       };
     }
@@ -250,7 +274,7 @@ describe('Feature: Room Discovery and Joining', () => {
         // Then I should see waiting messages
         await waitFor(() => {
           expect(screen.getByText('No rooms available')).toBeInTheDocument();
-          expect(screen.getByText('Please wait for a tutor to create a room')).toBeInTheDocument();
+          expect(screen.getByText('Please wait for a tutor to create a room.')).toBeInTheDocument();
         });
       });
     });

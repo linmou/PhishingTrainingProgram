@@ -111,6 +111,7 @@ export interface TypingIndicator {
 export interface RoomContextType {
     currentRoom: Room | null;
     messages: Message[];
+    participants: User[];
     loading: boolean;
     typingUsers: TypingIndicator[];
     createRoom: (title: string, description?: string, imageFile?: File) => Promise<void>;
@@ -123,4 +124,5 @@ export interface RoomContextType {
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
+    downloadChatHistory: () => void;
 } 

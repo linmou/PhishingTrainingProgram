@@ -12,10 +12,23 @@ export const useAuth = () => {
     return context;
 };
 
-// Generate a UUID v4 for users
-const generateUserId = () => {
-    // Generate a proper UUID v4
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+// Generate a consistent user ID based on display name and role
+const generateUserId = (displayName: string, role: UserRole) => {
+    // Normalize the display name: lowercase, trim, remove extra spaces
+    const normalized = displayName.toLowerCase().trim().replace(/\s+/g, ' ');
+    
+    // Create a simple hash from the normalized name and role
+    const input = `${normalized}-${role}`;
+    let hash = 0;
+    for (let i = 0; i < input.length; i++) {
+        const char = input.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    // Convert to a UUID-like format for consistency
+    const hashStr = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hashStr}-${role.substring(0, 4)}-4xxx-yxxx-xxxxxxxxxxxx`.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
@@ -78,37 +91,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // No capacity limits - users can join with any role
 
-            // Create user object
-            const newUser: User = {
-                id: generateUserId(),
-                display_name: displayName,
-                current_role: role,
-                status: 'active',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
+            // Generate consistent user ID based on name and role
+            const userId = generateUserId(displayName, role);
 
-            console.log('👤 AuthContext: Creating user object:', newUser);
-
-            // Store user in the database (without Supabase Auth)
-            console.log('💾 AuthContext: Inserting user into database...');
-            const { data: insertData, error: profileError } = await supabase
+            // Check if user already exists in database
+            console.log('🔍 AuthContext: Checking if user exists...');
+            const { data: existingUser, error: checkError } = await supabase
                 .from('users')
-                .insert({
-                    id: newUser.id,
-                    display_name: newUser.display_name,
-                    current_role: newUser.current_role,
-                    status: newUser.status
-                })
-                .select()
+                .select('*')
+                .eq('id', userId)
                 .single();
 
-            if (profileError) {
-                console.error('❌ AuthContext: Profile creation error:', profileError);
-                throw new Error(`Failed to create profile: ${profileError.message}`);
+            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+                console.error('❌ AuthContext: Error checking existing user:', checkError);
+                throw new Error(`Failed to check existing user: ${checkError.message}`);
             }
 
-            console.log('✅ AuthContext: User created in database:', insertData);
+            let newUser: User;
+            
+            if (existingUser) {
+                console.log('✅ AuthContext: Found existing user:', existingUser);
+                // Update the existing user's last login time
+                const { data: updatedUser, error: updateError } = await supabase
+                    .from('users')
+                    .update({
+                        current_role: role,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', userId)
+                    .select()
+                    .single();
+
+                if (updateError) {
+                    console.error('❌ AuthContext: Error updating user:', updateError);
+                    throw new Error(`Failed to update user: ${updateError.message}`);
+                }
+                
+                newUser = updatedUser;
+            } else {
+                // Create new user object
+                newUser = {
+                    id: userId,
+                    display_name: displayName,
+                    current_role: role,
+                    status: 'active',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                console.log('👤 AuthContext: Creating user object:', newUser);
+
+                // Store user in the database (without Supabase Auth)
+                console.log('💾 AuthContext: Inserting user into database...');
+                const { data: insertData, error: profileError } = await supabase
+                    .from('users')
+                    .insert({
+                        id: newUser.id,
+                        display_name: newUser.display_name,
+                        current_role: newUser.current_role,
+                        status: newUser.status
+                    })
+                    .select()
+                    .single();
+
+                if (profileError) {
+                    console.error('❌ AuthContext: Profile creation error:', profileError);
+                    throw new Error(`Failed to create profile: ${profileError.message}`);
+                }
+
+                console.log('✅ AuthContext: User created in database:', insertData);
+                newUser = insertData;
+            }
 
             // Store user locally
             localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
@@ -137,25 +190,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const signOut = async (): Promise<void> => {
         console.log('👋 AuthContext: Signing out...');
-        try {
-            if (user) {
-                console.log('🗑️ AuthContext: Removing user from database...');
-                const { error } = await supabase
-                    .from('users')
-                    .delete()
-                    .eq('id', user.id);
-
-                if (error) {
-                    console.error('❌ AuthContext: Error removing user from database:', error);
-                } else {
-                    console.log('✅ AuthContext: User removed from database');
-                }
-            }
-        } catch (error) {
-            console.error('❌ AuthContext: Error during sign out:', error);
-        }
-
-        // Always clear local storage regardless of database operation
+        // Don't delete user from database - just clear local session
+        // This preserves user data and room associations
+        
+        // Clear local storage
         localStorage.removeItem(USER_STORAGE_KEY);
         setUser(null);
         console.log('✅ AuthContext: Sign out complete');
