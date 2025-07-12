@@ -244,6 +244,11 @@ const RoomPage: React.FC = () => {
             <div className="room-header-bar">
                 <div className="room-title-section">
                     <h1>{currentRoom.title}</h1>
+                    {user?.current_role === 'observer' && (
+                        <div className="observer-mode-indicator" data-testid="observer-mode-indicator">
+                            <span className="observer-mode-badge">Observer Mode</span>
+                        </div>
+                    )}
                     {currentRoom.description && (
                         <p className="room-description">{currentRoom.description}</p>
                     )}
@@ -266,6 +271,13 @@ const RoomPage: React.FC = () => {
                                         )}
                                     </span>
                                 ))}
+                                {/* Always show current user if they're an observer */}
+                                {user?.current_role === 'observer' && !participants.find(p => p.id === user.id) && (
+                                    <span className="participant-item">
+                                        {user.display_name}
+                                        <span className="participant-role"> (observer)</span>
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}
@@ -388,6 +400,7 @@ const RoomPage: React.FC = () => {
 
                     {!canSendMessages && user?.current_role === 'observer' && (
                         <div className="observer-notice">
+                            <p><strong>Read-Only Mode</strong></p>
                             <p>👁️ You are observing this session. You cannot send messages.</p>
                         </div>
                     )}

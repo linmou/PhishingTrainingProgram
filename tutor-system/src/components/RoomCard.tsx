@@ -22,7 +22,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
     roomStatus = 'Available'
 }) => {
     return (
-        <div className="room-card" style={{
+        <div className="room-card" data-testid={`room-card-${room.id}`} style={{
             border: '1px solid #ddd',
             borderRadius: '8px',
             padding: '15px',

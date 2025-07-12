@@ -154,4 +154,129 @@ export const getRoomsByTutor = async (tutorId: string) => {
     }
     console.log('✅ Supabase Service: Rooms retrieved:', { count: data?.length || 0 });
     return data || []
+}
+
+// Observer-specific functions
+export const getRoomsByObserver = async () => {
+    console.log('👁️ Supabase Service: Getting rooms for observer');
+    const { data, error } = await supabase
+        .from('rooms')
+        .select(`
+            *,
+            tutor:users!tutor_id(*)
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('❌ Supabase Service: Get observer rooms error:', error);
+        throw error;
+    }
+    console.log('✅ Supabase Service: Observer rooms retrieved:', { count: data?.length || 0 });
+    return data || []
+}
+
+export const joinRoomAsObserver = async (roomId: string, observerId: string) => {
+    console.log('🔗 Supabase Service: Observer joining room:', { roomId, observerId });
+    
+    // Get room details first
+    const { data: room, error: roomError } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('id', roomId)
+        .single()
+
+    if (roomError) {
+        console.error('❌ Supabase Service: Room not found:', roomError);
+        throw roomError;
+    }
+
+    // Create session record for observer
+    const { data, error } = await supabase
+        .from('sessions')
+        .insert({
+            room_id: roomId,
+            tutor_id: room.tutor_id,
+            observer_id: observerId,
+            status: 'active'
+        })
+        .select()
+        .single()
+
+    if (error) {
+        console.error('❌ Supabase Service: Observer join error:', error);
+        throw error;
+    }
+    
+    console.log('✅ Supabase Service: Observer joined room successfully');
+    return { success: true, session: data }
+}
+
+export const getMessagesForRoom = async (roomId: string) => {
+    console.log('💬 Supabase Service: Getting messages for room:', roomId);
+    const { data, error } = await supabase
+        .from('messages')
+        .select(`
+            *,
+            user:users!user_id(display_name)
+        `)
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+
+    if (error) {
+        console.error('❌ Supabase Service: Get messages error:', error);
+        throw error;
+    }
+    console.log('✅ Supabase Service: Messages retrieved:', { count: data?.length || 0 });
+    return data || []
+}
+
+export const downloadChatHistory = async (roomId: string, messages: any[]) => {
+    console.log('📥 Supabase Service: Downloading chat history for room:', roomId);
+    
+    // Get room details
+    const { data: room, error: roomError } = await supabase
+        .from('rooms')
+        .select(`
+            *,
+            tutor:users!tutor_id(display_name)
+        `)
+        .eq('id', roomId)
+        .single()
+
+    if (roomError) {
+        console.error('❌ Supabase Service: Room not found for download:', roomError);
+        throw roomError;
+    }
+
+    // Format chat history
+    const chatHistory = {
+        room: {
+            title: room.title,
+            description: room.description,
+            tutor: room.tutor?.display_name,
+            created_at: room.created_at
+        },
+        messages: messages.map(msg => ({
+            content: msg.content,
+            user_role: msg.user_role,
+            display_name: msg.display_name || msg.user?.display_name,
+            created_at: msg.created_at
+        })),
+        exported_at: new Date().toISOString()
+    }
+
+    // Create and download file
+    const blob = new Blob([JSON.stringify(chatHistory, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-history-${roomId}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    console.log('✅ Supabase Service: Chat history downloaded successfully');
+    return { success: true }
 } 

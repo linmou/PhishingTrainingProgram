@@ -128,7 +128,7 @@
                     "id": 11,
                     "title": "User Interface - Observer View",
                     "description": "Create responsive UI for observer users",
-                    "status": "pending",
+                    "status": "done",
                     "priority": "low",
                     "dependencies": [
                         3
