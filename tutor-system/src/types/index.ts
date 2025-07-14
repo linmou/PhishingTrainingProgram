@@ -108,6 +108,8 @@ export interface AuthContextType {
     joinWithNameAndRole: (displayName: string, role: UserRole) => Promise<void>;
     signOut: () => Promise<void>;
     setUserRole: (role: UserRole) => Promise<void>;
+    // Update user profile (display name, avatar, etc.)
+    updateUserProfile: (updates: Partial<Pick<User, 'display_name' | 'avatar_url'>>) => Promise<void>;
 }
 
 // Typing indicator type

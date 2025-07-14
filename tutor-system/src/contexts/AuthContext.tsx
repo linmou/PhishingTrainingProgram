@@ -17,32 +17,28 @@ const generateUserId = (displayName: string, role: UserRole) => {
     // Normalize the display name: lowercase, trim, remove extra spaces
     const normalized = displayName.toLowerCase().trim().replace(/\s+/g, ' ');
     
-    // Create a simple hash from the normalized name and role
+    // Create a deterministic hash from the normalized name and role
     const input = `${normalized}-${role}`;
-    let hash = 0;
-    for (let i = 0; i < input.length; i++) {
-        const char = input.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32-bit integer
+    
+    // Generate multiple hash values to fill UUID segments
+    const hashes = [];
+    for (let i = 0; i < 5; i++) {
+        let hash = i * 31; // Different starting point for each hash
+        for (let j = 0; j < input.length; j++) {
+            const char = input.charCodeAt(j);
+            hash = ((hash << 5) - hash + char + i * 17) & 0xffffffff;
+        }
+        hashes.push(Math.abs(hash).toString(16).padStart(8, '0'));
     }
     
-    // Convert to a proper UUID format with valid hex characters only
-    const hashStr = Math.abs(hash).toString(16).padStart(8, '0');
+    // Build UUID segments: 8-4-4-4-12 characters
+    const segment1 = hashes[0].substring(0, 8);           // 8 chars
+    const segment2 = hashes[1].substring(0, 4);           // 4 chars
+    const segment3 = '4' + hashes[2].substring(0, 3);     // 4 chars (starts with 4 for UUID v4)
+    const segment4 = 'a' + hashes[3].substring(0, 3);     // 4 chars (starts with a for variant)
+    const segment5 = hashes[4].substring(0, 8) + hashes[0].substring(0, 4); // 12 chars
     
-    // Create a simple hash for the role to get valid hex characters
-    let roleHash = 0;
-    for (let i = 0; i < role.length; i++) {
-        roleHash = ((roleHash << 5) - roleHash) + role.charCodeAt(i);
-        roleHash = roleHash & roleHash;
-    }
-    const roleHex = Math.abs(roleHash).toString(16).padStart(4, '0').substring(0, 4);
-    
-    // Generate a proper UUID with valid hex characters
-    return `${hashStr}-${roleHex}-4xxx-yxxx-xxxxxxxxxxxx`.replace(/[xy]/g, function (c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
-        return v.toString(16);
-    });
+    return `${segment1}-${segment2}-${segment3}-${segment4}-${segment5}`;
 };
 
 // Local storage keys
@@ -305,12 +301,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
+    const updateUserProfile = async (updates: Partial<Pick<User, 'display_name' | 'avatar_url'>>): Promise<void> => {
+        if (!user) throw new Error('No user logged in');
+
+        console.log('👤 AuthContext: Updating user profile:', updates);
+
+        // Update user profile in database
+        console.log('📝 AuthContext: Updating user profile in database...');
+        const { error } = await supabase
+            .from('users')
+            .update({
+                ...updates,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', user.id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('❌ AuthContext: Error updating profile:', error);
+            throw error;
+        }
+
+        // Update local user
+        const updatedUser = {
+            ...user,
+            ...updates,
+            updated_at: new Date().toISOString()
+        };
+
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+        setUser(updatedUser);
+
+        console.log('✅ AuthContext: Profile updated successfully:', {
+            userId: updatedUser.id,
+            updates
+        });
+    };
+
     const value: AuthContextType = {
         user,
         loading,
         joinWithNameAndRole,
         signOut,
-        setUserRole
+        setUserRole,
+        updateUserProfile
     };
 
     return (

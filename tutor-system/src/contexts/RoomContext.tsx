@@ -115,7 +115,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (messagesData) {
                 // Add display_name to messages using stable function
                 const messagesWithDisplayName = messagesData.map(addDisplayNameToMessage);
-                setMessages(messagesWithDisplayName);
+                
+                // Preserve pre-populated messages by combining them with database messages
+                setMessages(prevMessages => {
+                    // Separate pre-populated messages (those with IDs starting with 'prepop-')
+                    const prePopulatedMessages = prevMessages.filter(msg => msg.id.startsWith('prepop-'));
+                    
+                    // Combine pre-populated messages with fresh database messages
+                    return [...prePopulatedMessages, ...messagesWithDisplayName];
+                });
             }
         } catch (error) {
             console.error('Error polling messages:', error);
@@ -239,6 +247,34 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (messagesError) throw messagesError;
 
+            // Process pre-populated dialogue if it exists
+            let prePopulatedMessages: Message[] = [];
+            if (roomData.pre_populated_dialogue && Array.isArray(roomData.pre_populated_dialogue)) {
+                console.log('🔄 Processing pre-populated dialogue:', roomData.pre_populated_dialogue);
+                
+                prePopulatedMessages = roomData.pre_populated_dialogue.map((item: any, index: number) => {
+                    // Create a timestamp that's earlier than any real messages
+                    const baseTimestamp = new Date(roomData.created_at);
+                    baseTimestamp.setSeconds(baseTimestamp.getSeconds() + index);
+                    
+                    return {
+                        id: `prepop-${roomId}-${index}`,
+                        room_id: roomId,
+                        user_id: 'system', // Use system as user_id for pre-populated messages
+                        content: item.message,
+                        user_role: item.role as UserRole,
+                        is_ai_generated: false,
+                        ai_model_used: null,
+                        ai_response_time_ms: null,
+                        parent_message_id: null,
+                        created_at: baseTimestamp.toISOString(),
+                        display_name: item.user_name
+                    } as Message;
+                });
+                
+                console.log('✅ Created pre-populated messages:', prePopulatedMessages);
+            }
+
             // Get unique user IDs from messages and room
             const userIds = new Set<string>();
             if (roomData.tutor_id) userIds.add(roomData.tutor_id);
@@ -262,8 +298,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Add display_name to existing messages
             const messagesWithDisplayName = (messagesData || []).map(addDisplayNameToMessage);
 
+            // Combine pre-populated messages with existing messages
+            const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
+
             setCurrentRoom(roomData);
-            setMessages(messagesWithDisplayName);
+            setMessages(allMessages);
             setParticipants(participantsData || []);
         } finally {
             setLoading(false);

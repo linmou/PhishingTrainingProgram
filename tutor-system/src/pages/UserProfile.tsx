@@ -14,11 +14,10 @@ import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 import AvatarDisplay from '../components/AvatarDisplay';
 import { deleteAvatarImage } from '../services/imageUpload';
-import { supabase } from '../services/supabase';
 import { ImageUploadResult } from '../types';
 
 const UserProfile: React.FC = () => {
-    const { user, loading, signOut, setUserRole } = useAuth();
+    const { user, loading, signOut, setUserRole, updateUserProfile } = useAuth();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [displayName, setDisplayName] = useState(user?.display_name || '');
@@ -43,15 +42,8 @@ const UserProfile: React.FC = () => {
         setIsSaving(true);
 
         try {
-            // Update user's avatar_url in the database
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({ avatar_url: avatarUrl })
-                .eq('id', user.id);
-
-            if (updateError) {
-                throw updateError;
-            }
+            // Update user's avatar using the context method
+            await updateUserProfile({ avatar_url: avatarUrl });
 
             setCurrentAvatarUrl(avatarUrl);
             setSaveMessage('Avatar updated successfully!');
@@ -63,15 +55,24 @@ const UserProfile: React.FC = () => {
         } finally {
             setIsSaving(false);
         }
-    }, [user]);
+    }, [user, updateUserProfile]);
 
     const handleAvatarUploadSuccess = useCallback(async (result: ImageUploadResult) => {
         if (result.success && result.avatarUrl) {
-            setCurrentAvatarUrl(result.avatarUrl);
-            setSaveMessage('Avatar updated successfully!');
-            setTimeout(() => setSaveMessage(''), 3000);
+            try {
+                // Update user's avatar using the context method
+                await updateUserProfile({ avatar_url: result.avatarUrl });
+                
+                setCurrentAvatarUrl(result.avatarUrl);
+                setSaveMessage('Avatar updated successfully!');
+                setTimeout(() => setSaveMessage(''), 3000);
+            } catch (err) {
+                console.error('Error updating avatar after upload:', err);
+                setError('Avatar uploaded but failed to update profile');
+                setTimeout(() => setError(''), 5000);
+            }
         }
-    }, []);
+    }, [updateUserProfile]);
 
     const handleAvatarUploadError = useCallback((error: string) => {
         setError(`Avatar upload failed: ${error}`);
@@ -111,14 +112,7 @@ const UserProfile: React.FC = () => {
         try {
             // Update display name if changed
             if (displayName !== user.display_name) {
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update({ display_name: displayName })
-                    .eq('id', user.id);
-
-                if (updateError) {
-                    throw updateError;
-                }
+                await updateUserProfile({ display_name: displayName });
             }
 
             // Update role if changed
@@ -137,7 +131,7 @@ const UserProfile: React.FC = () => {
         } finally {
             setIsSaving(false);
         }
-    }, [displayName, selectedRole, user, setUserRole]);
+    }, [displayName, selectedRole, user, setUserRole, updateUserProfile]);
 
     const handleSignOut = useCallback(async () => {
         try {
@@ -147,6 +141,15 @@ const UserProfile: React.FC = () => {
             console.error('Error signing out:', err);
         }
     }, [signOut, navigate]);
+
+    // Sync local state with context user changes
+    React.useEffect(() => {
+        if (user) {
+            setDisplayName(user.display_name || '');
+            setSelectedRole(user.current_role || '');
+            setCurrentAvatarUrl(user.avatar_url || null);
+        }
+    }, [user]);
 
     // Handle window resize for responsive design
     React.useEffect(() => {
