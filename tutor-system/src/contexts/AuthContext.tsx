@@ -26,11 +26,21 @@ const generateUserId = (displayName: string, role: UserRole) => {
         hash = hash & hash; // Convert to 32-bit integer
     }
     
-    // Convert to a UUID-like format for consistency
+    // Convert to a proper UUID format with valid hex characters only
     const hashStr = Math.abs(hash).toString(16).padStart(8, '0');
-    return `${hashStr}-${role.substring(0, 4)}-4xxx-yxxx-xxxxxxxxxxxx`.replace(/[xy]/g, function (c) {
+    
+    // Create a simple hash for the role to get valid hex characters
+    let roleHash = 0;
+    for (let i = 0; i < role.length; i++) {
+        roleHash = ((roleHash << 5) - roleHash) + role.charCodeAt(i);
+        roleHash = roleHash & roleHash;
+    }
+    const roleHex = Math.abs(roleHash).toString(16).padStart(4, '0').substring(0, 4);
+    
+    // Generate a proper UUID with valid hex characters
+    return `${hashStr}-${roleHex}-4xxx-yxxx-xxxxxxxxxxxx`.replace(/[xy]/g, function (c) {
         const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
         return v.toString(16);
     });
 };
@@ -41,6 +51,16 @@ const USER_STORAGE_KEY = 'tutor_system_user';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Debug user state changes
+    useEffect(() => {
+        console.log('🔄 AuthContext: User state changed:', {
+            hasUser: !!user,
+            userId: user?.id,
+            role: user?.current_role,
+            displayName: user?.display_name
+        });
+    }, [user]);
 
     useEffect(() => {
         // Check if user exists in local storage
@@ -76,18 +96,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             console.log('🚀 AuthContext: Starting join process...', { displayName, role });
 
-            // Test Supabase connection first
+            // Test Supabase connection with retry logic
             console.log('🔗 AuthContext: Testing Supabase connection...');
-            const { error: testError } = await supabase
-                .from('users')
-                .select('count')
-                .limit(1);
+            let connectionSuccess = false;
+            let lastError = null;
+            
+            // Try connection up to 3 times with increasing delays
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    console.log(`🔗 AuthContext: Connection attempt ${attempt}/3...`);
+                    
+                    const { error: testError } = await supabase
+                        .from('users')
+                        .select('count')
+                        .limit(1);
 
-            if (testError) {
-                console.error('❌ AuthContext: Supabase connection failed:', testError);
-                throw new Error(`Database connection failed: ${testError.message}`);
+                    if (testError) {
+                        lastError = testError;
+                        console.warn(`⚠️ AuthContext: Connection attempt ${attempt} failed:`, testError);
+                    } else {
+                        connectionSuccess = true;
+                        console.log('✅ AuthContext: Supabase connection successful');
+                        break;
+                    }
+                } catch (error) {
+                    lastError = error;
+                    console.warn(`⚠️ AuthContext: Connection attempt ${attempt} failed:`, error);
+                }
+                
+                // Wait before retry (exponential backoff)
+                if (attempt < 3) {
+                    const delay = attempt * 1000; // 1s, 2s
+                    console.log(`⏳ AuthContext: Waiting ${delay}ms before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
             }
-            console.log('✅ AuthContext: Supabase connection successful');
+
+            if (!connectionSuccess) {
+                console.error('❌ AuthContext: All connection attempts failed, using offline mode:', lastError);
+                console.log('🔄 AuthContext: Falling back to offline mode...');
+                
+                // Create user in offline mode (localStorage only)
+                const userId = generateUserId(displayName, role);
+                const offlineUser: User = {
+                    id: userId,
+                    display_name: displayName,
+                    current_role: role,
+                    status: 'active',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                // Store user locally
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(offlineUser));
+                setUser(offlineUser);
+                
+                console.log('✅ AuthContext: Offline mode activated, user created locally');
+                return; // Skip database operations
+            }
 
             // No capacity limits - users can join with any role
 

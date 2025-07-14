@@ -86,7 +86,6 @@ const RoleSelection: React.FC = () => {
                     >
                         <h3>Student</h3>
                         <p>Join rooms and participate in learning sessions</p>
-                        <small>Maximum: 1 student at a time</small>
                     </div>
 
                     <div
@@ -104,7 +103,6 @@ const RoleSelection: React.FC = () => {
                     >
                         <h3>Tutor</h3>
                         <p>Create rooms and teach students</p>
-                        <small>Maximum: 1 tutor at a time</small>
                     </div>
 
                     <div
@@ -122,7 +120,6 @@ const RoleSelection: React.FC = () => {
                     >
                         <h3>Observer</h3>
                         <p>Watch sessions and learn</p>
-                        <small>Unlimited observers allowed</small>
                     </div>
                 </div>
 

@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createRoom, getRoomsByTutor } from '../services/supabase';
 import { Database } from '../types/database';
+import ImageUpload from '../components/ImageUpload';
+import AvatarDisplay from '../components/AvatarDisplay';
+import DialogueCustomizer from '../components/DialogueCustomizer';
+import { ImageUploadResult, PrePopulatedMessage } from '../types';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 
@@ -18,10 +22,13 @@ const TutorView: React.FC = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+    const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
+    const [prePopulatedDialogue, setPrePopulatedDialogue] = useState<PrePopulatedMessage[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     
     // Preset images data
     const presetImages: PresetImage[] = [
@@ -52,14 +59,31 @@ const TutorView: React.FC = () => {
 
     const handleImageSelect = (imageId: string) => {
         setSelectedImageId(imageId);
+        setCustomImageUrl(null); // Clear custom image when preset is selected
         setError(null);
     };
+
+    const handleCustomImageUpload = useCallback(async (result: ImageUploadResult) => {
+        if (result.success && result.tutorImage) {
+            setCustomImageUrl(result.tutorImage.image_url);
+            setSelectedImageId(null); // Clear preset selection when custom image is uploaded
+            setError(null);
+        }
+    }, []);
+
+    const handleCustomImageError = useCallback((error: string) => {
+        setError(`Image upload failed: ${error}`);
+    }, []);
 
     const getSelectedImage = (): PresetImage | null => {
         return presetImages.find(img => img.id === selectedImageId) || null;
     };
 
     const getImageUrl = (): string => {
+        // Priority: custom uploaded image > preset image > default
+        if (customImageUrl) {
+            return customImageUrl;
+        }
         const selected = getSelectedImage();
         return selected ? selected.url : presetImages.find(img => img.id === 'default')?.url || '/images/room-presets/privacy_3.png';
     };
@@ -87,19 +111,30 @@ const TutorView: React.FC = () => {
                 title: title.trim(),
                 description: description.trim(),
                 tutor_id: user.id,
-                image_url: imageUrl
+                image_url: imageUrl,
+                pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null
             };
 
             const newRoom = await createRoom(roomData);
 
+            // Show success message
+            setSuccessMessage('Room created successfully');
+            
             // Reset form
             setTitle('');
             setDescription('');
             setSelectedImageId(null);
+            setCustomImageUrl(null);
+            setPrePopulatedDialogue([]);
             setShowCreateForm(false);
 
-            // Navigate to the new room
-            navigate(`/room/${newRoom.id}`);
+            // Reload rooms list
+            await loadRooms();
+
+            // Navigate to the new room after a short delay to show success message
+            setTimeout(() => {
+                navigate(`/room/${newRoom.id}`);
+            }, 1500);
         } catch (err: any) {
             setError(err.message || 'Failed to create room');
         } finally {
@@ -110,17 +145,53 @@ const TutorView: React.FC = () => {
     return (
         <div className="container">
             <div className="card">
-                <h1>Tutor Dashboard</h1>
-                <p>Welcome! You are logged in as a Tutor.</p>
-
-                <div className="capacity-status">
-                    <p>Capacity Status: [Will be implemented in Task 4]</p>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem'
+                }}>
+                    <div>
+                        <h1 style={{ margin: 0 }}>Tutor Dashboard</h1>
+                        <p style={{ margin: '0.5rem 0 0 0' }}>Welcome! You are logged in as a Tutor.</p>
+                    </div>
+                    <Link 
+                        to="/profile" 
+                        className="nav-profile-link"
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <AvatarDisplay
+                            avatarUrl={user?.avatar_url}
+                            displayName={user?.display_name || 'User'}
+                            size="small"
+                            className="nav-avatar"
+                        />
+                        <span>Profile</span>
+                    </Link>
                 </div>
+
+
+                {successMessage && (
+                    <div className="success-message" style={{ 
+                        color: 'green', 
+                        backgroundColor: '#d4edda',
+                        border: '1px solid #c3e6cb',
+                        borderRadius: '4px',
+                        padding: '0.75rem',
+                        marginBottom: '1rem'
+                    }}>
+                        {successMessage}
+                    </div>
+                )}
 
                 {!showCreateForm && (
                     <button 
                         className="btn btn-primary"
-                        onClick={() => setShowCreateForm(true)}
+                        onClick={() => {
+                            setShowCreateForm(true);
+                            setSuccessMessage(null);
+                            setError(null);
+                        }}
                     >
                         Create a new Room
                     </button>
@@ -188,7 +259,31 @@ const TutorView: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                        {selectedImageId && (
+
+                        {/* Custom Image Upload Section */}
+                        <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
+                            <h4 style={{ 
+                                fontSize: '1rem', 
+                                marginBottom: '0.75rem', 
+                                color: '#333',
+                                borderTop: '1px solid #eee',
+                                paddingTop: '1rem'
+                            }}>
+                                Or Upload Custom Image
+                            </h4>
+                            <ImageUpload
+                                uploadType="tutor-image"
+                                currentImageUrl={customImageUrl}
+                                onUploadSuccess={handleCustomImageUpload}
+                                onUploadError={handleCustomImageError}
+                                showPreview={true}
+                                dimensionConstraints={{ maxWidth: 800, maxHeight: 600 }}
+                                roomId="temp-room-id" // This will be updated after room creation
+                            />
+                        </div>
+
+                        {/* Preview Section */}
+                        {(selectedImageId || customImageUrl) && (
                             <div className="selected-image-preview" data-testid="selected-image-preview" style={{
                                 marginTop: '1rem',
                                 padding: '1rem',
@@ -197,11 +292,11 @@ const TutorView: React.FC = () => {
                                 textAlign: 'center'
                             }}>
                                 <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
-                                    Selected: {getSelectedImage()?.name}
+                                    {customImageUrl ? 'Custom Image Selected' : `Selected: ${getSelectedImage()?.name}`}
                                 </p>
                                 <img 
-                                    src={getSelectedImage()?.url} 
-                                    alt={getSelectedImage()?.name}
+                                    src={getImageUrl()} 
+                                    alt={customImageUrl ? 'Custom room image' : getSelectedImage()?.name}
                                     style={{
                                         maxWidth: '200px',
                                         height: 'auto',
@@ -210,6 +305,15 @@ const TutorView: React.FC = () => {
                                 />
                             </div>
                         )}
+                    </div>
+
+                    {/* Dialogue Customization Section */}
+                    <div className="form-group" style={{ marginTop: '2rem' }}>
+                        <DialogueCustomizer
+                            dialogue={prePopulatedDialogue}
+                            onChange={setPrePopulatedDialogue}
+                            disabled={isCreating}
+                        />
                     </div>
                     
                     {error && (

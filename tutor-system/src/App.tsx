@@ -7,6 +7,7 @@ import StudentView from './pages/StudentView';
 import TutorView from './pages/TutorView';
 import ObserverView from './pages/ObserverView';
 import RoomPage from './pages/RoomPage';
+import UserProfile from './pages/UserProfile';
 import './App.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
                             <Route path="/tutor" element={<TutorView />} />
                             <Route path="/observer" element={<ObserverView />} />
                             <Route path="/room/:roomId" element={<RoomPage />} />
+                            <Route path="/profile" element={<UserProfile />} />
                         </Routes>
                     </Router>
                 </RoomProvider>

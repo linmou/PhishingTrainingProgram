@@ -123,7 +123,7 @@ describe('SimpleLogin Component', () => {
     });
 
     test('handles join error gracefully', async () => {
-        const errorMessage = 'Maximum number of tutors (1) already reached';
+        const errorMessage = 'Database connection failed';
         mockJoinWithNameAndRole.mockRejectedValue(new Error(errorMessage));
 
         render(<SimpleLogin />);

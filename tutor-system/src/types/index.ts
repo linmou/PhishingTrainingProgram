@@ -10,8 +10,17 @@ export interface User {
     display_name: string;
     current_role: UserRole | null;
     status: UserStatus;
+    avatar_url?: string | null; // Added for avatar functionality
     created_at: string;
     updated_at: string;
+}
+
+// Pre-populated dialogue message for room setup
+export interface PrePopulatedMessage {
+    user_name: string;
+    message: string;
+    role: UserRole;
+    timestamp?: string; // Optional custom timestamp
 }
 
 // Room interface
@@ -25,6 +34,7 @@ export interface Room {
     ai_assistant_enabled: boolean;
     ai_assistant_model: string | null;
     ai_assistant_prompt: string | null;
+    pre_populated_dialogue?: PrePopulatedMessage[] | null; // Added for dialogue customization
     observer_count?: number; // Number of active observers in the room
     created_at: string;
     updated_at: string;
@@ -125,4 +135,42 @@ export interface RoomContextType {
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
     downloadChatHistory: () => void;
+}
+
+// Image Upload Types
+export interface TutorImage {
+    id: string;
+    tutor_id: string;
+    room_id: string;
+    image_url: string;
+    filename: string;
+    file_size: number;
+    upload_date: string;
+    is_active: boolean;
+}
+
+export interface ImageValidationResult {
+    isValid: boolean;
+    errors: string[];
+    fileSize?: number;
+    fileType?: string;
+    dimensions?: {
+        width: number;
+        height: number;
+    };
+}
+
+export interface ImageUploadResult {
+    success: boolean;
+    error?: string;
+    avatarUrl?: string;
+    tutorImage?: TutorImage;
+    previousAvatarRemoved?: boolean;
+}
+
+export interface ImageDimensions {
+    maxWidth?: number;
+    maxHeight?: number;
+    minWidth?: number;
+    minHeight?: number;
 } 

@@ -16,13 +16,19 @@ const HomePage: React.FC = () => {
         console.log('🏠 HomePage: useEffect triggered', {
             hasUser: !!user,
             role: user?.current_role,
-            userId: user?.id
+            userId: user?.id,
+            loading
         });
-        if (user?.current_role) {
+        if (user?.current_role && !loading) {
             console.log('🚀 HomePage: Navigating to role page:', user.current_role);
-            navigate(`/${user.current_role}`);
+            try {
+                navigate(`/${user.current_role}`);
+                console.log('✅ HomePage: Navigation completed successfully');
+            } catch (error) {
+                console.error('❌ HomePage: Navigation failed:', error);
+            }
         }
-    }, [user, navigate]);
+    }, [user, navigate, loading]);
 
     const handleRunDiagnostics = async () => {
         console.log('🔍 Running authentication diagnostics...');

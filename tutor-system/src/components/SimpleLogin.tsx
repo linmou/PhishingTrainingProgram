@@ -21,13 +21,20 @@ const SimpleLogin: React.FC = () => {
         setIsLoading(true);
 
         try {
-            console.log('🚀 SimpleLogin: Calling joinWithNameAndRole...');
+            console.log('🚀 SimpleLogin: Calling joinWithNameAndRole...', { displayName, selectedRole });
             await joinWithNameAndRole(displayName.trim(), selectedRole);
             console.log('✅ SimpleLogin: Join completed successfully');
+            // If we reach here, the join was successful and the user should be set
         } catch (err: any) {
             console.error('❌ SimpleLogin: Join failed:', err);
+            console.error('❌ SimpleLogin: Error details:', {
+                message: err.message,
+                stack: err.stack,
+                name: err.name
+            });
             setError(err.message || 'Failed to join');
         } finally {
+            console.log('🔄 SimpleLogin: Setting loading to false');
             setIsLoading(false);
         }
     };
@@ -76,7 +83,6 @@ const SimpleLogin: React.FC = () => {
                                     <div className="role-info">
                                         <strong>Student</strong>
                                         <p>Join rooms and participate in learning sessions</p>
-                                        <small>Maximum: 1 student at a time</small>
                                     </div>
                                 </label>
 
@@ -92,7 +98,6 @@ const SimpleLogin: React.FC = () => {
                                     <div className="role-info">
                                         <strong>Tutor</strong>
                                         <p>Create rooms and teach students</p>
-                                        <small>Maximum: 1 tutor at a time</small>
                                     </div>
                                 </label>
 
@@ -108,7 +113,6 @@ const SimpleLogin: React.FC = () => {
                                     <div className="role-info">
                                         <strong>Observer</strong>
                                         <p>Watch sessions and learn</p>
-                                        <small>Unlimited observers allowed</small>
                                     </div>
                                 </label>
                             </div>
@@ -149,6 +153,10 @@ const SimpleLogin: React.FC = () => {
                         color: '#666'
                     }}>
                         Setting up your session...
+                        <br />
+                        <small style={{ color: '#999', marginTop: '5px', display: 'block' }}>
+                            If this takes too long, the app will switch to offline mode
+                        </small>
                     </div>
                 )}
             </div>

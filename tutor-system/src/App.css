@@ -432,9 +432,69 @@ html, body, #root {
 }
 
 .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 0.8rem;
     color: #666;
     margin-bottom: 0.25rem;
+}
+
+.message-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.message-avatar {
+    flex-shrink: 0;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Participant list styling */
+.participant-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.participant-avatar {
+    flex-shrink: 0;
+}
+
+.participant-info {
+    display: flex;
+    align-items: center;
+}
+
+.participant-role {
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Navigation profile link styling */
+.nav-profile-link {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.nav-profile-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.nav-avatar {
+    flex-shrink: 0;
 }
 
 .message-content {

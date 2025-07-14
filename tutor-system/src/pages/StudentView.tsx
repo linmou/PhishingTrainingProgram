@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Database } from '../types/database';
 import RoomCard from '../components/RoomCard';
+import AvatarDisplay from '../components/AvatarDisplay';
 import { useAuth } from '../contexts/AuthContext';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
@@ -26,47 +27,66 @@ const StudentView: React.FC = () => {
 
     const fetchRooms = useCallback(async () => {
         try {
-            // Fetch active rooms with tutor information
-            const { data: roomsData, error } = await supabase
-                .from('rooms')
-                .select(`
-                    *,
-                    tutor:users!tutor_id(*)
-                `)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false });
+            console.log('🔍 StudentView: Fetching rooms...');
+            
+            // Add timeout and retry logic for room fetching
+            let roomsData = null;
+            let fetchError = null;
+            
+            for (let attempt = 1; attempt <= 2; attempt++) {
+                try {
+                    console.log(`🔍 StudentView: Fetch attempt ${attempt}/2...`);
+                    
+                    const result = await supabase
+                        .from('rooms')
+                        .select(`
+                            *,
+                            tutor:users!tutor_id(*)
+                        `)
+                        .eq('is_active', true)
+                        .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Error fetching rooms:', error);
+                    if (result.error) {
+                        fetchError = result.error;
+                        console.warn(`⚠️ StudentView: Fetch attempt ${attempt} failed:`, result.error);
+                    } else {
+                        roomsData = result.data;
+                        console.log('✅ StudentView: Rooms fetched successfully');
+                        break;
+                    }
+                } catch (err) {
+                    fetchError = err;
+                    console.warn(`⚠️ StudentView: Fetch attempt ${attempt} failed:`, err);
+                }
+                
+                // Wait before retry
+                if (attempt < 2) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+
+            if (!roomsData && fetchError) {
+                console.error('❌ StudentView: All fetch attempts failed, using offline mode');
+                setError('Unable to connect to server. Showing offline mode.');
+                // Set empty rooms array in offline mode
+                setRooms([]);
                 return;
             }
 
-            // Check capacity for each room
-            const roomsWithStatus = await Promise.all(
-                (roomsData || []).map(async (room) => {
-                    const { data: sessionData, error: sessionError } = await supabase
-                        .from('sessions')
-                        .select('*')
-                        .eq('room_id', room.id)
-                        .eq('status', 'active')
-                        .single();
-
-                    // If no session found (PGRST116 error) or session error, room is available
-                    const hasActiveSession = sessionData && !sessionError;
-                    const status = hasActiveSession ? 'Room Full' : 'Available';
-                    const isJoinDisabled = hasActiveSession;
-
-                    return {
-                        ...room,
-                        status,
-                        isJoinDisabled
-                    } as RoomWithStatus;
-                })
-            );
+            // No capacity limits - all rooms are always available
+            const roomsWithStatus = (roomsData || []).map((room) => ({
+                ...room,
+                status: 'Available',
+                isJoinDisabled: false
+            } as RoomWithStatus));
 
             setRooms(roomsWithStatus);
+            setError(null); // Clear any previous errors
+            
         } catch (err) {
-            console.error('Error in fetchRooms:', err);
+            console.error('❌ StudentView: Unexpected error in fetchRooms:', err);
+            setError('Unable to load rooms. Please try again later.');
+            setRooms([]);
         } finally {
             setLoading(false);
         }
@@ -75,47 +95,71 @@ const StudentView: React.FC = () => {
     useEffect(() => {
         fetchRooms();
 
-        // Set up real-time subscription for room changes
-        const roomSubscription = supabase
-            .channel('rooms_channel')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'rooms'
-                },
-                (payload) => {
-                    console.log('Room change detected:', payload);
-                    // Refetch rooms when there are changes
-                    fetchRooms();
-                }
-            )
-            .subscribe();
+        // Only set up real-time subscriptions if we're not in offline mode
+        let roomSubscription: any = null;
+        let sessionSubscription: any = null;
 
-        // Set up real-time subscription for session changes
-        const sessionSubscription = supabase
-            .channel('sessions_channel')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'sessions'
-                },
-                (payload) => {
-                    console.log('Session change detected:', payload);
-                    // Refetch rooms when session status changes (affects room availability)
-                    fetchRooms();
+        // Add a delay before setting up subscriptions to see if the initial fetch works
+        const setupSubscriptions = setTimeout(() => {
+            if (!error) { // Only setup subscriptions if no error occurred during fetch
+                try {
+                    console.log('🔄 StudentView: Setting up real-time subscriptions...');
+                    
+                    // Set up real-time subscription for room changes
+                    roomSubscription = supabase
+                        .channel('rooms_channel')
+                        .on(
+                            'postgres_changes',
+                            {
+                                event: '*',
+                                schema: 'public',
+                                table: 'rooms'
+                            },
+                            (payload) => {
+                                console.log('Room change detected:', payload);
+                                // Refetch rooms when there are changes
+                                fetchRooms();
+                            }
+                        )
+                        .subscribe();
+
+                    // Set up real-time subscription for session changes
+                    sessionSubscription = supabase
+                        .channel('sessions_channel')
+                        .on(
+                            'postgres_changes',
+                            {
+                                event: '*',
+                                schema: 'public',
+                                table: 'sessions'
+                            },
+                            (payload) => {
+                                console.log('Session change detected:', payload);
+                                // Refetch rooms when session status changes (affects room availability)
+                                fetchRooms();
+                            }
+                        )
+                        .subscribe();
+                    
+                    console.log('✅ StudentView: Real-time subscriptions setup complete');
+                } catch (subscriptionError) {
+                    console.warn('⚠️ StudentView: Failed to setup subscriptions:', subscriptionError);
                 }
-            )
-            .subscribe();
+            } else {
+                console.log('📴 StudentView: Skipping subscriptions due to offline mode');
+            }
+        }, 3000);
 
         return () => {
-            roomSubscription.unsubscribe();
-            sessionSubscription.unsubscribe();
+            clearTimeout(setupSubscriptions);
+            if (roomSubscription) {
+                roomSubscription.unsubscribe();
+            }
+            if (sessionSubscription) {
+                sessionSubscription.unsubscribe();
+            }
         };
-    }, [fetchRooms]);
+    }, [fetchRooms, error]);
 
     const handleJoinRoom = async (roomId: string) => {
         try {
@@ -193,15 +237,64 @@ const StudentView: React.FC = () => {
     return (
         <div className="container">
             <div className="card">
-                <h1>Student Dashboard</h1>
-                <p>Welcome! You are logged in as a Student.</p>
-
-                <div className="capacity-status">
-                    <p>Capacity Status: [Will be implemented in Task 4]</p>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem'
+                }}>
+                    <div>
+                        <h1 style={{ margin: 0 }}>Student Dashboard</h1>
+                        <p style={{ margin: '0.5rem 0 0 0' }}>Welcome! You are logged in as a Student.</p>
+                    </div>
+                    <Link 
+                        to="/profile" 
+                        className="nav-profile-link"
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <AvatarDisplay
+                            avatarUrl={user?.avatar_url}
+                            displayName={user?.display_name || 'User'}
+                            size="small"
+                            className="nav-avatar"
+                        />
+                        <span>Profile</span>
+                    </Link>
                 </div>
 
+
                 <h2>Available Rooms</h2>
-                {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+                {error && (
+                    <div className="error-message" style={{ 
+                        color: 'red', 
+                        marginBottom: '15px',
+                        padding: '10px',
+                        backgroundColor: '#ffe6e6',
+                        border: '1px solid #ff9999',
+                        borderRadius: '4px'
+                    }}>
+                        {error}
+                        <br />
+                        <button 
+                            onClick={() => {
+                                setError(null);
+                                setLoading(true);
+                                fetchRooms();
+                            }}
+                            style={{
+                                marginTop: '10px',
+                                padding: '8px 16px',
+                                backgroundColor: '#007bff',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
                 {loading ? (
                     <p>Loading rooms...</p>
                 ) : rooms.length > 0 ? (

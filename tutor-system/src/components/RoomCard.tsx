@@ -1,5 +1,6 @@
 import React from 'react';
 import { Database } from '../types/database';
+import AvatarDisplay from './AvatarDisplay';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
@@ -43,7 +44,16 @@ const RoomCard: React.FC<RoomCardProps> = ({
                 />
             )}
             <h3>{room.title}</h3>
-            <p><strong>Tutor:</strong> {tutor?.display_name || 'Unknown'}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <strong>Tutor:</strong>
+                <AvatarDisplay
+                    avatarUrl={tutor?.avatar_url}
+                    displayName={tutor?.display_name || 'Unknown'}
+                    size="small"
+                    className="room-card-avatar"
+                />
+                <span>{tutor?.display_name || 'Unknown'}</span>
+            </div>
             {room.description && <p><strong>Description:</strong> {room.description}</p>}
             <p><strong>Status:</strong> {roomStatus}</p>
             {roomStatus === 'Room Full' && <span>Full</span>}

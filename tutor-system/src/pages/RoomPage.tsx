@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
 import ChatMessage from '../components/ChatMessage';
+import AvatarDisplay from '../components/AvatarDisplay';
 import AIAssistantSettings from '../components/AIAssistantSettings';
 import jsPDF from 'jspdf';
 import { supabase } from '../services/supabase';
@@ -264,19 +265,35 @@ const RoomPage: React.FC = () => {
                             <p className="participants-title">Participants:</p>
                             <div className="participants-list">
                                 {participants.map(participant => (
-                                    <span key={participant.id} className="participant-item">
-                                        {participant.display_name}
-                                        {participant.current_role && (
-                                            <span className="participant-role"> ({participant.current_role})</span>
-                                        )}
-                                    </span>
+                                    <div key={participant.id} className="participant-item">
+                                        <AvatarDisplay
+                                            avatarUrl={participant.avatar_url}
+                                            displayName={participant.display_name}
+                                            size="small"
+                                            className="participant-avatar"
+                                        />
+                                        <span className="participant-info">
+                                            {participant.display_name}
+                                            {participant.current_role && (
+                                                <span className="participant-role"> ({participant.current_role})</span>
+                                            )}
+                                        </span>
+                                    </div>
                                 ))}
                                 {/* Always show current user if they're an observer */}
                                 {user?.current_role === 'observer' && !participants.find(p => p.id === user.id) && (
-                                    <span className="participant-item">
-                                        {user.display_name}
-                                        <span className="participant-role"> (observer)</span>
-                                    </span>
+                                    <div className="participant-item">
+                                        <AvatarDisplay
+                                            avatarUrl={user.avatar_url}
+                                            displayName={user.display_name}
+                                            size="small"
+                                            className="participant-avatar"
+                                        />
+                                        <span className="participant-info">
+                                            {user.display_name}
+                                            <span className="participant-role"> (observer)</span>
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -347,16 +364,22 @@ const RoomPage: React.FC = () => {
                                 <p>No messages yet. Start the conversation!</p>
                             </div>
                         ) : (
-                            messages.map((message) => (
-                                <ChatMessage
-                                    key={message.id}
-                                    message={message}
-                                    displayName={message.display_name}
-                                    onGenerateAIResponse={canUseAI && isAIEnabled ? handleGenerateAIResponseToMessage : undefined}
-                                    canGenerateAI={canUseAI && isAIEnabled}
-                                    isGeneratingAI={loadingAI}
-                                />
-                            ))
+                            messages.map((message) => {
+                                // Find the participant's avatar for this message
+                                const messageAuthor = participants?.find(p => p.id === message.user_id);
+                                
+                                return (
+                                    <ChatMessage
+                                        key={message.id}
+                                        message={message}
+                                        displayName={message.display_name}
+                                        avatarUrl={messageAuthor?.avatar_url}
+                                        onGenerateAIResponse={canUseAI && isAIEnabled ? handleGenerateAIResponseToMessage : undefined}
+                                        canGenerateAI={canUseAI && isAIEnabled}
+                                        isGeneratingAI={loadingAI}
+                                    />
+                                )
+                            })
                         )}
                         {/* Typing indicators */}
                         {typingUsers.length > 0 && (

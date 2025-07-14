@@ -16,6 +16,7 @@ export interface Database {
                     display_name: string | null
                     current_role: 'student' | 'tutor' | 'observer' | null
                     status: 'active' | 'inactive'
+                    avatar_url: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -25,6 +26,7 @@ export interface Database {
                     display_name?: string | null
                     current_role?: 'student' | 'tutor' | 'observer' | null
                     status?: 'active' | 'inactive'
+                    avatar_url?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -34,6 +36,7 @@ export interface Database {
                     display_name?: string | null
                     current_role?: 'student' | 'tutor' | 'observer' | null
                     status?: 'active' | 'inactive'
+                    avatar_url?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -49,6 +52,7 @@ export interface Database {
                     ai_assistant_enabled: boolean
                     ai_assistant_model: string | null
                     ai_assistant_prompt: string | null
+                    pre_populated_dialogue: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -62,6 +66,7 @@ export interface Database {
                     ai_assistant_enabled?: boolean
                     ai_assistant_model?: string | null
                     ai_assistant_prompt?: string | null
+                    pre_populated_dialogue?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -75,6 +80,7 @@ export interface Database {
                     ai_assistant_enabled?: boolean
                     ai_assistant_model?: string | null
                     ai_assistant_prompt?: string | null
+                    pre_populated_dialogue?: Json | null
                     created_at?: string
                     updated_at?: string
                 }

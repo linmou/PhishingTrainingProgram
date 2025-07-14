@@ -4,6 +4,7 @@ import { supabase, getRoomsByObserver, joinRoomAsObserver } from '../services/su
 import { useAuth } from '../contexts/AuthContext';
 import { Database } from '../types/database';
 import RoomCard from '../components/RoomCard';
+import AvatarDisplay from '../components/AvatarDisplay';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
@@ -92,8 +93,30 @@ const ObserverView: React.FC = () => {
     return (
         <div className="container">
             <div className={`card ${layoutClasses}`} data-testid="observer-dashboard">
-                <h1>Observer Dashboard</h1>
-                <p>Welcome! You are logged in as an Observer.</p>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem'
+                }}>
+                    <div>
+                        <h1 style={{ margin: 0 }}>Observer Dashboard</h1>
+                        <p style={{ margin: '0.5rem 0 0 0' }}>Welcome! You are logged in as an Observer.</p>
+                    </div>
+                    <Link 
+                        to="/profile" 
+                        className="nav-profile-link"
+                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <AvatarDisplay
+                            avatarUrl={user?.avatar_url}
+                            displayName={user?.display_name || 'User'}
+                            size="small"
+                            className="nav-avatar"
+                        />
+                        <span>Profile</span>
+                    </Link>
+                </div>
 
                 <h2>Available Rooms</h2>
                 {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
