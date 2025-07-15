@@ -29,6 +29,8 @@ const TutorView: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [customOpName, setCustomOpName] = useState('');
+    const [useCustomOp, setUseCustomOp] = useState(false);
     
     // Preset images data
     const presetImages: PresetImage[] = [
@@ -96,6 +98,11 @@ const TutorView: React.FC = () => {
             return;
         }
 
+        if (useCustomOp && !customOpName.trim()) {
+            setError('Custom OP name is required when using custom OP');
+            return;
+        }
+
         if (!user?.id) {
             setError('User not authenticated');
             return;
@@ -112,7 +119,10 @@ const TutorView: React.FC = () => {
                 description: description.trim(),
                 tutor_id: user.id,
                 image_url: imageUrl,
-                pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null
+                pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null,
+                op_id: useCustomOp ? null : user.id,
+                op_display_name: useCustomOp ? customOpName.trim() : user.display_name,
+                op_avatar_url: useCustomOp ? null : user.avatar_url
             };
 
             const newRoom = await createRoom(roomData);
@@ -126,6 +136,8 @@ const TutorView: React.FC = () => {
             setSelectedImageId(null);
             setCustomImageUrl(null);
             setPrePopulatedDialogue([]);
+            setCustomOpName('');
+            setUseCustomOp(false);
             setShowCreateForm(false);
 
             // Reload rooms list
@@ -305,6 +317,69 @@ const TutorView: React.FC = () => {
                                 />
                             </div>
                         )}
+                    </div>
+
+                    {/* OP Configuration Section */}
+                    <div className="form-group" style={{ marginTop: '2rem' }}>
+                        <label style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>
+                            Original Poster (OP) Settings
+                        </label>
+                        <div style={{ 
+                            padding: '1rem', 
+                            backgroundColor: '#f8f9fa', 
+                            borderRadius: '8px', 
+                            border: '1px solid #e9ecef' 
+                        }}>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                        type="radio"
+                                        name="opType"
+                                        checked={!useCustomOp}
+                                        onChange={() => setUseCustomOp(false)}
+                                        disabled={isCreating}
+                                    />
+                                    <span>Use my profile as OP</span>
+                                </label>
+                                <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem', fontSize: '0.9rem', color: '#6c757d' }}>
+                                    OP will be: <strong>{user?.display_name || 'Your Name'}</strong>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input
+                                        type="radio"
+                                        name="opType"
+                                        checked={useCustomOp}
+                                        onChange={() => setUseCustomOp(true)}
+                                        disabled={isCreating}
+                                    />
+                                    <span>Use custom OP name</span>
+                                </label>
+                                {useCustomOp && (
+                                    <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Enter custom OP name"
+                                            value={customOpName}
+                                            onChange={(e) => setCustomOpName(e.target.value)}
+                                            disabled={isCreating}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.5rem',
+                                                borderRadius: '4px',
+                                                border: '1px solid #ced4da',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        />
+                                        <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
+                                            Custom OP names won't have profile pictures or user accounts
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Dialogue Customization Section */}

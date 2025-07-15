@@ -14,6 +14,7 @@ interface RoomPostProps {
     isLiked?: boolean;
     isBookmarked?: boolean;
     likeCount?: number;
+    showOp?: boolean;
 }
 
 const RoomPost: React.FC<RoomPostProps> = ({
@@ -26,7 +27,8 @@ const RoomPost: React.FC<RoomPostProps> = ({
     onBookmark,
     isLiked = false,
     isBookmarked = false,
-    likeCount = 0
+    likeCount = 0,
+    showOp = false
 }) => {
     const formatTime = (timestamp: string) => {
         return new Date(timestamp).toLocaleString('en-US', {
@@ -43,16 +45,16 @@ const RoomPost: React.FC<RoomPostProps> = ({
             <div className="post-header">
                 <div className="post-author-info">
                     <AvatarDisplay
-                        avatarUrl={tutor?.avatar_url}
-                        displayName={tutor?.display_name || 'Tutor'}
+                        avatarUrl={showOp ? room.op_avatar_url : tutor?.avatar_url}
+                        displayName={showOp ? (room.op_display_name || 'OP') : (tutor?.display_name || 'Tutor')}
                         size="medium"
                         className="post-author-avatar"
                     />
                     <div className="post-author-details">
                         <div className="post-author-name">
-                            {tutor?.display_name || 'Tutor'}
+                            {showOp ? (room.op_display_name || 'OP') : (tutor?.display_name || 'Tutor')}
                             <span className="post-author-role">
-                                👨‍🏫 Tutor
+                                {showOp ? '📝 OP' : '👨‍🏫 Tutor'}
                             </span>
                         </div>
                         <div className="post-timestamp">

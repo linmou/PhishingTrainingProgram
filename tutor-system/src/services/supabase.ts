@@ -95,6 +95,9 @@ export const createRoom = async (roomData: {
     tutor_id: string;
     image_url?: string;
     pre_populated_dialogue?: any[] | null;
+    op_id?: string | null;
+    op_display_name?: string | null;
+    op_avatar_url?: string | null;
 }) => {
     console.log('🏠 Supabase Service: Creating room:', roomData);
     const { data, error } = await supabase

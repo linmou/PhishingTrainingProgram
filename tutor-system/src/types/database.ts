@@ -53,6 +53,9 @@ export interface Database {
                     ai_assistant_model: string | null
                     ai_assistant_prompt: string | null
                     pre_populated_dialogue: Json | null
+                    op_id: string | null
+                    op_display_name: string | null
+                    op_avatar_url: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -67,6 +70,9 @@ export interface Database {
                     ai_assistant_model?: string | null
                     ai_assistant_prompt?: string | null
                     pre_populated_dialogue?: Json | null
+                    op_id?: string | null
+                    op_display_name?: string | null
+                    op_avatar_url?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -81,6 +87,9 @@ export interface Database {
                     ai_assistant_model?: string | null
                     ai_assistant_prompt?: string | null
                     pre_populated_dialogue?: Json | null
+                    op_id?: string | null
+                    op_display_name?: string | null
+                    op_avatar_url?: string | null
                     created_at?: string
                     updated_at?: string
                 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
@@ -265,6 +265,7 @@ const RoomPagePost: React.FC = () => {
                     isLiked={roomEngagement.isLiked}
                     isBookmarked={roomEngagement.isBookmarked}
                     likeCount={roomEngagement.likeCount}
+                    showOp={true}
                 />
 
                 {/* AI Assistant Controls */}

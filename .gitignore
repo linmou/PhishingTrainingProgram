@@ -10,6 +10,9 @@ dev-debug.log
 node_modules/
 build/
 
+# Test coverage reports
+coverage/
+
 # Environment variables
 .env
 

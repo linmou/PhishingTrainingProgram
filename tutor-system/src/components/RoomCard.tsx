@@ -12,6 +12,7 @@ interface RoomCardProps {
     isJoinDisabled?: boolean;
     joinButtonText?: string;
     roomStatus?: string;
+    showOp?: boolean;
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ 
@@ -20,7 +21,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
     onJoin, 
     isJoinDisabled = false,
     joinButtonText = 'Join Room',
-    roomStatus = 'Available'
+    roomStatus = 'Available',
+    showOp = false
 }) => {
     return (
         <div className="room-card" data-testid={`room-card-${room.id}`} style={{
@@ -45,14 +47,14 @@ const RoomCard: React.FC<RoomCardProps> = ({
             )}
             <h3>{room.title}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <strong>Tutor:</strong>
+                <strong>{showOp ? 'OP:' : 'Tutor:'}</strong>
                 <AvatarDisplay
-                    avatarUrl={tutor?.avatar_url}
-                    displayName={tutor?.display_name || 'Unknown'}
+                    avatarUrl={showOp ? room.op_avatar_url : tutor?.avatar_url}
+                    displayName={showOp ? (room.op_display_name || 'Unknown') : (tutor?.display_name || 'Unknown')}
                     size="small"
                     className="room-card-avatar"
                 />
-                <span>{tutor?.display_name || 'Unknown'}</span>
+                <span>{showOp ? (room.op_display_name || 'Unknown') : (tutor?.display_name || 'Unknown')}</span>
             </div>
             {room.description && <p><strong>Description:</strong> {room.description}</p>}
             <p><strong>Status:</strong> {roomStatus}</p>

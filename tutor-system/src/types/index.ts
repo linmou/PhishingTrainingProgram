@@ -36,6 +36,9 @@ export interface Room {
     ai_assistant_prompt: string | null;
     pre_populated_dialogue?: PrePopulatedMessage[] | null; // Added for dialogue customization
     observer_count?: number; // Number of active observers in the room
+    op_id: string | null;
+    op_display_name: string | null;
+    op_avatar_url: string | null;
     created_at: string;
     updated_at: string;
 }
