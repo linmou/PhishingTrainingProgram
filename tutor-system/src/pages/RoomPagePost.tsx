@@ -1,0 +1,410 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useRoom } from '../contexts/RoomContext';
+import RoomPost from '../components/RoomPost';
+import PostComment from '../components/PostComment';
+import CommentInput from '../components/CommentInput';
+import AIAssistantSettings from '../components/AIAssistantSettings';
+import { Download, Settings, ArrowLeft } from 'lucide-react';
+
+const RoomPagePost: React.FC = () => {
+    const { roomId } = useParams<{ roomId: string }>();
+    const { user } = useAuth();
+    const {
+        currentRoom,
+        messages,
+        participants,
+        loading,
+        typingUsers,
+        joinRoom,
+        leaveRoom,
+        sendMessage,
+        generateAIResponse,
+        startTyping,
+        stopTyping,
+        aiConfig,
+        loadingAI,
+        downloadChatHistory
+    } = useRoom();
+
+    const [messageText, setMessageText] = useState('');
+    const [showAISettings, setShowAISettings] = useState(false);
+    const [sendingMessage, setSendingMessage] = useState(false);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+    
+    // Room engagement state (for future implementation)
+    const [roomEngagement, setRoomEngagement] = useState({
+        isLiked: false,
+        isBookmarked: false,
+        isFlagged: false,
+        likeCount: 0,
+        bookmarkCount: 0,
+        shareCount: 0
+    });
+
+    // Message engagement state (for future implementation)
+    const [messageEngagements, setMessageEngagements] = useState<Record<string, {
+        likeCount: number;
+        dislikeCount: number;
+        userLiked: boolean;
+        userDisliked: boolean;
+    }>>({});
+
+
+    // Join room on component mount
+    useEffect(() => {
+        if (roomId) {
+            joinRoom(roomId).catch(error => {
+                console.error('Failed to join room:', error);
+            });
+        }
+
+        // Cleanup: leave room on unmount
+        return () => {
+            leaveRoom();
+        };
+    }, [roomId, joinRoom, leaveRoom]);
+
+    // Auto-scroll disabled for post-style interface to let users control their view
+
+    // Find tutor from participants
+    const tutor = participants?.find(p => p.current_role === 'tutor') || null;
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!messageText.trim() || sendingMessage) return;
+
+        setSendingMessage(true);
+        stopTyping(); // Stop typing when message is sent
+        
+        try {
+            await sendMessage(messageText.trim());
+            setMessageText('');
+            setReplyingTo(null); // Clear reply state
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            alert('Failed to send message. Please try again.');
+        } finally {
+            setSendingMessage(false);
+        }
+    };
+
+    const handleInputChange = (value: string) => {
+        setMessageText(value);
+        
+        // Start typing indicator when user starts typing
+        if (value.length > 0 && !sendingMessage) {
+            startTyping();
+        } else if (value.length === 0) {
+            stopTyping();
+        }
+    };
+
+    const handleGenerateAIResponse = async (parentMessageId?: string) => {
+        try {
+            await generateAIResponse();
+        } catch (error) {
+            console.error('Failed to generate AI response:', error);
+            alert('Failed to generate AI response. Please try again.');
+        }
+    };
+
+    // Room engagement handlers (for future implementation)
+    const handleRoomLike = () => {
+        setRoomEngagement(prev => ({
+            ...prev,
+            isLiked: !prev.isLiked,
+            likeCount: prev.isLiked ? prev.likeCount - 1 : prev.likeCount + 1
+        }));
+        // TODO: Send to backend
+    };
+
+    const handleRoomShare = async () => {
+        if (navigator.share && roomId) {
+            try {
+                await navigator.share({
+                    title: currentRoom?.title || 'Learning Session',
+                    text: currentRoom?.description || 'Join this learning session',
+                    url: window.location.href
+                });
+            } catch (error) {
+                // Fallback to clipboard
+                navigator.clipboard.writeText(window.location.href);
+                alert('Room link copied to clipboard!');
+            }
+        } else {
+            // Fallback to clipboard
+            navigator.clipboard.writeText(window.location.href);
+            alert('Room link copied to clipboard!');
+        }
+    };
+
+    const handleRoomBookmark = () => {
+        setRoomEngagement(prev => ({
+            ...prev,
+            isBookmarked: !prev.isBookmarked,
+            bookmarkCount: prev.isBookmarked ? prev.bookmarkCount - 1 : prev.bookmarkCount + 1
+        }));
+        // TODO: Send to backend
+    };
+
+    // Message engagement handlers (for future implementation)
+    const handleMessageLike = (messageId: string, isLike: boolean) => {
+        setMessageEngagements(prev => {
+            const current = prev[messageId] || { likeCount: 0, dislikeCount: 0, userLiked: false, userDisliked: false };
+            
+            if (isLike) {
+                return {
+                    ...prev,
+                    [messageId]: {
+                        ...current,
+                        userLiked: !current.userLiked,
+                        userDisliked: false,
+                        likeCount: current.userLiked ? current.likeCount - 1 : current.likeCount + 1,
+                        dislikeCount: current.userDisliked ? current.dislikeCount - 1 : current.dislikeCount
+                    }
+                };
+            } else {
+                return {
+                    ...prev,
+                    [messageId]: {
+                        ...current,
+                        userDisliked: !current.userDisliked,
+                        userLiked: false,
+                        dislikeCount: current.userDisliked ? current.dislikeCount - 1 : current.dislikeCount + 1,
+                        likeCount: current.userLiked ? current.likeCount - 1 : current.likeCount
+                    }
+                };
+            }
+        });
+        // TODO: Send to backend
+    };
+
+    const handleMessageReply = (messageId: string) => {
+        const message = messages.find(m => m.id === messageId);
+        if (message) {
+            setReplyingTo({
+                id: messageId,
+                authorName: message.display_name || message.user_role
+            });
+        }
+    };
+
+    const canSendMessages = user && user.current_role !== 'observer';
+    const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
+    const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
+
+    if (loading) {
+        return (
+            <div className="room-post-layout">
+                <div className="room-post-container">
+                    <div className="loading">Loading room...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!currentRoom) {
+        return (
+            <div className="room-post-layout">
+                <div className="room-post-container">
+                    <div className="card">
+                        <h1>Room not found</h1>
+                        <p>The room you're looking for doesn't exist or is no longer active.</p>
+                        <Link to="/" className="btn btn-primary">Back to Home</Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="room-post-layout">
+            {/* Navigation Header */}
+            <div className="room-post-nav">
+                <div className="room-post-nav-content">
+                    <Link to="/" className="room-post-nav-back">
+                        <ArrowLeft size={20} />
+                        <span>Back to Dashboard</span>
+                    </Link>
+                    
+                    <div className="room-post-nav-actions">
+                        {canUseAI && (
+                            <button
+                                onClick={() => setShowAISettings(true)}
+                                className="btn btn-secondary btn-small"
+                                title="AI Assistant Settings"
+                            >
+                                <Settings size={16} />
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setShowDownloadModal(true)}
+                            className="btn btn-secondary btn-small"
+                            title="Download Chat History"
+                        >
+                            <Download size={16} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="room-post-container">
+                {/* Main Room Post */}
+                <RoomPost
+                    room={currentRoom}
+                    tutor={tutor}
+                    messageCount={messages.length}
+                    participantCount={participants?.length || 0}
+                    onLike={handleRoomLike}
+                    onShare={handleRoomShare}
+                    onBookmark={handleRoomBookmark}
+                    isLiked={roomEngagement.isLiked}
+                    isBookmarked={roomEngagement.isBookmarked}
+                    likeCount={roomEngagement.likeCount}
+                />
+
+                {/* AI Assistant Controls */}
+                {canUseAI && isAIEnabled && (
+                    <div className="comments-section">
+                        <div className="comments-header">
+                            🤖 AI Assistant Controls
+                        </div>
+                        <div style={{ padding: '16px 20px' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '14px', color: '#65676b' }}>
+                                    Status: {isAIEnabled ? '✅ Enabled' : '❌ Disabled'}
+                                    {isAIEnabled && aiConfig && (
+                                        <span style={{ marginLeft: '8px', color: '#1976d2' }}>
+                                            ({aiConfig.model_name})
+                                        </span>
+                                    )}
+                                </span>
+                                <button
+                                    onClick={() => handleGenerateAIResponse()}
+                                    disabled={loadingAI || messages.length === 0}
+                                    className="btn btn-primary btn-small"
+                                >
+                                    {loadingAI ? 'Generating...' : '🤖 Generate Response'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Comments Section */}
+                <div className="comments-section">
+                    <div className="comments-header">
+                        💬 Discussion ({messages.length} message{messages.length !== 1 ? 's' : ''})
+                    </div>
+                    
+                    <div className="comments-list">
+                        {messages.length === 0 ? (
+                            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#65676b' }}>
+                                <p>No messages yet. Start the conversation!</p>
+                            </div>
+                        ) : (
+                            messages.map((message) => {
+                                const engagement = messageEngagements[message.id] || {
+                                    likeCount: 0,
+                                    dislikeCount: 0,
+                                    userLiked: false,
+                                    userDisliked: false
+                                };
+                                
+                                return (
+                                    <PostComment
+                                        key={message.id}
+                                        message={message}
+                                        onLike={handleMessageLike}
+                                        onReply={handleMessageReply}
+                                        onGenerateAIResponse={canUseAI && isAIEnabled ? handleGenerateAIResponse : undefined}
+                                        likeCount={engagement.likeCount}
+                                        dislikeCount={engagement.dislikeCount}
+                                        isLiked={engagement.userLiked}
+                                        isDisliked={engagement.userDisliked}
+                                        canGenerateAI={canUseAI && isAIEnabled}
+                                        isGeneratingAI={loadingAI}
+                                        currentUserId={user?.id}
+                                    />
+                                );
+                            })
+                        )}
+                        
+                        {/* Typing indicators */}
+                        {typingUsers.length > 0 && (
+                            <div style={{ padding: '12px 20px', fontSize: '13px', color: '#65676b', fontStyle: 'italic' }}>
+                                {typingUsers.map(typingUser => (
+                                    <div key={typingUser.userId}>
+                                        <strong>{typingUser.displayName}</strong> is typing...
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                    </div>
+                </div>
+
+                {/* Comment Input */}
+                {canSendMessages ? (
+                    <CommentInput
+                        user={user}
+                        value={messageText}
+                        onChange={handleInputChange}
+                        onSubmit={handleSendMessage}
+                        onTyping={startTyping}
+                        onStopTyping={stopTyping}
+                        placeholder="Write a comment..."
+                        disabled={sendingMessage}
+                        isLoading={sendingMessage}
+                        replyingTo={replyingTo}
+                        onCancelReply={() => setReplyingTo(null)}
+                    />
+                ) : (
+                    <div className="comment-input-container">
+                        <div className="observer-comment-notice">
+                            👁️ You are in observer mode. You can view the conversation but cannot participate.
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* AI Settings Modal */}
+            {showAISettings && (
+                <AIAssistantSettings onClose={() => setShowAISettings(false)} />
+            )}
+
+            {/* Download Modal */}
+            {showDownloadModal && (
+                <div className="modal-overlay" onClick={() => setShowDownloadModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Download Chat History</h3>
+                        <p>Choose a format to download the chat history:</p>
+                        <div className="download-options">
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    downloadChatHistory();
+                                    setShowDownloadModal(false);
+                                }}
+                            >
+                                Download as TXT
+                            </button>
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={() => setShowDownloadModal(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default RoomPagePost;

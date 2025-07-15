@@ -175,4 +175,60 @@ export interface ImageDimensions {
     maxHeight?: number;
     minWidth?: number;
     minHeight?: number;
+}
+
+// Engagement and Social Features Types
+export interface MessageEngagement {
+    messageId: string;
+    userId: string;
+    type: 'like' | 'dislike';
+    created_at: string;
+}
+
+export interface RoomEngagement {
+    roomId: string;
+    userId: string;
+    type: 'like' | 'bookmark' | 'flag';
+    created_at: string;
+}
+
+export interface EngagementStats {
+    messageId?: string;
+    roomId?: string;
+    likeCount: number;
+    dislikeCount: number;
+    bookmarkCount?: number;
+    flagCount?: number;
+}
+
+export interface CommentReply {
+    id: string;
+    parentMessageId: string;
+    roomId: string;
+    userId: string;
+    content: string;
+    userRole: UserRole;
+    created_at: string;
+    display_name?: string;
+}
+
+// Extended Message interface with engagement
+export interface MessageWithEngagement extends Message {
+    likeCount?: number;
+    dislikeCount?: number;
+    replyCount?: number;
+    userLiked?: boolean;
+    userDisliked?: boolean;
+    replies?: CommentReply[];
+}
+
+// Room social features
+export interface RoomSocialFeatures {
+    roomId: string;
+    likeCount: number;
+    bookmarkCount: number;
+    shareCount: number;
+    isLiked: boolean;
+    isBookmarked: boolean;
+    isFlagged: boolean;
 } 
