@@ -24,57 +24,51 @@ const RoomCard: React.FC<RoomCardProps> = ({
     roomStatus = 'Available',
     showOp = false
 }) => {
+    const statusClass = roomStatus === 'Room Full' ? 'full' : 'available';
+    
     return (
-        <div className="room-card" data-testid={`room-card-${room.id}`} style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '15px',
-            marginBottom: '15px',
-            backgroundColor: '#f9f9f9'
-        }}>
+        <div className="room-card" data-testid={`room-card-${room.id}`}>
             {room.image_url && (
                 <img 
                     src={room.image_url} 
                     alt={room.title}
-                    style={{
-                        width: '100%',
-                        height: '150px',
-                        objectFit: 'cover',
-                        borderRadius: '4px',
-                        marginBottom: '10px'
-                    }}
+                    className="room-card-image"
                 />
             )}
-            <h3>{room.title}</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <strong>{showOp ? 'OP:' : 'Tutor:'}</strong>
-                <AvatarDisplay
-                    avatarUrl={showOp ? room.op_avatar_url : tutor?.avatar_url}
-                    displayName={showOp ? (room.op_display_name || 'Unknown') : (tutor?.display_name || 'Unknown')}
-                    size="small"
-                    className="room-card-avatar"
-                />
-                <span>{showOp ? (room.op_display_name || 'Unknown') : (tutor?.display_name || 'Unknown')}</span>
+            <div className="room-card-content">
+                <h3 className="room-card-title">{room.title}</h3>
+                
+                <div className="room-card-meta">
+                    <span className="room-card-meta-label">{showOp ? 'OP:' : 'Tutor:'}</span>
+                    <div className="room-card-meta-info">
+                        <AvatarDisplay
+                            avatarUrl={showOp ? room.op_avatar_url : tutor?.avatar_url}
+                            displayName={showOp ? (room.op_display_name || 'Unknown') : (tutor?.display_name || 'Unknown')}
+                            size="small"
+                            className="room-card-avatar"
+                        />
+                        <span className="room-card-meta-name">
+                            {showOp ? (room.op_display_name || 'Unknown') : (tutor?.display_name || 'Unknown')}
+                        </span>
+                    </div>
+                </div>
+                
+                {room.description && (
+                    <p className="room-card-description">{room.description}</p>
+                )}
+                
+                <div className={`room-card-status ${statusClass}`}>
+                    {roomStatus === 'Room Full' ? '🔒 Room Full' : '🟢 Available'}
+                </div>
+                
+                <button
+                    onClick={() => onJoin(room.id)}
+                    disabled={isJoinDisabled}
+                    className="room-card-button"
+                >
+                    {joinButtonText}
+                </button>
             </div>
-            {room.description && <p><strong>Description:</strong> {room.description}</p>}
-            <p><strong>Status:</strong> {roomStatus}</p>
-            {roomStatus === 'Room Full' && <span>Full</span>}
-            <button
-                onClick={() => onJoin(room.id)}
-                disabled={isJoinDisabled}
-                style={{
-                    width: '100%',
-                    padding: '8px',
-                    marginTop: '10px',
-                    backgroundColor: isJoinDisabled ? '#ccc' : '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: isJoinDisabled ? 'not-allowed' : 'pointer'
-                }}
-            >
-                {joinButtonText}
-            </button>
         </div>
     );
 };

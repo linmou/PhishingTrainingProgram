@@ -157,20 +157,14 @@ const TutorView: React.FC = () => {
     return (
         <div className="container">
             <div className="card">
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '1rem'
-                }}>
+                <div className="dashboard-header">
                     <div>
-                        <h1 style={{ margin: 0 }}>Tutor Dashboard</h1>
-                        <p style={{ margin: '0.5rem 0 0 0' }}>Welcome! You are logged in as a Tutor.</p>
+                        <h1 className="dashboard-title">Tutor Dashboard</h1>
+                        <p className="dashboard-subtitle">Welcome! You are logged in as a Tutor.</p>
                     </div>
                     <Link 
                         to="/profile" 
-                        className="nav-profile-link"
-                        style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        className="dashboard-profile-link"
                     >
                         <AvatarDisplay
                             avatarUrl={user?.avatar_url}
@@ -182,265 +176,295 @@ const TutorView: React.FC = () => {
                     </Link>
                 </div>
 
-
                 {successMessage && (
-                    <div className="success-message" style={{ 
-                        color: 'green', 
-                        backgroundColor: '#d4edda',
-                        border: '1px solid #c3e6cb',
-                        borderRadius: '4px',
-                        padding: '0.75rem',
-                        marginBottom: '1rem'
-                    }}>
+                    <div className="success-banner">
                         {successMessage}
                     </div>
                 )}
 
                 {!showCreateForm && (
                     <button 
-                        className="btn btn-primary"
+                        className="enhanced-button primary"
                         onClick={() => {
                             setShowCreateForm(true);
                             setSuccessMessage(null);
                             setError(null);
                         }}
                     >
-                        Create a new Room
+                        ➕ Create a new Room
                     </button>
                 )}
 
                 {showCreateForm && (
-                    <>
-                        <h2>Create New Room</h2>
+                    <div className="form-section">
+                        <h2 className="form-section-title">Create New Room</h2>
                         <form aria-label="Create room form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="room-title">Room Title</label>
-                        <input 
-                            id="room-title"
-                            type="text" 
-                            placeholder="Enter room title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            disabled={isCreating}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="room-description">Description</label>
-                        <textarea 
-                            id="room-description"
-                            placeholder="Enter room description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            disabled={isCreating}
-                        ></textarea>
-                    </div>
-                    <div className="form-group">
-                        <label>Choose Room Image</label>
-                        <div className="preset-images-container" data-testid="preset-images-container">
-                            {presetImages.map((image) => (
-                                <div 
-                                    key={image.id}
-                                    className={`preset-image-option ${selectedImageId === image.id ? 'selected' : ''}`}
-                                    data-testid={`preset-image-${image.id}`}
-                                    onClick={() => handleImageSelect(image.id)}
-                                    style={{
-                                        display: 'inline-block',
-                                        margin: '0.5rem',
-                                        padding: '0.5rem',
-                                        border: selectedImageId === image.id ? '3px solid #007bff' : '1px solid #ddd',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        textAlign: 'center',
-                                        backgroundColor: selectedImageId === image.id ? '#e3f2fd' : '#f8f9fa'
-                                    }}
-                                >
-                                    <img 
-                                        src={image.url} 
-                                        alt={image.name}
-                                        style={{
-                                            width: '100px',
-                                            height: '80px',
-                                            objectFit: 'cover',
-                                            borderRadius: '4px',
-                                            marginBottom: '0.5rem'
-                                        }}
+                            <div className="form-row two-columns">
+                                <div className="form-group">
+                                    <label htmlFor="room-title" className="enhanced-label">Room Title</label>
+                                    <input 
+                                        id="room-title"
+                                        type="text" 
+                                        className="enhanced-input"
+                                        placeholder="Enter room title"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        disabled={isCreating}
                                     />
-                                    <div style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
-                                        {image.name}
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor="room-description" className="enhanced-label">Description</label>
+                                    <textarea 
+                                        id="room-description"
+                                        className="enhanced-input enhanced-textarea"
+                                        placeholder="Enter room description"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        disabled={isCreating}
+                                    ></textarea>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="enhanced-label">Choose Room Image</label>
+                                <div className="preset-images-container" data-testid="preset-images-container">
+                                    {presetImages.map((image) => (
+                                        <div 
+                                            key={image.id}
+                                            className={`preset-image-option ${selectedImageId === image.id ? 'selected' : ''}`}
+                                            data-testid={`preset-image-${image.id}`}
+                                            onClick={() => handleImageSelect(image.id)}
+                                            style={{
+                                                display: 'inline-block',
+                                                margin: '0.5rem',
+                                                padding: '0.5rem',
+                                                border: selectedImageId === image.id ? '3px solid #007bff' : '1px solid #ddd',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                textAlign: 'center',
+                                                backgroundColor: selectedImageId === image.id ? '#e3f2fd' : '#f8f9fa'
+                                            }}
+                                        >
+                                            <img 
+                                                src={image.url} 
+                                                alt={image.name}
+                                                style={{
+                                                    width: '100px',
+                                                    height: '80px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px',
+                                                    marginBottom: '0.5rem'
+                                                }}
+                                            />
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                {image.name}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Custom Image Upload Section */}
+                                <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
+                                    <h4 style={{ 
+                                        fontSize: '1rem', 
+                                        marginBottom: '0.75rem', 
+                                        color: '#333',
+                                        borderTop: '1px solid #eee',
+                                        paddingTop: '1rem'
+                                    }}>
+                                        Or Upload Custom Image
+                                    </h4>
+                                    <ImageUpload
+                                        uploadType="tutor-image"
+                                        currentImageUrl={customImageUrl}
+                                        onUploadSuccess={handleCustomImageUpload}
+                                        onUploadError={handleCustomImageError}
+                                        showPreview={true}
+                                        dimensionConstraints={{ maxWidth: 800, maxHeight: 600 }}
+                                        roomId="temp-room-id" // This will be updated after room creation
+                                    />
+                                </div>
+
+                                {/* Preview Section */}
+                                {(selectedImageId || customImageUrl) && (
+                                    <div className="selected-image-preview" data-testid="selected-image-preview" style={{
+                                        marginTop: '1rem',
+                                        padding: '1rem',
+                                        backgroundColor: '#f8f9fa',
+                                        borderRadius: '8px',
+                                        textAlign: 'center'
+                                    }}>
+                                        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
+                                            {customImageUrl ? 'Custom Image Selected' : `Selected: ${getSelectedImage()?.name}`}
+                                        </p>
+                                        <img 
+                                            src={getImageUrl()} 
+                                            alt={customImageUrl ? 'Custom room image' : getSelectedImage()?.name}
+                                            style={{
+                                                maxWidth: '200px',
+                                                height: 'auto',
+                                                borderRadius: '4px'
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* OP Configuration Section */}
+                            <div className="form-group" style={{ marginTop: '2rem' }}>
+                                <label className="enhanced-label">👤 Original Poster (OP) Settings</label>
+                                <div style={{ 
+                                    padding: '1rem', 
+                                    backgroundColor: '#f8f9fa', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid #e9ecef' 
+                                }}>
+                                    <div style={{ marginBottom: '1rem' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="radio"
+                                                name="opType"
+                                                checked={!useCustomOp}
+                                                onChange={() => setUseCustomOp(false)}
+                                                disabled={isCreating}
+                                            />
+                                            <span>Use my profile as OP</span>
+                                        </label>
+                                        <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem', fontSize: '0.9rem', color: '#6c757d' }}>
+                                            OP will be: <strong>{user?.display_name || 'Your Name'}</strong>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="radio"
+                                                name="opType"
+                                                checked={useCustomOp}
+                                                onChange={() => setUseCustomOp(true)}
+                                                disabled={isCreating}
+                                            />
+                                            <span>Use custom OP name</span>
+                                        </label>
+                                        {useCustomOp && (
+                                            <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+                                                <input
+                                                    type="text"
+                                                    className="enhanced-input"
+                                                    placeholder="Enter custom OP name"
+                                                    value={customOpName}
+                                                    onChange={(e) => setCustomOpName(e.target.value)}
+                                                    disabled={isCreating}
+                                                />
+                                                <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
+                                                    Custom OP names won't have profile pictures or user accounts
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dialogue Customization Section */}
+                            <div className="form-group" style={{ marginTop: '2rem' }}>
+                                <label className="enhanced-label">💬 Pre-populated Messages</label>
+                                <DialogueCustomizer
+                                    dialogue={prePopulatedDialogue}
+                                    onChange={setPrePopulatedDialogue}
+                                    disabled={isCreating}
+                                />
+                            </div>
+                            
+                            {error && (
+                                <div className="error-banner">
+                                    {error}
+                                </div>
+                            )}
+                            
+                            <div className="form-row">
+                                <button 
+                                    type="submit"
+                                    className={`enhanced-button success ${isCreating ? 'loading' : ''}`}
+                                    disabled={isCreating}
+                                >
+                                    {isCreating ? 'Creating Room...' : '🚀 Create Room'}
+                                </button>
+                                <button 
+                                    type="button"
+                                    className="enhanced-button secondary"
+                                    onClick={() => {
+                                        setShowCreateForm(false);
+                                        setError(null);
+                                    }}
+                                    disabled={isCreating}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
+
+                <div className="form-section">
+                    <h2 className="form-section-title">📚 Your Rooms</h2>
+                    {rooms.length > 0 ? (
+                        <div className="rooms-grid">
+                            {rooms.map((room) => (
+                                <div key={room.id} className="room-card" data-testid="room-item">
+                                    {room.image_url && (
+                                        <img 
+                                            src={room.image_url} 
+                                            alt={room.title}
+                                            className="room-card-image"
+                                        />
+                                    )}
+                                    <div className="room-card-content">
+                                        <h3 className="room-card-title">{room.title}</h3>
+                                        
+                                        {room.description && (
+                                            <p className="room-card-description">{room.description}</p>
+                                        )}
+                                        
+                                        <div className="room-card-meta">
+                                            <span className="room-card-meta-label">Status:</span>
+                                            <div className={`room-card-status ${room.is_active ? 'available' : 'full'}`}>
+                                                {room.is_active ? '🟢 Active' : '🔴 Inactive'}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="room-card-meta">
+                                            <span className="room-card-meta-label">Created:</span>
+                                            <span className="room-card-meta-name">
+                                                {new Date(room.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        
+                                        <Link 
+                                            to={`/room/${room.id}`}
+                                            className="room-card-button"
+                                            style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}
+                                        >
+                                            🚪 Enter Room
+                                        </Link>
                                     </div>
                                 </div>
                             ))}
                         </div>
-
-                        {/* Custom Image Upload Section */}
-                        <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-                            <h4 style={{ 
-                                fontSize: '1rem', 
-                                marginBottom: '0.75rem', 
-                                color: '#333',
-                                borderTop: '1px solid #eee',
-                                paddingTop: '1rem'
-                            }}>
-                                Or Upload Custom Image
-                            </h4>
-                            <ImageUpload
-                                uploadType="tutor-image"
-                                currentImageUrl={customImageUrl}
-                                onUploadSuccess={handleCustomImageUpload}
-                                onUploadError={handleCustomImageError}
-                                showPreview={true}
-                                dimensionConstraints={{ maxWidth: 800, maxHeight: 600 }}
-                                roomId="temp-room-id" // This will be updated after room creation
-                            />
-                        </div>
-
-                        {/* Preview Section */}
-                        {(selectedImageId || customImageUrl) && (
-                            <div className="selected-image-preview" data-testid="selected-image-preview" style={{
-                                marginTop: '1rem',
-                                padding: '1rem',
-                                backgroundColor: '#f8f9fa',
-                                borderRadius: '8px',
-                                textAlign: 'center'
-                            }}>
-                                <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
-                                    {customImageUrl ? 'Custom Image Selected' : `Selected: ${getSelectedImage()?.name}`}
-                                </p>
-                                <img 
-                                    src={getImageUrl()} 
-                                    alt={customImageUrl ? 'Custom room image' : getSelectedImage()?.name}
-                                    style={{
-                                        maxWidth: '200px',
-                                        height: 'auto',
-                                        borderRadius: '4px'
-                                    }}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* OP Configuration Section */}
-                    <div className="form-group" style={{ marginTop: '2rem' }}>
-                        <label style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>
-                            Original Poster (OP) Settings
-                        </label>
-                        <div style={{ 
-                            padding: '1rem', 
-                            backgroundColor: '#f8f9fa', 
-                            borderRadius: '8px', 
-                            border: '1px solid #e9ecef' 
-                        }}>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                    <input
-                                        type="radio"
-                                        name="opType"
-                                        checked={!useCustomOp}
-                                        onChange={() => setUseCustomOp(false)}
-                                        disabled={isCreating}
-                                    />
-                                    <span>Use my profile as OP</span>
-                                </label>
-                                <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem', fontSize: '0.9rem', color: '#6c757d' }}>
-                                    OP will be: <strong>{user?.display_name || 'Your Name'}</strong>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                    <input
-                                        type="radio"
-                                        name="opType"
-                                        checked={useCustomOp}
-                                        onChange={() => setUseCustomOp(true)}
-                                        disabled={isCreating}
-                                    />
-                                    <span>Use custom OP name</span>
-                                </label>
-                                {useCustomOp && (
-                                    <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
-                                        <input
-                                            type="text"
-                                            placeholder="Enter custom OP name"
-                                            value={customOpName}
-                                            onChange={(e) => setCustomOpName(e.target.value)}
-                                            disabled={isCreating}
-                                            style={{
-                                                width: '100%',
-                                                padding: '0.5rem',
-                                                borderRadius: '4px',
-                                                border: '1px solid #ced4da',
-                                                fontSize: '0.9rem'
-                                            }}
-                                        />
-                                        <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
-                                            Custom OP names won't have profile pictures or user accounts
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Dialogue Customization Section */}
-                    <div className="form-group" style={{ marginTop: '2rem' }}>
-                        <DialogueCustomizer
-                            dialogue={prePopulatedDialogue}
-                            onChange={setPrePopulatedDialogue}
-                            disabled={isCreating}
-                        />
-                    </div>
-                    
-                    {error && (
-                        <div className="error-message" style={{ color: 'red', marginBottom: '1rem' }}>
-                            {error}
+                    ) : (
+                        <div className="rooms-empty-state">
+                            <div className="rooms-empty-state-icon">📝</div>
+                            <h3 className="rooms-empty-state-title">No rooms created yet</h3>
+                            <p className="rooms-empty-state-description">
+                                Click "Create a new Room" to get started with your first tutoring session.
+                            </p>
                         </div>
                     )}
-                    
-                    <button 
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={isCreating}
-                    >
-                        {isCreating ? 'Creating Room...' : 'Create Room'}
-                    </button>
-                </form>
-                    </>
-                )}
+                </div>
 
-                <h2>Your Rooms</h2>
-                {rooms.length > 0 ? (
-                    <div className="rooms-list">
-                        {rooms.map((room) => (
-                            <div key={room.id} className="room-item" data-testid="room-item">
-                                <h3>{room.title}</h3>
-                                <p>{room.description}</p>
-                                {room.image_url && (
-                                    <img 
-                                        src={room.image_url} 
-                                        alt={room.title}
-                                        style={{ maxWidth: '200px', height: 'auto' }}
-                                    />
-                                )}
-                                <p>Status: {room.is_active ? 'Active' : 'Inactive'}</p>
-                                <p>Created: {new Date(room.created_at).toLocaleDateString()}</p>
-                                <Link 
-                                    to={`/room/${room.id}`}
-                                    className="btn btn-primary"
-                                >
-                                    Enter Room
-                                </Link>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p>No rooms created yet.</p>
-                )}
-
-                <Link to="/" className="btn btn-secondary">Back to Home</Link>
+                <Link to="/" className="enhanced-button secondary">← Back to Home</Link>
             </div>
         </div>
     );
 };
 
-export default TutorView; 
+export default TutorView;
