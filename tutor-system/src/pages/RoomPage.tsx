@@ -332,7 +332,7 @@ const RoomPage: React.FC = () => {
                     <div className="room-actions">
                         <button 
                             className="btn btn-secondary btn-small"
-                            onClick={downloadChatHistory}
+                            onClick={() => downloadChatHistory()}
                         >
                             Download History
                         </button>

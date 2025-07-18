@@ -130,7 +130,7 @@ describe('RoomPage Component Tests', () => {
         mockAIConfig = {
             id: 'ai-config-id',
             room_id: mockRoom.id,
-            model_name: 'gpt-3.5-turbo',
+            model_name: 'gpt-4o',
             system_prompt: 'Test prompt',
             temperature: 0.7,
             max_tokens: 1000,
@@ -421,7 +421,7 @@ describe('RoomPage Component Tests', () => {
             render(<TestRoomPageWrapper />);
 
             expect(screen.getByText('🤖 AI Assistant: Enabled')).toBeInTheDocument();
-            expect(screen.getByText('(gpt-3.5-turbo)')).toBeInTheDocument();
+            expect(screen.getByText('(gpt-4o)')).toBeInTheDocument();
             expect(screen.getByText('🤖 Generate Response')).toBeInTheDocument();
         });
 

@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User, AIInteraction } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
     initializeAIAssistant,
     getAIConfig,
     updateAIConfig,
-    generateAndSaveAIResponse
+    generateAISuggestion,
+    recordAISuggestionFeedback
 } from '../services/aiService';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -27,6 +28,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [aiConfig, setAiConfig] = useState<AIAssistantConfig | null>(null);
     const [loadingAI, setLoadingAI] = useState(false);
     const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
+    const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+    const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
+    const [currentSuggestionContext, setCurrentSuggestionContext] = useState<{ 
+        parentMessageId: string; 
+        parentMessageContent: string;
+        startTime: number;
+        contextMessages: string[];
+    } | null>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const channelRef = useRef<any>(null);
     const { user } = useAuth();
@@ -166,11 +175,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return;
             }
 
-            try {
-                const config = await getAIConfig(currentRoom.id);
-                setAiConfig(config);
-            } catch (error) {
-                console.error('Failed to load AI config:', error);
+            // For simplified auth, use room data as AI config source
+            if (currentRoom.ai_assistant_enabled) {
+                setAiConfig({
+                    id: currentRoom.id,
+                    room_id: currentRoom.id,
+                    model_name: currentRoom.ai_assistant_model || 'gpt-4o',
+                    system_prompt: currentRoom.ai_assistant_prompt || 
+                        'You are a helpful AI assistant in an educational tutoring session. ' +
+                        'Provide clear, educational responses to help students learn. ' +
+                        'Be encouraging, patient, and focus on building understanding.',
+                    temperature: 0.7,
+                    max_tokens: 150,
+                    is_active: true,
+                    created_at: currentRoom.created_at,
+                    updated_at: currentRoom.updated_at
+                });
+            } else {
                 setAiConfig(null);
             }
         };
@@ -327,6 +348,21 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         console.log('Sending message:', { roomId: currentRoom.id, userId: user.id, content });
 
+        // Check if this is a tutor response after seeing an AI suggestion
+        if (user.current_role === 'tutor' && currentSuggestionContext && aiSuggestion) {
+            // Determine the action type
+            let action: 'accepted' | 'modified' = 'modified';
+            if (content.trim() === aiSuggestion.trim()) {
+                action = 'accepted';
+            }
+            
+            // Record the feedback
+            await recordAIFeedback(action, content);
+            
+            // Clear the suggestion context
+            clearAISuggestion();
+        }
+
         // Create optimistic message
         const optimisticMessage: Message = {
             id: `temp-${Date.now()}`, // Temporary ID
@@ -337,7 +373,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
-            parent_message_id: null,
+            parent_message_id: currentSuggestionContext?.parentMessageId || null,
             created_at: new Date().toISOString(),
             display_name: user.display_name || 'User'
         };
@@ -351,7 +387,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 room_id: currentRoom.id,
                 user_id: user.id,
                 content,
-                user_role: user.current_role as UserRole
+                user_role: user.current_role as UserRole,
+                parent_message_id: currentSuggestionContext?.parentMessageId || null
             })
             .select()
             .single();
@@ -390,8 +427,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setLoadingAI(true);
         try {
+            // If there's an existing suggestion, mark it as ignored
+            if (currentSuggestionContext && aiSuggestion) {
+                await recordAIFeedback('ignored');
+                clearAISuggestion();
+            }
+
             // Get the latest student message if no prompt provided
             let parentMessageId: string | undefined;
+            let parentMessageContent: string = '';
             if (!prompt) {
                 const latestMessage = messages
                     .filter(m => m.user_role === 'student' && !m.is_ai_generated)
@@ -399,18 +443,34 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (latestMessage) {
                     parentMessageId = latestMessage.id;
+                    parentMessageContent = latestMessage.content;
                     prompt = latestMessage.content;
                 }
             }
 
-            await generateAndSaveAIResponse(
+            if (!parentMessageId) {
+                throw new Error('No student message found to respond to');
+            }
+
+            const result = await generateAISuggestion(
                 currentRoom.id,
                 user.id,
                 prompt,
                 parentMessageId
             );
 
-            // The message will appear via real-time subscription
+            // Store the AI suggestion for the tutor
+            if (result.aiResponse.suggested_response) {
+                setAiSuggestion(result.aiResponse.suggested_response);
+                
+                // Store context for tracking
+                setCurrentSuggestionContext({
+                    parentMessageId,
+                    parentMessageContent,
+                    startTime: Date.now(),
+                    contextMessages: result.contextMessages
+                });
+            }
         } catch (error) {
             console.error('Failed to generate AI response:', error);
             throw error;
@@ -434,44 +494,56 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoadingAI(true);
         try {
             if (enabled) {
-                if (!aiConfig) {
-                    // Initialize AI assistant
-                    await initializeAIAssistant(
-                        currentRoom.id,
-                        config?.model_name || 'gpt-3.5-turbo',
-                        config?.system_prompt || undefined
-                    );
-                } else {
-                    // Update existing configuration
-                    await updateAIConfig(currentRoom.id, {
-                        is_active: true,
-                        ...config
-                    });
-                }
+                // For simplified auth, just update the room directly
+                const aiModel = config?.model_name || 'gpt-4o';
+                const aiPrompt = config?.system_prompt || 
+                    'You are a helpful AI assistant in an educational tutoring session. ' +
+                    'Provide clear, educational responses to help students learn. ' +
+                    'Be encouraging, patient, and focus on building understanding.';
+                
+                // Store AI config in the room itself
+                const { error: updateError } = await supabase
+                    .from('rooms')
+                    .update({ 
+                        ai_assistant_enabled: true,
+                        ai_assistant_model: aiModel,
+                        ai_assistant_prompt: aiPrompt
+                    })
+                    .eq('id', currentRoom.id);
 
-                // Update room to reflect AI assistant status
+                if (updateError) throw updateError;
+                
+                // Set a dummy AI config for the app to use
+                setAiConfig({
+                    id: currentRoom.id,
+                    room_id: currentRoom.id,
+                    model_name: aiModel,
+                    system_prompt: aiPrompt,
+                    temperature: config?.temperature || 0.7,
+                    max_tokens: config?.max_tokens || 150,
+                    is_active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+
+                // Reload the room to get updated data
                 const { data: updatedRoom, error: roomError } = await supabase
                     .from('rooms')
-                    .update({ ai_assistant_enabled: true })
+                    .select('*')
                     .eq('id', currentRoom.id)
-                    .select()
                     .single();
 
                 if (roomError) throw roomError;
                 setCurrentRoom(updatedRoom);
-
-                // Reload AI config
-                const newConfig = await getAIConfig(currentRoom.id);
-                setAiConfig(newConfig);
             } else {
                 // Disable AI assistant
-                if (aiConfig) {
-                    await updateAIConfig(currentRoom.id, { is_active: false });
-                }
-
                 const { data: updatedRoom, error: roomError } = await supabase
                     .from('rooms')
-                    .update({ ai_assistant_enabled: false })
+                    .update({ 
+                        ai_assistant_enabled: false,
+                        ai_assistant_model: null,
+                        ai_assistant_prompt: null
+                    })
                     .eq('id', currentRoom.id)
                     .select()
                     .single();
@@ -539,30 +611,167 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const downloadChatHistory = () => {
+    const downloadChatHistory = (format: 'txt' | 'json' = 'txt') => {
         if (!currentRoom || !messages) return;
 
         const roomTitle = currentRoom.title.replace(/\s+/g, '_');
-        const content = [
-            `Room: ${currentRoom.title}`,
-            `Created: ${new Date(currentRoom.created_at).toISOString()}`,
-            '',
-            'Messages:',
-            '=========',
-            ...messages.map(message => 
-                `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}`
-            )
-        ].join('\n');
+        const timestamp = new Date().toISOString().split('T')[0];
+        
+        // Only include AI data for tutors
+        const isTutor = user?.current_role === 'tutor';
+        
+        if (format === 'json') {
+            const exportData: any = {
+                room: {
+                    id: currentRoom.id,
+                    title: currentRoom.title,
+                    created_at: currentRoom.created_at
+                },
+                messages: messages.map(msg => ({
+                    id: msg.id,
+                    user_role: msg.user_role,
+                    display_name: msg.display_name,
+                    content: msg.content,
+                    created_at: msg.created_at,
+                    is_ai_generated: msg.is_ai_generated
+                })),
+                export_metadata: {
+                    exported_at: new Date().toISOString(),
+                    total_messages: messages.length
+                }
+            };
+            
+            // Only add AI-related data for tutors
+            if (isTutor) {
+                exportData.room.ai_enabled = currentRoom.ai_assistant_enabled;
+                exportData.room.ai_model = currentRoom.ai_assistant_model;
+                exportData.messages = messages.map(msg => ({
+                    id: msg.id,
+                    user_role: msg.user_role,
+                    display_name: msg.display_name,
+                    content: msg.content,
+                    created_at: msg.created_at,
+                    is_ai_generated: msg.is_ai_generated,
+                    ai_model_used: msg.ai_model_used
+                }));
+                exportData.ai_interactions = aiInteractions;
+                exportData.export_metadata.total_ai_interactions = aiInteractions.length;
+                exportData.export_metadata.interaction_summary = {
+                    accepted: aiInteractions.filter(i => i.tutor_action === 'accepted').length,
+                    rejected: aiInteractions.filter(i => i.tutor_action === 'rejected').length,
+                    modified: aiInteractions.filter(i => i.tutor_action === 'modified').length,
+                    ignored: aiInteractions.filter(i => i.tutor_action === 'ignored').length
+                };
+            }
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${roomTitle}_chat_export_${timestamp}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } else {
+            // TXT format - only include AI data for tutors
+            const aiSummary = isTutor && aiInteractions.length > 0 ? [
+                '',
+                'AI Assistant Summary:',
+                '====================',
+                `Total AI suggestions: ${aiInteractions.length}`,
+                `Accepted: ${aiInteractions.filter(i => i.tutor_action === 'accepted').length} (${(aiInteractions.filter(i => i.tutor_action === 'accepted').length / aiInteractions.length * 100).toFixed(2)}%)`,
+                `Modified: ${aiInteractions.filter(i => i.tutor_action === 'modified').length} (${(aiInteractions.filter(i => i.tutor_action === 'modified').length / aiInteractions.length * 100).toFixed(2)}%)`,
+                `Rejected: ${aiInteractions.filter(i => i.tutor_action === 'rejected').length} (${(aiInteractions.filter(i => i.tutor_action === 'rejected').length / aiInteractions.length * 100).toFixed(2)}%)`,
+                `Ignored: ${aiInteractions.filter(i => i.tutor_action === 'ignored').length} (${(aiInteractions.filter(i => i.tutor_action === 'ignored').length / aiInteractions.length * 100).toFixed(2)}%)`,
+                '',
+                'Detailed AI Interactions:',
+                '========================',
+                ...aiInteractions.map((interaction, idx) => [
+                    `#${idx + 1} - ${interaction.timestamp}`,
+                    `Parent Message: "${interaction.parent_message_content}"`,
+                    `AI Suggestion: "${interaction.ai_suggestion}"`,
+                    `Tutor Action: ${interaction.tutor_action}`,
+                    interaction.tutor_final_response ? `Final Response: "${interaction.tutor_final_response}"` : '',
+                    `Response Time: ${interaction.response_time_ms}ms`,
+                    ''
+                ].filter(line => line).join('\n'))
+            ] : [];
 
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${roomTitle}_chat_history.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+            const content = [
+                `Room: ${currentRoom.title}`,
+                `Created: ${new Date(currentRoom.created_at).toISOString()}`,
+                ...(isTutor ? [
+                    `AI Assistant: ${currentRoom.ai_assistant_enabled ? 'Enabled' : 'Disabled'}`,
+                    currentRoom.ai_assistant_model ? `AI Model: ${currentRoom.ai_assistant_model}` : ''
+                ] : []),
+                '',
+                'Messages:',
+                '=========',
+                ...messages.map(message => 
+                    `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}`
+                ),
+                ...aiSummary
+            ].filter(line => line !== '').join('\n');
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${roomTitle}_chat_history_${timestamp}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    };
+
+    const clearAISuggestion = () => {
+        setAiSuggestion(null);
+        setCurrentSuggestionContext(null);
+    };
+
+    const recordAIFeedback = async (
+        action: 'accepted' | 'rejected' | 'modified' | 'ignored',
+        finalResponse?: string
+    ): Promise<void> => {
+        if (!user || !currentRoom || !currentSuggestionContext || !aiSuggestion) {
+            console.warn('Cannot record AI feedback: missing context');
+            return;
+        }
+
+        const responseTime = Date.now() - currentSuggestionContext.startTime;
+
+        try {
+            // Record to database
+            await recordAISuggestionFeedback(
+                currentRoom.id,
+                user.id,
+                currentSuggestionContext.parentMessageId,
+                aiSuggestion,
+                action,
+                finalResponse,
+                undefined, // tutor_message_id will be set later if needed
+                responseTime,
+                currentSuggestionContext.contextMessages
+            );
+
+            // Add to local interactions for export
+            const interaction: AIInteraction = {
+                timestamp: new Date().toISOString(),
+                parent_message_id: currentSuggestionContext.parentMessageId,
+                parent_message_content: currentSuggestionContext.parentMessageContent,
+                ai_suggestion: aiSuggestion,
+                tutor_action: action,
+                tutor_final_response: finalResponse,
+                response_time_ms: responseTime
+            };
+
+            setAIInteractions(prev => [...prev, interaction]);
+        } catch (error) {
+            console.error('Failed to record AI feedback:', error);
+            // Don't throw - we don't want to interrupt the user flow
+        }
     };
 
     const value: RoomContextType = {
@@ -581,7 +790,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         stopTyping,
         aiConfig,
         loadingAI,
-        downloadChatHistory
+        downloadChatHistory,
+        aiSuggestion,
+        clearAISuggestion,
+        aiInteractions,
+        currentSuggestionContext,
+        recordAIFeedback
     };
 
     return (

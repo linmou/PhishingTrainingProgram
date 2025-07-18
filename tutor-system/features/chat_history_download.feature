@@ -50,4 +50,45 @@ Feature: Chat History and Room Information Download
     When the user downloads the chat history as "JSON"
     Then the downloaded file should contain the room's creation date
     And the downloaded file should contain each participant's display name and role
-    And each message in the downloaded file should have a unique ID, content, author's display name, author's role, and a precise timestamp. 
+    And each message in the downloaded file should have a unique ID, content, author's display name, author's role, and a precise timestamp.
+
+  Scenario: Download includes AI interaction data for tutors
+    Given the user is logged in as a "tutor" in the "Phishing 101" room
+    And the tutor has enabled AI assistant
+    And the tutor has used AI suggestions with various outcomes:
+      | Student Question            | AI Action  |
+      | What is phishing?          | accepted   |
+      | How do I stay safe?        | modified   |
+      | Is this email real?        | rejected   |
+    When the tutor downloads the chat history as "JSON"
+    Then the downloaded file should include an "ai_interactions" section
+    And the AI interactions should show:
+      | Field                  | Description                           |
+      | parent_message_content | The student's original question       |
+      | ai_suggestion         | The AI's suggested response           |
+      | tutor_action          | How the tutor used the suggestion     |
+      | tutor_final_response  | What the tutor actually sent          |
+      | response_time_ms      | Time taken to respond                 |
+
+  Scenario: TXT download includes AI usage summary
+    Given the user is logged in as a "tutor" in the "Phishing 101" room
+    And the tutor has used AI suggestions 10 times
+    When the tutor downloads the chat history as "TXT"
+    Then the file should include an "AI Assistant Summary" section
+    And the summary should show total suggestions and usage breakdown
+
+  Scenario: Students and observers see basic downloads without AI data
+    Given the user is logged in as a "student" in the "Phishing 101" room
+    And the tutor has used AI suggestions in the room
+    When the student downloads the chat history as "JSON"
+    Then the downloaded file should NOT include "ai_interactions" section
+    And the file should only contain messages and basic room information
+
+  Scenario: Download modal shows format options
+    Given the user is in the "Phishing 101" room
+    When the user clicks the "Download History" button
+    Then a modal should appear with format options:
+      | Format | Description                                    |
+      | TXT    | Simple text format for easy reading           |
+      | JSON   | Structured data format with full details      |
+    And the modal should have a "Cancel" button to close without downloading 

@@ -167,29 +167,6 @@ const PostComment: React.FC<PostCommentProps> = ({
                                 <span>Reply</span>
                             </button>
 
-                            {/* AI Generate Response (for tutors on student messages) */}
-                            {canGenerateAI &&
-                                message.user_role === 'student' &&
-                                !message.is_ai_generated &&
-                                onGenerateAIResponse && (
-                                    <button
-                                        onClick={() => onGenerateAIResponse(message.id)}
-                                        disabled={isGeneratingAI}
-                                        className="comment-action-btn comment-action-ai"
-                                        title="Generate AI response to this comment"
-                                    >
-                                        {isGeneratingAI ? (
-                                            <>
-                                                <div className="ai-loading-spinner"></div>
-                                                <span>Generating...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                🤖 <span>AI Response</span>
-                                            </>
-                                        )}
-                                    </button>
-                                )}
                         </div>
 
                         {/* More Actions */}

@@ -94,6 +94,7 @@ export interface ConversationMessage {
 
 export interface AIResponse {
     content: string;
+    suggested_response?: string;
     model_used: string;
     response_time_ms: number;
     success: boolean;
@@ -136,7 +137,17 @@ export interface RoomContextType {
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
-    downloadChatHistory: () => void;
+    downloadChatHistory: (format?: 'txt' | 'json') => void;
+    aiSuggestion: string | null;
+    clearAISuggestion: () => void;
+    aiInteractions: AIInteraction[];
+    currentSuggestionContext: { 
+        parentMessageId: string; 
+        parentMessageContent: string;
+        startTime: number;
+        contextMessages: string[];
+    } | null;
+    recordAIFeedback: (action: 'accepted' | 'rejected' | 'modified' | 'ignored', finalResponse?: string) => Promise<void>;
 }
 
 // Image Upload Types
@@ -231,4 +242,46 @@ export interface RoomSocialFeatures {
     isLiked: boolean;
     isBookmarked: boolean;
     isFlagged: boolean;
+}
+
+// AI Suggestion Tracking
+export interface AISuggestionFeedback {
+    id: string;
+    room_id: string;
+    tutor_id: string;
+    parent_message_id: string;
+    ai_suggestion: string;
+    tutor_action: 'accepted' | 'rejected' | 'modified' | 'ignored';
+    tutor_final_response: string | null;
+    tutor_message_id: string | null;
+    response_time_ms: number | null;
+    context_messages: string[] | null;
+    created_at: string;
+}
+
+export interface AIInteraction {
+    timestamp: string;
+    parent_message_id: string;
+    parent_message_content: string;
+    ai_suggestion: string;
+    tutor_action: 'accepted' | 'rejected' | 'modified' | 'ignored';
+    tutor_final_response?: string;
+    response_time_ms?: number;
+}
+
+export interface ChatExportData {
+    room: {
+        id: string;
+        title: string;
+        created_at: string;
+    };
+    messages: Array<{
+        id: string;
+        user_role: string;
+        display_name?: string;
+        content: string;
+        created_at: string;
+        is_ai_generated: boolean;
+    }>;
+    ai_interactions: AIInteraction[];
 } 

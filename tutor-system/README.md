@@ -49,8 +49,8 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 
 4. **Configure environment variables**
    ```bash
-   cp env.example .env.local
-   # Edit .env.local with your Supabase credentials
+   cp .env.example .env
+   # Edit .env with your Supabase credentials
    ```
 
 5. **Database Setup**
