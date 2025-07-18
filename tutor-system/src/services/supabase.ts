@@ -98,6 +98,7 @@ export const createRoom = async (roomData: {
     op_id?: string | null;
     op_display_name?: string | null;
     op_avatar_url?: string | null;
+    password?: string | null;
 }) => {
     console.log('🏠 Supabase Service: Creating room:', roomData);
     const { data, error } = await supabase
@@ -158,6 +159,80 @@ export const getRoomsByTutor = async (tutorId: string) => {
     }
     console.log('✅ Supabase Service: Rooms retrieved:', { count: data?.length || 0 });
     return data || []
+}
+
+export const validateRoomPassword = async (roomId: string, password: string) => {
+    console.log('🔐 Supabase Service: Validating room password:', roomId);
+    
+    const { data: room, error } = await supabase
+        .from('rooms')
+        .select('password')
+        .eq('id', roomId)
+        .single();
+
+    if (error) {
+        console.error('❌ Supabase Service: Room not found:', error);
+        throw new Error('Room not found');
+    }
+
+    // If room has no password, allow access
+    if (!room.password) {
+        return { success: true, message: 'Room has no password protection' };
+    }
+
+    // Check if provided password matches
+    if (room.password === password) {
+        console.log('✅ Supabase Service: Password validation successful');
+        return { success: true, message: 'Password correct' };
+    } else {
+        console.log('❌ Supabase Service: Password validation failed');
+        return { success: false, message: 'Incorrect password' };
+    }
+};
+
+export const deleteRoom = async (roomId: string) => {
+    console.log('🗑️ Supabase Service: Deleting room:', roomId);
+    
+    // First, verify the room exists and get current user
+    const user = await getCurrentUser();
+    if (!user) {
+        throw new Error('User not authenticated');
+    }
+
+    // Check if the user is the owner of the room
+    const { data: room, error: roomError } = await supabase
+        .from('rooms')
+        .select('tutor_id, title')
+        .eq('id', roomId)
+        .single();
+
+    if (roomError) {
+        console.error('❌ Supabase Service: Room not found:', roomError);
+        throw new Error('Room not found');
+    }
+
+    if (room.tutor_id !== user.id) {
+        console.error('❌ Supabase Service: User not authorized to delete room');
+        throw new Error('You are not authorized to delete this room');
+    }
+
+    // Delete the room (CASCADE will handle related data)
+    const { error: deleteError } = await supabase
+        .from('rooms')
+        .delete()
+        .eq('id', roomId)
+        .eq('tutor_id', user.id); // Double-check ownership
+
+    if (deleteError) {
+        console.error('❌ Supabase Service: Delete room error:', deleteError);
+        throw deleteError;
+    }
+
+    console.log('✅ Supabase Service: Room deleted successfully:', {
+        roomId,
+        title: room.title
+    });
+    return { success: true, title: room.title };
 }
 
 // Observer-specific functions

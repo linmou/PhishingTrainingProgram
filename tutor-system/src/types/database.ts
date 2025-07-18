@@ -56,6 +56,7 @@ export interface Database {
                     op_id: string | null
                     op_display_name: string | null
                     op_avatar_url: string | null
+                    password: string | null
                     created_at: string
                     updated_at: string
                 }
@@ -73,6 +74,7 @@ export interface Database {
                     op_id?: string | null
                     op_display_name?: string | null
                     op_avatar_url?: string | null
+                    password?: string | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -90,6 +92,7 @@ export interface Database {
                     op_id?: string | null
                     op_display_name?: string | null
                     op_avatar_url?: string | null
+                    password?: string | null
                     created_at?: string
                     updated_at?: string
                 }

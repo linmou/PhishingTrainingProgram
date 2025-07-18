@@ -85,3 +85,66 @@ Feature: Room Management with Preset Images
     Then the system should assign a default room image
     And the default image should be appropriate for educational content
     And the room should be created successfully
+
+  Scenario: Tutor creates a password-protected room
+    Given I am logged in as a tutor
+    When I navigate to the room creation page
+    And I enter room title "Private Study Session"
+    And I enter room description "Advanced topics requiring password access"
+    And I enable password protection
+    And I enter room password "SecurePass123"
+    And I submit the room creation form
+    Then a new password-protected room should be created
+    And the room password should be visible in my room list
+    And the password should be displayed in a monospace font
+
+  Scenario: Room owner bypasses password protection
+    Given I am logged in as a tutor
+    And I have created a password-protected room "Private Session" with password "MyPass123"
+    When I click to enter my own room
+    Then I should enter the room directly without password prompt
+    And I should see the room content immediately
+
+  Scenario: Non-owner attempts to join password-protected room
+    Given a password-protected room exists with password "SecurePass123"
+    And I am logged in as a student
+    When I attempt to join the password-protected room
+    Then I should see a password prompt modal
+    And the modal should display "This room is password protected. Please enter the password."
+    And the modal should have a password input field
+
+  Scenario: Entering correct password for room access
+    Given a password-protected room exists with password "SecurePass123"
+    And I am logged in as an observer
+    And I see the password prompt modal
+    When I enter the password "SecurePass123"
+    And I click "Join Room"
+    Then I should successfully enter the room
+    And the password prompt should disappear
+    And I should see the room content
+
+  Scenario: Entering incorrect password for room access
+    Given a password-protected room exists with password "SecurePass123"
+    And I am logged in as a student
+    And I see the password prompt modal
+    When I enter the password "WrongPassword"
+    And I click "Join Room"
+    Then I should see an error message "Incorrect password. Please try again."
+    And the password prompt should remain open
+    And the password field should be cleared
+    And I should be able to retry entering the password
+
+  Scenario: Canceling password prompt
+    Given a password-protected room exists
+    And I am logged in as a student
+    And I see the password prompt modal
+    When I click "Cancel"
+    Then I should be redirected to the home page
+    And I should not enter the room
+
+  Scenario: Room without password protection
+    Given I am logged in as a tutor
+    When I create a room without enabling password protection
+    Then the room should be created without a password
+    And any authenticated user should be able to join without password prompt
+    And the room card should display "No password" in the password field

@@ -85,7 +85,7 @@ The system includes a dummy AI assistant feature for tutors:
 - Real AI integration possible via environment variables
 
 ### Key Implementation Patterns
-- **Authentication**: Supabase Auth with role-based access control and capacity limits (1 tutor + 1 student max)
+- **Authentication**: Supabase Auth with role-based access control (no capacity limits)
 - **Real-time**: Hybrid approach using Supabase subscriptions (ready for when replication is enabled) + polling fallback
 - **State Management**: React Context API for auth and room state
 - **Error Handling**: Comprehensive error handling with user-friendly messages

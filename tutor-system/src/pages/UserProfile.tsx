@@ -32,7 +32,7 @@ const UserProfile: React.FC = () => {
     // Preset avatars available for selection
     const presetAvatars = [
         { id: 'cute_avatar_0', name: 'Cute Avatar', url: '/images/avatars/cute_avatar_0.jpeg' },
-        // Add more preset avatars here as they become available
+        { id: 'cute_avatar_1', name: 'Cute Avatar 2', url: '/images/avatars/cute_avatar_1.jpeg' },
     ];
 
     const handlePresetAvatarSelect = useCallback(async (avatarUrl: string) => {
@@ -62,7 +62,7 @@ const UserProfile: React.FC = () => {
             try {
                 // Update user's avatar using the context method
                 await updateUserProfile({ avatar_url: result.avatarUrl });
-                
+
                 setCurrentAvatarUrl(result.avatarUrl);
                 setSaveMessage('Avatar updated successfully!');
                 setTimeout(() => setSaveMessage(''), 3000);
@@ -105,7 +105,7 @@ const UserProfile: React.FC = () => {
 
     const handleSaveProfile = useCallback(async () => {
         if (!user) return; // Early return if user is null
-        
+
         setIsSaving(true);
         setError('');
 
@@ -216,14 +216,14 @@ const UserProfile: React.FC = () => {
                 }}>
                     <h1 style={{ margin: 0 }}>User Profile</h1>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Link 
+                        <Link
                             to={getNavigationLink()}
                             className="btn btn-secondary"
                             style={{ textDecoration: 'none' }}
                         >
                             ← Back to Dashboard
                         </Link>
-                        <button 
+                        <button
                             onClick={handleSignOut}
                             className="btn btn-danger"
                         >
@@ -267,13 +267,13 @@ const UserProfile: React.FC = () => {
                     {/* Avatar Section */}
                     <div>
                         <h2>Profile Picture</h2>
-                        
+
                         {/* Current Avatar Display */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '1rem', 
-                            marginBottom: '1rem' 
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1rem',
+                            marginBottom: '1rem'
                         }}>
                             <AvatarDisplay
                                 avatarUrl={currentAvatarUrl}
@@ -332,8 +332,8 @@ const UserProfile: React.FC = () => {
                                             padding: '3px',
                                             backgroundColor: currentAvatarUrl === avatar.url ? '#e3f2fd' : '#fff',
                                             transition: 'all 0.2s ease',
-                                            boxShadow: currentAvatarUrl === avatar.url 
-                                                ? '0 4px 12px rgba(0, 123, 255, 0.3)' 
+                                            boxShadow: currentAvatarUrl === avatar.url
+                                                ? '0 4px 12px rgba(0, 123, 255, 0.3)'
                                                 : '0 2px 4px rgba(0, 0, 0, 0.1)'
                                         }}
                                         title={`Select ${avatar.name}`}
@@ -371,11 +371,11 @@ const UserProfile: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            <p style={{ 
-                                fontSize: '0.85rem', 
-                                color: '#666', 
+                            <p style={{
+                                fontSize: '0.85rem',
+                                color: '#666',
                                 fontStyle: 'italic',
-                                margin: 0 
+                                margin: 0
                             }}>
                                 Click on any avatar to select it as your profile picture
                             </p>

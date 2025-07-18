@@ -33,6 +33,10 @@ const RoomPagePost: React.FC = () => {
     const [sendingMessage, setSendingMessage] = useState(false);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+    const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+    const [roomPassword, setRoomPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [joinError, setJoinError] = useState('');
     
     // Room engagement state (for future implementation)
     const [roomEngagement, setRoomEngagement] = useState({
@@ -56,16 +60,46 @@ const RoomPagePost: React.FC = () => {
     // Join room on component mount
     useEffect(() => {
         if (roomId) {
-            joinRoom(roomId).catch(error => {
-                console.error('Failed to join room:', error);
-            });
+            attemptJoinRoom();
         }
 
         // Cleanup: leave room on unmount
         return () => {
             leaveRoom();
         };
-    }, [roomId, joinRoom, leaveRoom]);
+    }, [roomId, leaveRoom]);
+
+    const attemptJoinRoom = async (password?: string) => {
+        try {
+            setJoinError('');
+            setPasswordError('');
+            await joinRoom(roomId!, password);
+        } catch (error: any) {
+            console.error('Failed to join room:', error);
+            if (error.message.includes('password protected')) {
+                setShowPasswordPrompt(true);
+                setJoinError('This room is password protected. Please enter the password.');
+            } else if (error.message.includes('Incorrect password')) {
+                setPasswordError('Incorrect password. Please try again.');
+                setShowPasswordPrompt(true); // Keep the prompt open for retry
+            } else {
+                setJoinError(error.message || 'Failed to join room');
+            }
+        }
+    };
+
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!roomPassword.trim()) {
+            setPasswordError('Please enter a password');
+            return;
+        }
+        await attemptJoinRoom(roomPassword);
+        if (!passwordError) {
+            setShowPasswordPrompt(false);
+            setRoomPassword('');
+        }
+    };
 
     // Auto-scroll disabled for post-style interface to let users control their view
 
@@ -197,6 +231,61 @@ const RoomPagePost: React.FC = () => {
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
 
+    // Show password prompt if needed
+    if (showPasswordPrompt) {
+        return (
+            <div className="room-post-layout">
+                <div className="room-post-container">
+                    <div className="card">
+                        <div className="modal-content" style={{ maxWidth: '400px', margin: '2rem auto' }}>
+                            <h2 style={{ marginBottom: '1rem', color: '#333' }}>🔒 Password Required</h2>
+                            <p style={{ marginBottom: '1rem', color: '#666' }}>
+                                This room is password protected. Please enter the password to continue.
+                            </p>
+                            
+                            {joinError && (
+                                <div className="error-banner" style={{ marginBottom: '1rem' }}>
+                                    {joinError}
+                                </div>
+                            )}
+                            
+                            <form onSubmit={handlePasswordSubmit}>
+                                <div className="form-group">
+                                    <label htmlFor="room-password" className="enhanced-label">
+                                        Room Password
+                                    </label>
+                                    <input
+                                        id="room-password"
+                                        type="password"
+                                        className="enhanced-input"
+                                        placeholder="Enter password"
+                                        value={roomPassword}
+                                        onChange={(e) => setRoomPassword(e.target.value)}
+                                        autoFocus
+                                    />
+                                    {passwordError && (
+                                        <div style={{ color: '#dc3545', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                                            {passwordError}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                    <Link to="/" className="enhanced-button secondary">
+                                        Cancel
+                                    </Link>
+                                    <button type="submit" className="enhanced-button primary">
+                                        Join Room
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (loading) {
         return (
             <div className="room-post-layout">
@@ -214,6 +303,11 @@ const RoomPagePost: React.FC = () => {
                     <div className="card">
                         <h1>Room not found</h1>
                         <p>The room you're looking for doesn't exist or is no longer active.</p>
+                        {joinError && (
+                            <div className="error-banner" style={{ marginBottom: '1rem' }}>
+                                {joinError}
+                            </div>
+                        )}
                         <Link to="/" className="btn btn-primary">Back to Home</Link>
                     </div>
                 </div>
@@ -330,6 +424,7 @@ const RoomPagePost: React.FC = () => {
                                         canGenerateAI={canUseAI && isAIEnabled}
                                         isGeneratingAI={loadingAI}
                                         currentUserId={user?.id}
+                                        currentUserRole={user?.current_role}
                                     />
                                 );
                             })

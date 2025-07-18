@@ -8,6 +8,7 @@ import {
     updateAIConfig,
     generateAndSaveAIResponse
 } from '../services/aiService';
+import { validateRoomPassword } from '../services/supabase';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -31,15 +32,30 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const channelRef = useRef<any>(null);
     const { user } = useAuth();
 
-    // Stable function to add display names to messages
-    const addDisplayNameToMessage = useCallback((message: any): Message => {
+    // Stable function to add display names and avatars to messages
+    const addDisplayNameToMessage = useCallback((message: any, participantsList?: User[]): Message => {
+        // Find the user from participants list
+        const messageUser = participantsList?.find(p => p.id === message.user_id);
+        
+        // For prepopulated messages, preserve the existing display_name
+        if (message.user_id === 'system' && message.display_name) {
+            return {
+                ...message,
+                // Keep the original display_name from prepopulated data
+                display_name: message.display_name,
+                avatar_url: null // No avatar for prepopulated messages
+            };
+        }
+        
         return {
             ...message,
             display_name: message.user_id === user?.id ? (user?.display_name || 'User') : 
-                         message.user_role === 'tutor' ? 'Tutor' :
-                         message.user_role === 'student' ? 'Student' : 'Observer'
+                         messageUser?.display_name || 
+                         (message.user_role === 'tutor' ? 'Tutor' :
+                          message.user_role === 'student' ? 'Student' : 'Observer'),
+            avatar_url: message.user_id === user?.id ? user?.avatar_url : messageUser?.avatar_url
         };
-    }, [user?.id, user?.display_name]);
+    }, [user?.id, user?.display_name, user?.avatar_url]);
 
     // Real-time subscription for messages and typing indicators
     useEffect(() => {
@@ -61,7 +77,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 (payload) => {
                     console.log('🟢 Real-time message received:', payload);
                     const newMessage = payload.new as any;
-                    const messageWithDisplayName = addDisplayNameToMessage(newMessage);
+                    const messageWithDisplayName = addDisplayNameToMessage(newMessage, participants);
                     
                     setMessages(prev => {
                         console.log('📝 Adding message to state:', messageWithDisplayName);
@@ -94,7 +110,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoom, user?.id, addDisplayNameToMessage]);
+    }, [currentRoom, user?.id, addDisplayNameToMessage, participants]);
 
     // Stable polling function to prevent infinite loops
     const pollMessages = useCallback(async () => {
@@ -113,8 +129,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (messagesData) {
-                // Add display_name to messages using stable function
-                const messagesWithDisplayName = messagesData.map(addDisplayNameToMessage);
+                // Add display_name and avatar_url to messages using stable function
+                const messagesWithDisplayName = messagesData.map(msg => addDisplayNameToMessage(msg, participants));
                 
                 // Preserve pre-populated messages by combining them with database messages
                 setMessages(prevMessages => {
@@ -128,7 +144,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             console.error('Error polling messages:', error);
         }
-    }, [currentRoom, addDisplayNameToMessage]);
+    }, [currentRoom, addDisplayNameToMessage, participants]);
 
     // Polling mechanism for messages (temporary until real-time replication is available)
     useEffect(() => {
@@ -157,6 +173,35 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         return () => clearInterval(interval);
     }, []);
+
+    // Update participants list when current user changes (e.g., avatar update)
+    useEffect(() => {
+        if (!currentRoom || !user) return;
+
+        // Update the current user in participants list
+        setParticipants(prev => {
+            const updatedParticipants = prev.map(p => 
+                p.id === user.id ? { ...p, ...user } : p
+            );
+            
+            // If user is not in participants, add them
+            if (!updatedParticipants.some(p => p.id === user.id)) {
+                updatedParticipants.push(user);
+            }
+            
+            return updatedParticipants;
+        });
+    }, [user, currentRoom]);
+
+    // Re-enrich existing messages when participants change (e.g., when user updates avatar)
+    useEffect(() => {
+        if (!currentRoom || !participants.length) return;
+
+        // Re-enrich all existing messages with updated participant info
+        setMessages(prevMessages => 
+            prevMessages.map(msg => addDisplayNameToMessage(msg, participants))
+        );
+    }, [participants, currentRoom, addDisplayNameToMessage]);
 
     // Load AI configuration when room changes
     useEffect(() => {
@@ -225,7 +270,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const joinRoom = useCallback(async (roomId: string): Promise<void> => {
+    const joinRoom = useCallback(async (roomId: string, password?: string): Promise<void> => {
         setLoading(true);
         try {
             // Get room details
@@ -237,6 +282,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .single();
 
             if (roomError) throw roomError;
+
+            // Validate password if room is password protected
+            if (roomData.password) {
+                // Skip password validation if current user is the room owner (tutor)
+                if (user?.id === roomData.tutor_id) {
+                    console.log('🔓 RoomContext: Room owner bypassing password validation');
+                } else {
+                    if (!password) {
+                        throw new Error('This room is password protected. Please enter the password.');
+                    }
+                    
+                    const validation = await validateRoomPassword(roomId, password);
+                    if (!validation.success) {
+                        throw new Error(validation.message);
+                    }
+                }
+            }
 
             // Get existing messages
             const { data: messagesData, error: messagesError } = await supabase
@@ -295,8 +357,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (participantsError) throw participantsError;
 
-            // Add display_name to existing messages
-            const messagesWithDisplayName = (messagesData || []).map(addDisplayNameToMessage);
+            // Add display_name and avatar_url to existing messages
+            const messagesWithDisplayName = (messagesData || []).map(msg => addDisplayNameToMessage(msg, participantsData || []));
 
             // Combine pre-populated messages with existing messages
             const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
@@ -339,7 +401,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ai_response_time_ms: null,
             parent_message_id: null,
             created_at: new Date().toISOString(),
-            display_name: user.display_name || 'User'
+            display_name: user.display_name || 'User',
+            avatar_url: user.avatar_url
         };
 
         // Add message optimistically
@@ -369,7 +432,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data) {
             setMessages(prev => prev.map(msg => 
                 msg.id === optimisticMessage.id 
-                    ? { ...data, display_name: user.display_name || 'User' }
+                    ? { ...data, display_name: user.display_name || 'User', avatar_url: user.avatar_url }
                     : msg
             ));
         }

@@ -39,6 +39,7 @@ export interface Room {
     op_id: string | null;
     op_display_name: string | null;
     op_avatar_url: string | null;
+    password: string | null; // Added for password protection
     created_at: string;
     updated_at: string;
 }
@@ -56,6 +57,7 @@ export interface Message {
     parent_message_id: string | null;
     created_at: string;
     display_name?: string; // Added for UI display
+    avatar_url?: string | null; // Added for avatar display
 }
 
 // Session interface
@@ -130,7 +132,7 @@ export interface RoomContextType {
     loading: boolean;
     typingUsers: TypingIndicator[];
     createRoom: (title: string, description?: string, imageFile?: File) => Promise<void>;
-    joinRoom: (roomId: string) => Promise<void>;
+    joinRoom: (roomId: string, password?: string) => Promise<void>;
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;

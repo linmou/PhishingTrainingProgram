@@ -16,6 +16,7 @@ interface PostCommentProps {
     canGenerateAI?: boolean;
     isGeneratingAI?: boolean;
     currentUserId?: string;
+    currentUserRole?: string | null;
     className?: string;
 }
 
@@ -32,6 +33,7 @@ const PostComment: React.FC<PostCommentProps> = ({
     canGenerateAI = false,
     isGeneratingAI = false,
     currentUserId,
+    currentUserRole,
     className = ''
 }) => {
     const formatTime = (timestamp: string) => {
@@ -82,7 +84,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
                     <AvatarDisplay
-                        avatarUrl={null} // Will use display_name for initials
+                        avatarUrl={message.avatar_url || null}
                         displayName={message.display_name || message.user_role}
                         size="small"
                         className="comment-avatar"
@@ -102,7 +104,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                                 {message.is_ai_generated ? 'AI Assistant' : (message.display_name || message.user_role)}
                             </span>
                             
-                            {!message.is_ai_generated && (
+                            {!message.is_ai_generated && currentUserRole !== 'student' && (
                                 <span className="comment-role-badge">
                                     {getRoleIcon(message.user_role, false)} {message.user_role}
                                 </span>
