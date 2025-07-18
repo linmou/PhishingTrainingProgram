@@ -6,6 +6,7 @@ import RoomPost from '../components/RoomPost';
 import PostComment from '../components/PostComment';
 import CommentInput from '../components/CommentInput';
 import AIAssistantSettings from '../components/AIAssistantSettings';
+import AISuggestionBox from '../components/AISuggestionBox';
 import { Download, Settings, ArrowLeft } from 'lucide-react';
 
 const RoomPagePost: React.FC = () => {
@@ -25,7 +26,11 @@ const RoomPagePost: React.FC = () => {
         stopTyping,
         aiConfig,
         loadingAI,
-        downloadChatHistory
+        downloadChatHistory,
+        aiSuggestion,
+        clearAISuggestion,
+        recordAIFeedback,
+        currentSuggestionContext
     } = useRoom();
 
     const [messageText, setMessageText] = useState('');
@@ -227,6 +232,16 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    const handleCopyAISuggestion = async (suggestion: string) => {
+        setMessageText(suggestion);
+        // Don't clear or record yet - wait for actual send
+    };
+
+    const handleRejectAISuggestion = async () => {
+        await recordAIFeedback('rejected');
+        clearAISuggestion();
+    };
+
     const canSendMessages = user && user.current_role !== 'observer';
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
@@ -362,33 +377,6 @@ const RoomPagePost: React.FC = () => {
                     showOp={true}
                 />
 
-                {/* AI Assistant Controls */}
-                {canUseAI && isAIEnabled && (
-                    <div className="comments-section">
-                        <div className="comments-header">
-                            🤖 AI Assistant Controls
-                        </div>
-                        <div style={{ padding: '16px 20px' }}>
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                <span style={{ fontSize: '14px', color: '#65676b' }}>
-                                    Status: {isAIEnabled ? '✅ Enabled' : '❌ Disabled'}
-                                    {isAIEnabled && aiConfig && (
-                                        <span style={{ marginLeft: '8px', color: '#1976d2' }}>
-                                            ({aiConfig.model_name})
-                                        </span>
-                                    )}
-                                </span>
-                                <button
-                                    onClick={() => handleGenerateAIResponse()}
-                                    disabled={loadingAI || messages.length === 0}
-                                    className="btn btn-primary btn-small"
-                                >
-                                    {loadingAI ? 'Generating...' : '🤖 Generate Response'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Comments Section */}
                 <div className="comments-section">
@@ -416,13 +404,10 @@ const RoomPagePost: React.FC = () => {
                                         message={message}
                                         onLike={handleMessageLike}
                                         onReply={handleMessageReply}
-                                        onGenerateAIResponse={canUseAI && isAIEnabled ? handleGenerateAIResponse : undefined}
                                         likeCount={engagement.likeCount}
                                         dislikeCount={engagement.dislikeCount}
                                         isLiked={engagement.userLiked}
                                         isDisliked={engagement.userDisliked}
-                                        canGenerateAI={canUseAI && isAIEnabled}
-                                        isGeneratingAI={loadingAI}
                                         currentUserId={user?.id}
                                         currentUserRole={user?.current_role}
                                     />
@@ -444,21 +429,54 @@ const RoomPagePost: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Comment Input */}
-                {canSendMessages ? (
-                    <CommentInput
-                        user={user}
-                        value={messageText}
-                        onChange={handleInputChange}
-                        onSubmit={handleSendMessage}
-                        onTyping={startTyping}
-                        onStopTyping={stopTyping}
-                        placeholder="Write a comment..."
-                        disabled={sendingMessage}
-                        isLoading={sendingMessage}
-                        replyingTo={replyingTo}
-                        onCancelReply={() => setReplyingTo(null)}
+                {/* AI Suggestion Box for Tutors */}
+                {canUseAI && aiSuggestion && (
+                    <AISuggestionBox
+                        suggestion={aiSuggestion}
+                        onCopy={handleCopyAISuggestion}
+                        onReject={handleRejectAISuggestion}
+                        isVisible={true}
+                        parentMessage={currentSuggestionContext?.parentMessageContent}
                     />
+                )}
+
+                {/* Comment Input with AI Button */}
+                {canSendMessages ? (
+                    <div className="comment-input-with-ai">
+                        <CommentInput
+                            user={user}
+                            value={messageText}
+                            onChange={handleInputChange}
+                            onSubmit={handleSendMessage}
+                            onTyping={startTyping}
+                            onStopTyping={stopTyping}
+                            placeholder="Write a comment..."
+                            disabled={sendingMessage}
+                            isLoading={sendingMessage}
+                            replyingTo={replyingTo}
+                            onCancelReply={() => setReplyingTo(null)}
+                        />
+                        {canUseAI && isAIEnabled && (
+                            <button
+                                onClick={() => handleGenerateAIResponse()}
+                                disabled={loadingAI || messages.length === 0}
+                                className="ai-generate-btn"
+                                title={loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
+                            >
+                                {loadingAI ? (
+                                    <>
+                                        <div className="ai-loading-spinner"></div>
+                                        <span className="ai-btn-text">AI</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="ai-btn-icon">✨</span>
+                                        <span className="ai-btn-text">AI</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 ) : (
                     <div className="comment-input-container">
                         <div className="observer-comment-notice">
@@ -483,11 +501,20 @@ const RoomPagePost: React.FC = () => {
                             <button 
                                 className="btn btn-primary"
                                 onClick={() => {
-                                    downloadChatHistory();
+                                    downloadChatHistory('txt');
                                     setShowDownloadModal(false);
                                 }}
                             >
                                 Download as TXT
+                            </button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    downloadChatHistory('json');
+                                    setShowDownloadModal(false);
+                                }}
+                            >
+                                Download as JSON
                             </button>
                             <button 
                                 className="btn btn-secondary"

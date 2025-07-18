@@ -181,7 +181,7 @@ describe('RoomContext - Room Management Tests', () => {
         mockAIConfig = {
             id: 'test-ai-config-id',
             room_id: mockRoom.id,
-            model_name: 'gpt-3.5-turbo',
+            model_name: 'gpt-4o',
             system_prompt: 'Test prompt',
             temperature: 0.7,
             max_tokens: 1000,

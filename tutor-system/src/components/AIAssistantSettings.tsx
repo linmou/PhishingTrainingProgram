@@ -13,7 +13,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     const { user } = useAuth();
 
     const [isEnabled, setIsEnabled] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<AIModelName>('gpt-3.5-turbo');
+    const [selectedModel, setSelectedModel] = useState<AIModelName>('gpt-4o');
     const [systemPrompt, setSystemPrompt] = useState('');
     const [temperature, setTemperature] = useState(0.7);
     const [maxTokens, setMaxTokens] = useState(150);
@@ -55,7 +55,19 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             onClose();
         } catch (error) {
             console.error('Failed to save AI settings:', error);
-            alert('Failed to save AI assistant settings. Please try again.');
+            let errorMessage = 'Failed to save AI assistant settings.';
+            
+            if (error instanceof Error) {
+                if (error.message.includes('function') && error.message.includes('does not exist')) {
+                    errorMessage += '\n\nDatabase functions are missing. Please run the migration script in apply_ai_migrations.sql';
+                } else if (error.message.includes('ai_assistant_configs')) {
+                    errorMessage += '\n\nAI tables are missing. Please run the migration script in apply_ai_migrations.sql';
+                } else {
+                    errorMessage += '\n\n' + error.message;
+                }
+            }
+            
+            alert(errorMessage);
         } finally {
             setIsSaving(false);
         }

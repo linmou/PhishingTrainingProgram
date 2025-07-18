@@ -1,25 +1,23 @@
 import { AIResponse, ConversationMessage, AIAssistantConfig } from '../types';
 import { supabase } from './supabase';
 
+// Get OpenAI configuration from environment variables
+const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
+const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://api.openai.com/v1';
+
 // Available AI models for the dummy service
 export const AI_MODELS = {
-    'gpt-4': {
-        name: 'GPT-4',
-        description: 'Most capable model for complex reasoning',
+    'gpt-4o': {
+        name: 'GPT-4o',
+        description: 'Most capable multimodal model for complex reasoning',
         maxTokens: 4000,
         temperature: 0.7
     },
-    'gpt-3.5-turbo': {
-        name: 'GPT-3.5 Turbo',
-        description: 'Fast and efficient for most tasks',
-        maxTokens: 2000,
+    'gpt-4': {
+        name: 'GPT-4',
+        description: 'Highly capable model for complex reasoning',
+        maxTokens: 4000,
         temperature: 0.7
-    },
-    'claude-3': {
-        name: 'Claude 3',
-        description: 'Excellent for educational content',
-        maxTokens: 3000,
-        temperature: 0.6
     }
 } as const;
 
@@ -50,12 +48,147 @@ const DUMMY_RESPONSES = {
     ]
 };
 
+// Suggested tutor responses for different scenarios
+const SUGGESTED_RESPONSES = {
+    educational: [
+        "Let's explore this concept together. Can you tell me what you already know about it?",
+        "That's an interesting question. Let me guide you through the key concepts.",
+        "I'll help you understand this better. First, let's start with the basics.",
+        "Good thinking! Let's work through this step by step.",
+        "This is a common challenge. Let me show you a helpful approach."
+    ],
+    encouragement: [
+        "You're doing great! Let's keep building on your understanding.",
+        "Excellent progress! What would you like to explore next?",
+        "That's the right idea! Can you expand on that thought?",
+        "Well done! You're really getting the hang of this.",
+        "I'm impressed with your thinking. Let's dive deeper."
+    ],
+    clarification: [
+        "I see where the confusion might be. Let me help clarify.",
+        "Let's approach this from a different angle. What if we consider...",
+        "That's a common area of confusion. The key difference is...",
+        "Almost there! Let me help you connect the final pieces.",
+        "Good attempt! Let me guide you to the complete understanding."
+    ]
+};
+
+/**
+ * Real OpenAI API Service
+ */
+class OpenAIService {
+    static async generateResponse(
+        userMessage: string,
+        conversationHistory: ConversationMessage[],
+        config: AIAssistantConfig
+    ): Promise<AIResponse> {
+        const startTime = Date.now();
+
+        try {
+            // Build messages for OpenAI API
+            const messages = [
+                {
+                    role: 'system',
+                    content: config.system_prompt || 'You are a helpful AI assistant in an educational tutoring session.'
+                },
+                ...conversationHistory.slice(-10).map(msg => ({
+                    role: msg.role === 'assistant' ? 'assistant' : 'user',
+                    content: msg.content
+                })),
+                {
+                    role: 'user',
+                    content: userMessage
+                }
+            ];
+
+            // Make API request
+            const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: config.model_name,
+                    messages,
+                    temperature: config.temperature,
+                    max_tokens: config.max_tokens
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+            }
+
+            const data = await response.json();
+            const responseContent = data.choices[0]?.message?.content || '';
+
+            // Generate a suggested response for the tutor
+            const suggestionMessages = [
+                ...messages,
+                { role: 'assistant', content: responseContent },
+                { 
+                    role: 'user', 
+                    content: 'Based on the above educational response, suggest a brief, interactive follow-up question or prompt that a tutor could use to engage the student further. Keep it under 2 sentences.'
+                }
+            ];
+
+            const suggestionResponse = await fetch(`${OAI_BASE_URL}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: config.model_name,
+                    messages: suggestionMessages,
+                    temperature: 0.7,
+                    max_tokens: 100
+                })
+            });
+
+            let suggestedResponse = '';
+            if (suggestionResponse.ok) {
+                const suggestionData = await suggestionResponse.json();
+                suggestedResponse = suggestionData.choices[0]?.message?.content || '';
+            }
+
+            const responseTime = Date.now() - startTime;
+
+            return {
+                content: responseContent,
+                suggested_response: suggestedResponse,
+                model_used: config.model_name,
+                response_time_ms: responseTime,
+                success: true
+            };
+
+        } catch (error) {
+            const responseTime = Date.now() - startTime;
+
+            return {
+                content: '',
+                model_used: config.model_name,
+                response_time_ms: responseTime,
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+}
+
 /**
  * Simulates an AI API call with realistic delay and responses
  */
 export class DummyAIService {
     private static getRandomResponse(category: keyof typeof DUMMY_RESPONSES): string {
         const responses = DUMMY_RESPONSES[category];
+        return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    private static getRandomSuggestedResponse(category: keyof typeof SUGGESTED_RESPONSES): string {
+        const responses = SUGGESTED_RESPONSES[category];
         return responses[Math.floor(Math.random() * responses.length)];
     }
 
@@ -127,8 +260,12 @@ export class DummyAIService {
 
             const responseTime = Date.now() - startTime;
 
+            const category = this.determineResponseCategory(userMessage);
+            const suggestedResponse = this.getRandomSuggestedResponse(category);
+
             return {
                 content: responseContent,
+                suggested_response: suggestedResponse,
                 model_used: config.model_name,
                 response_time_ms: responseTime,
                 success: true
@@ -153,25 +290,133 @@ export class DummyAIService {
  */
 export const initializeAIAssistant = async (
     roomId: string,
-    modelName: string = 'gpt-3.5-turbo',
-    systemPrompt?: string
+    modelName: string = 'gpt-4o',
+    systemPrompt?: string,
+    userId?: string
 ): Promise<string> => {
     const defaultPrompt = systemPrompt ||
         'You are a helpful AI assistant in an educational tutoring session. ' +
         'Provide clear, educational responses to help students learn. ' +
         'Be encouraging, patient, and focus on building understanding.';
 
-    const { data, error } = await supabase.rpc('initialize_ai_assistant', {
-        p_room_id: roomId,
-        p_model_name: modelName,
-        p_system_prompt: defaultPrompt
-    });
+    try {
+        // Try to use the database function
+        const { data, error } = await supabase.rpc('initialize_ai_assistant', {
+            p_room_id: roomId,
+            p_model_name: modelName,
+            p_system_prompt: defaultPrompt
+        });
 
-    if (error) {
-        throw new Error(`Failed to initialize AI assistant: ${error.message}`);
+        if (error) {
+            // If function doesn't exist, fall back to direct insert
+            if (error.code === '42883' || error.message.includes('function') || error.message.includes('does not exist')) {
+                return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId);
+            }
+            throw new Error(`Failed to initialize AI assistant: ${error.message}`);
+        }
+
+        return data;
+    } catch (error) {
+        // Fall back to direct insert
+        return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId);
+    }
+};
+
+/**
+ * Fallback method to initialize AI assistant without database function
+ */
+const initializeAIAssistantFallback = async (
+    roomId: string,
+    modelName: string,
+    systemPrompt: string,
+    userId?: string
+): Promise<string> => {
+    // Verify room and tutor
+    const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('tutor_id')
+        .eq('id', roomId)
+        .single();
+
+    if (roomError) {
+        console.error('Room query error:', roomError);
+        throw new Error(`Failed to verify room: ${roomError.message}`);
     }
 
-    return data;
+    // If userId is not provided, use the room's tutor_id
+    if (!userId) {
+        userId = roomData.tutor_id;
+    }
+
+    // Verify the user is the tutor
+    if (roomData.tutor_id !== userId) {
+        throw new Error('Only room tutors can initialize AI assistant');
+    }
+
+    // Create or update AI assistant config
+    // First try to update existing config
+    const { data: existingConfig } = await supabase
+        .from('ai_assistant_configs')
+        .select('id')
+        .eq('room_id', roomId)
+        .single();
+
+    let configData;
+    let configError;
+
+    if (existingConfig) {
+        // Update existing config
+        const { data, error } = await supabase
+            .from('ai_assistant_configs')
+            .update({
+                model_name: modelName,
+                system_prompt: systemPrompt,
+                is_active: true,
+                updated_at: new Date().toISOString()
+            })
+            .eq('room_id', roomId)
+            .select()
+            .single();
+        configData = data;
+        configError = error;
+    } else {
+        // Insert new config
+        const { data, error } = await supabase
+            .from('ai_assistant_configs')
+            .insert({
+                room_id: roomId,
+                model_name: modelName,
+                system_prompt: systemPrompt,
+                is_active: true
+            })
+            .select()
+            .single();
+        configData = data;
+        configError = error;
+    }
+
+    if (configError) {
+        throw new Error(`Failed to create AI config: ${configError.message}`);
+    }
+
+    // Initialize conversation context
+    await supabase
+        .from('ai_conversation_contexts')
+        .upsert({
+            room_id: roomId,
+            conversation_history: [],
+            last_updated: new Date().toISOString()
+        }, {
+            onConflict: 'room_id'
+        });
+
+    // Enable AI assistant for the room
+    await supabase
+        .from('rooms')
+        .update({ ai_assistant_enabled: true })
+        .eq('id', roomId);
+
+    return configData.id;
 };
 
 /**
@@ -220,20 +465,26 @@ export const updateAIConfig = async (
  * Get conversation history for AI context
  */
 export const getConversationContext = async (roomId: string): Promise<ConversationMessage[]> => {
-    const { data, error } = await supabase
-        .from('ai_conversation_contexts')
-        .select('conversation_history')
-        .eq('room_id', roomId)
-        .single();
+    try {
+        const { data, error } = await supabase
+            .from('ai_conversation_contexts')
+            .select('conversation_history')
+            .eq('room_id', roomId)
+            .single();
 
-    if (error) {
-        if (error.code === 'PGRST116') {
-            return []; // No context found
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return []; // No context found
+            }
+            console.warn('Failed to get conversation context:', error);
+            return []; // Return empty array on error
         }
-        throw new Error(`Failed to get conversation context: ${error.message}`);
-    }
 
-    return data.conversation_history as ConversationMessage[];
+        return data.conversation_history as ConversationMessage[];
+    } catch (error) {
+        console.warn('Error getting conversation context:', error);
+        return []; // Return empty array on any error
+    }
 };
 
 /**
@@ -244,34 +495,110 @@ export const addToConversationContext = async (
     role: 'user' | 'assistant' | 'system',
     content: string
 ): Promise<void> => {
-    const { error } = await supabase.rpc('add_conversation_context', {
-        p_room_id: roomId,
-        p_role: role,
-        p_content: content
-    });
+    try {
+        const { error } = await supabase.rpc('add_conversation_context', {
+            p_room_id: roomId,
+            p_role: role,
+            p_content: content
+        });
 
-    if (error) {
-        throw new Error(`Failed to add conversation context: ${error.message}`);
+        if (error) {
+            // If function doesn't exist, fall back to direct update
+            if (error.code === '42883' || error.message.includes('function') || error.message.includes('does not exist')) {
+                return await addToConversationContextFallback(roomId, role, content);
+            }
+            throw new Error(`Failed to add conversation context: ${error.message}`);
+        }
+    } catch (error) {
+        // Fall back to direct update
+        return await addToConversationContextFallback(roomId, role, content);
     }
 };
 
 /**
- * Generate AI response and save to database
+ * Fallback method to add conversation context without database function
  */
-export const generateAndSaveAIResponse = async (
+const addToConversationContextFallback = async (
+    roomId: string,
+    role: 'user' | 'assistant' | 'system',
+    content: string
+): Promise<void> => {
+    const newMessage = {
+        role,
+        content,
+        timestamp: Date.now() / 1000
+    };
+
+    // Get existing conversation history
+    const { data: existingData, error: fetchError } = await supabase
+        .from('ai_conversation_contexts')
+        .select('conversation_history')
+        .eq('room_id', roomId)
+        .single();
+
+    let conversationHistory = [];
+    if (!fetchError && existingData) {
+        conversationHistory = existingData.conversation_history || [];
+    }
+
+    // Add new message to history
+    conversationHistory.push(newMessage);
+
+    // Update or insert the conversation context
+    const { error: updateError } = await supabase
+        .from('ai_conversation_contexts')
+        .upsert({
+            room_id: roomId,
+            conversation_history: conversationHistory,
+            last_updated: new Date().toISOString()
+        }, {
+            onConflict: 'room_id'
+        });
+
+    if (updateError) {
+        throw new Error(`Failed to update conversation context: ${updateError.message}`);
+    }
+};
+
+/**
+ * Generate AI suggestion only (no database save)
+ */
+export const generateAISuggestion = async (
     roomId: string,
     userId: string,
     userMessage?: string,
-    parentMessageId?: string
-): Promise<string> => {
-    // Get AI configuration
-    const aiConfig = await getAIConfig(roomId);
-    if (!aiConfig || !aiConfig.is_active) {
+    parentMessageId?: string,
+    user?: any // Accept user object for auth context
+): Promise<{ aiResponse: AIResponse; contextMessages: string[] }> => {
+    // Get room data to check AI configuration
+    const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt')
+        .eq('id', roomId)
+        .single();
+
+    if (roomError || !roomData?.ai_assistant_enabled) {
         throw new Error('AI assistant is not enabled for this room');
     }
 
-    // Get conversation history
-    const conversationHistory = await getConversationContext(roomId);
+    // Create AI config from room data
+    const aiConfig: AIAssistantConfig = {
+        id: roomId,
+        room_id: roomId,
+        model_name: roomData.ai_assistant_model || 'gpt-3.5-turbo',
+        system_prompt: roomData.ai_assistant_prompt || 
+            'You are a helpful AI assistant in an educational tutoring session. ' +
+            'Provide clear, educational responses to help students learn. ' +
+            'Be encouraging, patient, and focus on building understanding.',
+        temperature: 0.7,
+        max_tokens: 150,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    };
+
+    // For simplified auth, skip conversation history to avoid RLS issues
+    const conversationHistory: ConversationMessage[] = [];
 
     // Use provided message or get the latest message from the room
     let prompt = userMessage;
@@ -291,40 +618,60 @@ export const generateAndSaveAIResponse = async (
         prompt = "Please provide a helpful response to continue our conversation.";
     }
 
-    // Generate AI response
-    const aiResponse = await DummyAIService.generateResponse(
-        prompt,
-        conversationHistory,
-        aiConfig
-    );
+    // Generate AI response - use OpenAI if API key is available
+    const aiResponse = OAI_API_KEY 
+        ? await OpenAIService.generateResponse(prompt, conversationHistory, aiConfig)
+        : await DummyAIService.generateResponse(prompt, conversationHistory, aiConfig);
+    
+    console.log('AI Service used:', OAI_API_KEY ? 'OpenAI API' : 'Dummy Service');
 
     if (!aiResponse.success) {
         throw new Error(aiResponse.error || 'Failed to generate AI response');
     }
 
-    // Save the AI response as a message
-    const { data: messageData, error: messageError } = await supabase
+    // Get context messages for tracking
+    const { data: contextMessagesData } = await supabase
         .from('messages')
+        .select('id')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+    
+    const contextMessages = contextMessagesData?.map(m => m.id) || [];
+
+    return { aiResponse, contextMessages };
+};
+
+/**
+ * Record AI suggestion feedback to database
+ */
+export const recordAISuggestionFeedback = async (
+    roomId: string,
+    tutorId: string,
+    parentMessageId: string,
+    aiSuggestion: string,
+    tutorAction: 'accepted' | 'rejected' | 'modified' | 'ignored',
+    tutorFinalResponse?: string,
+    tutorMessageId?: string,
+    responseTimeMs?: number,
+    contextMessages?: string[]
+): Promise<void> => {
+    const { error } = await supabase
+        .from('ai_suggestion_feedback')
         .insert({
             room_id: roomId,
-            user_id: userId, // Use the tutor's ID
-            content: aiResponse.content,
-            user_role: 'tutor', // AI responses are sent as tutor
-            is_ai_generated: true,
-            ai_model_used: aiResponse.model_used,
-            ai_response_time_ms: aiResponse.response_time_ms,
-            parent_message_id: parentMessageId
-        })
-        .select()
-        .single();
+            tutor_id: tutorId,
+            parent_message_id: parentMessageId,
+            ai_suggestion: aiSuggestion,
+            tutor_action: tutorAction,
+            tutor_final_response: tutorFinalResponse,
+            tutor_message_id: tutorMessageId,
+            response_time_ms: responseTimeMs,
+            context_messages: contextMessages
+        });
 
-    if (messageError) {
-        throw new Error(`Failed to save AI response: ${messageError.message}`);
+    if (error) {
+        console.error('Failed to record AI suggestion feedback:', error);
+        throw new Error(`Failed to record AI feedback: ${error.message}`);
     }
-
-    // Add to conversation context
-    await addToConversationContext(roomId, 'user', prompt);
-    await addToConversationContext(roomId, 'assistant', aiResponse.content);
-
-    return messageData.id;
 }; 

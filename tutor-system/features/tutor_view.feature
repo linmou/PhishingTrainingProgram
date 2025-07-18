@@ -42,4 +42,29 @@ Feature: Tutor User Interface
     Given a tutor is in the "Advanced Phishing" room
     And the chat contains a conversation with a student
     When the tutor clicks the "Download History" button
-    Then a file containing the chat history and room details should be downloaded 
+    Then a file containing the chat history and room details should be downloaded
+
+  Scenario: Tutor sees AI assistant controls in room
+    Given a tutor is in the "Advanced Phishing" room
+    Then the tutor should see an "AI Settings" button
+    And the tutor should see the AI status indicator
+    And the AI status should initially show "AI: Off"
+
+  Scenario: Tutor uses AI suggestions while teaching
+    Given a tutor is in the "Advanced Phishing" room with AI enabled
+    And a student asks "What are the warning signs of phishing?"
+    When the tutor clicks the AI suggestion button
+    Then an AI suggestion box should appear
+    And the suggestion should be contextually relevant to the student's question
+    And the tutor should see options to "Copy to Input" or "Reject"
+
+  Scenario: Tutor downloads chat history with AI tracking data
+    Given a tutor is in a room where they used AI suggestions
+    And the tutor has accepted, modified, and rejected various suggestions
+    When the tutor clicks the "Download History" button
+    And selects "Download as JSON"
+    Then the downloaded file should include:
+      | Section         | Description                           |
+      | messages        | All chat messages                     |
+      | ai_interactions | Records of AI suggestion usage        |
+      | ai_summary      | Statistics on AI suggestion usage     | 
