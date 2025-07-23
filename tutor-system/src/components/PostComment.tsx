@@ -2,6 +2,7 @@ import React from 'react';
 import { ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
 import { Message } from '../types';
 import AvatarDisplay from './AvatarDisplay';
+import './PostComment.css';
 
 interface PostCommentProps {
     message: Message;

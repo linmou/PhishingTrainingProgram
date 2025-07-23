@@ -8,6 +8,7 @@ import CommentInput from '../components/CommentInput';
 import AIAssistantSettings from '../components/AIAssistantSettings';
 import AISuggestionBox from '../components/AISuggestionBox';
 import { Download, Settings, ArrowLeft } from 'lucide-react';
+import '../components/RoomPagePost.css';
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();

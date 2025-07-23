@@ -7,6 +7,7 @@ import ImageUpload from '../components/ImageUpload';
 import AvatarDisplay from '../components/AvatarDisplay';
 import DialogueCustomizer from '../components/DialogueCustomizer';
 import { ImageUploadResult, PrePopulatedMessage } from '../types';
+import '../components/TutorView.css';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 
@@ -284,29 +285,12 @@ const TutorView: React.FC = () => {
                                             className={`preset-image-option ${selectedImageId === image.id ? 'selected' : ''}`}
                                             data-testid={`preset-image-${image.id}`}
                                             onClick={() => handleImageSelect(image.id)}
-                                            style={{
-                                                display: 'inline-block',
-                                                margin: '0.5rem',
-                                                padding: '0.5rem',
-                                                border: selectedImageId === image.id ? '3px solid #007bff' : '1px solid #ddd',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                textAlign: 'center',
-                                                backgroundColor: selectedImageId === image.id ? '#e3f2fd' : '#f8f9fa'
-                                            }}
                                         >
                                             <img 
                                                 src={image.url} 
                                                 alt={image.name}
-                                                style={{
-                                                    width: '100px',
-                                                    height: '80px',
-                                                    objectFit: 'cover',
-                                                    borderRadius: '4px',
-                                                    marginBottom: '0.5rem'
-                                                }}
                                             />
-                                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                            <div>
                                                 {image.name}
                                             </div>
                                         </div>
@@ -314,14 +298,8 @@ const TutorView: React.FC = () => {
                                 </div>
 
                                 {/* Custom Image Upload Section */}
-                                <div style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>
-                                    <h4 style={{ 
-                                        fontSize: '1rem', 
-                                        marginBottom: '0.75rem', 
-                                        color: '#333',
-                                        borderTop: '1px solid #eee',
-                                        paddingTop: '1rem'
-                                    }}>
+                                <div className="custom-upload-section">
+                                    <h4 className="custom-upload-title">
                                         Or Upload Custom Image
                                     </h4>
                                     <ImageUpload
@@ -337,40 +315,28 @@ const TutorView: React.FC = () => {
 
                                 {/* Preview Section */}
                                 {(selectedImageId || customImageUrl) && (
-                                    <div className="selected-image-preview" data-testid="selected-image-preview" style={{
-                                        marginTop: '1rem',
-                                        padding: '1rem',
-                                        backgroundColor: '#f8f9fa',
-                                        borderRadius: '8px',
-                                        textAlign: 'center'
-                                    }}>
-                                        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
+                                    <div className="selected-image-preview" data-testid="selected-image-preview">
+                                        <p>
                                             {customImageUrl ? 'Custom Image Selected' : `Selected: ${getSelectedImage()?.name}`}
                                         </p>
                                         <img 
                                             src={getImageUrl()} 
                                             alt={customImageUrl ? 'Custom room image' : getSelectedImage()?.name}
-                                            style={{
-                                                maxWidth: '200px',
-                                                height: 'auto',
-                                                borderRadius: '4px'
-                                            }}
                                         />
                                     </div>
                                 )}
                             </div>
 
                             {/* OP Configuration Section */}
-                            <div className="form-group" style={{ marginTop: '2rem' }}>
-                                <label className="enhanced-label">👤 Original Poster (OP) Settings</label>
-                                <div style={{ 
-                                    padding: '1rem', 
-                                    backgroundColor: '#f8f9fa', 
-                                    borderRadius: '8px', 
-                                    border: '1px solid #e9ecef' 
-                                }}>
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <div className="form-group op-configuration-section">
+                                <label className="enhanced-label">Original Poster (OP) Settings</label>
+                                <div className="configuration-section">
+                                    <div className="radio-group">
+                                        <div 
+                                            className={`radio-option ${!useCustomOp ? 'selected' : ''}`}
+                                            onClick={() => setUseCustomOp(false)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             <input
                                                 type="radio"
                                                 name="opType"
@@ -378,15 +344,19 @@ const TutorView: React.FC = () => {
                                                 onChange={() => setUseCustomOp(false)}
                                                 disabled={isCreating}
                                             />
-                                            <span>Use my profile as OP</span>
-                                        </label>
-                                        <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem', fontSize: '0.9rem', color: '#6c757d' }}>
-                                            OP will be: <strong>{user?.display_name || 'Your Name'}</strong>
+                                            <div className="radio-option-content">
+                                                <div className="radio-option-label">Use my profile as OP</div>
+                                                <div className="radio-option-description">
+                                                    OP will be: <strong>{user?.display_name || 'Your Name'}</strong>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        
+                                        <div 
+                                            className={`radio-option ${useCustomOp ? 'selected' : ''}`}
+                                            onClick={() => setUseCustomOp(true)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             <input
                                                 type="radio"
                                                 name="opType"
@@ -394,56 +364,61 @@ const TutorView: React.FC = () => {
                                                 onChange={() => setUseCustomOp(true)}
                                                 disabled={isCreating}
                                             />
-                                            <span>Use custom OP name</span>
-                                        </label>
-                                        {useCustomOp && (
-                                            <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
-                                                <input
-                                                    type="text"
-                                                    className="enhanced-input"
-                                                    placeholder="Enter custom OP name"
-                                                    value={customOpName}
-                                                    onChange={(e) => setCustomOpName(e.target.value)}
-                                                    disabled={isCreating}
-                                                />
-                                                <div style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.25rem' }}>
-                                                    Custom OP names won't have profile pictures or user accounts
+                                            <div className="radio-option-content">
+                                                <div className="radio-option-label">Use custom OP name</div>
+                                                <div className="radio-option-description">
+                                                    Create a custom name for the original poster
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
+                                    
+                                    {useCustomOp && (
+                                        <div className="custom-input-section">
+                                            <input
+                                                type="text"
+                                                className="enhanced-input"
+                                                placeholder="Enter custom OP name"
+                                                value={customOpName}
+                                                onChange={(e) => setCustomOpName(e.target.value)}
+                                                disabled={isCreating}
+                                            />
+                                            <div className="custom-input-helper">
+                                                Custom OP names won't have profile pictures or user accounts
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Password Protection Section */}
-                            <div className="form-group" style={{ marginTop: '2rem' }}>
-                                <label className="enhanced-label">🔒 Password Protection</label>
-                                <div style={{ 
-                                    padding: '1rem', 
-                                    backgroundColor: '#f8f9fa', 
-                                    borderRadius: '8px', 
-                                    border: '1px solid #e9ecef' 
-                                }}>
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <div className="form-group password-protection-section">
+                                <label className="enhanced-label">Password Protection</label>
+                                <div className="configuration-section">
+                                    <div className="radio-group">
+                                        <div 
+                                            className={`radio-option ${usePassword ? 'selected' : ''}`}
+                                            onClick={() => setUsePassword(!usePassword)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             <input
                                                 type="checkbox"
                                                 checked={usePassword}
                                                 onChange={(e) => setUsePassword(e.target.checked)}
                                                 disabled={isCreating}
                                             />
-                                            <span>Enable password protection for this room</span>
-                                        </label>
-                                        {!usePassword && (
-                                            <div style={{ marginLeft: '1.5rem', marginTop: '0.5rem', fontSize: '0.9rem', color: '#6c757d' }}>
-                                                Room will be accessible to anyone with the link
+                                            <div className="radio-option-content">
+                                                <div className="radio-option-label">Enable password protection for this room</div>
+                                                <div className="radio-option-description">
+                                                    {!usePassword ? 'Room will be accessible to anyone with the link' : 'Students and observers will need a password to join'}
+                                                </div>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                     
                                     {usePassword && (
-                                        <div>
-                                            <label htmlFor="room-password" className="enhanced-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                                        <div className="custom-input-section">
+                                            <label htmlFor="room-password" className="enhanced-label">
                                                 Room Password
                                             </label>
                                             <input
@@ -454,9 +429,8 @@ const TutorView: React.FC = () => {
                                                 value={roomPassword}
                                                 onChange={(e) => setRoomPassword(e.target.value)}
                                                 disabled={isCreating}
-                                                style={{ marginBottom: '0.5rem' }}
                                             />
-                                            <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>
+                                            <div className="custom-input-helper">
                                                 Students and observers will need this password to join the room
                                             </div>
                                         </div>
@@ -465,7 +439,7 @@ const TutorView: React.FC = () => {
                             </div>
 
                             {/* Dialogue Customization Section */}
-                            <div className="form-group" style={{ marginTop: '2rem' }}>
+                            <div className="form-group dialogue-customization-section">
                                 <label className="enhanced-label">💬 Pre-populated Messages</label>
                                 <DialogueCustomizer
                                     dialogue={prePopulatedDialogue}
@@ -542,17 +516,11 @@ const TutorView: React.FC = () => {
                                             <span className="room-card-meta-label">Password:</span>
                                             <span className="room-card-meta-name">
                                                 {room.password ? (
-                                                    <span style={{ 
-                                                        fontFamily: 'monospace', 
-                                                        backgroundColor: '#f8f9fa', 
-                                                        padding: '2px 6px', 
-                                                        borderRadius: '3px',
-                                                        color: '#495057'
-                                                    }}>
+                                                    <span className="password-display">
                                                         {room.password}
                                                     </span>
                                                 ) : (
-                                                    <span style={{ color: '#6c757d', fontStyle: 'italic' }}>
+                                                    <span className="no-password">
                                                         No password
                                                     </span>
                                                 )}
@@ -563,7 +531,6 @@ const TutorView: React.FC = () => {
                                             <Link 
                                                 to={`/room/${room.id}`}
                                                 className="room-card-button"
-                                                style={{ textDecoration: 'none', display: 'block', textAlign: 'center', marginBottom: '0.5rem' }}
                                             >
                                                 🚪 Enter Room
                                             </Link>
@@ -571,16 +538,6 @@ const TutorView: React.FC = () => {
                                                 className="enhanced-button danger"
                                                 onClick={() => handleDeleteRoom(room)}
                                                 disabled={deletingRoomId === room.id}
-                                                style={{ 
-                                                    width: '100%',
-                                                    fontSize: '0.85rem',
-                                                    padding: '0.5rem',
-                                                    backgroundColor: '#dc3545',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer'
-                                                }}
                                             >
                                                 {deletingRoomId === room.id ? 'Deleting...' : '🗑️ Delete Room'}
                                             </button>
@@ -604,44 +561,20 @@ const TutorView: React.FC = () => {
 
                 {/* Delete Confirmation Dialog */}
                 {showDeleteConfirm && roomToDelete && (
-                    <div className="modal-overlay" style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1000
-                    }}>
-                        <div className="modal-content" style={{
-                            backgroundColor: 'white',
-                            padding: '2rem',
-                            borderRadius: '8px',
-                            maxWidth: '500px',
-                            width: '90%',
-                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                        }}>
-                            <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>
+                    <div className="modal-overlay">
+                        <div className="modal-content">
+                            <h3 className="modal-title-danger">
                                 ⚠️ Confirm Room Deletion
                             </h3>
-                            <p style={{ marginBottom: '1rem' }}>
+                            <p>
                                 Are you sure you want to delete the room "<strong>{roomToDelete.title}</strong>"?
                             </p>
-                            <div style={{
-                                padding: '1rem',
-                                backgroundColor: '#fff3cd',
-                                border: '1px solid #ffeaa7',
-                                borderRadius: '4px',
-                                marginBottom: '1rem'
-                            }}>
-                                <p style={{ margin: 0, color: '#856404' }}>
+                            <div className="modal-warning">
+                                <p>
                                     <strong>Warning:</strong> This room will be permanently deleted and the chat history cannot be recovered.
                                 </p>
                             </div>
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                            <div className="modal-actions">
                                 <button
                                     className="enhanced-button secondary"
                                     onClick={cancelDeleteRoom}
@@ -653,10 +586,6 @@ const TutorView: React.FC = () => {
                                     className="enhanced-button danger"
                                     onClick={confirmDeleteRoom}
                                     disabled={deletingRoomId === roomToDelete.id}
-                                    style={{
-                                        backgroundColor: '#dc3545',
-                                        color: 'white'
-                                    }}
                                 >
                                     {deletingRoomId === roomToDelete.id ? 'Deleting...' : 'Delete Room'}
                                 </button>
