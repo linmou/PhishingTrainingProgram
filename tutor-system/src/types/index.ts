@@ -137,6 +137,7 @@ export interface RoomContextType {
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
+    regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
     startTyping: () => void;
     stopTyping: () => void;

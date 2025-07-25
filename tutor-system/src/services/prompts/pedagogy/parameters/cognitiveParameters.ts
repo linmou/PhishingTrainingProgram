@@ -2,7 +2,7 @@
  * Cognitive load and content parameter configurations
  */
 
-import { ParameterConfig } from '../types';
+import { ParameterConfig } from '../../types';
 
 export const COGNITIVE_PARAMETERS: Record<string, ParameterConfig> = {
   concept_density: {

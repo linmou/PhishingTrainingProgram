@@ -2,7 +2,7 @@
  * Learning stages framework for educational scaffolding
  */
 
-import { LearningStage } from '../types';
+import { LearningStage } from '../../types';
 
 export const LEARNING_STAGES: Record<string, LearningStage> = {
   stage1: {

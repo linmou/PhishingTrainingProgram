@@ -2,7 +2,7 @@
  * Communication style parameter configurations
  */
 
-import { ParameterConfig } from '../types';
+import { ParameterConfig } from '../../types';
 
 export const COMMUNICATION_STYLES: Record<string, ParameterConfig> = {
   teen_slang: {

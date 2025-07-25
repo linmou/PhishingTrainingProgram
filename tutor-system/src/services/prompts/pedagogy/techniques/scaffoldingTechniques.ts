@@ -2,7 +2,7 @@
  * Scaffolding techniques for educational support
  */
 
-import { ScaffoldingTechnique } from '../types';
+import { ScaffoldingTechnique } from '../../types';
 
 export const SCAFFOLDING_TECHNIQUES: Record<string, ScaffoldingTechnique> = {
   questioning: {

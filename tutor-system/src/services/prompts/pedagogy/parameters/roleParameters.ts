@@ -3,7 +3,7 @@
  * Roles are now treated as parameters with low/high intensity levels
  */
 
-import { ParameterConfig } from '../types';
+import { ParameterConfig } from '../../types';
 
 export const ROLE_PARAMETERS: Record<'peer' | 'trusted_adult', ParameterConfig> = {
   peer: {

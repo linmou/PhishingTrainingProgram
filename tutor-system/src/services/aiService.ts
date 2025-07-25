@@ -550,6 +550,7 @@ export const generateAISuggestion = async (
     userId: string,
     userMessage?: string,
     parentMessageId?: string,
+    parameterOverrides?: any, // Parameter overrides for custom prompt generation
     user?: any // Accept user object for auth context
 ): Promise<{ aiResponse: AIResponse; contextMessages: string[] }> => {
     // Get room data to check AI configuration
@@ -563,15 +564,40 @@ export const generateAISuggestion = async (
         throw new Error('AI assistant is not enabled for this room');
     }
 
+    // Generate custom system prompt if parameter overrides are provided
+    let systemPrompt = roomData.ai_assistant_prompt || 
+        'You are a helpful AI assistant in an educational tutoring session. ' +
+        'Provide clear, educational responses to help students learn. ' +
+        'Be encouraging, patient, and focus on building understanding.';
+
+    if (parameterOverrides) {
+        // Use our modular prompt system with parameter overrides
+        const config = {
+            role: parameterOverrides.role || 'peer',
+            communication_style: parameterOverrides.communication_style || {
+                teen_slang: 'high',
+                conversational_markers: 'high',
+                uncertainty_expression: 'low'
+            },
+            cognitive_parameters: parameterOverrides.cognitive_parameters || {
+                concept_density: 'low'
+            },
+            emotional_parameters: parameterOverrides.emotional_parameters || {
+                enthusiasm_level: 'high'
+            },
+            detection_areas: ['Urgent language', 'Too good to be true offers', 'Suspicious links'],
+            verification_steps: ['Check sender', 'Verify URL', 'Think before clicking']
+        };
+        
+        systemPrompt = generateSystemPrompt(config);
+    }
+
     // Create AI config from room data
     const aiConfig: AIAssistantConfig = {
         id: roomId,
         room_id: roomId,
         model_name: roomData.ai_assistant_model || 'gpt-3.5-turbo',
-        system_prompt: roomData.ai_assistant_prompt || 
-            'You are a helpful AI assistant in an educational tutoring session. ' +
-            'Provide clear, educational responses to help students learn. ' +
-            'Be encouraging, patient, and focus on building understanding.',
+        system_prompt: systemPrompt,
         temperature: 0.7,
         max_tokens: 150,
         is_active: true,

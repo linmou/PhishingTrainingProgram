@@ -2,7 +2,7 @@
  * Emotional design parameter configurations
  */
 
-import { ParameterConfig } from '../types';
+import { ParameterConfig } from '../../types';
 
 export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
   enthusiasm_level: {

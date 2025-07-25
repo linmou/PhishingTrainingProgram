@@ -23,6 +23,7 @@ const RoomPagePost: React.FC = () => {
         leaveRoom,
         sendMessage,
         generateAIResponse,
+        regenerateAIResponse,
         startTyping,
         stopTyping,
         aiConfig,
@@ -436,8 +437,10 @@ const RoomPagePost: React.FC = () => {
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}
                         onReject={handleRejectAISuggestion}
+                        onRegenerate={regenerateAIResponse}
                         isVisible={true}
                         parentMessage={currentSuggestionContext?.parentMessageContent}
+                        isRegenerating={loadingAI}
                     />
                 )}
 

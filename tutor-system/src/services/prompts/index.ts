@@ -1,17 +1,20 @@
 /**
- * Main system prompt generation with modular architecture
- * All parameters are treated equally in the new architecture
+ * Main system prompt generation with separated pedagogy and content architecture
+ * Pedagogical methods are universal, content is subject-specific
  */
 
 import { SystemPromptConfig } from './types';
 import { BASE_SYSTEM_PROMPT } from './basePrompt';
-import { ROLE_PARAMETERS } from './parameters/roleParameters';
-import { COMMUNICATION_STYLES } from './parameters/communicationStyles';
-import { COGNITIVE_PARAMETERS } from './parameters/cognitiveParameters';
-import { EMOTIONAL_PARAMETERS } from './parameters/emotionalParameters';
-import { LEARNING_STAGES } from './education/learningStages';
-import { SCAFFOLDING_TECHNIQUES } from './education/scaffoldingTechniques';
-import { SCAM_DETECTION_RULES, PRIVACY_PROTECTION_RULES } from './education/detectionRules';
+
+// PEDAGOGICAL METHODS (Universal - reusable across subjects)
+import { ROLE_PARAMETERS } from './pedagogy/parameters/roleParameters';
+import { COMMUNICATION_STYLES } from './pedagogy/parameters/communicationStyles';
+import { COGNITIVE_PARAMETERS } from './pedagogy/parameters/cognitiveParameters';
+import { EMOTIONAL_PARAMETERS } from './pedagogy/parameters/emotionalParameters';
+import { SCAFFOLDING_TECHNIQUES } from './pedagogy/techniques/scaffoldingTechniques';
+
+// CONTENT (Subject-specific - currently cybersecurity)
+import { SCAM_DETECTION_RULES, PRIVACY_PROTECTION_RULES } from './content/cybersecurity/detectionRules';
 
 /**
  * Generates a complete system prompt based on configuration
@@ -53,10 +56,13 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
       `**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${technique.description}`
     ).join('\n'),
 
-    "## Education Content:",
-    "You are teaching the following content: help students to understand and recognize the scams and privacy protection.",
+    "## Subject Content - Cybersecurity:",
+    "You are teaching cybersecurity: help students understand and recognize scams and privacy protection.",
 
+    "### Scam Detection Framework:",
     SCAM_DETECTION_RULES,
+    
+    "### Privacy Protection Guidelines:",
     PRIVACY_PROTECTION_RULES,
 
     "## Detection Areas to Focus On:",
@@ -71,13 +77,6 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
   return sections.filter(Boolean).join('\n\n');
 }
 
-// Re-export all the components for direct access if needed
-export { ROLE_PARAMETERS } from './parameters/roleParameters';
-export { COMMUNICATION_STYLES } from './parameters/communicationStyles';
-export { COGNITIVE_PARAMETERS } from './parameters/cognitiveParameters';
-export { EMOTIONAL_PARAMETERS } from './parameters/emotionalParameters';
-export { LEARNING_STAGES } from './education/learningStages';
-export { SCAFFOLDING_TECHNIQUES } from './education/scaffoldingTechniques';
-export { SCAM_DETECTION_RULES, PRIVACY_PROTECTION_RULES } from './education/detectionRules';
+// Export only what's actually used by the codebase
 export { PRESET_CONFIGS } from './presets';
 export * from './types';

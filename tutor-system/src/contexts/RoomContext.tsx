@@ -10,6 +10,7 @@ import {
     recordAISuggestionFeedback
 } from '../services/aiService';
 import { validateRoomPassword } from '../services/supabase';
+import { ParameterOverrides } from '../components/AISuggestionBox';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -542,6 +543,58 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const regenerateAIResponse = async (parameterOverrides: ParameterOverrides): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('No user or room available');
+        }
+
+        if (user.current_role !== 'tutor') {
+            throw new Error('Only tutors can regenerate AI responses');
+        }
+
+        if (!currentRoom.ai_assistant_enabled) {
+            throw new Error('AI assistant is not enabled for this room');
+        }
+
+        if (!currentSuggestionContext) {
+            throw new Error('No current suggestion to regenerate');
+        }
+
+        setLoadingAI(true);
+        try {
+            // Mark the current suggestion as modified/ignored
+            if (aiSuggestion) {
+                await recordAIFeedback('modified');
+            }
+
+            // Generate new suggestion with parameter overrides
+            const result = await generateAISuggestion(
+                currentRoom.id,
+                user.id,
+                currentSuggestionContext.parentMessageContent,
+                currentSuggestionContext.parentMessageId,
+                parameterOverrides // Pass the parameter overrides
+            );
+
+            // Update the AI suggestion
+            if (result.aiResponse.suggested_response) {
+                setAiSuggestion(result.aiResponse.suggested_response);
+                
+                // Update context with new generation time
+                setCurrentSuggestionContext({
+                    ...currentSuggestionContext,
+                    startTime: Date.now(),
+                    contextMessages: result.contextMessages
+                });
+            }
+        } catch (error) {
+            console.error('Failed to regenerate AI response:', error);
+            throw error;
+        } finally {
+            setLoadingAI(false);
+        }
+    };
+
     const toggleAIAssistant = async (
         enabled: boolean,
         config?: Partial<AIAssistantConfig>
@@ -848,6 +901,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         leaveRoom,
         sendMessage,
         generateAIResponse,
+        regenerateAIResponse,
         toggleAIAssistant,
         startTyping,
         stopTyping,
