@@ -44,6 +44,7 @@ npm run test:task3          # Test authentication system
 - `src/components/` - Reusable UI components (LoginForm, ChatMessage, AIAssistantSettings)
 - `src/pages/` - Route components for different user views (StudentView, TutorView, ObserverView)
 - `src/services/` - Supabase client configuration and service functions
+- `src/services/prompts/` - **Modular AI prompt system** (see AI Prompt Architecture below)
 - `src/contexts/` - React contexts for auth and room state management
 - `src/types/` - TypeScript type definitions for database schema
 - `supabase/migrations/` - Database schema and migration files
@@ -83,6 +84,55 @@ The system includes a dummy AI assistant feature for tutors:
 - Maintains conversation history
 - Currently uses dummy implementation (5% simulated failure rate)
 - Real AI integration possible via environment variables
+
+### AI Prompt Architecture
+The AI assistant uses a **modular prompt system** located in `src/services/prompts/`:
+
+#### File Structure
+```
+src/services/prompts/
+├── index.ts                      # Main generateSystemPrompt() function
+├── types.ts                      # TypeScript interfaces
+├── basePrompt.ts                 # Core system prompt foundation
+├── presets.ts                    # Ready-made configurations (casual_peer, supportive_adult)
+├── parameters/
+│   ├── roleParameters.ts         # Peer vs Trusted Adult personas (low/high intensity)
+│   ├── communicationStyles.ts    # Teen slang, conversational markers, uncertainty
+│   ├── cognitiveParameters.ts    # Concept density, perspective taking, examples
+│   └── emotionalParameters.ts    # Enthusiasm, validation, mistake normalization
+└── education/
+    ├── learningStages.ts         # 3-stage learning process framework
+    ├── scaffoldingTechniques.ts  # Educational support methods
+    └── detectionRules.ts         # Scam detection and privacy protection rules
+```
+
+#### Key Features
+- **Parameter Consistency**: All parameters (roles, communication, cognitive, emotional) use the same `low`/`high` intensity structure
+- **Modular Design**: Each file handles a single concern, making modifications easier
+- **Backward Compatibility**: Existing imports from `systemPrompts.ts` continue to work
+- **Preset Configurations**: Ready-made combinations for common scenarios
+- **Educational Framework**: Built-in scaffolding techniques and learning stages
+
+#### Usage Example
+```typescript
+import { generateSystemPrompt, PRESET_CONFIGS } from '../services/systemPrompts';
+
+// Use preset configuration
+const config = {
+  ...PRESET_CONFIGS.casual_peer,
+  detection_areas: ['Urgent language', 'Suspicious links'],
+  verification_steps: ['Check sender', 'Verify URL']
+};
+
+const systemPrompt = generateSystemPrompt(config);
+```
+
+#### Customization
+Tutors can modify individual parameter categories without affecting others:
+- **Role intensity**: Adjust peer/adult persona strength
+- **Communication style**: Control teen slang usage and uncertainty expression  
+- **Cognitive approach**: Set concept density and perspective-taking frequency
+- **Emotional tone**: Configure enthusiasm, validation, and confidence-building levels
 
 ### Key Implementation Patterns
 - **Authentication**: Supabase Auth with role-based access control (no capacity limits)
