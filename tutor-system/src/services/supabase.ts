@@ -613,6 +613,21 @@ export const submitMessageFeedback = async (
 export const getMessageFeedbackStats = async (messageId: string) => {
     console.log('📊 Supabase Service: Getting feedback stats for message:', messageId);
 
+    // Skip feedback stats for special message IDs that aren't valid UUIDs
+    if (messageId.startsWith('prepop-') || messageId.startsWith('temp-')) {
+        console.log('📊 Supabase Service: Skipping feedback stats for special message ID:', messageId);
+        return {
+            message_id: messageId,
+            total_feedback_count: 0,
+            like_count: 0,
+            dislike_count: 0,
+            average_like_rating: null,
+            average_dislike_rating: null,
+            overall_average_rating: null,
+            user_feedback: null
+        };
+    }
+
     const { data, error } = await supabase
         .from('message_feedback')
         .select('feedback_type, rating')
@@ -669,6 +684,12 @@ export const getMessageFeedbackStats = async (messageId: string) => {
 
 export const getUserMessageFeedback = async (messageId: string, userId: string) => {
     console.log('👤 Supabase Service: Getting user feedback for message:', { messageId, userId });
+
+    // Skip feedback stats for special message IDs that aren't valid UUIDs
+    if (messageId.startsWith('prepop-') || messageId.startsWith('temp-')) {
+        console.log('👤 Supabase Service: Skipping user feedback for special message ID:', messageId);
+        return null;
+    }
 
     const { data, error } = await supabase
         .from('message_feedback')
@@ -737,13 +758,25 @@ export const getRoomFeedbackSummary = async (roomId: string) => {
 };
 
 // Clear chat history function - removes all messages from room while preserving pre-populated messages
-export const clearChatHistory = async (roomId: string) => {
-    console.log('🧹 Supabase Service: Clearing chat history for room:', roomId);
+export const clearChatHistory = async (roomId: string, userId: string) => {
+    console.log('🧹 Supabase Service: Clearing chat history for room:', roomId, 'by user:', userId);
     
-    // Verify the user is the tutor of the room
-    const user = await getCurrentUser();
-    if (!user) {
-        throw new Error('User not authenticated');
+    // Verify user exists and get their role
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id, current_role, display_name')
+        .eq('id', userId)
+        .single();
+
+    if (userError || !userData) {
+        console.error('❌ Supabase Service: User not found:', userError);
+        throw new Error('User not found or not authenticated');
+    }
+
+    // Check if user is a tutor
+    if (userData.current_role !== 'tutor') {
+        console.error('❌ Supabase Service: User not authorized - not a tutor');
+        throw new Error('Only tutors can clear chat history');
     }
 
     // Check if the user is the owner of the room
@@ -758,7 +791,7 @@ export const clearChatHistory = async (roomId: string) => {
         throw new Error('Room not found');
     }
 
-    if (room.tutor_id !== user.id) {
+    if (room.tutor_id !== userId) {
         console.error('❌ Supabase Service: User not authorized to clear chat history');
         throw new Error('You are not authorized to clear chat history for this room');
     }
@@ -772,17 +805,6 @@ export const clearChatHistory = async (roomId: string) => {
     if (deleteError) {
         console.error('❌ Supabase Service: Clear chat history error:', deleteError);
         throw deleteError;
-    }
-
-    // Also clear any AI suggestion feedback related to the room
-    const { error: aiFeedbackError } = await supabase
-        .from('ai_suggestion_feedback')
-        .delete()
-        .eq('room_id', roomId);
-
-    if (aiFeedbackError) {
-        console.error('⚠️ Supabase Service: AI feedback cleanup warning:', aiFeedbackError);
-        // Don't throw error for AI feedback cleanup - it's not critical
     }
 
     // Clear message feedback data

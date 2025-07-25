@@ -896,8 +896,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         try {
-            // Call the service function to clear database messages
-            await clearChatHistoryService(currentRoom.id);
+            // Call the service function to clear database messages - pass user ID
+            await clearChatHistoryService(currentRoom.id, user.id);
 
             // Clear messages from local state but preserve pre-populated messages
             const prePopulatedMessages = messages.filter(msg => msg.id.startsWith('prepop-'));
