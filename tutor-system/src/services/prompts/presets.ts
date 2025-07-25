@@ -6,7 +6,9 @@ import { SystemPromptConfig } from './types';
 
 export const PRESET_CONFIGS: Record<string, Omit<SystemPromptConfig, 'detection_areas' | 'verification_steps'>> = {
   casual_peer: {
-    role: 'peer' as const,
+    role: {
+      role: 'low' as const
+    },
     communication_style: {
       teen_slang: 'high' as const,
       conversational_markers: 'high' as const,
@@ -27,7 +29,9 @@ export const PRESET_CONFIGS: Record<string, Omit<SystemPromptConfig, 'detection_
   },
   
   supportive_adult: {
-    role: 'trusted_adult' as const,
+    role: {
+      role: 'high' as const
+    },
     communication_style: {
       teen_slang: 'low' as const,
       conversational_markers: 'low' as const,

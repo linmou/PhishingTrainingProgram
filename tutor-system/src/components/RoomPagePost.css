@@ -530,3 +530,124 @@
         font-size: 20px;
     }
 }
+
+/* Smooth Scrolling and New Message Notification */
+.comments-list {
+    scroll-behavior: smooth;
+    overflow-y: auto;
+    max-height: 600px; /* Set a max height to enable scrolling */
+}
+
+/* New Message Indicator */
+.new-message-indicator {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid white;
+}
+
+.new-message-indicator:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+}
+
+.new-message-text {
+    white-space: nowrap;
+}
+
+.new-message-arrow {
+    font-size: 16px;
+    animation: bounce 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.6);
+    }
+    100% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-3px);
+    }
+    60% {
+        transform: translateY(-1px);
+    }
+}
+
+/* Ensure comments section is positioned relative for absolute positioning of indicator */
+.comments-section {
+    position: relative;
+}
+
+/* Smooth scroll animation for message container */
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Mobile responsiveness for new message indicator */
+@media (max-width: 768px) {
+    .new-message-indicator {
+        bottom: 15px;
+        padding: 10px 16px;
+        font-size: 13px;
+        border-radius: 20px;
+    }
+    
+    .new-message-arrow {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .new-message-indicator {
+        bottom: 10px;
+        padding: 8px 12px;
+        font-size: 12px;
+        border-radius: 18px;
+    }
+    
+    .comments-list {
+        max-height: 400px;
+    }
+}

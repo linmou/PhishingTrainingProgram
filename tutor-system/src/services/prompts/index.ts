@@ -24,8 +24,8 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
   const sections = [
     BASE_SYSTEM_PROMPT,
 
-    // Roles are now treated as parameters with low/high intensity
-    ROLE_PARAMETERS[config.role].high, // Default to high intensity for compatibility
+    // Role parameter now follows the same low/high pattern as other parameters
+    ROLE_PARAMETERS.role[config.role?.role || 'high'], // Use the configured role intensity
 
     "## Communication Style:",
     COMMUNICATION_STYLES.teen_slang[config.communication_style.teen_slang],

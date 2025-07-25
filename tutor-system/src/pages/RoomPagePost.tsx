@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
@@ -7,7 +7,8 @@ import PostComment from '../components/PostComment';
 import CommentInput from '../components/CommentInput';
 import AIAssistantSettings from '../components/AIAssistantSettings';
 import AISuggestionBox from '../components/AISuggestionBox';
-import { Download, Settings, ArrowLeft } from 'lucide-react';
+import { Download, Settings, ArrowLeft, Trash2 } from 'lucide-react';
+import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import '../components/RoomPagePost.css';
 
 const RoomPagePost: React.FC = () => {
@@ -29,21 +30,34 @@ const RoomPagePost: React.FC = () => {
         aiConfig,
         loadingAI,
         downloadChatHistory,
+        clearChatHistory,
         aiSuggestion,
         clearAISuggestion,
         recordAIFeedback,
-        currentSuggestionContext
+        currentSuggestionContext,
+        submitMessageFeedback,
+        messageFeedbackStats
     } = useRoom();
 
     const [messageText, setMessageText] = useState('');
     const [showAISettings, setShowAISettings] = useState(false);
     const [sendingMessage, setSendingMessage] = useState(false);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showClearChatModal, setShowClearChatModal] = useState(false);
+    const [clearingChat, setClearingChat] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [joinError, setJoinError] = useState('');
+    
+    // Scroll and notification state
+    const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
+    const [newMessageCount, setNewMessageCount] = useState(0);
+    const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const previousMessageCountRef = useRef(messages.length);
     
     // Room engagement state (for future implementation)
     const [roomEngagement, setRoomEngagement] = useState({
@@ -76,6 +90,69 @@ const RoomPagePost: React.FC = () => {
         };
     }, [roomId, leaveRoom]);
 
+    // Scroll functions (defined before useEffect that uses them)
+    const scrollToBottom = useCallback((smooth: boolean = true) => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ 
+                behavior: smooth ? 'smooth' : 'auto',
+                block: 'end'
+            });
+        }
+    }, []);
+
+    const handleScroll = useCallback(() => {
+        if (!messagesContainerRef.current) return;
+        
+        const container = messagesContainerRef.current;
+        const scrollTop = container.scrollTop;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+        
+        // Check if user has scrolled away from bottom (with 50px tolerance)
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+        setUserHasScrolledUp(!isAtBottom);
+        
+        // Hide new message indicator if user scrolls to bottom
+        if (isAtBottom) {
+            setShowNewMessageIndicator(false);
+            setNewMessageCount(0);
+        }
+    }, []);
+
+    const handleNewMessageClick = useCallback(() => {
+        scrollToBottom();
+        setShowNewMessageIndicator(false);
+        setNewMessageCount(0);
+    }, [scrollToBottom]);
+
+    // Handle automatic scrolling and new message notifications
+    useEffect(() => {
+        const currentMessageCount = messages.length;
+        const previousMessageCount = previousMessageCountRef.current;
+        
+        // Update ref with current count
+        previousMessageCountRef.current = currentMessageCount;
+        
+        // If there are new messages
+        if (currentMessageCount > previousMessageCount && previousMessageCount > 0) {
+            const newMessagesAdded = currentMessageCount - previousMessageCount;
+            
+            if (!userHasScrolledUp) {
+                // User is at bottom, auto-scroll to new messages
+                setTimeout(() => scrollToBottom(), 100);
+            } else {
+                // User has scrolled up, show notification
+                setNewMessageCount(prev => prev + newMessagesAdded);
+                setShowNewMessageIndicator(true);
+            }
+        }
+        
+        // Auto-scroll on first load
+        if (currentMessageCount > 0 && previousMessageCount === 0) {
+            setTimeout(() => scrollToBottom(false), 100);
+        }
+    }, [messages.length, userHasScrolledUp, scrollToBottom]);
+
     const attemptJoinRoom = async (password?: string) => {
         try {
             setJoinError('');
@@ -107,8 +184,6 @@ const RoomPagePost: React.FC = () => {
             setRoomPassword('');
         }
     };
-
-    // Auto-scroll disabled for post-style interface to let users control their view
 
     // Find tutor from participants
     const tutor = participants?.find(p => p.current_role === 'tutor') || null;
@@ -244,6 +319,21 @@ const RoomPagePost: React.FC = () => {
         clearAISuggestion();
     };
 
+    const handleClearChatHistory = async () => {
+        if (!canUseAI) return;
+        
+        setClearingChat(true);
+        try {
+            await clearChatHistory();
+            setShowClearChatModal(false);
+        } catch (error) {
+            console.error('Failed to clear chat history:', error);
+            alert('Failed to clear chat history. Please try again.');
+        } finally {
+            setClearingChat(false);
+        }
+    };
+
     const canSendMessages = user && user.current_role !== 'observer';
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
@@ -359,6 +449,15 @@ const RoomPagePost: React.FC = () => {
                         >
                             <Download size={16} />
                         </button>
+                        {canUseAI && (
+                            <button
+                                onClick={() => setShowClearChatModal(true)}
+                                className="btn btn-secondary btn-small"
+                                title="Clear Chat History"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -386,7 +485,11 @@ const RoomPagePost: React.FC = () => {
                         💬 Discussion ({messages.length} message{messages.length !== 1 ? 's' : ''})
                     </div>
                     
-                    <div className="comments-list">
+                    <div 
+                        className="comments-list" 
+                        ref={messagesContainerRef}
+                        onScroll={handleScroll}
+                    >
                         {messages.length === 0 ? (
                             <div style={{ padding: '40px 20px', textAlign: 'center', color: '#65676b' }}>
                                 <p>No messages yet. Start the conversation!</p>
@@ -412,6 +515,8 @@ const RoomPagePost: React.FC = () => {
                                         isDisliked={engagement.userDisliked}
                                         currentUserId={user?.id}
                                         currentUserRole={user?.current_role}
+                                        onSubmitFeedback={submitMessageFeedback}
+                                        feedbackStats={messageFeedbackStats[message.id]}
                                     />
                                 );
                             })
@@ -428,7 +533,19 @@ const RoomPagePost: React.FC = () => {
                             </div>
                         )}
                         
+                        {/* Invisible div to scroll to */}
+                        <div ref={messagesEndRef} />
                     </div>
+                    
+                    {/* New Message Indicator */}
+                    {showNewMessageIndicator && (
+                        <div className="new-message-indicator" onClick={handleNewMessageClick}>
+                            <span className="new-message-text">
+                                {newMessageCount} new message{newMessageCount !== 1 ? 's' : ''}
+                            </span>
+                            <span className="new-message-arrow">↓</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* AI Suggestion Box for Tutors */}
@@ -441,6 +558,7 @@ const RoomPagePost: React.FC = () => {
                         isVisible={true}
                         parentMessage={currentSuggestionContext?.parentMessageContent}
                         isRegenerating={loadingAI}
+                        parameterConfig={getConfigurationPreset('standard')}
                     />
                 )}
 
@@ -499,8 +617,8 @@ const RoomPagePost: React.FC = () => {
             {showDownloadModal && (
                 <div className="modal-overlay" onClick={() => setShowDownloadModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Download Chat History</h3>
-                        <p>Choose a format to download the chat history:</p>
+                        <h3>Download Room Data</h3>
+                        <p>Choose what to download:</p>
                         <div className="download-options">
                             <button 
                                 className="btn btn-primary"
@@ -509,7 +627,7 @@ const RoomPagePost: React.FC = () => {
                                     setShowDownloadModal(false);
                                 }}
                             >
-                                Download as TXT
+                                Chat History (TXT)
                             </button>
                             <button 
                                 className="btn btn-primary"
@@ -518,11 +636,47 @@ const RoomPagePost: React.FC = () => {
                                     setShowDownloadModal(false);
                                 }}
                             >
-                                Download as JSON
+                                Complete Data (JSON)
+                            </button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    downloadChatHistory('feedback');
+                                    setShowDownloadModal(false);
+                                }}
+                            >
+                                Download Feedback Data
                             </button>
                             <button 
                                 className="btn btn-secondary"
                                 onClick={() => setShowDownloadModal(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Clear Chat History Confirmation Modal */}
+            {showClearChatModal && (
+                <div className="modal-overlay" onClick={() => setShowClearChatModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Clear Chat History</h3>
+                        <p>Are you sure you want to clear all chat history for this room?</p>
+                        <p><strong>Warning:</strong> This action cannot be undone. Pre-populated messages will be preserved, but all user messages will be permanently deleted.</p>
+                        <div className="modal-actions">
+                            <button 
+                                className="btn btn-danger"
+                                onClick={handleClearChatHistory}
+                                disabled={clearingChat}
+                            >
+                                {clearingChat ? 'Clearing...' : 'Clear Chat History'}
+                            </button>
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={() => setShowClearChatModal(false)}
+                                disabled={clearingChat}
                             >
                                 Cancel
                             </button>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User, AIInteraction } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User, AIInteraction, MessageFeedbackStats } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -9,7 +9,14 @@ import {
     generateAISuggestion,
     recordAISuggestionFeedback
 } from '../services/aiService';
-import { validateRoomPassword } from '../services/supabase';
+import { 
+    validateRoomPassword,
+    submitMessageFeedback,
+    getMessageFeedbackStats,
+    getUserMessageFeedback,
+    getRoomFeedbackSummary,
+    clearChatHistory as clearChatHistoryService
+} from '../services/supabase';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -38,6 +45,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         startTime: number;
         contextMessages: string[];
     } | null>(null);
+    const [messageFeedbackStats, setMessageFeedbackStats] = useState<Record<string, MessageFeedbackStats>>({});
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const channelRef = useRef<any>(null);
     const { user } = useAuth();
@@ -727,7 +735,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const downloadChatHistory = (format: 'txt' | 'json' = 'txt') => {
+    const downloadChatHistory = async (format: 'txt' | 'json' | 'feedback' = 'txt') => {
         if (!currentRoom || !messages) return;
 
         const roomTitle = currentRoom.title.replace(/\s+/g, '_');
@@ -736,7 +744,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Only include AI data for tutors
         const isTutor = user?.current_role === 'tutor';
         
-        if (format === 'json') {
+        if (format === 'json' || format === 'feedback') {
+            // Get feedback summary for the room
+            let feedbackSummary = null;
+            try {
+                feedbackSummary = await getRoomFeedbackSummary(currentRoom.id);
+            } catch (error) {
+                console.warn('Failed to get room feedback summary:', error);
+            }
+
             const exportData: any = {
                 room: {
                     id: currentRoom.id,
@@ -749,13 +765,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     display_name: msg.display_name,
                     content: msg.content,
                     created_at: msg.created_at,
-                    is_ai_generated: msg.is_ai_generated
+                    is_ai_generated: msg.is_ai_generated,
+                    feedback_stats: messageFeedbackStats[msg.id] || undefined
                 })),
                 export_metadata: {
                     exported_at: new Date().toISOString(),
                     total_messages: messages.length
                 }
             };
+
+            // Add feedback summary if available
+            if (feedbackSummary) {
+                exportData.feedback_summary = feedbackSummary;
+            }
             
             // Only add AI-related data for tutors
             if (isTutor) {
@@ -784,11 +806,17 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${roomTitle}_chat_export_${timestamp}.json`;
+            const filename = format === 'feedback' 
+                ? `${roomTitle}_feedback_export_${timestamp}.json`
+                : `${roomTitle}_chat_export_${timestamp}.json`;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            
+            // If this is feedback format, we're done
+            if (format === 'feedback') return;
         } else {
             // TXT format - only include AI data for tutors
             const aiSummary = isTutor && aiInteractions.length > 0 ? [
@@ -814,6 +842,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ].filter(line => line).join('\n'))
             ] : [];
 
+            // Add feedback summary for TXT format
+            const messagesWithFeedback = Object.keys(messageFeedbackStats).length;
+            const totalFeedbackCount = Object.values(messageFeedbackStats).reduce((sum, stats) => sum + stats.total_feedback_count, 0);
+            const feedbackSummaryTxt = messagesWithFeedback > 0 ? [
+                '',
+                'Feedback Summary:',
+                '================',
+                `Messages with feedback: ${messagesWithFeedback}`,
+                `Total feedback entries: ${totalFeedbackCount}`,
+                ''
+            ] : [];
+
             const content = [
                 `Room: ${currentRoom.title}`,
                 `Created: ${new Date(currentRoom.created_at).toISOString()}`,
@@ -821,12 +861,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     `AI Assistant: ${currentRoom.ai_assistant_enabled ? 'Enabled' : 'Disabled'}`,
                     currentRoom.ai_assistant_model ? `AI Model: ${currentRoom.ai_assistant_model}` : ''
                 ] : []),
-                '',
+                ...feedbackSummaryTxt,
                 'Messages:',
                 '=========',
-                ...messages.map(message => 
-                    `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}`
-                ),
+                ...messages.map(message => {
+                    const feedbackStats = messageFeedbackStats[message.id];
+                    const feedbackInfo = feedbackStats && feedbackStats.total_feedback_count > 0 
+                        ? ` [👍${feedbackStats.like_count} 👎${feedbackStats.dislike_count}${feedbackStats.overall_average_rating ? ` ★${feedbackStats.overall_average_rating.toFixed(1)}` : ''}]`
+                        : '';
+                    return `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
+                }),
                 ...aiSummary
             ].filter(line => line !== '').join('\n');
 
@@ -839,6 +883,36 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+        }
+    };
+
+    const clearChatHistory = async (): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('No user or room available');
+        }
+
+        if (user.current_role !== 'tutor') {
+            throw new Error('Only tutors can clear chat history');
+        }
+
+        try {
+            // Call the service function to clear database messages
+            await clearChatHistoryService(currentRoom.id);
+
+            // Clear messages from local state but preserve pre-populated messages
+            const prePopulatedMessages = messages.filter(msg => msg.id.startsWith('prepop-'));
+            setMessages(prePopulatedMessages);
+            
+            // Clear message feedback stats
+            setMessageFeedbackStats({});
+            
+            // Clear AI interactions
+            setAIInteractions([]);
+            
+            console.log('✅ Chat history cleared successfully');
+        } catch (error) {
+            console.error('❌ Failed to clear chat history:', error);
+            throw error;
         }
     };
 
@@ -890,6 +964,71 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    // Message feedback functions
+    const handleSubmitMessageFeedback = async (messageId: string, feedbackType: 'like' | 'dislike', rating: number): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('User must be logged in and in a room to submit feedback');
+        }
+
+        try {
+            // Submit feedback to database
+            await submitMessageFeedback(messageId, user.id, currentRoom.id, feedbackType, rating);
+            
+            // Refresh feedback stats for this message
+            await handleGetMessageFeedbackStats(messageId);
+            
+        } catch (error) {
+            console.error('Failed to submit message feedback:', error);
+            throw error;
+        }
+    };
+
+    const handleGetMessageFeedbackStats = async (messageId: string): Promise<MessageFeedbackStats | null> => {
+        if (!user) return null;
+
+        try {
+            // Get overall stats
+            const stats = await getMessageFeedbackStats(messageId);
+            
+            // Get user's specific feedback
+            const userFeedback = await getUserMessageFeedback(messageId, user.id);
+            
+            // Combine stats with user feedback
+            const fullStats: MessageFeedbackStats = {
+                ...stats,
+                user_feedback: userFeedback ? {
+                    feedback_type: userFeedback.feedback_type,
+                    rating: userFeedback.rating
+                } : null
+            };
+
+            // Update local state
+            setMessageFeedbackStats(prev => ({
+                ...prev,
+                [messageId]: fullStats
+            }));
+
+            return fullStats;
+        } catch (error) {
+            console.error('Failed to get message feedback stats:', error);
+            return null;
+        }
+    };
+
+    // Load feedback stats for all messages when messages change
+    useEffect(() => {
+        if (messages.length > 0 && user) {
+            // Load feedback stats for each message
+            messages.forEach(message => {
+                // Only load if we don't already have stats for this message
+                if (!messageFeedbackStats[message.id]) {
+                    handleGetMessageFeedbackStats(message.id);
+                }
+            });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [messages.length, user]);
+
     const value: RoomContextType = {
         currentRoom,
         messages,
@@ -908,11 +1047,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         aiConfig,
         loadingAI,
         downloadChatHistory,
+        clearChatHistory,
         aiSuggestion,
         clearAISuggestion,
         aiInteractions,
         currentSuggestionContext,
-        recordAIFeedback
+        recordAIFeedback,
+        submitMessageFeedback: handleSubmitMessageFeedback,
+        getMessageFeedbackStats: handleGetMessageFeedbackStats,
+        messageFeedbackStats
     };
 
     return (

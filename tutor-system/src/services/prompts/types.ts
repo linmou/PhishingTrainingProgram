@@ -3,7 +3,9 @@
  */
 
 export interface SystemPromptConfig {
-  role: 'peer' | 'trusted_adult';
+  role: {
+    role: 'low' | 'high';
+  };
   communication_style: {
     teen_slang: 'low' | 'high';
     conversational_markers: 'low' | 'high';
@@ -28,6 +30,11 @@ export interface SystemPromptConfig {
 export interface ParameterConfig {
   low: string;
   high: string;
+  // Optional custom labels for the options (defaults to 'low'/'high')
+  labels?: {
+    low: string;
+    high: string;
+  };
 }
 
 export interface ScaffoldingTechnique {
@@ -40,3 +47,36 @@ export interface LearningStage {
   prompt: string;
   purpose: string;
 }
+
+/**
+ * Dynamic configuration interface that determines which parameters are available for selection
+ * Structure is automatically generated from the parameter files in the pedagogy/parameters folder
+ */
+export interface ParameterSelectionConfig {
+  role?: {
+    enabled: boolean;
+    options: string[];
+  };
+  [categoryKey: string]: {
+    enabled: boolean;
+    parameters?: Record<string, boolean>;
+    options?: string[];
+  } | undefined;
+}
+
+/**
+ * Dynamic parameter overrides interface
+ * Structure is flexible and based on what's actually loaded from parameter files
+ */
+export interface DynamicParameterOverrides {
+  role?: {
+    role: 'low' | 'high';
+  };
+  [categoryKey: string]: any;
+}
+
+/**
+ * Note: DEFAULT_PARAMETER_SELECTION is now dynamically generated 
+ * in dynamicParameterLoader.ts as DYNAMIC_PARAMETER_SELECTION
+ * This ensures it automatically includes all parameters from the prompts folder
+ */

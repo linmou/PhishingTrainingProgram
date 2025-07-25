@@ -116,7 +116,9 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             
             // Use individual parameter settings instead of preset
             const config = {
-                role: selectedPreset === 'casual_peer' ? 'peer' as const : 'trusted_adult' as const,
+                role: {
+                    role: selectedPreset === 'casual_peer' ? 'low' as const : 'high' as const
+                },
                 communication_style: {
                     teen_slang: teenSlang,
                     conversational_markers: conversationalMarkers,

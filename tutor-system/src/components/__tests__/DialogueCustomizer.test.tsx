@@ -43,7 +43,7 @@ describe('DialogueCustomizer', () => {
             expect(mockOnChange).toHaveBeenCalledWith([{
                 user_name: '',
                 message: '',
-                role: 'student'
+                role: 'others'
             }]);
         });
     });
@@ -185,7 +185,8 @@ describe('DialogueCustomizer', () => {
             const dialogueWithRoles: PrePopulatedMessage[] = [
                 { user_name: 'Student1', message: 'Hi', role: 'student' },
                 { user_name: 'Tutor1', message: 'Hello', role: 'tutor' },
-                { user_name: 'Observer1', message: 'Watching', role: 'observer' }
+                { user_name: 'Observer1', message: 'Watching', role: 'observer' },
+                { user_name: 'Other1', message: 'External message', role: 'others' }
             ];
 
             render(
@@ -198,6 +199,7 @@ describe('DialogueCustomizer', () => {
             expect(screen.getByText('Student')).toBeInTheDocument();
             expect(screen.getByText('Tutor')).toBeInTheDocument();
             expect(screen.getByText('Observer')).toBeInTheDocument();
+            expect(screen.getByText('Others')).toBeInTheDocument();
         });
     });
 

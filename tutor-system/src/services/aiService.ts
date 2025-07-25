@@ -348,7 +348,9 @@ export const initializeAIAssistant = async (
         const verificationSteps = promptConfig.custom_verification_steps || scenario?.verification_steps || [];
         
         const config = {
-            role: promptConfig.role || 'trusted_adult',
+            role: {
+                role: (promptConfig.role === 'peer' ? 'low' : 'high') as 'low' | 'high'
+            },
             communication_style: promptConfig.communication_style || PRESET_CONFIGS.supportive_adult.communication_style,
             cognitive_parameters: promptConfig.cognitive_parameters || PRESET_CONFIGS.supportive_adult.cognitive_parameters,
             emotional_parameters: promptConfig.emotional_parameters || PRESET_CONFIGS.supportive_adult.emotional_parameters,

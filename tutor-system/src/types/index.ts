@@ -15,11 +15,14 @@ export interface User {
     updated_at: string;
 }
 
+// Extended role type for pre-populated messages to include 'others'
+export type PrePopulatedMessageRole = UserRole | 'others';
+
 // Pre-populated dialogue message for room setup
 export interface PrePopulatedMessage {
     user_name: string;
     message: string;
-    role: UserRole;
+    role: PrePopulatedMessageRole;
     timestamp?: string; // Optional custom timestamp
 }
 
@@ -143,7 +146,7 @@ export interface RoomContextType {
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
-    downloadChatHistory: (format?: 'txt' | 'json') => void;
+    downloadChatHistory: (format?: 'txt' | 'json' | 'feedback') => void;
     aiSuggestion: string | null;
     clearAISuggestion: () => void;
     aiInteractions: AIInteraction[];
@@ -154,6 +157,12 @@ export interface RoomContextType {
         contextMessages: string[];
     } | null;
     recordAIFeedback: (action: 'accepted' | 'rejected' | 'modified' | 'ignored', finalResponse?: string) => Promise<void>;
+    // Message feedback functions
+    submitMessageFeedback: (messageId: string, feedbackType: 'like' | 'dislike', rating: number) => Promise<void>;
+    getMessageFeedbackStats: (messageId: string) => Promise<MessageFeedbackStats | null>;
+    messageFeedbackStats: Record<string, MessageFeedbackStats>;
+    // Clear chat history function (tutor-only)
+    clearChatHistory: () => Promise<void>;
 }
 
 // Image Upload Types
@@ -229,6 +238,40 @@ export interface CommentReply {
     display_name?: string;
 }
 
+// Message Feedback Types (Two-step feedback system)
+export interface MessageFeedback {
+    id: string;
+    message_id: string;
+    user_id: string;
+    room_id: string;
+    feedback_type: 'like' | 'dislike';
+    rating: number; // 1-5 scale
+    created_at: string;
+    updated_at: string;
+}
+
+export interface MessageFeedbackStats {
+    message_id: string;
+    total_feedback_count: number;
+    like_count: number;
+    dislike_count: number;
+    average_like_rating: number | null;
+    average_dislike_rating: number | null;
+    overall_average_rating: number | null;
+    user_feedback?: {
+        feedback_type: 'like' | 'dislike';
+        rating: number;
+    } | null;
+}
+
+export interface FeedbackSubmission {
+    messageId: string;
+    userId: string;
+    roomId: string;
+    feedbackType: 'like' | 'dislike';
+    rating: number;
+}
+
 // Extended Message interface with engagement
 export interface MessageWithEngagement extends Message {
     likeCount?: number;
@@ -237,6 +280,7 @@ export interface MessageWithEngagement extends Message {
     userLiked?: boolean;
     userDisliked?: boolean;
     replies?: CommentReply[];
+    feedbackStats?: MessageFeedbackStats;
 }
 
 // Room social features
@@ -288,6 +332,15 @@ export interface ChatExportData {
         content: string;
         created_at: string;
         is_ai_generated: boolean;
+        feedback_stats?: MessageFeedbackStats;
     }>;
     ai_interactions: AIInteraction[];
+    feedback_summary?: {
+        total_messages_with_feedback: number;
+        total_feedback_count: number;
+        average_rating: number;
+        like_percentage: number;
+        dislike_percentage: number;
+        rating_distribution: Record<number, number>;
+    };
 } 

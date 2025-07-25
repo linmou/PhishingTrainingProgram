@@ -1,21 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, X, CheckCircle, Sparkles, Settings, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Copy, X, CheckCircle, Sparkles, Settings, RotateCcw, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { DynamicParameterOverrides } from '../services/prompts/types';
+import { getParameterMetadata, createDefaultParameters, filterParameterOverrides, getDefaultParameterSelection } from '../services/prompts/parameterConfig';
 import './AISuggestionBox.css';
 
-interface ParameterOverrides {
-    role?: 'peer' | 'trusted_adult';
-    communication_style?: {
-        teen_slang?: 'low' | 'high';
-        conversational_markers?: 'low' | 'high';
-        uncertainty_expression?: 'low' | 'high';
-    };
-    emotional_parameters?: {
-        enthusiasm_level?: 'low' | 'high';
-    };
-    cognitive_parameters?: {
-        concept_density?: 'low' | 'high';
-    };
-}
+// Use the dynamic parameter overrides interface
+type ParameterOverrides = DynamicParameterOverrides;
 
 interface AISuggestionBoxProps {
     suggestion: string;
@@ -25,6 +15,7 @@ interface AISuggestionBoxProps {
     isVisible: boolean;
     parentMessage?: string;
     isRegenerating?: boolean;
+    parameterConfig?: any; // Dynamic configuration structure
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -34,25 +25,19 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     onRegenerate,
     isVisible,
     parentMessage,
-    isRegenerating = false
+    isRegenerating = false,
+    parameterConfig = getDefaultParameterSelection()
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
-    const [showParameters, setShowParameters] = useState(false);
-    const [parameters, setParameters] = useState<ParameterOverrides>({
-        role: 'peer',
-        communication_style: {
-            teen_slang: 'high',
-            conversational_markers: 'high',
-            uncertainty_expression: 'low'
-        },
-        emotional_parameters: {
-            enthusiasm_level: 'high'
-        },
-        cognitive_parameters: {
-            concept_density: 'low'
-        }
-    });
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+    const [quickAdjustCollapsed, setQuickAdjustCollapsed] = useState(true); // Start collapsed by default
+    const [showInfoModal, setShowInfoModal] = useState<string | null>(null);
+    const [parameters, setParameters] = useState<ParameterOverrides>(() => 
+        createDefaultParameters(parameterConfig)
+    );
+    
+    const metadata = getParameterMetadata();
 
     useEffect(() => {
         if (isVisible) {
@@ -69,6 +54,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     };
 
     const handleParameterChange = (path: string, value: string) => {
+        console.log('🎛️ Parameter change:', path, '→', value);
         setParameters(prev => {
             const newParams = { ...prev };
             const keys = path.split('.');
@@ -80,20 +66,126 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
             }
             
             current[keys[keys.length - 1]] = value;
+            console.log('🎛️ Updated parameters:', newParams);
             return newParams;
         });
     };
 
     const handleRegenerate = () => {
+        const filteredParams = filterParameterOverrides(parameters, parameterConfig);
+        console.log('🔄 Regenerating with filtered parameters:', filteredParams);
         if (onRegenerate) {
-            onRegenerate(parameters);
+            onRegenerate(filteredParams);
         }
+    };
+    
+    const toggleSection = (sectionKey: string) => {
+        setCollapsedSections(prev => ({
+            ...prev,
+            [sectionKey]: !prev[sectionKey]
+        }));
+    };
+    
+    const renderParameterSection = (sectionKey: string, sectionConfig: any, sectionMeta: any) => {
+        if (!sectionConfig.enabled) return null;
+        
+        const isCollapsed = collapsedSections[sectionKey];
+        
+        return (
+            <div key={sectionKey} className="ai-parameter-section">
+                <div className="ai-parameter-section-header">
+                    <div 
+                        className="ai-parameter-section-title-area"
+                        onClick={() => toggleSection(sectionKey)}
+                    >
+                        <span className="ai-parameter-section-title">{sectionMeta.label}</span>
+                        {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                    </div>
+                    <button 
+                        className="ai-parameter-info-btn"
+                        onClick={() => setShowInfoModal(sectionKey)}
+                        title={`View detailed information about ${sectionMeta.label}`}
+                    >
+                        <Info size={14} />
+                    </button>
+                </div>
+                
+                {!isCollapsed && (
+                    <div className="ai-parameter-section-content">
+                        {renderGenericParameters(sectionKey, sectionConfig, sectionMeta)}
+                    </div>
+                )}
+            </div>
+        );
+    };
+    
+    const renderGenericParameters = (sectionKey: string, sectionConfig: any, sectionMeta: any) => {
+        return Object.entries(sectionConfig.parameters)
+            .filter(([, enabled]) => enabled)
+            .map(([paramKey]) => {
+                const paramMeta = sectionMeta.parameters[paramKey];
+                const sectionParams = parameters[sectionKey as keyof ParameterOverrides] as any;
+                const currentValue = sectionParams?.[paramKey] || 'low';
+                
+                return (
+                    <div key={paramKey} className="ai-parameter-group">
+                        <label className="ai-parameter-label">{paramMeta.label}:</label>
+                        <select 
+                            value={currentValue}
+                            onChange={(e) => handleParameterChange(`${sectionKey}.${paramKey}`, e.target.value)}
+                            className="ai-parameter-select"
+                        >
+                            <option value="low">{paramMeta.labels?.low || 'low'}</option>
+                            <option value="high">{paramMeta.labels?.high || 'high'}</option>
+                        </select>
+                    </div>
+                );
+            });
+    };
+    
+    const renderInfoModal = () => {
+        if (!showInfoModal) return null;
+        
+        const sectionMeta = metadata[showInfoModal];
+        if (!sectionMeta) return null;
+        
+        return (
+            <div className="ai-info-modal-overlay" onClick={() => setShowInfoModal(null)}>
+                <div className="ai-info-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="ai-info-modal-header">
+                        <h3>{sectionMeta.label} Parameters</h3>
+                        <button 
+                            onClick={() => setShowInfoModal(null)}
+                            className="ai-info-modal-close"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                    <div className="ai-info-modal-content">
+                        <div className="ai-info-section">
+                            {sectionMeta.parameters && Object.entries(sectionMeta.parameters).map(([paramKey, paramInfo]: [string, any]) => (
+                                <div key={paramKey} className="ai-info-parameter">
+                                    <h4>{paramKey}</h4>
+                                    <div className="ai-info-option">
+                                        <strong>Low:</strong> {paramInfo.low}
+                                    </div>
+                                    <div className="ai-info-option">
+                                        <strong>High:</strong> {paramInfo.high}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     if (!isVisible) return null;
 
     return (
-        <div className={`ai-suggestion-box ${fadeIn ? 'fade-in' : ''}`}>
+        <>
+            <div className={`ai-suggestion-box ${fadeIn ? 'fade-in' : ''}`}>
             <div className="ai-suggestion-header">
                 <div className="ai-suggestion-title">
                     <Sparkles size={16} className="ai-icon" />
@@ -116,71 +208,20 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
             )}
 
             <div className="ai-suggestion-parameters">
-                <button
-                    onClick={() => setShowParameters(!showParameters)}
-                    className="ai-parameters-toggle"
-                    title={showParameters ? "Hide parameters" : "Show parameters"}
-                >
-                    <Settings size={14} />
-                    <span>Quick Adjust</span>
-                    {showParameters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
+                <div className="ai-parameters-header" onClick={() => setQuickAdjustCollapsed(!quickAdjustCollapsed)}>
+                    <div className="ai-parameters-header-content">
+                        <Settings size={16} />
+                        <span className="ai-parameters-title">Quick Adjust</span>
+                    </div>
+                    {quickAdjustCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                </div>
                 
-                {showParameters && (
-                    <div className="ai-parameters-panel">
-                        <div className="ai-parameter-row">
-                            <label className="ai-parameter-label">Role:</label>
-                            <select 
-                                value={parameters.role}
-                                onChange={(e) => handleParameterChange('role', e.target.value)}
-                                className="ai-parameter-select"
-                            >
-                                <option value="peer">Peer</option>
-                                <option value="trusted_adult">Trusted Adult</option>
-                            </select>
-                            
-                            <label className="ai-parameter-label">Communication:</label>
-                            <select 
-                                value={parameters.communication_style?.teen_slang}
-                                onChange={(e) => handleParameterChange('communication_style.teen_slang', e.target.value)}
-                                className="ai-parameter-select"
-                            >
-                                <option value="high">Casual</option>
-                                <option value="low">Formal</option>
-                            </select>
-                        </div>
-                        
-                        <div className="ai-parameter-row">
-                            <label className="ai-parameter-label">Enthusiasm:</label>
-                            <div className="ai-parameter-slider">
-                                <span>Low</span>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="1"
-                                    value={parameters.emotional_parameters?.enthusiasm_level === 'high' ? 1 : 0}
-                                    onChange={(e) => handleParameterChange('emotional_parameters.enthusiasm_level', e.target.value === '1' ? 'high' : 'low')}
-                                    className="ai-slider"
-                                />
-                                <span>High</span>
-                            </div>
-                            
-                            <label className="ai-parameter-label">Complexity:</label>
-                            <div className="ai-parameter-slider">
-                                <span>Simple</span>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="1"
-                                    value={parameters.cognitive_parameters?.concept_density === 'high' ? 1 : 0}
-                                    onChange={(e) => handleParameterChange('cognitive_parameters.concept_density', e.target.value === '1' ? 'high' : 'low')}
-                                    className="ai-slider"
-                                />
-                                <span>Complex</span>
-                            </div>
-                        </div>
+                {!quickAdjustCollapsed && (
+                    <div className="ai-parameters-menu">
+                        {renderParameterSection('role', parameterConfig.role, metadata.role)}
+                        {renderParameterSection('communication_style', parameterConfig.communication_style, metadata.communication_style)}
+                        {renderParameterSection('cognitive_parameters', parameterConfig.cognitive_parameters, metadata.cognitive_parameters)}
+                        {renderParameterSection('emotional_parameters', parameterConfig.emotional_parameters, metadata.emotional_parameters)}
                     </div>
                 )}
             </div>
@@ -227,7 +268,9 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                     <span>Reject</span>
                 </button>
             </div>
-        </div>
+            </div>
+            {renderInfoModal()}
+        </>
     );
 };
 

@@ -158,129 +158,295 @@
     -webkit-box-orient: vertical;
 }
 
-/* Parameter Controls */
+/* Parameter Controls - Menu Style */
 .ai-suggestion-parameters {
     margin: 0 16px;
     border-bottom: 1px solid #e0e9f5;
+    padding-bottom: 16px;
 }
 
-.ai-parameters-toggle {
+.ai-parameters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: #f8fafe;
+    border-radius: 6px;
+    border: 1px solid #e0e9f5;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ai-parameters-header:hover {
+    background: #eff6ff;
+}
+
+.ai-parameters-header-content {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
-    padding: 12px 0;
-    background: none;
-    border: none;
+}
+
+.ai-parameters-title {
+    font-size: 14px;
+    font-weight: 700;
     color: #1976d2;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.ai-parameters-toggle:hover {
-    color: #1565c0;
+.ai-parameters-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.ai-parameters-panel {
-    padding: 12px 0 16px;
-    animation: slideDown 0.2s ease-out;
+/* Parameter Sections */
+.ai-parameter-section {
+    border: 1px solid #e0e9f5;
+    border-radius: 6px;
     overflow: hidden;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        max-height: 0;
-    }
-    to {
-        opacity: 1;
-        max-height: 120px;
-    }
+.ai-parameter-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8fafe;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #e0e9f5;
 }
 
-.ai-parameter-row {
+.ai-parameter-section-title-area {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    gap: 8px;
+    cursor: pointer;
+    flex: 1;
 }
 
-.ai-parameter-row:last-child {
-    margin-bottom: 0;
+.ai-parameter-info-btn {
+    background: none;
+    border: none;
+    color: #1976d2;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-parameter-info-btn:hover {
+    background: rgba(25, 118, 210, 0.1);
+    color: #1565c0;
+}
+
+.ai-parameter-section-title-area:hover {
+    background: #eff6ff;
+}
+
+.ai-parameter-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1976d2;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.ai-parameter-section-content {
+    padding: 12px;
+    background: white;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 768px) {
+    .ai-parameter-section-content {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+.ai-parameter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .ai-parameter-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #65676b;
-    min-width: 70px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .ai-parameter-select {
-    padding: 4px 8px;
-    border: 1px solid #d4e5ff;
-    border-radius: 4px;
+    padding: 8px 12px;
+    border: 2px solid #e0e9f5;
+    border-radius: 8px;
     background: white;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
     color: #1c1e21;
     cursor: pointer;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 32px;
 }
 
 .ai-parameter-select:focus {
     outline: none;
     border-color: #1976d2;
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
 }
 
-.ai-parameter-slider {
+.ai-parameter-select:hover {
+    border-color: #1976d2;
+}
+
+/* Info Modal Styles */
+.ai-info-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 1;
-    min-width: 120px;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
 }
 
-.ai-parameter-slider span {
-    font-size: 11px;
+.ai-info-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.ai-info-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e9f5;
+    background: #f8fafe;
+}
+
+.ai-info-modal-header h3 {
+    margin: 0;
+    color: #1976d2;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.ai-info-modal-close {
+    background: none;
+    border: none;
     color: #65676b;
-    min-width: 35px;
-    text-align: center;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
 }
 
-.ai-slider {
+.ai-info-modal-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1c1e21;
+}
+
+.ai-info-modal-content {
+    padding: 20px;
+    overflow-y: auto;
     flex: 1;
-    height: 4px;
-    border-radius: 2px;
-    background: #e0e9f5;
-    outline: none;
-    cursor: pointer;
-    -webkit-appearance: none;
 }
 
-.ai-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #1976d2;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+.ai-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.ai-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #1976d2;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+.ai-info-parameter {
+    border: 1px solid #e0e9f5;
+    border-radius: 8px;
+    padding: 16px;
+    background: #fafbfc;
+}
+
+.ai-info-parameter h4 {
+    margin: 0 0 12px 0;
+    color: #1976d2;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background: #e8f1ff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 4px solid #1976d2;
+}
+
+.ai-info-option {
+    margin-bottom: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border-left: 3px solid #e0e9f5;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.ai-info-option:last-child {
+    margin-bottom: 0;
+}
+
+.ai-info-option strong {
+    color: #1976d2;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 50px;
+}
+
+/* Responsive modal */
+@media (max-width: 768px) {
+    .ai-info-modal {
+        margin: 10px;
+        max-height: 90vh;
+    }
+    
+    .ai-info-modal-header {
+        padding: 16px;
+    }
+    
+    .ai-info-modal-content {
+        padding: 16px;
+    }
+    
+    .ai-info-parameter {
+        padding: 12px;
+    }
+    
+    .ai-info-parameter h4 {
+        font-size: 14px;
+    }
 }
 
 /* Regenerate Button */
@@ -335,18 +501,19 @@
         justify-content: center;
     }
 
-    .ai-parameter-row {
-        flex-direction: column;
-        align-items: flex-start;
+    .ai-parameter-section-content {
         gap: 8px;
     }
-
-    .ai-parameter-slider {
-        width: 100%;
-        min-width: unset;
-    }
-
+    
     .ai-parameter-select {
-        width: 100%;
+        font-size: 12px;
+        padding: 6px 10px;
+        padding-right: 28px;
+        background-size: 14px;
+    }
+    
+    .ai-param-btn {
+        font-size: 11px;
+        padding: 6px 8px;
     }
 }

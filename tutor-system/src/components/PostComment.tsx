@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
-import { Message } from '../types';
+import { Message, MessageFeedbackStats } from '../types';
 import AvatarDisplay from './AvatarDisplay';
+import FeedbackRating from './FeedbackRating';
 import './PostComment.css';
 
 interface PostCommentProps {
@@ -19,6 +20,9 @@ interface PostCommentProps {
     currentUserId?: string;
     currentUserRole?: string | null;
     className?: string;
+    // New feedback props
+    onSubmitFeedback?: (messageId: string, feedbackType: 'like' | 'dislike', rating: number) => void;
+    feedbackStats?: MessageFeedbackStats;
 }
 
 const PostComment: React.FC<PostCommentProps> = ({
@@ -35,8 +39,13 @@ const PostComment: React.FC<PostCommentProps> = ({
     isGeneratingAI = false,
     currentUserId,
     currentUserRole,
-    className = ''
+    className = '',
+    onSubmitFeedback,
+    feedbackStats
 }) => {
+    // State for two-step feedback system
+    const [showRating, setShowRating] = useState<'like' | 'dislike' | null>(null);
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
     const formatTime = (timestamp: string) => {
         const now = new Date();
         const messageTime = new Date(timestamp);
@@ -78,6 +87,47 @@ const PostComment: React.FC<PostCommentProps> = ({
     };
 
     const isOwnComment = currentUserId === message.user_id;
+
+    // Feedback handling functions
+    const handleFeedbackClick = (feedbackType: 'like' | 'dislike') => {
+        if (isOwnComment) return;
+        
+        // If user already has this feedback type, show rating to modify it
+        const existingFeedback = feedbackStats?.user_feedback;
+        if (existingFeedback?.feedback_type === feedbackType) {
+            setShowRating(feedbackType);
+            return;
+        }
+        
+        // Show rating for new feedback
+        setShowRating(feedbackType);
+    };
+
+    const handleRatingSubmit = async (rating: number) => {
+        if (!showRating || !onSubmitFeedback) return;
+        
+        setIsSubmittingFeedback(true);
+        try {
+            await onSubmitFeedback(message.id, showRating, rating);
+            setShowRating(null);
+        } catch (error) {
+            console.error('Failed to submit feedback:', error);
+            // Could show error message to user here
+        } finally {
+            setIsSubmittingFeedback(false);
+        }
+    };
+
+    const handleRatingCancel = () => {
+        setShowRating(null);
+    };
+
+    // Get display values for feedback
+    const userFeedback = feedbackStats?.user_feedback;
+    const likeCountFromStats = feedbackStats?.like_count || 0;
+    const dislikeCountFromStats = feedbackStats?.dislike_count || 0;
+    const hasUserLiked = userFeedback?.feedback_type === 'like';
+    const hasUserDisliked = userFeedback?.feedback_type === 'dislike';
 
     return (
         <div className={`post-comment ${message.is_ai_generated ? 'post-comment-ai' : ''} ${className}`}>
@@ -138,26 +188,44 @@ const PostComment: React.FC<PostCommentProps> = ({
                     {/* Comment Actions */}
                     <div className="comment-actions">
                         <div className="comment-actions-left">
-                            {/* Like Button */}
+                            {/* Like Button - Two-step feedback */}
                             <button
-                                onClick={() => onLike?.(message.id, true)}
-                                className={`comment-action-btn ${isLiked ? 'comment-action-active' : ''}`}
-                                disabled={isOwnComment}
-                                title={isLiked ? 'Remove like' : 'Like this comment'}
+                                onClick={() => handleFeedbackClick('like')}
+                                className={`comment-action-btn ${hasUserLiked ? 'comment-action-active' : ''}`}
+                                disabled={isOwnComment || isSubmittingFeedback}
+                                title={hasUserLiked ? `You rated this ${userFeedback?.rating}/5 stars` : 'Like this comment'}
                             >
                                 <ThumbsUp className="comment-action-icon" />
-                                {likeCount > 0 && <span>{likeCount}</span>}
+                                {likeCountFromStats > 0 && (
+                                    <span>
+                                        {likeCountFromStats}
+                                        {feedbackStats?.average_like_rating && (
+                                            <span className="comment-rating-display">
+                                                ({feedbackStats.average_like_rating.toFixed(1)}★)
+                                            </span>
+                                        )}
+                                    </span>
+                                )}
                             </button>
 
-                            {/* Dislike Button */}
+                            {/* Dislike Button - Two-step feedback */}
                             <button
-                                onClick={() => onLike?.(message.id, false)}
-                                className={`comment-action-btn ${isDisliked ? 'comment-action-active' : ''}`}
-                                disabled={isOwnComment}
-                                title={isDisliked ? 'Remove dislike' : 'Dislike this comment'}
+                                onClick={() => handleFeedbackClick('dislike')}
+                                className={`comment-action-btn ${hasUserDisliked ? 'comment-action-active' : ''}`}
+                                disabled={isOwnComment || isSubmittingFeedback}
+                                title={hasUserDisliked ? `You rated this ${userFeedback?.rating}/5 stars` : 'Dislike this comment'}
                             >
                                 <ThumbsDown className="comment-action-icon" />
-                                {dislikeCount > 0 && <span>{dislikeCount}</span>}
+                                {dislikeCountFromStats > 0 && (
+                                    <span>
+                                        {dislikeCountFromStats}
+                                        {feedbackStats?.average_dislike_rating && (
+                                            <span className="comment-rating-display">
+                                                ({feedbackStats.average_dislike_rating.toFixed(1)}★)
+                                            </span>
+                                        )}
+                                    </span>
+                                )}
                             </button>
 
                             {/* Reply Button */}
@@ -182,6 +250,18 @@ const PostComment: React.FC<PostCommentProps> = ({
                             </button>
                         </div>
                     </div>
+                    
+                    {/* Two-step Feedback Rating Component */}
+                    {showRating && (
+                        <div className="comment-feedback-container" style={{ position: 'relative' }}>
+                            <FeedbackRating
+                                isLike={showRating === 'like'}
+                                onSubmit={handleRatingSubmit}
+                                onCancel={handleRatingCancel}
+                                currentRating={userFeedback?.feedback_type === showRating ? userFeedback.rating : 0}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

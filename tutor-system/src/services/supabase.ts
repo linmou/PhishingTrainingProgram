@@ -564,4 +564,247 @@ export const getTutorImages = async (roomId?: string) => {
 
     console.log('✅ Supabase Service: Tutor images retrieved:', { count: data?.length || 0 });
     return data || [];
-} 
+}
+
+// Message Feedback Functions
+export const submitMessageFeedback = async (
+    messageId: string,
+    userId: string,
+    roomId: string,
+    feedbackType: 'like' | 'dislike',
+    rating: number
+) => {
+    console.log('📝 Supabase Service: Submitting message feedback:', {
+        messageId,
+        userId,
+        roomId,
+        feedbackType,
+        rating
+    });
+
+    if (rating < 1 || rating > 5) {
+        throw new Error('Rating must be between 1 and 5');
+    }
+
+    // Use upsert to handle updates to existing feedback
+    const { data, error } = await supabase
+        .from('message_feedback')
+        .upsert({
+            message_id: messageId,
+            user_id: userId,
+            room_id: roomId,
+            feedback_type: feedbackType,
+            rating: rating
+        }, {
+            onConflict: 'message_id,user_id'
+        })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('❌ Supabase Service: Submit feedback error:', error);
+        throw error;
+    }
+
+    console.log('✅ Supabase Service: Feedback submitted successfully:', data);
+    return data;
+};
+
+export const getMessageFeedbackStats = async (messageId: string) => {
+    console.log('📊 Supabase Service: Getting feedback stats for message:', messageId);
+
+    const { data, error } = await supabase
+        .from('message_feedback')
+        .select('feedback_type, rating')
+        .eq('message_id', messageId);
+
+    if (error) {
+        console.error('❌ Supabase Service: Get feedback stats error:', error);
+        throw error;
+    }
+
+    if (!data || data.length === 0) {
+        console.log('📊 Supabase Service: No feedback found for message:', messageId);
+        return {
+            message_id: messageId,
+            total_feedback_count: 0,
+            like_count: 0,
+            dislike_count: 0,
+            average_like_rating: null,
+            average_dislike_rating: null,
+            overall_average_rating: null,
+            user_feedback: null
+        };
+    }
+
+    const likes = data.filter(f => f.feedback_type === 'like');
+    const dislikes = data.filter(f => f.feedback_type === 'dislike');
+    
+    const averageLikeRating = likes.length > 0 
+        ? likes.reduce((sum, f) => sum + f.rating, 0) / likes.length 
+        : null;
+    
+    const averageDislikeRating = dislikes.length > 0 
+        ? dislikes.reduce((sum, f) => sum + f.rating, 0) / dislikes.length 
+        : null;
+    
+    const overallAverageRating = data.length > 0 
+        ? data.reduce((sum, f) => sum + f.rating, 0) / data.length 
+        : null;
+
+    const stats = {
+        message_id: messageId,
+        total_feedback_count: data.length,
+        like_count: likes.length,
+        dislike_count: dislikes.length,
+        average_like_rating: averageLikeRating,
+        average_dislike_rating: averageDislikeRating,
+        overall_average_rating: overallAverageRating,
+        user_feedback: null // Will be set by the calling context with current user's feedback
+    };
+
+    console.log('✅ Supabase Service: Feedback stats retrieved:', stats);
+    return stats;
+};
+
+export const getUserMessageFeedback = async (messageId: string, userId: string) => {
+    console.log('👤 Supabase Service: Getting user feedback for message:', { messageId, userId });
+
+    const { data, error } = await supabase
+        .from('message_feedback')
+        .select('feedback_type, rating')
+        .eq('message_id', messageId)
+        .eq('user_id', userId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+        console.error('❌ Supabase Service: Get user feedback error:', error);
+        throw error;
+    }
+
+    console.log('✅ Supabase Service: User feedback retrieved:', data);
+    return data;
+};
+
+export const getRoomFeedbackSummary = async (roomId: string) => {
+    console.log('📊 Supabase Service: Getting room feedback summary:', roomId);
+
+    const { data, error } = await supabase
+        .from('message_feedback')
+        .select('message_id, feedback_type, rating')
+        .eq('room_id', roomId);
+
+    if (error) {
+        console.error('❌ Supabase Service: Get room feedback summary error:', error);
+        throw error;
+    }
+
+    if (!data || data.length === 0) {
+        return {
+            total_messages_with_feedback: 0,
+            total_feedback_count: 0,
+            average_rating: 0,
+            like_percentage: 0,
+            dislike_percentage: 0,
+            rating_distribution: {}
+        };
+    }
+
+    const likes = data.filter(f => f.feedback_type === 'like');
+    const dislikes = data.filter(f => f.feedback_type === 'dislike');
+    const averageRating = data.reduce((sum, f) => sum + f.rating, 0) / data.length;
+    
+    // Count unique messages with feedback
+    const messageIds = new Set(data.map(f => f.message_id)).size;
+    
+    // Rating distribution
+    const ratingDistribution: Record<number, number> = {};
+    for (let i = 1; i <= 5; i++) {
+        ratingDistribution[i] = data.filter(f => f.rating === i).length;
+    }
+
+    const summary = {
+        total_messages_with_feedback: messageIds,
+        total_feedback_count: data.length,
+        average_rating: averageRating,
+        like_percentage: (likes.length / data.length) * 100,
+        dislike_percentage: (dislikes.length / data.length) * 100,
+        rating_distribution: ratingDistribution
+    };
+
+    console.log('✅ Supabase Service: Room feedback summary retrieved:', summary);
+    return summary;
+};
+
+// Clear chat history function - removes all messages from room while preserving pre-populated messages
+export const clearChatHistory = async (roomId: string) => {
+    console.log('🧹 Supabase Service: Clearing chat history for room:', roomId);
+    
+    // Verify the user is the tutor of the room
+    const user = await getCurrentUser();
+    if (!user) {
+        throw new Error('User not authenticated');
+    }
+
+    // Check if the user is the owner of the room
+    const { data: room, error: roomError } = await supabase
+        .from('rooms')
+        .select('tutor_id, title, pre_populated_dialogue')
+        .eq('id', roomId)
+        .single();
+
+    if (roomError) {
+        console.error('❌ Supabase Service: Room not found:', roomError);
+        throw new Error('Room not found');
+    }
+
+    if (room.tutor_id !== user.id) {
+        console.error('❌ Supabase Service: User not authorized to clear chat history');
+        throw new Error('You are not authorized to clear chat history for this room');
+    }
+
+    // Delete all messages from the room (pre-populated messages are not stored in messages table)
+    const { error: deleteError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('room_id', roomId);
+
+    if (deleteError) {
+        console.error('❌ Supabase Service: Clear chat history error:', deleteError);
+        throw deleteError;
+    }
+
+    // Also clear any AI suggestion feedback related to the room
+    const { error: aiFeedbackError } = await supabase
+        .from('ai_suggestion_feedback')
+        .delete()
+        .eq('room_id', roomId);
+
+    if (aiFeedbackError) {
+        console.error('⚠️ Supabase Service: AI feedback cleanup warning:', aiFeedbackError);
+        // Don't throw error for AI feedback cleanup - it's not critical
+    }
+
+    // Clear message feedback data
+    const { error: messageFeedbackError } = await supabase
+        .from('message_feedback')
+        .delete()
+        .eq('room_id', roomId);
+
+    if (messageFeedbackError) {
+        console.error('⚠️ Supabase Service: Message feedback cleanup warning:', messageFeedbackError);
+        // Don't throw error for message feedback cleanup - it's not critical
+    }
+
+    console.log('✅ Supabase Service: Chat history cleared successfully:', {
+        roomId,
+        title: room.title,
+        prePopulatedMessagesPreserved: !!room.pre_populated_dialogue
+    });
+    
+    return { 
+        success: true, 
+        title: room.title,
+        prePopulatedMessagesPreserved: !!room.pre_populated_dialogue
+    };
+}; 

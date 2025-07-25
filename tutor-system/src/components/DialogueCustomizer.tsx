@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { PrePopulatedMessage, UserRole } from '../types';
+import { PrePopulatedMessage, PrePopulatedMessageRole } from '../types';
 
 interface DialogueCustomizerProps {
     /** Current dialogue messages */
@@ -35,13 +35,13 @@ const DialogueCustomizer: React.FC<DialogueCustomizerProps> = ({
         const newMessage: PrePopulatedMessage = {
             user_name: '',
             message: '',
-            role: 'student'
+            role: 'others'
         };
         onChange([...dialogue, newMessage]);
         setExpandedMessage(dialogue.length); // Expand the new message
     }, [dialogue, onChange]);
 
-    const updateMessage = useCallback((index: number, field: keyof PrePopulatedMessage, value: string | UserRole) => {
+    const updateMessage = useCallback((index: number, field: keyof PrePopulatedMessage, value: string | PrePopulatedMessageRole) => {
         const updatedDialogue = dialogue.map((msg, i) => 
             i === index ? { ...msg, [field]: value } : msg
         );
@@ -65,20 +65,22 @@ const DialogueCustomizer: React.FC<DialogueCustomizerProps> = ({
         onChange(updatedDialogue);
     }, [dialogue, onChange]);
 
-    const getRoleDisplayName = (role: UserRole) => {
+    const getRoleDisplayName = (role: PrePopulatedMessageRole) => {
         switch (role) {
             case 'student': return 'Student';
             case 'tutor': return 'Tutor';
             case 'observer': return 'Observer';
+            case 'others': return 'Others';
             default: return role;
         }
     };
 
-    const getRoleColor = (role: UserRole) => {
+    const getRoleColor = (role: PrePopulatedMessageRole) => {
         switch (role) {
             case 'student': return '#007bff';
             case 'tutor': return '#28a745';
             case 'observer': return '#6c757d';
+            case 'others': return '#ff6b35';
             default: return '#6c757d';
         }
     };
@@ -300,7 +302,7 @@ const DialogueCustomizer: React.FC<DialogueCustomizerProps> = ({
                                             </label>
                                             <select
                                                 value={message.role}
-                                                onChange={(e) => updateMessage(index, 'role', e.target.value as UserRole)}
+                                                onChange={(e) => updateMessage(index, 'role', e.target.value as PrePopulatedMessageRole)}
                                                 disabled={disabled}
                                                 style={{
                                                     width: '100%',
@@ -310,6 +312,7 @@ const DialogueCustomizer: React.FC<DialogueCustomizerProps> = ({
                                                     fontSize: '0.9rem'
                                                 }}
                                             >
+                                                <option value="others">Others</option>
                                                 <option value="student">Student</option>
                                                 <option value="tutor">Tutor</option>
                                                 <option value="observer">Observer</option>
