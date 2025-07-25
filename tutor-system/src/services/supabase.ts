@@ -313,6 +313,40 @@ export const getMessagesForRoom = async (roomId: string) => {
     return data || []
 }
 
+export const sendMessage = async (roomId: string, content: string, userId: string) => {
+    console.log('📤 Supabase Service: Sending message:', { roomId, userId, contentLength: content.length });
+    
+    // Get user profile to determine role and display name
+    const userProfile = await getUserProfile(userId);
+    if (!userProfile) {
+        throw new Error('User profile not found');
+    }
+
+    // Insert message into database
+    const { data, error } = await supabase
+        .from('messages')
+        .insert({
+            room_id: roomId,
+            user_id: userId,
+            content: content,
+            role: userProfile.current_role,
+            display_name: userProfile.display_name
+        })
+        .select(`
+            *,
+            user:users!user_id(display_name)
+        `)
+        .single();
+
+    if (error) {
+        console.error('❌ Supabase Service: Send message error:', error);
+        throw error;
+    }
+
+    console.log('✅ Supabase Service: Message sent successfully:', { messageId: data.id });
+    return data;
+}
+
 export const downloadChatHistory = async (roomId: string, messages: any[]) => {
     console.log('📥 Supabase Service: Downloading chat history for room:', roomId);
     

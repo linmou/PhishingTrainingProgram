@@ -444,7 +444,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
-            parent_message_id: currentSuggestionContext?.parentMessageId || null,
+            parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')) 
+                ? currentSuggestionContext.parentMessageId 
+                : null,
             created_at: new Date().toISOString(),
             display_name: user.display_name || 'User',
             avatar_url: user.avatar_url
@@ -460,7 +462,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user_id: user.id,
                 content,
                 user_role: user.current_role as UserRole,
-                parent_message_id: currentSuggestionContext?.parentMessageId || null
+                parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')) 
+                    ? currentSuggestionContext.parentMessageId 
+                    : null
             })
             .select()
             .single();
