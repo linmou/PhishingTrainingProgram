@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRoom } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AI_MODELS, AIModelName } from '../services/aiService';
-import { AIAssistantConfig } from '../types';
+import { ScenarioTemplate, SCENARIO_TEMPLATES } from '../services/detectionTemplates';
+import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
+import './AIAssistantSettings.css';
 
 interface AIAssistantSettingsProps {
     onClose: () => void;
@@ -18,6 +20,30 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     const [temperature, setTemperature] = useState(0.7);
     const [maxTokens, setMaxTokens] = useState(150);
     const [isSaving, setIsSaving] = useState(false);
+    
+    // New modular prompt settings
+    const [useModularPrompts, setUseModularPrompts] = useState(false);
+    const [selectedPreset, setSelectedPreset] = useState<'casual_peer' | 'supportive_adult'>('supportive_adult');
+    const [selectedScenario, setSelectedScenario] = useState<ScenarioTemplate | ''>('');
+    const [customDetectionAreas, setCustomDetectionAreas] = useState<string>('');
+    const [customVerificationSteps, setCustomVerificationSteps] = useState<string>('');
+    
+    // Communication Style Parameters
+    const [teenSlang, setTeenSlang] = useState<'low' | 'high'>('low');
+    const [conversationalMarkers, setConversationalMarkers] = useState<'low' | 'high'>('low');
+    const [uncertaintyExpression, setUncertaintyExpression] = useState<'low' | 'high'>('low');
+    
+    // Cognitive Load/Content Parameters
+    const [conceptDensity, setConceptDensity] = useState<'low' | 'high'>('high');
+    const [perspectiveTaking, setPerspectiveTaking] = useState<'low' | 'high'>('high');
+    const [personalExamples, setPersonalExamples] = useState<'low' | 'high'>('high');
+    const [consequenceHighlighting, setConsequenceHighlighting] = useState<'low' | 'high'>('high');
+    
+    // Emotional Design Parameters
+    const [enthusiasmLevel, setEnthusiasmLevel] = useState<'low' | 'high'>('low');
+    const [validationFrequency, setValidationFrequency] = useState<'low' | 'high'>('high');
+    const [mistakeNormalization, setMistakeNormalization] = useState<'low' | 'high'>('high');
+    const [confidenceBuilding, setConfidenceBuilding] = useState<'low' | 'high'>('high');
 
     // Initialize form with current configuration
     useEffect(() => {
@@ -37,8 +63,95 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 'Provide clear, educational responses to help students learn. ' +
                 'Be encouraging, patient, and focus on building understanding.'
             );
+            
+            // Initialize with supportive_adult preset values
+            const defaultPreset = PRESET_CONFIGS.supportive_adult;
+            setTeenSlang(defaultPreset.communication_style.teen_slang);
+            setConversationalMarkers(defaultPreset.communication_style.conversational_markers);
+            setUncertaintyExpression(defaultPreset.communication_style.uncertainty_expression);
+            
+            setConceptDensity(defaultPreset.cognitive_parameters.concept_density);
+            setPerspectiveTaking(defaultPreset.cognitive_parameters.perspective_taking);
+            setPersonalExamples(defaultPreset.cognitive_parameters.personal_examples);
+            setConsequenceHighlighting(defaultPreset.cognitive_parameters.consequence_highlighting);
+            
+            setEnthusiasmLevel(defaultPreset.emotional_parameters.enthusiasm_level);
+            setValidationFrequency(defaultPreset.emotional_parameters.validation_frequency);
+            setMistakeNormalization(defaultPreset.emotional_parameters.mistake_normalization);
+            setConfidenceBuilding(defaultPreset.emotional_parameters.confidence_building);
         }
     }, [currentRoom, aiConfig]);
+
+    // Handle preset selection
+    const handlePresetChange = (preset: 'casual_peer' | 'supportive_adult') => {
+        setSelectedPreset(preset);
+        
+        // Load preset values into individual parameters
+        const presetConfig = PRESET_CONFIGS[preset];
+        setTeenSlang(presetConfig.communication_style.teen_slang);
+        setConversationalMarkers(presetConfig.communication_style.conversational_markers);
+        setUncertaintyExpression(presetConfig.communication_style.uncertainty_expression);
+        
+        setConceptDensity(presetConfig.cognitive_parameters.concept_density);
+        setPerspectiveTaking(presetConfig.cognitive_parameters.perspective_taking);
+        setPersonalExamples(presetConfig.cognitive_parameters.personal_examples);
+        setConsequenceHighlighting(presetConfig.cognitive_parameters.consequence_highlighting);
+        
+        setEnthusiasmLevel(presetConfig.emotional_parameters.enthusiasm_level);
+        setValidationFrequency(presetConfig.emotional_parameters.validation_frequency);
+        setMistakeNormalization(presetConfig.emotional_parameters.mistake_normalization);
+        setConfidenceBuilding(presetConfig.emotional_parameters.confidence_building);
+    };
+
+    // Handle modular prompt generation
+    const handleGenerateModularPrompt = useCallback(() => {
+        if (useModularPrompts) {
+            const detectionAreas = customDetectionAreas.split('\n').filter(area => area.trim());
+            const verificationSteps = customVerificationSteps.split('\n').filter(step => step.trim());
+            
+            // Use scenario template if no custom areas provided
+            const scenarioData = selectedScenario ? SCENARIO_TEMPLATES[selectedScenario] : null;
+            const finalDetectionAreas = detectionAreas.length > 0 ? detectionAreas : (scenarioData?.detection_areas || []);
+            const finalVerificationSteps = verificationSteps.length > 0 ? verificationSteps : (scenarioData?.verification_steps || []);
+            
+            // Use individual parameter settings instead of preset
+            const config = {
+                role: selectedPreset === 'casual_peer' ? 'peer' as const : 'trusted_adult' as const,
+                communication_style: {
+                    teen_slang: teenSlang,
+                    conversational_markers: conversationalMarkers,
+                    uncertainty_expression: uncertaintyExpression
+                },
+                cognitive_parameters: {
+                    concept_density: conceptDensity,
+                    perspective_taking: perspectiveTaking,
+                    personal_examples: personalExamples,
+                    consequence_highlighting: consequenceHighlighting
+                },
+                emotional_parameters: {
+                    enthusiasm_level: enthusiasmLevel,
+                    validation_frequency: validationFrequency,
+                    mistake_normalization: mistakeNormalization,
+                    confidence_building: confidenceBuilding
+                },
+                detection_areas: finalDetectionAreas,
+                verification_steps: finalVerificationSteps
+            };
+            
+            const generatedPrompt = generateSystemPrompt(config);
+            setSystemPrompt(generatedPrompt);
+        }
+    }, [useModularPrompts, selectedPreset, selectedScenario, customDetectionAreas, customVerificationSteps,
+        teenSlang, conversationalMarkers, uncertaintyExpression,
+        conceptDensity, perspectiveTaking, personalExamples, consequenceHighlighting,
+        enthusiasmLevel, validationFrequency, mistakeNormalization, confidenceBuilding]);
+
+    // Auto-generate when modular settings change
+    useEffect(() => {
+        if (useModularPrompts) {
+            handleGenerateModularPrompt();
+        }
+    }, [useModularPrompts, handleGenerateModularPrompt]);
 
     const handleSave = async () => {
         if (!currentRoom || user?.current_role !== 'tutor') return;
@@ -130,18 +243,305 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                             </div>
 
                             <div className="ai-setting-group">
+                                <label className="ai-toggle-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={useModularPrompts}
+                                        onChange={(e) => setUseModularPrompts(e.target.checked)}
+                                        disabled={isSaving || loadingAI}
+                                    />
+                                    <span className="ai-toggle-text">Use Phishing Training Templates</span>
+                                </label>
+                                <p className="ai-setting-description">
+                                    Generate specialized prompts for phishing and privacy education
+                                </p>
+                            </div>
+
+                            {useModularPrompts && (
+                                <>
+                                    <div className="ai-setting-group">
+                                        <label className="ai-setting-label">AI Personality (Preset)</label>
+                                        <select
+                                            value={selectedPreset}
+                                            onChange={(e) => handlePresetChange(e.target.value as 'casual_peer' | 'supportive_adult')}
+                                            disabled={isSaving || loadingAI}
+                                            className="ai-setting-select"
+                                        >
+                                            <option value="supportive_adult">Trusted Adult - Mature and protective guidance</option>
+                                            <option value="casual_peer">Casual Peer - Fellow learner, relatable language</option>
+                                        </select>
+                                        <p className="ai-setting-description">
+                                            Selecting a preset will load default values for all parameters below. You can then customize individual settings.
+                                        </p>
+                                    </div>
+
+                                    <div className="ai-setting-group">
+                                        <label className="ai-setting-label">Scenario Template</label>
+                                        <select
+                                            value={selectedScenario}
+                                            onChange={(e) => setSelectedScenario(e.target.value as ScenarioTemplate | '')}
+                                            disabled={isSaving || loadingAI}
+                                            className="ai-setting-select"
+                                        >
+                                            <option value="">Custom / General</option>
+                                            <optgroup label="Scam Detection">
+                                                <option value="Nintendo Switch Deal ($19.99)">Nintendo Switch Deal ($19.99)</option>
+                                                <option value="iTunes Gift Card Survey ($500)">iTunes Gift Card Survey ($500)</option>
+                                                <option value="Account Security Alert">Account Security Alert</option>
+                                                <option value="General Scam Indicators">General Scam Indicators</option>
+                                            </optgroup>
+                                            <optgroup label="Privacy Protection">
+                                                <option value="Location Sharing Risks">Location Sharing Risks</option>
+                                                <option value="Contact Information Exposure">Contact Information Exposure</option>
+                                                <option value="Personal Details Protection">Personal Details Protection</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <div className="ai-setting-group">
+                                        <label className="ai-setting-label">
+                                            Custom Detection Areas
+                                            <span className="ai-setting-optional">(One per line, optional)</span>
+                                        </label>
+                                        <textarea
+                                            value={customDetectionAreas}
+                                            onChange={(e) => setCustomDetectionAreas(e.target.value)}
+                                            disabled={isSaving || loadingAI}
+                                            className="ai-setting-textarea"
+                                            placeholder="Red flags to watch for (optional - will use template if empty)"
+                                            rows={3}
+                                        />
+                                    </div>
+
+                                    <div className="ai-setting-group">
+                                        <label className="ai-setting-label">
+                                            Custom Verification Steps
+                                            <span className="ai-setting-optional">(One per line, optional)</span>
+                                        </label>
+                                        <textarea
+                                            value={customVerificationSteps}
+                                            onChange={(e) => setCustomVerificationSteps(e.target.value)}
+                                            disabled={isSaving || loadingAI}
+                                            className="ai-setting-textarea"
+                                            placeholder="Steps students should take to verify content (optional)"
+                                            rows={3}
+                                        />
+                                    </div>
+
+                                    {/* Communication Style Parameters */}
+                                    <div className="ai-setting-group">
+                                        <h4 className="ai-setting-section-header">🗣️ Communication Style Parameters</h4>
+                                        
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Teen Slang Integration
+                                                <span className="ai-setting-optional">({teenSlang})</span>
+                                            </label>
+                                            <select
+                                                value={teenSlang}
+                                                onChange={(e) => setTeenSlang(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Formal language only</option>
+                                                <option value="high">High - Heavy slang usage ("sus", "no cap")</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Conversational Markers
+                                                <span className="ai-setting-optional">({conversationalMarkers})</span>
+                                            </label>
+                                            <select
+                                                value={conversationalMarkers}
+                                                onChange={(e) => setConversationalMarkers(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Direct, clean speech</option>
+                                                <option value="high">High - Natural patterns ("So like...", "you know?")</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Uncertainty Expression
+                                                <span className="ai-setting-optional">({uncertaintyExpression})</span>
+                                            </label>
+                                            <select
+                                                value={uncertaintyExpression}
+                                                onChange={(e) => setUncertaintyExpression(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Definitive statements</option>
+                                                <option value="high">High - Shows uncertainty ("I think...", "let's check")</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Cognitive Load/Content Parameters */}
+                                    <div className="ai-setting-group">
+                                        <h4 className="ai-setting-section-header">🧠 Cognitive Load/Content Parameters</h4>
+                                        
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Concept Density
+                                                <span className="ai-setting-optional">({conceptDensity})</span>
+                                            </label>
+                                            <select
+                                                value={conceptDensity}
+                                                onChange={(e) => setConceptDensity(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - One idea per response</option>
+                                                <option value="high">High - Multiple concepts together</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Perspective Taking
+                                                <span className="ai-setting-optional">({perspectiveTaking})</span>
+                                            </label>
+                                            <select
+                                                value={perspectiveTaking}
+                                                onChange={(e) => setPerspectiveTaking(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - No perspective prompts</option>
+                                                <option value="high">High - Frequent perspective shifts ("Imagine you're the scammer...")</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Personal Examples
+                                                <span className="ai-setting-optional">({personalExamples})</span>
+                                            </label>
+                                            <select
+                                                value={personalExamples}
+                                                onChange={(e) => setPersonalExamples(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Generic scenarios</option>
+                                                <option value="high">High - Relatable personal stories</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Consequence Highlighting
+                                                <span className="ai-setting-optional">({consequenceHighlighting})</span>
+                                            </label>
+                                            <select
+                                                value={consequenceHighlighting}
+                                                onChange={(e) => setConsequenceHighlighting(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Minimal consequence focus</option>
+                                                <option value="high">High - Explicit consequence discussion</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Emotional Design Parameters */}
+                                    <div className="ai-setting-group">
+                                        <h4 className="ai-setting-section-header">❤️ Emotional Design Parameters</h4>
+                                        
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Enthusiasm Level
+                                                <span className="ai-setting-optional">({enthusiasmLevel})</span>
+                                            </label>
+                                            <select
+                                                value={enthusiasmLevel}
+                                                onChange={(e) => setEnthusiasmLevel(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Neutral, measured tone</option>
+                                                <option value="high">High - High energy, excited ("YES! Absolutely nailed it!")</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Validation Frequency
+                                                <span className="ai-setting-optional">({validationFrequency})</span>
+                                            </label>
+                                            <select
+                                                value={validationFrequency}
+                                                onChange={(e) => setValidationFrequency(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Minimal emotional validation</option>
+                                                <option value="high">High - Frequent validation ("I totally get why you'd think that...")</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Mistake Normalization
+                                                <span className="ai-setting-optional">({mistakeNormalization})</span>
+                                            </label>
+                                            <select
+                                                value={mistakeNormalization}
+                                                onChange={(e) => setMistakeNormalization(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Direct correction</option>
+                                                <option value="high">High - Mistakes as learning ("Don't worry - this scam fools tons of people")</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="ai-parameter-row">
+                                            <label className="ai-parameter-label">
+                                                Confidence Building
+                                                <span className="ai-setting-optional">({confidenceBuilding})</span>
+                                            </label>
+                                            <select
+                                                value={confidenceBuilding}
+                                                onChange={(e) => setConfidenceBuilding(e.target.value as 'low' | 'high')}
+                                                disabled={isSaving || loadingAI}
+                                                className="ai-parameter-select"
+                                            >
+                                                <option value="low">Low - Task-focused only</option>
+                                                <option value="high">High - Explicit confidence building ("You're getting really good at this!")</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="ai-setting-group">
                                 <label className="ai-setting-label">
                                     System Prompt
-                                    <span className="ai-setting-optional">(Instructions for the AI)</span>
+                                    <span className="ai-setting-optional">
+                                        {useModularPrompts ? "(Auto-generated from template)" : "(Instructions for the AI)"}
+                                    </span>
                                 </label>
                                 <textarea
                                     value={systemPrompt}
                                     onChange={(e) => setSystemPrompt(e.target.value)}
-                                    disabled={isSaving || loadingAI}
+                                    disabled={isSaving || loadingAI || useModularPrompts}
                                     className="ai-setting-textarea"
                                     placeholder="Enter instructions for how the AI should behave..."
-                                    rows={4}
+                                    rows={useModularPrompts ? 8 : 4}
                                 />
+                                {useModularPrompts && (
+                                    <p className="ai-setting-description">
+                                        This prompt is automatically generated from your template selections above. 
+                                        Uncheck "Use Phishing Training Templates" to edit manually.
+                                    </p>
+                                )}
                             </div>
 
                             <div className="ai-setting-group">

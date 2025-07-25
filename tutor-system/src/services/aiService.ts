@@ -1,5 +1,8 @@
 import { AIResponse, ConversationMessage, AIAssistantConfig } from '../types';
 import { supabase } from './supabase';
+import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
+import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
+import { buildAIContextFromExistingData } from './simplifiedAIContext';
 
 // Get OpenAI configuration from environment variables
 const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
@@ -22,6 +25,39 @@ export const AI_MODELS = {
 } as const;
 
 export type AIModelName = keyof typeof AI_MODELS;
+
+// Extended AI configuration for modular prompts
+export interface ExtendedAIConfig extends AIAssistantConfig {
+    role?: 'peer' | 'trusted_adult';
+    scenario_template?: ScenarioTemplate;
+    communication_style?: any;
+    cognitive_parameters?: any;
+    emotional_parameters?: any;
+    detection_areas?: string[];
+    verification_steps?: string[];
+}
+
+/**
+ * Apply preset configuration to create a complete system prompt
+ */
+export const applyPresetConfiguration = (
+    preset: 'casual_peer' | 'supportive_adult',
+    scenario?: ScenarioTemplate,
+    customDetectionAreas?: string[],
+    customVerificationSteps?: string[]
+): string => {
+    const scenarioData = scenario ? SCENARIO_TEMPLATES[scenario] : null;
+    const detectionAreas = customDetectionAreas || scenarioData?.detection_areas || [];
+    const verificationSteps = customVerificationSteps || scenarioData?.verification_steps || [];
+    
+    const config = {
+        ...PRESET_CONFIGS[preset],
+        detection_areas: detectionAreas,
+        verification_steps: verificationSteps
+    };
+    
+    return generateSystemPrompt(config);
+};
 
 // Dummy response templates for different scenarios
 const DUMMY_RESPONSES = {
@@ -286,15 +322,44 @@ export class DummyAIService {
 }
 
 /**
- * Initialize AI assistant for a room
+ * Initialize AI assistant for a room with modular system prompts
  */
 export const initializeAIAssistant = async (
     roomId: string,
     modelName: string = 'gpt-4o',
     systemPrompt?: string,
-    userId?: string
+    userId?: string,
+    promptConfig?: {
+        role?: 'peer' | 'trusted_adult';
+        scenario?: ScenarioTemplate;
+        communication_style?: any;
+        cognitive_parameters?: any;
+        emotional_parameters?: any;
+        custom_detection_areas?: string[];
+        custom_verification_steps?: string[];
+    }
 ): Promise<string> => {
-    const defaultPrompt = systemPrompt ||
+    let finalSystemPrompt = systemPrompt;
+    
+    // If no system prompt provided but config is given, generate one
+    if (!finalSystemPrompt && promptConfig) {
+        const scenario = promptConfig.scenario ? SCENARIO_TEMPLATES[promptConfig.scenario] : null;
+        const detectionAreas = promptConfig.custom_detection_areas || scenario?.detection_areas || [];
+        const verificationSteps = promptConfig.custom_verification_steps || scenario?.verification_steps || [];
+        
+        const config = {
+            role: promptConfig.role || 'trusted_adult',
+            communication_style: promptConfig.communication_style || PRESET_CONFIGS.supportive_adult.communication_style,
+            cognitive_parameters: promptConfig.cognitive_parameters || PRESET_CONFIGS.supportive_adult.cognitive_parameters,
+            emotional_parameters: promptConfig.emotional_parameters || PRESET_CONFIGS.supportive_adult.emotional_parameters,
+            detection_areas: detectionAreas,
+            verification_steps: verificationSteps
+        };
+        
+        finalSystemPrompt = generateSystemPrompt(config);
+    }
+    
+    const defaultPrompt = finalSystemPrompt ||
         'You are a helpful AI assistant in an educational tutoring session. ' +
         'Provide clear, educational responses to help students learn. ' +
         'Be encouraging, patient, and focus on building understanding.';
@@ -399,16 +464,7 @@ const initializeAIAssistantFallback = async (
         throw new Error(`Failed to create AI config: ${configError.message}`);
     }
 
-    // Initialize conversation context
-    await supabase
-        .from('ai_conversation_contexts')
-        .upsert({
-            room_id: roomId,
-            conversation_history: [],
-            last_updated: new Date().toISOString()
-        }, {
-            onConflict: 'room_id'
-        });
+    // No separate conversation context needed - using simplified architecture
 
     // Enable AI assistant for the room
     await supabase
@@ -462,103 +518,29 @@ export const updateAIConfig = async (
 };
 
 /**
- * Get conversation history for AI context
+ * Get conversation history for AI context (Simplified: uses existing tables)
  */
 export const getConversationContext = async (roomId: string): Promise<ConversationMessage[]> => {
-    try {
-        const { data, error } = await supabase
-            .from('ai_conversation_contexts')
-            .select('conversation_history')
-            .eq('room_id', roomId)
-            .single();
-
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return []; // No context found
-            }
-            console.warn('Failed to get conversation context:', error);
-            return []; // Return empty array on error
-        }
-
-        return data.conversation_history as ConversationMessage[];
-    } catch (error) {
-        console.warn('Error getting conversation context:', error);
-        return []; // Return empty array on any error
-    }
+    console.log('🔄 Building AI context from existing room and message data');
+    return await buildAIContextFromExistingData(roomId);
 };
 
 /**
- * Add message to conversation context
+ * Add message to conversation context (Simplified: no separate storage needed)
+ * Messages are automatically stored in the messages table, so no additional action needed
  */
 export const addToConversationContext = async (
     roomId: string,
     role: 'user' | 'assistant' | 'system',
     content: string
 ): Promise<void> => {
-    try {
-        const { error } = await supabase.rpc('add_conversation_context', {
-            p_room_id: roomId,
-            p_role: role,
-            p_content: content
-        });
-
-        if (error) {
-            // If function doesn't exist, fall back to direct update
-            if (error.code === '42883' || error.message.includes('function') || error.message.includes('does not exist')) {
-                return await addToConversationContextFallback(roomId, role, content);
-            }
-            throw new Error(`Failed to add conversation context: ${error.message}`);
-        }
-    } catch (error) {
-        // Fall back to direct update
-        return await addToConversationContextFallback(roomId, role, content);
-    }
+    console.log('✅ No separate context storage needed - messages already in messages table');
+    // No action needed - conversation is built dynamically from existing data
 };
 
 /**
- * Fallback method to add conversation context without database function
+ * No fallback needed - simplified architecture uses existing tables
  */
-const addToConversationContextFallback = async (
-    roomId: string,
-    role: 'user' | 'assistant' | 'system',
-    content: string
-): Promise<void> => {
-    const newMessage = {
-        role,
-        content,
-        timestamp: Date.now() / 1000
-    };
-
-    // Get existing conversation history
-    const { data: existingData, error: fetchError } = await supabase
-        .from('ai_conversation_contexts')
-        .select('conversation_history')
-        .eq('room_id', roomId)
-        .single();
-
-    let conversationHistory = [];
-    if (!fetchError && existingData) {
-        conversationHistory = existingData.conversation_history || [];
-    }
-
-    // Add new message to history
-    conversationHistory.push(newMessage);
-
-    // Update or insert the conversation context
-    const { error: updateError } = await supabase
-        .from('ai_conversation_contexts')
-        .upsert({
-            room_id: roomId,
-            conversation_history: conversationHistory,
-            last_updated: new Date().toISOString()
-        }, {
-            onConflict: 'room_id'
-        });
-
-    if (updateError) {
-        throw new Error(`Failed to update conversation context: ${updateError.message}`);
-    }
-};
 
 /**
  * Generate AI suggestion only (no database save)
@@ -597,8 +579,8 @@ export const generateAISuggestion = async (
         updated_at: new Date().toISOString()
     };
 
-    // For simplified auth, skip conversation history to avoid RLS issues
-    const conversationHistory: ConversationMessage[] = [];
+    // Get conversation history from existing room and message data (no separate AI tables needed!)
+    const conversationHistory = await buildAIContextFromExistingData(roomId);
 
     // Use provided message or get the latest message from the room
     let prompt = userMessage;
@@ -624,10 +606,14 @@ export const generateAISuggestion = async (
         : await DummyAIService.generateResponse(prompt, conversationHistory, aiConfig);
     
     console.log('AI Service used:', OAI_API_KEY ? 'OpenAI API' : 'Dummy Service');
+    console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
     if (!aiResponse.success) {
         throw new Error(aiResponse.error || 'Failed to generate AI response');
     }
+
+    // AI responses will be stored in the messages table when tutor sends them
+    // No separate conversation context storage needed!
 
     // Get context messages for tracking
     const { data: contextMessagesData } = await supabase
@@ -643,7 +629,8 @@ export const generateAISuggestion = async (
 };
 
 /**
- * Record AI suggestion feedback to database
+ * Simplified feedback tracking - can be implemented with existing messages table if needed
+ * For now, feedback is implicit through tutor's response actions
  */
 export const recordAISuggestionFeedback = async (
     roomId: string,
@@ -656,22 +643,7 @@ export const recordAISuggestionFeedback = async (
     responseTimeMs?: number,
     contextMessages?: string[]
 ): Promise<void> => {
-    const { error } = await supabase
-        .from('ai_suggestion_feedback')
-        .insert({
-            room_id: roomId,
-            tutor_id: tutorId,
-            parent_message_id: parentMessageId,
-            ai_suggestion: aiSuggestion,
-            tutor_action: tutorAction,
-            tutor_final_response: tutorFinalResponse,
-            tutor_message_id: tutorMessageId,
-            response_time_ms: responseTimeMs,
-            context_messages: contextMessages
-        });
-
-    if (error) {
-        console.error('Failed to record AI suggestion feedback:', error);
-        throw new Error(`Failed to record AI feedback: ${error.message}`);
-    }
+    console.log('📝 AI feedback tracking simplified - using existing message patterns');
+    // Feedback is tracked implicitly through whether tutors use AI suggestions or not
+    // Can be implemented later with analytics on message patterns if needed
 }; 

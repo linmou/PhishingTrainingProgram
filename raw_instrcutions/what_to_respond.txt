@@ -1,0 +1,177 @@
+General Conversation Flow Structure – for both scam & privacy
+Stage
+Bot Action
+Purpose
+Stage 1: Get Their First Reaction
+"Look at this post. What do you think - is this real or fake?"
+Assess initial judgment
+Stage 2: Ask Why They Think That
+"[Reflects teen's answer] What made you decide that? What did you see that helped you figure it out?"
+Understand their reasoning
+Stage 3: Find What They Missed & Help Them Learn
+Based on what teen says vs. what they missed, help them learn more
+
+Choose from the 6 Scaffolding Means whenever appropriate:
+Questioning – elicit reasoning
+	•	"What makes you think that?" → "Why would Nintendo sell at a 93% loss?"
+Explaining - For Complex Concepts
+	•	"Scammers use urgency to stop people from thinking carefully"
+Modeling - Showing Expert Behavior
+	•	"When I see everyone sharing the same 'deal,' I get more suspicious, not less"
+Feeding Back - Reinforcing Correct Observations/point out wrong Observations
+	•	"Exactly! $19.99 for a $300 console is definitely suspicious"
+Hinting - For Missed Red Flags
+	•	"Look at the language used - notice anything designed to make you act quickly?"
+Instructing - For Specific Actions
+	•	"Click on Emma Garcia's profile - what should you look for?"
+
+Fill knowledge gaps
+
+Scam Post detection – what to teach?
+General rules for Scam Check:
+	•	WHO posted it? (Verified account?)
+	•	WHAT are they offering? (Too good to be true?)
+	•	WHERE does the link go? (Legitimate domain?)
+	•	WHEN to take action? (Urgency pressure?)
+	•	WHY would they give this away? (Business logic?)
+
+🎮 Post 1: Nintendo Switch Deal ($19.99)
+
+✅ Strong Detection Areas 
+	•	"Too Good to Be True" Pricing: $19.99 for a $300+ gaming console
+	•	Urgency Language: "Hurry up, this offer WILL NOT LAST"
+	•	Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)
+	•	ALL CAPS Warning: "WILL NOT LAST" creates false urgency
+	•	No Official Branding: Missing Nintendo verification or official company messaging
+	•	Generic Username: "Lucy Simms" doesn't suggest official Nintendo account
+	•	Social Proof Manipulation: Limited engagement (only 3 likes) despite "amazing deal"
+	•	Account History Check: Need to verify Lucy Simms' previous posts and account creation date
+	•	Cross-Platform Verification: No mention of this deal on Nintendo's official channels
+	•	Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal
+Verification Steps Teen Should Take
+Immediate Checks
+	•	URL Analysis:
+	•	Don't click the shortened link
+	•	Check if it redirects to nintendo.com or authorized retailer
+	•	Look for HTTPS and legitimate domain
+	•	Account Verification:
+	•	Click on "Lucy Simms" profile
+	•	Check account creation date, follower count, posting history
+	•	Look for verification badge or official Nintendo affiliation
+	•	Cross-Reference Checking:
+	•	Visit nintendo.com directly to check for this promotion
+	•	Check Nintendo's official social media accounts
+	•	Search major gaming news sites for this deal
+	•	Price Reality Check:
+	•	Search current Nintendo Switch prices on legitimate retailers
+	•	Ask: "Why would Nintendo sell at 93% loss?"
+
+💳 Post 2: iTunes Gift Card Survey ($500)
+
+Red Flags Teens Should Recognize 
+	•	Excessive Value Promise: $500 for a "5 minute survey"
+	•	Urgency/Excitement Language: "crazy deal!!" with multiple exclamation points
+	•	Suspicious URL: http://bit.ly/FREEGIFTS (shortened link, not official Apple/iTunes)
+	•	"Instant" Reward Claims: "got instantly" suggests unrealistic immediate gratification
+	•	Generic Account: "Emma Garcia" not affiliated with Apple or iTunes
+	•	Professional Photo Quality: Uses actual iTunes gift card photo to appear legitimate
+	•	Believable Personal Story: "I filled in a 5 minute survey" sounds like peer testimony
+	•	Lack of Official Apple Branding: No Apple logo, iTunes official messaging, or verification
+	•	No Terms/Conditions: Legitimate promotions always include fine print and restrictions
+Verification Steps Teen Should Take
+Immediate Checks
+	•	Official Source Verification:
+	•	Visit apple.com or itunes.com directly
+	•	Check Apple's official social media for any current promotions
+	•	Look for press releases about legitimate gift card promotions
+	•	URL Analysis:
+	•	Don't click bit.ly link
+	•	Legitimate Apple promotions use apple.com domains
+	•	Check if URL redirects to official Apple pages
+	•	Account Investigation:
+	•	Check Emma Garcia's profile and posting history
+	•	Look for verification badge or Apple affiliation
+	•	See if account posts other "too good to be true" offers
+	•	Logic Check:
+	•	Ask: "Why would Apple give away $500 for 5 minutes of work?"
+	•	Calculate: If this were real, how much would Apple lose daily?
+	•	Research: Do major companies typically offer such high-value surveys?
+
+⚠️ Post 3: Account Security Alert
+
+Red Flags Teens Should Recognize 
+	•	Fear-Based Urgency: "YOUR ACCOUNT IS AT RISK" in large, alarming text
+	•	Suspicious URL: http://testdrive.info/youraccount (not official platform domain)
+	•	Generic Source: "Socail Media Testdrive" (note spelling error) not a recognizable platform
+	•	Panic-Inducing Language: "!!&$!ALERT!&$!!" with symbols and urgency
+	•	Immediate Action Pressure: "Click here to resolve" without explanation
+	•	Professional Design: Well-designed graphic could appear legitimate
+	•	Vague Platform Reference: Doesn't specify which account/platform is at risk
+	•	No Specific Account Information: Real security alerts include account-specific details
+	•	Spelling Error: "Socail" instead of "Social" in account name
+	•	No Alternative Contact Method: Legitimate alerts provide multiple ways to verify
+Verification Steps Teen Should Take
+Immediate Checks
+	•	Do NOT Click the Link:
+	•	Never click security alert links directly
+	•	Type the actual platform's URL manually into browser
+	•	Log into your real account separately to check for security notifications
+	•	Platform-Specific Verification:
+	•	Check which social media platforms you actually use
+	•	Log into each platform directly (Instagram, Snapchat, TikTok, etc.)
+	•	Look for real security notifications in your official account settings
+	•	URL Analysis:
+	•	Notice "testdrive.info" is not a legitimate social media domain
+	•	Real platforms use their official domains (instagram.com, snapchat.com, etc.)
+	•	Check for HTTPS and official SSL certificates
+	•	Contact Official Support:
+	•	If genuinely concerned, contact platform support through official channels
+	•	Use the platform's official help center or support contact methods
+	•	Ask parents/trusted adults for guidance
+	•	Account Security Review:
+	•	Change passwords if genuinely concerned (through official platform only)
+	•	Enable two-factor authentication through official platform settings
+	•	Review recent login activity in official account security settings
+
+
+Privacy risks detection– what to teach?
+Post 1 - Ethan's Movie Theater Post
+
+Privacy Risks:
+	•	Real-time location sharing - Announcing he'll be at a specific theater "THIS FRIDAY"
+	•	Predictable schedule - Giving exact time (8pm) and location, making him trackable
+	•	Social engineering vulnerability - Revealing when he'll be away from home
+Immediate action to take:
+	•	Comment to him: "Hey, might want to make plans via DM instead of posting publicly - just for safety!"
+	•	Suggest using group chats or private messages for meetup coordination
+	•	Explain that posting real-time locations can make him a target for theft (knowing when he's away from home)
+	•	Recommend generic posts like "excited for the new Marvel movie!" instead of specific times/locations
+
+Post 2 - Jasmine's House Post
+
+Privacy Risks:
+	•	Exact address exposure - "321 Jefferson Ave" posted publicly
+	•	Home location revealed - Photo shows her actual house with identifying features
+	•	Property details visible - House style, color, and neighborhood characteristics exposed
+	•	Invitation to strangers - Open invitation could attract unwanted visitors
+Immediate action to take:
+	•	Reply to her: "Hey! You posted your full address - you might want to delete that post ASAP"
+	•	Offer to help her adjust privacy settings so only friends can see location-based posts
+	•	Suggest meeting spots like "downtown" or "my neighborhood" instead of exact addresses
+	•	Recommend using private group chats for hangout invitations
+
+Post 3 - Jake's Phone Number Post
+
+Privacy Risks:
+	•	Direct contact information - Phone number "607-252-6771" shared publicly
+	•	Identity theft potential - Phone numbers are often used for account verification
+	•	Harassment/spam exposure - Number now accessible to anyone who sees the post
+	•	Social engineering target - Phone number can be used for scams or impersonation
+Immediate action to take:
+	•	Reply to him: "Dude, your phone number is public on your post - you should delete it now before it gets shared around"
+	•	Explain that public phone numbers lead to spam calls and potential scams
+	•	Help him understand that people can use his number for two-factor authentication attempts
+	•	Suggest he reach out to close friends directly with his new number instead
+
+
+

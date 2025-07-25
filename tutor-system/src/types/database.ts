@@ -199,47 +199,12 @@ export interface Database {
                     updated_at?: string
                 }
             }
-            ai_conversation_contexts: {
-                Row: {
-                    id: string
-                    room_id: string
-                    conversation_history: Json
-                    last_updated: string
-                }
-                Insert: {
-                    id?: string
-                    room_id: string
-                    conversation_history?: Json
-                    last_updated?: string
-                }
-                Update: {
-                    id?: string
-                    room_id?: string
-                    conversation_history?: Json
-                    last_updated?: string
-                }
-            }
         }
         Views: {
             [_ in never]: never
         }
         Functions: {
-            initialize_ai_assistant: {
-                Args: {
-                    p_room_id: string
-                    p_model_name?: string
-                    p_system_prompt?: string
-                }
-                Returns: string
-            }
-            add_conversation_context: {
-                Args: {
-                    p_room_id: string
-                    p_role: string
-                    p_content: string
-                }
-                Returns: void
-            }
+            [_ in never]: never
         }
         Enums: {
             user_role: 'student' | 'tutor' | 'observer'
