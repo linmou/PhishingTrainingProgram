@@ -1,0 +1,161 @@
+{
+  "testSuite": "Direct Coverage Detection",
+  "description": "Tests AI detection of clear, direct demonstrations of understanding or behavior",
+  "checklistItems": [
+    {
+      "id": "item-1",
+      "area_text": "[understanding] URL verification techniques",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-2",
+      "area_text": "[behavior] Hover over links before clicking",
+      "item_type": "verification_step",
+      "status": "pending"
+    },
+    {
+      "id": "item-3",
+      "area_text": "[understanding] Business logic evaluation",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-4",
+      "area_text": "[behavior] Check sender email addresses manually",
+      "item_type": "verification_step",
+      "status": "pending"
+    },
+    {
+      "id": "item-5",
+      "area_text": "[understanding] Urgency language recognition",
+      "item_type": "detection_area",
+      "status": "pending"
+    }
+  ],
+  "testCases": [
+    {
+      "id": "direct-1",
+      "name": "Clear URL understanding demonstration",
+      "studentResponse": "I noticed the link goes to goo.gl instead of nintendo.com, which seems suspicious. The real Nintendo website would use their own domain.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-1",
+          "newStatus": "covered",
+          "confidence": 90,
+          "evidence": "Student correctly identified non-official domain (goo.gl vs nintendo.com)",
+          "reasoning": "Explicit demonstration of URL verification understanding"
+        }
+      ]
+    },
+    {
+      "id": "direct-2",
+      "name": "Behavioral demonstration of link checking",
+      "studentResponse": "I hovered over the link and saw it was going to a different site than expected - it showed http://fake-site.com instead of the official iTunes store.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-2",
+          "newStatus": "covered",
+          "confidence": 95,
+          "evidence": "Student explicitly stated they hovered over the link and checked destination",
+          "reasoning": "Direct behavioral demonstration of safe link verification practice"
+        }
+      ]
+    },
+    {
+      "id": "direct-3",
+      "name": "Business logic understanding",
+      "studentResponse": "Wait, they're selling a $300 Nintendo Switch for only $19.99? That doesn't make any business sense. Nintendo would lose hundreds of dollars on each sale. No company would do that.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-3",
+          "newStatus": "covered",
+          "confidence": 95,
+          "evidence": "Student identified unrealistic pricing and explained why it's not viable business practice",
+          "reasoning": "Clear understanding of business logic and loss-making deals"
+        }
+      ]
+    },
+    {
+      "id": "direct-4",
+      "name": "Multiple coverage in single response",
+      "studentResponse": "I checked the sender's email and it's from 'deals@fakecompany.xyz' not from Apple. Also, when I hovered over the link, it goes to a shortened URL, not to apple.com.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-4",
+          "newStatus": "covered",
+          "confidence": 95,
+          "evidence": "Student checked sender email address and identified it as fake",
+          "reasoning": "Explicit demonstration of email verification behavior"
+        },
+        {
+          "itemId": "item-2",
+          "newStatus": "covered",
+          "confidence": 90,
+          "evidence": "Student hovered over link to check destination",
+          "reasoning": "Behavioral demonstration of link verification"
+        },
+        {
+          "itemId": "item-1",
+          "newStatus": "covered",
+          "confidence": 85,
+          "evidence": "Student recognized shortened URL as suspicious",
+          "reasoning": "Understanding of URL verification principles"
+        }
+      ]
+    },
+    {
+      "id": "direct-5",
+      "name": "Urgency language recognition",
+      "studentResponse": "The message says 'ACT NOW! LIMITED TIME!' which is trying to pressure me into making a quick decision without thinking. That's a red flag.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-5",
+          "newStatus": "covered",
+          "confidence": 90,
+          "evidence": "Student identified urgency language and recognized it as pressure tactic",
+          "reasoning": "Clear understanding of urgency manipulation techniques"
+        }
+      ]
+    },
+    {
+      "id": "direct-6",
+      "name": "Comprehensive understanding with explanation",
+      "studentResponse": "I see several problems here. First, the urgency - 'LAST CHANCE' is meant to stop me from thinking carefully. Second, the price of $19.99 for a Switch is impossible - they cost $300. And third, when I checked, the link doesn't go to Nintendo's real website. This is definitely a scam.",
+      "conversationHistory": [
+        {
+          "role": "assistant",
+          "content": "What makes you think this might be a scam?"
+        }
+      ],
+      "expectedCoverage": [
+        {
+          "itemId": "item-5",
+          "newStatus": "covered",
+          "confidence": 95,
+          "evidence": "Identified 'LAST CHANCE' as urgency tactic to prevent careful thinking",
+          "reasoning": "Explicit understanding of urgency manipulation"
+        },
+        {
+          "itemId": "item-3",
+          "newStatus": "covered",
+          "confidence": 95,
+          "evidence": "Recognized $19.99 price as impossible for $300 product",
+          "reasoning": "Clear business logic evaluation"
+        },
+        {
+          "itemId": "item-1",
+          "newStatus": "covered",
+          "confidence": 85,
+          "evidence": "Checked and identified link doesn't go to Nintendo's real website",
+          "reasoning": "Demonstrated URL verification understanding"
+        }
+      ]
+    }
+  ]
+}

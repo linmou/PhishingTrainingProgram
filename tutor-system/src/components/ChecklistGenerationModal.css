@@ -1,0 +1,189 @@
+/**
+ * ChecklistGenerationModal styles
+ * Modal styling for checklist generation options
+ */
+
+.checklist-generation-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.checklist-generation-modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #6b7280;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.modal-body {
+  padding: 20px 24px 24px 24px;
+}
+
+.modal-message {
+  margin: 0 0 20px 0;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.modal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-option-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.modal-option-button:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.modal-option-button.primary {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.modal-option-button.primary:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.modal-option-button.secondary {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.modal-option-button.secondary:hover {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.modal-option-button.tertiary {
+  background-color: white;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.modal-option-button.tertiary:hover {
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .checklist-generation-modal-content {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid #374151;
+  }
+
+  .modal-header h2 {
+    color: #f9fafb;
+  }
+
+  .modal-close-button {
+    color: #9ca3af;
+  }
+
+  .modal-close-button:hover {
+    background-color: #374151;
+    color: #e5e7eb;
+  }
+
+  .modal-message {
+    color: #d1d5db;
+  }
+
+  .modal-option-button {
+    background: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+  }
+
+  .modal-option-button:hover {
+    background-color: #4b5563;
+    border-color: #6b7280;
+  }
+
+  .modal-option-button.secondary {
+    background-color: #4b5563;
+    border-color: #6b7280;
+    color: #e5e7eb;
+  }
+
+  .modal-option-button.secondary:hover {
+    background-color: #6b7280;
+  }
+
+  .modal-option-button.tertiary {
+    background-color: #1f2937;
+    border-color: #4b5563;
+    color: #9ca3af;
+  }
+
+  .modal-option-button.tertiary:hover {
+    border-color: #6b7280;
+    color: #d1d5db;
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "testSuite": "Basic System Prompt Extraction",
+  "description": "Tests extraction of detection areas and verification steps from formatted system prompts",
+  "testCases": [
+    {
+      "id": "basic-extraction-1",
+      "name": "Standard formatted system prompt with detection areas",
+      "systemPrompt": "You are an AI tutor helping students identify online scams.\n\n## Communication Style:\nBe friendly and supportive.\n\n## Detection Areas to Focus On:\n- Urgency language designed to pressure quick action\n- Suspicious URLs that hide real destinations\n- Too good to be true pricing or offers\n- Generic usernames not affiliated with companies\n\n## Verification Steps to Teach:\n- Always hover over links before clicking\n- Check sender email addresses manually\n- Verify deals on official company websites\n\n## Learning Process:\nGuide students through discovery learning.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Urgency language designed to pressure quick action",
+          "Suspicious URLs that hide real destinations",
+          "Too good to be true pricing or offers",
+          "Generic usernames not affiliated with companies"
+        ],
+        "verification_steps": [
+          "Always hover over links before clicking",
+          "Check sender email addresses manually",
+          "Verify deals on official company websites"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] Urgency language designed to pressure quick action",
+          "[understanding] Suspicious URLs that hide real destinations",
+          "[understanding] Too good to be true pricing or offers",
+          "[understanding] Generic usernames not affiliated with companies"
+        ],
+        "behavior": [
+          "[behavior] Always hover over links before clicking",
+          "[behavior] Check sender email addresses manually",
+          "[behavior] Verify deals on official company websites"
+        ]
+      }
+    },
+    {
+      "id": "basic-extraction-2",
+      "name": "Nintendo Switch scam scenario prompt",
+      "systemPrompt": "Help students identify the Nintendo Switch scam.\n\n## Detection Areas to Focus On:\n- \"Too Good to Be True\" Pricing: $19.99 for a $300+ gaming console\n- Urgency Language: \"Hurry up, this offer WILL NOT LAST\"\n- Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)\n- Generic Username: \"Lucy Simms\" doesn't suggest official Nintendo account\n- Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal\n\n## Verification Steps to Teach:\n- Navigate to Nintendo.com directly to check for real deals\n- Search for the username to verify official accounts\n- Question deals that seem too good to be true\n\n## Emotional Approach:\nBe supportive and encouraging.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "\"Too Good to Be True\" Pricing: $19.99 for a $300+ gaming console",
+          "Urgency Language: \"Hurry up, this offer WILL NOT LAST\"",
+          "Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)",
+          "Generic Username: \"Lucy Simms\" doesn't suggest official Nintendo account",
+          "Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal"
+        ],
+        "verification_steps": [
+          "Navigate to Nintendo.com directly to check for real deals",
+          "Search for the username to verify official accounts",
+          "Question deals that seem too good to be true"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] \"Too Good to Be True\" Pricing: $19.99 for a $300+ gaming console",
+          "[understanding] Urgency Language: \"Hurry up, this offer WILL NOT LAST\"",
+          "[understanding] Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)",
+          "[understanding] Generic Username: \"Lucy Simms\" doesn't suggest official Nintendo account",
+          "[understanding] Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal"
+        ],
+        "behavior": [
+          "[behavior] Navigate to Nintendo.com directly to check for real deals",
+          "[behavior] Search for the username to verify official accounts",
+          "[behavior] Question deals that seem too good to be true"
+        ]
+      }
+    },
+    {
+      "id": "basic-extraction-3",
+      "name": "Empty detection areas section",
+      "systemPrompt": "You are an AI tutor.\n\n## Detection Areas to Focus On:\n\n## Verification Steps to Teach:\n\n## Communication Style:\nBe friendly.",
+      "expectedExtraction": {
+        "detection_areas": [],
+        "verification_steps": []
+      },
+      "expectedCategorization": {
+        "understanding": [],
+        "behavior": []
+      },
+      "expectedPrompt": "No detection areas found in the system prompt. Please add a checklist with specific detection areas to focus on during the tutoring session."
+    },
+    {
+      "id": "basic-extraction-4",
+      "name": "Mixed format with bullet points and dashes",
+      "systemPrompt": "Guide students through scam detection.\n\n## Detection Areas to Focus On:\n* Emotional manipulation through false urgency\n- Unrealistic pricing that defies business logic\n* Shortened URLs hiding actual destinations\n- Missing official verification or branding\n\n## Verification Steps to Teach:\n* Hover over all links before clicking\n* Cross-reference with official websites\n- Report suspicious content immediately\n* Take time to think before acting\n\n## Learning Objectives:\nDevelop critical thinking.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Emotional manipulation through false urgency",
+          "Unrealistic pricing that defies business logic",
+          "Shortened URLs hiding actual destinations",
+          "Missing official verification or branding"
+        ],
+        "verification_steps": [
+          "Hover over all links before clicking",
+          "Cross-reference with official websites",
+          "Report suspicious content immediately",
+          "Take time to think before acting"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] Emotional manipulation through false urgency",
+          "[understanding] Unrealistic pricing that defies business logic",
+          "[understanding] Shortened URLs hiding actual destinations",
+          "[understanding] Missing official verification or branding"
+        ],
+        "behavior": [
+          "[behavior] Hover over all links before clicking",
+          "[behavior] Cross-reference with official websites",
+          "[behavior] Report suspicious content immediately",
+          "[behavior] Take time to think before acting"
+        ]
+      }
+    }
+  ]
+}

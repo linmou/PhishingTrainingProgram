@@ -1,0 +1,127 @@
+{
+  "testSuite": "False Positive Prevention",
+  "description": "Tests that AI doesn't incorrectly detect coverage from unrelated or insufficient responses",
+  "checklistItems": [
+    {
+      "id": "item-1",
+      "area_text": "[understanding] URL verification techniques",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-2",
+      "area_text": "[behavior] Check sender email addresses manually",
+      "item_type": "verification_step",
+      "status": "pending"
+    },
+    {
+      "id": "item-3",
+      "area_text": "[understanding] Business logic evaluation",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-4",
+      "area_text": "[understanding] Urgency language recognition",
+      "item_type": "detection_area",
+      "status": "pending"
+    }
+  ],
+  "testCases": [
+    {
+      "id": "false-1",
+      "name": "Mentions URL but doesn't demonstrate understanding",
+      "studentResponse": "I clicked on the URL to see what would happen.",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Student mentions URL but shows risky behavior, not understanding"
+    },
+    {
+      "id": "false-2",
+      "name": "Uses keywords without context",
+      "studentResponse": "Email urgency verification business logic - am I using the right words?",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Student is just repeating keywords without demonstrating actual understanding"
+    },
+    {
+      "id": "false-3",
+      "name": "Correct action for wrong reason",
+      "studentResponse": "I didn't click the link because my computer is slow today.",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Not clicking was accidental, not due to security awareness"
+    },
+    {
+      "id": "false-4",
+      "name": "Asking about concept without demonstrating it",
+      "studentResponse": "What does it mean to verify a sender's email address?",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Question shows lack of understanding, not coverage"
+    },
+    {
+      "id": "false-5",
+      "name": "Unrelated response with similar words",
+      "studentResponse": "I urgently need to check my email for my homework assignment.",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Contains keywords 'urgently' and 'email' but in unrelated context"
+    },
+    {
+      "id": "false-6",
+      "name": "Incorrect understanding stated confidently",
+      "studentResponse": "I always trust messages that come from Gmail because Google is a big company.",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Shows misunderstanding of email verification despite mentioning email providers"
+    },
+    {
+      "id": "false-7",
+      "name": "Off-topic response",
+      "studentResponse": "I really like the Nintendo Switch. I've been saving up to buy one.",
+      "conversationHistory": [
+        {
+          "role": "assistant",
+          "content": "Let's look at this Nintendo Switch offer. What do you notice about the price?"
+        }
+      ],
+      "expectedCoverage": [],
+      "reasoning": "Student ignores the scam analysis prompt entirely"
+    },
+    {
+      "id": "false-8",
+      "name": "Repeating AI's words without understanding",
+      "studentResponse": "Yes, I see that it's a business logic flaw like you said.",
+      "conversationHistory": [
+        {
+          "role": "assistant",
+          "content": "This price shows a business logic flaw - no company would sell at such a loss."
+        }
+      ],
+      "expectedCoverage": [],
+      "reasoning": "Student is just agreeing/parroting without demonstrating independent understanding"
+    },
+    {
+      "id": "false-9",
+      "name": "Vague response without specifics",
+      "studentResponse": "Yeah, this seems suspicious somehow.",
+      "conversationHistory": [],
+      "expectedCoverage": [],
+      "reasoning": "Too vague to determine what understanding exists"
+    },
+    {
+      "id": "false-10",
+      "name": "Mentions checking but no evidence of understanding why",
+      "studentResponse": "I should probably check this, right?",
+      "conversationHistory": [
+        {
+          "role": "assistant",
+          "content": "What do you think about this email from 'deals@freeoffers.net'?"
+        }
+      ],
+      "expectedCoverage": [],
+      "reasoning": "Knows checking is expected but doesn't demonstrate understanding of what or why"
+    }
+  ]
+}

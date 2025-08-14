@@ -1,0 +1,112 @@
+{
+  "testSuite": "Edge Cases for System Prompt Extraction",
+  "description": "Tests handling of malformed, missing, or unusual system prompt formats",
+  "testCases": [
+    {
+      "id": "edge-1",
+      "name": "Missing detection areas section entirely",
+      "systemPrompt": "You are an AI tutor helping students stay safe online.\n\n## Communication Style:\nBe friendly and approachable.\n\n## Verification Steps to Teach:\n- Always verify before trusting\n- Check official sources\n\n## Learning Approach:\nUse discovery-based learning.",
+      "expectedExtraction": {
+        "detection_areas": [],
+        "verification_steps": [
+          "Always verify before trusting",
+          "Check official sources"
+        ]
+      },
+      "expectedPrompt": "No detection areas found in the system prompt. Please add a checklist with specific detection areas to focus on during the tutoring session.",
+      "shouldFallbackToTemplate": true
+    },
+    {
+      "id": "edge-2",
+      "name": "Malformed section headers",
+      "systemPrompt": "Help students identify scams.\n\n# Detection Areas to Focus On\n- Urgency tactics\n- Fake URLs\n\n### Verification Steps to Teach ###\n* Check domains\n* Verify senders\n\n## Random Section:\nSome other content.",
+      "expectedExtraction": {
+        "detection_areas": [],
+        "verification_steps": []
+      },
+      "note": "Should not extract due to incorrect header format (# instead of ##)",
+      "shouldFallbackToTemplate": true
+    },
+    {
+      "id": "edge-3",
+      "name": "Detection areas with inconsistent formatting",
+      "systemPrompt": "Guide students in online safety.\n\n## Detection Areas to Focus On:\n- Normal bullet point\n  - Nested bullet (should be ignored)\n* Asterisk bullet point\n1. Numbered item (should be ignored)\n- Another normal bullet\nPlain text line (should be ignored)\n  - Another nested item (should be ignored)\n\n## Verification Steps to Teach:\n- Consistent dash bullet\n* Asterisk bullet\n\n## End of prompt",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Normal bullet point",
+          "Asterisk bullet point",
+          "Another normal bullet"
+        ],
+        "verification_steps": [
+          "Consistent dash bullet",
+          "Asterisk bullet"
+        ]
+      },
+      "note": "Only top-level bullets with - or * should be extracted"
+    },
+    {
+      "id": "edge-4",
+      "name": "Empty bullet points",
+      "systemPrompt": "Teach online safety.\n\n## Detection Areas to Focus On:\n- \n- Valid detection area\n-     \n- Another valid area\n- \n\n## Verification Steps to Teach:\n- \n- Valid verification step\n* \n\n## Continue teaching",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Valid detection area",
+          "Another valid area"
+        ],
+        "verification_steps": [
+          "Valid verification step"
+        ]
+      },
+      "note": "Empty bullets should be filtered out"
+    },
+    {
+      "id": "edge-5",
+      "name": "Special characters and escaping",
+      "systemPrompt": "Help identify scams.\n\n## Detection Areas to Focus On:\n- URLs with special characters: http://fake.com?param=value&other=123\n- Messages with \"quotes\" and 'apostrophes'\n- Dollar amounts like $500 or percentages like 90% off\n- Special symbols: !!URGENT!! or ***FREE***\n\n## Verification Steps to Teach:\n- Check for & and ? in URLs\n- Look for $ signs in offers\n\n## Done",
+      "expectedExtraction": {
+        "detection_areas": [
+          "URLs with special characters: http://fake.com?param=value&other=123",
+          "Messages with \"quotes\" and 'apostrophes'",
+          "Dollar amounts like $500 or percentages like 90% off",
+          "Special symbols: !!URGENT!! or ***FREE***"
+        ],
+        "verification_steps": [
+          "Check for & and ? in URLs",
+          "Look for $ signs in offers"
+        ]
+      },
+      "note": "Special characters should be preserved exactly"
+    },
+    {
+      "id": "edge-6",
+      "name": "Very long detection area descriptions",
+      "systemPrompt": "Comprehensive scam detection training.\n\n## Detection Areas to Focus On:\n- This is an extremely long detection area description that goes on and on explaining in great detail about how scammers use psychological manipulation techniques including but not limited to urgency, fear, greed, curiosity, and social proof to bypass rational thinking and create emotional responses that lead to poor decision making in online interactions\n- Short item\n- Another very long item that discusses the complexities of URL obfuscation including URL shorteners like bit.ly and goo.gl, homograph attacks using similar-looking characters, subdomain spoofing where legitimate domains appear as subdomains of malicious sites, and the use of legitimate services to host phishing pages\n\n## Verification Steps to Teach:\n- Simple verification step\n\n## End",
+      "expectedExtraction": {
+        "detection_areas": [
+          "This is an extremely long detection area description that goes on and on explaining in great detail about how scammers use psychological manipulation techniques including but not limited to urgency, fear, greed, curiosity, and social proof to bypass rational thinking and create emotional responses that lead to poor decision making in online interactions",
+          "Short item",
+          "Another very long item that discusses the complexities of URL obfuscation including URL shorteners like bit.ly and goo.gl, homograph attacks using similar-looking characters, subdomain spoofing where legitimate domains appear as subdomains of malicious sites, and the use of legitimate services to host phishing pages"
+        ],
+        "verification_steps": [
+          "Simple verification step"
+        ]
+      },
+      "note": "Long descriptions should be preserved in full"
+    },
+    {
+      "id": "edge-7",
+      "name": "Multiple detection area sections (should use first only)",
+      "systemPrompt": "Teach scam detection.\n\n## Detection Areas to Focus On:\n- First section item 1\n- First section item 2\n\n## Some other content\n\n## Detection Areas to Focus On:\n- Second section item 1\n- Second section item 2\n\n## Verification Steps to Teach:\n- Verification step 1\n\n## End",
+      "expectedExtraction": {
+        "detection_areas": [
+          "First section item 1",
+          "First section item 2"
+        ],
+        "verification_steps": [
+          "Verification step 1"
+        ]
+      },
+      "note": "Only the first occurrence of each section should be used"
+    }
+  ]
+}

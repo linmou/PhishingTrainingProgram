@@ -1,4 +1,12 @@
-import { getConversationContext, generateAISuggestion } from '../aiService';
+// Mock modules before imports
+jest.mock('../simplifiedAIContext');
+
+// Import after mocks are defined
+import { getConversationContext, generateTutorSuggestion } from '../aiService';
+import { buildAIContextFromExistingData } from '../simplifiedAIContext';
+
+// Type the mock
+const mockBuildAIContext = buildAIContextFromExistingData as jest.MockedFunction<typeof buildAIContextFromExistingData>;
 
 // Mock Supabase
 jest.mock('../supabase', () => ({
@@ -26,35 +34,81 @@ jest.mock('../supabase', () => ({
 }));
 
 describe('Chat History Analysis', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        
+        // Set up the mock implementation for each test
+        mockBuildAIContext.mockResolvedValue([
+            {
+                role: 'system',
+                content: 'You are supporting a student in a room titled "Phishing Email Detection Training" with description: "Learn to identify phishing attempts in email communications"'
+            },
+            {
+                role: 'user',
+                content: 'Student shared for analysis: URGENT: Your account will be suspended! Click here to verify: http://phising-site.com/verify'
+            },
+            {
+                role: 'user',
+                content: 'Student shared for analysis: Limited time offer - claim your free gift card now!'
+            },
+            {
+                role: 'user',
+                content: 'Student: This email looks suspicious to me'
+            },
+            {
+                role: 'user',
+                content: 'Tutor: Good observation! What specific red flags do you notice?'
+            },
+            {
+                role: 'user',
+                content: 'Student: The urgent language and suspicious URL are major warning signs'
+            },
+            {
+                role: 'user',
+                content: 'AI suggested: Excellent analysis! You correctly identified key phishing indicators.'
+            }
+        ]);
+    });
+
     describe('Current Implementation Limitations', () => {
-        it('should demonstrate that conversation history is empty due to current implementation', async () => {
+        it('should show actual conversation context with mocked room data', async () => {
             const roomId = 'test-room-id';
             
             // Test current conversation context retrieval
             const conversationHistory = await getConversationContext(roomId);
             
-            console.log('\n=== CURRENT CONVERSATION HISTORY ===');
-            console.log('Length:', conversationHistory.length);
-            console.log('Content:', conversationHistory);
-            console.log('==========================================\n');
+            console.log('\n=== ACTUAL CONVERSATION HISTORY ===');
+            console.log('Length:', conversationHistory?.length || 0);
+            console.log('Full Content:');
+            if (conversationHistory && Array.isArray(conversationHistory)) {
+                conversationHistory.forEach((msg, i) => {
+                    console.log(`${i + 1}. [${msg.role}] ${msg.content}`);
+                });
+                console.log('Raw JSON:', JSON.stringify(conversationHistory, null, 2));
+            } else {
+                console.log('conversationHistory is undefined or not an array');
+            }
+            console.log('=====================================\n');
             
-            // Should be empty due to current implementation
-            expect(conversationHistory).toEqual([]);
+            // Should contain system message, posts, and chat messages
+            expect(conversationHistory).toBeDefined();
+            expect(conversationHistory.length).toBeGreaterThan(0);
+            expect(conversationHistory[0].role).toBe('system'); // Room context
+            expect(conversationHistory[0].content).toContain('Phishing Email Detection Training');
         });
 
-        it('should show that AI generation only uses immediate message context', async () => {
+        it('should show that tutor suggestion generation only uses conversation history', async () => {
             const roomId = 'test-room-id';
             const userId = 'test-user-id';
-            const userMessage = 'Is this email legitimate?';
             
             try {
-                const result = await generateAISuggestion(roomId, userId, userMessage);
+                const result = await generateTutorSuggestion(roomId, userId);
                 
-                console.log('\n=== AI GENERATION CONTEXT ===');
+                console.log('\n=== TUTOR SUGGESTION CONTEXT ===');
                 console.log('Context messages used:', result.contextMessages);
                 console.log('Number of context messages:', result.contextMessages.length);
-                console.log('AI response success:', result.aiResponse.success);
-                console.log('================================\n');
+                console.log('Suggestion success:', result.success);
+                console.log('=====================================\n');
                 
                 // Should only have a few recent message IDs for tracking
                 expect(result.contextMessages).toBeDefined();

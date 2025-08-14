@@ -28,7 +28,7 @@ jest.mock('../../services/aiService', () => ({
     initializeAIAssistant: jest.fn(),
     getAIConfig: jest.fn(),
     updateAIConfig: jest.fn(),
-    generateAISuggestion: jest.fn(),
+    generateTutorSuggestion: jest.fn(),
     recordAISuggestionFeedback: jest.fn(),
 }));
 

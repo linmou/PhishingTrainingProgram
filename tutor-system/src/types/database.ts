@@ -199,12 +199,287 @@ export interface Database {
                     updated_at?: string
                 }
             }
+            session_checklists: {
+                Row: {
+                    id: string
+                    room_id: string
+                    template_name: string
+                    session_start: string
+                    total_items: number
+                    completed_items: number
+                    completion_percentage: number
+                    is_active: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    room_id: string
+                    template_name: string
+                    session_start?: string
+                    total_items?: number
+                    completed_items?: number
+                    completion_percentage?: number
+                    is_active?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    room_id?: string
+                    template_name?: string
+                    session_start?: string
+                    total_items?: number
+                    completed_items?: number
+                    completion_percentage?: number
+                    is_active?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            checklist_items: {
+                Row: {
+                    id: string
+                    checklist_id: string
+                    area_text: string
+                    item_type: 'detection_area' | 'verification_step'
+                    priority: 'critical' | 'important' | 'optional'
+                    status: 'pending' | 'partially_covered' | 'covered' | 'needs_review'
+                    understanding_level: 'none' | 'basic' | 'good' | 'excellent'
+                    tutor_notes: string | null
+                    last_addressed: string | null
+                    attempts_count: number
+                    original_template_area: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    checklist_id: string
+                    area_text: string
+                    item_type: 'detection_area' | 'verification_step'
+                    priority: 'critical' | 'important' | 'optional'
+                    status?: 'pending' | 'partially_covered' | 'covered' | 'needs_review'
+                    understanding_level?: 'none' | 'basic' | 'good' | 'excellent'
+                    tutor_notes?: string | null
+                    last_addressed?: string | null
+                    attempts_count?: number
+                    original_template_area?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    checklist_id?: string
+                    area_text?: string
+                    item_type?: 'detection_area' | 'verification_step'
+                    priority?: 'critical' | 'important' | 'optional'
+                    status?: 'pending' | 'partially_covered' | 'covered' | 'needs_review'
+                    understanding_level?: 'none' | 'basic' | 'good' | 'excellent'
+                    tutor_notes?: string | null
+                    last_addressed?: string | null
+                    attempts_count?: number
+                    original_template_area?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            coverage_evidence: {
+                Row: {
+                    id: string
+                    item_id: string
+                    evidence_text: string
+                    analysis: string
+                    confidence_score: number
+                    detection_method: 'ai_analysis' | 'tutor_manual' | 'student_self_assessment'
+                    message_id: string | null
+                    timestamp: string
+                }
+                Insert: {
+                    id?: string
+                    item_id: string
+                    evidence_text: string
+                    analysis: string
+                    confidence_score: number
+                    detection_method: 'ai_analysis' | 'tutor_manual' | 'student_self_assessment'
+                    message_id?: string | null
+                    timestamp?: string
+                }
+                Update: {
+                    id?: string
+                    item_id?: string
+                    evidence_text?: string
+                    analysis?: string
+                    confidence_score?: number
+                    detection_method?: 'ai_analysis' | 'tutor_manual' | 'student_self_assessment'
+                    message_id?: string | null
+                    timestamp?: string
+                }
+            }
+            checklist_updates: {
+                Row: {
+                    id: string
+                    checklist_id: string
+                    item_id: string
+                    previous_status: string
+                    new_status: string
+                    previous_understanding: string
+                    new_understanding: string
+                    evidence_id: string | null
+                    updated_by: 'ai' | 'tutor' | 'student'
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    checklist_id: string
+                    item_id: string
+                    previous_status: string
+                    new_status: string
+                    previous_understanding: string
+                    new_understanding: string
+                    evidence_id?: string | null
+                    updated_by: 'ai' | 'tutor' | 'student'
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    checklist_id?: string
+                    item_id?: string
+                    previous_status?: string
+                    new_status?: string
+                    previous_understanding?: string
+                    new_understanding?: string
+                    evidence_id?: string | null
+                    updated_by?: 'ai' | 'tutor' | 'student'
+                    created_at?: string
+                }
+            }
+            checklist_configs: {
+                Row: {
+                    room_id: string
+                    ai_detection_sensitivity: 'strict' | 'moderate' | 'flexible'
+                    auto_coverage_detection: boolean
+                    require_tutor_confirmation: boolean
+                    completion_threshold: number
+                    regression_detection: boolean
+                    show_progress_to_students: boolean
+                    group_by_priority: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    room_id: string
+                    ai_detection_sensitivity?: 'strict' | 'moderate' | 'flexible'
+                    auto_coverage_detection?: boolean
+                    require_tutor_confirmation?: boolean
+                    completion_threshold?: number
+                    regression_detection?: boolean
+                    show_progress_to_students?: boolean
+                    group_by_priority?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    room_id?: string
+                    ai_detection_sensitivity?: 'strict' | 'moderate' | 'flexible'
+                    auto_coverage_detection?: boolean
+                    require_tutor_confirmation?: boolean
+                    completion_threshold?: number
+                    regression_detection?: boolean
+                    show_progress_to_students?: boolean
+                    group_by_priority?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            checklist_templates: {
+                Row: {
+                    id: string
+                    name: string
+                    description: string
+                    created_by_tutor_id: string
+                    is_public: boolean
+                    usage_count: number
+                    average_completion_rate: number | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    name: string
+                    description: string
+                    created_by_tutor_id: string
+                    is_public?: boolean
+                    usage_count?: number
+                    average_completion_rate?: number | null
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    name?: string
+                    description?: string
+                    created_by_tutor_id?: string
+                    is_public?: boolean
+                    usage_count?: number
+                    average_completion_rate?: number | null
+                    created_at?: string
+                    updated_at?: string
+                }
+            }
+            template_items: {
+                Row: {
+                    id: string
+                    template_id: string
+                    item_text: string
+                    item_type: 'detection_area' | 'verification_step'
+                    priority: 'critical' | 'important' | 'optional'
+                    suggested_understanding_threshold: number | null
+                    description: string | null
+                    teaching_tips: string | null
+                    sort_order: number
+                }
+                Insert: {
+                    id?: string
+                    template_id: string
+                    item_text: string
+                    item_type: 'detection_area' | 'verification_step'
+                    priority: 'critical' | 'important' | 'optional'
+                    suggested_understanding_threshold?: number | null
+                    description?: string | null
+                    teaching_tips?: string | null
+                    sort_order?: number
+                }
+                Update: {
+                    id?: string
+                    template_id?: string
+                    item_text?: string
+                    item_type?: 'detection_area' | 'verification_step'
+                    priority?: 'critical' | 'important' | 'optional'
+                    suggested_understanding_threshold?: number | null
+                    description?: string | null
+                    teaching_tips?: string | null
+                    sort_order?: number
+                }
+            }
         }
         Views: {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            initialize_checklist_from_template: {
+                Args: {
+                    p_room_id: string
+                    p_template_name: string
+                }
+                Returns: string
+            }
+            update_checklist_progress: {
+                Args: {
+                    p_checklist_id: string
+                }
+                Returns: undefined
+            }
         }
         Enums: {
             user_role: 'student' | 'tutor' | 'observer'

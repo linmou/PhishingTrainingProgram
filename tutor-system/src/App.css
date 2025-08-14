@@ -139,6 +139,8 @@ html, body, #root {
     flex-direction: column;
     background: white;
     min-width: 0;
+    position: relative;
+    padding-top: 60px; /* Space for floating button */
 }
 
 .chat-section-full {
@@ -220,6 +222,36 @@ html, body, #root {
     
     .chat-messages-container {
         max-height: calc(60vh - 140px);
+    }
+    
+    /* Floating checklist mobile styles */
+    .floating-checklist-toggle {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .checklist-float-btn {
+        padding: 10px 12px;
+        font-size: 14px;
+        min-width: 80px;
+    }
+    
+    .float-label {
+        font-size: 10px;
+    }
+    
+    .chat-with-checklist {
+        flex-direction: column;
+    }
+    
+    .checklist-sidebar {
+        width: 100%;
+        height: 50vh;
+        order: -1;
+    }
+    
+    .chat-section {
+        padding-top: 50px;
     }
 }
 
@@ -1035,7 +1067,91 @@ html, body, #root {
     font-style: italic;
 }
 
+/* Floating Checklist Styles */
+.floating-checklist-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.checklist-float-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+    transition: all 0.3s ease;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.checklist-float-btn:hover {
+    background: #1565c0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+}
+
+.checklist-float-btn.active {
+    background: #0d47a1;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.4);
+}
+
+.float-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Chat main area - contains messages and input form */
+.chat-main-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Chat with checklist layout */
+.chat-with-checklist {
+    display: flex !important;
+    gap: 16px;
+}
+
+.chat-with-checklist .chat-main-area {
+    flex: 1;
+}
+
+.chat-with-checklist .chat-input-form {
+    margin-right: 0;
+}
+
+.checklist-sidebar {
+    width: 400px;
+    height: calc(100vh - 140px);
+    background: white;
+    border: 1px solid #e0e9f5;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+
 /* Responsive design for smaller screens */
+@media (max-width: 1200px) {
+    .checklist-sidebar {
+        width: 350px;
+    }
+}
+
 @media (max-width: 768px) {
     .role-selection {
         flex-direction: column;

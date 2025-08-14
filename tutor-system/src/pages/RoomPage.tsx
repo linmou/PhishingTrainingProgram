@@ -5,6 +5,8 @@ import { useRoom } from '../contexts/RoomContext';
 import ChatMessage from '../components/ChatMessage';
 import AvatarDisplay from '../components/AvatarDisplay';
 import AIAssistantSettings from '../components/AIAssistantSettings';
+import ChecklistPanel from '../components/ChecklistPanel';
+import { useRoomFeatures } from '../hooks/useRoomFeatures';
 import jsPDF from 'jspdf';
 import { supabase } from '../services/supabase';
 
@@ -28,6 +30,9 @@ const RoomPage: React.FC = () => {
         downloadChatHistory
     } = useRoom();
 
+    // Use service layer for room features
+    const roomFeatures = useRoomFeatures(roomId || '');
+
     const [messageText, setMessageText] = useState('');
     const [showAISettings, setShowAISettings] = useState(false);
     const [sendingMessage, setSendingMessage] = useState(false);
@@ -36,6 +41,7 @@ const RoomPage: React.FC = () => {
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [joinError, setJoinError] = useState('');
+    const [showChecklist, setShowChecklist] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Join room on component mount
@@ -448,9 +454,57 @@ const RoomPage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Right side - Chat */}
-                <div className={`chat-section ${!currentRoom.image_url ? 'chat-section-full' : ''}`}>
-                    <div className="chat-messages-container">
+                {/* Right side - Chat and Checklist Container */}
+                <div className={`chat-section ${!currentRoom.image_url ? 'chat-section-full' : ''} ${showChecklist ? 'chat-with-checklist' : ''}`}>
+                    
+                    {/* Debug: Show current user role */}
+                    <div style={{position: 'absolute', top: '5px', left: '5px', background: 'yellow', padding: '5px', fontSize: '12px', zIndex: 1000}}>
+                        Debug: Role = {user?.current_role || 'undefined'} | User = {user?.display_name || 'no user'}
+                    </div>
+
+                    {/* Floating Learning Progress Toggle - Only for tutors */}
+                    {user?.current_role === 'tutor' && (
+                        <div className="floating-checklist-toggle">
+                            <button 
+                                className={`checklist-float-btn ${showChecklist ? 'active' : ''}`}
+                                onClick={() => setShowChecklist(!showChecklist)}
+                                title="Toggle learning progress checklist"
+                            >
+                                📋
+                                {showChecklist && <span className="float-label">Hide</span>}
+                                {!showChecklist && <span className="float-label">Progress</span>}
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Temporary: Always show button for testing */}
+                    <div className="floating-checklist-toggle" style={{top: '60px'}}>
+                        <button 
+                            className={`checklist-float-btn ${showChecklist ? 'active' : ''}`}
+                            onClick={() => setShowChecklist(!showChecklist)}
+                            title="Toggle learning progress checklist (TEST)"
+                            style={{background: 'red'}}
+                        >
+                            📋 TEST
+                            {showChecklist && <span className="float-label">Hide</span>}
+                            {!showChecklist && <span className="float-label">Progress</span>}
+                        </button>
+                    </div>
+                    
+                    {/* Main Chat Area */}
+                    <div className="chat-main-area">
+                        {/* Chat Messages Container */}
+                        <div className="chat-messages-container">
+                        
+                        {/* Debug info in chat area */}
+                        <div style={{background: 'yellow', padding: '10px', margin: '10px', border: '2px solid red'}}>
+                            <strong>DEBUG INFO:</strong><br/>
+                            User Role: {user?.current_role || 'undefined'}<br/>
+                            User Name: {user?.display_name || 'no user'}<br/>
+                            Show Checklist: {showChecklist ? 'true' : 'false'}<br/>
+                            Should Show Button: {user?.current_role === 'tutor' ? 'YES' : 'NO'}
+                        </div>
+                        
                         {messages.length === 0 ? (
                             <div className="waiting-message">
                                 <p>No messages yet. Start the conversation!</p>
@@ -489,10 +543,11 @@ const RoomPage: React.FC = () => {
                             </div>
                         )}
                         
-                        <div ref={messagesEndRef} />
-                    </div>
+                            <div ref={messagesEndRef} />
+                        </div>
 
-                    {canSendMessages && (
+                        {/* Chat Input Form */}
+                        {canSendMessages && (
                         <form onSubmit={handleSendMessage} className="chat-input-form">
                             <input
                                 type="text"
@@ -511,16 +566,30 @@ const RoomPage: React.FC = () => {
                                 {sendingMessage ? 'Sending...' : 'Send'}
                             </button>
                         </form>
-                    )}
+                        )}
 
-                    {!canSendMessages && user?.current_role === 'observer' && (
-                        <div className="observer-notice">
-                            <p><strong>Read-Only Mode</strong></p>
-                            <p>👁️ You are observing this session. You cannot send messages.</p>
+                        {/* Observer notice */}
+                        {!canSendMessages && user?.current_role === 'observer' && (
+                            <div className="observer-notice">
+                                <p><strong>Read-Only Mode</strong></p>
+                                <p>👁️ You are observing this session. You cannot send messages.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Learning Progress Sidebar - Only for tutors */}
+                    {user?.current_role === 'tutor' && showChecklist && (
+                        <div className="checklist-sidebar">
+                            <ChecklistPanel 
+                                roomId={roomId!}
+                                isVisible={true}
+                                onToggleVisibility={() => setShowChecklist(!showChecklist)}
+                            />
                         </div>
                     )}
                 </div>
             </div>
+
 
             {/* AI Settings Modal */}
             {showAISettings && (

@@ -1,0 +1,105 @@
+{
+  "testSuite": "Mixed Content Extraction",
+  "description": "Tests extraction when content mixes cognitive understanding and behavioral actions",
+  "testCases": [
+    {
+      "id": "mixed-1",
+      "name": "Combined understanding and action in single bullet",
+      "systemPrompt": "Help students with online safety.\n\n## Detection Areas to Focus On:\n- Understand social engineering tactics and verify information through official channels\n- Recognize urgency language and take time before responding\n- Learn about phishing URLs and always check the actual domain\n- Identify emotional manipulation and report suspicious content\n\n## Verification Steps to Teach:\n- Pause and think when feeling pressured to act quickly\n- Navigate directly to official websites instead of clicking links\n\n## Role:\nAct as a supportive peer.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Understand social engineering tactics and verify information through official channels",
+          "Recognize urgency language and take time before responding",
+          "Learn about phishing URLs and always check the actual domain",
+          "Identify emotional manipulation and report suspicious content"
+        ],
+        "verification_steps": [
+          "Pause and think when feeling pressured to act quickly",
+          "Navigate directly to official websites instead of clicking links"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] Social engineering tactics",
+          "[understanding] Urgency language recognition",
+          "[understanding] Phishing URL identification",
+          "[understanding] Emotional manipulation tactics"
+        ],
+        "behavior": [
+          "[behavior] Verify information through official channels",
+          "[behavior] Take time before responding to urgent requests",
+          "[behavior] Check the actual domain of URLs",
+          "[behavior] Report suspicious content",
+          "[behavior] Pause and think when feeling pressured to act quickly",
+          "[behavior] Navigate directly to official websites instead of clicking links"
+        ]
+      }
+    },
+    {
+      "id": "mixed-2",
+      "name": "Detection areas containing action verbs",
+      "systemPrompt": "Train students in cybersecurity awareness.\n\n## Detection Areas to Focus On:\n- Check for urgency language that creates false pressure\n- Verify sender authenticity before trusting messages\n- Look for business logic flaws in too-good-to-be-true offers\n- Examine URLs for suspicious patterns or shorteners\n\n## Verification Steps to Teach:\n- Use official channels to confirm any urgent requests\n- Take screenshots of suspicious content before reporting\n\n## Communication Style:\nBe encouraging and supportive.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Check for urgency language that creates false pressure",
+          "Verify sender authenticity before trusting messages",
+          "Look for business logic flaws in too-good-to-be-true offers",
+          "Examine URLs for suspicious patterns or shorteners"
+        ],
+        "verification_steps": [
+          "Use official channels to confirm any urgent requests",
+          "Take screenshots of suspicious content before reporting"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] Urgency language that creates false pressure",
+          "[understanding] Sender authenticity indicators",
+          "[understanding] Business logic flaws in offers",
+          "[understanding] Suspicious URL patterns or shorteners"
+        ],
+        "behavior": [
+          "[behavior] Check for urgency language",
+          "[behavior] Verify sender authenticity before trusting",
+          "[behavior] Look for business logic flaws",
+          "[behavior] Examine URLs for suspicious patterns",
+          "[behavior] Use official channels to confirm any urgent requests",
+          "[behavior] Take screenshots of suspicious content before reporting"
+        ]
+      }
+    },
+    {
+      "id": "mixed-3",
+      "name": "Complex sentences with multiple concepts",
+      "systemPrompt": "Guide students through scam identification.\n\n## Detection Areas to Focus On:\n- Understanding how scammers use urgency, fear, and excitement to bypass critical thinking and recognizing these emotional triggers\n- Learning to identify fake URLs, shortened links, and domain spoofing while developing habits to verify legitimacy\n- Recognizing unrealistic offers, business logic flaws, and understanding why legitimate companies wouldn't make such deals\n\n## Verification Steps to Teach:\n- Always pause, think critically, and verify through multiple sources before taking any action on suspicious messages\n- Develop a routine of checking sender details, hovering over links, and confirming through official channels\n\n## Approach:\nUse the Socratic method.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Understanding how scammers use urgency, fear, and excitement to bypass critical thinking and recognizing these emotional triggers",
+          "Learning to identify fake URLs, shortened links, and domain spoofing while developing habits to verify legitimacy",
+          "Recognizing unrealistic offers, business logic flaws, and understanding why legitimate companies wouldn't make such deals"
+        ],
+        "verification_steps": [
+          "Always pause, think critically, and verify through multiple sources before taking any action on suspicious messages",
+          "Develop a routine of checking sender details, hovering over links, and confirming through official channels"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] How scammers use urgency, fear, and excitement to bypass critical thinking",
+          "[understanding] Emotional trigger recognition",
+          "[understanding] Fake URLs, shortened links, and domain spoofing",
+          "[understanding] Unrealistic offers and business logic flaws",
+          "[understanding] Why legitimate companies wouldn't make loss-making deals"
+        ],
+        "behavior": [
+          "[behavior] Develop habits to verify URL legitimacy",
+          "[behavior] Pause and think critically before taking action",
+          "[behavior] Verify through multiple sources",
+          "[behavior] Check sender details",
+          "[behavior] Hover over links before clicking",
+          "[behavior] Confirm through official channels"
+        ]
+      }
+    }
+  ]
+}

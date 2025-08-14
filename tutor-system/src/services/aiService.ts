@@ -110,9 +110,9 @@ const SUGGESTED_RESPONSES = {
 };
 
 /**
- * Real OpenAI API Service
+ * Real OpenAI API Service - Core AI Response Generation
  */
-class OpenAIService {
+export class OpenAIService {
     static async generateResponse(
         userMessage: string,
         conversationHistory: ConversationMessage[],
@@ -159,42 +159,10 @@ class OpenAIService {
 
             const data = await response.json();
             const responseContent = data.choices[0]?.message?.content || '';
-
-            // Generate a suggested response for the tutor
-            const suggestionMessages = [
-                ...messages,
-                { role: 'assistant', content: responseContent },
-                { 
-                    role: 'user', 
-                    content: 'Based on the above educational response, suggest a brief, interactive follow-up question or prompt that a tutor could use to engage the student further. Keep it under 2 sentences.'
-                }
-            ];
-
-            const suggestionResponse = await fetch(`${OAI_BASE_URL}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OAI_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: config.model_name,
-                    messages: suggestionMessages,
-                    temperature: 0.7,
-                    max_tokens: 100
-                })
-            });
-
-            let suggestedResponse = '';
-            if (suggestionResponse.ok) {
-                const suggestionData = await suggestionResponse.json();
-                suggestedResponse = suggestionData.choices[0]?.message?.content || '';
-            }
-
             const responseTime = Date.now() - startTime;
 
             return {
                 content: responseContent,
-                suggested_response: suggestedResponse,
                 model_used: config.model_name,
                 response_time_ms: responseTime,
                 success: true
@@ -215,6 +183,78 @@ class OpenAIService {
 }
 
 /**
+ * Tutor Suggestion Service - Separate service for generating tutor prompts
+ */
+export class TutorSuggestionService {
+    static async generateSuggestion(
+        conversationHistory: ConversationMessage[],
+        config: AIAssistantConfig
+    ): Promise<{ suggestion: string; success: boolean; error?: string }> {
+        const startTime = Date.now();
+
+        try {
+            // Build conversation history as a single string
+            const conversationText = conversationHistory
+                .slice(-10)
+                .map(msg => `${msg.role}: ${msg.content}`)
+                .join('\n');
+
+            const messages = [
+                {
+                    role: 'system',
+                    content: 'You are helping a tutor engage students in educational conversations. Generate brief, interactive follow-up questions or prompts.'
+                },
+                {
+                    role: 'user',
+                    content: `Here is the recent conversation:\n\n${conversationText}\n\nBased on this conversation, suggest a brief follow-up question or prompt that a tutor could use to engage the student further. Keep it under 2 sentences and focus on deepening understanding.`
+                }
+            ];
+
+            const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: config.model_name,
+                    messages,
+                    temperature: 0.7,
+                    max_tokens: 100
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+            }
+
+            const data = await response.json();
+            const suggestion = data.choices[0]?.message?.content || '';
+
+            return {
+                suggestion,
+                success: true
+            };
+
+        } catch (error) {
+            return {
+                suggestion: '',
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error occurred'
+            };
+        }
+    }
+
+    static generateDummySuggestion(
+        category: keyof typeof SUGGESTED_RESPONSES
+    ): string {
+        const responses = SUGGESTED_RESPONSES[category];
+        return responses[Math.floor(Math.random() * responses.length)];
+    }
+}
+
+/**
  * Simulates an AI API call with realistic delay and responses
  */
 export class DummyAIService {
@@ -223,12 +263,12 @@ export class DummyAIService {
         return responses[Math.floor(Math.random() * responses.length)];
     }
 
-    private static getRandomSuggestedResponse(category: keyof typeof SUGGESTED_RESPONSES): string {
+    static generateSuggestedResponse(category: keyof typeof SUGGESTED_RESPONSES): string {
         const responses = SUGGESTED_RESPONSES[category];
         return responses[Math.floor(Math.random() * responses.length)];
     }
 
-    private static determineResponseCategory(userMessage: string): keyof typeof DUMMY_RESPONSES {
+    static determineResponseCategory(userMessage: string): keyof typeof DUMMY_RESPONSES {
         const message = userMessage.toLowerCase();
 
         if (message.includes('?') || message.includes('how') || message.includes('what') || message.includes('why')) {
@@ -296,12 +336,8 @@ export class DummyAIService {
 
             const responseTime = Date.now() - startTime;
 
-            const category = this.determineResponseCategory(userMessage);
-            const suggestedResponse = this.getRandomSuggestedResponse(category);
-
             return {
                 content: responseContent,
-                suggested_response: suggestedResponse,
                 model_used: config.model_name,
                 response_time_ms: responseTime,
                 success: true
@@ -545,20 +581,17 @@ export const addToConversationContext = async (
  */
 
 /**
- * Generate AI suggestion only (no database save)
+ * Generate tutor suggestion only (no AI response generation)
  */
-export const generateAISuggestion = async (
+export const generateTutorSuggestion = async (
     roomId: string,
     userId: string,
-    userMessage?: string,
-    parentMessageId?: string,
-    parameterOverrides?: any, // Parameter overrides for custom prompt generation
-    user?: any // Accept user object for auth context
-): Promise<{ aiResponse: AIResponse; contextMessages: string[] }> => {
+    parameterOverrides?: any
+): Promise<{ suggestion: string; success: boolean; error?: string; contextMessages: string[] }> => {
     // Get room data to check AI configuration
     const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt')
+        .select('ai_assistant_enabled, ai_assistant_model')
         .eq('id', roomId)
         .single();
 
@@ -566,82 +599,41 @@ export const generateAISuggestion = async (
         throw new Error('AI assistant is not enabled for this room');
     }
 
-    // Generate custom system prompt if parameter overrides are provided
-    let systemPrompt = roomData.ai_assistant_prompt || 
-        'You are a helpful AI assistant in an educational tutoring session. ' +
-        'Provide clear, educational responses to help students learn. ' +
-        'Be encouraging, patient, and focus on building understanding.';
-
-    if (parameterOverrides) {
-        // Use our modular prompt system with parameter overrides
-        const config = {
-            role: parameterOverrides.role || 'peer',
-            communication_style: parameterOverrides.communication_style || {
-                teen_slang: 'high',
-                conversational_markers: 'high',
-                uncertainty_expression: 'low'
-            },
-            cognitive_parameters: parameterOverrides.cognitive_parameters || {
-                concept_density: 'low'
-            },
-            emotional_parameters: parameterOverrides.emotional_parameters || {
-                enthusiasm_level: 'high'
-            },
-            detection_areas: ['Urgent language', 'Too good to be true offers', 'Suspicious links'],
-            verification_steps: ['Check sender', 'Verify URL', 'Think before clicking']
-        };
-        
-        systemPrompt = generateSystemPrompt(config);
-    }
-
-    // Create AI config from room data
+    // Create AI config from room data for suggestion generation
     const aiConfig: AIAssistantConfig = {
         id: roomId,
         room_id: roomId,
         model_name: roomData.ai_assistant_model || 'gpt-3.5-turbo',
-        system_prompt: systemPrompt,
+        system_prompt: 'Tutor suggestion system',
         temperature: 0.7,
-        max_tokens: 150,
+        max_tokens: 100,
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     };
 
-    // Get conversation history from existing room and message data (no separate AI tables needed!)
+    // Get conversation history from existing room and message data
     const conversationHistory = await buildAIContextFromExistingData(roomId);
-
-    // Use provided message or get the latest message from the room
-    let prompt = userMessage;
-    if (!prompt && parentMessageId) {
-        const { data: parentMessage, error } = await supabase
-            .from('messages')
-            .select('content')
-            .eq('id', parentMessageId)
-            .single();
-
-        if (!error && parentMessage) {
-            prompt = parentMessage.content;
-        }
-    }
-
-    if (!prompt) {
-        prompt = "Please provide a helpful response to continue our conversation.";
-    }
-
-    // Generate AI response - use OpenAI if API key is available
-    const aiResponse = OAI_API_KEY 
-        ? await OpenAIService.generateResponse(prompt, conversationHistory, aiConfig)
-        : await DummyAIService.generateResponse(prompt, conversationHistory, aiConfig);
     
-    console.log('AI Service used:', OAI_API_KEY ? 'OpenAI API' : 'Dummy Service');
     console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
-    if (!aiResponse.success) {
-        throw new Error(aiResponse.error || 'Failed to generate AI response');
+    // Generate tutor suggestion
+    let suggestionResult;
+    if (OAI_API_KEY) {
+        // Use real OpenAI service for tutor suggestions
+        suggestionResult = await TutorSuggestionService.generateSuggestion(
+            conversationHistory,
+            aiConfig
+        );
+    } else {
+        // Use dummy service for tutor suggestions
+        const lastMessage = conversationHistory[conversationHistory.length - 1];
+        const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
+        const suggestion = DummyAIService.generateSuggestedResponse(category);
+        suggestionResult = { suggestion, success: true };
     }
 
-    // AI responses will be stored in the messages table when tutor sends them
-    // No separate conversation context storage needed!
+    console.log('Suggestion Service used:', OAI_API_KEY ? 'OpenAI API' : 'Dummy Service');
 
     // Get context messages for tracking
     const { data: contextMessagesData } = await supabase
@@ -653,7 +645,10 @@ export const generateAISuggestion = async (
     
     const contextMessages = contextMessagesData?.map(m => m.id) || [];
 
-    return { aiResponse, contextMessages };
+    return { 
+        ...suggestionResult,
+        contextMessages 
+    };
 };
 
 /**

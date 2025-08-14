@@ -152,3 +152,12 @@ If npm commands appear to fail:
 4. Ensure you're in the correct subdirectory (e.g., `cd tutor-system` for this project)
 
 Note: Conda environments (like base) don't interfere with npm/node. They manage separate package ecosystems.
+
+## Development Workflow Recommendations
+
+### Refactoring and Testing
+- When you finish refactoring a function, try 'npm start' to see if there are any bugs as the final test
+
+## Database Migration Guidelines
+- New SQL files should be created in `tutor-system/supabase/migrations`
+- Carefully consider existing table schemas when creating new migrations

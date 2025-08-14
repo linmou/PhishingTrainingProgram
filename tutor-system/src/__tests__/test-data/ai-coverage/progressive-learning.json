@@ -1,0 +1,185 @@
+{
+  "testSuite": "Progressive Learning Detection",
+  "description": "Tests AI tracking of understanding that develops over multiple interactions",
+  "checklistItems": [
+    {
+      "id": "item-1",
+      "area_text": "[understanding] Social engineering recognition",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-2",
+      "area_text": "[behavior] Verify sender through official channels",
+      "item_type": "verification_step",
+      "status": "pending"
+    }
+  ],
+  "testCases": [
+    {
+      "id": "progressive-1",
+      "name": "Three-stage progression from confusion to understanding",
+      "interactions": [
+        {
+          "studentResponse": "I don't understand why someone would lie about giving away free stuff.",
+          "expectedCoverage": [],
+          "reasoning": "Initial confusion, no understanding demonstrated"
+        },
+        {
+          "studentResponse": "Oh, so they're trying to trick me into giving them my information?",
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "partially_covered",
+              "confidence": 60,
+              "evidence": "Beginning to understand deceptive intent"
+            }
+          ],
+          "reasoning": "Starting to grasp the concept"
+        },
+        {
+          "studentResponse": "I get it now - they pretend to be nice and offer free things to manipulate people into trusting them. That's social engineering!",
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "covered",
+              "confidence": 90,
+              "evidence": "Clear articulation of social engineering tactics"
+            }
+          ],
+          "reasoning": "Full understanding achieved"
+        }
+      ]
+    },
+    {
+      "id": "progressive-2",
+      "name": "Building behavioral habits over time",
+      "interactions": [
+        {
+          "studentResponse": "So I shouldn't trust this email?",
+          "expectedCoverage": [],
+          "reasoning": "Seeking guidance, no behavior demonstrated"
+        },
+        {
+          "studentResponse": "I could check if Apple really sent this by... looking at their website?",
+          "expectedCoverage": [
+            {
+              "itemId": "item-2",
+              "newStatus": "partially_covered",
+              "confidence": 65,
+              "evidence": "Tentatively suggesting verification method"
+            }
+          ],
+          "reasoning": "Beginning to think about verification"
+        },
+        {
+          "studentResponse": "I went directly to apple.com and checked their promotions page. This offer isn't there, so it's definitely fake!",
+          "expectedCoverage": [
+            {
+              "itemId": "item-2",
+              "newStatus": "covered",
+              "confidence": 95,
+              "evidence": "Independently verified through official channels"
+            }
+          ],
+          "reasoning": "Demonstrated the complete verification behavior"
+        }
+      ]
+    },
+    {
+      "id": "progressive-3",
+      "name": "Understanding deepens through questioning",
+      "interactions": [
+        {
+          "studentResponse": "The message seems really excited about this deal.",
+          "conversationHistory": [
+            {
+              "role": "assistant",
+              "content": "What do you notice about how this message is written?"
+            }
+          ],
+          "expectedCoverage": [],
+          "reasoning": "Surface observation without analysis"
+        },
+        {
+          "studentResponse": "It's using a lot of exclamation points and saying I need to hurry. Is that important?",
+          "conversationHistory": [
+            {
+              "role": "assistant",
+              "content": "Good observation! Why do you think they want you to hurry?"
+            }
+          ],
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "partially_covered",
+              "confidence": 55,
+              "evidence": "Noticing urgency tactics but not understanding purpose"
+            }
+          ],
+          "reasoning": "Recognition without full comprehension"
+        },
+        {
+          "studentResponse": "They want me to act fast so I don't have time to think about whether it's real or check if it's legitimate. They're using my emotions against me!",
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "covered",
+              "confidence": 85,
+              "evidence": "Understands emotional manipulation and urgency tactics"
+            }
+          ],
+          "reasoning": "Complete understanding of manipulation strategy"
+        }
+      ]
+    },
+    {
+      "id": "progressive-4",
+      "name": "Regression and recovery",
+      "interactions": [
+        {
+          "studentResponse": "I know I should check the URL, but this one has a lock icon so it's secure.",
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "partially_covered",
+              "confidence": 50,
+              "evidence": "Confusing HTTPS with legitimacy"
+            }
+          ],
+          "reasoning": "Partial but flawed understanding"
+        },
+        {
+          "studentResponse": "Wait, HTTPS just means the connection is encrypted, not that the site is trustworthy, right?",
+          "conversationHistory": [
+            {
+              "role": "assistant",
+              "content": "Let's think about what HTTPS actually tells us..."
+            }
+          ],
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "partially_covered",
+              "confidence": 70,
+              "evidence": "Self-correcting misconception"
+            }
+          ],
+          "reasoning": "Recovering from confusion"
+        },
+        {
+          "studentResponse": "I need to look at the actual domain name, not just the security certificate. Even scam sites can have HTTPS.",
+          "expectedCoverage": [
+            {
+              "itemId": "item-1",
+              "newStatus": "covered",
+              "confidence": 88,
+              "evidence": "Correct understanding after initial confusion"
+            }
+          ],
+          "reasoning": "Full recovery and correct understanding"
+        }
+      ]
+    }
+  ]
+}

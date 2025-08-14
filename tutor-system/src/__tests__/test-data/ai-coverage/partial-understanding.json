@@ -1,0 +1,147 @@
+{
+  "testSuite": "Partial Understanding Detection",
+  "description": "Tests AI detection of incomplete or developing understanding",
+  "checklistItems": [
+    {
+      "id": "item-1",
+      "area_text": "[understanding] Social engineering recognition",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-2",
+      "area_text": "[understanding] URL and domain analysis",
+      "item_type": "detection_area",
+      "status": "pending"
+    },
+    {
+      "id": "item-3",
+      "area_text": "[behavior] Verify through official channels",
+      "item_type": "verification_step",
+      "status": "pending"
+    },
+    {
+      "id": "item-4",
+      "area_text": "[understanding] Emotional manipulation tactics",
+      "item_type": "detection_area",
+      "status": "pending"
+    }
+  ],
+  "testCases": [
+    {
+      "id": "partial-1",
+      "name": "Recognizes some but not all social engineering tactics",
+      "studentResponse": "I can see they're offering something too good to be true - a free Switch. But the message seems friendly and helpful, so maybe it's legitimate?",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-1",
+          "newStatus": "partially_covered",
+          "confidence": 70,
+          "evidence": "Student recognized 'too good to be true' but missed friendly tone as manipulation",
+          "reasoning": "Shows some understanding but still vulnerable to social engineering"
+        }
+      ]
+    },
+    {
+      "id": "partial-2",
+      "name": "Basic URL understanding without full analysis",
+      "studentResponse": "The link looks weird - it's really short. But I'm not sure what the actual website is supposed to be.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-2",
+          "newStatus": "partially_covered",
+          "confidence": 65,
+          "evidence": "Student noticed shortened URL but can't identify legitimate domain",
+          "reasoning": "Beginning to understand URL analysis but needs more practice"
+        }
+      ]
+    },
+    {
+      "id": "partial-3",
+      "name": "Knows concept but unsure of execution",
+      "studentResponse": "I know I should check if this is real somehow, maybe by going to the company's website? But I'm not sure exactly how to do that safely.",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-3",
+          "newStatus": "partially_covered",
+          "confidence": 60,
+          "evidence": "Student knows to verify but unsure of safe methods",
+          "reasoning": "Conceptual understanding present but lacks practical application knowledge"
+        }
+      ]
+    },
+    {
+      "id": "partial-4",
+      "name": "Progressive understanding through conversation",
+      "studentResponse": "Oh, so when they say 'ACT NOW!' they're trying to make me panic? I didn't think about it that way before.",
+      "conversationHistory": [
+        {
+          "role": "assistant",
+          "content": "Notice how the message creates urgency. What do you think that does to your decision-making?"
+        }
+      ],
+      "expectedCoverage": [
+        {
+          "itemId": "item-4",
+          "newStatus": "partially_covered",
+          "confidence": 75,
+          "evidence": "Student beginning to understand urgency as emotional manipulation after guidance",
+          "reasoning": "Shows developing understanding with scaffolding support"
+        }
+      ]
+    },
+    {
+      "id": "partial-5",
+      "name": "Mixed correct and incorrect understanding",
+      "studentResponse": "I see the email is from a Gmail account instead of a company email, which is suspicious. But Gmail is a legitimate service, so maybe some companies use it?",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-1",
+          "newStatus": "partially_covered",
+          "confidence": 70,
+          "evidence": "Correctly identified personal email as suspicious but rationalized it incorrectly",
+          "reasoning": "Understanding is present but with significant gaps that could be exploited"
+        }
+      ]
+    },
+    {
+      "id": "partial-6",
+      "name": "Question shows developing understanding",
+      "studentResponse": "Wait, are you saying that whenever I see words like 'urgent' or 'limited time', I should be more careful? Even from real companies?",
+      "conversationHistory": [
+        {
+          "role": "assistant",
+          "content": "Let's talk about how scammers use urgency to pressure you."
+        }
+      ],
+      "expectedCoverage": [
+        {
+          "itemId": "item-4",
+          "newStatus": "partially_covered",
+          "confidence": 65,
+          "evidence": "Student making connections about urgency tactics but still forming understanding",
+          "reasoning": "Question demonstrates active learning and partial comprehension"
+        }
+      ]
+    },
+    {
+      "id": "partial-7",
+      "name": "Understands concept but misapplies it",
+      "studentResponse": "I checked the website and it has HTTPS, so it must be safe, right? That's what URL verification means?",
+      "conversationHistory": [],
+      "expectedCoverage": [
+        {
+          "itemId": "item-2",
+          "newStatus": "partially_covered",
+          "confidence": 55,
+          "evidence": "Student knows to check URLs but confuses HTTPS with domain legitimacy",
+          "reasoning": "Dangerous partial understanding that needs correction"
+        }
+      ]
+    }
+  ]
+}

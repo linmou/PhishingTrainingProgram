@@ -6,7 +6,7 @@ import {
     initializeAIAssistant,
     getAIConfig,
     updateAIConfig,
-    generateAISuggestion,
+    generateTutorSuggestion,
     recordAISuggestionFeedback
 } from '../services/aiService';
 import { 
@@ -528,16 +528,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('No student message found to respond to');
             }
 
-            const result = await generateAISuggestion(
+            const result = await generateTutorSuggestion(
                 currentRoom.id,
-                user.id,
-                prompt,
-                parentMessageId
+                user.id
             );
 
             // Store the AI suggestion for the tutor
-            if (result.aiResponse.suggested_response) {
-                setAiSuggestion(result.aiResponse.suggested_response);
+            if (result.suggestion) {
+                setAiSuggestion(result.suggestion);
                 
                 // Store context for tracking
                 setCurrentSuggestionContext({
@@ -580,17 +578,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // Generate new suggestion with parameter overrides
-            const result = await generateAISuggestion(
+            const result = await generateTutorSuggestion(
                 currentRoom.id,
                 user.id,
-                currentSuggestionContext.parentMessageContent,
-                currentSuggestionContext.parentMessageId,
                 parameterOverrides // Pass the parameter overrides
             );
 
             // Update the AI suggestion
-            if (result.aiResponse.suggested_response) {
-                setAiSuggestion(result.aiResponse.suggested_response);
+            if (result.suggestion) {
+                setAiSuggestion(result.suggestion);
                 
                 // Update context with new generation time
                 setCurrentSuggestionContext({

@@ -7,7 +7,8 @@ import PostComment from '../components/PostComment';
 import CommentInput from '../components/CommentInput';
 import AIAssistantSettings from '../components/AIAssistantSettings';
 import AISuggestionBox from '../components/AISuggestionBox';
-import { Download, Settings, ArrowLeft, Trash2 } from 'lucide-react';
+import ChecklistPanel from '../components/ChecklistPanel';
+import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import '../components/RoomPagePost.css';
 
@@ -45,6 +46,7 @@ const RoomPagePost: React.FC = () => {
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showClearChatModal, setShowClearChatModal] = useState(false);
     const [clearingChat, setClearingChat] = useState(false);
+    const [showChecklist, setShowChecklist] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
@@ -324,11 +326,37 @@ const RoomPagePost: React.FC = () => {
         
         setClearingChat(true);
         try {
+            // First, automatically download a JSON backup of the chat history
+            console.log('📁 Creating backup before clearing chat history...');
+            await downloadChatHistory('json');
+            
+            // Small delay to ensure download has started
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Then proceed with clearing the chat history
+            console.log('🗑️ Proceeding to clear chat history...');
             await clearChatHistory();
             setShowClearChatModal(false);
         } catch (error) {
             console.error('Failed to clear chat history:', error);
-            alert('Failed to clear chat history. Please try again.');
+            
+            // If the error is from downloading, ask user if they want to proceed anyway
+            if (error instanceof Error && error.message.includes('download')) {
+                const userConfirms = window.confirm(
+                    'Failed to create backup download. Do you still want to clear the chat history? This action cannot be undone.'
+                );
+                if (userConfirms) {
+                    try {
+                        await clearChatHistory();
+                        setShowClearChatModal(false);
+                    } catch (clearError) {
+                        console.error('Failed to clear chat history after backup failure:', clearError);
+                        alert('Failed to clear chat history. Please try again.');
+                    }
+                }
+            } else {
+                alert('Failed to clear chat history. Please try again.');
+            }
         } finally {
             setClearingChat(false);
         }
@@ -433,6 +461,15 @@ const RoomPagePost: React.FC = () => {
                     </Link>
                     
                     <div className="room-post-nav-actions">
+                        {canUseAI && (
+                            <button
+                                onClick={() => setShowChecklist(true)}
+                                className="btn btn-secondary btn-small"
+                                title="Learning Progress Checklist"
+                            >
+                                <CheckSquare size={16} />
+                            </button>
+                        )}
                         {canUseAI && (
                             <button
                                 onClick={() => setShowAISettings(true)}
@@ -608,6 +645,15 @@ const RoomPagePost: React.FC = () => {
                 )}
             </div>
 
+            {/* Checklist Panel */}
+            {roomId && (
+                <ChecklistPanel 
+                    roomId={roomId} 
+                    isVisible={showChecklist}  
+                    onToggleVisibility={() => setShowChecklist(!showChecklist)}
+                />
+            )}
+
             {/* AI Settings Modal */}
             {showAISettings && (
                 <AIAssistantSettings onClose={() => setShowAISettings(false)} />
@@ -664,14 +710,15 @@ const RoomPagePost: React.FC = () => {
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3>Clear Chat History</h3>
                         <p>Are you sure you want to clear all chat history for this room?</p>
-                        <p><strong>Warning:</strong> This action cannot be undone. Pre-populated messages will be preserved, but all user messages will be permanently deleted.</p>
+                        <p><strong>📁 Backup Protection:</strong> A complete JSON backup of all chat data will be automatically downloaded before deletion to ensure no data is lost.</p>
+                        <p><strong>Warning:</strong> After the backup, all user messages will be permanently deleted from the room. Pre-populated messages will be preserved.</p>
                         <div className="modal-actions">
                             <button 
                                 className="btn btn-danger"
                                 onClick={handleClearChatHistory}
                                 disabled={clearingChat}
                             >
-                                {clearingChat ? 'Clearing...' : 'Clear Chat History'}
+                                {clearingChat ? 'Creating backup & clearing...' : 'Download Backup & Clear History'}
                             </button>
                             <button 
                                 className="btn btn-secondary"

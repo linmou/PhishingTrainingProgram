@@ -5,7 +5,7 @@
 
 import { buildAIContextFromExistingData } from '../simplifiedAIContext';
 import { generateSystemPrompt } from '../systemPrompts';
-import { generateAISuggestion } from '../aiService';
+import { generateTutorSuggestion } from '../aiService';
 
 // Mock the supabase client
 jest.mock('../supabase', () => ({
