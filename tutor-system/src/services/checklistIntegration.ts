@@ -5,6 +5,7 @@
  */
 
 import { SessionChecklist, ChecklistItem } from '../types/checklist';
+import { LLMExtractionService } from './llmExtractionService';
 
 export interface ChecklistGenerationResult {
   success: boolean;
@@ -45,7 +46,7 @@ function createChecklistItems(texts: string[], itemType: 'detection_area' | 'ver
 /**
  * Returns a user prompt when no detection areas are found, null otherwise
  */
-function promptUserForDetectionAreas(detectionAreas: string[]): string | null {
+function _promptUserForDetectionAreas(detectionAreas: string[]): string | null {
   if (detectionAreas.length === 0) {
     return `No detection areas found in the system prompt. Please add a checklist with specific detection areas to focus on during the tutoring session.`;
   }
@@ -106,8 +107,6 @@ export async function generateChecklistFromSystemPrompt(
     userPrompt: null
   };
 }
-
-import { LLMExtractionService } from './llmExtractionService';
 
 /**
  * ChecklistIntegration class - now uses LLM-based extraction

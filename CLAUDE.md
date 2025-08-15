@@ -60,6 +60,11 @@ The app uses PostgreSQL via Supabase with these main tables:
 
 Row Level Security (RLS) policies enforce access control at the database level.
 
+### Authentication and Security
+- The system uses simplified auth without auth.uid()
+- All RLS policies must NOT use auth.uid() - use permissive policies instead
+- Database functions should be SECURITY DEFINER to bypass 
+
 ### Testing Strategy
 Comprehensive unit tests exist for completed features:
 - Task 1: Supabase service configuration (`src/services/__tests__/supabase.test.ts`)

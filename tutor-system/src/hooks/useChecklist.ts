@@ -85,6 +85,12 @@ export function useChecklist(roomId: string): UseChecklistReturn {
         systemPrompt, 
         templateName
       );
+      
+      // Check if checklist was created successfully
+      if (!newChecklist) {
+        throw new Error('Failed to create checklist - returned null');
+      }
+      
       setChecklist(newChecklist);
       
       // Update progress with immediate calculation for responsiveness
@@ -111,6 +117,15 @@ export function useChecklist(roomId: string): UseChecklistReturn {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate checklist';
       setError(errorMessage);
       console.error('Failed to generate checklist:', err);
+      
+      // Log more details for debugging
+      if (err instanceof Error) {
+        console.error('Error details:', {
+          message: err.message,
+          stack: err.stack,
+          cause: (err as any).cause
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -158,6 +173,12 @@ export function useChecklist(roomId: string): UseChecklistReturn {
             context.systemPrompt!, 
             templateName
           );
+          
+          // Check if checklist was created successfully
+          if (!newChecklist) {
+            throw new Error('Failed to create checklist - returned null');
+          }
+          
           setChecklist(newChecklist);
           
           // Update progress with immediate calculation for responsiveness
@@ -187,6 +208,12 @@ export function useChecklist(roomId: string): UseChecklistReturn {
           console.warn('🚨 Unexpected context type, falling back to template generation');
           // Fallback: just generate using template without showing modal
           const fallbackChecklist = await RoomFeaturesService.checklist.create(roomId, templateName);
+          
+          // Check if checklist was created successfully
+          if (!fallbackChecklist) {
+            throw new Error('Failed to create fallback checklist - returned null');
+          }
+          
           setChecklist(fallbackChecklist);
           
           const fallbackItems = [...fallbackChecklist.detection_areas, ...fallbackChecklist.verification_steps];
@@ -295,8 +322,19 @@ export function useChecklist(roomId: string): UseChecklistReturn {
         is_active: true
       };
 
-      // TODO: Save to database via ChecklistService
-      setChecklist(manualChecklist);
+      // Save manual checklist to database to get proper UUIDs
+      const savedChecklist = await RoomFeaturesService.checklist.createManual(
+        roomId, 
+        detectionAreas, 
+        verificationSteps
+      );
+      
+      // Check if checklist was created successfully
+      if (!savedChecklist) {
+        throw new Error('Failed to create manual checklist - returned null');
+      }
+      
+      setChecklist(savedChecklist);
       
       // Set initial progress for manual checklist
       const total = manualChecklist.total_items;

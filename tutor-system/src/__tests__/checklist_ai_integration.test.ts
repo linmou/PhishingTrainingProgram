@@ -341,7 +341,7 @@ describe('AI Checklist Integration', () => {
         role: { role: 'high' },
         communication_style: { teen_slang: 'low', conversational_markers: 'high', uncertainty_expression: 'low' },
         cognitive_parameters: { concept_density: 'high', perspective_taking: 'high', personal_examples: 'high', consequence_highlighting: 'high' },
-        emotional_parameters: { enthusiasm_level: 'high', validation_frequency: 'high', confidence_building: 'high' },
+        emotional_parameters: { enthusiasm_level: 'high', validation_frequency: 'high', mistake_normalization: 'high', confidence_building: 'high' },
         detection_areas: [],
         verification_steps: []
       }, mixedProgressItems);

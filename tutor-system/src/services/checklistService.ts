@@ -6,15 +6,11 @@
 
 import { supabase } from './supabase';
 import { CoverageDetectionService, CoverageUpdate } from './coverageDetectionService';
-import { generateSystemPromptWithChecklist, regenerateSystemPromptForRoom } from './prompts/checklistPromptGenerator';
+import { generateSystemPromptWithChecklist } from './prompts/checklistPromptGenerator';
 import { 
   ChecklistItem, 
   SessionChecklist, 
-  ChecklistProgress, 
-  ChecklistUpdate,
-  ChecklistConfig,
-  CoverageEvidence,
-  StudentChecklistProgress
+  ChecklistProgress
 } from '../types/checklist';
 import { SystemPromptConfig } from './prompts/types';
 import { SCENARIO_TEMPLATES } from './detectionTemplates';
@@ -34,8 +30,19 @@ export class ChecklistService {
     try {
       console.log('🚀 Initializing checklist for room:', roomId, 'with template:', templateName);
 
+      // First, deactivate any existing active checklists for this room
+      const { error: deactivateError } = await supabase
+        .from('session_checklists')
+        .update({ is_active: false })
+        .eq('room_id', roomId)
+        .eq('is_active', true);
+      
+      if (deactivateError) {
+        console.warn('Failed to deactivate old checklists:', deactivateError);
+      }
+
       // Use database function to initialize checklist
-      const { data, error } = await supabase
+      const { error } = await supabase
         .rpc('initialize_checklist_from_template', {
           p_room_id: roomId,
           p_template_name: templateName
@@ -49,8 +56,16 @@ export class ChecklistService {
       // Small delay to ensure database consistency
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Fetch the complete checklist data
-      const checklist = await this.getChecklistByRoom(roomId);
+      // Fetch the complete checklist data with retry logic
+      let checklist = await this.getChecklistByRoom(roomId);
+      
+      // Retry once if not found (database replication lag)
+      if (!checklist) {
+        console.log('⚠️ First read attempt failed, waiting 500ms and retrying...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        checklist = await this.getChecklistByRoom(roomId);
+      }
+      
       if (!checklist) {
         throw new Error('Failed to retrieve checklist after creation');
       }
@@ -70,13 +85,25 @@ export class ChecklistService {
     templateName: string
   ): Promise<SessionChecklist> {
     
+    // First, deactivate any existing active checklists for this room
+    const { error: deactivateError } = await supabase
+      .from('session_checklists')
+      .update({ is_active: false })
+      .eq('room_id', roomId)
+      .eq('is_active', true);
+    
+    if (deactivateError) {
+      console.warn('Failed to deactivate old checklists:', deactivateError);
+    }
+    
     // Create session checklist record
     const { data: checklist, error: checklistError } = await supabase
       .from('session_checklists')
       .insert({
         room_id: roomId,
         template_name: templateName,
-        session_start: new Date().toISOString()
+        session_start: new Date().toISOString(),
+        is_active: true
       })
       .select()
       .single();
@@ -172,6 +199,24 @@ export class ChecklistService {
    * Get complete checklist data for a room
    */
   static async getChecklistByRoom(roomId: string): Promise<SessionChecklist | null> {
+    console.log('🔍 Reading checklist for room:', roomId);
+    
+    // First, let's see ALL checklists for this room without any filters
+    const { data: allChecklists } = await supabase
+      .from('session_checklists')
+      .select('*')
+      .eq('room_id', roomId);
+    
+    console.log('🔍 ALL checklists for room:', {
+      count: allChecklists?.length || 0,
+      checklists: allChecklists?.map(c => ({
+        id: c.id,
+        room_id: c.room_id,
+        is_active: c.is_active,
+        is_active_type: typeof c.is_active
+      }))
+    });
+    
     const { data: checklist, error: checklistError } = await supabase
       .from('session_checklists')
       .select('*')
@@ -179,11 +224,21 @@ export class ChecklistService {
       .eq('is_active', true)
       .single();
 
+    console.log('📊 Checklist query result:', { 
+      found: !!checklist, 
+      error: checklistError?.code, 
+      message: checklistError?.message,
+      checklistId: checklist?.id,
+      isActive: checklist?.is_active
+    });
+
     if (checklistError) {
       // If no checklist found, return null instead of throwing error
       if (checklistError.code === 'PGRST116') {
+        console.log('ℹ️ No checklist found (PGRST116 - no rows returned)');
         return null;
       }
+      console.error('❌ Checklist query error:', checklistError);
       throw new Error(`Checklist not found for room: ${checklistError.message}`);
     }
 
@@ -608,7 +663,7 @@ export class ChecklistService {
   private static async triggerSystemPromptRegeneration(roomId: string): Promise<void> {
     try {
       // Get current AI configuration
-      const { data: aiConfig, error: configError } = await supabase
+      const { error: configError } = await supabase
         .from('ai_assistant_configs')
         .select('*')
         .eq('room_id', roomId)
@@ -720,6 +775,11 @@ export class ChecklistService {
    * Convenience method: Update checklist item
    */
   static async update(itemId: string, updates: Partial<ChecklistItem>): Promise<ChecklistItem> {
+    // Validate UUID format to prevent operations on temporary IDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(itemId)) {
+      throw new Error(`Invalid item ID format: "${itemId}". Items must be saved to database before editing. Please refresh the page and try again.`);
+    }
     if (updates.status) {
       return await this.updateItemStatus(
         itemId,
@@ -733,7 +793,169 @@ export class ChecklistService {
       return await this.updateItemPriority(itemId, updates.priority);
     }
 
+    // Handle area_text updates
+    if (updates.area_text !== undefined) {
+      const { data: updatedItem, error } = await supabase
+        .from('checklist_items')
+        .update({
+          area_text: updates.area_text,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', itemId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update item text: ${error.message}`);
+      }
+
+      console.log('✅ Updated item text:', { itemId, area_text: updates.area_text });
+      return updatedItem;
+    }
+
+    // Handle tutor_notes updates
+    if (updates.tutor_notes !== undefined) {
+      const { data: updatedItem, error } = await supabase
+        .from('checklist_items')
+        .update({
+          tutor_notes: updates.tutor_notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', itemId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update tutor notes: ${error.message}`);
+      }
+
+      console.log('✅ Updated tutor notes:', { itemId });
+      return updatedItem;
+    }
+
     throw new Error('No valid updates provided');
+  }
+
+  /**
+   * Create manual checklist with proper database persistence
+   */
+  static async createManual(
+    roomId: string, 
+    detectionAreas: string[], 
+    verificationSteps: string[]
+  ): Promise<SessionChecklist> {
+    // First, deactivate any existing active checklists for this room
+    const { error: deactivateError } = await supabase
+      .from('session_checklists')
+      .update({ is_active: false })
+      .eq('room_id', roomId)
+      .eq('is_active', true);
+    
+    if (deactivateError) {
+      console.warn('Failed to deactivate old checklists:', deactivateError);
+    }
+    
+    // First create the checklist record
+    console.log('🔨 Creating checklist with:', {
+      room_id: roomId,
+      room_id_type: typeof roomId,
+      room_id_length: roomId.length,
+      template_name: 'Manual Input',
+      is_active: true
+    });
+    
+    const { data: checklistData, error: checklistError } = await supabase
+      .from('session_checklists')
+      .insert({
+        room_id: roomId,
+        template_name: 'Manual Input',
+        session_start: new Date().toISOString(),
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (checklistError) {
+      throw new Error(`Failed to create checklist: ${checklistError.message}`);
+    }
+
+    // Create detection area items
+    const detectionItems = detectionAreas.map(text => ({
+      checklist_id: checklistData.id,
+      area_text: text,
+      item_type: 'detection_area',
+      priority: 'important',
+      status: 'pending',
+      understanding_level: 'none',
+      tutor_notes: '',
+      attempts_count: 0,
+      original_template_area: false
+    }));
+
+    // Create verification step items
+    const verificationItems = verificationSteps.map(text => ({
+      checklist_id: checklistData.id,
+      area_text: text,
+      item_type: 'verification_step',
+      priority: 'important',
+      status: 'pending',
+      understanding_level: 'none',
+      tutor_notes: '',
+      attempts_count: 0,
+      original_template_area: false
+    }));
+
+    // Insert all items
+    const allItems = [...detectionItems, ...verificationItems];
+    if (allItems.length > 0) {
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('checklist_items')
+        .insert(allItems)
+        .select();
+
+      if (itemsError) {
+        // Clean up checklist if items failed
+        await supabase.from('session_checklists').delete().eq('id', checklistData.id);
+        throw new Error(`Failed to create checklist items: ${itemsError.message}`);
+      }
+
+      // Update checklist totals
+      await supabase
+        .from('session_checklists')
+        .update({
+          total_items: allItems.length,
+          completed_items: 0,
+          completion_percentage: 0
+        })
+        .eq('id', checklistData.id);
+
+      console.log('✅ Created manual checklist with proper UUIDs:', { 
+        checklistId: checklistData.id, 
+        roomId: checklistData.room_id,
+        isActive: checklistData.is_active,
+        templateName: checklistData.template_name,
+        itemCount: itemsData.length 
+      });
+    }
+
+    // Return the complete checklist using existing read method
+    const savedChecklist = await this.read(roomId);
+    
+    if (!savedChecklist) {
+      // Add a small delay and try once more
+      console.log('⚠️ First read returned null, waiting 200ms and retrying...');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const retryChecklist = await this.read(roomId);
+      if (!retryChecklist) {
+        throw new Error(`Failed to read back created checklist for room: ${roomId}. Database may have consistency issues.`);
+      }
+      
+      console.log('✅ Retry successful, checklist found');
+      return retryChecklist;
+    }
+    
+    return savedChecklist;
   }
 
   /**
@@ -753,7 +975,7 @@ export class ChecklistService {
   /**
    * Subscribe to checklist changes (placeholder for real-time updates)
    */
-  static async subscribe(roomId: string, callback: (checklist: SessionChecklist) => void): Promise<() => void> {
+  static async subscribe(roomId: string, _callback: (checklist: SessionChecklist) => void): Promise<() => void> {
     // TODO: Implement real-time subscription when Supabase replication is enabled
     console.log(`📡 Subscribing to checklist updates for room: ${roomId}`);
     
@@ -837,9 +1059,11 @@ export class ChecklistService {
       throw new Error(result.userPrompt || 'Failed to create checklist from system prompt');
     }
     
-    // Save the checklist to database (simplified implementation for tests)
-    // In a real implementation, this would use the same database saving logic as other methods
-    return result.checklist;
+    // Save the checklist to database with proper UUIDs
+    const detectionTexts = result.checklist.detection_areas.map(item => item.area_text);
+    const verificationTexts = result.checklist.verification_steps.map(item => item.area_text);
+    
+    return await this.createManual(roomId, detectionTexts, verificationTexts);
   }
 
   /**

@@ -34,6 +34,7 @@ interface ChecklistItemComponentProps {
   onPriorityChange: (itemId: string, newPriority: ChecklistItem['priority']) => void;
   onAddNote: (itemId: string, note: string) => void;
   onViewEvidence: (itemId: string) => void;
+  onEditItem: (itemId: string, newText: string) => void;
 }
 
 const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
@@ -41,11 +42,20 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   onStatusChange,
   onPriorityChange,
   onAddNote,
-  onViewEvidence
+  onViewEvidence,
+  onEditItem
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingNote, setEditingNote] = useState(false);
   const [noteText, setNoteText] = useState(item.tutor_notes);
+  const [editingText, setEditingText] = useState(false);
+  const [itemText, setItemText] = useState(item.area_text);
+
+  // Update local state when item changes
+  React.useEffect(() => {
+    setItemText(item.area_text);
+    setNoteText(item.tutor_notes);
+  }, [item.area_text, item.tutor_notes]);
 
   const getStatusIcon = (status: ChecklistItem['status']) => {
     switch (status) {
@@ -81,6 +91,18 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   const handleSaveNote = () => {
     onAddNote(item.id, noteText);
     setEditingNote(false);
+  };
+
+  const handleSaveItemText = () => {
+    if (itemText.trim() && itemText !== item.area_text) {
+      onEditItem(item.id, itemText.trim());
+    }
+    setEditingText(false);
+  };
+
+  const handleCancelEditText = () => {
+    setItemText(item.area_text);
+    setEditingText(false);
   };
 
   return (
@@ -146,6 +168,40 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 <option value="optional">Optional</option>
               </select>
             </div>
+          </div>
+
+          <div className="checklist-item-text-edit">
+            <div className="text-edit-header">
+              <label>Item Text:</label>
+              {!editingText && (
+                <button
+                  className="edit-text-button"
+                  onClick={() => setEditingText(true)}
+                >
+                  <Edit size={14} />
+                  Edit
+                </button>
+              )}
+            </div>
+            {editingText ? (
+              <div className="text-editor">
+                <input
+                  type="text"
+                  value={itemText}
+                  onChange={(e) => setItemText(e.target.value)}
+                  className="text-edit-input"
+                  placeholder="Enter checklist item text..."
+                />
+                <div className="text-actions">
+                  <button onClick={handleSaveItemText} className="save-text">Save</button>
+                  <button onClick={handleCancelEditText} className="cancel-text">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-display">
+                {item.area_text}
+              </div>
+            )}
           </div>
 
           <div className="checklist-item-notes">
@@ -289,6 +345,15 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     } catch (error) {
       console.error('Failed to add custom area:', error);
       throw error;
+    }
+  };
+
+  const handleEditItem = async (itemId: string, newText: string) => {
+    try {
+      console.log('Editing checklist item:', { itemId, newText });
+      await updateItem(itemId, { area_text: newText });
+    } catch (err) {
+      console.error('Failed to edit item text:', err);
     }
   };
 
@@ -485,6 +550,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                         onPriorityChange={handlePriorityChange}
                         onAddNote={handleAddNote}
                         onViewEvidence={handleViewEvidence}
+                        onEditItem={handleEditItem}
                       />
                     ))}
                   </div>
@@ -502,6 +568,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                         onPriorityChange={handlePriorityChange}
                         onAddNote={handleAddNote}
                         onViewEvidence={handleViewEvidence}
+                        onEditItem={handleEditItem}
                       />
                     ))}
                   </div>
@@ -519,6 +586,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                         onPriorityChange={handlePriorityChange}
                         onAddNote={handleAddNote}
                         onViewEvidence={handleViewEvidence}
+                        onEditItem={handleEditItem}
                       />
                     ))}
                   </div>
@@ -551,6 +619,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                         onPriorityChange={handlePriorityChange}
                         onAddNote={handleAddNote}
                         onViewEvidence={handleViewEvidence}
+                        onEditItem={handleEditItem}
                       />
                     ))}
                   </div>
@@ -567,6 +636,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                         onPriorityChange={handlePriorityChange}
                         onAddNote={handleAddNote}
                         onViewEvidence={handleViewEvidence}
+                        onEditItem={handleEditItem}
                       />
                     ))}
                   </div>
@@ -583,6 +653,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                         onPriorityChange={handlePriorityChange}
                         onAddNote={handleAddNote}
                         onViewEvidence={handleViewEvidence}
+                        onEditItem={handleEditItem}
                       />
                     ))}
                   </div>

@@ -28,6 +28,13 @@
         "test:task1": "react-scripts test --testPathPattern=\"supabase.test.ts\" --watchAll=false",
         "test:task2": "react-scripts test --testPathPattern=\"database.test.ts\" --watchAll=false",
         "test:task3": "react-scripts test --testPathPattern=\"AuthContext.test.tsx\" --watchAll=false",
+        "test:selenium": "react-scripts test --testPathPattern=\"selenium.test.ts\" --watchAll=false",
+        "test:selenium-watch": "react-scripts test --testPathPattern=\"selenium.test.ts\"",
+        "test:selenium-simple": "react-scripts test --testPathPattern=\"selenium_simple.test.ts\" --watchAll=false",
+        "test:selenium-final": "react-scripts test --testPathPattern=\"selenium_final.test.ts\" --watchAll=false",
+        "test:smart-generate": "react-scripts test --testPathPattern=\"smart_generate_integration.test.ts\" --watchAll=false",
+        "test:smart-quick": "react-scripts test --testPathPattern=\"smart_generate_quick_test.ts\" --watchAll=false",
+        "test:db": "react-scripts test --testPathPattern=\"database_connection_test.ts\" --watchAll=false",
         "eject": "react-scripts eject",
         "deploy": "npm run build"
     },
@@ -77,6 +84,9 @@
         "@testing-library/react": "^13.4.0",
         "@testing-library/user-event": "^13.5.0",
         "@types/jspdf": "^1.3.3",
-        "jest-cucumber": "^4.5.0"
+        "@types/selenium-webdriver": "^4.1.28",
+        "chromedriver": "^139.0.1",
+        "jest-cucumber": "^4.5.0",
+        "selenium-webdriver": "^4.35.0"
     }
 }
