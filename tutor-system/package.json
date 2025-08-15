@@ -32,6 +32,7 @@
         "test:selenium-watch": "react-scripts test --testPathPattern=\"selenium.test.ts\"",
         "test:selenium-simple": "react-scripts test --testPathPattern=\"selenium_simple.test.ts\" --watchAll=false",
         "test:selenium-final": "react-scripts test --testPathPattern=\"selenium_final.test.ts\" --watchAll=false",
+        "test:selenium-comprehensive": "react-scripts test --testPathPattern=\"checklist_selenium_comprehensive.test.ts\" --watchAll=false",
         "test:smart-generate": "react-scripts test --testPathPattern=\"smart_generate_integration.test.ts\" --watchAll=false",
         "test:smart-quick": "react-scripts test --testPathPattern=\"smart_generate_quick_test.ts\" --watchAll=false",
         "test:db": "react-scripts test --testPathPattern=\"database_connection_test.ts\" --watchAll=false",

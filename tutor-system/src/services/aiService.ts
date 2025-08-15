@@ -190,8 +190,6 @@ export class TutorSuggestionService {
         conversationHistory: ConversationMessage[],
         config: AIAssistantConfig
     ): Promise<{ suggestion: string; success: boolean; error?: string }> {
-        const startTime = Date.now();
-
         try {
             // Build conversation history as a single string
             const conversationText = conversationHistory
@@ -199,14 +197,18 @@ export class TutorSuggestionService {
                 .map(msg => `${msg.role}: ${msg.content}`)
                 .join('\n');
 
+            // Use the config's system prompt if available, otherwise fall back to default
+            const systemPrompt = config.system_prompt || 
+                'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn. Be encouraging, patient, and focus on building understanding.';
+
             const messages = [
                 {
                     role: 'system',
-                    content: 'You are helping a tutor engage students in educational conversations. Generate brief, interactive follow-up questions or prompts.'
+                    content: systemPrompt
                 },
                 {
                     role: 'user',
-                    content: `Here is the recent conversation:\n\n${conversationText}\n\nBased on this conversation, suggest a brief follow-up question or prompt that a tutor could use to engage the student further. Keep it under 2 sentences and focus on deepening understanding.`
+                    content: `Based on the recent conversation below, suggest a brief follow-up question or prompt that a tutor could use to engage the student further. The suggestion should be under 2 sentences, interactive, and focused on deepening the student's understanding.\n\nRecent conversation:\n${conversationText}\n\nTutor suggestion:`
                 }
             ];
 
@@ -599,18 +601,26 @@ export const generateTutorSuggestion = async (
         throw new Error('AI assistant is not enabled for this room');
     }
 
-    // Create AI config from room data for suggestion generation
-    const aiConfig: AIAssistantConfig = {
-        id: roomId,
-        room_id: roomId,
-        model_name: roomData.ai_assistant_model || 'gpt-3.5-turbo',
-        system_prompt: 'Tutor suggestion system',
-        temperature: 0.7,
-        max_tokens: 100,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    };
+    // Get the actual AI configuration for the room
+    let aiConfig = await getAIConfig(roomId);
+    
+    // If no config exists, create a default one
+    if (!aiConfig) {
+        console.log('⚠️ No AI config found for room, using default configuration');
+        aiConfig = {
+            id: roomId,
+            room_id: roomId,
+            model_name: roomData.ai_assistant_model || 'gpt-4o',
+            system_prompt: 'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn. Be encouraging, patient, and focus on building understanding.',
+            temperature: 0.7,
+            max_tokens: 100,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+    }
+    
+    console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
 
     // Get conversation history from existing room and message data
     const conversationHistory = await buildAIContextFromExistingData(roomId);

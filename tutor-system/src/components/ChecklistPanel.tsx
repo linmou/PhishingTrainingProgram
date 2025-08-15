@@ -290,7 +290,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   } = useChecklist(roomId);
 
   const [showAddCustomArea, setShowAddCustomArea] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     try {
@@ -355,13 +354,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     } catch (err) {
       console.error('Failed to edit item text:', err);
     }
-  };
-
-  const toggleSection = (sectionName: string) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName]
-    }));
   };
 
   const groupItemsByPriority = (items: ChecklistItem[]) => {
@@ -491,8 +483,9 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     );
   }
 
-  const detectionGroups = groupItemsByPriority(checklist.detection_areas);
-  const verificationGroups = groupItemsByPriority(checklist.verification_steps);
+  // Combine all checklist items
+  const allItems = [...checklist.detection_areas, ...checklist.verification_steps];
+  const itemGroups = groupItemsByPriority(allItems);
 
   return (
     <div className="checklist-panel">
@@ -520,146 +513,69 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             </div>
             <div className="progress-text">
               {progress?.completion_percentage?.toFixed(1) || 0}% Complete 
-              ({progress?.covered_areas || 0}/{checklist ? checklist.detection_areas.length + checklist.verification_steps.length : 0} areas)
+              ({progress?.covered_areas || 0}/{allItems.length} items)
             </div>
           </div>
         </div>
 
         <div className="checklist-sections">
-          {/* Detection Areas */}
+          {/* All Items in One List */}
           <div className="checklist-section">
-            <div 
-              className="section-header"
-              onClick={() => toggleSection('detection')}
-            >
-              <span>🔍 Detection Areas ({checklist.detection_areas.length})</span>
-              {collapsedSections.detection ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            <div className="section-content">
+              {/* Critical Items */}
+              {itemGroups.critical.length > 0 && (
+                <div className="priority-group critical">
+                  <h4>🔴 Critical Items ({itemGroups.critical.length})</h4>
+                  {itemGroups.critical.map(item => (
+                    <ChecklistItemComponent
+                      key={item.id}
+                      item={item}
+                      onStatusChange={handleStatusChange}
+                      onPriorityChange={handlePriorityChange}
+                      onAddNote={handleAddNote}
+                      onViewEvidence={handleViewEvidence}
+                      onEditItem={handleEditItem}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Important Items */}
+              {itemGroups.important.length > 0 && (
+                <div className="priority-group important">
+                  <h4>🟡 Important Items ({itemGroups.important.length})</h4>
+                  {itemGroups.important.map(item => (
+                    <ChecklistItemComponent
+                      key={item.id}
+                      item={item}
+                      onStatusChange={handleStatusChange}
+                      onPriorityChange={handlePriorityChange}
+                      onAddNote={handleAddNote}
+                      onViewEvidence={handleViewEvidence}
+                      onEditItem={handleEditItem}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Optional Items */}
+              {itemGroups.optional.length > 0 && (
+                <div className="priority-group optional">
+                  <h4>⚪ Optional Items ({itemGroups.optional.length})</h4>
+                  {itemGroups.optional.map(item => (
+                    <ChecklistItemComponent
+                      key={item.id}
+                      item={item}
+                      onStatusChange={handleStatusChange}
+                      onPriorityChange={handlePriorityChange}
+                      onAddNote={handleAddNote}
+                      onViewEvidence={handleViewEvidence}
+                      onEditItem={handleEditItem}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            
-            {!collapsedSections.detection && (
-              <div className="section-content">
-                {/* Critical Areas */}
-                {detectionGroups.critical.length > 0 && (
-                  <div className="priority-group critical">
-                    <h4>🔴 Critical Areas ({detectionGroups.critical.length})</h4>
-                    {detectionGroups.critical.map(item => (
-                      <ChecklistItemComponent
-                        key={item.id}
-                        item={item}
-                        onStatusChange={handleStatusChange}
-                        onPriorityChange={handlePriorityChange}
-                        onAddNote={handleAddNote}
-                        onViewEvidence={handleViewEvidence}
-                        onEditItem={handleEditItem}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Important Areas */}
-                {detectionGroups.important.length > 0 && (
-                  <div className="priority-group important">
-                    <h4>🟡 Important Areas ({detectionGroups.important.length})</h4>
-                    {detectionGroups.important.map(item => (
-                      <ChecklistItemComponent
-                        key={item.id}
-                        item={item}
-                        onStatusChange={handleStatusChange}
-                        onPriorityChange={handlePriorityChange}
-                        onAddNote={handleAddNote}
-                        onViewEvidence={handleViewEvidence}
-                        onEditItem={handleEditItem}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Optional Areas */}
-                {detectionGroups.optional.length > 0 && (
-                  <div className="priority-group optional">
-                    <h4>⚪ Optional Areas ({detectionGroups.optional.length})</h4>
-                    {detectionGroups.optional.map(item => (
-                      <ChecklistItemComponent
-                        key={item.id}
-                        item={item}
-                        onStatusChange={handleStatusChange}
-                        onPriorityChange={handlePriorityChange}
-                        onAddNote={handleAddNote}
-                        onViewEvidence={handleViewEvidence}
-                        onEditItem={handleEditItem}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Verification Steps */}
-          <div className="checklist-section">
-            <div 
-              className="section-header"
-              onClick={() => toggleSection('verification')}
-            >
-              <span>✅ Verification Steps ({checklist.verification_steps.length})</span>
-              {collapsedSections.verification ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-            </div>
-            
-            {!collapsedSections.verification && (
-              <div className="section-content">
-                {/* Similar structure for verification steps */}
-                {verificationGroups.critical.length > 0 && (
-                  <div className="priority-group critical">
-                    <h4>🔴 Critical Steps ({verificationGroups.critical.length})</h4>
-                    {verificationGroups.critical.map(item => (
-                      <ChecklistItemComponent
-                        key={item.id}
-                        item={item}
-                        onStatusChange={handleStatusChange}
-                        onPriorityChange={handlePriorityChange}
-                        onAddNote={handleAddNote}
-                        onViewEvidence={handleViewEvidence}
-                        onEditItem={handleEditItem}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {verificationGroups.important.length > 0 && (
-                  <div className="priority-group important">
-                    <h4>🟡 Important Steps ({verificationGroups.important.length})</h4>
-                    {verificationGroups.important.map(item => (
-                      <ChecklistItemComponent
-                        key={item.id}
-                        item={item}
-                        onStatusChange={handleStatusChange}
-                        onPriorityChange={handlePriorityChange}
-                        onAddNote={handleAddNote}
-                        onViewEvidence={handleViewEvidence}
-                        onEditItem={handleEditItem}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {verificationGroups.optional.length > 0 && (
-                  <div className="priority-group optional">
-                    <h4>⚪ Optional Steps ({verificationGroups.optional.length})</h4>
-                    {verificationGroups.optional.map(item => (
-                      <ChecklistItemComponent
-                        key={item.id}
-                        item={item}
-                        onStatusChange={handleStatusChange}
-                        onPriorityChange={handlePriorityChange}
-                        onAddNote={handleAddNote}
-                        onViewEvidence={handleViewEvidence}
-                        onEditItem={handleEditItem}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
