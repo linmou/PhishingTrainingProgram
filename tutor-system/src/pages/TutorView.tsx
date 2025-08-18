@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createRoom, getRoomsByTutor, deleteRoom } from '../services/supabase';
+import { createRoom, getRoomsByTutor, deleteRoom, createRoomTemplate, getRoomTemplatesByTutor } from '../services/supabase';
 import { Database } from '../types/database';
 import ImageUpload from '../components/ImageUpload';
 import AvatarDisplay from '../components/AvatarDisplay';
 import DialogueCustomizer from '../components/DialogueCustomizer';
-import { ImageUploadResult, PrePopulatedMessage } from '../types';
+import DeleteConfirmModal from '../components/DeleteConfirmModal';
+import { ImageUploadResult, PrePopulatedMessage, RoomTemplate } from '../types';
 import '../components/TutorView.css';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
@@ -38,6 +39,11 @@ const TutorView: React.FC = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
     
+    // Template-related state
+    const [templates, setTemplates] = useState<RoomTemplate[]>([]);
+    const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+    const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+    
     // Preset images data
     const presetImages: PresetImage[] = [
         { id: 'phishing-1', name: 'Phishing Training 1', url: '/images/room-presets/phishing_1.png' },
@@ -59,11 +65,33 @@ const TutorView: React.FC = () => {
         }
     }, [user?.id]);
 
+    const loadTemplates = useCallback(async () => {
+        try {
+            if (user?.id) {
+                const userTemplates = await getRoomTemplatesByTutor(user.id);
+                setTemplates(userTemplates);
+            }
+        } catch (err) {
+            console.error('Error loading templates:', err);
+        }
+    }, [user?.id]);
+
+    const cancelDeleteRoom = useCallback(() => {
+        // Only allow cancel if not currently deleting
+        if (deletingRoomId) return;
+        
+        setShowDeleteConfirm(false);
+        setRoomToDelete(null);
+        setError(null); // Clear any errors
+    }, [deletingRoomId]);
+
     useEffect(() => {
         if (user?.id) {
             loadRooms();
+            loadTemplates();
         }
-    }, [user, loadRooms]);
+    }, [user, loadRooms, loadTemplates]);
+
 
     const handleImageSelect = (imageId: string) => {
         setSelectedImageId(imageId);
@@ -94,6 +122,54 @@ const TutorView: React.FC = () => {
         }
         const selected = getSelectedImage();
         return selected ? selected.url : presetImages.find(img => img.id === 'default')?.url || '/images/room-presets/privacy_3.png';
+    };
+
+    const handleTemplateSelect = (templateId: string) => {
+        if (!templateId) {
+            setSelectedTemplateId(null);
+            return;
+        }
+
+        const template = templates.find(t => t.id === templateId);
+        if (template) {
+            setSelectedTemplateId(templateId);
+            setTitle(template.title_template);
+            setDescription(template.description_template || '');
+            
+            // Set image if template has one
+            if (template.image_url) {
+                const presetImage = presetImages.find(img => img.url === template.image_url);
+                if (presetImage) {
+                    setSelectedImageId(presetImage.id);
+                    setCustomImageUrl(null);
+                } else {
+                    setCustomImageUrl(template.image_url);
+                    setSelectedImageId(null);
+                }
+            }
+            
+            // Set pre-populated dialogue
+            setPrePopulatedDialogue(template.pre_populated_dialogue || []);
+            
+            // Set OP configuration if exists
+            if (template.op_config_template) {
+                const opConfig = template.op_config_template;
+                if (opConfig.use_custom_op) {
+                    setUseCustomOp(true);
+                    setCustomOpName(opConfig.custom_op_name || '');
+                } else {
+                    setUseCustomOp(false);
+                    setCustomOpName('');
+                }
+            }
+            
+            // Set password configuration if exists
+            if (template.password_config) {
+                const passwordConfig = template.password_config;
+                setUsePassword(passwordConfig.use_password || false);
+                setRoomPassword(passwordConfig.password || '');
+            }
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -139,6 +215,40 @@ const TutorView: React.FC = () => {
 
             const newRoom = await createRoom(roomData);
 
+            // Create template if "Save as template" is checked
+            if (saveAsTemplate) {
+                try {
+                    const templateData = {
+                        tutor_id: user.id,
+                        template_name: title.trim(),
+                        template_description: null,
+                        title_template: title.trim(),
+                        description_template: description.trim(),
+                        image_url: imageUrl,
+                        pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null,
+                        ai_config_template: null, // TODO: Add AI config when implemented
+                        op_config_template: {
+                            use_custom_op: useCustomOp,
+                            custom_op_name: useCustomOp ? customOpName.trim() : null,
+                            op_id: useCustomOp ? null : user.id,
+                            op_display_name: useCustomOp ? customOpName.trim() : user.display_name,
+                            op_avatar_url: useCustomOp ? null : user.avatar_url
+                        },
+                        password_config: usePassword ? {
+                            use_password: true,
+                            password: roomPassword.trim()
+                        } : null
+                    };
+
+                    await createRoomTemplate(templateData);
+                    await loadTemplates(); // Reload templates
+                    console.log('✅ Template created successfully:', templateData.template_name);
+                } catch (templateErr) {
+                    console.error('⚠️ Failed to create template:', templateErr);
+                    // Don't fail room creation if template creation fails
+                }
+            }
+
             // Show success message
             setSuccessMessage('Room created successfully');
             
@@ -152,6 +262,8 @@ const TutorView: React.FC = () => {
             setUseCustomOp(false);
             setRoomPassword('');
             setUsePassword(false);
+            setSelectedTemplateId(null);
+            setSaveAsTemplate(false);
             setShowCreateForm(false);
 
             // Reload rooms list
@@ -168,10 +280,11 @@ const TutorView: React.FC = () => {
         }
     };
 
-    const handleDeleteRoom = (room: Room) => {
+    const handleDeleteRoom = useCallback((room: Room) => {
         setRoomToDelete(room);
+        setError(null);
         setShowDeleteConfirm(true);
-    };
+    }, []);
 
     const confirmDeleteRoom = async () => {
         if (!roomToDelete) return;
@@ -180,23 +293,21 @@ const TutorView: React.FC = () => {
         setError(null);
 
         try {
-            const result = await deleteRoom(roomToDelete.id);
+            // Pass the current user ID for simplified auth
+            const result = await deleteRoom(roomToDelete.id, user?.id);
             if (result.success) {
                 setSuccessMessage(`Room "${result.title}" has been deleted successfully`);
+                // Close modal immediately after successful deletion
+                setShowDeleteConfirm(false);
+                setRoomToDelete(null);
+                setDeletingRoomId(null);
                 await loadRooms(); // Refresh the rooms list
             }
         } catch (err: any) {
             setError(err.message || 'Failed to delete room');
-        } finally {
+            // Don't close modal on error - let user see the error and try again
             setDeletingRoomId(null);
-            setShowDeleteConfirm(false);
-            setRoomToDelete(null);
         }
-    };
-
-    const cancelDeleteRoom = () => {
-        setShowDeleteConfirm(false);
-        setRoomToDelete(null);
     };
 
     return (
@@ -250,6 +361,30 @@ const TutorView: React.FC = () => {
                     <div className="form-section">
                         <h2 className="form-section-title">Create New Room</h2>
                         <form aria-label="Create room form" onSubmit={handleSubmit}>
+                            {/* Template Selection */}
+                            {templates.length > 0 && (
+                                <div className="form-group template-selection-section">
+                                    <label htmlFor="template-select" className="enhanced-label">Use Template</label>
+                                    <select
+                                        id="template-select"
+                                        className="enhanced-input"
+                                        value={selectedTemplateId || ''}
+                                        onChange={(e) => handleTemplateSelect(e.target.value)}
+                                        disabled={isCreating}
+                                    >
+                                        <option value="">Create from scratch</option>
+                                        {templates.map((template) => (
+                                            <option key={template.id} value={template.id}>
+                                                {template.template_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="form-helper-text">
+                                        Select a template to pre-fill the form with saved configurations
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="form-row two-columns">
                                 <div className="form-group">
                                     <label htmlFor="room-title" className="enhanced-label">Room Title</label>
@@ -447,6 +582,25 @@ const TutorView: React.FC = () => {
                                     disabled={isCreating}
                                 />
                             </div>
+
+                            {/* Save as Template Section */}
+                            <div className="form-group save-template-section">
+                                <div className="checkbox-wrapper">
+                                    <label className="checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={saveAsTemplate}
+                                            onChange={(e) => setSaveAsTemplate(e.target.checked)}
+                                            disabled={isCreating}
+                                        />
+                                        <span className="checkmark"></span>
+                                        Save as template
+                                    </label>
+                                    <div className="form-helper-text">
+                                        Save this room configuration as a reusable template for future use
+                                    </div>
+                                </div>
+                            </div>
                             
                             {error && (
                                 <div className="error-banner">
@@ -559,40 +713,14 @@ const TutorView: React.FC = () => {
 
                 <Link to="/" className="enhanced-button secondary">← Back to Home</Link>
 
-                {/* Delete Confirmation Dialog */}
-                {showDeleteConfirm && roomToDelete && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
-                            <h3 className="modal-title-danger">
-                                ⚠️ Confirm Room Deletion
-                            </h3>
-                            <p>
-                                Are you sure you want to delete the room "<strong>{roomToDelete.title}</strong>"?
-                            </p>
-                            <div className="modal-warning">
-                                <p>
-                                    <strong>Warning:</strong> This room will be permanently deleted and the chat history cannot be recovered.
-                                </p>
-                            </div>
-                            <div className="modal-actions">
-                                <button
-                                    className="enhanced-button secondary"
-                                    onClick={cancelDeleteRoom}
-                                    disabled={deletingRoomId === roomToDelete.id}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="enhanced-button danger"
-                                    onClick={confirmDeleteRoom}
-                                    disabled={deletingRoomId === roomToDelete.id}
-                                >
-                                    {deletingRoomId === roomToDelete.id ? 'Deleting...' : 'Delete Room'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* Delete Confirmation Modal using React Portal */}
+                <DeleteConfirmModal
+                    isOpen={showDeleteConfirm}
+                    room={roomToDelete}
+                    isDeleting={!!deletingRoomId}
+                    onConfirm={confirmDeleteRoom}
+                    onCancel={cancelDeleteRoom}
+                />
             </div>
         </div>
     );

@@ -328,10 +328,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
 
   const handleAddCustomArea = async (
     areaText: string, 
-    itemType: 'detection_area' | 'verification_step', 
     priority: ChecklistItem['priority']
   ) => {
     try {
+      // Default to 'detection_area' since we removed the type selector
+      const itemType = 'detection_area';
       console.log('Adding custom area:', { areaText, itemType, priority });
       
       // Use the ChecklistService method to add the custom area

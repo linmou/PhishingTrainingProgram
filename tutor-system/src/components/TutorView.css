@@ -94,7 +94,8 @@
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.3s ease;
+    /* Removed transition to prevent modal blinking */
+    transition: box-shadow 0.2s ease, filter 0.2s ease;
     position: relative;
     overflow: hidden;
 }
@@ -155,8 +156,9 @@
 }
 
 .enhanced-button.danger:hover {
-    transform: translateY(-2px);
+    /* Removed transform to prevent modal blinking */
     box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+    filter: brightness(1.1);
 }
 
 .enhanced-button.loading {
@@ -727,11 +729,23 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999;
     backdrop-filter: blur(2px);
+    padding: 1rem;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease-out;
+}
+
+.modal-overlay.modal-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-overlay.modal-hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .modal-content {
@@ -742,6 +756,21 @@
     width: 90%;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     border: 1px solid #e9ecef;
+    position: relative;
+    animation: modalFadeIn 0.2s ease-out;
+    isolation: isolate;
+    transform-style: preserve-3d;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .modal-content h3 {
@@ -781,6 +810,28 @@
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
+}
+
+.modal-actions .enhanced-button {
+    min-width: 120px;
+    text-align: center;
+}
+
+.modal-actions .enhanced-button:disabled {
+    pointer-events: none;
+}
+
+/* Disable transforms when modal is open to prevent flicker */
+/* Commented out - may be causing issues
+body.modal-open .enhanced-button:hover {
+    transform: none !important;
+}
+*/
+
+/* Ensure modal content is always on top */
+.modal-content * {
+    position: relative;
+    z-index: 1;
 }
 
 /* Responsive Design */

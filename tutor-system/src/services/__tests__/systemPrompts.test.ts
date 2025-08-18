@@ -6,7 +6,7 @@ describe('System Prompts', () => {
     describe('generateSystemPrompt', () => {
         it('should generate a complete system prompt with peer role', () => {
             const config = {
-                role: 'peer' as const,
+                role: { role: 'low' as const },
                 communication_style: {
                     teen_slang: 'high' as const,
                     conversational_markers: 'high' as const,
@@ -30,7 +30,7 @@ describe('System Prompts', () => {
 
             const prompt = generateSystemPrompt(config);
 
-            expect(prompt).toContain('AI assistant helping teens learn');
+            expect(prompt).toContain('professional teacher in an online teaching platform');
             expect(prompt).toContain('## Your Role: Peer Learner');
             expect(prompt).toContain('Dude, this is so sketchy');
             expect(prompt).toContain('Test detection area');
@@ -40,7 +40,7 @@ describe('System Prompts', () => {
 
         it('should generate a complete system prompt with trusted adult role', () => {
             const config = {
-                role: 'trusted_adult' as const,
+                role: { role: 'high' as const },
                 communication_style: {
                     teen_slang: 'low' as const,
                     conversational_markers: 'low' as const,
@@ -121,7 +121,7 @@ describe('System Prompts', () => {
         it('should have valid casual_peer configuration', () => {
             const config = PRESET_CONFIGS.casual_peer;
             
-            expect(config.role).toBe('peer');
+            expect(config.role.role).toBe('low');
             expect(config.communication_style.teen_slang).toBe('high');
             expect(config.emotional_parameters.enthusiasm_level).toBe('high');
         });
@@ -129,7 +129,7 @@ describe('System Prompts', () => {
         it('should have valid supportive_adult configuration', () => {
             const config = PRESET_CONFIGS.supportive_adult;
             
-            expect(config.role).toBe('trusted_adult');
+            expect(config.role.role).toBe('high');
             expect(config.communication_style.teen_slang).toBe('low');
             expect(config.cognitive_parameters.concept_density).toBe('high');
         });

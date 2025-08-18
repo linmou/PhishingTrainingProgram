@@ -1,14 +1,26 @@
+/**
+ * AI Service - Refactored for Better Organization
+ * 
+ * Architecture:
+ * 1. AI Configuration Management - handles config loading/creation/updates
+ * 2. System Prompt Processing - handles prompt generation and parameter overrides
+ * 3. AI Response Services - handles actual AI API calls
+ * 4. Public API - clean interface for external usage
+ */
+
 import { AIResponse, ConversationMessage, AIAssistantConfig } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
 
-// Get OpenAI configuration from environment variables
+// ============================================================================
+// CONSTANTS AND TYPES
+// ============================================================================
+
 const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
 const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://api.openai.com/v1';
 
-// Available AI models for the dummy service
 export const AI_MODELS = {
     'gpt-4o': {
         name: 'GPT-4o',
@@ -26,91 +38,209 @@ export const AI_MODELS = {
 
 export type AIModelName = keyof typeof AI_MODELS;
 
-// Extended AI configuration for modular prompts
-export interface ExtendedAIConfig extends AIAssistantConfig {
-    role?: 'peer' | 'trusted_adult';
-    scenario_template?: ScenarioTemplate;
+interface ParameterOverrides {
+    role?: { role: 'low' | 'high' };
     communication_style?: any;
     cognitive_parameters?: any;
     emotional_parameters?: any;
     detection_areas?: string[];
     verification_steps?: string[];
+    temperature?: number;
+    max_tokens?: number;
 }
 
+interface ProcessedAIConfig extends AIAssistantConfig {
+    isLegacy: boolean;
+    needsUpgrade: boolean;
+}
+
+// ============================================================================
+// 1. AI CONFIGURATION MANAGEMENT
+// ============================================================================
+
+class AIConfigurationManager {
+    /**
+     * Load AI configuration for a room, handling various edge cases
+     */
+    static async loadConfig(roomId: string, roomData: any): Promise<ProcessedAIConfig> {
+        const config = await getAIConfig(roomId);
+        
+        if (!config) {
+            console.log('⚠️ No AI config found for room, creating default configuration');
+            return this.createDefaultConfig(roomId, roomData);
+        }
+
+        if (this.isLegacyConfig(config)) {
+            console.log('🔄 Legacy AI config detected, upgrading to modern format');
+            return this.upgradeLegacyConfig(config);
+        }
+
+        return {
+            ...config,
+            isLegacy: false,
+            needsUpgrade: false
+        };
+    }
+
+    /**
+     * Create a proper default configuration with structured prompt
+     */
+    static createDefaultConfig(roomId: string, roomData: any): ProcessedAIConfig {
+        const defaultConfig = PRESET_CONFIGS.supportive_adult;
+        const detectionAreas = ['Suspicious links', 'Urgent language', 'Unexpected requests'];
+        const verificationSteps = ['Check sender authenticity', 'Verify through official channels', 'Think before clicking'];
+
+        const systemPrompt = generateSystemPrompt({
+            ...defaultConfig,
+            detection_areas: detectionAreas,
+            verification_steps: verificationSteps
+        });
+
+        return {
+            id: roomId,
+            room_id: roomId,
+            model_name: roomData.ai_assistant_model || 'gpt-4o',
+            system_prompt: systemPrompt,
+            prompt_config: {
+                ...defaultConfig,
+                detection_areas: detectionAreas,
+                verification_steps: verificationSteps
+            },
+            temperature: 0.7,
+            max_tokens: 100,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            isLegacy: false,
+            needsUpgrade: false
+        };
+    }
+
+    /**
+     * Upgrade legacy configuration to modern format
+     */
+    static upgradeLegacyConfig(legacyConfig: AIAssistantConfig): ProcessedAIConfig {
+        const defaultConfig = PRESET_CONFIGS.supportive_adult;
+        const detectionAreas = ['Suspicious links', 'Urgent language', 'Unexpected requests'];
+        const verificationSteps = ['Check sender authenticity', 'Verify through official channels', 'Think before clicking'];
+
+        const newSystemPrompt = generateSystemPrompt({
+            ...defaultConfig,
+            detection_areas: detectionAreas,
+            verification_steps: verificationSteps
+        });
+
+        return {
+            ...legacyConfig,
+            system_prompt: newSystemPrompt,
+            prompt_config: {
+                ...defaultConfig,
+                detection_areas: detectionAreas,
+                verification_steps: verificationSteps
+            },
+            isLegacy: true,
+            needsUpgrade: true
+        };
+    }
+
+    /**
+     * Check if a config is legacy (missing prompt_config)
+     */
+    static isLegacyConfig(config: AIAssistantConfig): boolean {
+        return !config.prompt_config;
+    }
+}
+
+// ============================================================================
+// 2. SYSTEM PROMPT PROCESSING
+// ============================================================================
+
+class SystemPromptProcessor {
+    /**
+     * Process parameter overrides and generate new system prompt if needed
+     */
+    static processOverrides(config: ProcessedAIConfig, overrides?: ParameterOverrides): ProcessedAIConfig {
+        if (!overrides || Object.keys(overrides).length === 0) {
+            return config;
+        }
+
+        console.log('🔧 Applying parameter overrides:', overrides);
+
+        if (!config.prompt_config) {
+            console.log('⚠️ No prompt_config available, applying only direct parameter overrides');
+            return this.applyDirectOverrides(config, overrides);
+        }
+
+        console.log('📄 Using stored prompt configuration for parameter overrides');
+        return this.applyStructuredOverrides(config, overrides);
+    }
+
+    /**
+     * Apply parameter overrides using structured prompt configuration
+     */
+    static applyStructuredOverrides(config: ProcessedAIConfig, overrides: ParameterOverrides): ProcessedAIConfig {
+        // Ensure we have a valid base config - use default if prompt_config is somehow invalid
+        if (!config.prompt_config) {
+            console.warn('⚠️ prompt_config is missing, using default configuration');
+            config.prompt_config = {
+                ...PRESET_CONFIGS.supportive_adult,
+                detection_areas: ['Suspicious links', 'Urgent language', 'Unexpected requests'],
+                verification_steps: ['Check sender authenticity', 'Verify through official channels', 'Think before clicking']
+            };
+        }
+
+        // Merge stored config with parameter overrides - ensure all required fields exist
+        const mergedConfig = {
+            ...config.prompt_config,
+            // Ensure required fields have defaults
+            role: config.prompt_config.role || { role: 'high' as const },
+            communication_style: config.prompt_config.communication_style || PRESET_CONFIGS.supportive_adult.communication_style,
+            cognitive_parameters: config.prompt_config.cognitive_parameters || PRESET_CONFIGS.supportive_adult.cognitive_parameters,
+            emotional_parameters: config.prompt_config.emotional_parameters || PRESET_CONFIGS.supportive_adult.emotional_parameters,
+            detection_areas: config.prompt_config.detection_areas || [],
+            verification_steps: config.prompt_config.verification_steps || []
+        };
+
+        // Apply individual parameter overrides
+        if (overrides.role) mergedConfig.role = overrides.role;
+        if (overrides.communication_style) mergedConfig.communication_style = { ...mergedConfig.communication_style, ...overrides.communication_style };
+        if (overrides.cognitive_parameters) mergedConfig.cognitive_parameters = { ...mergedConfig.cognitive_parameters, ...overrides.cognitive_parameters };
+        if (overrides.emotional_parameters) mergedConfig.emotional_parameters = { ...mergedConfig.emotional_parameters, ...overrides.emotional_parameters };
+        if (overrides.detection_areas) mergedConfig.detection_areas = overrides.detection_areas;
+        if (overrides.verification_steps) mergedConfig.verification_steps = overrides.verification_steps;
+
+        console.log('🔄 Applied parameter overrides to stored configuration');
+
+        // Generate new system prompt with merged configuration
+        const newSystemPrompt = generateSystemPrompt(mergedConfig);
+        console.log('✨ Generated new system prompt from clean configuration');
+
+        return {
+            ...config,
+            system_prompt: newSystemPrompt,
+            temperature: overrides.temperature ?? config.temperature,
+            max_tokens: overrides.max_tokens ?? config.max_tokens
+        };
+    }
+
+    /**
+     * Apply only direct parameter overrides (fallback for configs without prompt_config)
+     */
+    static applyDirectOverrides(config: ProcessedAIConfig, overrides: ParameterOverrides): ProcessedAIConfig {
+        return {
+            ...config,
+            temperature: overrides.temperature ?? config.temperature,
+            max_tokens: overrides.max_tokens ?? config.max_tokens
+        };
+    }
+}
+
+// ============================================================================
+// 3. AI RESPONSE SERVICES
+// ============================================================================
+
 /**
- * Apply preset configuration to create a complete system prompt
- */
-export const applyPresetConfiguration = (
-    preset: 'casual_peer' | 'supportive_adult',
-    scenario?: ScenarioTemplate,
-    customDetectionAreas?: string[],
-    customVerificationSteps?: string[]
-): string => {
-    const scenarioData = scenario ? SCENARIO_TEMPLATES[scenario] : null;
-    const detectionAreas = customDetectionAreas || scenarioData?.detection_areas || [];
-    const verificationSteps = customVerificationSteps || scenarioData?.verification_steps || [];
-    
-    const config = {
-        ...PRESET_CONFIGS[preset],
-        detection_areas: detectionAreas,
-        verification_steps: verificationSteps
-    };
-    
-    return generateSystemPrompt(config);
-};
-
-// Dummy response templates for different scenarios
-const DUMMY_RESPONSES = {
-    educational: [
-        "That's a great question! Let me break this down for you step by step...",
-        "I can help you understand this concept better. Here's how it works...",
-        "This is an important topic in your studies. Let me explain the key points...",
-        "Good observation! This relates to several fundamental principles...",
-        "Let me provide some additional context that might be helpful..."
-    ],
-    encouragement: [
-        "You're making excellent progress! Keep up the good work.",
-        "That's exactly the right approach. You're thinking about this correctly.",
-        "Great question! Asking questions like this shows you're really engaged.",
-        "Your understanding is developing well. Let's build on that...",
-        "I can see you're really grasping these concepts. Well done!"
-    ],
-    clarification: [
-        "Let me clarify that point for you...",
-        "I think there might be some confusion here. Let me explain...",
-        "That's a common misconception. The actual explanation is...",
-        "You're close! Let me help you get to the complete understanding...",
-        "I see where the confusion might come from. Here's the key difference..."
-    ]
-};
-
-// Suggested tutor responses for different scenarios
-const SUGGESTED_RESPONSES = {
-    educational: [
-        "Let's explore this concept together. Can you tell me what you already know about it?",
-        "That's an interesting question. Let me guide you through the key concepts.",
-        "I'll help you understand this better. First, let's start with the basics.",
-        "Good thinking! Let's work through this step by step.",
-        "This is a common challenge. Let me show you a helpful approach."
-    ],
-    encouragement: [
-        "You're doing great! Let's keep building on your understanding.",
-        "Excellent progress! What would you like to explore next?",
-        "That's the right idea! Can you expand on that thought?",
-        "Well done! You're really getting the hang of this.",
-        "I'm impressed with your thinking. Let's dive deeper."
-    ],
-    clarification: [
-        "I see where the confusion might be. Let me help clarify.",
-        "Let's approach this from a different angle. What if we consider...",
-        "That's a common area of confusion. The key difference is...",
-        "Almost there! Let me help you connect the final pieces.",
-        "Good attempt! Let me guide you to the complete understanding."
-    ]
-};
-
-/**
- * Real OpenAI API Service - Core AI Response Generation
+ * Real OpenAI API Service
  */
 export class OpenAIService {
     static async generateResponse(
@@ -121,7 +251,6 @@ export class OpenAIService {
         const startTime = Date.now();
 
         try {
-            // Build messages for OpenAI API
             const messages = [
                 {
                     role: 'system',
@@ -137,7 +266,6 @@ export class OpenAIService {
                 }
             ];
 
-            // Make API request
             const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
                 method: 'POST',
                 headers: {
@@ -183,7 +311,7 @@ export class OpenAIService {
 }
 
 /**
- * Tutor Suggestion Service - Separate service for generating tutor prompts
+ * Tutor Suggestion Service
  */
 export class TutorSuggestionService {
     static async generateSuggestion(
@@ -191,14 +319,12 @@ export class TutorSuggestionService {
         config: AIAssistantConfig
     ): Promise<{ suggestion: string; success: boolean; error?: string }> {
         try {
-            // Build conversation history as a single string
             const conversationText = conversationHistory
                 .slice(-10)
                 .map(msg => `${msg.role}: ${msg.content}`)
                 .join('\n');
 
-            // Use the config's system prompt if available, otherwise fall back to default
-            const systemPrompt = config.system_prompt || 
+            const systemPrompt = config.system_prompt ||
                 'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn. Be encouraging, patient, and focus on building understanding.';
 
             const messages = [
@@ -248,29 +374,41 @@ export class TutorSuggestionService {
         }
     }
 
-    static generateDummySuggestion(
-        category: keyof typeof SUGGESTED_RESPONSES
-    ): string {
-        const responses = SUGGESTED_RESPONSES[category];
-        return responses[Math.floor(Math.random() * responses.length)];
+    static generateDummySuggestion(category: 'educational' | 'encouragement' | 'clarification'): string {
+        const responses = {
+            educational: [
+                "Let's explore this concept together. Can you tell me what you already know about it?",
+                "That's an interesting question. Let me guide you through the key concepts.",
+                "I'll help you understand this better. First, let's start with the basics.",
+                "Good thinking! Let's work through this step by step.",
+                "This is a common challenge. Let me show you a helpful approach."
+            ],
+            encouragement: [
+                "You're doing great! Let's keep building on your understanding.",
+                "Excellent progress! What would you like to explore next?",
+                "That's the right idea! Can you expand on that thought?",
+                "Well done! You're really getting the hang of this.",
+                "I'm impressed with your thinking. Let's dive deeper."
+            ],
+            clarification: [
+                "I see where the confusion might be. Let me help clarify.",
+                "Let's approach this from a different angle. What if we consider...",
+                "That's a common area of confusion. The key difference is...",
+                "Almost there! Let me help you connect the final pieces.",
+                "Good attempt! Let me guide you to the complete understanding."
+            ]
+        };
+
+        const categoryResponses = responses[category];
+        return categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
     }
 }
 
 /**
- * Simulates an AI API call with realistic delay and responses
+ * Dummy AI Service for testing/fallback
  */
 export class DummyAIService {
-    private static getRandomResponse(category: keyof typeof DUMMY_RESPONSES): string {
-        const responses = DUMMY_RESPONSES[category];
-        return responses[Math.floor(Math.random() * responses.length)];
-    }
-
-    static generateSuggestedResponse(category: keyof typeof SUGGESTED_RESPONSES): string {
-        const responses = SUGGESTED_RESPONSES[category];
-        return responses[Math.floor(Math.random() * responses.length)];
-    }
-
-    static determineResponseCategory(userMessage: string): keyof typeof DUMMY_RESPONSES {
+    static determineResponseCategory(userMessage: string): 'educational' | 'encouragement' | 'clarification' {
         const message = userMessage.toLowerCase();
 
         if (message.includes('?') || message.includes('how') || message.includes('what') || message.includes('why')) {
@@ -284,58 +422,44 @@ export class DummyAIService {
         return Math.random() > 0.7 ? 'encouragement' : 'educational';
     }
 
-    private static generateContextualResponse(
-        userMessage: string,
-        conversationHistory: ConversationMessage[],
-        systemPrompt?: string
-    ): string {
-        const category = this.determineResponseCategory(userMessage);
-        const baseResponse = this.getRandomResponse(category);
-
-        // Add context-aware details based on the message
-        const contextualAdditions = [
-            "Based on our previous discussion, this connects to what we covered earlier.",
-            "This builds nicely on the foundation we've established.",
-            "Consider how this applies to real-world scenarios you might encounter.",
-            "Think about the practical implications of this concept.",
-            "This is particularly relevant for your upcoming assessments."
-        ];
-
-        // Sometimes add contextual information
-        if (Math.random() > 0.5) {
-            const addition = contextualAdditions[Math.floor(Math.random() * contextualAdditions.length)];
-            return `${baseResponse} ${addition}`;
-        }
-
-        return baseResponse;
-    }
-
-    /**
-     * Generate an AI response using dummy data
-     */
     static async generateResponse(
         userMessage: string,
         conversationHistory: ConversationMessage[],
         config: AIAssistantConfig
     ): Promise<AIResponse> {
-        // Simulate API call delay (500ms to 2000ms)
+        // Simulate API call delay
         const delay = Math.random() * 1500 + 500;
         const startTime = Date.now();
 
         await new Promise(resolve => setTimeout(resolve, delay));
 
         try {
-            // Simulate occasional API failures (5% chance)
+            // Simulate occasional failures
             if (Math.random() < 0.05) {
                 throw new Error('AI service temporarily unavailable');
             }
 
-            const responseContent = this.generateContextualResponse(
-                userMessage,
-                conversationHistory,
-                config.system_prompt || undefined
-            );
+            const category = this.determineResponseCategory(userMessage);
+            const responses = {
+                educational: [
+                    "That's a great question! Let me break this down for you step by step...",
+                    "I can help you understand this concept better. Here's how it works...",
+                    "This is an important topic in your studies. Let me explain the key points..."
+                ],
+                encouragement: [
+                    "You're making excellent progress! Keep up the good work.",
+                    "That's exactly the right approach. You're thinking about this correctly.",
+                    "Great question! Asking questions like this shows you're really engaged."
+                ],
+                clarification: [
+                    "Let me clarify that point for you...",
+                    "I think there might be some confusion here. Let me explain...",
+                    "That's a common misconception. The actual explanation is..."
+                ]
+            };
 
+            const categoryResponses = responses[category];
+            const responseContent = categoryResponses[Math.floor(Math.random() * categoryResponses.length)];
             const responseTime = Date.now() - startTime;
 
             return {
@@ -359,6 +483,137 @@ export class DummyAIService {
     }
 }
 
+// ============================================================================
+// 4. PUBLIC API - CLEAN INTERFACE
+// ============================================================================
+
+/**
+ * Generate tutor suggestion with parameter overrides
+ * Main entry point for the Quick Adjust feature
+ */
+export const generateTutorSuggestion = async (
+    roomId: string,
+    userId: string,
+    parameterOverrides?: ParameterOverrides
+): Promise<{ suggestion: string; success: boolean; error?: string; contextMessages: string[] }> => {
+    try {
+        // 1. Validate room and get basic data
+        const roomData = await validateRoom(roomId);
+        
+        // 2. Load and process AI configuration
+        let aiConfig = await AIConfigurationManager.loadConfig(roomId, roomData);
+        
+        // 3. Apply parameter overrides if provided
+        aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
+        
+        // 4. Log final configuration being used
+        console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
+        
+        // 5. Get conversation history
+        const conversationHistory = await buildAIContextFromExistingData(roomId);
+        console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
+        
+        // 6. Generate suggestion using appropriate service
+        const suggestionResult = await generateSuggestionWithService(conversationHistory, aiConfig);
+        
+        // 7. Get context messages for tracking
+        const contextMessages = await getContextMessages(roomId);
+        
+        return {
+            ...suggestionResult,
+            contextMessages
+        };
+
+    } catch (error) {
+        console.error('Failed to generate tutor suggestion:', error);
+        return {
+            suggestion: '',
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error occurred',
+            contextMessages: []
+        };
+    }
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Validate room and check AI assistant status
+ */
+async function validateRoom(roomId: string) {
+    const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('ai_assistant_enabled, ai_assistant_model')
+        .eq('id', roomId)
+        .single();
+
+    if (roomError || !roomData?.ai_assistant_enabled) {
+        throw new Error('AI assistant is not enabled for this room');
+    }
+
+    return roomData;
+}
+
+/**
+ * Generate suggestion using the appropriate service (OpenAI or Dummy)
+ */
+async function generateSuggestionWithService(
+    conversationHistory: ConversationMessage[],
+    aiConfig: AIAssistantConfig
+) {
+    if (OAI_API_KEY) {
+        console.log('Using OpenAI API for tutor suggestions');
+        return await TutorSuggestionService.generateSuggestion(conversationHistory, aiConfig);
+    } else {
+        console.log('Using Dummy Service for tutor suggestions');
+        const lastMessage = conversationHistory[conversationHistory.length - 1];
+        const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
+        const suggestion = TutorSuggestionService.generateDummySuggestion(category);
+        return { suggestion, success: true };
+    }
+}
+
+/**
+ * Get context messages for tracking purposes
+ */
+async function getContextMessages(roomId: string): Promise<string[]> {
+    const { data: contextMessagesData } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+    return contextMessagesData?.map(m => m.id) || [];
+}
+
+// ============================================================================
+// LEGACY FUNCTIONS - MAINTAINED FOR BACKWARD COMPATIBILITY
+// ============================================================================
+
+/**
+ * Get AI assistant configuration for a room
+ */
+export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | null> => {
+    const { data, error } = await supabase
+        .from('ai_assistant_configs')
+        .select('*')
+        .eq('room_id', roomId)
+        .eq('is_active', true)
+        .single();
+
+    if (error) {
+        if (error.code === 'PGRST116') {
+            return null; // No configuration found
+        }
+        throw new Error(`Failed to get AI config: ${error.message}`);
+    }
+
+    return data;
+};
+
 /**
  * Initialize AI assistant for a room with modular system prompts
  */
@@ -378,14 +633,15 @@ export const initializeAIAssistant = async (
     }
 ): Promise<string> => {
     let finalSystemPrompt = systemPrompt;
-    
-    // If no system prompt provided but config is given, generate one
+    let finalPromptConfig = null;
+
+    // Generate system prompt from config if needed
     if (!finalSystemPrompt && promptConfig) {
         const scenario = promptConfig.scenario ? SCENARIO_TEMPLATES[promptConfig.scenario] : null;
         const detectionAreas = promptConfig.custom_detection_areas || scenario?.detection_areas || [];
         const verificationSteps = promptConfig.custom_verification_steps || scenario?.verification_steps || [];
-        
-        const config = {
+
+        finalPromptConfig = {
             role: {
                 role: (promptConfig.role === 'peer' ? 'low' : 'high') as 'low' | 'high'
             },
@@ -395,10 +651,10 @@ export const initializeAIAssistant = async (
             detection_areas: detectionAreas,
             verification_steps: verificationSteps
         };
-        
-        finalSystemPrompt = generateSystemPrompt(config);
+
+        finalSystemPrompt = generateSystemPrompt(finalPromptConfig);
     }
-    
+
     const defaultPrompt = finalSystemPrompt ||
         'You are a helpful AI assistant in an educational tutoring session. ' +
         'Provide clear, educational responses to help students learn. ' +
@@ -415,7 +671,7 @@ export const initializeAIAssistant = async (
         if (error) {
             // If function doesn't exist, fall back to direct insert
             if (error.code === '42883' || error.message.includes('function') || error.message.includes('does not exist')) {
-                return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId);
+                return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId, finalPromptConfig);
             }
             throw new Error(`Failed to initialize AI assistant: ${error.message}`);
         }
@@ -423,7 +679,7 @@ export const initializeAIAssistant = async (
         return data;
     } catch (error) {
         // Fall back to direct insert
-        return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId);
+        return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId, finalPromptConfig);
     }
 };
 
@@ -434,7 +690,8 @@ const initializeAIAssistantFallback = async (
     roomId: string,
     modelName: string,
     systemPrompt: string,
-    userId?: string
+    userId?: string,
+    promptConfig?: any
 ): Promise<string> => {
     // Verify room and tutor
     const { data: roomData, error: roomError } = await supabase
@@ -459,7 +716,6 @@ const initializeAIAssistantFallback = async (
     }
 
     // Create or update AI assistant config
-    // First try to update existing config
     const { data: existingConfig } = await supabase
         .from('ai_assistant_configs')
         .select('id')
@@ -476,6 +732,7 @@ const initializeAIAssistantFallback = async (
             .update({
                 model_name: modelName,
                 system_prompt: systemPrompt,
+                prompt_config: promptConfig,
                 is_active: true,
                 updated_at: new Date().toISOString()
             })
@@ -492,6 +749,7 @@ const initializeAIAssistantFallback = async (
                 room_id: roomId,
                 model_name: modelName,
                 system_prompt: systemPrompt,
+                prompt_config: promptConfig,
                 is_active: true
             })
             .select()
@@ -504,8 +762,6 @@ const initializeAIAssistantFallback = async (
         throw new Error(`Failed to create AI config: ${configError.message}`);
     }
 
-    // No separate conversation context needed - using simplified architecture
-
     // Enable AI assistant for the room
     await supabase
         .from('rooms')
@@ -513,27 +769,6 @@ const initializeAIAssistantFallback = async (
         .eq('id', roomId);
 
     return configData.id;
-};
-
-/**
- * Get AI assistant configuration for a room
- */
-export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | null> => {
-    const { data, error } = await supabase
-        .from('ai_assistant_configs')
-        .select('*')
-        .eq('room_id', roomId)
-        .eq('is_active', true)
-        .single();
-
-    if (error) {
-        if (error.code === 'PGRST116') {
-            return null; // No configuration found
-        }
-        throw new Error(`Failed to get AI config: ${error.message}`);
-    }
-
-    return data;
 };
 
 /**
@@ -558,7 +793,7 @@ export const updateAIConfig = async (
 };
 
 /**
- * Get conversation history for AI context (Simplified: uses existing tables)
+ * Get conversation history for AI context
  */
 export const getConversationContext = async (roomId: string): Promise<ConversationMessage[]> => {
     console.log('🔄 Building AI context from existing room and message data');
@@ -566,8 +801,7 @@ export const getConversationContext = async (roomId: string): Promise<Conversati
 };
 
 /**
- * Add message to conversation context (Simplified: no separate storage needed)
- * Messages are automatically stored in the messages table, so no additional action needed
+ * Add message to conversation context (simplified architecture)
  */
 export const addToConversationContext = async (
     roomId: string,
@@ -579,91 +813,7 @@ export const addToConversationContext = async (
 };
 
 /**
- * No fallback needed - simplified architecture uses existing tables
- */
-
-/**
- * Generate tutor suggestion only (no AI response generation)
- */
-export const generateTutorSuggestion = async (
-    roomId: string,
-    userId: string,
-    parameterOverrides?: any
-): Promise<{ suggestion: string; success: boolean; error?: string; contextMessages: string[] }> => {
-    // Get room data to check AI configuration
-    const { data: roomData, error: roomError } = await supabase
-        .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model')
-        .eq('id', roomId)
-        .single();
-
-    if (roomError || !roomData?.ai_assistant_enabled) {
-        throw new Error('AI assistant is not enabled for this room');
-    }
-
-    // Get the actual AI configuration for the room
-    let aiConfig = await getAIConfig(roomId);
-    
-    // If no config exists, create a default one
-    if (!aiConfig) {
-        console.log('⚠️ No AI config found for room, using default configuration');
-        aiConfig = {
-            id: roomId,
-            room_id: roomId,
-            model_name: roomData.ai_assistant_model || 'gpt-4o',
-            system_prompt: 'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn. Be encouraging, patient, and focus on building understanding.',
-            temperature: 0.7,
-            max_tokens: 100,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
-    }
-    
-    console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
-
-    // Get conversation history from existing room and message data
-    const conversationHistory = await buildAIContextFromExistingData(roomId);
-    
-    console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
-
-    // Generate tutor suggestion
-    let suggestionResult;
-    if (OAI_API_KEY) {
-        // Use real OpenAI service for tutor suggestions
-        suggestionResult = await TutorSuggestionService.generateSuggestion(
-            conversationHistory,
-            aiConfig
-        );
-    } else {
-        // Use dummy service for tutor suggestions
-        const lastMessage = conversationHistory[conversationHistory.length - 1];
-        const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
-        const suggestion = DummyAIService.generateSuggestedResponse(category);
-        suggestionResult = { suggestion, success: true };
-    }
-
-    console.log('Suggestion Service used:', OAI_API_KEY ? 'OpenAI API' : 'Dummy Service');
-
-    // Get context messages for tracking
-    const { data: contextMessagesData } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: false })
-        .limit(5);
-    
-    const contextMessages = contextMessagesData?.map(m => m.id) || [];
-
-    return { 
-        ...suggestionResult,
-        contextMessages 
-    };
-};
-
-/**
- * Simplified feedback tracking - can be implemented with existing messages table if needed
- * For now, feedback is implicit through tutor's response actions
+ * Record AI suggestion feedback (simplified)
  */
 export const recordAISuggestionFeedback = async (
     roomId: string,
@@ -678,5 +828,43 @@ export const recordAISuggestionFeedback = async (
 ): Promise<void> => {
     console.log('📝 AI feedback tracking simplified - using existing message patterns');
     // Feedback is tracked implicitly through whether tutors use AI suggestions or not
-    // Can be implemented later with analytics on message patterns if needed
-}; 
+};
+
+// ============================================================================
+// DEPRECATED LEGACY FUNCTIONS
+// ============================================================================
+
+/**
+ * @deprecated Use generateSystemPrompt from systemPrompts instead
+ */
+export const applyPresetConfiguration = (
+    preset: 'casual_peer' | 'supportive_adult',
+    scenario?: ScenarioTemplate,
+    customDetectionAreas?: string[],
+    customVerificationSteps?: string[]
+): string => {
+    const scenarioData = scenario ? SCENARIO_TEMPLATES[scenario] : null;
+    const detectionAreas = customDetectionAreas || scenarioData?.detection_areas || [];
+    const verificationSteps = customVerificationSteps || scenarioData?.verification_steps || [];
+
+    const config = {
+        ...PRESET_CONFIGS[preset],
+        detection_areas: detectionAreas,
+        verification_steps: verificationSteps
+    };
+
+    return generateSystemPrompt(config);
+};
+
+/**
+ * @deprecated Legacy interface for backward compatibility
+ */
+export interface ExtendedAIConfig extends AIAssistantConfig {
+    role?: 'peer' | 'trusted_adult';
+    scenario_template?: ScenarioTemplate;
+    communication_style?: any;
+    cognitive_parameters?: any;
+    emotional_parameters?: any;
+    detection_areas?: string[];
+    verification_steps?: string[];
+}

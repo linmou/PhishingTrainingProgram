@@ -1,5 +1,7 @@
 // Supabase uses ISO string dates instead of Firestore Timestamps
 
+import { SystemPromptConfig } from '../services/prompts/types';
+
 // User types
 export type UserRole = 'student' | 'tutor' | 'observer';
 export type UserStatus = 'active' | 'inactive';
@@ -47,6 +49,24 @@ export interface Room {
     updated_at: string;
 }
 
+// Room Template interface for saving and reusing room configurations
+export interface RoomTemplate {
+    id: string;
+    tutor_id: string;
+    template_name: string;
+    template_description: string | null;
+    title_template: string;
+    description_template: string | null;
+    image_url: string | null;
+    pre_populated_dialogue: PrePopulatedMessage[] | null;
+    ai_config_template: any | null; // Stores AI configuration as JSON
+    op_config_template: any | null; // Stores OP configuration as JSON
+    password_config: any | null; // Stores password configuration as JSON
+    usage_count: number;
+    created_at: string;
+    updated_at: string;
+}
+
 // Message interface
 export interface Message {
     id: string;
@@ -80,6 +100,7 @@ export interface AIAssistantConfig {
     room_id: string;
     model_name: string;
     system_prompt: string | null;
+    prompt_config?: SystemPromptConfig | null; // Stores the configuration used to generate the prompt
     temperature: number;
     max_tokens: number;
     is_active: boolean;

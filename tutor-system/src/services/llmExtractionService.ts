@@ -44,7 +44,7 @@ export class LLMExtractionService {
 
     try {
       const extractionPrompt = `
-Analyze the following system prompt and extract cybersecurity learning objectives.
+Extract cybersecurity learning objectives from the system prompt, preserving ALL specific details.
 
 Return ONLY a JSON object with this exact format:
 {
@@ -52,21 +52,36 @@ Return ONLY a JSON object with this exact format:
   "behavior": ["[behavior] item1", "[behavior] item2"]
 }
 
-Guidelines:
-- "understanding" items are concepts to recognize/identify (e.g., "Urgency language", "Suspicious URLs")
-- "behavior" items are actions to take (e.g., "Check sender email", "Hover over links")
-- Each item MUST be prefixed with [understanding] or [behavior]
-- Extract 3-8 relevant items total
-- Focus on cybersecurity/scam detection learning objectives
+CRITICAL PRESERVATION RULES:
+1. PRESERVE EXACT DETAILS: Keep specific URLs, prices, quotes, domain names, and technical examples
+2. PRESERVE QUOTED TEXT: Maintain all quotes like "ACT NOW!" exactly as written
+3. PRESERVE NUMBERS: Keep specific prices ($19.99), quantities (3 left), times (1 hour)
+4. PRESERVE DOMAINS: Keep exact domain examples (amaz0n.com vs amazon.com)
+5. PRESERVE TECHNICAL SPECS: Keep specific URLs, file types, error patterns
 
-IMPORTANT - Fallback Rules:
-- If the prompt is too short, vague, or lacks cybersecurity content, return:
+Guidelines:
+- "understanding" items = concepts to recognize/identify
+- "behavior" items = specific actions to take
+- Each item MUST start with [understanding] or [behavior]
+- DO NOT generalize - keep specific examples and context
+- Extract 3-8 items total focusing on cybersecurity education
+
+Examples of GOOD extraction (preserving specificity):
+✅ "[understanding] 'Too Good to Be True' Pricing: $19.99 for a $300+ gaming console"
+✅ "[understanding] Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)"
+✅ "[behavior] Navigate to Nintendo.com directly to check for real deals"
+
+Examples of BAD extraction (too generic):
+❌ "[understanding] Suspicious URLs" (lost specific URL and context)
+❌ "[understanding] Urgency language" (lost specific examples)
+❌ "[behavior] Check websites" (lost specific site and method)
+
+FALLBACK RULES:
+- If prompt is too short (<20 words) or lacks cybersecurity content:
   {
     "understanding": ["[understanding] None"],
     "behavior": ["[behavior] None"]
   }
-- If the prompt has less than 20 meaningful words, use the fallback
-- If no clear cybersecurity learning objectives can be extracted, use the fallback
 
 System Prompt:
 ${systemPrompt}
@@ -154,21 +169,28 @@ ${systemPrompt}
   private static async retryWithStricterPrompt(systemPrompt: string): Promise<ExtractionResult> {
     const stricterPrompt = `
 CRITICAL: You MUST include the exact prefix [understanding] or [behavior] at the START of each item.
+CRITICAL: You MUST preserve ALL specific details, quotes, URLs, prices, and technical examples.
 
 Analyze this prompt and extract cybersecurity learning objectives:
 ${systemPrompt}
 
 Return JSON with this EXACT format (prefixes are MANDATORY):
 {
-  "understanding": ["[understanding] Concept to recognize"],
-  "behavior": ["[behavior] Action to take"]
+  "understanding": ["[understanding] Specific concept with exact details"],
+  "behavior": ["[behavior] Specific action with exact context"]
 }
 
-RULES:
+PRESERVATION REQUIREMENTS:
 1. Every item MUST start with [understanding] or [behavior]
-2. If content is insufficient, return:
+2. PRESERVE exact quotes, URLs, prices, domain names, and technical details
+3. DO NOT generalize - keep specific examples and context
+4. If content is insufficient, return:
    {"understanding": ["[understanding] None"], "behavior": ["[behavior] None"]}
-3. NO exceptions - prefixes are required!
+5. NO exceptions - prefixes AND specificity are required!
+
+Examples:
+✅ "[understanding] Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)"
+❌ "[understanding] Suspicious URLs" (too generic)
 `;
 
     try {

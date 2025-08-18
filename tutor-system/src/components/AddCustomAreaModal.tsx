@@ -8,7 +8,6 @@ interface AddCustomAreaModalProps {
   onClose: () => void;
   onAdd: (
     areaText: string,
-    itemType: 'detection_area' | 'verification_step',
     priority: ChecklistItem['priority']
   ) => Promise<void>;
 }
@@ -19,7 +18,6 @@ const AddCustomAreaModal: React.FC<AddCustomAreaModalProps> = ({
   onAdd
 }) => {
   const [areaText, setAreaText] = useState('');
-  const [itemType, setItemType] = useState<'detection_area' | 'verification_step'>('detection_area');
   const [priority, setPriority] = useState<ChecklistItem['priority']>('important');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,11 +39,10 @@ const AddCustomAreaModal: React.FC<AddCustomAreaModalProps> = ({
       setIsSubmitting(true);
       setError(null);
       
-      await onAdd(areaText.trim(), itemType, priority);
+      await onAdd(areaText.trim(), priority);
       
       // Reset form
       setAreaText('');
-      setItemType('detection_area');
       setPriority('important');
       
       onClose();
@@ -59,7 +56,6 @@ const AddCustomAreaModal: React.FC<AddCustomAreaModalProps> = ({
   const handleClose = () => {
     if (!isSubmitting) {
       setAreaText('');
-      setItemType('detection_area');
       setPriority('important');
       setError(null);
       onClose();
@@ -84,23 +80,6 @@ const AddCustomAreaModal: React.FC<AddCustomAreaModalProps> = ({
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label htmlFor="item-type">Type:</label>
-            <select
-              id="item-type"
-              value={itemType}
-              onChange={(e) => setItemType(e.target.value as 'detection_area' | 'verification_step')}
-              disabled={isSubmitting}
-              className="form-select"
-            >
-              <option value="detection_area">🔍 Detection Area</option>
-              <option value="verification_step">✅ Verification Step</option>
-            </select>
-            <div className="form-help">
-              Detection areas help students identify threats. Verification steps teach how to confirm suspicions.
-            </div>
-          </div>
-
-          <div className="form-group">
             <label htmlFor="priority">Priority:</label>
             <select
               id="priority"
@@ -117,7 +96,7 @@ const AddCustomAreaModal: React.FC<AddCustomAreaModalProps> = ({
 
           <div className="form-group">
             <label htmlFor="area-text">
-              {itemType === 'detection_area' ? 'Detection Area Description:' : 'Verification Step Description:'}
+              Learning Area Description:
             </label>
             <textarea
               id="area-text"
@@ -126,10 +105,7 @@ const AddCustomAreaModal: React.FC<AddCustomAreaModalProps> = ({
               disabled={isSubmitting}
               className="form-textarea"
               rows={4}
-              placeholder={itemType === 'detection_area' 
-                ? "e.g., Emotional manipulation through false urgency - Student should recognize pressure tactics that create artificial time pressure"
-                : "e.g., Cross-reference with official sources - Check the company's official website or social media for verification"
-              }
+              placeholder="e.g., Emotional manipulation through false urgency - Student should recognize pressure tactics that create artificial time pressure"
               maxLength={500}
             />
             <div className="form-counter">

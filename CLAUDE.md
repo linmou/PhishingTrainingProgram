@@ -166,3 +166,7 @@ Note: Conda environments (like base) don't interfere with npm/node. They manage 
 ## Database Migration Guidelines
 - New SQL files should be created in `tutor-system/supabase/migrations`
 - Carefully consider existing table schemas when creating new migrations
+
+## Task Master AI Instructions
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md
