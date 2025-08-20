@@ -901,22 +901,22 @@ export const createRoomTemplate = async (templateData: {
 };
 
 export const getRoomTemplatesByTutor = async (tutorId: string) => {
-    console.log('📄 Supabase Service: Getting templates for tutor:', tutorId);
+    console.log('📄 Supabase Service: Getting global templates for all tutors');
     
+    // Get global templates (system user ID: 00000000-0000-0000-0000-000000000000)
     const { data, error } = await supabase
         .from('room_templates')
         .select('*')
-        .eq('tutor_id', tutorId)
-        .order('created_at', { ascending: false });
+        .eq('tutor_id', '00000000-0000-0000-0000-000000000000')
+        .order('template_name', { ascending: true });
 
     if (error) {
         console.error('❌ Supabase Service: Get templates error:', error);
         throw error;
     }
 
-    console.log('✅ Supabase Service: Templates retrieved:', {
-        count: data?.length || 0,
-        tutorId
+    console.log('✅ Supabase Service: Global templates retrieved:', {
+        count: data?.length || 0
     });
     
     return data || [];

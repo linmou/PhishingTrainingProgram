@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createRoom, getRoomsByTutor, deleteRoom, createRoomTemplate, getRoomTemplatesByTutor } from '../services/supabase';
+import { createRoom, getRoomsByTutor, deleteRoom, getRoomTemplatesByTutor } from '../services/supabase';
 import { Database } from '../types/database';
 import ImageUpload from '../components/ImageUpload';
 import AvatarDisplay from '../components/AvatarDisplay';
@@ -42,7 +42,6 @@ const TutorView: React.FC = () => {
     // Template-related state
     const [templates, setTemplates] = useState<RoomTemplate[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-    const [saveAsTemplate, setSaveAsTemplate] = useState(false);
     
     // Preset images data
     const presetImages: PresetImage[] = [
@@ -215,39 +214,7 @@ const TutorView: React.FC = () => {
 
             const newRoom = await createRoom(roomData);
 
-            // Create template if "Save as template" is checked
-            if (saveAsTemplate) {
-                try {
-                    const templateData = {
-                        tutor_id: user.id,
-                        template_name: title.trim(),
-                        template_description: null,
-                        title_template: title.trim(),
-                        description_template: description.trim(),
-                        image_url: imageUrl,
-                        pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null,
-                        ai_config_template: null, // TODO: Add AI config when implemented
-                        op_config_template: {
-                            use_custom_op: useCustomOp,
-                            custom_op_name: useCustomOp ? customOpName.trim() : null,
-                            op_id: useCustomOp ? null : user.id,
-                            op_display_name: useCustomOp ? customOpName.trim() : user.display_name,
-                            op_avatar_url: useCustomOp ? null : user.avatar_url
-                        },
-                        password_config: usePassword ? {
-                            use_password: true,
-                            password: roomPassword.trim()
-                        } : null
-                    };
-
-                    await createRoomTemplate(templateData);
-                    await loadTemplates(); // Reload templates
-                    console.log('✅ Template created successfully:', templateData.template_name);
-                } catch (templateErr) {
-                    console.error('⚠️ Failed to create template:', templateErr);
-                    // Don't fail room creation if template creation fails
-                }
-            }
+            // Template creation removed - templates are now global and managed centrally
 
             // Show success message
             setSuccessMessage('Room created successfully');
@@ -263,7 +230,6 @@ const TutorView: React.FC = () => {
             setRoomPassword('');
             setUsePassword(false);
             setSelectedTemplateId(null);
-            setSaveAsTemplate(false);
             setShowCreateForm(false);
 
             // Reload rooms list
@@ -583,7 +549,8 @@ const TutorView: React.FC = () => {
                                 />
                             </div>
 
-                            {/* Save as Template Section */}
+                            {/* Save as Template Section - DISABLED: Templates are now global */}
+                            {/*
                             <div className="form-group save-template-section">
                                 <div className="checkbox-wrapper">
                                     <label className="checkbox-label">
@@ -601,6 +568,7 @@ const TutorView: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
+                            */}
                             
                             {error && (
                                 <div className="error-banner">
