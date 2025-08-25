@@ -366,6 +366,7 @@ const RoomPagePost: React.FC = () => {
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
 
+
     // Show password prompt if needed
     if (showPasswordPrompt) {
         return (
@@ -461,7 +462,8 @@ const RoomPagePost: React.FC = () => {
                     </Link>
                     
                     <div className="room-post-nav-actions">
-                        {canUseAI && (
+                        {/* Learning Progress Button - Only for tutors */}
+                        {user?.current_role === 'tutor' && canUseAI && (
                             <button
                                 onClick={() => setShowChecklist(true)}
                                 className="btn btn-secondary btn-small"
@@ -470,7 +472,8 @@ const RoomPagePost: React.FC = () => {
                                 <CheckSquare size={16} />
                             </button>
                         )}
-                        {canUseAI && (
+                        {/* AI Settings Button - Only for tutors */}
+                        {user?.current_role === 'tutor' && canUseAI && (
                             <button
                                 onClick={() => setShowAISettings(true)}
                                 className="btn btn-secondary btn-small"
@@ -486,7 +489,8 @@ const RoomPagePost: React.FC = () => {
                         >
                             <Download size={16} />
                         </button>
-                        {canUseAI && (
+                        {/* Clear Chat Button - Only for tutors */}
+                        {user?.current_role === 'tutor' && canUseAI && (
                             <button
                                 onClick={() => setShowClearChatModal(true)}
                                 className="btn btn-secondary btn-small"
@@ -586,7 +590,7 @@ const RoomPagePost: React.FC = () => {
                 </div>
 
                 {/* AI Suggestion Box for Tutors */}
-                {canUseAI && aiSuggestion && (
+                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && (
                     <AISuggestionBox
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}
@@ -615,7 +619,7 @@ const RoomPagePost: React.FC = () => {
                             replyingTo={replyingTo}
                             onCancelReply={() => setReplyingTo(null)}
                         />
-                        {canUseAI && isAIEnabled && (
+                        {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
                             <button
                                 onClick={() => handleGenerateAIResponse()}
                                 disabled={loadingAI || messages.length === 0}
@@ -645,8 +649,8 @@ const RoomPagePost: React.FC = () => {
                 )}
             </div>
 
-            {/* Checklist Panel */}
-            {roomId && (
+            {/* Checklist Panel - Only for tutors */}
+            {roomId && user?.current_role === 'tutor' && (
                 <ChecklistPanel 
                     roomId={roomId} 
                     isVisible={showChecklist}  
