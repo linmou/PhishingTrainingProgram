@@ -228,7 +228,7 @@ During implementation, several critical test issues were identified and resolved
 ### **Validation Tools**
 
 - **Validation Script**: `scripts/validate-test-fixes.js` - Checks that fixes are properly implemented
-- **Fix Documentation**: `docs/test-fixes-summary.md` - Comprehensive technical details of all fixes
+- **Fix Documentation**: `claude_docs/test-fixes-summary.md` - Comprehensive technical details of all fixes
 
 To validate test fixes are working:
 ```bash

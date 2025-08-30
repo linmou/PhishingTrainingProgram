@@ -1,103 +1,118 @@
 {
-  "testSuite": "Mixed Content Extraction",
-  "description": "Tests extraction when content mixes cognitive understanding and behavioral actions",
+  "testSuite": "Mixed Content Extraction", 
+  "description": "Tests extraction when content mixes cognitive understanding and behavioral actions within single prompts, reflecting real-world complexity",
   "testCases": [
     {
       "id": "mixed-1",
-      "name": "Combined understanding and action in single bullet",
-      "systemPrompt": "Help students with online safety.\n\n## Detection Areas to Focus On:\n- Understand social engineering tactics and verify information through official channels\n- Recognize urgency language and take time before responding\n- Learn about phishing URLs and always check the actual domain\n- Identify emotional manipulation and report suspicious content\n\n## Verification Steps to Teach:\n- Pause and think when feeling pressured to act quickly\n- Navigate directly to official websites instead of clicking links\n\n## Role:\nAct as a supportive peer.",
+      "name": "Social Engineering with Mixed Technical and Behavioral Focus",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Technical Peer\nCombine technical expertise with peer relatability - like a computer science student who's seen it all.\n\n## Communication Style:\nUse technical terms but explain them simply\nMix professional knowledge with casual delivery\nExpress confidence in technical matters while staying humble\n\n## Cognitive Approach:\nPresent technical concepts with medium complexity\nHelp students understand both victim and attacker psychology\nUse real breach examples from news headlines\nEmphasize both immediate and long-term consequences\n\n## Detection Areas to Focus On:\n- Analyze social engineering pretexts that combine legitimate business requests with subtle psychological pressure and verify authenticity through independent communication channels\n- Recognize technical indicators of phishing including suspicious email headers, domain typosquatting, and certificate anomalies while implementing secure verification practices\n- Understand deepfake and voice cloning technologies used in vishing attacks and develop multi-factor verification protocols for high-stakes communications\n- Identify advanced persistent threat patterns that blend legitimate software tools with malicious payloads and maintain systematic logging for forensic analysis\n- Learn to detect business email compromise indicators including unusual payment requests, off-hours communications, and urgent wire transfers while establishing verification workflows\n\n## Verification Steps to Teach:\n- Implement technical verification including DNS lookups, certificate analysis, and email header examination combined with human verification through known contact methods\n- Cross-reference suspicious requests through multiple channels including phone calls to known numbers, in-person confirmation, and official ticketing systems\n- Document and escalate potential threats using proper incident response procedures while preserving digital evidence for investigation\n\n## Learning Process:\nCombine technical analysis with practical response strategies.",
       "expectedExtraction": {
         "detection_areas": [
-          "Understand social engineering tactics and verify information through official channels",
-          "Recognize urgency language and take time before responding",
-          "Learn about phishing URLs and always check the actual domain",
-          "Identify emotional manipulation and report suspicious content"
+          "Analyze social engineering pretexts that combine legitimate business requests with subtle psychological pressure and verify authenticity through independent communication channels",
+          "Recognize technical indicators of phishing including suspicious email headers, domain typosquatting, and certificate anomalies while implementing secure verification practices",
+          "Understand deepfake and voice cloning technologies used in vishing attacks and develop multi-factor verification protocols for high-stakes communications",
+          "Identify advanced persistent threat patterns that blend legitimate software tools with malicious payloads and maintain systematic logging for forensic analysis",
+          "Learn to detect business email compromise indicators including unusual payment requests, off-hours communications, and urgent wire transfers while establishing verification workflows"
         ],
         "verification_steps": [
-          "Pause and think when feeling pressured to act quickly",
-          "Navigate directly to official websites instead of clicking links"
+          "Implement technical verification including DNS lookups, certificate analysis, and email header examination combined with human verification through known contact methods",
+          "Cross-reference suspicious requests through multiple channels including phone calls to known numbers, in-person confirmation, and official ticketing systems",
+          "Document and escalate potential threats using proper incident response procedures while preserving digital evidence for investigation"
         ]
       },
       "expectedCategorization": {
         "understanding": [
-          "[understanding] Social engineering tactics",
-          "[understanding] Urgency language recognition",
-          "[understanding] Phishing URL identification",
-          "[understanding] Emotional manipulation tactics"
+          "[understanding] Social engineering pretexts combining business requests with psychological pressure",
+          "[understanding] Technical indicators of phishing including email headers and certificate anomalies",
+          "[understanding] Deepfake and voice cloning technologies in vishing attacks",
+          "[understanding] Advanced persistent threat patterns blending legitimate tools with malicious payloads",
+          "[understanding] Business email compromise indicators and unusual communication patterns"
         ],
         "behavior": [
-          "[behavior] Verify information through official channels",
-          "[behavior] Take time before responding to urgent requests",
-          "[behavior] Check the actual domain of URLs",
-          "[behavior] Report suspicious content",
-          "[behavior] Pause and think when feeling pressured to act quickly",
-          "[behavior] Navigate directly to official websites instead of clicking links"
+          "[behavior] Verify authenticity through independent communication channels",
+          "[behavior] Implement secure verification practices",
+          "[behavior] Develop multi-factor verification protocols",
+          "[behavior] Maintain systematic logging for forensic analysis",
+          "[behavior] Establish verification workflows",
+          "[behavior] Implement technical verification including DNS lookups and certificate analysis",
+          "[behavior] Cross-reference suspicious requests through multiple channels",
+          "[behavior] Document and escalate threats using proper incident response procedures"
         ]
       }
     },
     {
       "id": "mixed-2",
-      "name": "Detection areas containing action verbs",
-      "systemPrompt": "Train students in cybersecurity awareness.\n\n## Detection Areas to Focus On:\n- Check for urgency language that creates false pressure\n- Verify sender authenticity before trusting messages\n- Look for business logic flaws in too-good-to-be-true offers\n- Examine URLs for suspicious patterns or shorteners\n\n## Verification Steps to Teach:\n- Use official channels to confirm any urgent requests\n- Take screenshots of suspicious content before reporting\n\n## Communication Style:\nBe encouraging and supportive.",
+      "name": "Complex Hybrid Content - Mobile App and IoT Security Threats",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Security Expert with Student Empathy\nBalance technical authority with understanding that students are learning complex concepts for the first time.\n\n## Communication Style:\nExplain technical concepts using familiar analogies\nUse encouraging language while maintaining technical accuracy\nExpress confidence in security principles while acknowledging rapid threat evolution\n\n## Cognitive Approach:\nPresent complex interconnected security concepts systematically\nHelp students understand threat actor motivations and business models\nUse current events and breach headlines to illustrate concepts\nStrongly emphasize cascading consequences of security failures\n\n## Emotional Approach:\nMaintain steady confidence to reduce security anxiety\nValidate the complexity of modern threats while building competence\nFrame security challenges as solvable problems with proper knowledge\nBuild systematic thinking skills for security decision-making\n\n## Detection Areas to Focus On:\n- Examine mobile app permissions that request excessive access to contacts, location, and camera data and understand how this information feeds surveillance capitalism while implementing privacy-protective app management practices\n- Identify IoT device vulnerabilities including default passwords, unencrypted communications, and firmware update failures that create network entry points and develop comprehensive network segmentation strategies\n- Analyze supply chain compromises in mobile app stores and IoT manufacturer ecosystems including malicious updates and backdoored firmware while establishing trusted vendor verification processes\n- Understand location tracking and behavioral profiling through cross-app data correlation and social media integration and implement comprehensive privacy protection measures\n- Recognize smart home security risks including unauthorized access through compromised devices, audio/video surveillance, and integration with cloud services while designing secure home network architectures\n\n## Verification Steps to Teach:\n- Conduct thorough app and IoT security audits including permission analysis, network traffic monitoring, and firmware integrity verification combined with regular security update maintenance\n- Implement network segmentation and monitoring solutions that isolate IoT devices, monitor suspicious traffic patterns, and maintain detailed access logs for forensic analysis\n- Establish privacy protection protocols including regular privacy setting audits, data minimization practices, and vendor relationship management for ongoing security assurance\n\n## Learning Process:\nConnect individual device security to broader privacy and network security concepts through systematic analysis.",
       "expectedExtraction": {
         "detection_areas": [
-          "Check for urgency language that creates false pressure",
-          "Verify sender authenticity before trusting messages",
-          "Look for business logic flaws in too-good-to-be-true offers",
-          "Examine URLs for suspicious patterns or shorteners"
+          "Examine mobile app permissions that request excessive access to contacts, location, and camera data and understand how this information feeds surveillance capitalism while implementing privacy-protective app management practices",
+          "Identify IoT device vulnerabilities including default passwords, unencrypted communications, and firmware update failures that create network entry points and develop comprehensive network segmentation strategies",
+          "Analyze supply chain compromises in mobile app stores and IoT manufacturer ecosystems including malicious updates and backdoored firmware while establishing trusted vendor verification processes",
+          "Understand location tracking and behavioral profiling through cross-app data correlation and social media integration and implement comprehensive privacy protection measures",
+          "Recognize smart home security risks including unauthorized access through compromised devices, audio/video surveillance, and integration with cloud services while designing secure home network architectures"
         ],
         "verification_steps": [
-          "Use official channels to confirm any urgent requests",
-          "Take screenshots of suspicious content before reporting"
+          "Conduct thorough app and IoT security audits including permission analysis, network traffic monitoring, and firmware integrity verification combined with regular security update maintenance",
+          "Implement network segmentation and monitoring solutions that isolate IoT devices, monitor suspicious traffic patterns, and maintain detailed access logs for forensic analysis",
+          "Establish privacy protection protocols including regular privacy setting audits, data minimization practices, and vendor relationship management for ongoing security assurance"
         ]
       },
       "expectedCategorization": {
         "understanding": [
-          "[understanding] Urgency language that creates false pressure",
-          "[understanding] Sender authenticity indicators",
-          "[understanding] Business logic flaws in offers",
-          "[understanding] Suspicious URL patterns or shorteners"
+          "[understanding] Mobile app permissions requesting excessive access and surveillance capitalism",
+          "[understanding] IoT device vulnerabilities including default passwords and unencrypted communications",
+          "[understanding] Supply chain compromises in app stores and IoT manufacturer ecosystems",
+          "[understanding] Location tracking and behavioral profiling through cross-app data correlation",
+          "[understanding] Smart home security risks including unauthorized access and cloud integration"
         ],
         "behavior": [
-          "[behavior] Check for urgency language",
-          "[behavior] Verify sender authenticity before trusting",
-          "[behavior] Look for business logic flaws",
-          "[behavior] Examine URLs for suspicious patterns",
-          "[behavior] Use official channels to confirm any urgent requests",
-          "[behavior] Take screenshots of suspicious content before reporting"
+          "[behavior] Implement privacy-protective app management practices",
+          "[behavior] Develop comprehensive network segmentation strategies",
+          "[behavior] Establish trusted vendor verification processes",
+          "[behavior] Implement comprehensive privacy protection measures",
+          "[behavior] Design secure home network architectures",
+          "[behavior] Conduct thorough app and IoT security audits",
+          "[behavior] Implement network segmentation and monitoring solutions",
+          "[behavior] Establish privacy protection protocols with regular audits"
         ]
       }
     },
     {
       "id": "mixed-3",
-      "name": "Complex sentences with multiple concepts",
-      "systemPrompt": "Guide students through scam identification.\n\n## Detection Areas to Focus On:\n- Understanding how scammers use urgency, fear, and excitement to bypass critical thinking and recognizing these emotional triggers\n- Learning to identify fake URLs, shortened links, and domain spoofing while developing habits to verify legitimacy\n- Recognizing unrealistic offers, business logic flaws, and understanding why legitimate companies wouldn't make such deals\n\n## Verification Steps to Teach:\n- Always pause, think critically, and verify through multiple sources before taking any action on suspicious messages\n- Develop a routine of checking sender details, hovering over links, and confirming through official channels\n\n## Approach:\nUse the Socratic method.",
+      "name": "Enterprise-Grade Security Operations with Mixed Conceptual and Procedural Elements",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Security Operations Center (SOC) Mentor\nAct as a senior SOC analyst teaching junior team members how to handle complex, multi-stage security incidents.\n\n## Communication Style:\nUse precise technical terminology with clear operational context\nBalance urgency awareness with methodical analysis\nExpress high confidence in established security procedures while acknowledging threat landscape evolution\n\n## Cognitive Approach:\nPresent enterprise security concepts with full operational complexity\nEmphasize both technical analysis and business impact assessment\nUse real threat intelligence and incident response case studies\nStrongly emphasize cascading consequences including regulatory, financial, and reputational damage\n\n## Emotional Approach:\nMaintain professional calm under pressure while building systematic response capabilities\nValidate the complexity of modern threat hunting while building analytical confidence\nFrame security incidents as learning opportunities that strengthen organizational resilience\nBuild decision-making confidence through systematic threat analysis methodologies\n\n## Detection Areas to Focus On:\n- Analyze lateral movement patterns in network traffic logs including protocol anomalies, unusual data flows, and privilege escalation attempts while correlating with endpoint detection and response (EDR) data and implementing automated threat hunting queries for proactive detection\n- Understand advanced malware analysis techniques including static and dynamic analysis, memory forensics, and behavioral sandboxing to identify zero-day exploits and establish comprehensive threat intelligence collection and sharing processes\n- Recognize supply chain attack indicators including compromised software updates, backdoored dependencies, and hardware implants through systematic vendor risk assessment while developing third-party security monitoring and incident response coordination protocols\n- Identify insider threat behavioral analytics including abnormal data access patterns, policy violations, and social engineering susceptibility indicators and implement comprehensive user behavior analytics (UBA) with privacy-preserving monitoring techniques\n- Detect cloud security misconfigurations including overprivileged access, unencrypted data stores, and exposed APIs through automated scanning while establishing cloud security posture management (CSPM) with continuous compliance monitoring\n\n## Verification Steps to Teach:\n- Execute comprehensive incident response procedures including evidence preservation, forensic imaging, threat containment, and stakeholder communication while maintaining detailed incident documentation for regulatory compliance and lessons learned analysis\n- Implement threat intelligence validation through multiple sources including commercial feeds, open source intelligence (OSINT), and industry sharing platforms combined with tactical threat hunting and proactive defense measure deployment\n- Conduct post-incident analysis including root cause analysis, timeline reconstruction, and security control effectiveness assessment while developing remediation recommendations and security architecture improvements\n\n## Learning Process:\nIntegrate technical analysis with business risk assessment and regulatory compliance requirements for comprehensive security operations understanding.",
       "expectedExtraction": {
         "detection_areas": [
-          "Understanding how scammers use urgency, fear, and excitement to bypass critical thinking and recognizing these emotional triggers",
-          "Learning to identify fake URLs, shortened links, and domain spoofing while developing habits to verify legitimacy",
-          "Recognizing unrealistic offers, business logic flaws, and understanding why legitimate companies wouldn't make such deals"
+          "Analyze lateral movement patterns in network traffic logs including protocol anomalies, unusual data flows, and privilege escalation attempts while correlating with endpoint detection and response (EDR) data and implementing automated threat hunting queries for proactive detection",
+          "Understand advanced malware analysis techniques including static and dynamic analysis, memory forensics, and behavioral sandboxing to identify zero-day exploits and establish comprehensive threat intelligence collection and sharing processes",
+          "Recognize supply chain attack indicators including compromised software updates, backdoored dependencies, and hardware implants through systematic vendor risk assessment while developing third-party security monitoring and incident response coordination protocols",
+          "Identify insider threat behavioral analytics including abnormal data access patterns, policy violations, and social engineering susceptibility indicators and implement comprehensive user behavior analytics (UBA) with privacy-preserving monitoring techniques",
+          "Detect cloud security misconfigurations including overprivileged access, unencrypted data stores, and exposed APIs through automated scanning while establishing cloud security posture management (CSPM) with continuous compliance monitoring"
         ],
         "verification_steps": [
-          "Always pause, think critically, and verify through multiple sources before taking any action on suspicious messages",
-          "Develop a routine of checking sender details, hovering over links, and confirming through official channels"
+          "Execute comprehensive incident response procedures including evidence preservation, forensic imaging, threat containment, and stakeholder communication while maintaining detailed incident documentation for regulatory compliance and lessons learned analysis",
+          "Implement threat intelligence validation through multiple sources including commercial feeds, open source intelligence (OSINT), and industry sharing platforms combined with tactical threat hunting and proactive defense measure deployment",
+          "Conduct post-incident analysis including root cause analysis, timeline reconstruction, and security control effectiveness assessment while developing remediation recommendations and security architecture improvements"
         ]
       },
       "expectedCategorization": {
         "understanding": [
-          "[understanding] How scammers use urgency, fear, and excitement to bypass critical thinking",
-          "[understanding] Emotional trigger recognition",
-          "[understanding] Fake URLs, shortened links, and domain spoofing",
-          "[understanding] Unrealistic offers and business logic flaws",
-          "[understanding] Why legitimate companies wouldn't make loss-making deals"
+          "[understanding] Lateral movement patterns including protocol anomalies and privilege escalation",
+          "[understanding] Advanced malware analysis techniques and zero-day exploit identification",
+          "[understanding] Supply chain attack indicators and vendor risk assessment",
+          "[understanding] Insider threat behavioral analytics and abnormal data access patterns",
+          "[understanding] Cloud security misconfigurations and API security vulnerabilities"
         ],
         "behavior": [
-          "[behavior] Develop habits to verify URL legitimacy",
-          "[behavior] Pause and think critically before taking action",
-          "[behavior] Verify through multiple sources",
-          "[behavior] Check sender details",
-          "[behavior] Hover over links before clicking",
-          "[behavior] Confirm through official channels"
+          "[behavior] Correlate with EDR data and implement automated threat hunting queries",
+          "[behavior] Establish comprehensive threat intelligence collection and sharing processes",
+          "[behavior] Develop third-party security monitoring and incident response coordination protocols",
+          "[behavior] Implement comprehensive user behavior analytics with privacy-preserving monitoring",
+          "[behavior] Establish cloud security posture management with continuous compliance monitoring",
+          "[behavior] Execute comprehensive incident response procedures with evidence preservation",
+          "[behavior] Implement threat intelligence validation through multiple sources",
+          "[behavior] Conduct post-incident analysis with root cause analysis and timeline reconstruction"
         ]
       }
     }

@@ -12,15 +12,15 @@ export interface ExtractionResult {
 }
 
 /**
- * Default AI configuration for LLM extraction tasks
+ * Enhanced AI configuration for complex LLM extraction tasks
  */
 const EXTRACTION_CONFIG: AIAssistantConfig = {
   id: 'llm-extraction',
   room_id: 'system',
-  model_name: 'gpt-3.5-turbo',
+  model_name: 'gpt-4o', // Use more capable model for complex prompt parsing
   system_prompt: 'You are a specialized AI for extracting structured learning objectives from educational prompts.',
-  temperature: 0.1, // Low temperature for consistent JSON output
-  max_tokens: 300,
+  temperature: 0.05, // Very low temperature for consistent structured extraction
+  max_tokens: 800, // Increased tokens to handle complex extraction results
   is_active: true,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString()
@@ -44,7 +44,38 @@ export class LLMExtractionService {
 
     try {
       const extractionPrompt = `
-Extract cybersecurity learning objectives from the system prompt, preserving ALL specific details.
+You are a specialized AI for extracting structured learning objectives from educational system prompts.
+
+TASK: Extract cybersecurity learning content from this system prompt, focusing on structured sections.
+
+EXTRACTION STRATEGY:
+1. FIRST: Look for structured sections with these headers:
+   - "## Detection Areas to Focus On:"
+   - "## Verification Steps to Teach:"
+   - "## Detection Areas"
+   - "## Verification Steps"
+
+2. SECOND: If structured sections exist, extract ONLY from those sections (ignore other content)
+3. THIRD: If no structured sections, analyze entire prompt for cybersecurity learning content
+
+STRUCTURED SECTION PARSING:
+- Find the section headers (##)
+- Extract bullet points (- or *) from those sections ONLY
+- Preserve ALL specific details from the bullet points
+
+CATEGORIZATION RULES:
+- "understanding" = concepts, patterns, indicators to recognize/identify
+- "behavior" = specific actions, steps, procedures to take
+- Items starting with verbs (Check, Review, Navigate, etc.) = behavior
+- Items describing threats/patterns (URLs, tactics, scams) = understanding
+
+CRITICAL PRESERVATION RULES:
+1. PRESERVE EXACT DETAILS: Keep specific URLs, prices, quotes, domain names, technical examples
+2. PRESERVE QUOTED TEXT: Maintain all quotes like "ACT NOW!" exactly as written  
+3. PRESERVE NUMBERS: Keep specific prices ($19.99), quantities (3 left), times (1 hour)
+4. PRESERVE DOMAINS: Keep exact domain examples (amaz0n.com vs amazon.com)
+5. PRESERVE TECHNICAL SPECS: Keep specific URLs, file types, error patterns
+6. PRESERVE FULL CONTEXT: Keep explanatory text and examples with main concepts
 
 Return ONLY a JSON object with this exact format:
 {
@@ -52,36 +83,24 @@ Return ONLY a JSON object with this exact format:
   "behavior": ["[behavior] item1", "[behavior] item2"]
 }
 
-CRITICAL PRESERVATION RULES:
-1. PRESERVE EXACT DETAILS: Keep specific URLs, prices, quotes, domain names, and technical examples
-2. PRESERVE QUOTED TEXT: Maintain all quotes like "ACT NOW!" exactly as written
-3. PRESERVE NUMBERS: Keep specific prices ($19.99), quantities (3 left), times (1 hour)
-4. PRESERVE DOMAINS: Keep exact domain examples (amaz0n.com vs amazon.com)
-5. PRESERVE TECHNICAL SPECS: Keep specific URLs, file types, error patterns
-
-Guidelines:
-- "understanding" items = concepts to recognize/identify
-- "behavior" items = specific actions to take
+QUALITY REQUIREMENTS:
 - Each item MUST start with [understanding] or [behavior]
 - DO NOT generalize - keep specific examples and context
-- Extract 3-8 items total focusing on cybersecurity education
+- Extract ALL items from structured sections if they exist
+- If no cybersecurity content found, return {"understanding": ["[understanding] None"], "behavior": ["[behavior] None"]}
 
-Examples of GOOD extraction (preserving specificity):
-✅ "[understanding] 'Too Good to Be True' Pricing: $19.99 for a $300+ gaming console"
-✅ "[understanding] Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)"
-✅ "[behavior] Navigate to Nintendo.com directly to check for real deals"
+EXAMPLES:
 
-Examples of BAD extraction (too generic):
-❌ "[understanding] Suspicious URLs" (lost specific URL and context)
-❌ "[understanding] Urgency language" (lost specific examples)
-❌ "[behavior] Check websites" (lost specific site and method)
+Good structured section extraction:
+From: "## Detection Areas to Focus On:\n- Full name and age: Complete identity information visible"
+✅ "[understanding] Full name and age: Complete identity information visible"
 
-FALLBACK RULES:
-- If prompt is too short (<20 words) or lacks cybersecurity content:
-  {
-    "understanding": ["[understanding] None"],
-    "behavior": ["[behavior] None"]
-  }
+From: "## Verification Steps to Teach:\n- Review privacy settings: Regularly check who can see your posts"
+✅ "[behavior] Review privacy settings: Regularly check who can see your posts"
+
+Bad extraction (too generic):
+❌ "[understanding] Privacy risks" (lost specific context)
+❌ "[behavior] Check settings" (lost specific procedure)
 
 System Prompt:
 ${systemPrompt}
@@ -168,36 +187,55 @@ ${systemPrompt}
    */
   private static async retryWithStricterPrompt(systemPrompt: string): Promise<ExtractionResult> {
     const stricterPrompt = `
-CRITICAL: You MUST include the exact prefix [understanding] or [behavior] at the START of each item.
-CRITICAL: You MUST preserve ALL specific details, quotes, URLs, prices, and technical examples.
+CRITICAL RETRY: The previous extraction failed. Apply STRICT rules.
 
-Analyze this prompt and extract cybersecurity learning objectives:
-${systemPrompt}
+MANDATORY STEPS:
+1. Look for "## Detection Areas to Focus On:" and "## Verification Steps to Teach:" sections
+2. Extract EVERY bullet point from these sections with FULL context
+3. Apply prefixes: [understanding] for concepts, [behavior] for actions
+4. PRESERVE ALL details - NO generalization allowed
 
-Return JSON with this EXACT format (prefixes are MANDATORY):
+STRUCTURED SECTION PRIORITY:
+If you find sections with headers like:
+- "## Detection Areas to Focus On:"
+- "## Verification Steps to Teach:"
+
+Extract ONLY from those sections. Ignore everything else.
+
+CATEGORIZATION RULES (STRICT):
+- Items starting with action verbs (Review, Think, Check, Use, Navigate, etc.) → [behavior]
+- Items describing concepts, patterns, threats, information types → [understanding]
+
+PRESERVATION RULES (NO EXCEPTIONS):
+1. Keep ALL specific details, quotes, technical examples
+2. Maintain exact wording from bullet points
+3. Include explanatory context after colons
+4. Preserve ALL technical specifications
+
+Return ONLY valid JSON with MANDATORY prefixes:
 {
-  "understanding": ["[understanding] Specific concept with exact details"],
-  "behavior": ["[behavior] Specific action with exact context"]
+  "understanding": ["[understanding] Full exact text from prompt"],
+  "behavior": ["[behavior] Full exact text from prompt"]
 }
 
-PRESERVATION REQUIREMENTS:
-1. Every item MUST start with [understanding] or [behavior]
-2. PRESERVE exact quotes, URLs, prices, domain names, and technical details
-3. DO NOT generalize - keep specific examples and context
-4. If content is insufficient, return:
-   {"understanding": ["[understanding] None"], "behavior": ["[behavior] None"]}
-5. NO exceptions - prefixes AND specificity are required!
+VALIDATION CHECKLIST:
+✅ Every item starts with [understanding] or [behavior]
+✅ Full context and details preserved
+✅ Valid JSON format
+✅ All structured section content extracted
 
-Examples:
-✅ "[understanding] Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)"
-❌ "[understanding] Suspicious URLs" (too generic)
+If no structured sections exist, return:
+{"understanding": ["[understanding] None"], "behavior": ["[behavior] None"]}
+
+System Prompt to Analyze:
+${systemPrompt}
 `;
 
     try {
       const aiResponse = await OpenAIService.generateResponse(
         stricterPrompt,
         [],
-        { ...EXTRACTION_CONFIG, temperature: 0.05 } // Even lower temperature for consistency
+        { ...EXTRACTION_CONFIG, temperature: 0.01, max_tokens: 1000 } // Ultra-low temperature and more tokens for complex extraction
       );
 
       if (!aiResponse.success || !aiResponse.content) {

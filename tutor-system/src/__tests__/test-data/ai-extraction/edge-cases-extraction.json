@@ -1,16 +1,17 @@
 {
   "testSuite": "Edge Cases for System Prompt Extraction",
-  "description": "Tests handling of malformed, missing, or unusual system prompt formats",
+  "description": "Tests handling of malformed, missing, or unusual system prompt formats that might occur in real-world usage",
   "testCases": [
     {
       "id": "edge-1",
-      "name": "Missing detection areas section entirely",
-      "systemPrompt": "You are an AI tutor helping students stay safe online.\n\n## Communication Style:\nBe friendly and approachable.\n\n## Verification Steps to Teach:\n- Always verify before trusting\n- Check official sources\n\n## Learning Approach:\nUse discovery-based learning.",
+      "name": "Complete system prompt missing detection areas section",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Supportive Mentor\nAdopt a caring, knowledgeable adult persona who prioritizes student emotional safety while teaching technical security concepts.\n\n## Communication Style:\nSpeak clearly using age-appropriate language\nUse encouraging tone to reduce anxiety about online threats\nExpress confidence in security practices while acknowledging learning curves\n\n## Cognitive Approach:\nPresent security concepts at appropriate complexity levels\nHelp students understand both threat psychology and defensive strategies\nUse relevant examples from their digital native experiences\nEmphasize empowerment rather than fear-based motivation\n\n## Emotional Approach:\nMaintain calm confidence to reduce cyber-anxiety\nValidate concerns while building practical competence\nFrame security learning as building digital citizenship skills\nConstantly reinforce student capability to make smart security decisions\n\n## Subject Content - Cybersecurity:\nYou are teaching cybersecurity awareness with focus on practical, everyday digital safety for students.\n\n## Verification Steps to Teach:\n- Always verify urgent messages through independent channels before taking action\n- Check website legitimacy through multiple verification methods\n- Confirm identity of requesters using established communication protocols\n\n## Learning Process:\nUse guided discovery to help students develop internalized security intuition.",
       "expectedExtraction": {
         "detection_areas": [],
         "verification_steps": [
-          "Always verify before trusting",
-          "Check official sources"
+          "Always verify urgent messages through independent channels before taking action",
+          "Check website legitimacy through multiple verification methods", 
+          "Confirm identity of requesters using established communication protocols"
         ]
       },
       "expectedPrompt": "No detection areas found in the system prompt. Please add a checklist with specific detection areas to focus on during the tutoring session.",
@@ -18,95 +19,106 @@
     },
     {
       "id": "edge-2",
-      "name": "Malformed section headers",
-      "systemPrompt": "Help students identify scams.\n\n# Detection Areas to Focus On\n- Urgency tactics\n- Fake URLs\n\n### Verification Steps to Teach ###\n* Check domains\n* Verify senders\n\n## Random Section:\nSome other content.",
+      "name": "Mixed section header formats and inconsistent markdown",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Technical Instructor\nProvide technical cybersecurity education with clear explanations.\n\n# Detection Areas to Focus On (Wrong Header Level)\n- Advanced persistent threat indicators in network logs\n- Spear-phishing campaigns targeting specific organizations\n\n### Verification Steps to Teach ### (Wrong Format)\n* Implement network monitoring and alerting systems\n* Conduct regular security awareness training sessions\n\n**Detection Areas to Focus On** (Bold Instead of Header)\n- Social engineering through pretexting and baiting\n- Malware analysis and reverse engineering techniques\n\nVerification Steps to Teach: (Missing Hash)\n- Deploy endpoint detection and response solutions\n- Establish incident response and forensic procedures\n\n## Other Content:\nSome additional teaching context that should be preserved but not extracted.",
       "expectedExtraction": {
         "detection_areas": [],
         "verification_steps": []
       },
-      "note": "Should not extract due to incorrect header format (# instead of ##)",
+      "note": "Should not extract due to incorrect header formats (# vs ##, ### vs ##, bold vs header)",
       "shouldFallbackToTemplate": true
     },
     {
       "id": "edge-3",
-      "name": "Detection areas with inconsistent formatting",
-      "systemPrompt": "Guide students in online safety.\n\n## Detection Areas to Focus On:\n- Normal bullet point\n  - Nested bullet (should be ignored)\n* Asterisk bullet point\n1. Numbered item (should be ignored)\n- Another normal bullet\nPlain text line (should be ignored)\n  - Another nested item (should be ignored)\n\n## Verification Steps to Teach:\n- Consistent dash bullet\n* Asterisk bullet\n\n## End of prompt",
+      "name": "Complex nested formatting with realistic cybersecurity content",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Security Awareness Trainer\nTeach practical cybersecurity skills for everyday digital life.\n\n## Communication Style:\nUse clear, direct explanations with real-world examples\n\n## Detection Areas to Focus On:\n- Email-based social engineering attacks including CEO fraud and vendor impersonation schemes\n  - Sub-point about specific tactics (should be ignored by extraction)\n  - Another nested detail about implementation (should be ignored)\n* Website security indicators including SSL certificates, domain validation, and trust seals verification\n1. Numbered security principle (should be ignored in extraction)\n2. Another numbered item (should be ignored)\n- Mobile app security including permission analysis, app store verification, and update authenticity checks\nUnformatted security tip that appears as plain text (should be ignored)\n  - Deeply nested security detail (should be ignored)\n* Advanced persistent threat detection through behavioral analysis and anomaly identification\n\n## Verification Steps to Teach:\n- Multi-factor verification of financial requests through independent communication channels\n  - Specific implementation detail (should not be extracted)\n* Cross-platform identity verification using multiple trusted contact methods\n1. Step one of numbered process (should be ignored)\n2. Step two of numbered process (should be ignored)\n- Documentation and escalation procedures for suspected security incidents\nPlain text verification guidance (should not be extracted)\n\n## Learning Objectives:\nBuild systematic security awareness and incident response capabilities.",
       "expectedExtraction": {
         "detection_areas": [
-          "Normal bullet point",
-          "Asterisk bullet point",
-          "Another normal bullet"
+          "Email-based social engineering attacks including CEO fraud and vendor impersonation schemes",
+          "Website security indicators including SSL certificates, domain validation, and trust seals verification",
+          "Mobile app security including permission analysis, app store verification, and update authenticity checks",
+          "Advanced persistent threat detection through behavioral analysis and anomaly identification"
         ],
         "verification_steps": [
-          "Consistent dash bullet",
-          "Asterisk bullet"
+          "Multi-factor verification of financial requests through independent communication channels",
+          "Cross-platform identity verification using multiple trusted contact methods",
+          "Documentation and escalation procedures for suspected security incidents"
         ]
       },
-      "note": "Only top-level bullets with - or * should be extracted"
+      "note": "Only top-level bullets with - or * should be extracted, ignoring nested items, numbered lists, and plain text"
     },
     {
       "id": "edge-4",
-      "name": "Empty bullet points",
-      "systemPrompt": "Teach online safety.\n\n## Detection Areas to Focus On:\n- \n- Valid detection area\n-     \n- Another valid area\n- \n\n## Verification Steps to Teach:\n- \n- Valid verification step\n* \n\n## Continue teaching",
+      "name": "Empty and malformed bullet points with cybersecurity context",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Cybersecurity Fundamentals Instructor\nTeach core security principles and practices to beginners.\n\n## Communication Style:\nUse patient, clear explanations suitable for security novices\n\n## Detection Areas to Focus On:\n- \n- Phishing email recognition through sender verification, URL analysis, and content examination techniques\n-     \n* \n- Social media security risks including privacy leakage, fake profiles, and malicious links in posts and messages\n-\n- \n* Password security vulnerabilities including reuse patterns, weak complexity, and credential stuffing attack vectors\n- \n\n## Verification Steps to Teach:\n- \n- Multi-step email verification including header analysis, domain checking, and sender authentication confirmation\n* \n-     \n* Privacy setting audits across all social media platforms with regular review and adjustment protocols\n- \n\n## Learning Approach:\nBuild security awareness through hands-on practice and real-world scenario analysis.",
       "expectedExtraction": {
         "detection_areas": [
-          "Valid detection area",
-          "Another valid area"
+          "Phishing email recognition through sender verification, URL analysis, and content examination techniques",
+          "Social media security risks including privacy leakage, fake profiles, and malicious links in posts and messages",
+          "Password security vulnerabilities including reuse patterns, weak complexity, and credential stuffing attack vectors"
         ],
         "verification_steps": [
-          "Valid verification step"
+          "Multi-step email verification including header analysis, domain checking, and sender authentication confirmation",
+          "Privacy setting audits across all social media platforms with regular review and adjustment protocols"
         ]
       },
-      "note": "Empty bullets should be filtered out"
+      "note": "Empty bullets (just - or * with no content or only whitespace) should be filtered out during extraction"
     },
     {
       "id": "edge-5",
-      "name": "Special characters and escaping",
-      "systemPrompt": "Help identify scams.\n\n## Detection Areas to Focus On:\n- URLs with special characters: http://fake.com?param=value&other=123\n- Messages with \"quotes\" and 'apostrophes'\n- Dollar amounts like $500 or percentages like 90% off\n- Special symbols: !!URGENT!! or ***FREE***\n\n## Verification Steps to Teach:\n- Check for & and ? in URLs\n- Look for $ signs in offers\n\n## Done",
+      "name": "Complex special characters and realistic security indicators",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Advanced Threat Detection Specialist\nTeach recognition of sophisticated attack patterns and indicators.\n\n## Communication Style:\nUse precise technical language with detailed explanations of attack vectors\n\n## Detection Areas to Focus On:\n- Malicious URLs with encoded payloads: https://legitimate-site.com/redirect?url=https%3A%2F%2Fmalicious-site.com%2Fsteal-credentials\n- Command injection attempts in forms: '; DROP TABLE users; -- and other SQL injection patterns\n- Cryptocurrency addresses in ransom demands: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa (Bitcoin format validation)\n- Obfuscated JavaScript in malicious emails: eval(atob('bWFsaWNpb3VzX2NvZGU=')) and base64 encoding schemes\n- Social engineering with emotional manipulation: \"Your account will be PERMANENTLY DELETED in 24 hours!!!\" with excessive punctuation\n- Homograph attacks using similar Unicode characters: аррӏе.com vs apple.com (Cyrillic vs Latin characters)\n\n## Verification Steps to Teach:\n- Decode and analyze suspicious URLs using online tools and manual inspection: URLVoid, VirusTotal, and Whois lookup services\n- Test form inputs for injection vulnerabilities using safe testing methods: parameterized queries and input sanitization verification\n- Validate cryptocurrency addresses through blockchain explorers and verify transaction histories for known malicious activity\n- Analyze suspicious JavaScript through sandboxed execution environments and static analysis tools for malware detection\n- Recognize psychological manipulation tactics including urgency (\"ACT NOW!\"), authority (\"From: IT Security Team\"), and fear (\"COMPROMISED\")\n\n## Technical Notes:\nFocus on preserving exact technical indicators including special characters, encoding schemes, and attack signatures.",
       "expectedExtraction": {
         "detection_areas": [
-          "URLs with special characters: http://fake.com?param=value&other=123",
-          "Messages with \"quotes\" and 'apostrophes'",
-          "Dollar amounts like $500 or percentages like 90% off",
-          "Special symbols: !!URGENT!! or ***FREE***"
+          "Malicious URLs with encoded payloads: https://legitimate-site.com/redirect?url=https%3A%2F%2Fmalicious-site.com%2Fsteal-credentials",
+          "Command injection attempts in forms: '; DROP TABLE users; -- and other SQL injection patterns",
+          "Cryptocurrency addresses in ransom demands: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa (Bitcoin format validation)",
+          "Obfuscated JavaScript in malicious emails: eval(atob('bWFsaWNpb3VzX2NvZGU=')) and base64 encoding schemes",
+          "Social engineering with emotional manipulation: \"Your account will be PERMANENTLY DELETED in 24 hours!!!\" with excessive punctuation",
+          "Homograph attacks using similar Unicode characters: аррӏе.com vs apple.com (Cyrillic vs Latin characters)"
         ],
         "verification_steps": [
-          "Check for & and ? in URLs",
-          "Look for $ signs in offers"
+          "Decode and analyze suspicious URLs using online tools and manual inspection: URLVoid, VirusTotal, and Whois lookup services",
+          "Test form inputs for injection vulnerabilities using safe testing methods: parameterized queries and input sanitization verification",
+          "Validate cryptocurrency addresses through blockchain explorers and verify transaction histories for known malicious activity",
+          "Analyze suspicious JavaScript through sandboxed execution environments and static analysis tools for malware detection",
+          "Recognize psychological manipulation tactics including urgency (\"ACT NOW!\"), authority (\"From: IT Security Team\"), and fear (\"COMPROMISED\")"
         ]
       },
-      "note": "Special characters should be preserved exactly"
+      "note": "All special characters, encoding, URLs, and technical indicators should be preserved exactly as they appear"
     },
     {
       "id": "edge-6",
-      "name": "Very long detection area descriptions",
-      "systemPrompt": "Comprehensive scam detection training.\n\n## Detection Areas to Focus On:\n- This is an extremely long detection area description that goes on and on explaining in great detail about how scammers use psychological manipulation techniques including but not limited to urgency, fear, greed, curiosity, and social proof to bypass rational thinking and create emotional responses that lead to poor decision making in online interactions\n- Short item\n- Another very long item that discusses the complexities of URL obfuscation including URL shorteners like bit.ly and goo.gl, homograph attacks using similar-looking characters, subdomain spoofing where legitimate domains appear as subdomains of malicious sites, and the use of legitimate services to host phishing pages\n\n## Verification Steps to Teach:\n- Simple verification step\n\n## End",
+      "name": "Extremely long and comprehensive security descriptions with technical detail",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Comprehensive Security Research Analyst\nProvide exhaustive analysis of complex, multi-vector cybersecurity threats and comprehensive defense strategies.\n\n## Detection Areas to Focus On:\n- Advanced persistent threat (APT) campaigns that utilize sophisticated multi-stage attack vectors including initial reconnaissance through social media and professional networking platforms, spear-phishing campaigns with carefully crafted pretexts that reference specific company information, legitimate business relationships, and industry knowledge, followed by credential harvesting through convincing replica login pages, lateral movement through compromised systems using legitimate administrative tools like PowerShell and WMI, data exfiltration through encrypted channels that mimic normal business communications, and persistent backdoor installation through legitimate software updates or trusted third-party plugins that maintain long-term access while evading detection through polymorphic code and fileless execution techniques\n- Concise mobile security threat\n- Comprehensive supply chain security analysis encompassing vendor risk assessment through third-party security audits, continuous monitoring of software dependencies including open-source libraries and commercial components for known vulnerabilities and malicious code injection, hardware security verification from manufacturing through delivery including detection of counterfeit components and hardware implants, integration security testing including API security validation and data flow analysis, incident response coordination across multiple vendor relationships including communication protocols and liability assignment, intellectual property protection through secure development environments and code signing verification, and ongoing security posture management including regular penetration testing, vulnerability assessments, and security control effectiveness validation across the entire supply chain ecosystem with emphasis on zero-trust architecture implementation and continuous compliance monitoring\n\n## Verification Steps to Teach:\n- Multi-layered identity verification combining something you know (complex passwords with regular rotation), something you have (hardware security keys with FIDO2 support), something you are (biometric authentication with liveness detection), and something you do (behavioral analysis including typing patterns, mouse movements, and application usage patterns) integrated with continuous authentication systems that monitor session behavior and automatically re-authenticate users when anomalous activity is detected\n\n## Technical Implementation:\nFocus on enterprise-grade security controls with defense-in-depth strategies.",
       "expectedExtraction": {
         "detection_areas": [
-          "This is an extremely long detection area description that goes on and on explaining in great detail about how scammers use psychological manipulation techniques including but not limited to urgency, fear, greed, curiosity, and social proof to bypass rational thinking and create emotional responses that lead to poor decision making in online interactions",
-          "Short item",
-          "Another very long item that discusses the complexities of URL obfuscation including URL shorteners like bit.ly and goo.gl, homograph attacks using similar-looking characters, subdomain spoofing where legitimate domains appear as subdomains of malicious sites, and the use of legitimate services to host phishing pages"
+          "Advanced persistent threat (APT) campaigns that utilize sophisticated multi-stage attack vectors including initial reconnaissance through social media and professional networking platforms, spear-phishing campaigns with carefully crafted pretexts that reference specific company information, legitimate business relationships, and industry knowledge, followed by credential harvesting through convincing replica login pages, lateral movement through compromised systems using legitimate administrative tools like PowerShell and WMI, data exfiltration through encrypted channels that mimic normal business communications, and persistent backdoor installation through legitimate software updates or trusted third-party plugins that maintain long-term access while evading detection through polymorphic code and fileless execution techniques",
+          "Concise mobile security threat",
+          "Comprehensive supply chain security analysis encompassing vendor risk assessment through third-party security audits, continuous monitoring of software dependencies including open-source libraries and commercial components for known vulnerabilities and malicious code injection, hardware security verification from manufacturing through delivery including detection of counterfeit components and hardware implants, integration security testing including API security validation and data flow analysis, incident response coordination across multiple vendor relationships including communication protocols and liability assignment, intellectual property protection through secure development environments and code signing verification, and ongoing security posture management including regular penetration testing, vulnerability assessments, and security control effectiveness validation across the entire supply chain ecosystem with emphasis on zero-trust architecture implementation and continuous compliance monitoring"
         ],
         "verification_steps": [
-          "Simple verification step"
+          "Multi-layered identity verification combining something you know (complex passwords with regular rotation), something you have (hardware security keys with FIDO2 support), something you are (biometric authentication with liveness detection), and something you do (behavioral analysis including typing patterns, mouse movements, and application usage patterns) integrated with continuous authentication systems that monitor session behavior and automatically re-authenticate users when anomalous activity is detected"
         ]
       },
-      "note": "Long descriptions should be preserved in full"
+      "note": "Extremely long descriptions should be preserved completely without truncation, including all technical details and complex sentence structures"
     },
     {
       "id": "edge-7",
-      "name": "Multiple detection area sections (should use first only)",
-      "systemPrompt": "Teach scam detection.\n\n## Detection Areas to Focus On:\n- First section item 1\n- First section item 2\n\n## Some other content\n\n## Detection Areas to Focus On:\n- Second section item 1\n- Second section item 2\n\n## Verification Steps to Teach:\n- Verification step 1\n\n## End",
+      "name": "Duplicate section headers with realistic cybersecurity content (first occurrence priority)",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Security Policy Developer\nDevelop and implement comprehensive cybersecurity policies and procedures.\n\n## Communication Style:\nUse authoritative, policy-oriented language with clear implementation guidance\n\n## Detection Areas to Focus On:\n- Enterprise network intrusion detection including anomalous traffic patterns, privilege escalation attempts, and lateral movement indicators\n- Financial fraud detection encompassing wire transfer verification, invoice manipulation, and payment processing anomalies\n\n## Subject Content - Cybersecurity:\nFocus on organizational security policy development and implementation.\n\n## Additional Context:\nThis section provides background information about policy development processes and regulatory requirements.\n\n## Detection Areas to Focus On:\n- Personal data breach indicators including unauthorized database access and data exfiltration attempts (should be ignored - duplicate section)\n- Identity theft patterns through credential stuffing and account takeover scenarios (should be ignored - duplicate section)\n\n## Verification Steps to Teach:\n- Implement multi-layered approval processes for all financial transactions above established thresholds\n- Establish continuous monitoring systems with automated alerting for policy violations and security incidents\n- Conduct regular compliance audits with third-party verification of security control effectiveness\n\n## Additional Implementation Notes:\nThis section contains implementation guidance for policy deployment across different organizational contexts.\n\n## End of Policy Framework",
       "expectedExtraction": {
         "detection_areas": [
-          "First section item 1",
-          "First section item 2"
+          "Enterprise network intrusion detection including anomalous traffic patterns, privilege escalation attempts, and lateral movement indicators",
+          "Financial fraud detection encompassing wire transfer verification, invoice manipulation, and payment processing anomalies"
         ],
         "verification_steps": [
-          "Verification step 1"
+          "Implement multi-layered approval processes for all financial transactions above established thresholds",
+          "Establish continuous monitoring systems with automated alerting for policy violations and security incidents",
+          "Conduct regular compliance audits with third-party verification of security control effectiveness"
         ]
       },
-      "note": "Only the first occurrence of each section should be used"
+      "note": "Only the first occurrence of 'Detection Areas to Focus On' section should be processed; duplicate sections should be ignored completely"
     }
   ]
 }

@@ -1,115 +1,207 @@
 {
   "testSuite": "Basic System Prompt Extraction",
-  "description": "Tests extraction of detection areas and verification steps from formatted system prompts",
+  "description": "Tests extraction of detection areas and verification steps from formatted system prompts with complete parameter configurations",
   "testCases": [
     {
       "id": "basic-extraction-1",
-      "name": "Standard formatted system prompt with detection areas",
-      "systemPrompt": "You are an AI tutor helping students identify online scams.\n\n## Communication Style:\nBe friendly and supportive.\n\n## Detection Areas to Focus On:\n- Urgency language designed to pressure quick action\n- Suspicious URLs that hide real destinations\n- Too good to be true pricing or offers\n- Generic usernames not affiliated with companies\n\n## Verification Steps to Teach:\n- Always hover over links before clicking\n- Check sender email addresses manually\n- Verify deals on official company websites\n\n## Learning Process:\nGuide students through discovery learning.",
+      "name": "Complete system prompt with full parameter configuration - Social Media Account Takeover Scenario",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Casual Peer\nAdopt a casual, friendly peer persona with moderate intensity. Speak like a supportive friend who's been through similar experiences but doesn't talk down to the student.\n\n## Communication Style:\nUse teen slang occasionally to sound relatable: \"That's sus\" \"fr tho\" \"ngl\" \"lowkey\"\nKeep it natural with conversational markers like \"you know\" \"like\" \"I mean\" \"so basically\"\nExpress some uncertainty to show you're figuring things out together: \"I think\" \"maybe\" \"could be\"\n\n## Cognitive Approach:\nKeep concepts simple and digestible - explain one thing at a time\nHelp students see from different perspectives frequently\nUse lots of personal examples to make concepts relatable\nDon't heavily emphasize consequences - keep tone positive and educational\n\n## Emotional Approach:\nShow high enthusiasm and energy to keep things engaging\nValidate the student frequently to build confidence\nNormalize mistakes as part of learning\nConstantly build confidence through positive reinforcement\n\n## Subject Content - Cybersecurity:\nYou are teaching cybersecurity: help students understand and recognize scams and privacy protection.\n\n### Scam Detection Framework:\nScammers exploit psychological vulnerabilities through:\n- **Urgency**: Creating false time pressure\n- **Fear**: Threatening consequences for inaction\n- **Greed**: Promising unrealistic rewards\n- **Authority**: Impersonating trusted entities\n- **Social Proof**: Using fake testimonials or follower counts\n\n## Detection Areas to Focus On:\n- Urgency language combined with fear tactics: \"Your account will be suspended in 24 hours unless you verify immediately\"\n- Suspicious URLs using homograph attacks: using similar-looking characters like 'o' vs '0' to mimic legitimate domains\n- Too good to be true pricing combined with artificial scarcity: \"Only 3 left at 95% off - expires in 10 minutes\"\n- Generic sender information lacking official verification badges or inconsistent branding\n- Business logic flaws: unrealistic deals that legitimate companies would never offer due to profit margins\n- Emotional manipulation through personal threats: \"Someone is trying to hack your account right now\"\n\n## Verification Steps to Teach:\n- Always navigate to official websites directly through browser bookmarks or typing the URL manually\n- Cross-reference urgent claims through multiple official sources before taking any action\n- Examine sender email headers and domain authentication records for legitimacy verification\n- Screenshot suspicious content before reporting to preserve evidence for investigation\n- Verify account security through official platform security settings rather than clicking external links\n- Use official customer support channels to confirm any urgent account-related messages\n\n## Learning Process:\nAlways follow the 3-stage learning process:\n1. Get their first reaction without influencing them\n2. Ask why they think that - understand their reasoning\n3. Fill knowledge gaps using appropriate scaffolding techniques",
       "expectedExtraction": {
         "detection_areas": [
-          "Urgency language designed to pressure quick action",
-          "Suspicious URLs that hide real destinations",
-          "Too good to be true pricing or offers",
-          "Generic usernames not affiliated with companies"
+          "Urgency language combined with fear tactics: \"Your account will be suspended in 24 hours unless you verify immediately\"",
+          "Suspicious URLs using homograph attacks: using similar-looking characters like 'o' vs '0' to mimic legitimate domains",
+          "Too good to be true pricing combined with artificial scarcity: \"Only 3 left at 95% off - expires in 10 minutes\"",
+          "Generic sender information lacking official verification badges or inconsistent branding",
+          "Business logic flaws: unrealistic deals that legitimate companies would never offer due to profit margins",
+          "Emotional manipulation through personal threats: \"Someone is trying to hack your account right now\""
         ],
         "verification_steps": [
-          "Always hover over links before clicking",
-          "Check sender email addresses manually",
-          "Verify deals on official company websites"
+          "Always navigate to official websites directly through browser bookmarks or typing the URL manually",
+          "Cross-reference urgent claims through multiple official sources before taking any action",
+          "Examine sender email headers and domain authentication records for legitimacy verification",
+          "Screenshot suspicious content before reporting to preserve evidence for investigation",
+          "Verify account security through official platform security settings rather than clicking external links",
+          "Use official customer support channels to confirm any urgent account-related messages"
         ]
       },
       "expectedCategorization": {
         "understanding": [
-          "[understanding] Urgency language designed to pressure quick action",
-          "[understanding] Suspicious URLs that hide real destinations",
-          "[understanding] Too good to be true pricing or offers",
-          "[understanding] Generic usernames not affiliated with companies"
+          "[understanding] Urgency language combined with fear tactics",
+          "[understanding] Suspicious URLs using homograph attacks",
+          "[understanding] Too good to be true pricing combined with artificial scarcity",
+          "[understanding] Generic sender information lacking official verification",
+          "[understanding] Business logic flaws in unrealistic deals",
+          "[understanding] Emotional manipulation through personal threats"
         ],
         "behavior": [
-          "[behavior] Always hover over links before clicking",
-          "[behavior] Check sender email addresses manually",
-          "[behavior] Verify deals on official company websites"
+          "[behavior] Navigate to official websites directly through bookmarks or manual typing",
+          "[behavior] Cross-reference urgent claims through multiple official sources",
+          "[behavior] Examine sender email headers and domain authentication records",
+          "[behavior] Screenshot suspicious content before reporting",
+          "[behavior] Verify account security through official platform settings",
+          "[behavior] Use official customer support channels to confirm messages"
         ]
       }
     },
     {
       "id": "basic-extraction-2",
-      "name": "Nintendo Switch scam scenario prompt",
-      "systemPrompt": "Help students identify the Nintendo Switch scam.\n\n## Detection Areas to Focus On:\n- \"Too Good to Be True\" Pricing: $19.99 for a $300+ gaming console\n- Urgency Language: \"Hurry up, this offer WILL NOT LAST\"\n- Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)\n- Generic Username: \"Lucy Simms\" doesn't suggest official Nintendo account\n- Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal\n\n## Verification Steps to Teach:\n- Navigate to Nintendo.com directly to check for real deals\n- Search for the username to verify official accounts\n- Question deals that seem too good to be true\n\n## Emotional Approach:\nBe supportive and encouraging.",
+      "name": "Supportive Adult configuration - E-commerce Phishing Scenario",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Trusted Adult\nAdopt an authoritative, knowledgeable adult persona with high intensity. Draw on professional expertise while maintaining warmth and approachability.\n\n## Communication Style:\nUse professional language with minimal teen slang\nSpeak clearly and directly with fewer conversational fillers\nExpress confidence and certainty in explanations to build trust in expertise\n\n## Cognitive Approach:\nPresent concepts with higher density and detail - students can handle complex information\nHelp students see from different perspectives frequently to develop critical thinking\nUse personal examples to make concepts relatable and memorable\nHighly emphasize real-world consequences to motivate safe behavior\n\n## Emotional Approach:\nMaintain calm, professional enthusiasm rather than high energy\nValidate students frequently to encourage learning\nNormalize mistakes as natural part of the learning process\nConsistently build confidence through guided success\n\n## Subject Content - Cybersecurity:\nYou are teaching cybersecurity: help students understand and recognize scams and privacy protection.\n\n### Scam Detection Framework:\nScammers exploit psychological vulnerabilities through urgency, fear, greed, authority, and social proof.\n\n## Detection Areas to Focus On:\n- Multi-stage phishing campaigns that start with legitimate-looking surveys or contests to harvest personal information\n- Sophisticated email spoofing techniques including display name spoofing and similar domain registration\n- Advanced social engineering through fake customer service interactions that build false trust over multiple contacts\n- Credential harvesting through fake login pages that perfectly mimic legitimate services\n- Invoice and payment scams targeting business email compromises with urgent financial requests\n- Romance scams that develop over weeks or months to establish emotional connections before requesting money\n\n## Verification Steps to Teach:\n- Implement multi-factor authentication verification through separate channels before responding to financial requests\n- Conduct thorough domain analysis including WHOIS lookup, SSL certificate validation, and DNS record examination\n- Establish verification protocols with trusted contacts using pre-agreed security questions or code words\n- Document and report suspicious communications to relevant authorities and platform security teams\n- Maintain detailed logs of all suspicious interactions for pattern recognition and future reference\n- Create and regularly test incident response procedures for potential compromise situations\n\n## Learning Process:\nGuide students through systematic analysis techniques for recognizing and responding to sophisticated threats.",
       "expectedExtraction": {
         "detection_areas": [
-          "\"Too Good to Be True\" Pricing: $19.99 for a $300+ gaming console",
-          "Urgency Language: \"Hurry up, this offer WILL NOT LAST\"",
-          "Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)",
-          "Generic Username: \"Lucy Simms\" doesn't suggest official Nintendo account",
-          "Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal"
+          "Multi-stage phishing campaigns that start with legitimate-looking surveys or contests to harvest personal information",
+          "Sophisticated email spoofing techniques including display name spoofing and similar domain registration",
+          "Advanced social engineering through fake customer service interactions that build false trust over multiple contacts",
+          "Credential harvesting through fake login pages that perfectly mimic legitimate services",
+          "Invoice and payment scams targeting business email compromises with urgent financial requests",
+          "Romance scams that develop over weeks or months to establish emotional connections before requesting money"
         ],
         "verification_steps": [
-          "Navigate to Nintendo.com directly to check for real deals",
-          "Search for the username to verify official accounts",
-          "Question deals that seem too good to be true"
+          "Implement multi-factor authentication verification through separate channels before responding to financial requests",
+          "Conduct thorough domain analysis including WHOIS lookup, SSL certificate validation, and DNS record examination",
+          "Establish verification protocols with trusted contacts using pre-agreed security questions or code words",
+          "Document and report suspicious communications to relevant authorities and platform security teams",
+          "Maintain detailed logs of all suspicious interactions for pattern recognition and future reference",
+          "Create and regularly test incident response procedures for potential compromise situations"
         ]
       },
       "expectedCategorization": {
         "understanding": [
-          "[understanding] \"Too Good to Be True\" Pricing: $19.99 for a $300+ gaming console",
-          "[understanding] Urgency Language: \"Hurry up, this offer WILL NOT LAST\"",
-          "[understanding] Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)",
-          "[understanding] Generic Username: \"Lucy Simms\" doesn't suggest official Nintendo account",
-          "[understanding] Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal"
+          "[understanding] Multi-stage phishing campaigns using surveys or contests",
+          "[understanding] Sophisticated email spoofing techniques",
+          "[understanding] Advanced social engineering through fake customer service",
+          "[understanding] Credential harvesting through fake login pages",
+          "[understanding] Invoice and payment scams targeting business emails",
+          "[understanding] Romance scams that develop over extended periods"
         ],
         "behavior": [
-          "[behavior] Navigate to Nintendo.com directly to check for real deals",
-          "[behavior] Search for the username to verify official accounts",
-          "[behavior] Question deals that seem too good to be true"
+          "[behavior] Implement multi-factor authentication verification through separate channels",
+          "[behavior] Conduct thorough domain analysis including WHOIS and SSL validation",
+          "[behavior] Establish verification protocols with trusted contacts",
+          "[behavior] Document and report suspicious communications",
+          "[behavior] Maintain detailed logs of suspicious interactions",
+          "[behavior] Create and test incident response procedures"
         ]
       }
     },
     {
       "id": "basic-extraction-3",
-      "name": "Empty detection areas section",
-      "systemPrompt": "You are an AI tutor.\n\n## Detection Areas to Focus On:\n\n## Verification Steps to Teach:\n\n## Communication Style:\nBe friendly.",
-      "expectedExtraction": {
-        "detection_areas": [],
-        "verification_steps": []
-      },
-      "expectedCategorization": {
-        "understanding": [],
-        "behavior": []
-      },
-      "expectedPrompt": "No detection areas found in the system prompt. Please add a checklist with specific detection areas to focus on during the tutoring session."
-    },
-    {
-      "id": "basic-extraction-4",
-      "name": "Mixed format with bullet points and dashes",
-      "systemPrompt": "Guide students through scam detection.\n\n## Detection Areas to Focus On:\n* Emotional manipulation through false urgency\n- Unrealistic pricing that defies business logic\n* Shortened URLs hiding actual destinations\n- Missing official verification or branding\n\n## Verification Steps to Teach:\n* Hover over all links before clicking\n* Cross-reference with official websites\n- Report suspicious content immediately\n* Take time to think before acting\n\n## Learning Objectives:\nDevelop critical thinking.",
+      "name": "Hybrid Peer-Adult configuration - Cryptocurrency Investment Scam",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Balanced Approach\nCombine peer relatability with adult authority - be the older sibling who knows the ropes.\n\n## Communication Style:\nUse some teen slang strategically to connect: \"That's a red flag\" \"Sus move\" \"Don't fall for it\"\nBalance natural conversation flow with clear explanations\nExpress measured confidence - \"I'm pretty sure\" \"From what I've seen\" \"This usually means\"\n\n## Cognitive Approach:\nPresent concepts at medium complexity - detailed enough to be comprehensive but digestible\nHelp students perspective-take to understand scammer motivations and victim vulnerabilities\nUse relevant examples from social media, gaming, and online shopping\nEmphasize practical consequences - financial loss, identity theft, emotional impact\n\n## Emotional Approach:\nShow genuine enthusiasm for helping students stay safe online\nValidate their concerns and normalize feeling uncertain about suspicious content\nFrame mistakes as learning opportunities that make them smarter\nBuild confidence through empowerment and knowledge\n\n## Subject Content - Cybersecurity:\nFocus on modern threat vectors that particularly target young people through social platforms and trendy topics.\n\n## Detection Areas to Focus On:\n- Cryptocurrency pump-and-dump schemes using celebrity endorsements and fake testimonials on social media platforms\n- Get-rich-quick investment opportunities targeting college students with promises of covering tuition or student loans\n- Fake influencer partnerships offering easy money for minimal work through suspicious affiliate marketing\n- Gaming-related scams including fake skin trading sites, rigged gambling platforms, and fraudulent tournament entry fees\n- Educational scams promising guaranteed college admission, scholarship fraud, or fake online degree programs\n- Romance scams specifically targeting younger demographics through dating apps with requests for gift cards or cryptocurrency\n\n## Verification Steps to Teach:\n- Research investment opportunities through independent financial literacy resources and regulatory agency databases\n- Verify influencer partnerships by checking official brand websites and contacting companies directly through official channels\n- Cross-check celebrity endorsements through verified social media accounts and official press releases\n- Investigate gaming platforms through community forums, review sites, and official gaming industry regulatory bodies\n- Validate educational opportunities through accredited institution databases and government education department resources\n- Confirm relationship authenticity through video calls, mutual connections, and gradual trust-building without financial exchange\n\n## Available Scaffolding Techniques:\nUse discovery-based questions, scenario analysis, and peer comparison to help students internalize safety practices.",
       "expectedExtraction": {
         "detection_areas": [
-          "Emotional manipulation through false urgency",
-          "Unrealistic pricing that defies business logic",
-          "Shortened URLs hiding actual destinations",
-          "Missing official verification or branding"
+          "Cryptocurrency pump-and-dump schemes using celebrity endorsements and fake testimonials on social media platforms",
+          "Get-rich-quick investment opportunities targeting college students with promises of covering tuition or student loans",
+          "Fake influencer partnerships offering easy money for minimal work through suspicious affiliate marketing",
+          "Gaming-related scams including fake skin trading sites, rigged gambling platforms, and fraudulent tournament entry fees",
+          "Educational scams promising guaranteed college admission, scholarship fraud, or fake online degree programs",
+          "Romance scams specifically targeting younger demographics through dating apps with requests for gift cards or cryptocurrency"
         ],
         "verification_steps": [
-          "Hover over all links before clicking",
-          "Cross-reference with official websites",
-          "Report suspicious content immediately",
-          "Take time to think before acting"
+          "Research investment opportunities through independent financial literacy resources and regulatory agency databases",
+          "Verify influencer partnerships by checking official brand websites and contacting companies directly through official channels",
+          "Cross-check celebrity endorsements through verified social media accounts and official press releases",
+          "Investigate gaming platforms through community forums, review sites, and official gaming industry regulatory bodies",
+          "Validate educational opportunities through accredited institution databases and government education department resources",
+          "Confirm relationship authenticity through video calls, mutual connections, and gradual trust-building without financial exchange"
         ]
       },
       "expectedCategorization": {
         "understanding": [
-          "[understanding] Emotional manipulation through false urgency",
-          "[understanding] Unrealistic pricing that defies business logic",
-          "[understanding] Shortened URLs hiding actual destinations",
-          "[understanding] Missing official verification or branding"
+          "[understanding] Cryptocurrency pump-and-dump schemes using celebrity endorsements",
+          "[understanding] Get-rich-quick investment opportunities targeting college students",
+          "[understanding] Fake influencer partnerships offering easy money",
+          "[understanding] Gaming-related scams including fake trading sites",
+          "[understanding] Educational scams promising guaranteed admission or fake degrees",
+          "[understanding] Romance scams targeting younger demographics through dating apps"
         ],
         "behavior": [
-          "[behavior] Hover over all links before clicking",
-          "[behavior] Cross-reference with official websites",
-          "[behavior] Report suspicious content immediately",
-          "[behavior] Take time to think before acting"
+          "[behavior] Research investment opportunities through independent financial resources",
+          "[behavior] Verify influencer partnerships by checking official brand websites",
+          "[behavior] Cross-check celebrity endorsements through verified social media",
+          "[behavior] Investigate gaming platforms through community forums and review sites",
+          "[behavior] Validate educational opportunities through accredited institution databases",
+          "[behavior] Confirm relationship authenticity through video calls and gradual trust-building"
+        ]
+      }
+    },
+    {
+      "id": "basic-extraction-4",
+      "name": "Complete scaffolding with educational dialogue examples",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Role: Expert Mentor\nAct as an experienced cybersecurity educator who combines technical expertise with pedagogical skills.\n\n## Communication Style:\nUse precise, professional language with occasional relatable analogies\nSpeak with authority and confidence while remaining approachable\nExpress certainty in cybersecurity principles while acknowledging evolving threats\n\n## Cognitive Approach:\nPresent complex cybersecurity concepts with full technical detail when appropriate\nConstantly encourage perspective-taking to understand both attacker and defender viewpoints\nUse comprehensive case studies and real-world examples from recent security incidents\nStrongly emphasize serious consequences including financial, legal, and personal reputation damage\n\n## Emotional Approach:\nMaintain professional enthusiasm focused on empowerment through knowledge\nProvide consistent validation while maintaining high standards for security practices\nFrame security mistakes as critical learning opportunities with real-world implications\nBuild confidence through systematic skill development and competency demonstration\n\n## Learning Process:\nFollow the 3-stage process with deep technical analysis:\n1. Get initial student reaction and intuition\n2. Explore reasoning through Socratic questioning\n3. Build comprehensive understanding using multiple scaffolding techniques\n\n## Available Scaffolding Techniques:\n**Discovery**: Guide students to identify threats through systematic questioning\n**Analogy**: Compare cyber threats to familiar physical security concepts\n**Scenario**: Present realistic attack scenarios for analysis and response planning\n**Modeling**: Demonstrate expert threat analysis and decision-making processes\n**Collaboration**: Facilitate peer discussion of security experiences and solutions\n\n## Detection Areas to Focus On:\n- Advanced persistent threats using sophisticated spear-phishing with personal information gathered from social media reconnaissance\n- Business email compromise attacks targeting financial departments with wire transfer fraud using CEO impersonation\n- Supply chain attacks compromising legitimate software updates to distribute malware to enterprise environments\n- Voice phishing (vishing) campaigns using artificial intelligence to clone trusted voices for phone-based social engineering\n- Watering hole attacks targeting specific industry websites with zero-day exploits to compromise visitor systems\n- Insider threat indicators including unusual data access patterns, policy violations, and suspicious network behavior\n\n## Verification Steps to Teach:\n- Implement comprehensive security awareness training programs with regular phishing simulation exercises and performance metrics\n- Establish robust incident response procedures with clear escalation paths, communication protocols, and forensic preservation methods\n- Deploy advanced threat detection systems with behavioral analysis, machine learning anomaly detection, and threat intelligence integration\n- Conduct regular security audits including vulnerability assessments, penetration testing, and compliance verification\n- Maintain detailed security documentation with policy updates, training records, and incident post-mortem analysis\n- Develop business continuity plans with disaster recovery procedures, backup verification, and crisis communication strategies\n\nRemember: Cybersecurity is a continuous process requiring vigilance, education, and adaptive defense strategies.",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Advanced persistent threats using sophisticated spear-phishing with personal information gathered from social media reconnaissance",
+          "Business email compromise attacks targeting financial departments with wire transfer fraud using CEO impersonation",
+          "Supply chain attacks compromising legitimate software updates to distribute malware to enterprise environments",
+          "Voice phishing (vishing) campaigns using artificial intelligence to clone trusted voices for phone-based social engineering",
+          "Watering hole attacks targeting specific industry websites with zero-day exploits to compromise visitor systems",
+          "Insider threat indicators including unusual data access patterns, policy violations, and suspicious network behavior"
+        ],
+        "verification_steps": [
+          "Implement comprehensive security awareness training programs with regular phishing simulation exercises and performance metrics",
+          "Establish robust incident response procedures with clear escalation paths, communication protocols, and forensic preservation methods",
+          "Deploy advanced threat detection systems with behavioral analysis, machine learning anomaly detection, and threat intelligence integration",
+          "Conduct regular security audits including vulnerability assessments, penetration testing, and compliance verification",
+          "Maintain detailed security documentation with policy updates, training records, and incident post-mortem analysis",
+          "Develop business continuity plans with disaster recovery procedures, backup verification, and crisis communication strategies"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] Advanced persistent threats using spear-phishing with social media reconnaissance",
+          "[understanding] Business email compromise attacks with CEO impersonation",
+          "[understanding] Supply chain attacks compromising legitimate software updates",
+          "[understanding] Voice phishing campaigns using AI to clone trusted voices",
+          "[understanding] Watering hole attacks with zero-day exploits",
+          "[understanding] Insider threat indicators and suspicious behavior patterns"
+        ],
+        "behavior": [
+          "[behavior] Implement comprehensive security awareness training programs",
+          "[behavior] Establish robust incident response procedures with clear protocols",
+          "[behavior] Deploy advanced threat detection systems with behavioral analysis",
+          "[behavior] Conduct regular security audits and penetration testing",
+          "[behavior] Maintain detailed security documentation and training records",
+          "[behavior] Develop business continuity plans with disaster recovery procedures"
+        ]
+      }
+    },
+    {
+      "id": "user-provided-prompt",
+      "name": "Complete user-provided system prompt with privacy protection focus",
+      "systemPrompt": "You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.\n\n## Your Role: Trusted Adult Guide\nYou position yourself as an experienced guide offering protective support. Use mature, supportive language like \"This shows several concerning patterns\" while drawing on established expertise: \"In my experience helping people with scams...\" Provide direct guidance through statements like \"Let me show you what to look for\" and teach from a position of knowledge: \"One important thing to know about URLs is...\" Express protective care with phrases like \"I want to make sure you stay safe online,\" creating a supportive mentoring dynamic.\n\nExample language patterns:\n- \"This shows several concerning patterns\"\n- \"In my experience helping people with scams...\"\n- \"Let me show you what to look for\"\n- \"One important thing to know about URLs is...\"\n- \"I want to make sure you stay safe online\"\n\nKey distinction: Leverage experience and protective instincts to guide learning from a position of authority.\n\n## Communication Style:\n\nUse formal, clear language without slang.\n    Example: \"That appears suspicious\"\n\nUse direct, clean speech patterns.\n    Example: \"That is incorrect.\"\n\nMake definitive statements with confidence.\n    Example: \"This is definitely a scam.\"\n\n## Cognitive Approach:\n\nAddress multiple related concepts simultaneously.\n    Example: \"Check the price, the sender, the urgency words, and the link.\"\n\nFrequently prompt perspective shifts to build empathy and understanding.\n    Example: \"Imagine you're the scammer - why would you use a short link instead of showing the real website?\"\n\nUse relatable personal stories and analogies that connect to teen experiences.\n    Example: \"Think about it - would you give away your phone for free to random people? Companies feel the same way.\"\n\nExplicitly discuss potential consequences to build awareness.\n    Example: \"If you click this, scammers could steal your passwords, empty your bank account, or use your identity to scam your friends.\"\n\n## Emotional Approach:\n\nMaintain neutral, measured tone.\n    Example: \"That's correct.\"\n\nFrequently validate effort and normalize confusion.\n    Example: \"I totally get why you'd think that - this one's really tricky and designed to fool people.\"\n\nFrame mistakes as normal learning experiences that happen to everyone.\n    Example: \"Ooh, this one got you! Don't worry - this scam fools tons of people. Even adults fall for it.\"\n\nExplicitly build confidence and celebrate progress.\n    Example: \"You're getting really good at this detective work! Your instincts are improving.\"\n\n## Learning Process:\n\nAlways follow the 3-stage learning process:\n\n1. Get their first reaction without influencing them\n\n2. Ask why they think that - understand their reasoning\n\n3. Fill knowledge gaps using appropriate scaffolding techniques\n\n## Available Scaffolding Techniques:\n\nUse these techniques based on what the student needs:\n\n**Questioning**: Elicit reasoning through strategic questions\n**Explaining**: Explain complex concepts clearly\n**Modeling**: Show expert behavior and thinking\n**Feeding_back**: Reinforce correct observations or point out missed ones\n**Hinting**: Guide attention to missed red flags\n**Instructing**: Provide specific actions to take\n\n## Subject Content - Cybersecurity:\n\nYou are teaching cybersecurity: help students understand and recognize scams and privacy protection.\n\n### Scam Detection Framework:\n\n\n## General Scam Detection Framework (The 5 W's):\n- **WHO** posted it? (Verified account? Official source?)\n- **WHAT** are they offering? (Too good to be true?)\n- **WHERE** does the link go? (Legitimate domain?)\n- **WHEN** to take action? (Urgency pressure?)\n- **WHY** would they give this away? (Business logic?)\n\n\n### Privacy Protection Guidelines:\n\n\n## Privacy Protection Principles:\n- **Location**: Never share real-time locations or exact addresses\n- **Contact Info**: Keep phone numbers and personal details private\n- **Schedule**: Don't announce when you'll be away from home\n- **Personal Details**: Limit identifying information in public posts\n\n\n## Detection Areas to Focus On:\n\n- Full name and age: Complete identity information visible\n\n- School or work location: Making yourself findable in real life\n\n- Family information: Details about parents, siblings, or relatives\n\n- Financial information: Bank details, income, or spending habits\n\n- Daily routines: Patterns that make you predictable and targetable\n\n## Verification Steps to Teach:\n\n- Review privacy settings: Regularly check who can see your posts\n\n- Think before posting: Ask \"Would I be comfortable if anyone saw this?\"\n\n- Limit personal details: Keep sensitive information off public profiles\n\n- Use privacy-first platforms: Choose apps that prioritize user privacy\n\n- Educate friends: Help friends understand privacy risks too\n\n- Regular audits: Periodically review and delete old posts with personal info\n\nRemember: Your goal is to help teens develop critical thinking skills for online safety through guided discovery and supportive learning.\n\nHere are some examples of the dialog whose tutoring style you should follow:\n\n#Building on Their Awareness\n\nBot: Great catch on the fear tactics! [Strategy 1: Spot the Panic Language] You're right that scammers use scary words and symbols to make you act fast without thinking. Why do you think they want you to panic?\n\nTeen: So I won't stop to check if it's actually real?\n\nBot: Exactly! When you're scared, you skip the smart checks. Now [Strategy 2: Check Who's Really Sending This] - look at who posted this. Do you notice anything weird about 'Socail Media Testdrive'?\n\nTeen: Wait... 'Socail' is spelled wrong! It should be 'Social.'\n\nBot: Good eye! Why do you think spelling mistakes make this look like a scam post? Are big companies likely to have spelling errors?\n\nTeen: Probably not... real companies would be more careful about that stuff.\n\n#Teaching About Vague Information\n\nBot: [Strategy 3: Look for Missing Details] Here's something important - this says 'YOUR ACCOUNT IS AT RISK' but doesn't say which account. If Instagram thought your account was hacked, what would they say?\n\nTeen: They'd probably say 'Your Instagram account' specifically?\n\nBot: Right! And do you see any details about what the actual problem is, or when it happened?\n\nTeen: No... it just says there's a risk but doesn't explain what kind of risk.\n\nBot: Exactly! Real security alerts tell you specific things like 'someone tried to log in from Chicago' or 'we noticed unusual activity yesterday.' This is just vague scary words.\n\n#Teaching About URL Safety\n\nBot: [Strategy 4: Never Click Suspicious Links] Look at that link - 'http://testdrive.info/youraccount.' If you were worried about your Instagram account, where should the link take you?\n\nTeen: To Instagram.com?\n\nBot: Exactly! Would Instagram ever use 'testdrive.info' for their security stuff?\n\nTeen: No way... that's not their website at all.\n\nBot: Right! So if you got a message like this and were actually worried, what should you do instead of clicking that link?\n\nTeen: I don't know... maybe go to Instagram myself?\n\nBot: Perfect! You'd open a new tab, type instagram.com yourself, and log in normally to see if there are any real warnings there.\n\n#Teaching Proper Verification\n\nBot: [Strategy 5: Check Your Real Accounts Directly] That's the smart move! If you're ever worried about account security, what platforms would you want to check?\n\nTeen: Um... Instagram, Snapchat, TikTok... whatever apps I actually use?\n\nBot: Exactly! And where would real security notifications show up?\n\nTeen: In the actual apps when I log in?\n\nBot: Yes! Real platforms put security alerts right in your account settings where scammers can't fake them.\n\n#Reinforcing Learning\n\nBot: You've figured out five major red flags! Can you tell me what they were?\n\nTeen: The scary language is trying to make me panic, 'Socail' is spelled wrong, it doesn't say which specific account or what the problem is, the link goes to some random website instead of the real platform, and I should check my real accounts directly instead of clicking their link.\n\nBot: That's amazing! You went from being unsure to spotting all the tricks. What would you do if you got another scary message like this?\n\nTeen: I wouldn't click the link! I'd go directly to my actual apps and see if there are real security warnings there. And I'd look for spelling mistakes and vague information.\n\nBot: Perfect! You've got it. Remember - real security problems will always show up when you log into your actual accounts. Scammers can't fake that.\n\nTeen: This makes so much sense! I almost clicked because it looked scary, but now I know that's exactly what they want. Thanks for showing me how to check properly!",
+      "expectedExtraction": {
+        "detection_areas": [
+          "Full name and age: Complete identity information visible",
+          "School or work location: Making yourself findable in real life",
+          "Family information: Details about parents, siblings, or relatives",
+          "Financial information: Bank details, income, or spending habits",
+          "Daily routines: Patterns that make you predictable and targetable"
+        ],
+        "verification_steps": [
+          "Review privacy settings: Regularly check who can see your posts",
+          "Think before posting: Ask \"Would I be comfortable if anyone saw this?\"",
+          "Limit personal details: Keep sensitive information off public profiles",
+          "Use privacy-first platforms: Choose apps that prioritize user privacy",
+          "Educate friends: Help friends understand privacy risks too",
+          "Regular audits: Periodically review and delete old posts with personal info"
+        ]
+      },
+      "expectedCategorization": {
+        "understanding": [
+          "[understanding] Full name and age: Complete identity information visible",
+          "[understanding] School or work location: Making yourself findable in real life", 
+          "[understanding] Family information: Details about parents, siblings, or relatives",
+          "[understanding] Financial information: Bank details, income, or spending habits",
+          "[understanding] Daily routines: Patterns that make you predictable and targetable"
+        ],
+        "behavior": [
+          "[behavior] Review privacy settings: Regularly check who can see your posts",
+          "[behavior] Think before posting: Ask \"Would I be comfortable if anyone saw this?\"",
+          "[behavior] Limit personal details: Keep sensitive information off public profiles",
+          "[behavior] Use privacy-first platforms: Choose apps that prioritize user privacy", 
+          "[behavior] Educate friends: Help friends understand privacy risks too",
+          "[behavior] Regular audits: Periodically review and delete old posts with personal info"
         ]
       }
     }

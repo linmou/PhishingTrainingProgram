@@ -117,7 +117,7 @@ When adding new functionality:
 
 ## Links
 
-- [Testing Strategy Documentation](../../docs/testing-strategy.md)
-- [Project Documentation Index](../../docs/README.md)  
+- [Testing Strategy Documentation](../../claude_docs/testing-strategy.md)
+- [Project Documentation Index](../../claude_docs/README.md)  
 - [Jest Documentation](https://jestjs.io/docs/getting-started)
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) 

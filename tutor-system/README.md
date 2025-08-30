@@ -157,7 +157,7 @@ We have comprehensive unit tests for completed tasks 1-3:
 - **Task 2**: Database schema, RLS policies, and CRUD operations  
 - **Task 3**: Authentication system with role management and capacity limits
 
-See [Testing Strategy Documentation](docs/testing-strategy.md) for detailed coverage information.
+See [Testing Strategy Documentation](claude_docs/testing-strategy.md) for detailed coverage information.
 
 ### Running Tests
 
