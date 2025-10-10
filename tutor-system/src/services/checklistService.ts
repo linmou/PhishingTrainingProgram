@@ -711,16 +711,27 @@ export class ChecklistService {
       // Generate new prompt with checklist context
       const newPrompt = generateSystemPromptWithChecklist(baseConfig, allItems);
 
-      // Update AI configuration
-      await supabase
-        .from('ai_assistant_configs')
-        .update({
-          system_prompt: newPrompt,
-          updated_at: new Date().toISOString()
-        })
-        .eq('room_id', roomId);
+      // Update AI configuration (configs table if present) and keep room prompt in sync
+      try {
+        await supabase
+          .from('ai_assistant_configs')
+          .update({
+            system_prompt: newPrompt,
+            updated_at: new Date().toISOString()
+          })
+          .eq('room_id', roomId);
+      } catch (e) {
+        // Non-fatal; some setups do not use the configs table
+        console.warn('ai_assistant_configs not updated (optional):', e);
+      }
 
-      console.log('✅ System prompt regenerated for room:', roomId);
+      // Always persist the regenerated prompt on the room for simplified flows
+      await supabase
+        .from('rooms')
+        .update({ ai_assistant_prompt: newPrompt })
+        .eq('id', roomId);
+
+      console.log('✅ System prompt regenerated and synced for room:', roomId);
 
     } catch (error) {
       console.error('Failed to regenerate system prompt:', error);

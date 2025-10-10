@@ -606,7 +606,36 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
 
     if (error) {
         if (error.code === 'PGRST116') {
-            return null; // No configuration found
+            // No configuration found in ai_assistant_configs – fall back to room-level fields
+            // This supports the simplified flow where we persist prompt/model on rooms
+            const { data: room, error: roomError } = await supabase
+                .from('rooms')
+                .select('ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt, id')
+                .eq('id', roomId)
+                .single();
+
+            if (roomError || !room?.ai_assistant_enabled) {
+                return null;
+            }
+
+            // If the room stores a prompt/model, synthesize a config so downstream code can use it
+            if (room.ai_assistant_prompt) {
+                const synthesized: AIAssistantConfig = {
+                    id: roomId,
+                    room_id: roomId,
+                    model_name: room.ai_assistant_model || 'gpt-4o',
+                    system_prompt: room.ai_assistant_prompt,
+                    // Use sensible defaults; callers can override via parameter overrides
+                    temperature: 0.7,
+                    max_tokens: 150,
+                    is_active: true,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                return synthesized;
+            }
+
+            return null;
         }
         throw new Error(`Failed to get AI config: ${error.message}`);
     }
