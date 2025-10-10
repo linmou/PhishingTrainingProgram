@@ -5,6 +5,8 @@ import { Database } from '../types/database';
 import RoomCard from '../components/RoomCard';
 import AvatarDisplay from '../components/AvatarDisplay';
 import { useAuth } from '../contexts/AuthContext';
+// Reuse grid and card styles from Tutor dashboard
+import '../components/TutorView.css';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
@@ -24,6 +26,8 @@ const StudentView: React.FC = () => {
     const [rooms, setRooms] = useState<RoomWithStatus[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    // Filters
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchRooms = useCallback(async () => {
         try {
@@ -298,8 +302,27 @@ const StudentView: React.FC = () => {
                 {loading ? (
                     <p>Loading rooms...</p>
                 ) : rooms.length > 0 ? (
-                    <div className="rooms-list">
-                        {rooms.map((room) => (
+                    <>
+                        {/* Filter bar */}
+                        <div className="rooms-filter-bar">
+                            <input
+                                type="text"
+                                className="enhanced-input rooms-filter-search"
+                                placeholder="Search by title or description..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <div className="rooms-grid">
+                        {rooms
+                            .filter((room) => {
+                                const q = searchTerm.trim().toLowerCase();
+                                if (!q) return true;
+                                const title = (room.title || '').toLowerCase();
+                                const desc = (room.description || '').toLowerCase();
+                                return title.includes(q) || desc.includes(q);
+                            })
+                            .map((room) => (
                             <RoomCard
                                 key={room.id}
                                 room={room}
@@ -309,7 +332,8 @@ const StudentView: React.FC = () => {
                                 isJoinDisabled={room.isJoinDisabled}
                             />
                         ))}
-                    </div>
+                        </div>
+                    </>
                 ) : (
                     <div className="waiting-message">
                         <p>No rooms available</p>

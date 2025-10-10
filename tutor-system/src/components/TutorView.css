@@ -538,13 +538,31 @@
     }
 }
 
+/* Medium screens: 2 columns for rooms grid */
+@media (min-width: 769px) and (max-width: 1200px) {
+    .rooms-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 /* Rooms Grid */
 .rooms-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
     margin-top: 1.5rem;
 }
+
+/* Filter Bar */
+.rooms-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.5rem 0 1rem 0;
+}
+
+.rooms-filter-search { flex: 1; }
+.rooms-filter-select { max-width: 180px; }
 
 .room-card {
     background: white;

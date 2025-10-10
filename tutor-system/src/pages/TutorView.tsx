@@ -28,6 +28,9 @@ const TutorView: React.FC = () => {
     const [prePopulatedDialogue, setPrePopulatedDialogue] = useState<PrePopulatedMessage[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [rooms, setRooms] = useState<Room[]>([]);
+    // Dashboard filters
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const [error, setError] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -602,9 +605,40 @@ const TutorView: React.FC = () => {
 
                 <div className="form-section">
                     <h2 className="form-section-title">📚 Your Rooms</h2>
+                    {/* Filter Bar */}
+                    <div className="rooms-filter-bar">
+                        <input
+                            type="text"
+                            className="enhanced-input rooms-filter-search"
+                            placeholder="Search by title or description..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <select
+                            className="enhanced-input rooms-filter-select"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+                        >
+                            <option value="all">All</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
                     {rooms.length > 0 ? (
                         <div className="rooms-grid">
-                            {rooms.map((room) => (
+                            {rooms
+                                .filter((room) => {
+                                    // Status filter
+                                    if (statusFilter === 'active' && !room.is_active) return false;
+                                    if (statusFilter === 'inactive' && room.is_active) return false;
+                                    // Text search (title + description)
+                                    const q = searchTerm.trim().toLowerCase();
+                                    if (!q) return true;
+                                    const title = (room.title || '').toLowerCase();
+                                    const desc = (room.description || '').toLowerCase();
+                                    return title.includes(q) || desc.includes(q);
+                                })
+                                .map((room) => (
                                 <div key={room.id} className="room-card" data-testid="room-item">
                                     {room.image_url && (
                                         <img 
