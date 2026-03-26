@@ -7,7 +7,6 @@
 import { getAIConfig } from './aiService';
 import { ChecklistIntegration } from './checklistIntegration';
 import { supabase } from './supabase';
-import { AIAssistantConfig } from '../types';
 
 export interface ChecklistGenerationContext {
   type: 'no_ai_config' | 'empty_system_prompt' | 'ready_for_extraction';
@@ -35,12 +34,12 @@ export async function assessChecklistGenerationContext(roomId: string): Promise<
       return { type: 'no_ai_config' };
     }
     
-    // Try to get AI configuration from ai_assistant_configs table
+    // Load AI configuration from the room-backed AI settings
     let aiConfig = await getAIConfig(roomId);
     
-    // If no config in table, check if we can use room data
+    // If no persisted room config is available, synthesize defaults from the room flag
     if (!aiConfig && roomData.ai_assistant_enabled) {
-      console.log('⚠️ No AI config in table, but room has AI enabled. Looking for default system prompt...');
+      console.log('⚠️ No persisted AI prompt found, but room has AI enabled. Looking for default system prompt...');
       
       // Check if there's a default system prompt we can use
       // This handles the case where AI is enabled on the room but no config row exists yet

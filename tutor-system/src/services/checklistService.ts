@@ -662,16 +662,14 @@ export class ChecklistService {
    */
   private static async triggerSystemPromptRegeneration(roomId: string): Promise<void> {
     try {
-      // Get current AI configuration
-      const { error: configError } = await supabase
-        .from('ai_assistant_configs')
-        .select('*')
-        .eq('room_id', roomId)
-        .eq('is_active', true)
+      const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('ai_assistant_enabled')
+        .eq('id', roomId)
         .single();
 
-      if (configError) {
-        console.warn('No AI config found for room, skipping prompt regeneration');
+      if (roomError || !roomData?.ai_assistant_enabled) {
+        console.warn('No room-level AI config found for room, skipping prompt regeneration');
         return;
       }
 
@@ -711,21 +709,7 @@ export class ChecklistService {
       // Generate new prompt with checklist context
       const newPrompt = generateSystemPromptWithChecklist(baseConfig, allItems);
 
-      // Update AI configuration (configs table if present) and keep room prompt in sync
-      try {
-        await supabase
-          .from('ai_assistant_configs')
-          .update({
-            system_prompt: newPrompt,
-            updated_at: new Date().toISOString()
-          })
-          .eq('room_id', roomId);
-      } catch (e) {
-        // Non-fatal; some setups do not use the configs table
-        console.warn('ai_assistant_configs not updated (optional):', e);
-      }
-
-      // Always persist the regenerated prompt on the room for simplified flows
+      // Persist the regenerated prompt on the room source of truth.
       await supabase
         .from('rooms')
         .update({ ai_assistant_prompt: newPrompt })

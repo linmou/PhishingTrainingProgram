@@ -29,21 +29,6 @@ The AI Assistant module adds intelligent response generation capabilities to the
 
 #### New Tables
 
-**ai_assistant_configs**
-```sql
-CREATE TABLE ai_assistant_configs (
-    id UUID PRIMARY KEY,
-    room_id UUID UNIQUE REFERENCES rooms(id),
-    model_name TEXT DEFAULT 'gpt-3.5-turbo',
-    system_prompt TEXT,
-    temperature DECIMAL(3,2) DEFAULT 0.7,
-    max_tokens INTEGER DEFAULT 150,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
 **ai_conversation_contexts**
 ```sql
 CREATE TABLE ai_conversation_contexts (
@@ -60,6 +45,11 @@ CREATE TABLE ai_conversation_contexts (
 - `ai_assistant_enabled`: Boolean flag for AI activation
 - `ai_assistant_model`: Default model selection
 - `ai_assistant_prompt`: Default system prompt
+
+Runtime source of truth:
+- The current application runtime stores AI enablement, model, and prompt on `rooms`
+- The tutor UI reads and writes room-level AI fields directly
+- Separate `ai_assistant_configs` rows are treated as legacy data, not the active runtime source
 
 **messages** - Added AI metadata:
 - `is_ai_generated`: Identifies AI-generated messages
@@ -203,7 +193,7 @@ interface RoomContextType {
 
 All AI functionality integrates with Supabase:
 - Real-time message updates include AI messages
-- PostgreSQL functions for AI management
+- Room-level AI settings stored on `rooms`
 - Row Level Security for access control
 - JSONB storage for conversation context
 

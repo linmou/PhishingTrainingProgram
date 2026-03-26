@@ -563,16 +563,23 @@ async function generateSuggestionWithService(
     conversationHistory: ConversationMessage[],
     aiConfig: AIAssistantConfig
 ) {
+    const lastMessage = conversationHistory[conversationHistory.length - 1];
+    const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
+
     if (OAI_API_KEY) {
         console.log('Using OpenAI API for tutor suggestions');
-        return await TutorSuggestionService.generateSuggestion(conversationHistory, aiConfig);
-    } else {
-        console.log('Using Dummy Service for tutor suggestions');
-        const lastMessage = conversationHistory[conversationHistory.length - 1];
-        const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
-        const suggestion = TutorSuggestionService.generateDummySuggestion(category);
-        return { suggestion, success: true };
+        const result = await TutorSuggestionService.generateSuggestion(conversationHistory, aiConfig);
+
+        if (result.success) {
+            return result;
+        }
+
+        console.warn('OpenAI tutor suggestion failed, falling back to dummy suggestion:', result.error);
     }
+
+    console.log('Using Dummy Service for tutor suggestions');
+    const suggestion = TutorSuggestionService.generateDummySuggestion(category);
+    return { suggestion, success: true };
 }
 
 /**
@@ -597,50 +604,31 @@ async function getContextMessages(roomId: string): Promise<string[]> {
  * Get AI assistant configuration for a room
  */
 export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | null> => {
-    const { data, error } = await supabase
-        .from('ai_assistant_configs')
-        .select('*')
-        .eq('room_id', roomId)
-        .eq('is_active', true)
+    const { data: room, error } = await supabase
+        .from('rooms')
+        .select('id, ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt, created_at, updated_at')
+        .eq('id', roomId)
         .single();
 
     if (error) {
-        if (error.code === 'PGRST116') {
-            // No configuration found in ai_assistant_configs – fall back to room-level fields
-            // This supports the simplified flow where we persist prompt/model on rooms
-            const { data: room, error: roomError } = await supabase
-                .from('rooms')
-                .select('ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt, id')
-                .eq('id', roomId)
-                .single();
-
-            if (roomError || !room?.ai_assistant_enabled) {
-                return null;
-            }
-
-            // If the room stores a prompt/model, synthesize a config so downstream code can use it
-            if (room.ai_assistant_prompt) {
-                const synthesized: AIAssistantConfig = {
-                    id: roomId,
-                    room_id: roomId,
-                    model_name: room.ai_assistant_model || 'gpt-4o',
-                    system_prompt: room.ai_assistant_prompt,
-                    // Use sensible defaults; callers can override via parameter overrides
-                    temperature: 0.7,
-                    max_tokens: 150,
-                    is_active: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
-                return synthesized;
-            }
-
-            return null;
-        }
         throw new Error(`Failed to get AI config: ${error.message}`);
     }
 
-    return data;
+    if (!room?.ai_assistant_enabled) {
+        return null;
+    }
+
+    return {
+        id: room.id,
+        room_id: room.id,
+        model_name: room.ai_assistant_model || 'gpt-4o',
+        system_prompt: room.ai_assistant_prompt,
+        temperature: 0.7,
+        max_tokens: 150,
+        is_active: true,
+        created_at: room.created_at || new Date().toISOString(),
+        updated_at: room.updated_at || new Date().toISOString()
+    };
 };
 
 /**
@@ -689,27 +677,7 @@ export const initializeAIAssistant = async (
         'Provide clear, educational responses to help students learn. ' +
         'Be encouraging, patient, and focus on building understanding.';
 
-    try {
-        // Try to use the database function
-        const { data, error } = await supabase.rpc('initialize_ai_assistant', {
-            p_room_id: roomId,
-            p_model_name: modelName,
-            p_system_prompt: defaultPrompt
-        });
-
-        if (error) {
-            // If function doesn't exist, fall back to direct insert
-            if (error.code === '42883' || error.message.includes('function') || error.message.includes('does not exist')) {
-                return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId, finalPromptConfig);
-            }
-            throw new Error(`Failed to initialize AI assistant: ${error.message}`);
-        }
-
-        return data;
-    } catch (error) {
-        // Fall back to direct insert
-        return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId, finalPromptConfig);
-    }
+    return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId, finalPromptConfig);
 };
 
 /**
@@ -744,60 +712,23 @@ const initializeAIAssistantFallback = async (
         throw new Error('Only room tutors can initialize AI assistant');
     }
 
-    // Create or update AI assistant config
-    const { data: existingConfig } = await supabase
-        .from('ai_assistant_configs')
-        .select('id')
-        .eq('room_id', roomId)
+    const { data: updatedRoom, error: updateError } = await supabase
+        .from('rooms')
+        .update({
+            ai_assistant_enabled: true,
+            ai_assistant_model: modelName,
+            ai_assistant_prompt: systemPrompt,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', roomId)
+        .select()
         .single();
 
-    let configData;
-    let configError;
-
-    if (existingConfig) {
-        // Update existing config
-        const { data, error } = await supabase
-            .from('ai_assistant_configs')
-            .update({
-                model_name: modelName,
-                system_prompt: systemPrompt,
-                prompt_config: promptConfig,
-                is_active: true,
-                updated_at: new Date().toISOString()
-            })
-            .eq('room_id', roomId)
-            .select()
-            .single();
-        configData = data;
-        configError = error;
-    } else {
-        // Insert new config
-        const { data, error } = await supabase
-            .from('ai_assistant_configs')
-            .insert({
-                room_id: roomId,
-                model_name: modelName,
-                system_prompt: systemPrompt,
-                prompt_config: promptConfig,
-                is_active: true
-            })
-            .select()
-            .single();
-        configData = data;
-        configError = error;
+    if (updateError || !updatedRoom) {
+        throw new Error(`Failed to initialize AI config: ${updateError?.message || 'Room update failed'}`);
     }
 
-    if (configError) {
-        throw new Error(`Failed to create AI config: ${configError.message}`);
-    }
-
-    // Enable AI assistant for the room
-    await supabase
-        .from('rooms')
-        .update({ ai_assistant_enabled: true })
-        .eq('id', roomId);
-
-    return configData.id;
+    return updatedRoom.id;
 };
 
 /**
@@ -807,10 +738,24 @@ export const updateAIConfig = async (
     roomId: string,
     updates: Partial<Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'temperature' | 'max_tokens' | 'is_active'>>
 ): Promise<AIAssistantConfig> => {
+    const roomUpdates: Record<string, unknown> = {
+        updated_at: new Date().toISOString()
+    };
+
+    if (typeof updates.model_name !== 'undefined') {
+        roomUpdates.ai_assistant_model = updates.model_name;
+    }
+    if (typeof updates.system_prompt !== 'undefined') {
+        roomUpdates.ai_assistant_prompt = updates.system_prompt;
+    }
+    if (typeof updates.is_active !== 'undefined') {
+        roomUpdates.ai_assistant_enabled = updates.is_active;
+    }
+
     const { data, error } = await supabase
-        .from('ai_assistant_configs')
-        .update(updates)
-        .eq('room_id', roomId)
+        .from('rooms')
+        .update(roomUpdates)
+        .eq('id', roomId)
         .select()
         .single();
 
@@ -818,7 +763,17 @@ export const updateAIConfig = async (
         throw new Error(`Failed to update AI config: ${error.message}`);
     }
 
-    return data;
+    return {
+        id: data.id,
+        room_id: data.id,
+        model_name: data.ai_assistant_model || updates.model_name || 'gpt-4o',
+        system_prompt: data.ai_assistant_prompt,
+        temperature: updates.temperature ?? 0.7,
+        max_tokens: updates.max_tokens ?? 150,
+        is_active: Boolean(data.ai_assistant_enabled),
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString()
+    };
 };
 
 /**

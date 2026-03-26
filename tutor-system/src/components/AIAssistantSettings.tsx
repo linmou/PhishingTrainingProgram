@@ -175,8 +175,6 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             if (error instanceof Error) {
                 if (error.message.includes('function') && error.message.includes('does not exist')) {
                     errorMessage += '\n\nDatabase functions are missing. Please run the migration script in apply_ai_migrations.sql';
-                } else if (error.message.includes('ai_assistant_configs')) {
-                    errorMessage += '\n\nAI tables are missing. Please run the migration script in apply_ai_migrations.sql';
                 } else {
                     errorMessage += '\n\n' + error.message;
                 }

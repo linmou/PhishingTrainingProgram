@@ -83,14 +83,13 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
  * Get AI configuration (keep this - tutors need to set AI parameters)
  */
 export async function getAIConfigFromRoom(roomId: string) {
-    const { data: config } = await supabase
-        .from('ai_assistant_configs')
-        .select('*')
-        .eq('room_id', roomId)
+    const { data: room } = await supabase
+        .from('rooms')
+        .select('ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt')
+        .eq('id', roomId)
         .single();
 
-    // If no config exists, return default
-    if (!config) {
+    if (!room?.ai_assistant_enabled) {
         return {
             model_name: 'gpt-4o',
             system_prompt: 'You are a helpful AI assistant in a phishing training session.',
@@ -99,7 +98,12 @@ export async function getAIConfigFromRoom(roomId: string) {
         };
     }
 
-    return config;
+    return {
+        model_name: room.ai_assistant_model || 'gpt-4o',
+        system_prompt: room.ai_assistant_prompt || 'You are a helpful AI assistant in a phishing training session.',
+        temperature: 0.7,
+        max_tokens: 150
+    };
 }
 
 /**
@@ -111,7 +115,7 @@ export async function generateAIResponseWithExistingData(
     userMessage: string,
     userId: string
 ) {
-    // 1. Get AI config from ai_assistant_configs (or default)
+    // 1. Get AI config from room fields (or default)
     const aiConfig = await getAIConfigFromRoom(roomId);
     
     // 2. Build context from existing rooms + messages tables  

@@ -5,7 +5,7 @@
 
 import { buildAIContextFromExistingData } from '../simplifiedAIContext';
 import { generateSystemPrompt } from '../systemPrompts';
-import { generateTutorSuggestion } from '../aiService';
+import { generateTutorSuggestion, getAIConfig } from '../aiService';
 
 // Mock the supabase client
 jest.mock('../supabase', () => ({
@@ -255,6 +255,44 @@ describe('Context Message Formatting', () => {
     console.log('✅ Message Formatting Verified:');
     context.slice(1).forEach((msg, i) => {
       console.log(`  ${i + 1}. ${msg.content}`);
+    });
+  });
+});
+
+describe('AI config loading edge cases', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('loads AI settings directly from room fields', async () => {
+    // Test responsible for aiService.ts room-backed AI config loading after removing ai_assistant_configs from the runtime path.
+    const roomId = 'room-with-inline-ai-config';
+    const { supabase } = require('../supabase');
+
+    supabase.from.mockReturnValueOnce({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: {
+              id: roomId,
+              ai_assistant_enabled: true,
+              ai_assistant_model: 'gpt-4o',
+              ai_assistant_prompt: 'Use the room-level tutor guidance.',
+              created_at: '2026-03-20T00:00:00Z',
+              updated_at: '2026-03-26T00:00:00Z'
+            },
+            error: null
+          })
+        })
+      })
+    });
+
+    await expect(getAIConfig(roomId)).resolves.toMatchObject({
+      id: roomId,
+      room_id: roomId,
+      model_name: 'gpt-4o',
+      system_prompt: 'Use the room-level tutor guidance.',
+      is_active: true
     });
   });
 });

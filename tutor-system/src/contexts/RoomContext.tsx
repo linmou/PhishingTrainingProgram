@@ -3,9 +3,6 @@ import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndi
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
-    initializeAIAssistant,
-    getAIConfig,
-    updateAIConfig,
     generateTutorSuggestion,
     recordAISuggestionFeedback
 } from '../services/aiService';
