@@ -37,6 +37,27 @@ interface ChecklistItemComponentProps {
   onEditItem: (itemId: string, newText: string) => void;
 }
 
+const serializeChecklistItem = (item: ChecklistItem) => ({
+  id: item.id,
+  area_text: item.area_text,
+  item_type: item.item_type,
+  priority: item.priority ?? 'optional',
+  status: item.status,
+  understanding_level: item.understanding_level ?? 'none',
+  tutor_notes: item.tutor_notes,
+  attempts_count: item.attempts_count,
+  last_addressed: item.last_addressed ? new Date(item.last_addressed).toISOString() : null,
+  coverage_evidence: item.coverage_evidence.map(evidence => ({
+    id: evidence.id,
+    evidence_text: evidence.evidence_text,
+    analysis: evidence.analysis,
+    confidence_score: evidence.confidence_score,
+    detection_method: evidence.detection_method,
+    timestamp: new Date(evidence.timestamp).toISOString(),
+    message_id: evidence.message_id ?? null
+  }))
+});
+
 const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   item,
   onStatusChange,
@@ -321,10 +342,45 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     console.log('View evidence for item:', itemId);
   };
 
-  const handleExportReport = () => {
-    // TODO: Generate and download progress report
-    console.log('Export progress report');
-  };
+  const handleExportReport = useCallback(() => {
+    if (!checklist) {
+      return;
+    }
+
+    const allItems = [...checklist.detection_areas, ...checklist.verification_steps];
+    const safeTemplateName = checklist.template_name
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_-]/g, '');
+    const exportDate = new Date().toISOString().split('T')[0];
+
+    const exportData = {
+      room_id: roomId,
+      template_name: checklist.template_name,
+      exported_at: new Date().toISOString(),
+      summary: {
+        completion_percentage: progress?.completion_percentage ?? checklist.completion_percentage,
+        total_items: allItems.length,
+        covered_items: progress?.covered_areas ?? checklist.completed_items,
+        partially_covered_items: progress?.partially_covered_areas ?? allItems.filter(item => item.status === 'partially_covered').length,
+        pending_items: progress?.pending_areas ?? allItems.filter(item => item.status === 'pending').length
+      },
+      detection_areas: checklist.detection_areas.map(serializeChecklistItem),
+      verification_steps: checklist.verification_steps.map(serializeChecklistItem)
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+
+    downloadLink.href = downloadUrl;
+    downloadLink.download = `${safeTemplateName || 'learning_progress'}_learning_progress_${exportDate}.json`;
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(downloadUrl);
+  }, [checklist, progress, roomId]);
 
   const handleAddCustomArea = async (
     areaText: string, 

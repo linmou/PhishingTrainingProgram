@@ -1,3 +1,10 @@
+## Intent
+Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing and learning progress export.
+
+## Metadata
+- Updated: 2026-03-26
+- Commit ID: pending at update time
+
 # Tutor-System Documentation Hub
 
 This directory contains comprehensive architectural and implementation documentation for the tutor-system codebase - a React/TypeScript application designed for 1-to-1 online tutoring with a focus on phishing and cybersecurity education.
@@ -102,12 +109,17 @@ npm test src/services/__tests__/database.test.ts
 - **Evidence collection**: AI/tutor assessment of student understanding
 - **Template library**: Reusable educational scenarios
 - **Analytics foundation**: Complete audit trails for learning effectiveness
+- **Tutor export**: Learning Progress can be exported as JSON from the checklist panel, including summary counts and serialized checklist items
 
 ### 5. Context + Service Layer Pattern
 - **React Context**: Global state management for auth and room state
 - **Service abstraction**: Database operations isolated from UI logic
 - **Type safety**: Full TypeScript coverage with strict mode
 - **Error boundaries**: Comprehensive error handling with user feedback
+
+### 6. Router and Deployment
+- **Hash-based routing**: The app now uses `HashRouter` at the shell level so deep links survive refresh on static hosting without server-side SPA rewrites
+- **Render compatibility**: This avoids `not found` responses on refresh for routes such as room detail pages when deployed behind static hosting defaults
 
 ## 📊 **Test Coverage Metrics**
 
