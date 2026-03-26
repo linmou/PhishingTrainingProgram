@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test responsible for aiService.ts room-based AI configuration persistence after removing ai_assistant_configs from the runtime path.
+ * Test responsible for aiService.ts using room fields for base AI settings and ai_assistant_configs for persisted extended config fields.
  */
 
 jest.mock('../simplifiedAIContext', () => ({
@@ -25,37 +25,61 @@ describe('AI Service room source of truth', () => {
         jest.clearAllMocks();
     });
 
-    it('loads AI config directly from room fields', async () => {
-        mockSupabaseFrom.mockReturnValueOnce({
-            select: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    single: jest.fn().mockResolvedValue({
-                        data: {
-                            id: 'room-1',
-                            ai_assistant_enabled: true,
-                            ai_assistant_model: 'gpt-4o',
-                            ai_assistant_prompt: 'Room-backed AI prompt.',
-                            created_at: '2026-03-25T00:00:00Z',
-                            updated_at: '2026-03-26T00:00:00Z'
-                        },
-                        error: null
+    it('loads AI config from room fields and merges persisted extended config', async () => {
+        mockSupabaseFrom
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'room-1',
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_prompt: 'Room-backed AI prompt.',
+                                created_at: '2026-03-25T00:00:00Z',
+                                updated_at: '2026-03-26T00:00:00Z'
+                            },
+                            error: null
+                        })
                     })
                 })
             })
-        });
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    prompt_config: {
+                                        role: { role: 'low' }
+                                    },
+                                    temperature: 0.4,
+                                    max_tokens: 120
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            });
 
         await expect(getAIConfig('room-1')).resolves.toMatchObject({
             id: 'room-1',
             room_id: 'room-1',
             model_name: 'gpt-4o',
             system_prompt: 'Room-backed AI prompt.',
+            prompt_config: {
+                role: { role: 'low' }
+            },
+            temperature: 0.4,
+            max_tokens: 120,
             is_active: true,
             created_at: '2026-03-25T00:00:00Z',
             updated_at: '2026-03-26T00:00:00Z'
         });
     });
 
-    it('initializes AI by updating room fields instead of ai_assistant_configs', async () => {
+    it('initializes AI by updating room fields and persisting extended config', async () => {
         mockSupabaseRpc.mockResolvedValue({
             data: null,
             error: {
@@ -90,42 +114,86 @@ describe('AI Service room source of truth', () => {
                         })
                     })
                 })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: null,
+                            error: { code: 'PGRST116', message: 'No rows found' }
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null
+                })
             });
 
         await expect(
             initializeAIAssistant('room-1', 'gpt-4o', 'Initialize prompt', 'tutor-1')
         ).resolves.toBe('room-1');
 
-        expect(mockSupabaseFrom).toHaveBeenCalledTimes(2);
+        expect(mockSupabaseFrom).toHaveBeenCalledTimes(4);
         expect(mockSupabaseFrom.mock.calls[0][0]).toBe('rooms');
         expect(mockSupabaseFrom.mock.calls[1][0]).toBe('rooms');
+        expect(mockSupabaseFrom.mock.calls[2][0]).toBe('ai_assistant_configs');
+        expect(mockSupabaseFrom.mock.calls[3][0]).toBe('ai_assistant_configs');
     });
 
-    it('updates AI config through room fields and returns a synthesized config', async () => {
-        mockSupabaseFrom.mockReturnValueOnce({
-            update: jest.fn().mockReturnValue({
-                eq: jest.fn().mockReturnValue({
-                    select: jest.fn().mockReturnValue({
+    it('updates AI config through room fields and persists structured prompt config', async () => {
+        mockSupabaseFrom
+            .mockReturnValueOnce({
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        select: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    id: 'room-2',
+                                    ai_assistant_enabled: true,
+                                    ai_assistant_model: 'gpt-4',
+                                    ai_assistant_prompt: 'Updated room prompt.',
+                                    created_at: '2026-03-20T00:00:00Z',
+                                    updated_at: '2026-03-26T12:00:00Z'
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
                         single: jest.fn().mockResolvedValue({
                             data: {
-                                id: 'room-2',
-                                ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4',
-                                ai_assistant_prompt: 'Updated room prompt.',
-                                created_at: '2026-03-20T00:00:00Z',
-                                updated_at: '2026-03-26T12:00:00Z'
+                                id: 'ai-config-1'
                             },
                             error: null
                         })
                     })
                 })
             })
-        });
+            .mockReturnValueOnce({
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: null
+                    })
+                })
+            });
 
         await expect(
             updateAIConfig('room-2', {
                 model_name: 'gpt-4',
                 system_prompt: 'Updated room prompt.',
+                prompt_config: {
+                    role: { role: 'low' }
+                },
+                temperature: 0.4,
+                max_tokens: 120,
                 is_active: true
             })
         ).resolves.toMatchObject({
@@ -133,9 +201,16 @@ describe('AI Service room source of truth', () => {
             room_id: 'room-2',
             model_name: 'gpt-4',
             system_prompt: 'Updated room prompt.',
+            prompt_config: {
+                role: { role: 'low' }
+            },
+            temperature: 0.4,
+            max_tokens: 120,
             is_active: true
         });
 
-        expect(mockSupabaseFrom).toHaveBeenCalledWith('rooms');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(1, 'rooms');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(2, 'ai_assistant_configs');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(3, 'ai_assistant_configs');
     });
 });

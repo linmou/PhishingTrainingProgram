@@ -44,7 +44,13 @@ interface ParameterOverrides {
 #### Configuration Evolution
 - **Legacy configs**: Missing `prompt_config` field, simple string prompts
 - **Modern configs**: Structured with modular prompt components
-- **Upgrade strategy**: Preserves functionality while adding new features
+- **Upgrade strategy**: Preserves an existing saved room prompt while attaching structured defaults for override support
+
+#### Persistence Model
+- **`rooms`**: Stores AI enablement, active model, and rendered system prompt
+- **`ai_assistant_configs`**: Stores durable structured fields such as `prompt_config`, `temperature`, and `max_tokens`
+- **Merged runtime config**: `getAIConfig()` loads room fields first, then merges persisted extended config values from `ai_assistant_configs`
+- **Practical effect**: Quick Adjust changes like switching role from trusted adult to peer survive reloads and can be rehydrated into the UI
 
 ### Default Configuration Strategy (Lines 88-117)
 **Educational Defaults**:
@@ -140,8 +146,20 @@ interface ParameterOverrides {
     success: boolean;
     error?: string;
     contextMessages: string[]; // For analytics
+    appliedConfig?: {
+        model_name: string;
+        system_prompt: string | null;
+        prompt_config?: SystemPromptConfig | null;
+        temperature: number;
+        max_tokens: number;
+    };
 }
 ```
+
+**Quick Adjust persistence**:
+- The service strips only outer wrapper quotes from AI-generated suggestions
+- The service returns the fully applied config snapshot used to generate the suggestion
+- `RoomContext` persists that snapshot through `updateAIConfig()`, so role changes and parameter overrides are durable instead of session-only
 
 ## Helper Functions
 
@@ -171,6 +189,11 @@ interface ParameterOverrides {
 - `initializeAIAssistant`: Full initialization with prompt config
 - `updateAIConfig`: Configuration updates
 - `recordAISuggestionFeedback`: Simplified feedback tracking
+
+### Durable Role Persistence
+- Changing role to peer is represented as `prompt_config.role.role = 'low'`
+- `updateAIConfig()` persists that structured role into `ai_assistant_configs.prompt_config`
+- `getAIConfig()` reloads the structured role on the next page load and rehydrates both Quick Adjust and AI Assistant Settings from that saved value
 
 ### Migration Strategy
 - **Deprecated functions**: Marked with `@deprecated` annotations

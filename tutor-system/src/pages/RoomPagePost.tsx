@@ -600,6 +600,7 @@ const RoomPagePost: React.FC = () => {
                         parentMessage={currentSuggestionContext?.parentMessageContent}
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
+                        initialParameters={aiConfig?.prompt_config || undefined}
                     />
                 )}
 

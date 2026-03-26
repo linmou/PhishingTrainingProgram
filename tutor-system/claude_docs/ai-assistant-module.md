@@ -48,8 +48,9 @@ CREATE TABLE ai_conversation_contexts (
 
 Runtime source of truth:
 - The current application runtime stores AI enablement, model, and prompt on `rooms`
-- The tutor UI reads and writes room-level AI fields directly
-- Separate `ai_assistant_configs` rows are treated as legacy data, not the active runtime source
+- The tutor UI reads room-level AI fields for enablement and rendered prompt text
+- Structured controls such as `prompt_config`, `temperature`, and `max_tokens` are persisted in `ai_assistant_configs`
+- `getAIConfig()` merges room fields with `ai_assistant_configs` so Quick Adjust and settings screens can be rehydrated after reload
 
 **messages** - Added AI metadata:
 - `is_ai_generated`: Identifies AI-generated messages
@@ -77,6 +78,12 @@ Per-room settings include:
 - **System Prompts**: Custom AI behavior instructions
 - **Temperature**: Creativity control (0.0-1.0)
 - **Max Tokens**: Response length limits (50-500)
+- **Structured Prompt Config**: Role, communication style, cognitive parameters, emotional parameters, detection areas, and verification steps
+
+Quick Adjust persistence:
+- Regenerating a suggestion returns the effective applied config
+- The app persists that config immediately
+- Reopening Quick Adjust or AI Assistant Settings reflects the saved role and parameter values instead of default values
 
 ### 3. Conversation Context
 
@@ -194,8 +201,9 @@ interface RoomContextType {
 All AI functionality integrates with Supabase:
 - Real-time message updates include AI messages
 - Room-level AI settings stored on `rooms`
+- Extended AI config stored on `ai_assistant_configs`
 - Row Level Security for access control
-- JSONB storage for conversation context
+- JSONB storage for structured prompt config
 
 ## Testing
 

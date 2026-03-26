@@ -4,7 +4,8 @@ import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
     generateTutorSuggestion,
-    recordAISuggestionFeedback
+    recordAISuggestionFeedback,
+    updateAIConfig
 } from '../services/aiService';
 import { 
     validateRoomPassword,
@@ -228,20 +229,21 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // For simplified auth, use room data as AI config source
             if (currentRoom.ai_assistant_enabled) {
-                setAiConfig({
+                setAiConfig(prevConfig => ({
                     id: currentRoom.id,
                     room_id: currentRoom.id,
-                    model_name: currentRoom.ai_assistant_model || 'gpt-4o',
-                    system_prompt: currentRoom.ai_assistant_prompt || 
+                    model_name: currentRoom.ai_assistant_model || prevConfig?.model_name || 'gpt-4o',
+                    system_prompt: currentRoom.ai_assistant_prompt || prevConfig?.system_prompt ||
                         'You are a helpful AI assistant in an educational tutoring session. ' +
                         'Provide clear, educational responses to help students learn. ' +
                         'Be encouraging, patient, and focus on building understanding.',
-                    temperature: 0.7,
-                    max_tokens: 150,
+                    prompt_config: prevConfig?.room_id === currentRoom.id ? prevConfig.prompt_config ?? null : null,
+                    temperature: prevConfig?.room_id === currentRoom.id ? prevConfig.temperature : 0.7,
+                    max_tokens: prevConfig?.room_id === currentRoom.id ? prevConfig.max_tokens : 150,
                     is_active: true,
                     created_at: currentRoom.created_at,
                     updated_at: currentRoom.updated_at
-                });
+                }));
             } else {
                 setAiConfig(null);
             }
@@ -581,6 +583,29 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 parameterOverrides // Pass the parameter overrides
             );
 
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to regenerate AI response');
+            }
+
+            if (result.appliedConfig) {
+                const savedConfig = await updateAIConfig(currentRoom.id, {
+                    model_name: result.appliedConfig.model_name,
+                    system_prompt: result.appliedConfig.system_prompt,
+                    prompt_config: result.appliedConfig.prompt_config,
+                    temperature: result.appliedConfig.temperature,
+                    max_tokens: result.appliedConfig.max_tokens,
+                    is_active: true
+                });
+
+                setAiConfig(savedConfig);
+                setCurrentRoom(prevRoom => prevRoom ? {
+                    ...prevRoom,
+                    ai_assistant_model: savedConfig.model_name,
+                    ai_assistant_prompt: savedConfig.system_prompt,
+                    updated_at: savedConfig.updated_at
+                } : prevRoom);
+            }
+
             // Update the AI suggestion
             if (result.suggestion) {
                 setAiSuggestion(result.suggestion);
@@ -640,6 +665,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     room_id: currentRoom.id,
                     model_name: aiModel,
                     system_prompt: aiPrompt,
+                    prompt_config: config?.prompt_config ?? null,
                     temperature: config?.temperature || 0.7,
                     max_tokens: config?.max_tokens || 150,
                     is_active: true,

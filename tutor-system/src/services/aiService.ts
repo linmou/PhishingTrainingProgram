@@ -49,10 +49,117 @@ interface ParameterOverrides {
     max_tokens?: number;
 }
 
+type AppliedConfigSnapshot = Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'temperature' | 'max_tokens' | 'prompt_config'>;
+
 interface ProcessedAIConfig extends AIAssistantConfig {
     isLegacy: boolean;
     needsUpgrade: boolean;
 }
+
+const stripWrappedQuotes = (value: string): string => {
+    const trimmed = value.trim();
+
+    if (trimmed.length < 2) {
+        return value;
+    }
+
+    const firstChar = trimmed[0];
+    const lastChar = trimmed[trimmed.length - 1];
+    const hasWrappingQuotes = (
+        (firstChar === '"' && lastChar === '"') ||
+        (firstChar === '\'' && lastChar === '\'')
+    );
+
+    if (!hasWrappingQuotes) {
+        return value;
+    }
+
+    const innerContent = trimmed.slice(1, -1);
+    if (innerContent.includes('\n')) {
+        return value;
+    }
+
+    return innerContent.trim();
+};
+
+const getExtendedAIConfig = async (roomId: string): Promise<{
+    prompt_config?: AIAssistantConfig['prompt_config'];
+    temperature?: number;
+    max_tokens?: number;
+} | null> => {
+    try {
+        const { data, error } = await (supabase as any)
+            .from('ai_assistant_configs')
+            .select('prompt_config, temperature, max_tokens')
+            .eq('room_id', roomId)
+            .eq('is_active', true)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return null;
+            }
+
+            console.warn('Failed to load extended AI config, falling back to room fields:', error);
+            return null;
+        }
+
+        return data || null;
+    } catch (error) {
+        console.warn('Extended AI config lookup failed, falling back to room fields:', error);
+        return null;
+    }
+};
+
+const persistExtendedAIConfig = async (
+    roomId: string,
+    updates: Partial<Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'prompt_config' | 'temperature' | 'max_tokens' | 'is_active'>>
+): Promise<void> => {
+    const { data: existingConfig, error: existingError } = await (supabase as any)
+        .from('ai_assistant_configs')
+        .select('id')
+        .eq('room_id', roomId)
+        .single();
+
+    if (existingError && existingError.code !== 'PGRST116') {
+        throw new Error(`Failed to load persisted AI config: ${existingError.message}`);
+    }
+
+    const configPayload = {
+        room_id: roomId,
+        model_name: updates.model_name || 'gpt-4o',
+        system_prompt: updates.system_prompt ?? null,
+        prompt_config: updates.prompt_config ?? null,
+        temperature: updates.temperature ?? 0.7,
+        max_tokens: updates.max_tokens ?? 150,
+        is_active: updates.is_active ?? true,
+        updated_at: new Date().toISOString()
+    };
+
+    if (existingConfig?.id) {
+        const { error } = await (supabase as any)
+            .from('ai_assistant_configs')
+            .update(configPayload)
+            .eq('id', existingConfig.id);
+
+        if (error) {
+            throw new Error(`Failed to persist AI config: ${error.message}`);
+        }
+
+        return;
+    }
+
+    const { error } = await (supabase as any)
+        .from('ai_assistant_configs')
+        .insert({
+            ...configPayload,
+            created_at: new Date().toISOString()
+        });
+
+    if (error) {
+        throw new Error(`Failed to persist AI config: ${error.message}`);
+    }
+};
 
 // ============================================================================
 // 1. AI CONFIGURATION MANAGEMENT
@@ -124,7 +231,7 @@ class AIConfigurationManager {
         const detectionAreas = ['Suspicious links', 'Urgent language', 'Unexpected requests'];
         const verificationSteps = ['Check sender authenticity', 'Verify through official channels', 'Think before clicking'];
 
-        const newSystemPrompt = generateSystemPrompt({
+        const fallbackSystemPrompt = generateSystemPrompt({
             ...defaultConfig,
             detection_areas: detectionAreas,
             verification_steps: verificationSteps
@@ -132,7 +239,7 @@ class AIConfigurationManager {
 
         return {
             ...legacyConfig,
-            system_prompt: newSystemPrompt,
+            system_prompt: legacyConfig.system_prompt || fallbackSystemPrompt,
             prompt_config: {
                 ...defaultConfig,
                 detection_areas: detectionAreas,
@@ -217,6 +324,7 @@ class SystemPromptProcessor {
 
         return {
             ...config,
+            prompt_config: mergedConfig,
             system_prompt: newSystemPrompt,
             temperature: overrides.temperature ?? config.temperature,
             max_tokens: overrides.max_tokens ?? config.max_tokens
@@ -286,7 +394,7 @@ export class OpenAIService {
             }
 
             const data = await response.json();
-            const responseContent = data.choices[0]?.message?.content || '';
+            const responseContent = stripWrappedQuotes(data.choices[0]?.message?.content || '');
             const responseTime = Date.now() - startTime;
 
             return {
@@ -358,7 +466,7 @@ export class TutorSuggestionService {
             }
 
             const data = await response.json();
-            const suggestion = data.choices[0]?.message?.content || '';
+            const suggestion = stripWrappedQuotes(data.choices[0]?.message?.content || '');
 
             return {
                 suggestion,
@@ -495,7 +603,13 @@ export const generateTutorSuggestion = async (
     roomId: string,
     userId: string,
     parameterOverrides?: ParameterOverrides
-): Promise<{ suggestion: string; success: boolean; error?: string; contextMessages: string[] }> => {
+): Promise<{
+    suggestion: string;
+    success: boolean;
+    error?: string;
+    contextMessages: string[];
+    appliedConfig?: AppliedConfigSnapshot;
+}> => {
     try {
         // 1. Validate room and get basic data
         const roomData = await validateRoom(roomId);
@@ -521,6 +635,14 @@ export const generateTutorSuggestion = async (
         
         return {
             ...suggestionResult,
+            suggestion: stripWrappedQuotes(suggestionResult.suggestion),
+            appliedConfig: {
+                model_name: aiConfig.model_name,
+                system_prompt: aiConfig.system_prompt,
+                prompt_config: aiConfig.prompt_config,
+                temperature: aiConfig.temperature,
+                max_tokens: aiConfig.max_tokens
+            },
             contextMessages
         };
 
@@ -618,13 +740,16 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
         return null;
     }
 
+    const extendedConfig = await getExtendedAIConfig(roomId);
+
     return {
         id: room.id,
         room_id: room.id,
         model_name: room.ai_assistant_model || 'gpt-4o',
         system_prompt: room.ai_assistant_prompt,
-        temperature: 0.7,
-        max_tokens: 150,
+        prompt_config: extendedConfig?.prompt_config ?? null,
+        temperature: extendedConfig?.temperature ?? 0.7,
+        max_tokens: extendedConfig?.max_tokens ?? 150,
         is_active: true,
         created_at: room.created_at || new Date().toISOString(),
         updated_at: room.updated_at || new Date().toISOString()
@@ -728,6 +853,15 @@ const initializeAIAssistantFallback = async (
         throw new Error(`Failed to initialize AI config: ${updateError?.message || 'Room update failed'}`);
     }
 
+    await persistExtendedAIConfig(roomId, {
+        model_name: modelName,
+        system_prompt: systemPrompt,
+        prompt_config: promptConfig ?? null,
+        temperature: 0.7,
+        max_tokens: 150,
+        is_active: true
+    });
+
     return updatedRoom.id;
 };
 
@@ -736,7 +870,7 @@ const initializeAIAssistantFallback = async (
  */
 export const updateAIConfig = async (
     roomId: string,
-    updates: Partial<Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'temperature' | 'max_tokens' | 'is_active'>>
+    updates: Partial<Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'prompt_config' | 'temperature' | 'max_tokens' | 'is_active'>>
 ): Promise<AIAssistantConfig> => {
     const roomUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString()
@@ -763,11 +897,21 @@ export const updateAIConfig = async (
         throw new Error(`Failed to update AI config: ${error.message}`);
     }
 
+    await persistExtendedAIConfig(roomId, {
+        model_name: data.ai_assistant_model || updates.model_name || 'gpt-4o',
+        system_prompt: data.ai_assistant_prompt,
+        prompt_config: updates.prompt_config ?? null,
+        temperature: updates.temperature ?? 0.7,
+        max_tokens: updates.max_tokens ?? 150,
+        is_active: typeof updates.is_active === 'boolean' ? updates.is_active : Boolean(data.ai_assistant_enabled)
+    });
+
     return {
         id: data.id,
         room_id: data.id,
         model_name: data.ai_assistant_model || updates.model_name || 'gpt-4o',
         system_prompt: data.ai_assistant_prompt,
+        prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,
         max_tokens: updates.max_tokens ?? 150,
         is_active: Boolean(data.ai_assistant_enabled),

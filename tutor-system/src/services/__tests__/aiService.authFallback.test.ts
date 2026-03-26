@@ -100,4 +100,73 @@ describe('AI Service auth fallback', () => {
         expect(result.suggestion).toBeTruthy();
         expect(result.contextMessages).toEqual(['message-1', 'message-2']);
     });
+
+    it('strips only wrapping quotes from AI tutor suggestions', async () => {
+        global.fetch = jest.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                choices: [
+                    {
+                        message: {
+                            content: '"What makes the sender address look suspicious to you?"'
+                        }
+                    }
+                ]
+            })
+        } as Response);
+
+        mockSupabaseFrom
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'room-123',
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_prompt: 'Use room-level tutor guidance.',
+                                created_at: '2026-03-20T00:00:00Z',
+                                updated_at: '2026-03-26T00:00:00Z'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        order: jest.fn().mockReturnValue({
+                            limit: jest.fn().mockResolvedValue({
+                                data: [
+                                    { id: 'message-1' }
+                                ]
+                            })
+                        })
+                    })
+                })
+            });
+
+        const result = await generateTutorSuggestion('room-123', 'tutor-123');
+
+        expect(result.success).toBe(true);
+        expect(result.suggestion).toBe('What makes the sender address look suspicious to you?');
+        expect(result.appliedConfig).toMatchObject({
+            model_name: 'gpt-4o',
+            system_prompt: 'Use room-level tutor guidance.'
+        });
+    });
 });

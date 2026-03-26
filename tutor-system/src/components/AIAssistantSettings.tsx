@@ -4,11 +4,18 @@ import { useAuth } from '../contexts/AuthContext';
 import { AI_MODELS, AIModelName } from '../services/aiService';
 import { ScenarioTemplate, SCENARIO_TEMPLATES } from '../services/detectionTemplates';
 import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
+import { SystemPromptConfig } from '../services/prompts/types';
 import './AIAssistantSettings.css';
 
 interface AIAssistantSettingsProps {
     onClose: () => void;
 }
+
+const getPresetFromPromptConfig = (
+    promptConfig: SystemPromptConfig
+): 'casual_peer' | 'supportive_adult' => {
+    return promptConfig.role.role === 'low' ? 'casual_peer' : 'supportive_adult';
+};
 
 const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) => {
     const { currentRoom, aiConfig, toggleAIAssistant, loadingAI } = useRoom();
@@ -47,6 +54,46 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
     // Initialize form with current configuration
     useEffect(() => {
+        const applyPromptConfigToForm = (promptConfig: SystemPromptConfig) => {
+            setUseModularPrompts(true);
+            setSelectedPreset(getPresetFromPromptConfig(promptConfig));
+            setTeenSlang(promptConfig.communication_style.teen_slang);
+            setConversationalMarkers(promptConfig.communication_style.conversational_markers);
+            setUncertaintyExpression(promptConfig.communication_style.uncertainty_expression);
+            setConceptDensity(promptConfig.cognitive_parameters.concept_density);
+            setPerspectiveTaking(promptConfig.cognitive_parameters.perspective_taking);
+            setPersonalExamples(promptConfig.cognitive_parameters.personal_examples);
+            setConsequenceHighlighting(promptConfig.cognitive_parameters.consequence_highlighting);
+            setEnthusiasmLevel(promptConfig.emotional_parameters.enthusiasm_level);
+            setValidationFrequency(promptConfig.emotional_parameters.validation_frequency);
+            setMistakeNormalization(promptConfig.emotional_parameters.mistake_normalization);
+            setConfidenceBuilding(promptConfig.emotional_parameters.confidence_building);
+            setCustomDetectionAreas(promptConfig.detection_areas.join('\n'));
+            setCustomVerificationSteps(promptConfig.verification_steps.join('\n'));
+            setSelectedScenario('');
+        };
+
+        const applyDefaultFormState = () => {
+            setUseModularPrompts(false);
+            setSelectedPreset('supportive_adult');
+            setSelectedScenario('');
+            setCustomDetectionAreas('');
+            setCustomVerificationSteps('');
+
+            const defaultPreset = PRESET_CONFIGS.supportive_adult;
+            setTeenSlang(defaultPreset.communication_style.teen_slang);
+            setConversationalMarkers(defaultPreset.communication_style.conversational_markers);
+            setUncertaintyExpression(defaultPreset.communication_style.uncertainty_expression);
+            setConceptDensity(defaultPreset.cognitive_parameters.concept_density);
+            setPerspectiveTaking(defaultPreset.cognitive_parameters.perspective_taking);
+            setPersonalExamples(defaultPreset.cognitive_parameters.personal_examples);
+            setConsequenceHighlighting(defaultPreset.cognitive_parameters.consequence_highlighting);
+            setEnthusiasmLevel(defaultPreset.emotional_parameters.enthusiasm_level);
+            setValidationFrequency(defaultPreset.emotional_parameters.validation_frequency);
+            setMistakeNormalization(defaultPreset.emotional_parameters.mistake_normalization);
+            setConfidenceBuilding(defaultPreset.emotional_parameters.confidence_building);
+        };
+
         if (currentRoom) {
             setIsEnabled(currentRoom.ai_assistant_enabled);
         }
@@ -56,6 +103,12 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             setSystemPrompt(aiConfig.system_prompt || '');
             setTemperature(aiConfig.temperature);
             setMaxTokens(aiConfig.max_tokens);
+
+            if (aiConfig.prompt_config) {
+                applyPromptConfigToForm(aiConfig.prompt_config);
+            } else {
+                applyDefaultFormState();
+            }
         } else {
             // Set default values
             setSystemPrompt(
@@ -63,22 +116,9 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 'Provide clear, educational responses to help students learn. ' +
                 'Be encouraging, patient, and focus on building understanding.'
             );
-            
-            // Initialize with supportive_adult preset values
-            const defaultPreset = PRESET_CONFIGS.supportive_adult;
-            setTeenSlang(defaultPreset.communication_style.teen_slang);
-            setConversationalMarkers(defaultPreset.communication_style.conversational_markers);
-            setUncertaintyExpression(defaultPreset.communication_style.uncertainty_expression);
-            
-            setConceptDensity(defaultPreset.cognitive_parameters.concept_density);
-            setPerspectiveTaking(defaultPreset.cognitive_parameters.perspective_taking);
-            setPersonalExamples(defaultPreset.cognitive_parameters.personal_examples);
-            setConsequenceHighlighting(defaultPreset.cognitive_parameters.consequence_highlighting);
-            
-            setEnthusiasmLevel(defaultPreset.emotional_parameters.enthusiasm_level);
-            setValidationFrequency(defaultPreset.emotional_parameters.validation_frequency);
-            setMistakeNormalization(defaultPreset.emotional_parameters.mistake_normalization);
-            setConfidenceBuilding(defaultPreset.emotional_parameters.confidence_building);
+            setTemperature(0.7);
+            setMaxTokens(150);
+            applyDefaultFormState();
         }
     }, [currentRoom, aiConfig]);
 
@@ -160,9 +200,35 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
         setIsSaving(true);
         try {
+            const promptConfig = useModularPrompts ? {
+                role: {
+                    role: selectedPreset === 'casual_peer' ? 'low' as const : 'high' as const
+                },
+                communication_style: {
+                    teen_slang: teenSlang,
+                    conversational_markers: conversationalMarkers,
+                    uncertainty_expression: uncertaintyExpression
+                },
+                cognitive_parameters: {
+                    concept_density: conceptDensity,
+                    perspective_taking: perspectiveTaking,
+                    personal_examples: personalExamples,
+                    consequence_highlighting: consequenceHighlighting
+                },
+                emotional_parameters: {
+                    enthusiasm_level: enthusiasmLevel,
+                    validation_frequency: validationFrequency,
+                    mistake_normalization: mistakeNormalization,
+                    confidence_building: confidenceBuilding
+                },
+                detection_areas: customDetectionAreas.split('\n').filter(area => area.trim()),
+                verification_steps: customVerificationSteps.split('\n').filter(step => step.trim())
+            } : null;
+
             await toggleAIAssistant(isEnabled, {
                 model_name: selectedModel,
                 system_prompt: systemPrompt,
+                prompt_config: promptConfig,
                 temperature,
                 max_tokens: maxTokens
             });

@@ -16,6 +16,7 @@ interface AISuggestionBoxProps {
     parentMessage?: string;
     isRegenerating?: boolean;
     parameterConfig?: any; // Dynamic configuration structure
+    initialParameters?: ParameterOverrides;
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -26,7 +27,8 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     isVisible,
     parentMessage,
     isRegenerating = false,
-    parameterConfig = getDefaultParameterSelection()
+    parameterConfig = getDefaultParameterSelection(),
+    initialParameters
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
@@ -34,7 +36,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     const [quickAdjustCollapsed, setQuickAdjustCollapsed] = useState(true); // Start collapsed by default
     const [showInfoModal, setShowInfoModal] = useState<string | null>(null);
     const [parameters, setParameters] = useState<ParameterOverrides>(() => 
-        createDefaultParameters(parameterConfig)
+        ({ ...createDefaultParameters(parameterConfig), ...initialParameters })
     );
     
     const metadata = getParameterMetadata();
@@ -46,6 +48,13 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
             setFadeIn(false);
         }
     }, [isVisible]);
+
+    useEffect(() => {
+        setParameters({
+            ...createDefaultParameters(parameterConfig),
+            ...initialParameters
+        });
+    }, [parameterConfig, initialParameters]);
 
     const handleCopy = () => {
         onCopy(suggestion);
