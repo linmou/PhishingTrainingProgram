@@ -79,127 +79,91 @@ describe('Room Template Management', () => {
         (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([]);
     });
 
-    describe('Template Creation', () => {
-        test('should show "Save as template" checkbox in room creation form', async () => {
+    describe('Template Selection', () => {
+        test('should not show "Save as template" controls in room creation form', async () => {
             render(
                 <TestWrapper>
                     <TutorView />
                 </TestWrapper>
             );
 
-            // Click "Create a new Room" button
             const createButton = screen.getByText('➕ Create a new Room');
             fireEvent.click(createButton);
-
-            // Wait for form to appear and check for "Save as template" checkbox
-            await waitFor(() => {
-                expect(screen.getByLabelText(/save as template/i)).toBeInTheDocument();
-            });
-        });
-
-        test('should save room as template when checkbox is checked', async () => {
-            const mockCreateRoom = supabaseService.createRoom as jest.Mock;
-            const mockCreateTemplate = supabaseService.createRoomTemplate as jest.Mock;
-            
-            mockCreateRoom.mockResolvedValue({
-                id: 'room-123',
-                title: 'Test Room',
-                description: 'Test Description'
-            });
-            mockCreateTemplate.mockResolvedValue({
-                id: 'template-123',
-                template_name: 'Test Room'
-            });
-
-            render(
-                <TestWrapper>
-                    <TutorView />
-                </TestWrapper>
-            );
-
-            // Open room creation form
-            fireEvent.click(screen.getByText('➕ Create a new Room'));
 
             await waitFor(() => {
                 expect(screen.getByLabelText(/room title/i)).toBeInTheDocument();
             });
 
-            // Fill out the form
-            fireEvent.change(screen.getByLabelText(/room title/i), {
-                target: { value: 'Test Room' }
+            expect(screen.queryByLabelText(/save as template/i)).not.toBeInTheDocument();
+        });
+
+        test('should create room from selected template without saving a new template', async () => {
+            const mockCreateRoom = supabaseService.createRoom as jest.Mock;
+            const mockCreateTemplate = supabaseService.createRoomTemplate as jest.Mock;
+            const mockTemplates = [
+                {
+                    id: 'template-1',
+                    template_name: 'Global Privacy Template',
+                    title_template: 'Template Title',
+                    description_template: 'Template Description',
+                    image_url: '/images/room-presets/privacy_2.png',
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
+                }
+            ];
+            
+            mockCreateRoom.mockResolvedValue({
+                id: 'room-123',
+                title: 'Template Title',
+                description: 'Template Description'
             });
-            fireEvent.change(screen.getByLabelText(/description/i), {
-                target: { value: 'Test Description' }
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(mockTemplates);
+
+            render(
+                <TestWrapper>
+                    <TutorView />
+                </TestWrapper>
+            );
+
+            fireEvent.click(screen.getByText('➕ Create a new Room'));
+
+            await waitFor(() => {
+                expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
             });
 
-            // Check "Save as template"
-            const saveAsTemplateCheckbox = screen.getByLabelText(/save as template/i);
-            fireEvent.click(saveAsTemplateCheckbox);
+            fireEvent.change(screen.getByLabelText(/use template/i), {
+                target: { value: 'template-1' }
+            });
 
-            // Submit form
-            const submitButton = screen.getByText('🚀 Create Room');
-            fireEvent.click(submitButton);
+            fireEvent.click(screen.getByText('🚀 Create Room'));
 
             await waitFor(() => {
                 expect(mockCreateRoom).toHaveBeenCalledWith({
-                    title: 'Test Room',
-                    description: 'Test Description',
+                    title: 'Template Title',
+                    description: 'Template Description',
                     tutor_id: 'tutor-123',
-                    image_url: expect.any(String),
+                    image_url: '/images/room-presets/privacy_2.png',
                     pre_populated_dialogue: null,
                     op_id: 'tutor-123',
                     op_display_name: 'Test Tutor',
                     op_avatar_url: null,
                     password: null
                 });
-
-                expect(mockCreateTemplate).toHaveBeenCalledWith({
-                    tutor_id: 'tutor-123',
-                    template_name: 'Test Room',
-                    template_description: null,
-                    title_template: 'Test Room',
-                    description_template: 'Test Description',
-                    image_url: expect.any(String),
-                    pre_populated_dialogue: null,
-                    ai_config_template: null,
-                    op_config_template: expect.any(Object),
-                    password_config: null
-                });
             });
+
+            expect(mockCreateTemplate).not.toHaveBeenCalled();
         });
 
-        test('should not save template when checkbox is unchecked', async () => {
-            const mockCreateRoom = supabaseService.createRoom as jest.Mock;
-            const mockCreateTemplate = supabaseService.createRoomTemplate as jest.Mock;
-            
-            mockCreateRoom.mockResolvedValue({
-                id: 'room-123',
-                title: 'Test Room'
-            });
-
+        test('should load templates using the current tutor id', async () => {
             render(
                 <TestWrapper>
                     <TutorView />
                 </TestWrapper>
             );
 
-            // Open form and fill it out without checking template checkbox
-            fireEvent.click(screen.getByText('➕ Create a new Room'));
-
             await waitFor(() => {
-                expect(screen.getByLabelText(/room title/i)).toBeInTheDocument();
-            });
-
-            fireEvent.change(screen.getByLabelText(/room title/i), {
-                target: { value: 'Test Room' }
-            });
-
-            // Submit without checking "Save as template"
-            fireEvent.click(screen.getByText('🚀 Create Room'));
-
-            await waitFor(() => {
-                expect(mockCreateRoom).toHaveBeenCalled();
-                expect(mockCreateTemplate).not.toHaveBeenCalled();
+                expect(supabaseService.getRoomTemplatesByTutor).toHaveBeenCalledWith('tutor-123');
             });
         });
     });
@@ -331,27 +295,25 @@ describe('Room Template Management', () => {
                 );
             });
         });
-    });
 
-    describe('Template Management', () => {
-        test('should only show templates created by the current tutor', async () => {
+        test('should clear stale password and custom OP state when selected template does not define them', async () => {
             const mockTemplates = [
                 {
                     id: 'template-1',
-                    tutor_id: 'tutor-123', // Current tutor
-                    template_name: 'My Template'
-                },
-                {
-                    id: 'template-2', 
-                    tutor_id: 'other-tutor', // Different tutor
-                    template_name: 'Other Template'
+                    template_name: 'Global Basics Template',
+                    title_template: 'Global Basics Workshop',
+                    description_template: 'Default template without password or custom OP',
+                    image_url: '/images/room-presets/privacy_1.png',
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
                 }
             ];
 
-            // Service should only return current tutor's templates
-            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([
-                mockTemplates[0] // Only current tutor's template
-            ]);
+            const mockCreateRoom = supabaseService.createRoom as jest.Mock;
+            mockCreateRoom.mockResolvedValue({ id: 'room-123' });
+
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(mockTemplates);
 
             render(
                 <TestWrapper>
@@ -362,20 +324,70 @@ describe('Room Template Management', () => {
             fireEvent.click(screen.getByText('➕ Create a new Room'));
 
             await waitFor(() => {
-                expect(screen.getByText('My Template')).toBeInTheDocument();
-                expect(screen.queryByText('Other Template')).not.toBeInTheDocument();
+                expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
             });
-        });
 
-        test('should preserve all room configurations in template', async () => {
+            fireEvent.click(screen.getByText(/use custom op name/i));
+            fireEvent.click(screen.getByText(/enable password protection for this room/i));
+
+            const templateDropdown = screen.getByLabelText(/use template/i);
+            fireEvent.change(templateDropdown, { target: { value: 'template-1' } });
+
+            await waitFor(() => {
+                const titleInput = screen.getByLabelText(/room title/i) as HTMLInputElement;
+                expect(titleInput.value).toBe('Global Basics Workshop');
+            });
+
+            fireEvent.click(screen.getByText('🚀 Create Room'));
+
+            await waitFor(() => {
+                expect(mockCreateRoom).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        title: 'Global Basics Workshop',
+                        description: 'Default template without password or custom OP',
+                        op_id: 'tutor-123',
+                        op_display_name: 'Test Tutor',
+                        op_avatar_url: null,
+                        password: null
+                    })
+                );
+            });
+
+            expect(screen.queryByText('Custom OP name is required when using custom OP')).not.toBeInTheDocument();
+            expect(screen.queryByText('Password is required when password protection is enabled')).not.toBeInTheDocument();
+        });
+    });
+
+    describe('Template Management', () => {
+        test('should create room using template-provided password and custom OP configuration', async () => {
             const mockCreateRoom = supabaseService.createRoom as jest.Mock;
-            const mockCreateTemplate = supabaseService.createRoomTemplate as jest.Mock;
+            const mockTemplates = [
+                {
+                    id: 'template-1',
+                    template_name: 'Protected Scenario Template',
+                    title_template: 'Protected Scenario',
+                    description_template: 'Room created from protected template',
+                    image_url: '/images/room-presets/phishing_3.png',
+                    pre_populated_dialogue: [
+                        { user_name: 'OP', message: 'Is this real?', role: 'others' }
+                    ],
+                    op_config_template: {
+                        use_custom_op: true,
+                        custom_op_name: 'TrainingBot'
+                    },
+                    password_config: {
+                        use_password: true,
+                        password: 'SecureTraining'
+                    }
+                }
+            ];
             
             mockCreateRoom.mockResolvedValue({ 
                 id: 'room-123', 
-                title: 'Complex Training Room',
-                description: 'Advanced training scenario'
+                title: 'Protected Scenario',
+                description: 'Room created from protected template'
             });
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(mockTemplates);
 
             render(
                 <TestWrapper>
@@ -383,48 +395,31 @@ describe('Room Template Management', () => {
                 </TestWrapper>
             );
 
-            // Open form and fill out basic data
             fireEvent.click(screen.getByText('➕ Create a new Room'));
 
             await waitFor(() => {
-                expect(screen.getByLabelText(/room title/i)).toBeInTheDocument();
+                expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
             });
 
-            // Fill form with complex configuration data
-            fireEvent.change(screen.getByLabelText(/room title/i), {
-                target: { value: 'Complex Training Room' }
-            });
-            
-            fireEvent.change(screen.getByLabelText(/description/i), {
-                target: { value: 'Advanced training scenario' }
+            fireEvent.change(screen.getByLabelText(/use template/i), {
+                target: { value: 'template-1' }
             });
 
-            // Check save as template checkbox
-            const saveAsTemplateCheckbox = screen.getByLabelText(/save as template/i);
-            fireEvent.click(saveAsTemplateCheckbox);
-
-            // Submit the form
             fireEvent.click(screen.getByText('🚀 Create Room'));
 
-            // Verify that createRoomTemplate was called with the correct data structure
             await waitFor(() => {
-                expect(mockCreateTemplate).toHaveBeenCalledWith({
+                expect(mockCreateRoom).toHaveBeenCalledWith({
+                    title: 'Protected Scenario',
+                    description: 'Room created from protected template',
                     tutor_id: 'tutor-123',
-                    template_name: 'Complex Training Room',
-                    template_description: null,
-                    title_template: 'Complex Training Room',
-                    description_template: 'Advanced training scenario',
-                    image_url: expect.any(String),
-                    pre_populated_dialogue: null,
-                    ai_config_template: null,
-                    op_config_template: expect.objectContaining({
-                        use_custom_op: false,
-                        custom_op_name: null,
-                        op_id: 'tutor-123',
-                        op_display_name: 'Test Tutor',
-                        op_avatar_url: null
-                    }),
-                    password_config: null
+                    image_url: '/images/room-presets/phishing_3.png',
+                    pre_populated_dialogue: [
+                        { user_name: 'OP', message: 'Is this real?', role: 'others' }
+                    ],
+                    op_id: null,
+                    op_display_name: 'TrainingBot',
+                    op_avatar_url: null,
+                    password: 'SecureTraining'
                 });
             });
         });

@@ -44,6 +44,40 @@ const generateUserId = (displayName: string, role: UserRole) => {
 // Local storage keys
 const USER_STORAGE_KEY = 'tutor_system_user';
 
+const ensureStoredUserProfile = async (storedUser: User): Promise<User> => {
+    const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', storedUser.id)
+        .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+        throw new Error(`Failed to validate stored user: ${checkError.message}`);
+    }
+
+    if (existingUser) {
+        return existingUser;
+    }
+
+    const { data: insertedUser, error: insertError } = await supabase
+        .from('users')
+        .insert({
+            id: storedUser.id,
+            display_name: storedUser.display_name,
+            current_role: storedUser.current_role,
+            status: storedUser.status,
+            avatar_url: storedUser.avatar_url ?? null
+        })
+        .select()
+        .single();
+
+    if (insertError) {
+        throw new Error(`Failed to restore stored user profile: ${insertError.message}`);
+    }
+
+    return insertedUser;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -72,7 +106,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         displayName: userData.display_name,
                         role: userData.current_role
                     });
-                    setUser(userData);
+
+                    try {
+                        const syncedUser = await ensureStoredUserProfile(userData);
+                        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(syncedUser));
+                        setUser(syncedUser);
+                    } catch (syncError) {
+                        console.warn('⚠️ AuthContext: Failed to sync stored user with database, keeping local session:', syncError);
+                        setUser(userData);
+                    }
                 } else {
                     console.log('ℹ️  AuthContext: No stored user found');
                 }

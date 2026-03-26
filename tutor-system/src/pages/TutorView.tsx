@@ -134,43 +134,22 @@ const TutorView: React.FC = () => {
 
         const template = templates.find(t => t.id === templateId);
         if (template) {
+            const presetImage = template.image_url
+                ? presetImages.find(img => img.url === template.image_url)
+                : null;
+            const opConfig = template.op_config_template;
+            const passwordConfig = template.password_config;
+
             setSelectedTemplateId(templateId);
             setTitle(template.title_template);
             setDescription(template.description_template || '');
-            
-            // Set image if template has one
-            if (template.image_url) {
-                const presetImage = presetImages.find(img => img.url === template.image_url);
-                if (presetImage) {
-                    setSelectedImageId(presetImage.id);
-                    setCustomImageUrl(null);
-                } else {
-                    setCustomImageUrl(template.image_url);
-                    setSelectedImageId(null);
-                }
-            }
-            
-            // Set pre-populated dialogue
+            setSelectedImageId(presetImage?.id || null);
+            setCustomImageUrl(template.image_url && !presetImage ? template.image_url : null);
             setPrePopulatedDialogue(template.pre_populated_dialogue || []);
-            
-            // Set OP configuration if exists
-            if (template.op_config_template) {
-                const opConfig = template.op_config_template;
-                if (opConfig.use_custom_op) {
-                    setUseCustomOp(true);
-                    setCustomOpName(opConfig.custom_op_name || '');
-                } else {
-                    setUseCustomOp(false);
-                    setCustomOpName('');
-                }
-            }
-            
-            // Set password configuration if exists
-            if (template.password_config) {
-                const passwordConfig = template.password_config;
-                setUsePassword(passwordConfig.use_password || false);
-                setRoomPassword(passwordConfig.password || '');
-            }
+            setUseCustomOp(Boolean(opConfig?.use_custom_op));
+            setCustomOpName(opConfig?.use_custom_op ? opConfig.custom_op_name || '' : '');
+            setUsePassword(Boolean(passwordConfig?.use_password));
+            setRoomPassword(passwordConfig?.use_password ? passwordConfig.password || '' : '');
         }
     };
 

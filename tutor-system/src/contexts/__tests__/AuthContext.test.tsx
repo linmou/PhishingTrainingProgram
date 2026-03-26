@@ -167,6 +167,44 @@ describe('AuthContext - Task 3 Tests', () => {
             });
         });
 
+        it('should recreate stored user in database when localStorage user has no matching profile row', async () => {
+            localStorage.setItem('tutor_system_user', JSON.stringify(mockUser));
+
+            const selectSingle = jest.fn().mockResolvedValue({
+                data: null,
+                error: { code: 'PGRST116' }
+            });
+            const insertSingle = jest.fn().mockResolvedValue({
+                data: mockUser,
+                error: null
+            });
+
+            (supabase.from as jest.Mock).mockImplementation(() => ({
+                select: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        single: selectSingle
+                    }))
+                })),
+                insert: jest.fn(() => ({
+                    select: jest.fn(() => ({
+                        single: insertSingle
+                    }))
+                }))
+            }));
+
+            render(
+                <AuthProvider>
+                    <TestComponent />
+                </AuthProvider>
+            );
+
+            await waitFor(() => {
+                expect(selectSingle).toHaveBeenCalled();
+                expect(insertSingle).toHaveBeenCalled();
+                expect(screen.getByTestId('user')).toHaveTextContent(JSON.stringify(mockUser));
+            });
+        });
+
         it('should initialize without user when localStorage is empty', async () => {
             localStorage.clear();
 
@@ -239,9 +277,23 @@ describe('AuthContext - Task 3 Tests', () => {
             const mockFromChain = {
                 select: jest.fn(() => ({
                     limit: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: mockError
-                    })
+                        data: [],
+                        error: null
+                    }),
+                    eq: jest.fn(() => ({
+                        single: jest.fn().mockResolvedValue({
+                            data: null,
+                            error: { code: 'PGRST116' }
+                        })
+                    }))
+                })),
+                insert: jest.fn(() => ({
+                    select: jest.fn(() => ({
+                        single: jest.fn().mockResolvedValue({
+                            data: null,
+                            error: mockError
+                        })
+                    }))
                 }))
             };
 
