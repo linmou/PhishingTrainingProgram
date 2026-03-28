@@ -49,6 +49,7 @@ interface ParameterOverrides {
 #### Persistence Model
 - **`rooms`**: Stores AI enablement, active model, and rendered system prompt
 - **`ai_assistant_configs`**: Stores durable structured fields such as `prompt_config`, `temperature`, and `max_tokens`
+- **`ai_assistant_config_logs`**: Stores before/after snapshots, changed fields, actor, and reason for AI configuration changes
 - **Merged runtime config**: `getAIConfig()` loads room fields first, then merges persisted extended config values from `ai_assistant_configs`
 - **Practical effect**: Quick Adjust changes like switching role from trusted adult to peer survive reloads and can be rehydrated into the UI
 
@@ -160,6 +161,7 @@ interface ParameterOverrides {
 - The service strips only outer wrapper quotes from AI-generated suggestions
 - The service returns the fully applied config snapshot used to generate the suggestion
 - `RoomContext` persists that snapshot through `updateAIConfig()`, so role changes and parameter overrides are durable instead of session-only
+- Config change logging is best-effort. If audit logging fails because the log table is missing or returns a malformed error, the tutor workflow still succeeds and the service only emits a warning.
 
 ## Helper Functions
 
@@ -194,6 +196,7 @@ interface ParameterOverrides {
 - Changing role to peer is represented as `prompt_config.role.role = 'low'`
 - `updateAIConfig()` persists that structured role into `ai_assistant_configs.prompt_config`
 - `getAIConfig()` reloads the structured role on the next page load and rehydrates both Quick Adjust and AI Assistant Settings from that saved value
+- When a tutor changes AI settings or Quick Adjust parameters, `updateAIConfig()` also attempts to append an audit entry to `ai_assistant_config_logs`
 
 ### Migration Strategy
 - **Deprecated functions**: Marked with `@deprecated` annotations

@@ -669,7 +669,7 @@ const RoomPagePost: React.FC = () => {
                 <div className="modal-overlay" onClick={() => setShowDownloadModal(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3>Download Room Data</h3>
-                        <p>Choose what to download:</p>
+                        <p>Choose a format to download:</p>
                         <div className="download-options">
                             <button 
                                 className="btn btn-primary"
@@ -688,15 +688,6 @@ const RoomPagePost: React.FC = () => {
                                 }}
                             >
                                 Complete Data (JSON)
-                            </button>
-                            <button 
-                                className="btn btn-primary"
-                                onClick={() => {
-                                    downloadChatHistory('feedback');
-                                    setShowDownloadModal(false);
-                                }}
-                            >
-                                Download Feedback Data
                             </button>
                             <button 
                                 className="btn btn-secondary"

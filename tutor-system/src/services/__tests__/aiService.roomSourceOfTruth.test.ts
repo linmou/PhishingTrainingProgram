@@ -146,6 +146,39 @@ describe('AI Service room source of truth', () => {
     it('updates AI config through room fields and persists structured prompt config', async () => {
         mockSupabaseFrom
             .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'room-2',
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_prompt: 'Old prompt.',
+                                created_at: '2026-03-20T00:00:00Z',
+                                updated_at: '2026-03-26T11:00:00Z'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    prompt_config: null,
+                                    temperature: 0.7,
+                                    max_tokens: 150
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
                 update: jest.fn().mockReturnValue({
                     eq: jest.fn().mockReturnValue({
                         select: jest.fn().mockReturnValue({
@@ -178,10 +211,16 @@ describe('AI Service room source of truth', () => {
             })
             .mockReturnValueOnce({
                 update: jest.fn().mockReturnValue({
-                    eq: jest.fn().mockResolvedValue({
+                    eq: jest.fn().mockReturnValue({
                         data: null,
                         error: null
                     })
+                })
+            })
+            .mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: null
                 })
             });
 
@@ -195,7 +234,7 @@ describe('AI Service room source of truth', () => {
                 temperature: 0.4,
                 max_tokens: 120,
                 is_active: true
-            })
+            }, 'tutor-2')
         ).resolves.toMatchObject({
             id: 'room-2',
             room_id: 'room-2',
@@ -211,6 +250,136 @@ describe('AI Service room source of truth', () => {
 
         expect(mockSupabaseFrom).toHaveBeenNthCalledWith(1, 'rooms');
         expect(mockSupabaseFrom).toHaveBeenNthCalledWith(2, 'ai_assistant_configs');
-        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(3, 'ai_assistant_configs');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(3, 'rooms');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(4, 'ai_assistant_configs');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(5, 'ai_assistant_configs');
+        expect(mockSupabaseFrom).toHaveBeenNthCalledWith(6, 'ai_assistant_config_logs');
+
+        const insertMock = mockSupabaseFrom.mock.results[5].value.insert as jest.Mock;
+        expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+            room_id: 'room-2',
+            changed_by_user_id: 'tutor-2',
+            change_reason: 'settings_update',
+            changed_fields: ['model_name', 'system_prompt', 'prompt_config', 'temperature', 'max_tokens'],
+            previous_config: {
+                model_name: 'gpt-4o',
+                system_prompt: 'Old prompt.',
+                prompt_config: null,
+                temperature: 0.7,
+                max_tokens: 150,
+                is_active: true
+            },
+            new_config: {
+                model_name: 'gpt-4',
+                system_prompt: 'Updated room prompt.',
+                prompt_config: {
+                    role: { role: 'low' }
+                },
+                temperature: 0.4,
+                max_tokens: 120,
+                is_active: true
+            }
+        }));
+    });
+
+    it('does not fail the main config update when AI config logging fails', async () => {
+        mockSupabaseFrom
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'room-3',
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_prompt: 'Original prompt.',
+                                created_at: '2026-03-20T00:00:00Z',
+                                updated_at: '2026-03-26T11:00:00Z'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    prompt_config: null,
+                                    temperature: 0.7,
+                                    max_tokens: 150
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        select: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    id: 'room-3',
+                                    ai_assistant_enabled: true,
+                                    ai_assistant_model: 'gpt-4o',
+                                    ai_assistant_prompt: 'Adjusted prompt.',
+                                    created_at: '2026-03-20T00:00:00Z',
+                                    updated_at: '2026-03-26T12:00:00Z'
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'ai-config-3'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: null
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: {}
+                })
+            });
+
+        await expect(
+            updateAIConfig('room-3', {
+                system_prompt: 'Adjusted prompt.',
+                prompt_config: {
+                    role: { role: 'high' }
+                },
+                temperature: 0.5,
+                max_tokens: 180,
+                is_active: true
+            }, 'tutor-3')
+        ).resolves.toMatchObject({
+            id: 'room-3',
+            room_id: 'room-3',
+            system_prompt: 'Adjusted prompt.',
+            temperature: 0.5,
+            max_tokens: 180,
+            is_active: true
+        });
     });
 });

@@ -169,6 +169,7 @@ export interface Database {
                     id: string
                     room_id: string
                     model_name: string
+                    prompt_config?: any | null
                     system_prompt: string | null
                     temperature: number
                     max_tokens: number
@@ -180,6 +181,7 @@ export interface Database {
                     id?: string
                     room_id: string
                     model_name?: string
+                    prompt_config?: any | null
                     system_prompt?: string | null
                     temperature?: number
                     max_tokens?: number
@@ -191,12 +193,45 @@ export interface Database {
                     id?: string
                     room_id?: string
                     model_name?: string
+                    prompt_config?: any | null
                     system_prompt?: string | null
                     temperature?: number
                     max_tokens?: number
                     is_active?: boolean
                     created_at?: string
                     updated_at?: string
+                }
+            }
+            ai_assistant_config_logs: {
+                Row: {
+                    id: string
+                    room_id: string
+                    changed_by_user_id: string
+                    change_reason: string
+                    changed_fields: string[]
+                    previous_config: any
+                    new_config: any
+                    changed_at: string
+                }
+                Insert: {
+                    id?: string
+                    room_id: string
+                    changed_by_user_id: string
+                    change_reason?: string
+                    changed_fields: string[]
+                    previous_config: any
+                    new_config: any
+                    changed_at?: string
+                }
+                Update: {
+                    id?: string
+                    room_id?: string
+                    changed_by_user_id?: string
+                    change_reason?: string
+                    changed_fields?: string[]
+                    previous_config?: any
+                    new_config?: any
+                    changed_at?: string
                 }
             }
             session_checklists: {

@@ -1,8 +1,8 @@
 ## Intent
-Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing and learning progress export.
+Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-03-26
+- Updated: 2026-03-28
 - Commit ID: pending at update time
 
 # Tutor-System Documentation Hub

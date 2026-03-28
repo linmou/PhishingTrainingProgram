@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User, AIInteraction, MessageFeedbackStats } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User, AIInteraction, MessageFeedbackStats, AIConfigChangeLog } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
     generateTutorSuggestion,
     recordAISuggestionFeedback,
-    updateAIConfig
+    updateAIConfig,
+    getAIConfigChangeHistory
 } from '../services/aiService';
 import { 
     validateRoomPassword,
@@ -16,6 +17,7 @@ import {
     clearChatHistory as clearChatHistoryService
 } from '../services/supabase';
 import { ParameterOverrides } from '../components/AISuggestionBox';
+import { buildRoomExportData } from './roomExportBuilder';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -595,7 +597,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     temperature: result.appliedConfig.temperature,
                     max_tokens: result.appliedConfig.max_tokens,
                     is_active: true
-                });
+                }, user.id, 'suggestion_regeneration');
 
                 setAiConfig(savedConfig);
                 setCurrentRoom(prevRoom => prevRoom ? {
@@ -639,66 +641,39 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setLoadingAI(true);
         try {
+            let savedConfig: AIAssistantConfig | null = null;
+
             if (enabled) {
-                // For simplified auth, just update the room directly
                 const aiModel = config?.model_name || 'gpt-4o';
-                const aiPrompt = config?.system_prompt || 
+                const aiPrompt = config?.system_prompt ||
                     'You are a helpful AI assistant in an educational tutoring session. ' +
                     'Provide clear, educational responses to help students learn. ' +
                     'Be encouraging, patient, and focus on building understanding.';
-                
-                // Store AI config in the room itself
-                const { error: updateError } = await supabase
-                    .from('rooms')
-                    .update({ 
-                        ai_assistant_enabled: true,
-                        ai_assistant_model: aiModel,
-                        ai_assistant_prompt: aiPrompt
-                    })
-                    .eq('id', currentRoom.id);
 
-                if (updateError) throw updateError;
-                
-                // Set a dummy AI config for the app to use
-                setAiConfig({
-                    id: currentRoom.id,
-                    room_id: currentRoom.id,
+                savedConfig = await updateAIConfig(currentRoom.id, {
                     model_name: aiModel,
                     system_prompt: aiPrompt,
                     prompt_config: config?.prompt_config ?? null,
                     temperature: config?.temperature || 0.7,
                     max_tokens: config?.max_tokens || 150,
-                    is_active: true,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-
-                // Reload the room to get updated data
-                const { data: updatedRoom, error: roomError } = await supabase
-                    .from('rooms')
-                    .select('*')
-                    .eq('id', currentRoom.id)
-                    .single();
-
-                if (roomError) throw roomError;
-                setCurrentRoom(updatedRoom);
+                    is_active: true
+                }, user.id, 'settings_enable');
             } else {
-                // Disable AI assistant
-                const { data: updatedRoom, error: roomError } = await supabase
-                    .from('rooms')
-                    .update({ 
-                        ai_assistant_enabled: false,
-                        ai_assistant_model: null,
-                        ai_assistant_prompt: null
-                    })
-                    .eq('id', currentRoom.id)
-                    .select()
-                    .single();
-
-                if (roomError) throw roomError;
-                setCurrentRoom(updatedRoom);
-                setAiConfig(null);
+                savedConfig = await updateAIConfig(currentRoom.id, {
+                    system_prompt: null,
+                    is_active: false
+                }, user.id, 'settings_disable');
             }
+
+            const { data: updatedRoom, error: roomError } = await supabase
+                .from('rooms')
+                .select('*')
+                .eq('id', currentRoom.id)
+                .single();
+
+            if (roomError) throw roomError;
+            setCurrentRoom(updatedRoom);
+            setAiConfig(savedConfig);
         } catch (error) {
             console.error('Failed to toggle AI assistant:', error);
             throw error;
@@ -758,7 +733,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const downloadChatHistory = async (format: 'txt' | 'json' | 'feedback' = 'txt') => {
+    const downloadChatHistory = async (format: 'txt' | 'json' = 'txt') => {
         if (!currentRoom || !messages) return;
 
         const roomTitle = currentRoom.title.replace(/\s+/g, '_');
@@ -767,79 +742,43 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Only include AI data for tutors
         const isTutor = user?.current_role === 'tutor';
         
-        if (format === 'json' || format === 'feedback') {
+        if (format === 'json') {
             // Get feedback summary for the room
             let feedbackSummary = null;
+            let aiConfigHistory: AIConfigChangeLog[] = [];
             try {
                 feedbackSummary = await getRoomFeedbackSummary(currentRoom.id);
             } catch (error) {
                 console.warn('Failed to get room feedback summary:', error);
             }
-
-            const exportData: any = {
-                room: {
-                    id: currentRoom.id,
-                    title: currentRoom.title,
-                    created_at: currentRoom.created_at
-                },
-                messages: messages.map(msg => ({
-                    id: msg.id,
-                    user_role: msg.user_role,
-                    display_name: msg.display_name,
-                    content: msg.content,
-                    created_at: msg.created_at,
-                    is_ai_generated: msg.is_ai_generated,
-                    feedback_stats: messageFeedbackStats[msg.id] || undefined
-                })),
-                export_metadata: {
-                    exported_at: new Date().toISOString(),
-                    total_messages: messages.length
-                }
-            };
-
-            // Add feedback summary if available
-            if (feedbackSummary) {
-                exportData.feedback_summary = feedbackSummary;
-            }
-            
-            // Only add AI-related data for tutors
             if (isTutor) {
-                exportData.room.ai_enabled = currentRoom.ai_assistant_enabled;
-                exportData.room.ai_model = currentRoom.ai_assistant_model;
-                exportData.messages = messages.map(msg => ({
-                    id: msg.id,
-                    user_role: msg.user_role,
-                    display_name: msg.display_name,
-                    content: msg.content,
-                    created_at: msg.created_at,
-                    is_ai_generated: msg.is_ai_generated,
-                    ai_model_used: msg.ai_model_used
-                }));
-                exportData.ai_interactions = aiInteractions;
-                exportData.export_metadata.total_ai_interactions = aiInteractions.length;
-                exportData.export_metadata.interaction_summary = {
-                    accepted: aiInteractions.filter(i => i.tutor_action === 'accepted').length,
-                    rejected: aiInteractions.filter(i => i.tutor_action === 'rejected').length,
-                    modified: aiInteractions.filter(i => i.tutor_action === 'modified').length,
-                    ignored: aiInteractions.filter(i => i.tutor_action === 'ignored').length
-                };
+                try {
+                    aiConfigHistory = await getAIConfigChangeHistory(currentRoom.id);
+                } catch (error) {
+                    console.warn('Failed to get AI config change history:', error);
+                }
             }
+
+            const exportData = buildRoomExportData({
+                room: currentRoom,
+                messages,
+                messageFeedbackStats,
+                feedbackSummary,
+                aiInteractions,
+                aiConfigHistory,
+                isTutor
+            });
             
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            const filename = format === 'feedback' 
-                ? `${roomTitle}_feedback_export_${timestamp}.json`
-                : `${roomTitle}_chat_export_${timestamp}.json`;
+            const filename = `${roomTitle}_chat_export_${timestamp}.json`;
             link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            
-            // If this is feedback format, we're done
-            if (format === 'feedback') return;
         } else {
             // TXT format - only include AI data for tutors
             const aiSummary = isTutor && aiInteractions.length > 0 ? [

@@ -108,6 +108,26 @@ export interface AIAssistantConfig {
     updated_at: string;
 }
 
+export interface AIAssistantConfigSnapshot {
+    model_name: string | null;
+    system_prompt: string | null;
+    prompt_config: SystemPromptConfig | null;
+    temperature: number | null;
+    max_tokens: number | null;
+    is_active: boolean;
+}
+
+export interface AIConfigChangeLog {
+    id: string;
+    room_id: string;
+    changed_by_user_id: string;
+    change_reason: string;
+    changed_fields: string[];
+    previous_config: AIAssistantConfigSnapshot;
+    new_config: AIAssistantConfigSnapshot;
+    changed_at: string;
+}
+
 export interface AIConversationContext {
     id: string;
     room_id: string;
@@ -167,7 +187,7 @@ export interface RoomContextType {
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
     loadingAI: boolean;
-    downloadChatHistory: (format?: 'txt' | 'json' | 'feedback') => void;
+    downloadChatHistory: (format?: 'txt' | 'json') => void;
     aiSuggestion: string | null;
     clearAISuggestion: () => void;
     aiInteractions: AIInteraction[];
@@ -345,6 +365,8 @@ export interface ChatExportData {
         id: string;
         title: string;
         created_at: string;
+        ai_enabled?: boolean;
+        ai_model?: string | null;
     };
     messages: Array<{
         id: string;
@@ -353,15 +375,23 @@ export interface ChatExportData {
         content: string;
         created_at: string;
         is_ai_generated: boolean;
+        ai_model_used?: string | null;
         feedback_stats?: MessageFeedbackStats;
     }>;
-    ai_interactions: AIInteraction[];
+    export_metadata: {
+        exported_at: string;
+        total_messages: number;
+        total_ai_interactions?: number;
+        interaction_summary?: {
+            accepted: number;
+            rejected: number;
+            modified: number;
+            ignored: number;
+        };
+    };
+    ai_interactions?: AIInteraction[];
+    ai_config_history?: AIConfigChangeLog[];
     feedback_summary?: {
-        total_messages_with_feedback: number;
-        total_feedback_count: number;
-        average_rating: number;
-        like_percentage: number;
-        dislike_percentage: number;
-        rating_distribution: Record<number, number>;
+        [key: string]: any;
     };
 } 

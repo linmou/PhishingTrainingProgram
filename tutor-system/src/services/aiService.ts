@@ -8,7 +8,7 @@
  * 4. Public API - clean interface for external usage
  */
 
-import { AIResponse, ConversationMessage, AIAssistantConfig } from '../types';
+import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
@@ -108,6 +108,108 @@ const getExtendedAIConfig = async (roomId: string): Promise<{
     } catch (error) {
         console.warn('Extended AI config lookup failed, falling back to room fields:', error);
         return null;
+    }
+};
+
+const buildConfigSnapshot = ({
+    roomModelName,
+    roomPrompt,
+    promptConfig,
+    temperature,
+    maxTokens,
+    isActive
+}: {
+    roomModelName: string | null | undefined;
+    roomPrompt: string | null | undefined;
+    promptConfig: AIAssistantConfig['prompt_config'] | null | undefined;
+    temperature: number | null | undefined;
+    maxTokens: number | null | undefined;
+    isActive: boolean;
+}): AIAssistantConfigSnapshot => ({
+    model_name: roomModelName ?? null,
+    system_prompt: roomPrompt ?? null,
+    prompt_config: promptConfig ?? null,
+    temperature: temperature ?? null,
+    max_tokens: maxTokens ?? null,
+    is_active: isActive
+});
+
+const getCurrentAIConfigSnapshot = async (roomId: string): Promise<AIAssistantConfigSnapshot | null> => {
+    const { data: room, error } = await supabase
+        .from('rooms')
+        .select('id, ai_assistant_enabled, ai_assistant_model, ai_assistant_prompt')
+        .eq('id', roomId)
+        .single();
+
+    if (error) {
+        throw new Error(`Failed to load current AI room config: ${error.message}`);
+    }
+
+    const extendedConfig = await getExtendedAIConfig(roomId);
+
+    return buildConfigSnapshot({
+        roomModelName: room.ai_assistant_model,
+        roomPrompt: room.ai_assistant_prompt,
+        promptConfig: extendedConfig?.prompt_config ?? null,
+        temperature: extendedConfig?.temperature ?? (room.ai_assistant_enabled ? 0.7 : null),
+        maxTokens: extendedConfig?.max_tokens ?? (room.ai_assistant_enabled ? 150 : null),
+        isActive: Boolean(room.ai_assistant_enabled)
+    });
+};
+
+const getChangedConfigFields = (
+    previousConfig: AIAssistantConfigSnapshot,
+    nextConfig: AIAssistantConfigSnapshot
+): string[] => {
+    const fields: Array<keyof AIAssistantConfigSnapshot> = [
+        'model_name',
+        'system_prompt',
+        'prompt_config',
+        'temperature',
+        'max_tokens',
+        'is_active'
+    ];
+
+    return fields.filter((field) => JSON.stringify(previousConfig[field]) !== JSON.stringify(nextConfig[field]));
+};
+
+const recordAIConfigChange = async ({
+    roomId,
+    changedByUserId,
+    changeReason,
+    previousConfig,
+    nextConfig
+}: {
+    roomId: string;
+    changedByUserId: string;
+    changeReason: string;
+    previousConfig: AIAssistantConfigSnapshot;
+    nextConfig: AIAssistantConfigSnapshot;
+}): Promise<void> => {
+    const changedFields = getChangedConfigFields(previousConfig, nextConfig);
+
+    if (!changedFields.length) {
+        return;
+    }
+
+    const { error } = await (supabase as any)
+        .from('ai_assistant_config_logs')
+        .insert({
+            room_id: roomId,
+            changed_by_user_id: changedByUserId,
+            change_reason: changeReason,
+            changed_fields: changedFields,
+            previous_config: previousConfig,
+            new_config: nextConfig,
+            changed_at: new Date().toISOString()
+        });
+
+    if (error) {
+        const errorMessage =
+            (typeof error?.message === 'string' && error.message.trim()) ||
+            (typeof error?.code === 'string' && error.code.trim()) ||
+            'Unknown logging error';
+        throw new Error(`Failed to record AI config change: ${errorMessage}`);
     }
 };
 
@@ -870,8 +972,11 @@ const initializeAIAssistantFallback = async (
  */
 export const updateAIConfig = async (
     roomId: string,
-    updates: Partial<Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'prompt_config' | 'temperature' | 'max_tokens' | 'is_active'>>
+    updates: Partial<Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'prompt_config' | 'temperature' | 'max_tokens' | 'is_active'>>,
+    changedByUserId?: string,
+    changeReason: string = 'settings_update'
 ): Promise<AIAssistantConfig> => {
+    const previousConfig = changedByUserId ? await getCurrentAIConfigSnapshot(roomId) : null;
     const roomUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString()
     };
@@ -906,7 +1011,7 @@ export const updateAIConfig = async (
         is_active: typeof updates.is_active === 'boolean' ? updates.is_active : Boolean(data.ai_assistant_enabled)
     });
 
-    return {
+    const savedConfig = {
         id: data.id,
         room_id: data.id,
         model_name: data.ai_assistant_model || updates.model_name || 'gpt-4o',
@@ -918,6 +1023,43 @@ export const updateAIConfig = async (
         created_at: data.created_at || new Date().toISOString(),
         updated_at: data.updated_at || new Date().toISOString()
     };
+
+    if (changedByUserId && previousConfig) {
+        try {
+            await recordAIConfigChange({
+                roomId,
+                changedByUserId,
+                changeReason,
+                previousConfig,
+                nextConfig: buildConfigSnapshot({
+                    roomModelName: savedConfig.model_name,
+                    roomPrompt: savedConfig.system_prompt,
+                    promptConfig: savedConfig.prompt_config ?? null,
+                    temperature: savedConfig.temperature,
+                    maxTokens: savedConfig.max_tokens,
+                    isActive: savedConfig.is_active
+                })
+            });
+        } catch (loggingError) {
+            console.warn('AI config change logging failed; continuing without audit entry.', loggingError);
+        }
+    }
+
+    return savedConfig;
+};
+
+export const getAIConfigChangeHistory = async (roomId: string): Promise<AIConfigChangeLog[]> => {
+    const { data, error } = await (supabase as any)
+        .from('ai_assistant_config_logs')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('changed_at', { ascending: true });
+
+    if (error) {
+        throw new Error(`Failed to load AI config change history: ${error.message}`);
+    }
+
+    return data || [];
 };
 
 /**
