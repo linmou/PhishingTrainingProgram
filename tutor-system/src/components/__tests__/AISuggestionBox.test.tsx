@@ -55,4 +55,70 @@ describe('AISuggestionBox', () => {
         expect(selectValues[2]).toBe('high');
         expect(selectValues[3]).toBe('low');
     });
+
+    it('preserves a tutor dropdown selection across parent rerenders with equivalent props', () => {
+        const onRegenerate = jest.fn();
+        const initialParameters = {
+            role: { role: 'low' as const },
+            communication_style: {
+                teen_slang: 'high' as const,
+                conversational_markers: 'high' as const,
+                uncertainty_expression: 'low' as const
+            }
+        };
+
+        const { container, rerender } = render(
+            <AISuggestionBox
+                suggestion="Try asking about the sender domain."
+                onCopy={jest.fn()}
+                onReject={jest.fn()}
+                onRegenerate={onRegenerate}
+                isVisible={true}
+                isRegenerating={false}
+                parameterConfig={getConfigurationPreset('standard')}
+                initialParameters={initialParameters}
+            />
+        );
+
+        fireEvent.click(screen.getByText('Quick Adjust'));
+
+        const selects = Array.from(container.querySelectorAll('select'));
+        const teenSlangSelect = selects[1] as HTMLSelectElement;
+
+        expect(teenSlangSelect.value).toBe('high');
+
+        fireEvent.change(teenSlangSelect, { target: { value: 'low' } });
+        expect(teenSlangSelect.value).toBe('low');
+
+        rerender(
+            <AISuggestionBox
+                suggestion="Try asking about the sender domain."
+                onCopy={jest.fn()}
+                onReject={jest.fn()}
+                onRegenerate={onRegenerate}
+                isVisible={true}
+                isRegenerating={false}
+                parameterConfig={getConfigurationPreset('standard')}
+                initialParameters={{
+                    role: { role: 'low' },
+                    communication_style: {
+                        teen_slang: 'high',
+                        conversational_markers: 'high',
+                        uncertainty_expression: 'low'
+                    }
+                }}
+            />
+        );
+
+        fireEvent.click(screen.getByText('Regenerate'));
+
+        expect(onRegenerate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                role: { role: 'low' },
+                communication_style: expect.objectContaining({
+                    teen_slang: 'low'
+                })
+            })
+        );
+    });
 });

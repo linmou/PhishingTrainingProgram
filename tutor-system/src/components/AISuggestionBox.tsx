@@ -49,13 +49,6 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
         }
     }, [isVisible]);
 
-    useEffect(() => {
-        setParameters({
-            ...createDefaultParameters(parameterConfig),
-            ...initialParameters
-        });
-    }, [parameterConfig, initialParameters]);
-
     const handleCopy = () => {
         onCopy(suggestion);
         setCopied(true);
