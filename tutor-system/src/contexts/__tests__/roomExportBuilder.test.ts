@@ -1,5 +1,5 @@
 /**
- * Test responsible for roomExportBuilder.ts and ensures room JSON exports merge chat, feedback, and tutor-only AI config history without overlapping message shapes.
+ * Test responsible for roomExportBuilder.ts and ensures room JSON exports merge chat, feedback, and tutor-only AI interaction snapshots without overlapping message shapes.
  */
 
 import { buildRoomExportData } from '../roomExportBuilder';
@@ -68,33 +68,7 @@ describe('buildRoomExportData', () => {
       tutor_action: 'modified',
       tutor_final_response: 'Look at the domain and the urgency language.',
       response_time_ms: 5000,
-    },
-  ];
-
-  const feedbackSummary = {
-    total_feedback: 2,
-    average_rating: 4.5,
-    liked_messages: 1,
-    disliked_messages: 0,
-  };
-
-  const aiConfigHistory = [
-    {
-      id: 'log-1',
-      room_id: 'room-123',
-      changed_by_user_id: 'tutor-123',
-      changed_at: '2026-03-28T12:05:00Z',
-      change_reason: 'settings_save',
-      changed_fields: ['temperature', 'prompt_config'],
-      previous_config: {
-        model_name: 'gpt-4o',
-        system_prompt: 'Stay focused on scam detection.',
-        prompt_config: null,
-        temperature: 0.7,
-        max_tokens: 150,
-        is_active: true,
-      },
-      new_config: {
+      ai_config_snapshot: {
         model_name: 'gpt-4o',
         system_prompt: 'Stay focused on scam detection.',
         prompt_config: {
@@ -107,14 +81,20 @@ describe('buildRoomExportData', () => {
     },
   ];
 
-  it('builds a tutor JSON export that merges feedback data into chat export and includes AI config history', () => {
+  const feedbackSummary = {
+    total_feedback: 2,
+    average_rating: 4.5,
+    liked_messages: 1,
+    disliked_messages: 0,
+  };
+
+  it('builds a tutor JSON export that merges feedback data into chat export and includes AI interaction snapshots', () => {
     const exportData = buildRoomExportData({
       room,
       messages,
       messageFeedbackStats,
       feedbackSummary,
       aiInteractions,
-      aiConfigHistory,
       isTutor: true,
     });
 
@@ -122,7 +102,7 @@ describe('buildRoomExportData', () => {
     expect(exportData.room.ai_enabled).toBe(true);
     expect(exportData.room.ai_model).toBe('gpt-4o');
     expect(exportData.ai_interactions).toEqual(aiInteractions);
-    expect(exportData.ai_config_history).toEqual(aiConfigHistory);
+    expect(exportData.ai_config_history).toBeUndefined();
     expect(exportData.export_metadata.total_ai_interactions).toBe(1);
     expect(exportData.messages).toEqual([
       expect.objectContaining({
@@ -136,6 +116,20 @@ describe('buildRoomExportData', () => {
         ai_model_used: 'gpt-4o',
       }),
     ]);
+    expect(exportData.ai_interactions?.[0]).toEqual(
+      expect.objectContaining({
+        ai_config_snapshot: {
+          model_name: 'gpt-4o',
+          system_prompt: 'Stay focused on scam detection.',
+          prompt_config: {
+            role: { role: 'high' },
+          },
+          temperature: 0.4,
+          max_tokens: 150,
+          is_active: true,
+        },
+      })
+    );
   });
 
   it('omits tutor-only AI export data for non-tutor exports while keeping feedback summary merged', () => {
@@ -145,7 +139,6 @@ describe('buildRoomExportData', () => {
       messageFeedbackStats,
       feedbackSummary,
       aiInteractions,
-      aiConfigHistory,
       isTutor: false,
     });
 

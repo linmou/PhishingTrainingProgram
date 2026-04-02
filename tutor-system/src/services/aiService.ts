@@ -20,6 +20,9 @@ import { buildAIContextFromExistingData } from './simplifiedAIContext';
 
 const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
 const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://api.openai.com/v1';
+const getRuntimeEnvironment = (): 'debug' | 'production' =>
+    process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
+const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
 
 export const AI_MODELS = {
     'gpt-4o': {
@@ -49,7 +52,7 @@ interface ParameterOverrides {
     max_tokens?: number;
 }
 
-type AppliedConfigSnapshot = Pick<AIAssistantConfig, 'model_name' | 'system_prompt' | 'temperature' | 'max_tokens' | 'prompt_config'>;
+type AppliedConfigSnapshot = AIAssistantConfigSnapshot;
 
 interface ProcessedAIConfig extends AIAssistantConfig {
     isLegacy: boolean;
@@ -741,9 +744,10 @@ export const generateTutorSuggestion = async (
             appliedConfig: {
                 model_name: aiConfig.model_name,
                 system_prompt: aiConfig.system_prompt,
-                prompt_config: aiConfig.prompt_config,
+                prompt_config: aiConfig.prompt_config ?? null,
                 temperature: aiConfig.temperature,
-                max_tokens: aiConfig.max_tokens
+                max_tokens: aiConfig.max_tokens,
+                is_active: aiConfig.is_active
             },
             contextMessages
         };
@@ -1041,7 +1045,11 @@ export const updateAIConfig = async (
                 })
             });
         } catch (loggingError) {
-            console.warn('AI config change logging failed; continuing without audit entry.', loggingError);
+            if (shouldTolerateAuditLogFailure()) {
+                console.warn('AI config change logging failed in debug environment.', loggingError);
+            } else {
+                throw loggingError;
+            }
         }
     }
 

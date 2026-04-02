@@ -10,7 +10,7 @@ import { RoomProvider, useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { generateTutorSuggestion, updateAIConfig } from '../../services/aiService';
-import { Room, User } from '../../types';
+import { AIAssistantConfigSnapshot, Room, User } from '../../types';
 
 jest.mock('../../services/supabase', () => ({
     supabase: {
@@ -163,7 +163,15 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'What makes this message suspicious?',
                 success: true,
-                contextMessages: ['message-1']
+                contextMessages: ['message-1'],
+                appliedConfig: {
+                    model_name: 'gpt-4o',
+                    system_prompt: 'Original prompt',
+                    prompt_config: null,
+                    temperature: 0.7,
+                    max_tokens: 150,
+                    is_active: true
+                }
             })
             .mockResolvedValueOnce({
                 suggestion: 'Which red flags stand out first?',
@@ -263,35 +271,40 @@ describe('RoomContext Quick Adjust persistence', () => {
             });
         });
 
-        expect(updateAIConfig).toHaveBeenCalledWith('room-1', {
-            model_name: 'gpt-4o',
-            system_prompt: 'Updated quick-adjust prompt',
-            prompt_config: {
-                role: { role: 'low' },
-                communication_style: {
-                    teen_slang: 'high',
-                    conversational_markers: 'low',
-                    uncertainty_expression: 'low'
+        expect(updateAIConfig).toHaveBeenCalledWith(
+            'room-1',
+            {
+                model_name: 'gpt-4o',
+                system_prompt: 'Updated quick-adjust prompt',
+                prompt_config: {
+                    role: { role: 'low' },
+                    communication_style: {
+                        teen_slang: 'high',
+                        conversational_markers: 'low',
+                        uncertainty_expression: 'low'
+                    },
+                    cognitive_parameters: {
+                        concept_density: 'low',
+                        perspective_taking: 'high',
+                        personal_examples: 'high',
+                        consequence_highlighting: 'high'
+                    },
+                    emotional_parameters: {
+                        enthusiasm_level: 'low',
+                        validation_frequency: 'high',
+                        mistake_normalization: 'high',
+                        confidence_building: 'high'
+                    },
+                    detection_areas: ['Suspicious links'],
+                    verification_steps: ['Check sender']
                 },
-                cognitive_parameters: {
-                    concept_density: 'low',
-                    perspective_taking: 'high',
-                    personal_examples: 'high',
-                    consequence_highlighting: 'high'
-                },
-                emotional_parameters: {
-                    enthusiasm_level: 'low',
-                    validation_frequency: 'high',
-                    mistake_normalization: 'high',
-                    confidence_building: 'high'
-                },
-                detection_areas: ['Suspicious links'],
-                verification_steps: ['Check sender']
+                temperature: 0.4,
+                max_tokens: 120,
+                is_active: true
             },
-            temperature: 0.4,
-            max_tokens: 120,
-            is_active: true
-        });
+            'tutor-1',
+            'suggestion_regeneration'
+        );
 
         expect(roomApi!.aiConfig).toMatchObject({
             model_name: 'gpt-4o',
@@ -302,5 +315,94 @@ describe('RoomContext Quick Adjust persistence', () => {
             temperature: 0.4,
             max_tokens: 120
         });
+    });
+
+    it('records the effective AI config snapshot with each interaction', async () => {
+        const generatedSnapshot: AIAssistantConfigSnapshot = {
+            model_name: 'gpt-4o',
+            system_prompt: 'Original prompt',
+            prompt_config: null,
+            temperature: 0.7,
+            max_tokens: 150,
+            is_active: true
+        };
+
+        const regeneratedSnapshot: AIAssistantConfigSnapshot = {
+            model_name: 'gpt-4o',
+            system_prompt: 'Updated quick-adjust prompt',
+            prompt_config: {
+                role: { role: 'low' }
+            } as any,
+            temperature: 0.4,
+            max_tokens: 120,
+            is_active: true
+        };
+
+        (generateTutorSuggestion as jest.Mock)
+            .mockResolvedValueOnce({
+                suggestion: 'What makes this message suspicious?',
+                success: true,
+                contextMessages: ['message-1'],
+                appliedConfig: generatedSnapshot
+            })
+            .mockResolvedValueOnce({
+                suggestion: 'Which red flags stand out first?',
+                success: true,
+                contextMessages: ['message-1'],
+                appliedConfig: regeneratedSnapshot
+            });
+
+        (updateAIConfig as jest.Mock).mockResolvedValue({
+            id: 'room-1',
+            room_id: 'room-1',
+            ...regeneratedSnapshot,
+            created_at: '2026-03-20T00:00:00Z',
+            updated_at: '2026-03-26T12:00:00Z'
+        });
+
+        let roomApi: ReturnType<typeof useRoom> | undefined;
+
+        render(
+            <RoomProvider>
+                <TestRoomHelper onReady={(api) => { roomApi = api; }} />
+            </RoomProvider>
+        );
+
+        await waitFor(() => {
+            expect(roomApi).toBeDefined();
+        });
+
+        await act(async () => {
+            await roomApi!.joinRoom('room-1');
+        });
+
+        await act(async () => {
+            await roomApi!.generateAIResponse();
+        });
+
+        await act(async () => {
+            await roomApi!.regenerateAIResponse({
+                role: {
+                    role: 'low'
+                },
+                temperature: 0.4,
+                max_tokens: 120
+            });
+        });
+
+        await act(async () => {
+            await roomApi!.recordAIFeedback('accepted', 'Which red flags stand out first?');
+        });
+
+        expect(roomApi!.aiInteractions).toEqual([
+            expect.objectContaining({
+                tutor_action: 'modified',
+                ai_config_snapshot: generatedSnapshot
+            }),
+            expect.objectContaining({
+                tutor_action: 'accepted',
+                ai_config_snapshot: regeneratedSnapshot
+            })
+        ]);
     });
 });

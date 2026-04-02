@@ -1,8 +1,8 @@
 /**
- * Build a single room export payload that keeps chat, feedback, and tutor-only AI metadata in one non-overlapping JSON structure.
+ * Build a single room export payload that keeps chat, feedback, and tutor-only AI interaction metadata in one non-overlapping JSON structure.
  */
 
-import { AIConfigChangeLog, AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room } from '../types';
+import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room } from '../types';
 
 interface BuildRoomExportDataArgs {
   room: Room;
@@ -10,7 +10,6 @@ interface BuildRoomExportDataArgs {
   messageFeedbackStats: Record<string, MessageFeedbackStats>;
   feedbackSummary: ChatExportData['feedback_summary'] | null;
   aiInteractions: AIInteraction[];
-  aiConfigHistory: AIConfigChangeLog[];
   isTutor: boolean;
 }
 
@@ -20,7 +19,6 @@ export const buildRoomExportData = ({
   messageFeedbackStats,
   feedbackSummary,
   aiInteractions,
-  aiConfigHistory,
   isTutor,
 }: BuildRoomExportDataArgs): ChatExportData => {
   const exportData: ChatExportData = {
@@ -56,7 +54,6 @@ export const buildRoomExportData = ({
   exportData.room.ai_enabled = room.ai_assistant_enabled;
   exportData.room.ai_model = room.ai_assistant_model;
   exportData.ai_interactions = aiInteractions;
-  exportData.ai_config_history = aiConfigHistory;
   exportData.export_metadata.total_ai_interactions = aiInteractions.length;
   exportData.export_metadata.interaction_summary = {
     accepted: aiInteractions.filter((entry) => entry.tutor_action === 'accepted').length,

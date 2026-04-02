@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, TypingIndicator, User, AIInteraction, MessageFeedbackStats, AIConfigChangeLog } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
     generateTutorSuggestion,
     recordAISuggestionFeedback,
-    updateAIConfig,
-    getAIConfigChangeHistory
+    updateAIConfig
 } from '../services/aiService';
 import { 
     validateRoomPassword,
@@ -44,6 +43,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         parentMessageContent: string;
         startTime: number;
         contextMessages: string[];
+        aiConfigSnapshot?: AIAssistantConfigSnapshot;
     } | null>(null);
     const [messageFeedbackStats, setMessageFeedbackStats] = useState<Record<string, MessageFeedbackStats>>({});
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -543,7 +543,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     parentMessageId,
                     parentMessageContent,
                     startTime: Date.now(),
-                    contextMessages: result.contextMessages
+                    contextMessages: result.contextMessages,
+                    aiConfigSnapshot: result.appliedConfig
                 });
             }
         } catch (error) {
@@ -591,11 +592,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (result.appliedConfig) {
                 const savedConfig = await updateAIConfig(currentRoom.id, {
-                    model_name: result.appliedConfig.model_name,
+                    model_name: result.appliedConfig.model_name ?? undefined,
                     system_prompt: result.appliedConfig.system_prompt,
                     prompt_config: result.appliedConfig.prompt_config,
-                    temperature: result.appliedConfig.temperature,
-                    max_tokens: result.appliedConfig.max_tokens,
+                    temperature: result.appliedConfig.temperature ?? undefined,
+                    max_tokens: result.appliedConfig.max_tokens ?? undefined,
                     is_active: true
                 }, user.id, 'suggestion_regeneration');
 
@@ -616,7 +617,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setCurrentSuggestionContext({
                     ...currentSuggestionContext,
                     startTime: Date.now(),
-                    contextMessages: result.contextMessages
+                    contextMessages: result.contextMessages,
+                    aiConfigSnapshot: result.appliedConfig
                 });
             }
         } catch (error) {
@@ -745,18 +747,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (format === 'json') {
             // Get feedback summary for the room
             let feedbackSummary = null;
-            let aiConfigHistory: AIConfigChangeLog[] = [];
             try {
                 feedbackSummary = await getRoomFeedbackSummary(currentRoom.id);
             } catch (error) {
                 console.warn('Failed to get room feedback summary:', error);
-            }
-            if (isTutor) {
-                try {
-                    aiConfigHistory = await getAIConfigChangeHistory(currentRoom.id);
-                } catch (error) {
-                    console.warn('Failed to get AI config change history:', error);
-                }
             }
 
             const exportData = buildRoomExportData({
@@ -765,7 +759,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 messageFeedbackStats,
                 feedbackSummary,
                 aiInteractions,
-                aiConfigHistory,
                 isTutor
             });
             
@@ -916,7 +909,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ai_suggestion: aiSuggestion,
                 tutor_action: action,
                 tutor_final_response: finalResponse,
-                response_time_ms: responseTime
+                response_time_ms: responseTime,
+                ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot
             };
 
             setAIInteractions(prev => [...prev, interaction]);

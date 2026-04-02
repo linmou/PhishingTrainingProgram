@@ -21,8 +21,20 @@ const mockSupabaseFrom = supabase.from as jest.Mock;
 const mockSupabaseRpc = supabase.rpc as jest.Mock;
 
 describe('AI Service room source of truth', () => {
+    const originalEnvironment = process.env.REACT_APP_ENVIRONMENT;
+
     beforeEach(() => {
         jest.clearAllMocks();
+        delete process.env.REACT_APP_ENVIRONMENT;
+    });
+
+    afterAll(() => {
+        if (originalEnvironment === undefined) {
+            delete process.env.REACT_APP_ENVIRONMENT;
+            return;
+        }
+
+        process.env.REACT_APP_ENVIRONMENT = originalEnvironment;
     });
 
     it('loads AI config from room fields and merges persisted extended config', async () => {
@@ -282,7 +294,9 @@ describe('AI Service room source of truth', () => {
         }));
     });
 
-    it('does not fail the main config update when AI config logging fails', async () => {
+    it('fails the config update in production when AI config logging fails', async () => {
+        process.env.REACT_APP_ENVIRONMENT = 'production';
+
         mockSupabaseFrom
             .mockReturnValueOnce({
                 select: jest.fn().mockReturnValue({
@@ -359,7 +373,10 @@ describe('AI Service room source of truth', () => {
             .mockReturnValueOnce({
                 insert: jest.fn().mockResolvedValue({
                     data: null,
-                    error: {}
+                    error: {
+                        code: '42P01',
+                        message: 'relation "public.ai_assistant_config_logs" does not exist'
+                    }
                 })
             });
 
@@ -373,9 +390,108 @@ describe('AI Service room source of truth', () => {
                 max_tokens: 180,
                 is_active: true
             }, 'tutor-3')
+        ).rejects.toThrow('Failed to record AI config change: relation "public.ai_assistant_config_logs" does not exist');
+    });
+
+    it('allows the config update in debug when AI config logging fails', async () => {
+        process.env.REACT_APP_ENVIRONMENT = 'debug';
+
+        mockSupabaseFrom
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'room-4',
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_prompt: 'Original prompt.',
+                                created_at: '2026-03-20T00:00:00Z',
+                                updated_at: '2026-03-26T11:00:00Z'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    prompt_config: null,
+                                    temperature: 0.7,
+                                    max_tokens: 150
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        select: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    id: 'room-4',
+                                    ai_assistant_enabled: true,
+                                    ai_assistant_model: 'gpt-4o',
+                                    ai_assistant_prompt: 'Adjusted prompt.',
+                                    created_at: '2026-03-20T00:00:00Z',
+                                    updated_at: '2026-03-26T12:00:00Z'
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'ai-config-4'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                update: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockResolvedValue({
+                        data: null,
+                        error: null
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                insert: jest.fn().mockResolvedValue({
+                    data: null,
+                    error: {
+                        code: '42P01',
+                        message: 'relation "public.ai_assistant_config_logs" does not exist'
+                    }
+                })
+            });
+
+        await expect(
+            updateAIConfig('room-4', {
+                system_prompt: 'Adjusted prompt.',
+                prompt_config: {
+                    role: { role: 'high' }
+                },
+                temperature: 0.5,
+                max_tokens: 180,
+                is_active: true
+            }, 'tutor-4')
         ).resolves.toMatchObject({
-            id: 'room-3',
-            room_id: 'room-3',
+            id: 'room-4',
+            room_id: 'room-4',
             system_prompt: 'Adjusted prompt.',
             temperature: 0.5,
             max_tokens: 180,

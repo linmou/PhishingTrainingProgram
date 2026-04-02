@@ -101,15 +101,16 @@ channel.on('postgres_changes', { event: 'INSERT', table: 'messages' })
 ### Chat History Management (Lines 738-887)
 **Export Formats**:
 - **TXT**: Human-readable format with timestamps
-- **JSON**: Structured room export with metadata, feedback summary, and tutor-only AI audit data
+- **JSON**: Structured room export with metadata, feedback summary, and tutor-only AI interaction data
 
 **Role-based Data**:
-- **Tutors**: JSON export includes merged chat + feedback data, AI suggestion analytics, and AI config change history
-- **Students/Observers**: Export excludes tutor-only AI analytics and config history
+- **Tutors**: JSON export includes merged chat + feedback data, AI suggestion analytics, and per-interaction `ai_config_snapshot` data
+- **Students/Observers**: Export excludes tutor-only AI analytics and config snapshots
 
 **Export Design**:
 - JSON export is built through a single export builder so one message shape is used for both feedback and chat data
 - Feedback export is no longer a separate download path; feedback summary is part of the room JSON export
+- AI config change history remains in Supabase for audit/debug use, but is no longer included in the normal JSON download
 
 ### Feedback System (Lines 968-1030)
 **Message-level feedback**:

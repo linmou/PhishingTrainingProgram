@@ -196,6 +196,7 @@ export interface RoomContextType {
         parentMessageContent: string;
         startTime: number;
         contextMessages: string[];
+        aiConfigSnapshot?: AIAssistantConfigSnapshot;
     } | null;
     recordAIFeedback: (action: 'accepted' | 'rejected' | 'modified' | 'ignored', finalResponse?: string) => Promise<void>;
     // Message feedback functions
@@ -358,6 +359,7 @@ export interface AIInteraction {
     tutor_action: 'accepted' | 'rejected' | 'modified' | 'ignored';
     tutor_final_response?: string;
     response_time_ms?: number;
+    ai_config_snapshot?: AIAssistantConfigSnapshot;
 }
 
 export interface ChatExportData {
@@ -390,7 +392,6 @@ export interface ChatExportData {
         };
     };
     ai_interactions?: AIInteraction[];
-    ai_config_history?: AIConfigChangeLog[];
     feedback_summary?: {
         [key: string]: any;
     };
