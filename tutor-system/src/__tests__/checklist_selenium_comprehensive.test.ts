@@ -1,6 +1,6 @@
 /**
- * Comprehensive Selenium Tests for AI Checklist Integration
- * Combines all checklist-related selenium tests into one organized suite
+ * Comprehensive Selenium Tests for AI Checklist Integration.
+ * Combines all checklist-related browser tests into one organized opt-in external suite.
  * 
  * Test Coverage:
  * 1. Basic Navigation and UI Elements
@@ -13,7 +13,9 @@
 import { Builder, WebDriver, By, until, WebElement } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
 
-describe('Checklist Feature - Comprehensive Selenium Tests', () => {
+const describeBrowserE2E = process.env.RUN_BROWSER_E2E_TESTS === 'true' ? describe : describe.skip;
+
+describeBrowserE2E('Checklist Feature - Comprehensive Selenium Tests', () => {
   let driver: WebDriver;
   const baseUrl = 'http://localhost:3000';
   const testRoomId = '910b9930-df5a-43c7-ac85-68394aaf6ccb'; // Nintendo Switch room

@@ -21,6 +21,7 @@ jest.mock('../services/supabase', () => ({
     },
     getRoomsByTutor: jest.fn(),
     createRoom: jest.fn(),
+    getRoomTemplatesByTutor: jest.fn(),
 }));
 jest.mock('../contexts/AuthContext', () => ({
     ...jest.requireActual('../contexts/AuthContext'),
@@ -33,11 +34,12 @@ jest.mock('../contexts/RoomContext', () => ({
 jest.mock('jspdf');
 
 // Import the mocked functions
-import { getRoomsByTutor, createRoom } from '../services/supabase';
+import { getRoomsByTutor, createRoom, getRoomTemplatesByTutor } from '../services/supabase';
 
 const mockSupabaseClient = supabase as jest.Mocked<typeof supabase>;
 const mockGetRoomsByTutor = getRoomsByTutor as jest.Mock;
 const mockCreateRoom = createRoom as jest.Mock;
+const mockGetRoomTemplatesByTutor = getRoomTemplatesByTutor as jest.Mock;
 const mockUseAuth = useAuth as jest.Mock;
 const mockUseRoom = useRoom as jest.Mock;
 
@@ -72,6 +74,7 @@ defineFeature(feature, test => {
     beforeEach(() => {
         // Reset mocks and state before each test
         jest.clearAllMocks();
+        jest.useFakeTimers();
         location = { pathname: '/' };
         mockUser = { 
             id: 'tutor-id-123', 
@@ -147,6 +150,7 @@ defineFeature(feature, test => {
         
         // Mock getRoomsByTutor to return empty array initially
         mockGetRoomsByTutor.mockResolvedValue([]);
+        mockGetRoomTemplatesByTutor.mockResolvedValue([]);
         
         // Mock createRoom to simulate room creation
         mockCreateRoom.mockResolvedValue({
@@ -164,6 +168,11 @@ defineFeature(feature, test => {
         
         // Mock scrollIntoView
         window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    });
+
+    afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
     });
 
     const renderWithRouter = (initialPath: string) => {
@@ -251,6 +260,10 @@ defineFeature(feature, test => {
         });
 
         and('the tutor is automatically navigated to the new room page', async () => {
+            act(() => {
+                jest.advanceTimersByTime(1500);
+            });
+
             await waitFor(() => {
                 expect(screen.getByTestId('location-display')).toHaveTextContent('/room/newly-created-room');
             });

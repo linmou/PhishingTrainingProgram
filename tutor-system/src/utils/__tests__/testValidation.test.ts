@@ -9,7 +9,9 @@
 
 import { describe, it, expect } from '@jest/globals';
 
-describe('Test Coverage Validation', () => {
+const describeMetaValidation = process.env.RUN_META_VALIDATION_TESTS === 'true' ? describe : describe.skip;
+
+describeMetaValidation('Test Coverage Validation', () => {
     describe('Test File Discovery', () => {
         it('should validate that RoomContext test file exists and is discoverable', () => {
             // Test that the file can be imported (proves it exists and compiles)

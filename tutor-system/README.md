@@ -1,3 +1,9 @@
+<!--
+Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
+Updated: 2026-04-02
+Commit: fc41c9d
+-->
+
 # Tutor System - 1v1 Online Training Platform
 
 A Supabase-based React application for 1v1 tutor-student training with real-time communication and role-based access control.
@@ -162,17 +168,36 @@ See [Testing Strategy Documentation](claude_docs/testing-strategy.md) for detail
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run the default deterministic regression suite
 npm test
+
+# Equivalent explicit deterministic regression command
+npm run test:regression
 
 # Run tests with coverage
 npm test -- --coverage
+
+# Run live OpenAI integration suites explicitly
+npm run test:integration:openai
+
+# Run browser/ChromeDriver-backed integration suite explicitly
+npm run test:integration:browser
+
+# Run all external integration suites
+npm run test:integration:external
 
 # Run specific test suites
 npm test src/services/__tests__/supabase.test.ts      # Task 1
 npm test src/services/__tests__/database.test.ts      # Task 2  
 npm test src/contexts/__tests__/AuthContext.test.tsx  # Task 3
 ```
+
+### Test Tiers
+
+- `npm test` and `npm run test:regression` are the default regression commands. They intentionally skip opt-in suites that require live OpenAI access or a working local ChromeDriver/browser pairing.
+- `npm run test:integration:openai` runs the real OpenAI-backed checklist suites. Use this for vendor integration validation, not as the default per-commit guardrail.
+- `npm run test:integration:browser` runs the Selenium checklist suite. Use this when the local browser automation environment is known-good.
+- `npm run test:integration:external` runs both external tiers in sequence.
 
 ### Test Files Structure
 

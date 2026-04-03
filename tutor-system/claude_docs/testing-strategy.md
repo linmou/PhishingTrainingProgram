@@ -2,6 +2,29 @@
 
 This document outlines the comprehensive testing strategy for the completed tasks (1-3) of the Online Tutor System project.
 
+## Current Test Tiers
+
+The repository now uses two distinct validation tiers:
+
+1. Deterministic regression:
+   - Command: `npm test` or `npm run test:regression`
+   - Purpose: stable per-change guardrail
+   - Rule: must not require live vendor credentials or local browser-driver compatibility
+
+2. External integration:
+   - Command: `npm run test:integration:openai`
+   - Purpose: validate the real OpenAI boundary with live credentials
+   - Rule: opt-in only because vendor/network state can fail without a code regression
+
+3. Browser end-to-end integration:
+   - Command: `npm run test:integration:browser`
+   - Purpose: validate Selenium/browser wiring against a real local browser
+   - Rule: opt-in only because Chrome/ChromeDriver version skew can fail without a product regression
+
+4. Full external validation:
+   - Command: `npm run test:integration:external`
+   - Purpose: run both external tiers when preparing a release or checking environment health
+
 ## Overview
 
 We have implemented unit tests for the first three completed tasks:
@@ -153,11 +176,23 @@ npm test src/contexts/__tests__/AuthContext.test.tsx
 
 ### Run All Tests
 ```bash
-# Run all tests
+# Run the default deterministic regression suite
 npm test
+
+# Equivalent explicit deterministic regression command
+npm run test:regression
 
 # Run tests with Jest coverage
 npm run test:coverage
+
+# Run live OpenAI integration suites
+npm run test:integration:openai
+
+# Run browser-backed external integration suites
+npm run test:integration:browser
+
+# Run all external integration suites
+npm run test:integration:external
 
 # Run comprehensive coverage report (Jest + custom analysis)
 npm run test:coverage-report

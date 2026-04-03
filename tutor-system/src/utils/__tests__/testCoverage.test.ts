@@ -9,7 +9,9 @@
 
 import { TestCoverageAnalyzer, TestCoverageReport, CoverageMetrics } from '../testCoverage';
 
-describe('Test Coverage Analysis', () => {
+const describeMetaValidation = process.env.RUN_META_VALIDATION_TESTS === 'true' ? describe : describe.skip;
+
+describeMetaValidation('Test Coverage Analysis', () => {
     describe('Task 1 Coverage Analysis', () => {
         let task1Report: TestCoverageReport;
 

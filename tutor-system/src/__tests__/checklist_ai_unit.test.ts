@@ -1,6 +1,6 @@
 /**
- * AI Checklist Integration Test Suite
- * Uses JSON test data files to validate AI extraction and coverage detection
+ * AI Checklist Integration Test Suite.
+ * Uses JSON test data files to validate real OpenAI-backed extraction and coverage detection as an opt-in external integration suite.
  */
 
 import { extractDetectionAreasFromPromptAsync } from '../services/promptDetectionExtractor';
@@ -107,7 +107,9 @@ function categorizeItems(detectionAreas: string[], verificationSteps: string[]):
   };
 }
 
-describe('AI Checklist Integration', () => {
+const describeLiveOpenAI = process.env.RUN_LIVE_OPENAI_TESTS === 'true' ? describe : describe.skip;
+
+describeLiveOpenAI('AI Checklist Integration', () => {
   // Increase timeout for LLM API calls
   jest.setTimeout(15000);
   

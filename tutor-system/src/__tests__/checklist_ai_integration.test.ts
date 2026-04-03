@@ -1,6 +1,6 @@
 /**
- * Tests for AI Checklist Integration
- * Covers LLM extraction, coverage detection, and AI adaptation
+ * Tests for AI Checklist Integration.
+ * Covers real OpenAI-backed extraction, coverage detection, and AI adaptation as an opt-in external integration suite.
  */
 
 import { CoverageDetectionService } from '../services/coverageDetectionService';
@@ -9,8 +9,11 @@ import { generateSystemPromptWithChecklist } from '../services/prompts/checklist
 import { ChecklistItem, CoverageEvidence } from '../types/checklist';
 import { SystemPromptConfig } from '../services/prompts/types';
 
-// Use real OpenAI service - no mocking
-describe('AI Checklist Integration', () => {
+// Use real OpenAI service - no mocking.
+// Keep this suite opt-in so default regression runs stay deterministic.
+const describeLiveOpenAI = process.env.RUN_LIVE_OPENAI_TESTS === 'true' ? describe : describe.skip;
+
+describeLiveOpenAI('AI Checklist Integration', () => {
   // Increase timeout for real API calls
   jest.setTimeout(30000);
 
