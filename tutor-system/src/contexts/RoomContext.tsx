@@ -5,7 +5,8 @@ import { useAuth } from './AuthContext';
 import {
     generateTutorSuggestion,
     recordAISuggestionFeedback,
-    updateAIConfig
+    updateAIConfig,
+    getAIConfig
 } from '../services/aiService';
 import { 
     validateRoomPassword,
@@ -229,26 +230,37 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return;
             }
 
-            // For simplified auth, use room data as AI config source
-            if (currentRoom.ai_assistant_enabled) {
-                setAiConfig(prevConfig => ({
-                    id: currentRoom.id,
-                    room_id: currentRoom.id,
-                    model_name: currentRoom.ai_assistant_model || prevConfig?.model_name || 'gpt-4o',
-                    system_prompt: currentRoom.ai_assistant_prompt || prevConfig?.system_prompt ||
-                        'You are a helpful AI assistant in an educational tutoring session. ' +
-                        'Provide clear, educational responses to help students learn. ' +
-                        'Be encouraging, patient, and focus on building understanding.',
-                    prompt_config: prevConfig?.room_id === currentRoom.id ? prevConfig.prompt_config ?? null : null,
-                    temperature: prevConfig?.room_id === currentRoom.id ? prevConfig.temperature : 0.7,
-                    max_tokens: prevConfig?.room_id === currentRoom.id ? prevConfig.max_tokens : 150,
-                    is_active: true,
-                    created_at: currentRoom.created_at,
-                    updated_at: currentRoom.updated_at
-                }));
-            } else {
+            if (!currentRoom.ai_assistant_enabled) {
                 setAiConfig(null);
+                return;
             }
+
+            try {
+                const persistedConfig = await getAIConfig(currentRoom.id);
+
+                if (persistedConfig) {
+                    setAiConfig(persistedConfig);
+                    return;
+                }
+            } catch (error) {
+                console.error('Failed to load AI config:', error);
+            }
+
+            setAiConfig(prevConfig => ({
+                id: currentRoom.id,
+                room_id: currentRoom.id,
+                model_name: currentRoom.ai_assistant_model || prevConfig?.model_name || 'gpt-4o',
+                system_prompt: currentRoom.ai_assistant_prompt || prevConfig?.system_prompt ||
+                    'You are a helpful AI assistant in an educational tutoring session. ' +
+                    'Provide clear, educational responses to help students learn. ' +
+                    'Be encouraging, patient, and focus on building understanding.',
+                prompt_config: prevConfig?.room_id === currentRoom.id ? prevConfig.prompt_config ?? null : null,
+                temperature: prevConfig?.room_id === currentRoom.id ? prevConfig.temperature : 0.7,
+                max_tokens: prevConfig?.room_id === currentRoom.id ? prevConfig.max_tokens : 150,
+                is_active: true,
+                created_at: currentRoom.created_at,
+                updated_at: currentRoom.updated_at
+            }));
         };
 
         loadAIConfig();
@@ -533,6 +545,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 currentRoom.id,
                 user.id
             );
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to generate AI response');
+            }
 
             // Store the AI suggestion for the tutor
             if (result.suggestion) {

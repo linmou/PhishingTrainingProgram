@@ -12,6 +12,18 @@ import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import '../components/RoomPagePost.css';
 
+const getAIResponseErrorMessage = (error: unknown): string => {
+    if (!(error instanceof Error)) {
+        return 'Failed to generate AI response.';
+    }
+
+    if (error.message.includes('401')) {
+        return 'Failed to generate AI response.\n\nAI backend authentication failed (401). The configured API token or gateway token is invalid.';
+    }
+
+    return `Failed to generate AI response.\n\n${error.message}`;
+};
+
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { user } = useAuth();
@@ -226,7 +238,7 @@ const RoomPagePost: React.FC = () => {
             await generateAIResponse();
         } catch (error) {
             console.error('Failed to generate AI response:', error);
-            alert('Failed to generate AI response. Please try again.');
+            alert(getAIResponseErrorMessage(error));
         }
     };
 

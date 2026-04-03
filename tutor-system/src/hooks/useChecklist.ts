@@ -167,12 +167,21 @@ export function useChecklist(roomId: string): UseChecklistReturn {
           
         case 'ready_for_extraction':
           console.log('✅ Ready for extraction, proceeding with smart generation');
-          // Proceed with TDD extraction using existing logic
-          const newChecklist = await RoomFeaturesService.checklist.createFromSystemPromptOrTemplate(
-            roomId, 
-            context.systemPrompt!, 
-            templateName
+          // If prompt_config already contains structured checklist items, use them directly.
+          const hasStructuredPromptConfigItems = Boolean(
+            context.verificationSteps || (context.detectionAreas && context.detectionAreas.length > 0)
           );
+          const newChecklist = hasStructuredPromptConfigItems
+            ? await RoomFeaturesService.checklist.createManual(
+                roomId,
+                context.detectionAreas || [],
+                context.verificationSteps || []
+              )
+            : await RoomFeaturesService.checklist.createFromSystemPromptOrTemplate(
+                roomId,
+                context.systemPrompt!,
+                templateName
+              );
           
           // Check if checklist was created successfully
           if (!newChecklist) {

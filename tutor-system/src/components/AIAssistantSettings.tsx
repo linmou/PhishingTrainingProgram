@@ -17,6 +17,18 @@ const getPresetFromPromptConfig = (
     return promptConfig.role.role === 'low' ? 'casual_peer' : 'supportive_adult';
 };
 
+const getScenarioFromPromptConfig = (
+    promptConfig: SystemPromptConfig
+): ScenarioTemplate | '' => {
+    const matchedScenario = (Object.entries(SCENARIO_TEMPLATES) as Array<[ScenarioTemplate, typeof SCENARIO_TEMPLATES[ScenarioTemplate]]>)
+        .find(([, template]) =>
+            JSON.stringify(template.detection_areas) === JSON.stringify(promptConfig.detection_areas) &&
+            JSON.stringify(template.verification_steps) === JSON.stringify(promptConfig.verification_steps)
+        );
+
+    return matchedScenario?.[0] || '';
+};
+
 const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) => {
     const { currentRoom, aiConfig, toggleAIAssistant, loadingAI } = useRoom();
     const { user } = useAuth();
@@ -52,6 +64,31 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     const [mistakeNormalization, setMistakeNormalization] = useState<'low' | 'high'>('high');
     const [confidenceBuilding, setConfidenceBuilding] = useState<'low' | 'high'>('high');
 
+    const getEffectiveScenarioContent = useCallback(() => {
+        const detectionAreas = customDetectionAreas.split('\n').filter(area => area.trim());
+        const verificationSteps = customVerificationSteps.split('\n').filter(step => step.trim());
+        const scenarioData = selectedScenario ? SCENARIO_TEMPLATES[selectedScenario] : null;
+
+        return {
+            detectionAreas: detectionAreas.length > 0 ? detectionAreas : (scenarioData?.detection_areas || []),
+            verificationSteps: verificationSteps.length > 0 ? verificationSteps : (scenarioData?.verification_steps || [])
+        };
+    }, [customDetectionAreas, customVerificationSteps, selectedScenario]);
+
+    const handleScenarioChange = (scenario: ScenarioTemplate | '') => {
+        setSelectedScenario(scenario);
+
+        if (!scenario) {
+            setCustomDetectionAreas('');
+            setCustomVerificationSteps('');
+            return;
+        }
+
+        const template = SCENARIO_TEMPLATES[scenario];
+        setCustomDetectionAreas(template.detection_areas.join('\n'));
+        setCustomVerificationSteps(template.verification_steps.join('\n'));
+    };
+
     // Initialize form with current configuration
     useEffect(() => {
         const applyPromptConfigToForm = (promptConfig: SystemPromptConfig) => {
@@ -70,7 +107,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             setConfidenceBuilding(promptConfig.emotional_parameters.confidence_building);
             setCustomDetectionAreas(promptConfig.detection_areas.join('\n'));
             setCustomVerificationSteps(promptConfig.verification_steps.join('\n'));
-            setSelectedScenario('');
+            setSelectedScenario(getScenarioFromPromptConfig(promptConfig));
         };
 
         const applyDefaultFormState = () => {
@@ -146,13 +183,10 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     // Handle modular prompt generation
     const handleGenerateModularPrompt = useCallback(() => {
         if (useModularPrompts) {
-            const detectionAreas = customDetectionAreas.split('\n').filter(area => area.trim());
-            const verificationSteps = customVerificationSteps.split('\n').filter(step => step.trim());
-            
-            // Use scenario template if no custom areas provided
-            const scenarioData = selectedScenario ? SCENARIO_TEMPLATES[selectedScenario] : null;
-            const finalDetectionAreas = detectionAreas.length > 0 ? detectionAreas : (scenarioData?.detection_areas || []);
-            const finalVerificationSteps = verificationSteps.length > 0 ? verificationSteps : (scenarioData?.verification_steps || []);
+            const {
+                detectionAreas: finalDetectionAreas,
+                verificationSteps: finalVerificationSteps
+            } = getEffectiveScenarioContent();
             
             // Use individual parameter settings instead of preset
             const config = {
@@ -183,7 +217,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
             const generatedPrompt = generateSystemPrompt(config);
             setSystemPrompt(generatedPrompt);
         }
-    }, [useModularPrompts, selectedPreset, selectedScenario, customDetectionAreas, customVerificationSteps,
+    }, [useModularPrompts, selectedPreset, getEffectiveScenarioContent,
         teenSlang, conversationalMarkers, uncertaintyExpression,
         conceptDensity, perspectiveTaking, personalExamples, consequenceHighlighting,
         enthusiasmLevel, validationFrequency, mistakeNormalization, confidenceBuilding]);
@@ -200,6 +234,11 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
         setIsSaving(true);
         try {
+            const {
+                detectionAreas: finalDetectionAreas,
+                verificationSteps: finalVerificationSteps
+            } = getEffectiveScenarioContent();
+
             const promptConfig = useModularPrompts ? {
                 role: {
                     role: selectedPreset === 'casual_peer' ? 'low' as const : 'high' as const
@@ -221,13 +260,17 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                     mistake_normalization: mistakeNormalization,
                     confidence_building: confidenceBuilding
                 },
-                detection_areas: customDetectionAreas.split('\n').filter(area => area.trim()),
-                verification_steps: customVerificationSteps.split('\n').filter(step => step.trim())
+                detection_areas: finalDetectionAreas,
+                verification_steps: finalVerificationSteps
             } : null;
+
+            const finalSystemPrompt = promptConfig
+                ? generateSystemPrompt(promptConfig)
+                : systemPrompt;
 
             await toggleAIAssistant(isEnabled, {
                 model_name: selectedModel,
-                system_prompt: systemPrompt,
+                system_prompt: finalSystemPrompt,
                 prompt_config: promptConfig,
                 temperature,
                 max_tokens: maxTokens
@@ -345,7 +388,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                                         <label className="ai-setting-label">Scenario Template</label>
                                         <select
                                             value={selectedScenario}
-                                            onChange={(e) => setSelectedScenario(e.target.value as ScenarioTemplate | '')}
+                                            onChange={(e) => handleScenarioChange(e.target.value as ScenarioTemplate | '')}
                                             disabled={isSaving || loadingAI}
                                             className="ai-setting-select"
                                         >

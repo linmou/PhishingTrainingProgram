@@ -16,6 +16,7 @@ jest.mock('../supabase', () => ({
 
 import { getAIConfig, initializeAIAssistant, updateAIConfig } from '../aiService';
 import { supabase } from '../supabase';
+import { generateSystemPrompt, PRESET_CONFIGS } from '../systemPrompts';
 
 const mockSupabaseFrom = supabase.from as jest.Mock;
 const mockSupabaseRpc = supabase.rpc as jest.Mock;
@@ -38,6 +39,11 @@ describe('AI Service room source of truth', () => {
     });
 
     it('loads AI config from room fields and merges persisted extended config', async () => {
+        const normalizedPromptConfig = {
+            ...PRESET_CONFIGS.supportive_adult,
+            role: { role: 'low' as const }
+        };
+
         mockSupabaseFrom
             .mockReturnValueOnce({
                 select: jest.fn().mockReturnValue({
@@ -79,7 +85,11 @@ describe('AI Service room source of truth', () => {
             id: 'room-1',
             room_id: 'room-1',
             model_name: 'gpt-4o',
-            system_prompt: 'Room-backed AI prompt.',
+            system_prompt: generateSystemPrompt({
+                ...normalizedPromptConfig,
+                detection_areas: [],
+                verification_steps: []
+            }),
             prompt_config: {
                 role: { role: 'low' }
             },
@@ -88,6 +98,76 @@ describe('AI Service room source of truth', () => {
             is_active: true,
             created_at: '2026-03-25T00:00:00Z',
             updated_at: '2026-03-26T00:00:00Z'
+        });
+    });
+
+    it('regenerates the effective system prompt from persisted prompt_config when room prompt is stale', async () => {
+        const promptConfig = {
+            role: { role: 'high' as const },
+            communication_style: {
+                teen_slang: 'low' as const,
+                conversational_markers: 'low' as const,
+                uncertainty_expression: 'low' as const
+            },
+            cognitive_parameters: {
+                concept_density: 'high' as const,
+                perspective_taking: 'high' as const,
+                personal_examples: 'high' as const,
+                consequence_highlighting: 'high' as const
+            },
+            emotional_parameters: {
+                enthusiasm_level: 'low' as const,
+                validation_frequency: 'high' as const,
+                mistake_normalization: 'high' as const,
+                confidence_building: 'high' as const
+            },
+            detection_areas: [
+                'Real-time location sharing: Announcing specific places and times'
+            ],
+            verification_steps: [
+                'Use private messages: Coordinate meetups via DM instead of public posts'
+            ]
+        };
+
+        mockSupabaseFrom
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        single: jest.fn().mockResolvedValue({
+                            data: {
+                                id: 'room-9',
+                                ai_assistant_enabled: true,
+                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_prompt: 'Generic stale prompt',
+                                created_at: '2026-04-02T00:00:00Z',
+                                updated_at: '2026-04-02T00:00:00Z'
+                            },
+                            error: null
+                        })
+                    })
+                })
+            })
+            .mockReturnValueOnce({
+                select: jest.fn().mockReturnValue({
+                    eq: jest.fn().mockReturnValue({
+                        eq: jest.fn().mockReturnValue({
+                            single: jest.fn().mockResolvedValue({
+                                data: {
+                                    prompt_config: promptConfig,
+                                    temperature: 0.7,
+                                    max_tokens: 150
+                                },
+                                error: null
+                            })
+                        })
+                    })
+                })
+            });
+
+        await expect(getAIConfig('room-9')).resolves.toMatchObject({
+            room_id: 'room-9',
+            prompt_config: promptConfig,
+            system_prompt: generateSystemPrompt(promptConfig)
         });
     });
 

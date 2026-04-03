@@ -4,11 +4,13 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AIAssistantSettings from '../AIAssistantSettings';
 import { useRoom } from '../../contexts/RoomContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { SCENARIO_TEMPLATES } from '../../services/detectionTemplates';
+import { generateSystemPrompt } from '../../services/systemPrompts';
 
 jest.mock('../../contexts/RoomContext', () => ({
     useRoom: jest.fn()
@@ -90,5 +92,229 @@ describe('AIAssistantSettings', () => {
 
         expect(screen.getByText(/Temperature: 0.4/)).toBeInTheDocument();
         expect(screen.getByText(/Max Response Length: 120 tokens/)).toBeInTheDocument();
+    });
+
+    it('shows the saved scenario instead of falling back to Custom / General when prompt_config matches a template', async () => {
+        (useAuth as jest.Mock).mockReturnValue({
+            user: {
+                id: 'tutor-1',
+                current_role: 'tutor'
+            }
+        });
+
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: {
+                id: 'room-1',
+                ai_assistant_enabled: true
+            },
+            aiConfig: {
+                id: 'room-1',
+                room_id: 'room-1',
+                model_name: 'gpt-4o',
+                system_prompt: 'Scenario-backed prompt',
+                prompt_config: {
+                    role: { role: 'high' },
+                    communication_style: {
+                        teen_slang: 'low',
+                        conversational_markers: 'low',
+                        uncertainty_expression: 'low'
+                    },
+                    cognitive_parameters: {
+                        concept_density: 'high',
+                        perspective_taking: 'high',
+                        personal_examples: 'high',
+                        consequence_highlighting: 'high'
+                    },
+                    emotional_parameters: {
+                        enthusiasm_level: 'low',
+                        validation_frequency: 'high',
+                        mistake_normalization: 'high',
+                        confidence_building: 'high'
+                    },
+                    detection_areas: SCENARIO_TEMPLATES['General Scam Indicators'].detection_areas,
+                    verification_steps: SCENARIO_TEMPLATES['General Scam Indicators'].verification_steps
+                },
+                temperature: 0.7,
+                max_tokens: 150,
+                is_active: true,
+                created_at: '2026-03-20T00:00:00Z',
+                updated_at: '2026-03-26T12:00:00Z'
+            },
+            toggleAIAssistant: jest.fn(),
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        await waitFor(() => {
+            expect(screen.getByDisplayValue('General Scam Indicators')).toBeInTheDocument();
+        });
+    });
+
+    it('persists the selected scenario template when saving without custom textarea overrides', async () => {
+        const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
+
+        (useAuth as jest.Mock).mockReturnValue({
+            user: {
+                id: 'tutor-1',
+                current_role: 'tutor'
+            }
+        });
+
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: {
+                id: 'room-1',
+                ai_assistant_enabled: true
+            },
+            aiConfig: {
+                id: 'room-1',
+                room_id: 'room-1',
+                model_name: 'gpt-4o',
+                system_prompt: 'Original prompt',
+                prompt_config: null,
+                temperature: 0.7,
+                max_tokens: 150,
+                is_active: true,
+                created_at: '2026-03-20T00:00:00Z',
+                updated_at: '2026-03-26T12:00:00Z'
+            },
+            toggleAIAssistant,
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        fireEvent.click(screen.getByLabelText('Use Phishing Training Templates'));
+        fireEvent.change(screen.getByDisplayValue('Custom / General'), {
+            target: { value: 'Location Sharing Risks' }
+        });
+        fireEvent.click(screen.getByText('Save Settings'));
+
+        await waitFor(() => {
+            expect(toggleAIAssistant).toHaveBeenCalledWith(
+                true,
+                expect.objectContaining({
+                    prompt_config: expect.objectContaining({
+                        detection_areas: SCENARIO_TEMPLATES['Location Sharing Risks'].detection_areas,
+                        verification_steps: SCENARIO_TEMPLATES['Location Sharing Risks'].verification_steps
+                    }),
+                    system_prompt: generateSystemPrompt({
+                        role: { role: 'high' },
+                        communication_style: {
+                            teen_slang: 'low',
+                            conversational_markers: 'low',
+                            uncertainty_expression: 'low'
+                        },
+                        cognitive_parameters: {
+                            concept_density: 'high',
+                            perspective_taking: 'high',
+                            personal_examples: 'high',
+                            consequence_highlighting: 'high'
+                        },
+                        emotional_parameters: {
+                            enthusiasm_level: 'low',
+                            validation_frequency: 'high',
+                            mistake_normalization: 'high',
+                            confidence_building: 'high'
+                        },
+                        detection_areas: SCENARIO_TEMPLATES['Location Sharing Risks'].detection_areas,
+                        verification_steps: SCENARIO_TEMPLATES['Location Sharing Risks'].verification_steps
+                    })
+                })
+            );
+        });
+    });
+
+    it('replaces prior template-derived checklist fields when switching to a different scenario template', async () => {
+        const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
+
+        (useAuth as jest.Mock).mockReturnValue({
+            user: {
+                id: 'tutor-1',
+                current_role: 'tutor'
+            }
+        });
+
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: {
+                id: 'room-1',
+                ai_assistant_enabled: true
+            },
+            aiConfig: {
+                id: 'room-1',
+                room_id: 'room-1',
+                model_name: 'gpt-4o',
+                system_prompt: generateSystemPrompt({
+                    role: { role: 'high' },
+                    communication_style: {
+                        teen_slang: 'low',
+                        conversational_markers: 'low',
+                        uncertainty_expression: 'low'
+                    },
+                    cognitive_parameters: {
+                        concept_density: 'high',
+                        perspective_taking: 'high',
+                        personal_examples: 'high',
+                        consequence_highlighting: 'high'
+                    },
+                    emotional_parameters: {
+                        enthusiasm_level: 'low',
+                        validation_frequency: 'high',
+                        mistake_normalization: 'high',
+                        confidence_building: 'high'
+                    },
+                    detection_areas: SCENARIO_TEMPLATES['Location Sharing Risks'].detection_areas,
+                    verification_steps: SCENARIO_TEMPLATES['Location Sharing Risks'].verification_steps
+                }),
+                prompt_config: {
+                    role: { role: 'high' },
+                    communication_style: {
+                        teen_slang: 'low',
+                        conversational_markers: 'low',
+                        uncertainty_expression: 'low'
+                    },
+                    cognitive_parameters: {
+                        concept_density: 'high',
+                        perspective_taking: 'high',
+                        personal_examples: 'high',
+                        consequence_highlighting: 'high'
+                    },
+                    emotional_parameters: {
+                        enthusiasm_level: 'low',
+                        validation_frequency: 'high',
+                        mistake_normalization: 'high',
+                        confidence_building: 'high'
+                    },
+                    detection_areas: SCENARIO_TEMPLATES['Location Sharing Risks'].detection_areas,
+                    verification_steps: SCENARIO_TEMPLATES['Location Sharing Risks'].verification_steps
+                },
+                temperature: 0.7,
+                max_tokens: 150,
+                is_active: true,
+                created_at: '2026-03-20T00:00:00Z',
+                updated_at: '2026-03-26T12:00:00Z'
+            },
+            toggleAIAssistant,
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        fireEvent.change(screen.getByDisplayValue('Location Sharing Risks'), {
+            target: { value: 'Contact Information Exposure' }
+        });
+        fireEvent.click(screen.getByText('Save Settings'));
+
+        await waitFor(() => {
+            expect(toggleAIAssistant).toHaveBeenCalledWith(
+                true,
+                expect.objectContaining({
+                    prompt_config: expect.objectContaining({
+                        detection_areas: SCENARIO_TEMPLATES['Contact Information Exposure'].detection_areas,
+                        verification_steps: SCENARIO_TEMPLATES['Contact Information Exposure'].verification_steps
+                    })
+                })
+            );
+        });
     });
 });

@@ -9,7 +9,7 @@ import '@testing-library/jest-dom';
 import { RoomProvider, useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
-import { generateTutorSuggestion, updateAIConfig } from '../../services/aiService';
+import { generateTutorSuggestion, updateAIConfig, getAIConfig } from '../../services/aiService';
 import { AIAssistantConfigSnapshot, Room, User } from '../../types';
 
 jest.mock('../../services/supabase', () => ({
@@ -31,7 +31,8 @@ jest.mock('../../services/supabase', () => ({
 jest.mock('../../services/aiService', () => ({
     generateTutorSuggestion: jest.fn(),
     recordAISuggestionFeedback: jest.fn(),
-    updateAIConfig: jest.fn()
+    updateAIConfig: jest.fn(),
+    getAIConfig: jest.fn()
 }));
 
 jest.mock('../AuthContext', () => ({
@@ -84,6 +85,8 @@ describe('RoomContext Quick Adjust persistence', () => {
             user: mockUser,
             loading: false
         });
+
+        (getAIConfig as jest.Mock).mockResolvedValue(null);
 
         (supabase.channel as jest.Mock).mockReturnValue({
             on: jest.fn().mockReturnThis(),

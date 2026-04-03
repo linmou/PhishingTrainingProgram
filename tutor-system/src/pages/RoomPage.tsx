@@ -10,6 +10,18 @@ import { useRoomFeatures } from '../hooks/useRoomFeatures';
 import jsPDF from 'jspdf';
 import { supabase } from '../services/supabase';
 
+const getAIResponseErrorMessage = (error: unknown): string => {
+    if (!(error instanceof Error)) {
+        return 'Failed to generate AI response.';
+    }
+
+    if (error.message.includes('401')) {
+        return 'Failed to generate AI response.\n\nAI backend authentication failed (401). The configured API token or gateway token is invalid.';
+    }
+
+    return `Failed to generate AI response.\n\n${error.message}`;
+};
+
 const RoomPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { user } = useAuth();
@@ -133,7 +145,7 @@ const RoomPage: React.FC = () => {
             await generateAIResponse();
         } catch (error) {
             console.error('Failed to generate AI response:', error);
-            alert('Failed to generate AI response. Please try again.');
+            alert(getAIResponseErrorMessage(error));
         }
     };
 
@@ -145,7 +157,7 @@ const RoomPage: React.FC = () => {
             }
         } catch (error) {
             console.error('Failed to generate AI response:', error);
-            alert('Failed to generate AI response. Please try again.');
+            alert(getAIResponseErrorMessage(error));
         }
     };
 

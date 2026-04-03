@@ -13,6 +13,7 @@ export interface ChecklistGenerationContext {
   systemPrompt?: string;
   aiConfigId?: string;
   detectionAreas?: string[];
+  verificationSteps?: string[];
   error?: Error;
 }
 
@@ -68,6 +69,20 @@ export async function assessChecklistGenerationContext(roomId: string): Promise<
     
     // Get system prompt (handle null/undefined)
     const systemPrompt = aiConfig.system_prompt || '';
+
+    const persistedDetectionAreas = aiConfig.prompt_config?.detection_areas?.filter(area => area.trim()) || [];
+    const persistedVerificationSteps = aiConfig.prompt_config?.verification_steps?.filter(step => step.trim()) || [];
+    const persistedItems = [...persistedDetectionAreas, ...persistedVerificationSteps];
+
+    if (persistedItems.length > 0) {
+      return {
+        type: 'ready_for_extraction',
+        systemPrompt,
+        detectionAreas: persistedDetectionAreas,
+        verificationSteps: persistedVerificationSteps,
+        aiConfigId: aiConfig.id
+      };
+    }
     
     // Try to extract detection areas using async LLM extraction
     const extraction = await ChecklistIntegration.extractFromSystemPromptAsync(systemPrompt);

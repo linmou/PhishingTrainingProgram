@@ -23,6 +23,7 @@ const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://api.openai.c
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
+const shouldAllowDummyAISuggestions = (): boolean => getRuntimeEnvironment() === 'debug' && !OAI_API_KEY;
 
 export const AI_MODELS = {
     'gpt-4o': {
@@ -114,6 +115,37 @@ const getExtendedAIConfig = async (roomId: string): Promise<{
     }
 };
 
+const getEffectiveSystemPrompt = (
+    roomPrompt: string | null | undefined,
+    promptConfig: AIAssistantConfig['prompt_config'] | null | undefined
+): string | null => {
+    if (promptConfig) {
+        const normalizedPromptConfig = {
+            ...PRESET_CONFIGS.supportive_adult,
+            ...promptConfig,
+            role: promptConfig.role || PRESET_CONFIGS.supportive_adult.role,
+            communication_style: {
+                ...PRESET_CONFIGS.supportive_adult.communication_style,
+                ...promptConfig.communication_style
+            },
+            cognitive_parameters: {
+                ...PRESET_CONFIGS.supportive_adult.cognitive_parameters,
+                ...promptConfig.cognitive_parameters
+            },
+            emotional_parameters: {
+                ...PRESET_CONFIGS.supportive_adult.emotional_parameters,
+                ...promptConfig.emotional_parameters
+            },
+            detection_areas: promptConfig.detection_areas || [],
+            verification_steps: promptConfig.verification_steps || []
+        };
+
+        return generateSystemPrompt(normalizedPromptConfig);
+    }
+
+    return roomPrompt ?? null;
+};
+
 const buildConfigSnapshot = ({
     roomModelName,
     roomPrompt,
@@ -152,7 +184,7 @@ const getCurrentAIConfigSnapshot = async (roomId: string): Promise<AIAssistantCo
 
     return buildConfigSnapshot({
         roomModelName: room.ai_assistant_model,
-        roomPrompt: room.ai_assistant_prompt,
+        roomPrompt: getEffectiveSystemPrompt(room.ai_assistant_prompt, extendedConfig?.prompt_config ?? null),
         promptConfig: extendedConfig?.prompt_config ?? null,
         temperature: extendedConfig?.temperature ?? (room.ai_assistant_enabled ? 0.7 : null),
         maxTokens: extendedConfig?.max_tokens ?? (room.ai_assistant_enabled ? 150 : null),
@@ -802,7 +834,16 @@ async function generateSuggestionWithService(
             return result;
         }
 
-        console.warn('OpenAI tutor suggestion failed, falling back to dummy suggestion:', result.error);
+        console.warn('OpenAI tutor suggestion failed:', result.error);
+        return result;
+    }
+
+    if (!shouldAllowDummyAISuggestions()) {
+        return {
+            suggestion: '',
+            success: false,
+            error: 'AI suggestions require a valid OpenAI API configuration'
+        };
     }
 
     console.log('Using Dummy Service for tutor suggestions');
@@ -847,12 +888,16 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
     }
 
     const extendedConfig = await getExtendedAIConfig(roomId);
+    const effectiveSystemPrompt = getEffectiveSystemPrompt(
+        room.ai_assistant_prompt,
+        extendedConfig?.prompt_config ?? null
+    );
 
     return {
         id: room.id,
         room_id: room.id,
         model_name: room.ai_assistant_model || 'gpt-4o',
-        system_prompt: room.ai_assistant_prompt,
+        system_prompt: effectiveSystemPrompt,
         prompt_config: extendedConfig?.prompt_config ?? null,
         temperature: extendedConfig?.temperature ?? 0.7,
         max_tokens: extendedConfig?.max_tokens ?? 150,
