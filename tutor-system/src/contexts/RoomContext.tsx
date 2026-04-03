@@ -51,6 +51,40 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const channelRef = useRef<any>(null);
     const { user } = useAuth();
 
+    const refreshMessageFeedbackStats = useCallback(async (messageId: string) => {
+        if (!user) return null;
+
+        try {
+            const stats = await getMessageFeedbackStats(messageId);
+            const userFeedback = await getUserMessageFeedback(messageId, user.id);
+
+            const fullStats: MessageFeedbackStats = {
+                ...stats,
+                user_feedback: userFeedback ? {
+                    feedback_type: userFeedback.feedback_type,
+                    rating: userFeedback.rating
+                } : null
+            };
+
+            setMessageFeedbackStats(prev => ({
+                ...prev,
+                [messageId]: fullStats
+            }));
+
+            return fullStats;
+        } catch (error) {
+            console.error('Failed to get message feedback stats:', error);
+            return null;
+        }
+    }, [user]);
+
+    const handleFeedbackRealtime = useCallback(async (payload: any) => {
+        const feedbackMessageId = payload?.new?.message_id;
+        if (!feedbackMessageId) return;
+
+        await refreshMessageFeedbackStats(feedbackMessageId);
+    }, [refreshMessageFeedbackStats]);
+
     // Stable function to add display names and avatars to messages
     const addDisplayNameToMessage = useCallback((message: any, participantsList?: User[]): Message => {
         // Find the user from participants list
@@ -104,6 +138,32 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     });
                 }
             )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'message_feedback',
+                    filter: `room_id=eq.${currentRoom.id}`
+                },
+                handleFeedbackRealtime
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'message_feedback',
+                    filter: `room_id=eq.${currentRoom.id}`
+                },
+                handleFeedbackRealtime
+            )
+            .on('broadcast', { event: 'message_feedback_changed' }, (payload) => {
+                const feedbackMessageId = payload?.payload?.messageId;
+                if (!feedbackMessageId) return;
+
+                void refreshMessageFeedbackStats(feedbackMessageId);
+            })
             .on('broadcast', { event: 'typing_start' }, (payload) => {
                 const { userId, displayName } = payload.payload;
                 if (userId !== user?.id) {
@@ -129,7 +189,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoom, user?.id, addDisplayNameToMessage, participants]);
+    }, [currentRoom, user?.id, addDisplayNameToMessage, participants, handleFeedbackRealtime]);
 
     // Stable polling function to prevent infinite loops
     const pollMessages = useCallback(async () => {
@@ -947,7 +1007,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await submitMessageFeedback(messageId, user.id, currentRoom.id, feedbackType, rating);
             
             // Refresh feedback stats for this message
-            await handleGetMessageFeedbackStats(messageId);
+            await refreshMessageFeedbackStats(messageId);
+
+            try {
+                channelRef.current?.send({
+                    type: 'broadcast',
+                    event: 'message_feedback_changed',
+                    payload: {
+                        messageId
+                    }
+                });
+            } catch (broadcastError) {
+                console.warn('Failed to broadcast message feedback change:', broadcastError);
+            }
             
         } catch (error) {
             console.error('Failed to submit message feedback:', error);
@@ -956,35 +1028,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const handleGetMessageFeedbackStats = async (messageId: string): Promise<MessageFeedbackStats | null> => {
-        if (!user) return null;
-
-        try {
-            // Get overall stats
-            const stats = await getMessageFeedbackStats(messageId);
-            
-            // Get user's specific feedback
-            const userFeedback = await getUserMessageFeedback(messageId, user.id);
-            
-            // Combine stats with user feedback
-            const fullStats: MessageFeedbackStats = {
-                ...stats,
-                user_feedback: userFeedback ? {
-                    feedback_type: userFeedback.feedback_type,
-                    rating: userFeedback.rating
-                } : null
-            };
-
-            // Update local state
-            setMessageFeedbackStats(prev => ({
-                ...prev,
-                [messageId]: fullStats
-            }));
-
-            return fullStats;
-        } catch (error) {
-            console.error('Failed to get message feedback stats:', error);
-            return null;
-        }
+        return refreshMessageFeedbackStats(messageId);
     };
 
     // Load feedback stats for all messages when messages change

@@ -19,7 +19,12 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { RoomProvider, useRoom } from '../RoomContext';
 import { AuthProvider, useAuth } from '../AuthContext';
-import { supabase } from '../../services/supabase';
+import {
+    supabase,
+    getMessageFeedbackStats,
+    getUserMessageFeedback,
+    submitMessageFeedback
+} from '../../services/supabase';
 import { User, Room, Message, AIAssistantConfig } from '../../types';
 
 // Mock all dependencies
@@ -30,7 +35,13 @@ jest.mock('../../services/supabase', () => ({
         storage: {
             from: jest.fn()
         }
-    }
+    },
+    validateRoomPassword: jest.fn(),
+    submitMessageFeedback: jest.fn(),
+    getMessageFeedbackStats: jest.fn(),
+    getUserMessageFeedback: jest.fn(),
+    getRoomFeedbackSummary: jest.fn(),
+    clearChatHistory: jest.fn()
 }));
 
 jest.mock('../../services/aiService', () => ({
@@ -53,6 +64,7 @@ const TestRoomComponent: React.FC = () => {
         loading,
         loadingAI,
         aiConfig,
+        messageFeedbackStats,
         createRoom,
         joinRoom,
         leaveRoom,
@@ -107,6 +119,7 @@ const TestRoomComponent: React.FC = () => {
             <div data-testid="loading-ai">{loadingAI ? 'loading-ai' : 'not-loading-ai'}</div>
             <div data-testid="current-room">{currentRoom ? JSON.stringify(currentRoom) : 'no-room'}</div>
             <div data-testid="messages">{JSON.stringify(messages)}</div>
+            <div data-testid="message-feedback-stats">{JSON.stringify(messageFeedbackStats)}</div>
             <div data-testid="ai-config">{aiConfig ? JSON.stringify(aiConfig) : 'no-ai-config'}</div>
             <button onClick={handleCreateRoom}>Create Room</button>
             <button onClick={handleJoinRoom}>Join Room</button>
@@ -193,6 +206,28 @@ describe('RoomContext - Room Management Tests', () => {
         mockSubscription = {
             unsubscribe: jest.fn()
         };
+
+        (submitMessageFeedback as jest.Mock).mockResolvedValue({
+            id: 'feedback-1',
+            message_id: mockMessage.id,
+            user_id: mockUser.id,
+            room_id: mockRoom.id,
+            feedback_type: 'like',
+            rating: 4
+        });
+
+        (getMessageFeedbackStats as jest.Mock).mockResolvedValue({
+            message_id: mockMessage.id,
+            total_feedback_count: 0,
+            like_count: 0,
+            dislike_count: 0,
+            average_like_rating: null,
+            average_dislike_rating: null,
+            overall_average_rating: null,
+            user_feedback: null
+        });
+
+        (getUserMessageFeedback as jest.Mock).mockResolvedValue(null);
 
         // Setup default useAuth mock
         (useAuth as jest.Mock).mockReturnValue({
@@ -968,15 +1003,15 @@ describe('RoomContext - Room Management Tests', () => {
     });
 
     describe('Real-time Message Subscription', () => {
-        it('should setup message subscription when room is joined', async () => {
-            const mockChannel = {
-                on: jest.fn().mockReturnThis(),
-                subscribe: jest.fn().mockReturnValue(mockSubscription)
-            };
+        const createRoomChannel = () => ({
+            on: jest.fn().mockReturnThis(),
+            send: jest.fn(),
+            subscribe: jest.fn().mockReturnValue(mockSubscription),
+            unsubscribe: jest.fn()
+        });
 
-            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
-
-            const mockFromChain = {
+        const mockSuccessfulRoomJoin = (messagesData: Message[] = []) => {
+            const mockRoomQuery = {
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
                         eq: jest.fn(() => ({
@@ -989,18 +1024,39 @@ describe('RoomContext - Room Management Tests', () => {
                 }))
             };
 
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [],
-                                error: null
-                            })
-                        }))
+            const mockMessagesQuery = {
+                select: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        order: jest.fn().mockResolvedValue({
+                            data: messagesData,
+                            error: null
+                        })
                     }))
-                });
+                }))
+            };
+
+            const mockUsersQuery = {
+                select: jest.fn(() => ({
+                    in: jest.fn().mockResolvedValue({
+                        data: [mockUser],
+                        error: null
+                    })
+                }))
+            };
+
+            (supabase.from as jest.Mock)
+                .mockReturnValueOnce(mockRoomQuery)
+                .mockReturnValueOnce(mockMessagesQuery)
+                .mockReturnValueOnce(mockUsersQuery)
+                .mockReturnValueOnce(mockMessagesQuery)
+                .mockReturnValue(mockMessagesQuery);
+        };
+
+        it('should setup message subscription when room is joined', async () => {
+            const mockChannel = createRoomChannel();
+
+            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin();
 
             render(
                 <RoomProvider>
@@ -1024,44 +1080,176 @@ describe('RoomContext - Room Management Tests', () => {
                     },
                     expect.any(Function)
                 );
+                expect(mockChannel.on).toHaveBeenCalledWith(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'message_feedback',
+                        filter: `room_id=eq.${mockRoom.id}`
+                    },
+                    expect.any(Function)
+                );
+                expect(mockChannel.on).toHaveBeenCalledWith(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'message_feedback',
+                        filter: `room_id=eq.${mockRoom.id}`
+                    },
+                    expect.any(Function)
+                );
+                expect(mockChannel.on).toHaveBeenCalledWith(
+                    'broadcast',
+                    { event: 'message_feedback_changed' },
+                    expect.any(Function)
+                );
                 expect(mockChannel.subscribe).toHaveBeenCalled();
             });
         });
 
-        it('should cleanup subscription when room is left', async () => {
-            const mockChannel = {
-                on: jest.fn().mockReturnThis(),
-                subscribe: jest.fn().mockReturnValue(mockSubscription)
-            };
+        it('should refresh feedback stats when a message_feedback insert arrives', async () => {
+            const mockChannel = createRoomChannel();
 
             (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin([mockMessage]);
 
-            // First join a room to create a subscription
-            const mockFromChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [],
-                                error: null
-                            })
-                        }))
-                    }))
+            (getMessageFeedbackStats as jest.Mock)
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 0,
+                    like_count: 0,
+                    dislike_count: 0,
+                    average_like_rating: null,
+                    average_dislike_rating: null,
+                    overall_average_rating: null,
+                    user_feedback: null
+                })
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 1,
+                    dislike_count: 0,
+                    average_like_rating: 4,
+                    average_dislike_rating: null,
+                    overall_average_rating: 4,
+                    user_feedback: null
                 });
+
+            render(
+                <RoomProvider>
+                    <TestRoomComponent />
+                </RoomProvider>
+            );
+
+            await act(async () => {
+                screen.getByText('Join Room').click();
+            });
+
+            await waitFor(() => {
+                expect(getMessageFeedbackStats).toHaveBeenCalledWith(mockMessage.id);
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"like_count":0');
+            });
+
+            const feedbackInsertHandler = mockChannel.on.mock.calls.find(
+                ([eventType, config]: [string, { table?: string; event?: string }]) =>
+                    eventType === 'postgres_changes' &&
+                    config.table === 'message_feedback' &&
+                    config.event === 'INSERT'
+            )?.[2];
+
+            expect(feedbackInsertHandler).toBeDefined();
+
+            await act(async () => {
+                await feedbackInsertHandler({
+                    new: {
+                        room_id: mockRoom.id,
+                        message_id: mockMessage.id
+                    }
+                });
+            });
+
+            await waitFor(() => {
+                expect(getMessageFeedbackStats).toHaveBeenCalledTimes(2);
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"like_count":1');
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"overall_average_rating":4');
+            });
+        });
+
+        it('should refresh feedback stats when a message_feedback update arrives', async () => {
+            const mockChannel = createRoomChannel();
+
+            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin([mockMessage]);
+
+            (getMessageFeedbackStats as jest.Mock)
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 1,
+                    dislike_count: 0,
+                    average_like_rating: 4,
+                    average_dislike_rating: null,
+                    overall_average_rating: 4,
+                    user_feedback: null
+                })
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 0,
+                    dislike_count: 1,
+                    average_like_rating: null,
+                    average_dislike_rating: 2,
+                    overall_average_rating: 2,
+                    user_feedback: null
+                });
+
+            render(
+                <RoomProvider>
+                    <TestRoomComponent />
+                </RoomProvider>
+            );
+
+            await act(async () => {
+                screen.getByText('Join Room').click();
+            });
+
+            await waitFor(() => {
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"like_count":1');
+            });
+
+            const feedbackUpdateHandler = mockChannel.on.mock.calls.find(
+                ([eventType, config]: [string, { table?: string; event?: string }]) =>
+                    eventType === 'postgres_changes' &&
+                    config.table === 'message_feedback' &&
+                    config.event === 'UPDATE'
+            )?.[2];
+
+            expect(feedbackUpdateHandler).toBeDefined();
+
+            await act(async () => {
+                await feedbackUpdateHandler({
+                    new: {
+                        room_id: mockRoom.id,
+                        message_id: mockMessage.id
+                    }
+                });
+            });
+
+            await waitFor(() => {
+                expect(getMessageFeedbackStats).toHaveBeenCalledTimes(2);
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"like_count":0');
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"dislike_count":1');
+                expect(screen.getByTestId('message-feedback-stats')).toHaveTextContent('"overall_average_rating":2');
+            });
+        });
+
+        it('should cleanup subscription when room is left', async () => {
+            const mockChannel = createRoomChannel();
+
+            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin();
 
             const { unmount } = render(
                 <RoomProvider>
@@ -1080,7 +1268,71 @@ describe('RoomContext - Room Management Tests', () => {
 
             unmount();
 
-            expect(mockSubscription.unsubscribe).toHaveBeenCalled();
+            expect(mockChannel.unsubscribe).toHaveBeenCalled();
+        });
+
+        it('should broadcast feedback changes after submitting message feedback', async () => {
+            const mockChannel = createRoomChannel();
+            let roomFunctions: any;
+
+            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin([mockMessage]);
+
+            (getMessageFeedbackStats as jest.Mock)
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 0,
+                    like_count: 0,
+                    dislike_count: 0,
+                    average_like_rating: null,
+                    average_dislike_rating: null,
+                    overall_average_rating: null,
+                    user_feedback: null
+                })
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 1,
+                    dislike_count: 0,
+                    average_like_rating: 4,
+                    average_dislike_rating: null,
+                    overall_average_rating: 4,
+                    user_feedback: null
+                });
+
+            render(
+                <RoomProvider>
+                    <TestRoomComponent />
+                    <TestRoomHelper onRoomFunctions={(functions) => { roomFunctions = functions; }} />
+                </RoomProvider>
+            );
+
+            await act(async () => {
+                screen.getByText('Join Room').click();
+            });
+
+            await waitFor(() => {
+                expect(roomFunctions?.submitMessageFeedback).toBeDefined();
+            });
+
+            await act(async () => {
+                await roomFunctions.submitMessageFeedback(mockMessage.id, 'like', 4);
+            });
+
+            expect(submitMessageFeedback).toHaveBeenCalledWith(
+                mockMessage.id,
+                mockUser.id,
+                mockRoom.id,
+                'like',
+                4
+            );
+            expect(mockChannel.send).toHaveBeenCalledWith({
+                type: 'broadcast',
+                event: 'message_feedback_changed',
+                payload: {
+                    messageId: mockMessage.id
+                }
+            });
         });
     });
 

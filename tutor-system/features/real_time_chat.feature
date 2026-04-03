@@ -27,6 +27,16 @@ Feature: Real-time Chat System
     Then the tutor should see the message "I can see it!" immediately without refreshing
     And the message should appear in the tutor's chat window within 2 seconds
 
+  Scenario: Message feedback appears immediately without page refresh
+    Given the tutor, student, and observer are all viewing the same room
+    And the tutor has already sent the message "Please inspect the sender address carefully."
+    When the student rates that message with a thumbs up and 4 stars
+    Then the tutor should see the updated thumbs up count immediately without refreshing
+    And the observer should see the updated thumbs up count immediately without refreshing
+    When the student changes the rating for that message to a thumbs down and 2 stars
+    Then the tutor should see the updated thumbs down count immediately without refreshing
+    And the observer should see the updated thumbs down count immediately without refreshing
+
   Scenario: Observer has read-only access to the chat
     Then the chat input should be disabled for the observer
     And the send message button should be disabled for the observer

@@ -160,12 +160,14 @@ jest.mock('../services/aiService', () => ({
 }));
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useParams, Routes, Route } from 'react-router-dom';
 import RoomPage from '../pages/RoomPage';
+import RoomPagePost from '../pages/RoomPagePost';
 import { useAuth, AuthProvider } from '../contexts/AuthContext';
 import { RoomProvider, useRoom } from '../contexts/RoomContext';
+import * as RoomContextModule from '../contexts/RoomContext';
 import { supabase } from '../services/supabase';
 import { User, UserRole, Room, Message } from '../types';
 
@@ -191,6 +193,9 @@ interface TestMessage {
   created_at: string;
   display_name: string;
 }
+
+const MockAuthClientContext = React.createContext<any>(null);
+const MockRoomClientContext = React.createContext<any>(null);
 
 describe('Real-time Chat System BDD Tests', () => {
   let mockTutor: TestUser;
@@ -559,6 +564,246 @@ describe('Real-time Chat System BDD Tests', () => {
         // Tests will fail until offline message handling UI is implemented
         expect(offlineMessage || queueIndicator).toBeTruthy();
       });
+    });
+  });
+
+  describe('Scenario 6: Two-rendered-client page seam', () => {
+    const buildRoomValue = (overrides: Record<string, any> = {}) => ({
+      currentRoom: mockRoom,
+      messages: [],
+      participants: [
+        { ...mockTutor, status: 'active' },
+        { ...mockStudent, status: 'active' },
+        { ...mockObserver, status: 'active' }
+      ],
+      loading: false,
+      typingUsers: [],
+      joinRoom: jest.fn().mockResolvedValue(undefined),
+      leaveRoom: jest.fn().mockResolvedValue(undefined),
+      sendMessage: jest.fn().mockResolvedValue(undefined),
+      generateAIResponse: jest.fn().mockResolvedValue(undefined),
+      regenerateAIResponse: jest.fn().mockResolvedValue(undefined),
+      startTyping: jest.fn(),
+      stopTyping: jest.fn(),
+      aiConfig: null,
+      loadingAI: false,
+      downloadChatHistory: jest.fn(),
+      clearChatHistory: jest.fn().mockResolvedValue(undefined),
+      aiSuggestion: null,
+      clearAISuggestion: jest.fn(),
+      aiInteractions: [],
+      currentSuggestionContext: null,
+      recordAIFeedback: jest.fn().mockResolvedValue(undefined),
+      submitMessageFeedback: jest.fn().mockResolvedValue(undefined),
+      getMessageFeedbackStats: jest.fn().mockResolvedValue(null),
+      messageFeedbackStats: {},
+      ...overrides
+    });
+
+    const renderClientPage = (authUser: TestUser, roomValue: Record<string, any>) =>
+      render(
+        <MockAuthClientContext.Provider value={{ user: authUser, loading: false }}>
+          <MockRoomClientContext.Provider value={roomValue}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+    beforeEach(() => {
+      (useAuth as jest.Mock).mockImplementation(() => React.useContext(MockAuthClientContext));
+      jest.spyOn(RoomContextModule, 'useRoom').mockImplementation(() => React.useContext(MockRoomClientContext));
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      (useAuth as jest.Mock).mockReset();
+    });
+
+    test('should render new realtime messages on another rendered client page', async () => {
+      const baseMessages = [
+        {
+          id: 'msg-base-1',
+          room_id: mockRoom.id,
+          user_id: mockTutor.id,
+          content: 'Welcome to the room.',
+          user_role: 'tutor' as const,
+          is_ai_generated: false,
+          ai_model_used: null,
+          ai_response_time_ms: null,
+          parent_message_id: null,
+          created_at: new Date().toISOString(),
+          display_name: mockTutor.display_name,
+          avatar_url: null
+        }
+      ];
+
+      const studentRealtimeMessage = {
+        id: 'msg-base-2',
+        room_id: mockRoom.id,
+        user_id: mockStudent.id,
+        content: 'I can see the update without refreshing.',
+        user_role: 'student' as const,
+        is_ai_generated: false,
+        ai_model_used: null,
+        ai_response_time_ms: null,
+        parent_message_id: null,
+        created_at: new Date().toISOString(),
+        display_name: mockStudent.display_name,
+        avatar_url: null
+      };
+
+      const tutorView = renderClientPage(mockTutor, buildRoomValue({ messages: baseMessages }));
+      const observerView = renderClientPage(mockObserver, buildRoomValue({ messages: baseMessages }));
+
+      expect(within(tutorView.container).queryByText(studentRealtimeMessage.content)).not.toBeInTheDocument();
+      expect(within(observerView.container).queryByText(studentRealtimeMessage.content)).not.toBeInTheDocument();
+
+      tutorView.rerender(
+        <MockAuthClientContext.Provider value={{ user: mockTutor, loading: false }}>
+          <MockRoomClientContext.Provider value={buildRoomValue({ messages: [...baseMessages, studentRealtimeMessage] })}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+      observerView.rerender(
+        <MockAuthClientContext.Provider value={{ user: mockObserver, loading: false }}>
+          <MockRoomClientContext.Provider value={buildRoomValue({ messages: [...baseMessages, studentRealtimeMessage] })}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+      expect(within(tutorView.container).getByText(studentRealtimeMessage.content)).toBeInTheDocument();
+      expect(within(observerView.container).getByText(studentRealtimeMessage.content)).toBeInTheDocument();
+    });
+
+    test('should render realtime feedback changes on tutor and observer pages at the same time', async () => {
+      const tutorMessage = {
+        id: 'msg-feedback-1',
+        room_id: mockRoom.id,
+        user_id: mockTutor.id,
+        content: 'Please inspect the sender address carefully.',
+        user_role: 'tutor' as const,
+        is_ai_generated: false,
+        ai_model_used: null,
+        ai_response_time_ms: null,
+        parent_message_id: null,
+        created_at: new Date().toISOString(),
+        display_name: mockTutor.display_name,
+        avatar_url: null
+      };
+
+      const baseRoomValue = buildRoomValue({
+        messages: [tutorMessage],
+        messageFeedbackStats: {}
+      });
+
+      const tutorView = renderClientPage(mockTutor, baseRoomValue);
+      const observerView = renderClientPage(mockObserver, baseRoomValue);
+
+      expect(within(tutorView.container).queryByText('(4.0★)')).not.toBeInTheDocument();
+      expect(within(observerView.container).queryByText('(4.0★)')).not.toBeInTheDocument();
+
+      const likedRoomValue = buildRoomValue({
+        messages: [tutorMessage],
+        messageFeedbackStats: {
+          [tutorMessage.id]: {
+            message_id: tutorMessage.id,
+            total_feedback_count: 1,
+            like_count: 1,
+            dislike_count: 0,
+            average_like_rating: 4,
+            average_dislike_rating: null,
+            overall_average_rating: 4,
+            user_feedback: null
+          }
+        }
+      });
+
+      tutorView.rerender(
+        <MockAuthClientContext.Provider value={{ user: mockTutor, loading: false }}>
+          <MockRoomClientContext.Provider value={likedRoomValue}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+      observerView.rerender(
+        <MockAuthClientContext.Provider value={{ user: mockObserver, loading: false }}>
+          <MockRoomClientContext.Provider value={likedRoomValue}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+      expect(within(tutorView.container).getByText('(4.0★)')).toBeInTheDocument();
+      expect(within(observerView.container).getByText('(4.0★)')).toBeInTheDocument();
+
+      const dislikedRoomValue = buildRoomValue({
+        messages: [tutorMessage],
+        messageFeedbackStats: {
+          [tutorMessage.id]: {
+            message_id: tutorMessage.id,
+            total_feedback_count: 1,
+            like_count: 0,
+            dislike_count: 1,
+            average_like_rating: null,
+            average_dislike_rating: 2,
+            overall_average_rating: 2,
+            user_feedback: null
+          }
+        }
+      });
+
+      tutorView.rerender(
+        <MockAuthClientContext.Provider value={{ user: mockTutor, loading: false }}>
+          <MockRoomClientContext.Provider value={dislikedRoomValue}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+      observerView.rerender(
+        <MockAuthClientContext.Provider value={{ user: mockObserver, loading: false }}>
+          <MockRoomClientContext.Provider value={dislikedRoomValue}>
+            <MemoryRouter initialEntries={['/room/room-1']}>
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
+              </Routes>
+            </MemoryRouter>
+          </MockRoomClientContext.Provider>
+        </MockAuthClientContext.Provider>
+      );
+
+      expect(within(tutorView.container).queryByText('(4.0★)')).not.toBeInTheDocument();
+      expect(within(observerView.container).queryByText('(4.0★)')).not.toBeInTheDocument();
+      expect(within(tutorView.container).getByText('(2.0★)')).toBeInTheDocument();
+      expect(within(observerView.container).getByText('(2.0★)')).toBeInTheDocument();
     });
   });
 });

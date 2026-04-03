@@ -5,6 +5,7 @@ import '@testing-library/jest-dom';
 import TutorView from '../pages/TutorView';
 import RoomPagePost from '../pages/RoomPagePost';
 import RoomCard from '../components/RoomCard';
+import PostComment from '../components/PostComment';
 import RoomPost from '../components/RoomPost';
 import { AuthProvider } from '../contexts/AuthContext';
 import { RoomProvider } from '../contexts/RoomContext';
@@ -371,6 +372,87 @@ describe('Room OP Configuration', () => {
                 expect(screen.getByText('Security Department')).toBeInTheDocument();
                 expect(screen.getByText('📝 OP')).toBeInTheDocument();
             });
+        });
+    });
+
+    describe('PostComment feedback display', () => {
+        it('should render updated feedback stats when thumb ratings change', () => {
+            const message = {
+                id: 'message-1',
+                room_id: 'room-456',
+                user_id: 'student-456',
+                content: 'This response helped me understand the red flags.',
+                user_role: 'student' as const,
+                is_ai_generated: false,
+                ai_model_used: null,
+                ai_response_time_ms: null,
+                parent_message_id: null,
+                created_at: new Date().toISOString(),
+                display_name: 'Student One',
+                avatar_url: null
+            };
+
+            const { rerender } = render(
+                <PostComment
+                    message={message}
+                    currentUserId="tutor-123"
+                    currentUserRole="tutor"
+                    feedbackStats={{
+                        message_id: message.id,
+                        total_feedback_count: 0,
+                        like_count: 0,
+                        dislike_count: 0,
+                        average_like_rating: null,
+                        average_dislike_rating: null,
+                        overall_average_rating: null,
+                        user_feedback: null
+                    }}
+                />
+            );
+
+            expect(screen.queryByText('(4.0★)')).not.toBeInTheDocument();
+            expect(screen.queryByText('(2.0★)')).not.toBeInTheDocument();
+
+            rerender(
+                <PostComment
+                    message={message}
+                    currentUserId="tutor-123"
+                    currentUserRole="tutor"
+                    feedbackStats={{
+                        message_id: message.id,
+                        total_feedback_count: 1,
+                        like_count: 1,
+                        dislike_count: 0,
+                        average_like_rating: 4,
+                        average_dislike_rating: null,
+                        overall_average_rating: 4,
+                        user_feedback: null
+                    }}
+                />
+            );
+
+            expect(screen.getByText('(4.0★)')).toBeInTheDocument();
+
+            rerender(
+                <PostComment
+                    message={message}
+                    currentUserId="tutor-123"
+                    currentUserRole="tutor"
+                    feedbackStats={{
+                        message_id: message.id,
+                        total_feedback_count: 1,
+                        like_count: 0,
+                        dislike_count: 1,
+                        average_like_rating: null,
+                        average_dislike_rating: 2,
+                        overall_average_rating: 2,
+                        user_feedback: null
+                    }}
+                />
+            );
+
+            expect(screen.queryByText('(4.0★)')).not.toBeInTheDocument();
+            expect(screen.getByText('(2.0★)')).toBeInTheDocument();
         });
     });
 });
