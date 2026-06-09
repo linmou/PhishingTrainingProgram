@@ -134,11 +134,11 @@ describe('AI Context Integration', () => {
 
   it('should generate system prompt with context-aware detection areas', () => {
     const config = {
-      role: 'trusted_adult' as const,
+      role: { role: 'high' as const },
       communication_style: {
         teen_slang: 'low' as const,
         conversational_markers: 'high' as const,
-        uncertainty_expressions: 'low' as const
+        uncertainty_expression: 'low' as const
       },
       cognitive_parameters: {
         concept_density: 'medium' as const,

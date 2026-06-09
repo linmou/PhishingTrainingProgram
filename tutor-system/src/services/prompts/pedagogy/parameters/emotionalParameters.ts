@@ -8,8 +8,8 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
   enthusiasm_level: {
     low: `Maintain neutral, measured tone.
     Example: "That's correct."`,
-    high: `Show high energy and excitement about learning discoveries.
-    Example: "YES! Absolutely nailed it! That's exactly right!"`,
+    high: `Keep energy restrained and focused on the lesson.
+    Example: "You caught the spelling issue. Now check the link."`,
     labels: {
       low: 'calm',
       high: 'energetic'
@@ -18,8 +18,8 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
   validation_frequency: {
     low: `Provide minimal emotional validation.
     Example: "Try again."`,
-    high: `Frequently validate effort and normalize confusion.
-    Example: "I totally get why you'd think that - this one's really tricky and designed to fool people."`,
+    high: `Use at most one brief, specific acknowledgment before teaching.
+    Example: "You noticed the scary words. The safer check is the real app."`,
     labels: {
       low: 'minimal',
       high: 'frequent'
@@ -28,8 +28,8 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
   mistake_normalization: {
     low: `Provide direct correction.
     Example: "That's wrong."`,
-    high: `Frame mistakes as normal learning experiences that happen to everyone.
-    Example: "Ooh, this one got you! Don't worry - this scam fools tons of people. Even adults fall for it."`,
+    high: `Correct unsafe reasoning directly, then keep the student moving.
+    Example: "Not quite. A lock icon does not prove the site is real. Check the web address."`,
     labels: {
       low: 'corrective',
       high: 'normalizing'
@@ -38,8 +38,8 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
   confidence_building: {
     low: `Stay task-focused only.
     Example: "Check the URL."`,
-    high: `Explicitly build confidence and celebrate progress.
-    Example: "You're getting really good at this detective work! Your instincts are improving."`,
+    high: `Build confidence through specific evidence, not generic praise.
+    Example: "You found the misspelling. The next check is whether the web address matches the real company."`,
     labels: {
       low: 'task-focused',
       high: 'encouraging'

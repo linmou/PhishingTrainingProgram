@@ -14,6 +14,16 @@ const evalRoot = path.join(repoRoot, 'evals', 'promptfoo');
 const readText = (relativePath: string): string =>
   fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
 
+const readPromptfooCases = (): Array<{ vars: Record<string, string>; assert: Array<{ metric: string; value: string }> }> => {
+  const caseFile = yaml.load(
+    readText('evals/promptfoo/cases/account-security-alert.yaml')
+  );
+
+  expect(Array.isArray(caseFile)).toBe(true);
+
+  return caseFile as Array<{ vars: Record<string, string>; assert: Array<{ metric: string; value: string }> }>;
+};
+
 describe('Promptfoo evaluation scaffold', () => {
   const rubricFiles = [
     'turn_rhythm.md',
@@ -64,6 +74,7 @@ describe('Promptfoo evaluation scaffold', () => {
     expect(config).toContain('file://prompts/improved.chat.prompt.json');
     expect(config).toContain('openai:chat:gpt-4o-mini');
     expect(config).toContain('openai:chat:gpt-4o');
+    expect(config).toContain('- file://cases/account-security-alert.yaml');
     expect((cases.match(/case_id:/g) || []).length).toBeGreaterThanOrEqual(12);
     expect(cases).toContain('student_trusts_https');
     expect(cases).toContain('student_asks_about_bot_experience');
@@ -81,11 +92,9 @@ describe('Promptfoo evaluation scaffold', () => {
   });
 
   it('keeps case applicability aligned with per-case rubric assertions', () => {
-    const caseFile = yaml.load(
-      readText('evals/promptfoo/cases/account-security-alert.yaml')
-    ) as { tests: Array<{ vars: Record<string, string>; assert: Array<{ metric: string; value: string }> }> };
+    const caseFile = readPromptfooCases();
 
-    caseFile.tests.forEach((testCase) => {
+    caseFile.forEach((testCase) => {
       const applicableRequirements = testCase.vars.applicable_requirements
         .split(',')
         .map((requirement) => requirement.trim())
@@ -96,18 +105,29 @@ describe('Promptfoo evaluation scaffold', () => {
 
       expect(assertedMetrics).toEqual(applicableRequirements);
       testCase.assert.forEach((assertion) => {
-        expect(assertion.value).toBe(`file://rubrics/${assertion.metric}.md`);
+        expect(assertion.value).toContain(`/rubrics/${assertion.metric}.md`);
+      });
+    });
+  });
+
+  it('uses rubric file references that resolve from the Promptfoo config directory', () => {
+    const caseFile = readPromptfooCases();
+
+    caseFile.forEach((testCase) => {
+      testCase.assert.forEach((assertion) => {
+        const fileReference = assertion.value.replace(/^file:\/\//, '');
+        const resolvedPath = path.resolve(evalRoot, fileReference);
+
+        expect(fs.existsSync(resolvedPath)).toBe(true);
       });
     });
   });
 
   it('avoids leaking exact student messages from the eval cases into the improved prompt examples', () => {
-    const caseFile = yaml.load(
-      readText('evals/promptfoo/cases/account-security-alert.yaml')
-    ) as { tests: Array<{ vars: Record<string, string> }> };
+    const caseFile = readPromptfooCases();
     const improvedPrompt = readText('evals/promptfoo/prompts/improved.prompt.txt');
 
-    caseFile.tests.forEach((testCase) => {
+    caseFile.forEach((testCase) => {
       expect(improvedPrompt).not.toContain(testCase.vars.student_message);
     });
   });

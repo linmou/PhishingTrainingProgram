@@ -16,7 +16,7 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
         ];
 
         const config = {
-            role: 'trusted_adult' as const,
+            role: { role: 'high' as const },
             communication_style: {
                 teen_slang: 'low' as const,
                 conversational_markers: 'low' as const,
@@ -65,7 +65,7 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
 
     it('should handle empty custom areas gracefully', () => {
         const config = {
-            role: 'peer' as const,
+            role: { role: 'low' as const },
             communication_style: {
                 teen_slang: 'high' as const,
                 conversational_markers: 'high' as const,
@@ -96,7 +96,7 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
         // Should not have any bullet points under these sections
         const detectionSectionIndex = generatedPrompt.indexOf('## Detection Areas to Focus On:');
         const verificationSectionIndex = generatedPrompt.indexOf('## Verification Steps to Teach:');
-        const nextSectionIndex = generatedPrompt.indexOf('## Learning Process:');
+        const nextSectionIndex = generatedPrompt.indexOf('## Default Safe Actions:');
         
         const detectionSection = generatedPrompt.substring(detectionSectionIndex, verificationSectionIndex);
         const verificationSection = generatedPrompt.substring(verificationSectionIndex, nextSectionIndex);

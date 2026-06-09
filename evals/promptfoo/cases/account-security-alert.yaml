@@ -1,4 +1,3 @@
-tests:
   - vars:
       case_id: student_thinks_alert_is_real
       scenario_context: "A social post says 'YOUR ACCOUNT IS AT RISK' and links to http://testdrive.info/youraccount from 'Socail Media Testdrive'."

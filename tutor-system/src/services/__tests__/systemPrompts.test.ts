@@ -30,12 +30,12 @@ describe('System Prompts', () => {
 
             const prompt = generateSystemPrompt(config);
 
-            expect(prompt).toContain('professional teacher in an online teaching platform');
+            expect(prompt).toContain('knowledgeable tutor in a phishing-training session');
             expect(prompt).toContain('## Your Role: Peer Learner');
-            expect(prompt).toContain('Dude, this is so sketchy');
+            expect(prompt).toContain('knowledgeable peer coach');
             expect(prompt).toContain('Test detection area');
             expect(prompt).toContain('Test verification step');
-            expect(prompt).toContain('3-stage learning process');
+            expect(prompt).toContain('Use a tight tutoring rhythm');
         });
 
         it('should generate a complete system prompt with trusted adult role', () => {
@@ -122,8 +122,10 @@ describe('System Prompts', () => {
             const config = PRESET_CONFIGS.casual_peer;
             
             expect(config.role.role).toBe('low');
-            expect(config.communication_style.teen_slang).toBe('high');
-            expect(config.emotional_parameters.enthusiasm_level).toBe('high');
+            expect(config.communication_style.teen_slang).toBe('low');
+            expect(config.communication_style.uncertainty_expression).toBe('high');
+            expect(config.emotional_parameters.enthusiasm_level).toBe('low');
+            expect(config.emotional_parameters.mistake_normalization).toBe('high');
         });
 
         it('should have valid supportive_adult configuration', () => {

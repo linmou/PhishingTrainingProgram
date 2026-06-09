@@ -4,7 +4,7 @@ describe('Parameter Effectiveness Tests', () => {
     describe('Communication Style Parameters', () => {
         it('should include different language patterns based on teen slang setting', () => {
             const lowSlangConfig = {
-                role: 'peer' as const,
+                role: { role: 'low' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -22,13 +22,13 @@ describe('Parameter Effectiveness Tests', () => {
             // Low slang should mention formal language
             expect(lowSlangPrompt).toContain('formal, clear language');
             // High slang should mention specific slang terms
-            expect(highSlangPrompt).toContain('sus');
-            expect(highSlangPrompt).toContain('no cap');
+            expect(highSlangPrompt).toContain('relaxed teen-friendly language');
+            expect(highSlangPrompt).toContain('without forced slang');
         });
 
         it('should include different uncertainty patterns', () => {
             const lowUncertaintyConfig = {
-                role: 'trusted_adult' as const,
+                role: { role: 'high' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -44,15 +44,15 @@ describe('Parameter Effectiveness Tests', () => {
             const highUncertaintyPrompt = generateSystemPrompt(highUncertaintyConfig);
 
             expect(lowUncertaintyPrompt).toContain('definitive statements');
-            expect(highUncertaintyPrompt).toContain('I think this might be');
-            expect(highUncertaintyPrompt).toContain('let\'s check together');
+            expect(highUncertaintyPrompt).toContain('Be confident when the student\'s reasoning is unsafe');
+            expect(highUncertaintyPrompt).toContain('Open the real app instead');
         });
     });
 
     describe('Cognitive Parameters', () => {
         it('should handle concept density differences', () => {
             const lowDensityConfig = {
-                role: 'trusted_adult' as const,
+                role: { role: 'high' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -73,7 +73,7 @@ describe('Parameter Effectiveness Tests', () => {
 
         it('should include perspective taking instructions', () => {
             const lowPerspectiveConfig = {
-                role: 'peer' as const,
+                role: { role: 'low' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -89,14 +89,14 @@ describe('Parameter Effectiveness Tests', () => {
             const highPerspectivePrompt = generateSystemPrompt(highPerspectiveConfig);
 
             expect(lowPerspectivePrompt).toContain('direct analysis without perspective shifts');
-            expect(highPerspectivePrompt).toContain('Imagine you\'re the scammer');
+            expect(highPerspectivePrompt).toContain('A scammer might hide the real website name');
         });
     });
 
     describe('Emotional Parameters', () => {
         it('should include different enthusiasm levels', () => {
             const lowEnthusiasmConfig = {
-                role: 'trusted_adult' as const,
+                role: { role: 'high' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -112,12 +112,12 @@ describe('Parameter Effectiveness Tests', () => {
             const highEnthusiasmPrompt = generateSystemPrompt(highEnthusiasmConfig);
 
             expect(lowEnthusiasmPrompt).toContain('neutral, measured tone');
-            expect(highEnthusiasmPrompt).toContain('YES! Absolutely nailed it!');
+            expect(highEnthusiasmPrompt).toContain('restrained and focused on the lesson');
         });
 
         it('should include mistake normalization approaches', () => {
             const lowNormalizationConfig = {
-                role: 'peer' as const,
+                role: { role: 'low' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -133,14 +133,14 @@ describe('Parameter Effectiveness Tests', () => {
             const highNormalizationPrompt = generateSystemPrompt(highNormalizationConfig);
 
             expect(lowNormalizationPrompt).toContain('direct correction');
-            expect(highNormalizationPrompt).toContain('This one got you! Don\'t worry');
+            expect(highNormalizationPrompt).toContain('Correct unsafe reasoning directly');
         });
     });
 
     describe('Role-Specific Instructions', () => {
         it('should include different role-based language patterns', () => {
             const peerConfig = {
-                role: 'peer' as const,
+                role: { role: 'low' as const },
                 communication_style: { teen_slang: 'high' as const, conversational_markers: 'high' as const, uncertainty_expression: 'high' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'high' as const, personal_examples: 'high' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'high' as const, validation_frequency: 'high' as const, mistake_normalization: 'high' as const, confidence_building: 'high' as const },
@@ -149,7 +149,7 @@ describe('Parameter Effectiveness Tests', () => {
 
             const adultConfig = {
                 ...peerConfig,
-                role: 'trusted_adult' as const
+                role: { role: 'high' as const }
             };
 
             const peerPrompt = generateSystemPrompt(peerConfig);
@@ -157,20 +157,55 @@ describe('Parameter Effectiveness Tests', () => {
 
             // Peer role should include casual language
             expect(peerPrompt).toContain('Peer Learner');
-            expect(peerPrompt).toContain('Dude, this is so sketchy');
-            expect(peerPrompt).toContain('we\'re figuring this out together');
+            expect(peerPrompt).toContain('knowledgeable peer coach');
+            expect(peerPrompt).toContain('Do not claim personal memories');
 
             // Adult role should include protective language
             expect(adultPrompt).toContain('Trusted Adult Guide');
             expect(adultPrompt).toContain('experienced guide offering protective support');
             expect(adultPrompt).toContain('I want to make sure you stay safe online');
         });
+
+        it('should generate a casual peer prompt that matches reviewed tutor behavior requirements', () => {
+            const prompt = generateSystemPrompt({
+                role: { role: 'low' as const },
+                communication_style: {
+                    teen_slang: 'low' as const,
+                    conversational_markers: 'low' as const,
+                    uncertainty_expression: 'low' as const
+                },
+                cognitive_parameters: {
+                    concept_density: 'low' as const,
+                    perspective_taking: 'low' as const,
+                    personal_examples: 'low' as const,
+                    consequence_highlighting: 'low' as const
+                },
+                emotional_parameters: {
+                    enthusiasm_level: 'low' as const,
+                    validation_frequency: 'low' as const,
+                    mistake_normalization: 'low' as const,
+                    confidence_building: 'low' as const
+                },
+                detection_areas: ['Fear-Based Urgency: "YOUR ACCOUNT IS AT RISK"'],
+                verification_steps: ['Do NOT Click: Never click security alert links directly']
+            });
+
+            expect(prompt).toContain('Ask at most one focused question');
+            expect(prompt).toContain('correct the mistake directly');
+            expect(prompt).toContain('one concrete safe action');
+            expect(prompt).toContain('Do not claim personal memories');
+            expect(prompt).toContain('A person who clicked');
+            expect(prompt).toContain('The lock does not prove the site is real');
+            expect(prompt).toContain('Open the real app yourself');
+            expect(prompt).not.toContain('Honestly, I fall for stuff like this too sometimes');
+            expect(prompt).not.toContain('YES! Absolutely nailed it!');
+        });
     });
 
     describe('Detection Areas and Verification Steps', () => {
         it('should include custom detection areas and verification steps', () => {
             const config = {
-                role: 'trusted_adult' as const,
+                role: { role: 'high' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'high' as const, perspective_taking: 'high' as const, personal_examples: 'high' as const, consequence_highlighting: 'high' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'high' as const, mistake_normalization: 'high' as const, confidence_building: 'high' as const },
@@ -196,7 +231,7 @@ describe('Parameter Effectiveness Tests', () => {
     describe('Scaffolding Techniques', () => {
         it('should always include scaffolding techniques in the prompt', () => {
             const config = {
-                role: 'peer' as const,
+                role: { role: 'low' as const },
                 communication_style: { teen_slang: 'low' as const, conversational_markers: 'low' as const, uncertainty_expression: 'low' as const },
                 cognitive_parameters: { concept_density: 'low' as const, perspective_taking: 'low' as const, personal_examples: 'low' as const, consequence_highlighting: 'low' as const },
                 emotional_parameters: { enthusiasm_level: 'low' as const, validation_frequency: 'low' as const, mistake_normalization: 'low' as const, confidence_building: 'low' as const },
@@ -213,11 +248,11 @@ describe('Parameter Effectiveness Tests', () => {
             expect(prompt).toContain('Hinting');
             expect(prompt).toContain('Instructing');
 
-            // Should include the 3-stage learning process
-            expect(prompt).toContain('3-stage learning process');
-            expect(prompt).toContain('Get their first reaction');
-            expect(prompt).toContain('Ask why they think that');
-            expect(prompt).toContain('Fill knowledge gaps');
+            // Should include the current tutoring rhythm
+            expect(prompt).toContain('Use a tight tutoring rhythm');
+            expect(prompt).toContain('Teach one concrete point first');
+            expect(prompt).toContain('Ask at most one focused question');
+            expect(prompt).toContain('Include one concrete safe action');
         });
     });
 });

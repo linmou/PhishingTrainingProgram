@@ -10,16 +10,21 @@ import { buildEvaluationUserTurn, buildPromptfooChatMessages } from '../promptfo
 
 const repoRoot = path.resolve(__dirname, '../../..', '..');
 
+const readFirstCaseVars = (): Record<string, string> => {
+  const caseFile = yaml.load(
+    fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/cases/account-security-alert.yaml'), 'utf8')
+  ) as Array<{ vars: Record<string, string> }>;
+
+  return caseFile[0].vars;
+};
+
 describe('Promptfoo evaluation prompt formatting', () => {
   it('formats eval cases as product-shaped chat messages', () => {
     const currentSystemPrompt = fs.readFileSync(
       path.join(repoRoot, 'evals/promptfoo/prompts/current.prompt.txt'),
       'utf8'
     );
-    const caseFile = yaml.load(
-      fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/cases/account-security-alert.yaml'), 'utf8')
-    ) as { tests: Array<{ vars: Record<string, string> }> };
-    const firstCase = caseFile.tests[0].vars;
+    const firstCase = readFirstCaseVars();
 
     const messages = buildPromptfooChatMessages(currentSystemPrompt);
     const concreteUserTurn = buildEvaluationUserTurn({
@@ -49,10 +54,7 @@ describe('Promptfoo evaluation prompt formatting', () => {
     const config = yaml.load(
       fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/promptfooconfig.yaml'), 'utf8')
     ) as { prompts: string[] };
-    const caseFile = yaml.load(
-      fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/cases/account-security-alert.yaml'), 'utf8')
-    ) as { tests: Array<{ vars: Record<string, string> }> };
-    const firstCase = caseFile.tests[0].vars;
+    const firstCase = readFirstCaseVars();
 
     expect(config.prompts).toEqual([
       'file://prompts/current.chat.prompt.json',

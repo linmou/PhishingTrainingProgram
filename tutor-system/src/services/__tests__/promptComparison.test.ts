@@ -26,8 +26,8 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         
         // Casual peer should have peer-specific language
         expect(casualPeerPrompt).toContain('Peer Learner');
-        expect(casualPeerPrompt).toContain('Integrate teen slang naturally');
-        expect(casualPeerPrompt).toContain('YES! Absolutely nailed it');
+        expect(casualPeerPrompt).toContain('knowledgeable peer coach');
+        expect(casualPeerPrompt).toContain('Ask at most one focused question');
         
         // Supportive adult should have adult-specific language
         expect(supportiveAdultPrompt).toContain('Trusted Adult Guide');
@@ -39,7 +39,7 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         const nintendoScenario = SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'];
         
         const practicalPrompt = generateSystemPrompt({
-            role: 'peer',
+            role: { role: 'low' as const },
             communication_style: {
                 teen_slang: 'high',
                 conversational_markers: 'high', 
@@ -67,20 +67,20 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         // Verify scenario-specific content is included
         expect(practicalPrompt).toContain('$19.99 for a $300+ gaming console');
         expect(practicalPrompt).toContain('nintendo.com or authorized retailer');
-        expect(practicalPrompt).toContain('Ask "Why would Nintendo sell at 93% loss?"');
+        expect(practicalPrompt).toContain('Official Social Media: Check Nintendo\'s official social media accounts');
         
         // Verify peer role and high settings are reflected
-        expect(practicalPrompt).toContain('fellow learner');
-        expect(practicalPrompt).toContain('sus');
-        expect(practicalPrompt).toContain('Imagine you\'re the scammer');
-        expect(practicalPrompt).toContain('YES! Absolutely nailed it');
+        expect(practicalPrompt).toContain('knowledgeable peer coach');
+        expect(practicalPrompt).toContain('relaxed teen-friendly language');
+        expect(practicalPrompt).toContain('scammer might hide the real website name');
+        expect(practicalPrompt).toContain('Keep energy restrained');
     });
 
     it('should demonstrate privacy protection scenario with trusted adult role', () => {
         const privacyScenario = SCENARIO_TEMPLATES['Location Sharing Risks'];
         
         const privacyPrompt = generateSystemPrompt({
-            role: 'trusted_adult',
+            role: { role: 'high' as const },
             communication_style: {
                 teen_slang: 'low',
                 conversational_markers: 'low',
@@ -110,12 +110,12 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         expect(privacyPrompt).toContain('private messages');
         expect(privacyPrompt).toContain('Trusted Adult Guide');
         expect(privacyPrompt).toContain('multiple related concepts');
-        expect(privacyPrompt).toContain('Explicit consequence discussion');
+        expect(privacyPrompt).toContain('Explicitly discuss potential consequences to build awareness');
     });
 
     it('should show length and complexity differences between configurations', () => {
         const minimalConfig = {
-            role: 'trusted_adult' as const,
+            role: { role: 'high' as const },
             communication_style: {
                 teen_slang: 'low' as const,
                 conversational_markers: 'low' as const,
@@ -138,7 +138,7 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         };
 
         const maximalConfig = {
-            role: 'peer' as const,
+            role: { role: 'low' as const },
             communication_style: {
                 teen_slang: 'high' as const,
                 conversational_markers: 'high' as const,
@@ -175,6 +175,6 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         expect(maximalPrompt).toContain('multiple related concepts simultaneously');
         
         expect(minimalPrompt).toContain('minimal emotional validation');
-        expect(maximalPrompt).toContain('Frequent validation');
+        expect(maximalPrompt).toContain('one brief, specific acknowledgment');
     });
 });

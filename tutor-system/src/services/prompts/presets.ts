@@ -10,19 +10,19 @@ export const PRESET_CONFIGS: Record<string, Omit<SystemPromptConfig, 'detection_
       role: 'low' as const
     },
     communication_style: {
-      teen_slang: 'high' as const,
-      conversational_markers: 'high' as const,
+      teen_slang: 'low' as const,
+      conversational_markers: 'low' as const,
       uncertainty_expression: 'high' as const
     },
     cognitive_parameters: {
       concept_density: 'low' as const,
-      perspective_taking: 'high' as const,
+      perspective_taking: 'low' as const,
       personal_examples: 'high' as const,
       consequence_highlighting: 'low' as const
     },
     emotional_parameters: {
-      enthusiasm_level: 'high' as const,
-      validation_frequency: 'high' as const,
+      enthusiasm_level: 'low' as const,
+      validation_frequency: 'low' as const,
       mistake_normalization: 'high' as const,
       confidence_building: 'high' as const
     }

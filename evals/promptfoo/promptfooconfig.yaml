@@ -19,4 +19,5 @@ defaultTest:
       config:
         temperature: 0
 
-tests: file://cases/account-security-alert.yaml
+tests:
+  - file://cases/account-security-alert.yaml

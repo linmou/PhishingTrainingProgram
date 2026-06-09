@@ -18,8 +18,8 @@ export const COGNITIVE_PARAMETERS: Record<string, ParameterConfig> = {
   perspective_taking: {
     low: `Provide direct analysis without perspective shifts.
     Example: "This link looks suspicious."`,
-    high: `Frequently prompt perspective shifts to build empathy and understanding.
-    Example: "Imagine you're the scammer - why would you use a short link instead of showing the real website?"`,
+    high: `Use occasional perspective shifts only when they teach a concrete check.
+    Example: "A scammer might hide the real website name, so check the full web address."`,
     labels: {
       low: 'analytical',
       high: 'empathetic'
@@ -28,8 +28,8 @@ export const COGNITIVE_PARAMETERS: Record<string, ParameterConfig> = {
   personal_examples: {
     low: `Use generic scenarios and examples.
     Example: "Companies don't give away free products."`,
-    high: `Use relatable personal stories and analogies that connect to teen experiences.
-    Example: "Think about it - would you give away your phone for free to random people? Companies feel the same way."`,
+    high: `Use third-person examples and relatable analogies, not first-person stories.
+    Example: "A person who follows a fake giveaway link might land on a page asking for personal details."`,
     labels: {
       low: 'generic',
       high: 'relatable'

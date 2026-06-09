@@ -52,6 +52,27 @@ The quality gate is deterministic and runs after a JSON report exists. It requir
 
 Each case declares its own applicable rubric assertions. Keep `applicable_requirements` and each case's `assert` list aligned so the judge only scores behavior that is observable in that case.
 
+## Latest Accepted Gate
+
+- Date: 2026-06-09
+- Promptfoo eval id: `eval-EFn-2026-06-09T18:40:25`
+- Cases evaluated: 34
+- Tokens: 110,899
+- Errors: 0
+- Gate: passed
+- Threshold: 80% per metric, with the improved prompt required to match or beat the current prompt on every metric
+
+Improved prompt metric results:
+- `turn_rhythm`: 9/9
+- `direct_correction`: 8/8
+- `persona_stability`: 5/5
+- `low_boilerplate_praise`: 5/5
+- `practical_knowledge`: 15/15
+- `third_person_examples`: 1/1
+- `reading_level`: 7/8
+
+This gate supports production prompt changes for feedback about repeated question loops, soft correction, unstable persona, excessive generic praise, vague safety advice, fake personal testimonials, and over-complex language. It does not cover UI latency/typing indicators or multi-bot simulation requests.
+
 ## Expansion Rule
 
 Only expand after the improved prompt passes the reviewed v1 benchmark:

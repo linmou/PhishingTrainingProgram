@@ -63,7 +63,7 @@ describe('AI Service Parameter Overrides', () => {
             const mergedConfig = { ...baseConfig, ...parameterOverrides };
             const systemPrompt = generateSystemPrompt(mergedConfig);
 
-            expect(systemPrompt).toContain('Dude, this is so sketchy');
+            expect(systemPrompt).toContain('relaxed teen-friendly language');
             expect(mergedConfig.communication_style.teen_slang).toBe('high');
         });
 
@@ -151,11 +151,11 @@ describe('AI Service Parameter Overrides', () => {
 
             // Trusted adult should have formal language
             expect(trustedAdultPrompt).toContain('## Your Role: Trusted Adult');
-            expect(trustedAdultPrompt).not.toContain('Dude, this is so sketchy');
+            expect(trustedAdultPrompt).not.toContain('knowledgeable peer coach');
 
             // Peer should have casual language after override
             expect(peerPrompt).toContain('## Your Role: Peer Learner');
-            expect(peerPrompt).toContain('Dude, this is so sketchy');
+            expect(peerPrompt).toContain('knowledgeable peer coach');
         });
 
         test('should handle empty configuration gracefully', () => {
@@ -184,7 +184,7 @@ describe('AI Service Parameter Overrides', () => {
 
             expect(() => generateSystemPrompt(emptyConfig)).not.toThrow();
             const prompt = generateSystemPrompt(emptyConfig);
-            expect(prompt).toContain('professional teacher in an online teaching platform');
+            expect(prompt).toContain('knowledgeable tutor in a phishing-training session');
         });
     });
 

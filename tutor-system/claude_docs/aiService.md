@@ -66,6 +66,33 @@ interface ParameterOverrides {
 ### `SystemPromptProcessor` Class (Lines 158-236)
 **Purpose**: Handles dynamic prompt generation with parameter overrides
 
+### Tutor Behavior Quality Gate
+
+Intent: keep production prompt changes tied to reviewed student-behavior requirements instead of relying on ad hoc prompt edits.
+
+The phishing tutor prompt is evaluated through the Promptfoo benchmark in `../evals/promptfoo/` before the production prompt text is changed. The current quality gate requires the candidate prompt to pass at least 80% of applicable assertions for every metric and to match or beat the baseline prompt on every metric.
+
+Latest accepted run:
+- Date: 2026-06-09
+- Promptfoo eval id: `eval-EFn-2026-06-09T18:40:25`
+- Scope: `casual_peer` agent preset with the `Account Security Alert` fixture and holdout-style account-alert variants
+- Result: gate passed, 34 cases evaluated, 110,899 tokens, 0 errors
+
+Feedback covered by the accepted prompt:
+- Repeated question loops: `turn_rhythm` passed 9/9 for the improved prompt.
+- Soft or indirect correction: `direct_correction` passed 8/8.
+- Fake friend or fake first-person persona: `persona_stability` passed 5/5.
+- Boilerplate praise: `low_boilerplate_praise` passed 5/5.
+- Vague advice without practical checks: `practical_knowledge` passed 15/15.
+- Personal testimonials: `third_person_examples` passed 1/1.
+- Over-complex language: `reading_level` passed 7/8, above the 80% metric threshold.
+
+Feedback not solved by prompt-only work:
+- UI latency and typing feedback require product/UI changes.
+- Multi-bot or richer simulation behavior requires new product design and evaluation fixtures.
+
+Production prompt behavior now emphasizes direct tutoring: teach one concrete point first, ask at most one focused question only when useful, correct unsafe reasoning directly, provide concrete safe actions, avoid fake personal memories, use third-person examples, and keep language simple for confused students.
+
 #### `processOverrides` (Lines 162-176)
 **Strategy**:
 - **No overrides**: Return original configuration unchanged
