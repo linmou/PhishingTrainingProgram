@@ -23,7 +23,8 @@ import {
     supabase,
     getMessageFeedbackStats,
     getUserMessageFeedback,
-    submitMessageFeedback
+    submitMessageFeedback,
+    getRoomFeedbackSummary
 } from '../../services/supabase';
 import { User, Room, Message, AIAssistantConfig } from '../../types';
 
@@ -228,6 +229,11 @@ describe('RoomContext - Room Management Tests', () => {
         });
 
         (getUserMessageFeedback as jest.Mock).mockResolvedValue(null);
+        (getRoomFeedbackSummary as jest.Mock).mockResolvedValue({
+            total_messages_with_feedback: 0,
+            total_feedback_entries: 0,
+            average_room_rating: null
+        });
 
         // Setup default useAuth mock
         (useAuth as jest.Mock).mockReturnValue({
@@ -1333,6 +1339,262 @@ describe('RoomContext - Room Management Tests', () => {
                     messageId: mockMessage.id
                 }
             });
+        });
+    });
+
+    // RoomContext.test.tsx: regression coverage for chat-history exports using refreshed feedback state without requiring a room reload.
+    describe('Download Chat History Regression', () => {
+        const createRoomChannel = () => ({
+            on: jest.fn().mockReturnThis(),
+            send: jest.fn(),
+            subscribe: jest.fn().mockReturnValue(mockSubscription),
+            unsubscribe: jest.fn()
+        });
+
+        const mockSuccessfulRoomJoin = (messagesData: Message[] = []) => {
+            const mockRoomQuery = {
+                select: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        eq: jest.fn(() => ({
+                            single: jest.fn().mockResolvedValue({
+                                data: mockRoom,
+                                error: null
+                            })
+                        }))
+                    }))
+                }))
+            };
+
+            const mockMessagesQuery = {
+                select: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        order: jest.fn().mockResolvedValue({
+                            data: messagesData,
+                            error: null
+                        })
+                    }))
+                }))
+            };
+
+            const mockUsersQuery = {
+                select: jest.fn(() => ({
+                    in: jest.fn().mockResolvedValue({
+                        data: [mockUser],
+                        error: null
+                    })
+                }))
+            };
+
+            (supabase.from as jest.Mock)
+                .mockReturnValueOnce(mockRoomQuery)
+                .mockReturnValueOnce(mockMessagesQuery)
+                .mockReturnValueOnce(mockUsersQuery)
+                .mockReturnValueOnce(mockMessagesQuery)
+                .mockReturnValue(mockMessagesQuery);
+        };
+
+        const createDownloadMocks = () => {
+            const originalBlob = global.Blob;
+            const originalCreateElement = document.createElement.bind(document);
+            const originalAppendChild = document.body.appendChild.bind(document.body);
+            const originalRemoveChild = document.body.removeChild.bind(document.body);
+            const originalCreateObjectURL = global.URL.createObjectURL;
+            const originalRevokeObjectURL = global.URL.revokeObjectURL;
+
+            const click = jest.fn();
+            const link = {
+                href: '',
+                download: '',
+                click
+            } as unknown as HTMLAnchorElement;
+
+            const blobMock = jest.fn((content: BlobPart[], options?: BlobPropertyBag) => ({
+                content: content[0],
+                type: options?.type
+            }));
+
+            (global as any).Blob = blobMock;
+            document.createElement = jest.fn((tagName: string) => (
+                tagName === 'a' ? link : originalCreateElement(tagName)
+            )) as typeof document.createElement;
+            document.body.appendChild = jest.fn(() => link) as typeof document.body.appendChild;
+            document.body.removeChild = jest.fn(() => link) as typeof document.body.removeChild;
+            global.URL.createObjectURL = jest.fn(() => 'blob:mock-download-url');
+            global.URL.revokeObjectURL = jest.fn();
+
+            return {
+                blobMock,
+                click,
+                restore: () => {
+                    (global as any).Blob = originalBlob;
+                    document.createElement = originalCreateElement;
+                    document.body.appendChild = originalAppendChild;
+                    document.body.removeChild = originalRemoveChild;
+                    global.URL.createObjectURL = originalCreateObjectURL;
+                    global.URL.revokeObjectURL = originalRevokeObjectURL;
+                }
+            };
+        };
+
+        it('should include updated like feedback in txt export without a refresh', async () => {
+            const mockChannel = createRoomChannel();
+            let roomFunctions: any;
+
+            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin([mockMessage]);
+
+            (getMessageFeedbackStats as jest.Mock)
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 0,
+                    like_count: 0,
+                    dislike_count: 0,
+                    average_like_rating: null,
+                    average_dislike_rating: null,
+                    overall_average_rating: null,
+                    user_feedback: null
+                })
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 1,
+                    dislike_count: 0,
+                    average_like_rating: 4,
+                    average_dislike_rating: null,
+                    overall_average_rating: 4,
+                    user_feedback: null
+                });
+
+            render(
+                <RoomProvider>
+                    <TestRoomComponent />
+                    <TestRoomHelper onRoomFunctions={(functions) => { roomFunctions = functions; }} />
+                </RoomProvider>
+            );
+
+            await act(async () => {
+                screen.getByText('Join Room').click();
+            });
+
+            const feedbackInsertHandler = mockChannel.on.mock.calls.find(
+                ([eventType, config]: [string, { table?: string; event?: string }]) =>
+                    eventType === 'postgres_changes' &&
+                    config.table === 'message_feedback' &&
+                    config.event === 'INSERT'
+            )?.[2];
+
+            expect(feedbackInsertHandler).toBeDefined();
+
+            await act(async () => {
+                await feedbackInsertHandler({
+                    new: {
+                        room_id: mockRoom.id,
+                        message_id: mockMessage.id
+                    }
+                });
+            });
+
+            const downloadMocks = createDownloadMocks();
+
+            await act(async () => {
+                await roomFunctions.downloadChatHistory('txt');
+            });
+
+            const exportedContent = downloadMocks.blobMock.mock.calls[0][0][0] as string;
+
+            expect(exportedContent).toContain('Feedback Summary:');
+            expect(exportedContent).toContain('Messages with feedback: 1');
+            expect(exportedContent).toContain('Total feedback entries: 1');
+            expect(exportedContent).toContain('[👍1 👎0 ★4.0]');
+            expect(downloadMocks.click).toHaveBeenCalled();
+
+            downloadMocks.restore();
+        });
+
+        it('should include updated dislike feedback in json export without a refresh', async () => {
+            const mockChannel = createRoomChannel();
+            let roomFunctions: any;
+
+            (supabase.channel as jest.Mock).mockReturnValue(mockChannel);
+            mockSuccessfulRoomJoin([mockMessage]);
+
+            (getMessageFeedbackStats as jest.Mock)
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 1,
+                    dislike_count: 0,
+                    average_like_rating: 4,
+                    average_dislike_rating: null,
+                    overall_average_rating: 4,
+                    user_feedback: null
+                })
+                .mockResolvedValueOnce({
+                    message_id: mockMessage.id,
+                    total_feedback_count: 1,
+                    like_count: 0,
+                    dislike_count: 1,
+                    average_like_rating: null,
+                    average_dislike_rating: 2,
+                    overall_average_rating: 2,
+                    user_feedback: null
+                });
+
+            (getRoomFeedbackSummary as jest.Mock).mockResolvedValue({
+                total_messages_with_feedback: 1,
+                total_feedback_entries: 1,
+                average_room_rating: 2
+            });
+
+            render(
+                <RoomProvider>
+                    <TestRoomComponent />
+                    <TestRoomHelper onRoomFunctions={(functions) => { roomFunctions = functions; }} />
+                </RoomProvider>
+            );
+
+            await act(async () => {
+                screen.getByText('Join Room').click();
+            });
+
+            const feedbackUpdateHandler = mockChannel.on.mock.calls.find(
+                ([eventType, config]: [string, { table?: string; event?: string }]) =>
+                    eventType === 'postgres_changes' &&
+                    config.table === 'message_feedback' &&
+                    config.event === 'UPDATE'
+            )?.[2];
+
+            expect(feedbackUpdateHandler).toBeDefined();
+
+            await act(async () => {
+                await feedbackUpdateHandler({
+                    new: {
+                        room_id: mockRoom.id,
+                        message_id: mockMessage.id
+                    }
+                });
+            });
+
+            const downloadMocks = createDownloadMocks();
+
+            await act(async () => {
+                await roomFunctions.downloadChatHistory('json');
+            });
+
+            const exportedData = JSON.parse(downloadMocks.blobMock.mock.calls[0][0][0] as string);
+
+            expect(exportedData.messages).toHaveLength(1);
+            expect(exportedData.messages[0].feedback_stats.like_count).toBe(0);
+            expect(exportedData.messages[0].feedback_stats.dislike_count).toBe(1);
+            expect(exportedData.messages[0].feedback_stats.average_dislike_rating).toBe(2);
+            expect(exportedData.feedback_summary).toEqual({
+                total_messages_with_feedback: 1,
+                total_feedback_entries: 1,
+                average_room_rating: 2
+            });
+            expect(downloadMocks.click).toHaveBeenCalled();
+
+            downloadMocks.restore();
         });
     });
 

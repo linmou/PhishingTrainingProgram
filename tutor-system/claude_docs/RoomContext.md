@@ -110,6 +110,7 @@ channel.on('postgres_changes', { event: 'INSERT', table: 'messages' })
 **Export Design**:
 - JSON export is built through a single export builder so one message shape is used for both feedback and chat data
 - Feedback export is no longer a separate download path; feedback summary is part of the room JSON export
+- Realtime feedback insert/update events refresh message feedback stats in memory, so TXT and JSON exports include the latest like/dislike summary without requiring a room reload
 - AI config change history remains in Supabase for audit/debug use, but is no longer included in the normal JSON download
 
 ### Feedback System (Lines 968-1030)
