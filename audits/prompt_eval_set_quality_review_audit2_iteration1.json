@@ -1,0 +1,373 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "review",
+  "iteration": 1,
+  "reviewer_id": "audit2",
+  "claim": "The evaluation set is high quality for judging Account Security Alert tutor prompt behavior against user_feedback.md prompt-fixable requirements before live Promptfoo runs.",
+  "overall_verdict": "fail",
+  "overall_confidence": 0.82,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "coverage of feedback requirements by cases/rubrics",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:4",
+          "text": "Break the question-every-turn pattern. Interleave: explanation \u2192 question \u2192 explanation, not question \u2192 question \u2192 question."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/turn_rhythm.md:3",
+          "text": "The tutor must break the question-every-turn pattern."
+        },
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:5",
+          "text": "Add genuine disagreement and correction."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/direct_correction.md:3",
+          "text": "When the student is wrong or incomplete, the tutor must correct the mistake directly instead of validating unsafe reasoning."
+        },
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:6",
+          "text": "Stabilize the persona. Pick one consistent voice"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/persona_stability.md:3",
+          "text": "The tutor should keep one consistent knowledgeable-peer voice"
+        },
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:7",
+          "text": "Reduce boilerplate encouragement."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/low_boilerplate_praise.md:3",
+          "text": "The tutor should reduce hollow encouragement."
+        },
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:8",
+          "text": "Real-world tools (URL decompilers, reverse image search, HTTPS indicators)"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/practical_knowledge.md:8",
+          "text": "URL expander/checker, reverse image search, HTTPS/domain distinction."
+        },
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:9",
+          "text": "Use third-person testimonials, not first-person AI claims."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/third_person_examples.md:3",
+          "text": "third-person testimonials or general examples, not first-person AI claims."
+        },
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:11",
+          "text": "Simplify language for younger audiences."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/reading_level.md:3",
+          "text": "language that works for younger or confused students"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:42-48",
+          "text": "case_id: younger_student_confused"
+        }
+      ],
+      "reasoning": "The prompt-fixable feedback items are represented by explicit rubrics and scenario cases, while UI latency and multi-bot simulation are outside the stated prompt-behavior scope.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "user_feedback.md:10",
+          "text": "Fix response latency. Add a typing indicator."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:21",
+          "text": "This evaluates prompt behavior only. It does not call Supabase, does not exercise the React app, and does not verify UI latency."
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "text": "case realism and variety",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:3-7",
+          "text": "case_id: student_thinks_alert_is_real"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:11-15",
+          "text": "case_id: student_wants_to_click"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:19-23",
+          "text": "case_id: student_trusts_https"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:35-39",
+          "text": "case_id: student_gives_vague_answer"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:51-55",
+          "text": "case_id: overconfident_student"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:83-87",
+          "text": "case_id: student_asks_about_bot_experience"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:99-103",
+          "text": "case_id: student_thinks_design_proves_legit"
+        },
+        {
+          "kind": "quote",
+          "location": "raw_instrcutions/what_to_respond.txt:102-112",
+          "text": "Red Flags Teens Should Recognize"
+        }
+      ],
+      "reasoning": "The cases cover wrong, incomplete, confused, overconfident, practical-action, persona-challenge, and correct-answer turns grounded in the Account Security Alert content.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:9",
+          "text": "This benchmark starts with one fixed AI situation"
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "text": "rubric observability and pass/fail clarity",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.79,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/direct_correction.md:5-15",
+          "text": "Pass criteria"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/turn_rhythm.md:5-15",
+          "text": "Asks no more than one focused question."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/practical_knowledge.md:5-15",
+          "text": "Gives practical next steps relevant to the student's message."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:8",
+          "text": "applicable_requirements: \"direct_correction, turn_rhythm, practical_knowledge, reading_level\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/promptfooconfig.yaml:21-42",
+          "text": "assert:"
+        }
+      ],
+      "reasoning": "The individual rubrics are mostly observable, but Promptfoo applies all seven rubrics to every case despite per-case applicable_requirements; that makes pass/fail less clear for cases where a requirement is not relevant.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/third_person_examples.md:25",
+          "text": "Return pass=true only if the response avoids first-person experience claims."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/reading_level.md:25",
+          "text": "Return pass=true only if the response is clear for a younger or confused learner."
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "text": "prompt/product-context validity alignment",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:13-18",
+          "text": "Agent preset: `casual_peer`"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/fixtures/fixture-metadata.json:5-6",
+          "text": "\"agent_preset\": \"casual_peer\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/fixtures/fixture-metadata.json:7-17",
+          "text": "\"source_files\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/current.chat.prompt.json:7-8",
+          "text": "Scenario context:"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.chat.prompt.json:7-8",
+          "text": "Scenario context:"
+        },
+        {
+          "kind": "quote",
+          "location": "raw_instrcutions/what_to_respond.txt:100-134",
+          "text": "Post 3: Account Security Alert"
+        }
+      ],
+      "reasoning": "The benchmark is explicitly scoped to the Account Security Alert and casual_peer preset, and the chat prompts send the same scenario/history/latest-message structure for both prompts.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/fixtures/fixture-metadata.json:19",
+          "text": "\"git_commit\": \"pending-review\""
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "text": "bias/leakage risk and overfitting control",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:48-49",
+          "text": "Student: It has a lock icon, so I think it's safe."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:19-23",
+          "text": "case_id: student_trusts_https"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:51-52",
+          "text": "Student: I should click it fast because my account might be at risk."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:11-15",
+          "text": "student_message: \"I would click it quickly just in case.\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:54-55",
+          "text": "Student: Did this ever happen to you?"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:83-87",
+          "text": "student_message: \"Have you ever clicked one of these and regretted it?\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:57-58",
+          "text": "Student: What should I do?"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:59-63",
+          "text": "student_message: \"So what should I actually do if I am worried?\""
+        }
+      ],
+      "reasoning": "Several eval cases closely paraphrase the candidate prompt's own few-shot examples, so a live run can reward memorizing the improved prompt rather than robust behavior.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/current.chat.prompt.json:7-8",
+          "text": "Student's latest message:"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.chat.prompt.json:7-8",
+          "text": "Student's latest message:"
+        }
+      ]
+    },
+    {
+      "id": "c6",
+      "text": "maintainability/readability for reviewers",
+      "blocking": false,
+      "verdict": "pass",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:25-30",
+          "text": "Review Order"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:51-58",
+          "text": "Expansion Rule"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:3",
+          "text": "case_id: student_thinks_alert_is_real"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:8",
+          "text": "applicable_requirements:"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/practical_knowledge.md:1",
+          "text": "# Practical Knowledge Rubric"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/promptfooconfig.yaml:4-6",
+          "text": "prompts:"
+        }
+      ],
+      "reasoning": "The files are short, named by behavior, and include review/run instructions, so reviewers can inspect and extend the set without reverse engineering.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:8",
+          "text": "applicable_requirements: \"direct_correction, turn_rhythm, practical_knowledge, reading_level\""
+        }
+      ]
+    }
+  ],
+  "open_questions": [
+    "Should promptfooconfig.yaml apply only the per-case applicable_requirements instead of every rubric to every case?",
+    "Should the candidate prompt few-shot examples be excluded from, or systematically varied away from, the live evaluation cases?"
+  ],
+  "disputed_points_if_any": []
+}

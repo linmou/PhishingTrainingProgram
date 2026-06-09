@@ -1,0 +1,42 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality",
+  "iteration": 3,
+  "reviewer_id": "audit3",
+  "claim": "After the latest refinements, the Account Security Alert promptfoo evaluation set has adequate bias, leakage, and overfitting control for a first-scope benchmark before prompt tuning.",
+  "criteria": [
+    {
+      "id": "c5_eval_set_controls_leakage_and_overfitting",
+      "text": "Evaluation set controls leakage and overfitting through non-identical prompt examples, holdout/generalization cases, and non-hard-coded rubrics.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.82,
+      "evidence": [
+        "evals/promptfoo/prompts/improved.prompt.txt:46: \"Style examples from neighboring scam situations. These examples show the desired behavior pattern but intentionally do not answer the evaluation cases directly:\"",
+        "evals/promptfoo/prompts/improved.prompt.txt:48: example student says \"This giveaway post has tons of comments, so it must be legit.\" This is not an Account Security Alert eval case.",
+        "evals/promptfoo/prompts/improved.prompt.txt:51: example student says \"I should fill out the survey because the reward is only available today.\" This is a neighboring scam situation rather than an exact eval case.",
+        "evals/promptfoo/cases/account-security-alert.yaml:255-259: holdout_student_trusts_support_domain uses SnapTalk and snaptalk-security-check.example.net instead of Socail Media Testdrive/testdrive.info.",
+        "evals/promptfoo/cases/account-security-alert.yaml:273-278: holdout_parent_forwards_bank_alert shifts to a parent-forwarded bank alert and secure-bank-help.example.com, testing transfer to a different relationship and account domain.",
+        "evals/promptfoo/cases/account-security-alert.yaml:291-296: holdout_student_overuses_url_tool tests a shortened-link redirect to verify-login-center.example.org and whether the tutor treats URL expansion as only one check.",
+        "evals/promptfoo/README.md:25: \"The v1 benchmark stays on one fixture, but the case set includes holdout-style account-alert variations with different platform names, domains, and user relationships.\"",
+        "evals/promptfoo/rubrics/practical_knowledge.md:7: rubric asks for \"scenario-specific details from the case, such as the suspicious domain shown in the student context\" rather than hard-coding testdrive.info.",
+        "evals/promptfoo/rubrics/practical_knowledge.md:8: rubric covers generalizable checks: \"URL expander/checker, reverse image search, HTTPS/domain distinction.\"",
+        "audits/prompt_eval_set_quality_review_iteration2_summary.json:43-57: iteration 2 c5 was disputed, so iteration 3 needs to resolve whether added holdouts and neighboring examples are enough under the narrowed criterion."
+      ],
+      "counterevidence": [
+        "evals/promptfoo/prompts/improved.prompt.txt:20-25: the candidate prompt still names the Account Security Alert scenario and includes exact fixture facts: \"YOUR ACCOUNT IS AT RISK\", \"Socail Media Testdrive\", and \"http://testdrive.info/youraccount\".",
+        "evals/promptfoo/cases/account-security-alert.yaml:4: first eval case repeats the same canonical fixture string: \"YOUR ACCOUNT IS AT RISK\" and \"http://testdrive.info/youraccount\" from \"Socail Media Testdrive\".",
+        "evals/promptfoo/prompts/improved.prompt.txt:54 and evals/promptfoo/cases/account-security-alert.yaml:189: the neighboring example \"Did this ever happen to you?\" is not text-identical to \"Have you ever clicked one of these and regretted it?\", but it is the same first-person-experience trap.",
+        "evals/promptfoo/prompts/improved.prompt.txt:57 and evals/promptfoo/cases/account-security-alert.yaml:135: the example \"What should I do?\" overlaps the practical-next-step behavior tested by \"So what should I actually do if I am worried?\"."
+      ],
+      "reasoning": "Pass under the iteration-3 criterion because the prompt's candidate examples do not copy exact eval case text, the case file now includes explicit holdout/generalization variants, and the practical_knowledge rubric is written around scenario-specific details and general security actions rather than a single domain string. The main contradiction is that the candidate prompt still contains the canonical Account Security Alert fixture facts, so this is adequate only for a first-scope benchmark of the known scenario, not evidence that the prompt generalizes broadly across phishing scenarios."
+    }
+  ],
+  "overall_verdict": "pass",
+  "overall_confidence": 0.82,
+  "blocking_failures": [],
+  "open_questions": [
+    "Should future benchmark iterations separate canonical scenario facts from the candidate prompt before tuning, or is including fixture facts acceptable because the product prompt also receives the active scenario template?",
+    "Before using this as broader evidence, should the next expansion add fully separate scam categories so the gate cannot be passed by memorizing Account Security Alert red flags?"
+  ]
+}

@@ -43,16 +43,16 @@ Practical tools and checks:
 - Reverse image search can help detect copied logos, fake screenshots, or reused profile images.
 - Search the exact alert text online to see whether others report it as a scam.
 
-Good response examples:
+Style examples from neighboring scam situations. These examples show the desired behavior pattern but intentionally do not answer the evaluation cases directly:
 
-Student: It has a lock icon, so I think it's safe.
-Tutor: Not quite. The lock only means your connection is encrypted. A scam site can still have HTTPS. The stronger check is the website name: `testdrive.info` is not Instagram, Snapchat, or TikTok. Open the real app yourself and check security alerts there.
+Student: This giveaway post has tons of comments, so it must be legit.
+Tutor: Not quite. Comments can be copied or fake. The stronger check is whether the account and website match the real company. Go to the company's real site yourself and look for the offer there.
 
-Student: I should click it fast because my account might be at risk.
-Tutor: I would not click it. The scary wording is the trap. Real security problems usually show up inside the real app after you log in normally. Open the app yourself, then check security settings and recent login activity.
+Student: I should fill out the survey because the reward is only available today.
+Tutor: I would slow down. "Only today" is a pressure phrase. Before entering anything, check the real company site and ask whether the reward makes business sense.
 
 Student: Did this ever happen to you?
-Tutor: A common pattern is that a person clicks a fake alert, reaches a fake login page, and gives the scammer their password. The safer move is boring but reliable: go to the real app yourself and check there.
+Tutor: A common pattern is that a person follows a fake promotion, reaches a page asking for personal details, and gives the scammer useful information. The safer move is to verify through the real company site.
 
 Student: What should I do?
-Tutor: First, do not click the link. Open the real app or type the real website yourself. Then check account settings for security alerts or recent logins. If there is no alert there, the post is probably fake.
+Tutor: First, avoid the link in the post. Open the real website yourself, check whether the offer or warning exists there, and only continue if the source is clearly official.

@@ -1,0 +1,60 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality_review",
+  "iteration": 2,
+  "reviewer_count": 3,
+  "status": "not_converged",
+  "disputed_criteria": [
+    "c5"
+  ],
+  "criteria": {
+    "c1": {
+      "criterion_text": "Coverage of prompt-fixable feedback requirements by cases/rubrics, excluding non-prompt issues like latency and real multi-bot UI.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.87,
+        0.88,
+        0.87
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c3": {
+      "criterion_text": "Rubric observability and pass/fail clarity including per-case assertion alignment.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.86,
+        0.85,
+        0.86
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c5": {
+      "criterion_text": "Bias/leakage risk and overfitting control.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "fail",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.8,
+        0.84,
+        0.78
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    }
+  }
+}

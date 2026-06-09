@@ -22,6 +22,8 @@ This evaluates prompt behavior only. It does not call Supabase, does not exercis
 
 The `.chat.prompt.json` files use the same logical message order as the product AI call: one `system` message containing the selected tutor prompt, followed by one `user` message containing scenario context, recent conversation, and the latest student message from the eval case.
 
+The v1 benchmark stays on one fixture, but the case set includes holdout-style account-alert variations with different platform names, domains, and user relationships. These are intentionally not copied into the improved prompt examples, so the benchmark checks whether the behavior transfers within the scenario instead of only matching memorized strings.
+
 ## Review Order
 
 1. Read `cases/account-security-alert.yaml`.
@@ -47,6 +49,8 @@ npm run eval:prompts:view
 Do not run `eval:prompts` or `eval:prompts:report` until the evaluation set and rubrics have been reviewed. Those commands call live LLM providers through Promptfoo and require `OPENAI_API_KEY`.
 
 The quality gate is deterministic and runs after a JSON report exists. It requires the improved prompt to pass at least 80% for each metric and to match or beat the current prompt on every metric.
+
+Each case declares its own applicable rubric assertions. Keep `applicable_requirements` and each case's `assert` list aligned so the judge only scores behavior that is observable in that case.
 
 ## Expansion Rule
 

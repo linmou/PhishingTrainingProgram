@@ -18,27 +18,5 @@ defaultTest:
       id: openai:chat:gpt-4o
       config:
         temperature: 0
-  assert:
-    - type: llm-rubric
-      metric: turn_rhythm
-      value: file://rubrics/turn_rhythm.md
-    - type: llm-rubric
-      metric: direct_correction
-      value: file://rubrics/direct_correction.md
-    - type: llm-rubric
-      metric: persona_stability
-      value: file://rubrics/persona_stability.md
-    - type: llm-rubric
-      metric: low_boilerplate_praise
-      value: file://rubrics/low_boilerplate_praise.md
-    - type: llm-rubric
-      metric: practical_knowledge
-      value: file://rubrics/practical_knowledge.md
-    - type: llm-rubric
-      metric: third_person_examples
-      value: file://rubrics/third_person_examples.md
-    - type: llm-rubric
-      metric: reading_level
-      value: file://rubrics/reading_level.md
 
 tests: file://cases/account-security-alert.yaml

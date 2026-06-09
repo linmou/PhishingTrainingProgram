@@ -1,0 +1,42 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality",
+  "iteration": 3,
+  "reviewer_id": "audit1",
+  "claim": "After the latest refinements, the Account Security Alert promptfoo evaluation set has adequate bias, leakage, and overfitting control for a first-scope benchmark before prompt tuning.",
+  "criteria": [
+    {
+      "id": "c5_eval_set_controls_leakage_and_overfitting",
+      "text": "Evaluation set controls leakage and overfitting through non-identical prompt examples, holdout/generalization cases, and non-hard-coded rubrics.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.78,
+      "evidence": [
+        "evals/promptfoo/prompts/improved.prompt.txt:46: \"Style examples from neighboring scam situations. These examples show the desired behavior pattern but intentionally do not answer the evaluation cases directly:\"",
+        "evals/promptfoo/prompts/improved.prompt.txt:48: prompt example uses a giveaway post: \"This giveaway post has tons of comments, so it must be legit.\" This is not an exact Account Security Alert eval case.",
+        "evals/promptfoo/prompts/improved.prompt.txt:51: prompt example uses a survey/reward situation: \"I should fill out the survey because the reward is only available today.\" This is not an exact Account Security Alert eval case.",
+        "evals/promptfoo/prompts/improved.prompt.txt:54-58: prompt examples include generic experience and action patterns, but do not copy the exact eval messages \"Have you ever clicked one of these and regretted it?\" from evals/promptfoo/cases/account-security-alert.yaml:189 or \"So what should I actually do if I am worried?\" from evals/promptfoo/cases/account-security-alert.yaml:135.",
+        "evals/promptfoo/cases/account-security-alert.yaml:255-259: holdout_student_trusts_support_domain changes platform and domain to SnapTalk and snaptalk-security-check.example.net and tests partial-domain trust, not only the original testdrive.info fixture.",
+        "evals/promptfoo/cases/account-security-alert.yaml:273-277: holdout_parent_forwards_bank_alert changes the relationship, channel, and domain to a parent-forwarded bank alert at secure-bank-help.example.com.",
+        "evals/promptfoo/cases/account-security-alert.yaml:291-295: holdout_student_overuses_url_tool tests transfer to shortened-link expansion and verify-login-center.example.org rather than the original alert URL.",
+        "evals/promptfoo/README.md:25: README explicitly states the set includes holdout-style account-alert variations with different platform names, domains, and user relationships and that these are not copied into the improved prompt examples.",
+        "evals/promptfoo/rubrics/practical_knowledge.md:7: practical_knowledge requires using \"scenario-specific details from the case, such as the suspicious domain shown in the student context\" rather than hard-coding testdrive.info.",
+        "evals/promptfoo/rubrics/practical_knowledge.md:8-9: rubric preserves target behavior through general security actions and checks: URL expanders/checkers, reverse image search, HTTPS/domain distinction, and not clicking suspicious links.",
+        "evals/promptfoo/rubrics/practical_knowledge.md:17-25: examples and final rule are generic and action-oriented; they do not require one domain string or one platform name.",
+        "audits/prompt_eval_set_quality_review_iteration2_summary.json:43-57: prior iteration left c5 disputed, with one fail and two pass verdicts; latest strict review resolves the narrower c5 criterion as pass while retaining residual risk below."
+      ],
+      "counterevidence": [
+        "evals/promptfoo/prompts/improved.prompt.txt:20-28: the candidate prompt still names the exact Account Security Alert scenario and lists fixture-specific red flags including \"Socail Media Testdrive\" and http://testdrive.info/youraccount, which overlap with base eval contexts at evals/promptfoo/cases/account-security-alert.yaml:4, 43, and 61.",
+        "evals/promptfoo/prompts/improved.prompt.txt:39-44: the prompt explicitly lists practical checks that several eval cases ask for, including URL expansion, domain matching, HTTPS distinction, and reverse image search. This is legitimate target behavior but increases the chance of measuring instruction recall rather than broad transfer.",
+        "evals/promptfoo/README.md:9 and evals/promptfoo/README.md:55-61: the benchmark intentionally starts with one fixed AI situation and defers expansion to other templates, so it is adequate only as a first-scope benchmark, not a broad anti-overfitting proof."
+      ],
+      "reasoning": "Pass is strict but scoped. The earlier direct-leakage concern is sufficiently reduced because the few-shot style examples are neighboring scam situations rather than exact eval case copies, the case file now contains concrete holdout/generalization variants, and the practical_knowledge rubric is generic over the suspicious domain shown in each case. I would still treat this as a narrow pre-tuning gate: the improved prompt contains scenario facts and enumerated behaviors that many base cases test, so passing this benchmark should not be used as evidence of broad generalization beyond Account Security Alert without the README expansion."
+    }
+  ],
+  "overall_verdict": "pass",
+  "overall_confidence": 0.78,
+  "blocking_failures": [],
+  "open_questions": [
+    "Should future iterations separate base fixture checks from holdout-only scoring so the final prompt-tuning decision cannot be dominated by cases whose facts are explicitly listed in the candidate prompt?"
+  ]
+}

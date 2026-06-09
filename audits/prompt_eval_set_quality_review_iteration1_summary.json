@@ -1,0 +1,108 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality_review",
+  "iteration": 1,
+  "reviewer_count": 3,
+  "status": "not_converged",
+  "disputed_criteria": [
+    "c1"
+  ],
+  "criteria": {
+    "c1": {
+      "criterion_text": "Coverage of feedback requirements by cases/rubrics.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "fail",
+        "pass",
+        "fail"
+      ],
+      "confidences": [
+        0.9,
+        0.86,
+        0.91
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    },
+    "c2": {
+      "criterion_text": "Case realism and variety.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.84,
+        0.78,
+        0.8
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c3": {
+      "criterion_text": "Rubric observability and pass/fail clarity.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "confidences": [
+        0.91,
+        0.79,
+        0.88
+      ],
+      "final_verdict": "fail",
+      "converged": true
+    },
+    "c4": {
+      "criterion_text": "Prompt/product-context validity alignment.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.82,
+        0.82,
+        0.78
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c5": {
+      "criterion_text": "Bias/leakage risk and overfitting control.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "confidences": [
+        0.86,
+        0.9,
+        0.83
+      ],
+      "final_verdict": "fail",
+      "converged": true
+    },
+    "c6": {
+      "criterion_text": "Maintainability/readability for reviewers.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.87,
+        0.84,
+        0.87
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    }
+  }
+}

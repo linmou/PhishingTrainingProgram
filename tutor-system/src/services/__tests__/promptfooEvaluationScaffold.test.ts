@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import yaml from 'js-yaml';
 
 const repoRoot = path.resolve(__dirname, '../../..', '..');
 const tutorRoot = path.join(repoRoot, 'tutor-system');
@@ -76,6 +77,38 @@ describe('Promptfoo evaluation scaffold', () => {
       expect(rubric).toContain('Passing examples');
       expect(rubric).toContain('Failing examples');
       expect(rubric).toContain('merely friendly');
+    });
+  });
+
+  it('keeps case applicability aligned with per-case rubric assertions', () => {
+    const caseFile = yaml.load(
+      readText('evals/promptfoo/cases/account-security-alert.yaml')
+    ) as { tests: Array<{ vars: Record<string, string>; assert: Array<{ metric: string; value: string }> }> };
+
+    caseFile.tests.forEach((testCase) => {
+      const applicableRequirements = testCase.vars.applicable_requirements
+        .split(',')
+        .map((requirement) => requirement.trim())
+        .sort();
+      const assertedMetrics = testCase.assert
+        .map((assertion) => assertion.metric)
+        .sort();
+
+      expect(assertedMetrics).toEqual(applicableRequirements);
+      testCase.assert.forEach((assertion) => {
+        expect(assertion.value).toBe(`file://rubrics/${assertion.metric}.md`);
+      });
+    });
+  });
+
+  it('avoids leaking exact student messages from the eval cases into the improved prompt examples', () => {
+    const caseFile = yaml.load(
+      readText('evals/promptfoo/cases/account-security-alert.yaml')
+    ) as { tests: Array<{ vars: Record<string, string> }> };
+    const improvedPrompt = readText('evals/promptfoo/prompts/improved.prompt.txt');
+
+    caseFile.tests.forEach((testCase) => {
+      expect(improvedPrompt).not.toContain(testCase.vars.student_message);
     });
   });
 });

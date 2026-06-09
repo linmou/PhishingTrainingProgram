@@ -1,0 +1,26 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality",
+  "iteration": 3,
+  "reviewer_count": 3,
+  "status": "converged",
+  "disputed_criteria": [],
+  "criteria": {
+    "c5_eval_set_controls_leakage_and_overfitting": {
+      "criterion_text": "Evaluation set controls leakage and overfitting through non-identical prompt examples, holdout/generalization cases, and non-hard-coded rubrics.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.78,
+        0.86,
+        0.82
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    }
+  }
+}

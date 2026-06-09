@@ -1,6 +1,6 @@
 {
   "purpose": "Frozen v1 current-prompt fixture for reviewing promptfoo cases and rubrics before live evaluation.",
-  "generated_at": "2026-06-09T17:50:00.230Z",
+  "generated_at": "2026-06-09T18:09:05.693Z",
   "generated_by": "tutor-system/scripts/export-promptfoo-fixture.js",
   "agent_preset": "casual_peer",
   "scenario_template": "Account Security Alert",

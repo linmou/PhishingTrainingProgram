@@ -1,0 +1,39 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality",
+  "iteration": 3,
+  "reviewer_id": "audit2",
+  "claim": "After the latest refinements, the Account Security Alert promptfoo evaluation set has adequate bias, leakage, and overfitting control for a first-scope benchmark before prompt tuning.",
+  "criteria": [
+    {
+      "id": "c5_eval_set_controls_leakage_and_overfitting",
+      "text": "Evaluation set controls leakage and overfitting through non-identical prompt examples, holdout/generalization cases, and non-hard-coded rubrics.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.86,
+      "evidence": [
+        "evals/promptfoo/prompts/improved.prompt.txt:46 states: \"Style examples from neighboring scam situations. These examples show the desired behavior pattern but intentionally do not answer the evaluation cases directly:\"",
+        "evals/promptfoo/prompts/improved.prompt.txt:48-58 uses neighboring examples about a giveaway post, a survey reward, a personal-experience question, and a generic what-to-do case rather than copying the exact Account Security Alert eval case text.",
+        "evals/promptfoo/cases/account-security-alert.yaml:255-260 adds holdout_student_trusts_support_domain with a different platform/domain: \"SnapTalk\" and \"http://snaptalk-security-check.example.net/login\".",
+        "evals/promptfoo/cases/account-security-alert.yaml:273-278 adds holdout_parent_forwards_bank_alert with a different relationship and domain: a parent, a bank alert, and \"https://secure-bank-help.example.com/reactivate\".",
+        "evals/promptfoo/cases/account-security-alert.yaml:291-296 adds holdout_student_overuses_url_tool, testing transfer from URL expansion to destination-domain judgment rather than simple link avoidance.",
+        "evals/promptfoo/README.md:25 documents the intended control: \"holdout-style account-alert variations with different platform names, domains, and user relationships\" and says these are \"intentionally not copied into the improved prompt examples\".",
+        "evals/promptfoo/rubrics/practical_knowledge.md:6-9 requires practical next steps, scenario-specific details, relevant tools, and not clicking suspicious links; it does not require the answer to mention only the original testdrive.info domain.",
+        "evals/promptfoo/rubrics/practical_knowledge.md:7 says \"such as the suspicious domain shown in the student context,\" which preserves domain-check behavior while allowing different domains in holdout cases.",
+        "audits/prompt_eval_set_quality_review_iteration2_summary.json:43-57 shows c5 was previously disputed, so the iteration-3 holdout additions directly address the remaining overfitting-control concern."
+      ],
+      "counterevidence": [
+        "evals/promptfoo/prompts/improved.prompt.txt:20-28 still includes the exact base scenario and its canonical red flags, including \"Socail Media Testdrive\" and \"http://testdrive.info/youraccount\", so several non-holdout cases remain partly answerable from prompt facts.",
+        "evals/promptfoo/prompts/improved.prompt.txt:39-44 explicitly lists practical tools and checks also exercised by cases, including URL expanders, exact-domain matching, HTTPS distinction, reverse image search, and exact alert-text search.",
+        "evals/promptfoo/cases/account-security-alert.yaml:4,43,61 reuse original fixture strings like \"YOUR ACCOUNT IS AT RISK\", \"http://testdrive.info/youraccount\", and \"Socail Media Testdrive\" in early cases."
+      ],
+      "reasoning": "Charitable pass for a first-scope benchmark before prompt tuning. The set is not a broad anti-overfitting benchmark, but the latest artifacts satisfy the stated blocking threshold: examples are not exact eval-case copies, the suite now includes at least some holdout/generalization variation, and the scoped practical-knowledge rubric rewards transferable security behavior rather than one hard-coded domain string."
+    }
+  ],
+  "overall_verdict": "pass",
+  "overall_confidence": 0.86,
+  "blocking_failures": [],
+  "open_questions": [
+    "Before using this benchmark as evidence beyond Account Security Alert prompt tuning, should the README expansion rule be followed with neighboring scam templates and a larger hidden holdout set?"
+  ]
+}

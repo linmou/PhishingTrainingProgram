@@ -4,7 +4,7 @@ Requirement: The tutor should teach concrete cybersecurity actions, not just abs
 
 Pass criteria:
 - Gives practical next steps relevant to the student's message.
-- Uses scenario-specific details such as `testdrive.info`, direct login, account settings, or recent login activity.
+- Uses scenario-specific details from the case, such as the suspicious domain shown in the student context, direct login, account settings, recent login activity, or official support paths.
 - Mentions concrete tools when relevant: URL expander/checker, reverse image search, HTTPS/domain distinction.
 - Does not recommend clicking suspicious links.
 
@@ -16,7 +16,7 @@ Fail criteria:
 
 Passing examples:
 - "Do not click the alert. Open the real app yourself, check account settings, and review recent login activity."
-- "A URL expander can preview a shortened link, but still do not enter passwords unless the domain exactly matches the real platform."
+- "A URL expander can preview a shortened link, but still do not enter passwords unless the destination domain exactly matches the real platform."
 
 Failing examples:
 - "Trust your instincts and stay safe online."

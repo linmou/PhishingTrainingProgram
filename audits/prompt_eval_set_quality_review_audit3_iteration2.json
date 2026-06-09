@@ -1,0 +1,240 @@
+{
+  "feature_name": "prompt_eval_set_quality_review",
+  "phase": "quality_review",
+  "iteration": 2,
+  "reviewer_id": "audit3",
+  "claim": "After refinement, the evaluation set is high quality for judging prompt-fixable Account Security Alert tutor prompt behavior before live Promptfoo runs.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.84,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "Coverage of prompt-fixable feedback requirements by cases/rubrics, excluding non-prompt issues like latency and real multi-bot UI.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:21",
+          "text": "This evaluates prompt behavior only. It does not call Supabase, does not exercise the React app, and does not verify UI latency."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:32",
+          "text": "The baseline should expose known weaknesses from `user_feedback.md`: repeated questions, excessive praise, soft validation of wrong answers, fake first-person examples, and limited practical guidance."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/turn_rhythm.md:3",
+          "text": "Requirement: The tutor must break the question-every-turn pattern."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/direct_correction.md:3",
+          "text": "Requirement: When the student is wrong or incomplete, the tutor must correct the mistake directly instead of validating unsafe reasoning."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/low_boilerplate_praise.md:3",
+          "text": "Requirement: The tutor should reduce hollow encouragement."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/persona_stability.md:3",
+          "text": "Requirement: The tutor should keep one consistent knowledgeable-peer voice: informed, direct, relaxed, and not stiff."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/practical_knowledge.md:3",
+          "text": "Requirement: The tutor should teach concrete cybersecurity actions, not just abstract suspicion."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/third_person_examples.md:3",
+          "text": "Requirement: The tutor should use third-person testimonials or general examples, not first-person AI claims."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/reading_level.md:3",
+          "text": "Requirement: The tutor should use language that works for younger or confused students, especially when the student signals confusion."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:96-101",
+          "text": "case_id: younger_student_confused"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:186-191",
+          "text": "case_id: student_asks_about_bot_experience"
+        }
+      ],
+      "reasoning": "I accept audit2 iteration 1's scope argument and reject audit1/audit3 iteration 1's latency objection under the refined claim: the artifact now explicitly limits itself to prompt behavior, and the rubrics cover the prompt-fixable feedback categories. Cases exercise confused-student language and first-person-experience traps, so coverage is no longer merely nominal.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:55-59",
+          "text": "Only expand after the improved prompt passes the reviewed v1 benchmark"
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "text": "Rubric observability and pass/fail clarity including per-case assertion alignment.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:51",
+          "text": "Each case declares its own applicable rubric assertions. Keep `applicable_requirements` and each case's `assert` list aligned so the judge only scores behavior that is observable in that case."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/promptfooconfig.yaml:15-22",
+          "text": "defaultTest:"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:8-21",
+          "text": "applicable_requirements: \"direct_correction, turn_rhythm, practical_knowledge, reading_level\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:29-39",
+          "text": "applicable_requirements: \"direct_correction, practical_knowledge, low_boilerplate_praise\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:191-198",
+          "text": "applicable_requirements: \"third_person_examples, persona_stability\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:242-252",
+          "text": "applicable_requirements: \"practical_knowledge, turn_rhythm, persona_stability\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/direct_correction.md:5-15",
+          "text": "Pass criteria:"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/turn_rhythm.md:5-15",
+          "text": "Asks no more than one focused question."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/practical_knowledge.md:5-15",
+          "text": "Gives practical next steps relevant to the student's message."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/third_person_examples.md:25",
+          "text": "Return pass=true only if the response avoids first-person experience claims."
+        }
+      ],
+      "reasoning": "I accept the earlier c3 failure mechanism but find it fixed: promptfooconfig now delegates tests to the case file, and each case carries its own assert list that matches its applicable_requirements. The rubrics still use LLM judgment, but their pass/fail criteria and final pass=true clauses are observable enough for pre-live Promptfoo review.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/persona_stability.md:6",
+          "text": "Sounds like a knowledgeable peer coach."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/rubrics/low_boilerplate_praise.md:13",
+          "text": "Says \"great job\", \"perfect\", \"amazing\", or \"nailed it\" without need."
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "text": "Bias/leakage risk and overfitting control.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:46",
+          "text": "Style examples from neighboring scam situations. These examples show the desired behavior pattern but intentionally do not answer the evaluation cases directly:"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:48-52",
+          "text": "Student: This giveaway post has tons of comments, so it must be legit."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:54-58",
+          "text": "Student: Did this ever happen to you?"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:42-47",
+          "text": "case_id: student_trusts_https"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:150-155",
+          "text": "case_id: student_asks_about_url_tools"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:186-191",
+          "text": "case_id: student_asks_about_bot_experience"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:236-242",
+          "text": "case_id: student_asks_reverse_image"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:49",
+          "text": "It requires the improved prompt to pass at least 80% for each metric and to match or beat the current prompt on every metric."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/README.md:55-59",
+          "text": "Only expand after the improved prompt passes the reviewed v1 benchmark"
+        }
+      ],
+      "reasoning": "I accept the earlier audits' concern that direct few-shot duplicates would leak answers, but the refined prompt now labels examples as neighboring scam situations and does not use the Account Security Alert facts in those examples. The eval still tests behaviors that the prompt explicitly trains, which is the point of prompt-fixable preflight evaluation, and the current-vs-improved gate plus expansion rule reduce overfitting risk enough for this pre-live benchmark.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:54",
+          "text": "Student: Did this ever happen to you?"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:189",
+          "text": "student_message: \"Have you ever clicked one of these and regretted it?\""
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/prompts/improved.prompt.txt:57",
+          "text": "Student: What should I do?"
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/cases/account-security-alert.yaml:135",
+          "text": "student_message: \"So what should I actually do if I am worried?\""
+        }
+      ]
+    }
+  ],
+  "open_questions": [
+    "The set is adequate as a reviewed v1 preflight, but the README's expansion rule should be followed before using it as broad evidence for all tutor scenarios."
+  ],
+  "disputed_points_if_any": [
+    "c1: I accept audit2 iteration 1's pass once the refined claim excludes latency and real multi-bot UI; README.md:21 states the prompt-only boundary.",
+    "c3: I reject audit1/audit2/audit3 iteration 1's global-assertion objection because assertions now live under each case in account-security-alert.yaml rather than globally in promptfooconfig.yaml.",
+    "c5: I reject the prior blocking fail because exact Account Security Alert few-shot duplicates were replaced by neighboring scam examples, but I retain lower confidence due to remaining persona-trap and generic action paraphrases."
+  ]
+}

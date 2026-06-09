@@ -9,6 +9,8 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 const tutorRoot = path.join(repoRoot, 'tutor-system');
 const promptPath = path.join(repoRoot, 'evals', 'promptfoo', 'prompts', 'current.prompt.txt');
 const chatPromptPath = path.join(repoRoot, 'evals', 'promptfoo', 'prompts', 'current.chat.prompt.json');
+const improvedPromptPath = path.join(repoRoot, 'evals', 'promptfoo', 'prompts', 'improved.prompt.txt');
+const improvedChatPromptPath = path.join(repoRoot, 'evals', 'promptfoo', 'prompts', 'improved.chat.prompt.json');
 const metadataPath = path.join(repoRoot, 'evals', 'promptfoo', 'fixtures', 'fixture-metadata.json');
 
 require.extensions['.ts'] = (module, filename) => {
@@ -59,8 +61,11 @@ const metadata = {
 
 fs.writeFileSync(promptPath, `${currentPrompt}\n`);
 fs.writeFileSync(chatPromptPath, `${JSON.stringify(buildPromptfooChatMessages(currentPrompt), null, 2)}\n`);
+const improvedPrompt = fs.readFileSync(improvedPromptPath, 'utf8').trim();
+fs.writeFileSync(improvedChatPromptPath, `${JSON.stringify(buildPromptfooChatMessages(improvedPrompt), null, 2)}\n`);
 fs.writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
 
 console.log(`Wrote ${path.relative(repoRoot, promptPath)}`);
 console.log(`Wrote ${path.relative(repoRoot, chatPromptPath)}`);
+console.log(`Wrote ${path.relative(repoRoot, improvedChatPromptPath)}`);
 console.log(`Wrote ${path.relative(repoRoot, metadataPath)}`);
