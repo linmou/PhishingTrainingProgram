@@ -40,6 +40,12 @@
         "test:smart-generate": "react-scripts test --testPathPattern=\"smart_generate_integration.test.ts\" --watchAll=false",
         "test:smart-quick": "react-scripts test --testPathPattern=\"smart_generate_quick_test.ts\" --watchAll=false",
         "test:db": "react-scripts test --testPathPattern=\"database_connection_test.ts\" --watchAll=false",
+        "eval:prompts": "promptfoo eval -c ../evals/promptfoo/promptfooconfig.yaml",
+        "eval:prompts:report": "promptfoo eval -c ../evals/promptfoo/promptfooconfig.yaml --output ../evals/promptfoo/results/latest.json --output ../evals/promptfoo/results/latest.html",
+        "eval:prompts:gate": "node scripts/check-promptfoo-quality-gate.js ../evals/promptfoo/results/latest.json 0.8",
+        "eval:prompts:ci": "npm run eval:prompts:report && npm run eval:prompts:gate",
+        "eval:prompts:view": "promptfoo view -y -o ../evals/promptfoo/results/latest.html",
+        "eval:prompts:export-current": "node scripts/export-promptfoo-fixture.js",
         "eject": "react-scripts eject",
         "deploy": "npm run build"
     },
@@ -92,6 +98,7 @@
         "@types/selenium-webdriver": "^4.1.28",
         "chromedriver": "^139.0.1",
         "jest-cucumber": "^4.5.0",
+        "promptfoo": "^0.121.15",
         "selenium-webdriver": "^4.35.0"
     }
 }

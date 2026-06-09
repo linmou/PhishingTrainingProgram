@@ -13,6 +13,10 @@ build/
 # Test coverage reports
 coverage/
 
+# Prompt evaluation outputs
+.promptfoo/
+evals/promptfoo/results/
+
 # Environment variables
 .env
 

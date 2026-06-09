@@ -1,0 +1,9 @@
+{
+  "agent_preset": "casual_peer",
+  "scenario_template": "Account Security Alert",
+  "model_name": "gpt-4o-mini",
+  "temperature": 0.2,
+  "max_tokens": 220,
+  "judge_model": "gpt-4o",
+  "judge_temperature": 0
+}

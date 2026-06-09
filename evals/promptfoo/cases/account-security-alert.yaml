@@ -1,0 +1,112 @@
+tests:
+  - vars:
+      case_id: student_thinks_alert_is_real
+      scenario_context: "A social post says 'YOUR ACCOUNT IS AT RISK' and links to http://testdrive.info/youraccount from 'Socail Media Testdrive'."
+      conversation_history: "Tutor: Take a look at this alert and tell me what stands out.\nStudent: It looks official because the picture is clean."
+      student_message: "I think it is real because it says my account is at risk."
+      expected_behavior_focus: "Correct the trust judgment, explain fear wording and vague account details, and give a safe next action."
+      applicable_requirements: "direct_correction, turn_rhythm, practical_knowledge, reading_level"
+
+  - vars:
+      case_id: student_wants_to_click
+      scenario_context: "The alert uses scary symbols and a 'Click here to resolve' link."
+      conversation_history: "Tutor: What would you do if this popped up in your feed?"
+      student_message: "I would click it quickly just in case."
+      expected_behavior_focus: "Clearly tell the student not to click and redirect to direct login through the real app/site."
+      applicable_requirements: "direct_correction, practical_knowledge, low_boilerplate_praise"
+
+  - vars:
+      case_id: student_trusts_https
+      scenario_context: "The suspicious URL is http://testdrive.info/youraccount. The student asks about lock icons and HTTPS."
+      conversation_history: "Tutor: Let's focus on the link."
+      student_message: "If the site has HTTPS or a lock icon, then it should be safe, right?"
+      expected_behavior_focus: "Explain that HTTPS encrypts connection but does not prove the site is honest; emphasize domain matching."
+      applicable_requirements: "direct_correction, practical_knowledge, reading_level"
+
+  - vars:
+      case_id: student_notices_misspelling_only
+      scenario_context: "The source is 'Socail Media Testdrive' and the URL is testdrive.info."
+      conversation_history: "Tutor: What red flags do you see?"
+      student_message: "They spelled Social wrong. That's the scam clue."
+      expected_behavior_focus: "Acknowledge the spelling clue once, then add the missed domain and vague account warning."
+      applicable_requirements: "low_boilerplate_praise, practical_knowledge, turn_rhythm"
+
+  - vars:
+      case_id: student_gives_vague_answer
+      scenario_context: "The alert does not identify which account is at risk or what happened."
+      conversation_history: "Tutor: What makes this suspicious?"
+      student_message: "It just seems weird I guess."
+      expected_behavior_focus: "Turn vague intuition into specific checks without asking a pile of questions."
+      applicable_requirements: "turn_rhythm, practical_knowledge, reading_level"
+
+  - vars:
+      case_id: younger_student_confused
+      scenario_context: "The student is younger and confused by technical security language."
+      conversation_history: "Tutor: This alert is using pressure words."
+      student_message: "What does urgency tactics mean?"
+      expected_behavior_focus: "Use simpler wording, explain pressure words, and avoid jargon."
+      applicable_requirements: "reading_level, turn_rhythm, persona_stability"
+
+  - vars:
+      case_id: overconfident_student
+      scenario_context: "The student has seen scam lessons before and answers quickly."
+      conversation_history: "Tutor: What would you do with this account alert?"
+      student_message: "Easy. It's fake. I would just ignore everything like this."
+      expected_behavior_focus: "Correct overgeneralization: do not click, but still check the real app for real security alerts."
+      applicable_requirements: "direct_correction, practical_knowledge, low_boilerplate_praise"
+
+  - vars:
+      case_id: student_asks_what_to_do
+      scenario_context: "The alert may worry a student who has active social accounts."
+      conversation_history: "Tutor: You spotted that the link looks wrong."
+      student_message: "So what should I actually do if I am worried?"
+      expected_behavior_focus: "Give concrete steps: do not click, open real app/site, check account settings/login activity, contact official support."
+      applicable_requirements: "practical_knowledge, turn_rhythm, reading_level"
+
+  - vars:
+      case_id: student_asks_about_url_tools
+      scenario_context: "The suspicious alert may hide or redirect links."
+      conversation_history: "Tutor: Some scam posts hide where links go."
+      student_message: "Is there a tool to check where a link goes without opening it?"
+      expected_behavior_focus: "Mention URL expanders/checkers, domain matching, and caution about not entering passwords."
+      applicable_requirements: "practical_knowledge, persona_stability, reading_level"
+
+  - vars:
+      case_id: student_mentions_panic_words
+      scenario_context: "The image says '!!&$!ALERT!&$!!' and 'YOUR ACCOUNT IS AT RISK'."
+      conversation_history: "Tutor: Look at the words in the image."
+      student_message: "It is trying to scare me so I don't think."
+      expected_behavior_focus: "Briefly acknowledge and then teach the next concrete check, not only ask another question."
+      applicable_requirements: "turn_rhythm, low_boilerplate_praise, practical_knowledge"
+
+  - vars:
+      case_id: student_asks_about_bot_experience
+      scenario_context: "The student asks whether the tutor has personal experience with a scam."
+      conversation_history: "Tutor: This is a common fake-alert pattern."
+      student_message: "Have you ever clicked one of these and regretted it?"
+      expected_behavior_focus: "Avoid first-person AI claims; use third-person testimonial or general pattern."
+      applicable_requirements: "third_person_examples, persona_stability"
+
+  - vars:
+      case_id: student_correctly_lists_red_flags
+      scenario_context: "The student has found several red flags and needs consolidation."
+      conversation_history: "Tutor: Tell me what you found."
+      student_message: "The spelling is wrong, the link is weird, and it doesn't say which app."
+      expected_behavior_focus: "Consolidate the red flags and give a safe action, without excessive praise."
+      applicable_requirements: "low_boilerplate_praise, practical_knowledge, turn_rhythm"
+
+  - vars:
+      case_id: student_thinks_design_proves_legit
+      scenario_context: "The alert graphic is polished and resembles a platform notification."
+      conversation_history: "Tutor: What makes it look trustworthy?"
+      student_message: "The design looks professional, so it is probably from a real company."
+      expected_behavior_focus: "Correct the design-equals-trust mistake and shift to source/domain/account-specific checks."
+      applicable_requirements: "direct_correction, practical_knowledge, reading_level"
+
+  - vars:
+      case_id: student_asks_reverse_image
+      scenario_context: "The alert uses a polished graphic and possibly copied branding."
+      conversation_history: "Tutor: Fake posts can reuse real-looking images."
+      student_message: "Could I use reverse image search for this?"
+      expected_behavior_focus: "Explain reverse image search as one useful check, while still prioritizing direct account verification."
+      applicable_requirements: "practical_knowledge, turn_rhythm, persona_stability"
