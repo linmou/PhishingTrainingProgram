@@ -1,0 +1,178 @@
+# PM Summary: Prompt Improvements From Prototype Feedback
+
+Intent: explain, for education and product reviewers, which learner-experience issues were improved through prompt design and how the evaluation gate checks whether those improvements are reliable.
+
+Updated: 2026-06-09
+
+## Executive Summary
+
+We improved the chatbot behavior for the feedback items that can be addressed through prompt design. The revised tutor is now designed to teach more directly, correct unsafe reasoning, use a stable knowledgeable-peer voice, reduce hollow praise, provide concrete safety actions, avoid fake personal stories, and use simpler language for younger or confused learners.
+
+Two feedback items were not treated as prompt-only fixes:
+- Response latency and typing indicators require product interface work.
+- Multi-bot simulation requires a larger product design decision and a new evaluation setup.
+
+## What Changed For Learners
+
+### 1. The Bot Should Stop Asking A Question Every Turn
+
+User feedback said the bot felt like it kept asking questions instead of teaching.
+
+The prompt now tells the bot to follow a more balanced tutoring rhythm:
+- Teach one concrete idea first.
+- Ask a focused question only when it helps the student think.
+- Do not end every response with a question.
+
+Expected learner impact:
+- Students should receive clearer explanations instead of feeling interrogated.
+- The conversation should feel more like tutoring and less like a worksheet.
+
+Evaluation gate result:
+- The improved prompt passed all cases for this behavior: `9/9`.
+
+### 2. The Bot Should Correct Wrong Or Incomplete Answers
+
+User feedback said the bot sometimes validated students even when their answer was wrong or incomplete.
+
+The prompt now tells the bot to correct unsafe reasoning directly before giving encouragement. For example, if a student says a website is safe because it has a lock icon, the bot should clearly explain that the lock does not prove the site is real.
+
+Expected learner impact:
+- Students get a stronger sense that the tutor has authority.
+- Mistakes become teachable moments instead of being softly approved.
+- Safety misconceptions are corrected before they become habits.
+
+Evaluation gate result:
+- The improved prompt passed all direct-correction cases: `8/8`.
+
+### 3. The Bot Needs A Stable Persona
+
+User feedback said the bot should have one consistent voice, ideally a knowledgeable peer: informed, college-age, and not stiff.
+
+The prompt now defines the bot as a knowledgeable peer coach for teen phishing training. It also tells the bot not to pretend to be a friend, parent, performer, or person with personal memories.
+
+Expected learner impact:
+- The bot should feel more consistent and trustworthy.
+- The tone should be approachable without becoming fake or over-familiar.
+
+Evaluation gate result:
+- The improved prompt passed all persona-stability cases: `5/5`.
+
+### 4. The Bot Should Reduce Boilerplate Praise
+
+User feedback said constant phrases like "great job" felt hollow.
+
+The prompt now limits praise to at most one brief, specific acknowledgment before teaching. The bot should acknowledge what the student noticed, then move quickly into the learning point.
+
+Expected learner impact:
+- Praise should feel more earned and less scripted.
+- The bot should spend more turns teaching, correcting, and guiding.
+
+Evaluation gate result:
+- The improved prompt passed all low-boilerplate-praise cases: `5/5`.
+
+### 5. The Bot Should Give More Specific Safety Knowledge
+
+User feedback said learners valued concrete tools and real-world actions.
+
+The prompt now asks the bot to give specific next steps instead of vague advice like "be careful." Examples include:
+- Do not click suspicious links.
+- Open the real app or real website yourself.
+- Check account settings, security alerts, or recent login activity inside the real account.
+- For bank alerts, use the official banking app, website, or the phone number on the card.
+- Remember that HTTPS or a lock icon does not prove a site is real.
+
+Expected learner impact:
+- Students should leave with actions they can actually perform.
+- The bot should teach practical safety habits, not just general caution.
+
+Evaluation gate result:
+- The improved prompt passed all practical-knowledge cases: `15/15`.
+
+### 6. The Bot Should Use Third-Person Stories, Not Fake Personal Claims
+
+User feedback said first-person AI claims break trust. For example, an AI saying "I once did this and regretted it" feels fake.
+
+The prompt now tells the bot to use third-person examples instead. It can describe what often happens to a person in a risky situation, but it should not claim personal lived experience.
+
+Expected learner impact:
+- The bot avoids pretending to be human.
+- Examples can still be relatable without damaging trust.
+
+Evaluation gate result:
+- The improved prompt passed the third-person example case: `1/1`.
+
+### 7. The Bot Should Use Simpler Language
+
+User feedback said some younger participants were confused by terms such as "urgency tactics."
+
+The prompt now asks the bot to use simpler wording, especially when a student seems confused. Examples:
+- Say "pressure words" instead of "urgency tactics."
+- Say "fake web address" or "wrong website" instead of "illegitimate domain."
+- Say "check in the real app" instead of "official account verification."
+- Say "the lock does not prove the site is real" instead of giving a technical explanation of HTTPS.
+
+Expected learner impact:
+- Younger learners should understand the safety lesson more easily.
+- The bot should adapt explanations toward plain language.
+
+Evaluation gate result:
+- The improved prompt passed the reading-level gate: `7/8`, which is above the required threshold.
+
+## What Was Not Solved In This Prompt Iteration
+
+### Response Latency And Typing Indicator
+
+This cannot be solved reliably through prompt wording. It requires product behavior such as a visible typing state, faster first response, streaming, or staged response delivery.
+
+### Multi-Bot Simulation
+
+This also needs product design work. A prompt can adjust one bot's tone, but a true formal-bot plus peer-bot simulation needs multiple agent roles, interface design, and a separate evaluation set.
+
+## Evaluation Gate: What It Means
+
+The evaluation gate is the quality standard used before accepting the new prompt into the product.
+
+It has two purposes:
+- Make sure the improved prompt actually addresses the target feedback.
+- Make sure the improved prompt does not merely sound better in one hand-picked example.
+
+The gate tested the improved prompt against a reviewed set of account-security-alert tutoring situations. These cases included both direct examples and holdout-style variations, meaning the prompt had to generalize to similar but not identical student responses.
+
+## Evaluation Gate Passing Criteria
+
+The prompt had to meet both conditions:
+- It needed to pass at least 80% of the applicable checks for every behavior category.
+- It needed to match or beat the previous prompt in every behavior category.
+
+This matters because a prompt that improves one issue while making another worse should not be accepted.
+
+## Final Gate Result
+
+The improved prompt passed the gate.
+
+Evaluation details:
+- Cases evaluated: `34`
+- Errors: `0`
+- Overall result: passed
+
+Behavior category results:
+
+| Behavior Category | Result |
+| --- | ---: |
+| Balanced teaching rhythm | `9/9` |
+| Direct correction | `8/8` |
+| Stable persona | `5/5` |
+| Reduced boilerplate praise | `5/5` |
+| Practical safety knowledge | `15/15` |
+| Third-person examples | `1/1` |
+| Simpler reading level | `7/8` |
+
+## Why The Evaluation Is More Reliable Than A Single Demo
+
+The evaluation set was reviewed and refined before the prompt was accepted.
+
+Reliability checks included:
+- Each case tested observable chatbot behavior, not vague preference.
+- Each case only tested requirements that could actually be observed in that situation.
+- Holdout variations were included so the prompt could not simply memorize one example.
+- The final evaluation set was reviewed through a multi-reviewer debate process and reached agreement after refinement.
