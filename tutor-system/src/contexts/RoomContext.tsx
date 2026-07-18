@@ -6,7 +6,8 @@ import {
     generateTutorSuggestion,
     recordAISuggestionFeedback,
     updateAIConfig,
-    getAIConfig
+    getAIConfig,
+    DEFAULT_AI_MODEL
 } from '../services/aiService';
 import { 
     validateRoomPassword,
@@ -309,7 +310,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setAiConfig(prevConfig => ({
                 id: currentRoom.id,
                 room_id: currentRoom.id,
-                model_name: currentRoom.ai_assistant_model || prevConfig?.model_name || 'gpt-4o',
+                model_name: currentRoom.ai_assistant_model || prevConfig?.model_name || DEFAULT_AI_MODEL,
                 system_prompt: currentRoom.ai_assistant_prompt || prevConfig?.system_prompt ||
                     'You are a helpful AI assistant in an educational tutoring session. ' +
                     'Provide clear, educational responses to help students learn. ' +
@@ -722,7 +723,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             let savedConfig: AIAssistantConfig | null = null;
 
             if (enabled) {
-                const aiModel = config?.model_name || 'gpt-4o';
+                const aiModel = config?.model_name || DEFAULT_AI_MODEL;
                 const aiPrompt = config?.system_prompt ||
                     'You are a helpful AI assistant in an educational tutoring session. ' +
                     'Provide clear, educational responses to help students learn. ' +

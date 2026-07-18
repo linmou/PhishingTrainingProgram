@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRoom } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
-import { AI_MODELS, AIModelName } from '../services/aiService';
+import { AI_MODELS, AIModelName, DEFAULT_AI_MODEL } from '../services/aiService';
 import { ScenarioTemplate, SCENARIO_TEMPLATES } from '../services/detectionTemplates';
 import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
 import { SystemPromptConfig } from '../services/prompts/types';
@@ -34,7 +34,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     const { user } = useAuth();
 
     const [isEnabled, setIsEnabled] = useState(false);
-    const [selectedModel, setSelectedModel] = useState<AIModelName>('gpt-4o');
+    const [selectedModel, setSelectedModel] = useState<AIModelName>(DEFAULT_AI_MODEL);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [temperature, setTemperature] = useState(0.7);
     const [maxTokens, setMaxTokens] = useState(150);
