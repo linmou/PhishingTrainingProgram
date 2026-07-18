@@ -58,7 +58,7 @@ interface ParameterOverrides {
 - **Role**: `supportive_adult` preset (high authority, encouraging tone)
 - **Detection areas**: `['Suspicious links', 'Urgent language', 'Unexpected requests']`
 - **Verification steps**: `['Check sender authenticity', 'Verify through official channels', 'Think before clicking']`
-- **Model**: `gpt-4o` (most capable multimodal model)
+- **Model**: `gpt-4o-mini` (`DEFAULT_AI_MODEL` — cheap default; `gpt-4o` remains selectable)
 - **Response length**: 100 tokens (concise educational responses)
 
 ## System Prompt Processing

@@ -276,7 +276,7 @@ describe('AI config loading edge cases', () => {
               data: {
                 id: roomId,
                 ai_assistant_enabled: true,
-                ai_assistant_model: 'gpt-4o',
+                ai_assistant_model: 'gpt-4o-mini',
                 ai_assistant_prompt: 'Use the room-level tutor guidance.',
                 created_at: '2026-03-20T00:00:00Z',
                 updated_at: '2026-03-26T00:00:00Z'
@@ -302,7 +302,7 @@ describe('AI config loading edge cases', () => {
     await expect(getAIConfig(roomId)).resolves.toMatchObject({
       id: roomId,
       room_id: roomId,
-      model_name: 'gpt-4o',
+      model_name: 'gpt-4o-mini',
       system_prompt: 'Use the room-level tutor guidance.',
       is_active: true
     });

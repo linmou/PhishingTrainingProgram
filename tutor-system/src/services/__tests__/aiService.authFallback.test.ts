@@ -54,7 +54,7 @@ describe('AI Service auth fallback', () => {
                         single: jest.fn().mockResolvedValue({
                             data: {
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o'
+                                ai_assistant_model: 'gpt-4o-mini'
                             },
                             error: null
                         })
@@ -68,7 +68,7 @@ describe('AI Service auth fallback', () => {
                             data: {
                                 id: 'room-123',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Use room-level tutor guidance.',
                                 created_at: '2026-03-20T00:00:00Z',
                                 updated_at: '2026-03-26T00:00:00Z'
@@ -122,7 +122,7 @@ describe('AI Service auth fallback', () => {
                         single: jest.fn().mockResolvedValue({
                             data: {
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o'
+                                ai_assistant_model: 'gpt-4o-mini'
                             },
                             error: null
                         })
@@ -136,7 +136,7 @@ describe('AI Service auth fallback', () => {
                             data: {
                                 id: 'room-123',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Use room-level tutor guidance.',
                                 created_at: '2026-03-20T00:00:00Z',
                                 updated_at: '2026-03-26T00:00:00Z'
@@ -165,7 +165,7 @@ describe('AI Service auth fallback', () => {
         expect(result.success).toBe(true);
         expect(result.suggestion).toBe('What makes the sender address look suspicious to you?');
         expect(result.appliedConfig).toMatchObject({
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: 'Use room-level tutor guidance.'
         });
     });

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createRoom, deleteRoom, getRoomsByTutor, getRoomTemplatesByTutor } from '../services/supabase';
-import { getAIConfig, initializeAIAssistant, updateAIConfig } from '../services/aiService';
+import { getAIConfig, initializeAIAssistant, updateAIConfig, DEFAULT_AI_MODEL } from '../services/aiService';
 import { Database } from '../types/database';
 import AvatarDisplay from '../components/AvatarDisplay';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -114,7 +114,7 @@ const TestRoomsView: React.FC = () => {
 
       const aiTemplate = selectedTemplate.ai_config_template;
       if (aiTemplate?.enabled) {
-        const modelName = aiTemplate.model_name || 'gpt-4o-mini';
+        const modelName = aiTemplate.model_name || DEFAULT_AI_MODEL;
         const promptConfig = aiTemplate.prompt_config
           ? {
               role: (aiTemplate.preset === 'casual_peer' ||

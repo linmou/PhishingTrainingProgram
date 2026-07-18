@@ -68,7 +68,7 @@ describe('RoomContext AI generation failures', () => {
     (getAIConfig as jest.Mock).mockResolvedValue({
       id: 'ai-config-1',
       room_id: 'room-1',
-      model_name: 'gpt-4o',
+      model_name: 'gpt-4o-mini',
       system_prompt: 'Scenario prompt',
       prompt_config: null,
       temperature: 0.7,
@@ -99,7 +99,7 @@ describe('RoomContext AI generation failures', () => {
                     image_url: null,
                     is_active: true,
                     ai_assistant_enabled: true,
-                    ai_assistant_model: 'gpt-4o',
+                    ai_assistant_model: 'gpt-4o-mini',
                     ai_assistant_prompt: 'Scenario prompt',
                     op_id: null,
                     op_display_name: null,

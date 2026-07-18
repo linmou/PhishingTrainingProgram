@@ -41,7 +41,7 @@ describe('AIAssistantSettings', () => {
             aiConfig: {
                 id: 'room-1',
                 room_id: 'room-1',
-                model_name: 'gpt-4o',
+                model_name: 'gpt-4o-mini',
                 system_prompt: 'Updated quick-adjust prompt',
                 prompt_config: {
                     role: { role: 'low' },
@@ -110,7 +110,7 @@ describe('AIAssistantSettings', () => {
             aiConfig: {
                 id: 'room-1',
                 room_id: 'room-1',
-                model_name: 'gpt-4o',
+                model_name: 'gpt-4o-mini',
                 system_prompt: 'Scenario-backed prompt',
                 prompt_config: {
                     role: { role: 'high' },
@@ -169,7 +169,7 @@ describe('AIAssistantSettings', () => {
             aiConfig: {
                 id: 'room-1',
                 room_id: 'room-1',
-                model_name: 'gpt-4o',
+                model_name: 'gpt-4o-mini',
                 system_prompt: 'Original prompt',
                 prompt_config: null,
                 temperature: 0.7,
@@ -243,7 +243,7 @@ describe('AIAssistantSettings', () => {
             aiConfig: {
                 id: 'room-1',
                 room_id: 'room-1',
-                model_name: 'gpt-4o',
+                model_name: 'gpt-4o-mini',
                 system_prompt: generateSystemPrompt({
                     role: { role: 'high' },
                     communication_style: {
@@ -316,5 +316,125 @@ describe('AIAssistantSettings', () => {
                 })
             );
         });
+    });
+
+    it('locks AI Personality when student_tone_lock is set and shows lock indicator', async () => {
+        (useAuth as jest.Mock).mockReturnValue({
+            user: {
+                id: 'tutor-1',
+                current_role: 'tutor'
+            }
+        });
+
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: {
+                id: 'room-1',
+                ai_assistant_enabled: true
+            },
+            aiConfig: {
+                id: 'room-1',
+                room_id: 'room-1',
+                model_name: 'gpt-4o-mini',
+                system_prompt: 'peer prompt',
+                prompt_config: {
+                    role: { role: 'low' },
+                    communication_style: {
+                        teen_slang: 'high',
+                        conversational_markers: 'high',
+                        uncertainty_expression: 'low'
+                    },
+                    cognitive_parameters: {
+                        concept_density: 'low',
+                        perspective_taking: 'high',
+                        personal_examples: 'low',
+                        consequence_highlighting: 'high'
+                    },
+                    emotional_parameters: {
+                        enthusiasm_level: 'low',
+                        validation_frequency: 'low',
+                        mistake_normalization: 'high',
+                        confidence_building: 'high'
+                    },
+                    detection_areas: ['Suspicious links'],
+                    verification_steps: ['Check sender'],
+                    student_tone_lock: {
+                        locked: true,
+                        chosen_by_user_id: 'student-1',
+                        chosen_role: 'low'
+                    }
+                },
+                temperature: 0.4,
+                max_tokens: 120,
+                is_active: true,
+                created_at: '2026-03-20T00:00:00Z',
+                updated_at: '2026-03-26T12:00:00Z'
+            },
+            toggleAIAssistant: jest.fn(),
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        const personality = screen.getByRole('combobox', { name: /AI Personality/i });
+        expect(personality).toBeDisabled();
+        expect(screen.getByTestId('ai-tone-lock-indicator')).toBeInTheDocument();
+        expect(screen.getByText(/student chose/i)).toBeInTheDocument();
+    });
+
+    it('keeps AI Personality editable when student has not locked tone', () => {
+        (useAuth as jest.Mock).mockReturnValue({
+            user: {
+                id: 'tutor-1',
+                current_role: 'tutor'
+            }
+        });
+
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: {
+                id: 'room-1',
+                ai_assistant_enabled: true
+            },
+            aiConfig: {
+                id: 'room-1',
+                room_id: 'room-1',
+                model_name: 'gpt-4o-mini',
+                system_prompt: 'prompt',
+                prompt_config: {
+                    role: { role: 'high' },
+                    communication_style: {
+                        teen_slang: 'low',
+                        conversational_markers: 'low',
+                        uncertainty_expression: 'low'
+                    },
+                    cognitive_parameters: {
+                        concept_density: 'low',
+                        perspective_taking: 'low',
+                        personal_examples: 'low',
+                        consequence_highlighting: 'low'
+                    },
+                    emotional_parameters: {
+                        enthusiasm_level: 'low',
+                        validation_frequency: 'low',
+                        mistake_normalization: 'low',
+                        confidence_building: 'low'
+                    },
+                    detection_areas: [],
+                    verification_steps: []
+                },
+                temperature: 0.7,
+                max_tokens: 150,
+                is_active: true,
+                created_at: '2026-03-20T00:00:00Z',
+                updated_at: '2026-03-26T12:00:00Z'
+            },
+            toggleAIAssistant: jest.fn(),
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        const personality = screen.getByRole('combobox', { name: /AI Personality/i });
+        expect(personality).not.toBeDisabled();
+        expect(screen.queryByTestId('ai-tone-lock-indicator')).not.toBeInTheDocument();
     });
 });

@@ -364,7 +364,7 @@ export class DummyAIService {
  */
 export const initializeAIAssistant = async (
     roomId: string,
-    modelName: string = 'gpt-4o',
+    modelName: string = 'gpt-4o-mini',
     systemPrompt?: string,
     userId?: string,
     promptConfig?: {
@@ -623,7 +623,7 @@ export const generateTutorSuggestion = async (
         aiConfig = {
             id: roomId,
             room_id: roomId,
-            model_name: roomData.ai_assistant_model || 'gpt-4o',
+            model_name: roomData.ai_assistant_model || 'gpt-4o-mini',
             system_prompt: defaultSystemPrompt,
             prompt_config: {
                 ...defaultConfig,

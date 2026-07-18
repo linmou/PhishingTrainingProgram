@@ -86,7 +86,7 @@ describe('RoomContext AI config reload', () => {
                     image_url: null,
                     is_active: true,
                     ai_assistant_enabled: true,
-                    ai_assistant_model: 'gpt-4o',
+                    ai_assistant_model: 'gpt-4o-mini',
                     ai_assistant_prompt: 'Persisted modular prompt',
                     op_id: null,
                     op_display_name: null,
@@ -145,7 +145,7 @@ describe('RoomContext AI config reload', () => {
     (getAIConfig as jest.Mock).mockResolvedValue({
       id: 'ai-config-1',
       room_id: 'room-1',
-      model_name: 'gpt-4o',
+      model_name: 'gpt-4o-mini',
       system_prompt: 'Persisted modular prompt',
       prompt_config: {
         role: { role: 'high' },

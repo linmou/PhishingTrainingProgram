@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createRoom, getRoomsByTutor, deleteRoom, getRoomTemplatesByTutor } from '../services/supabase';
-import { getAIConfig, initializeAIAssistant, updateAIConfig } from '../services/aiService';
+import { getAIConfig, initializeAIAssistant, updateAIConfig, DEFAULT_AI_MODEL } from '../services/aiService';
 import { Database } from '../types/database';
 import ImageUpload from '../components/ImageUpload';
 import AvatarDisplay from '../components/AvatarDisplay';
@@ -215,7 +215,7 @@ const TutorView: React.FC = () => {
             // enable the AI assistant so the fixed tutor behavior is live in the room.
             const aiTemplate = selectedTemplate?.ai_config_template;
             if (aiTemplate?.enabled && user?.id) {
-                const modelName = aiTemplate.model_name || 'gpt-4o-mini';
+                const modelName = aiTemplate.model_name || DEFAULT_AI_MODEL;
                 // Prefer regenerating from prompt_config so rooms always get the
                 // current improved prompt code; fall back to stored system_prompt.
                 const promptConfig = aiTemplate.prompt_config

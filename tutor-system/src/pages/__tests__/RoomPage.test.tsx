@@ -102,7 +102,7 @@ const buildMessage = (overrides: Partial<Message> = {}): Message => ({
 const buildAIConfig = (overrides: Partial<AIAssistantConfig> = {}): AIAssistantConfig => ({
   id: 'ai-config-1',
   room_id: 'room-1',
-  model_name: 'gpt-4o',
+  model_name: 'gpt-4o-mini',
   system_prompt: 'Test system prompt',
   prompt_config: null,
   temperature: 0.7,
@@ -265,7 +265,7 @@ describe('RoomPage', () => {
     renderRoomPage();
 
     expect(screen.getByText('🤖 AI: On')).toBeInTheDocument();
-    expect(screen.getByText('(gpt-4o)')).toBeInTheDocument();
+    expect(screen.getByText('(gpt-4o-mini)')).toBeInTheDocument();
     expect(screen.getByText('🤖 Generate')).toBeInTheDocument();
   });
 

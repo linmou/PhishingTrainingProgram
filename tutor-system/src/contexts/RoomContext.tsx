@@ -9,6 +9,7 @@ import {
     getAIConfig,
     DEFAULT_AI_MODEL
 } from '../services/aiService';
+import { setStudentAITone as persistStudentAITone } from '../services/studentAIToneService';
 import { 
     validateRoomPassword,
     submitMessageFeedback,
@@ -714,6 +715,39 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const setStudentAITone = async (tone: 'peer' | 'adult'): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('No user or room available');
+        }
+        if (user.current_role !== 'student') {
+            throw new Error('Only students can set AI tone preference');
+        }
+
+        setLoadingAI(true);
+        try {
+            const savedConfig = await persistStudentAITone({
+                roomId: currentRoom.id,
+                userId: user.id,
+                tone,
+                participants,
+                aiEnabled: Boolean(currentRoom.ai_assistant_enabled),
+            });
+            setAiConfig(savedConfig);
+            setCurrentRoom((prevRoom) =>
+                prevRoom
+                    ? {
+                          ...prevRoom,
+                          ai_assistant_model: savedConfig.model_name,
+                          ai_assistant_prompt: savedConfig.system_prompt,
+                          updated_at: savedConfig.updated_at,
+                      }
+                    : prevRoom
+            );
+        } finally {
+            setLoadingAI(false);
+        }
+    };
+
     const toggleAIAssistant = async (
         enabled: boolean,
         config?: Partial<AIAssistantConfig>
@@ -1067,6 +1101,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         generateAIResponse,
         regenerateAIResponse,
         toggleAIAssistant,
+        setStudentAITone,
         startTyping,
         stopTyping,
         aiConfig,

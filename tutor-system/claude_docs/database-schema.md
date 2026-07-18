@@ -108,7 +108,7 @@ sessions: {
 ai_assistant_configs: {
     id: string;
     room_id: string;
-    model_name: string;           // e.g., "gpt-4o", "gpt-4"
+    model_name: string;           // default: "gpt-4o-mini"; also "gpt-4o", "gpt-4"
     system_prompt: string | null; // AI behavior instructions
     temperature: number;          // AI randomness (0.0-2.0)
     max_tokens: number;           // Response length limit

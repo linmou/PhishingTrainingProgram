@@ -36,7 +36,7 @@ describe('checklistGenerationContext', () => {
           single: jest.fn().mockResolvedValue({
             data: {
               ai_assistant_enabled: true,
-              ai_assistant_model: 'gpt-4o'
+              ai_assistant_model: 'gpt-4o-mini'
             },
             error: null
           })
@@ -47,7 +47,7 @@ describe('checklistGenerationContext', () => {
     (getAIConfig as jest.Mock).mockResolvedValue({
       id: 'ai-config-1',
       room_id: 'room-1',
-      model_name: 'gpt-4o',
+      model_name: 'gpt-4o-mini',
       system_prompt: 'Generic saved prompt',
       prompt_config: {
         role: { role: 'high' },

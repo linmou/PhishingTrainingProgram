@@ -33,7 +33,7 @@ describe.skip('AI checklist integration step definitions', () => {
 Given('the AI assistant is enabled for a tutoring room', async function() {
   this.aiEnabled = true;
   this.aiConfig = {
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     temperature: 0.1,
     coverage_detection_enabled: true
   };

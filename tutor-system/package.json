@@ -24,6 +24,7 @@
         "test:regression": "react-scripts test --watchAll=false",
         "test:coverage": "react-scripts test --coverage --watchAll=false",
         "test:bdd": "react-scripts test --testPathPattern=\"room_management_steps\" --watchAll=false",
+        "test:e2e:student-ai-tone": "react-scripts test --watchAll=false --runTestsByPath src/__tests__/student_ai_tone_e2e.test.tsx",
         "test:bdd-watch": "react-scripts test --testPathPattern=\"room_management_steps\"",
         "test:tasks": "npm run test:task1 && npm run test:task2 && npm run test:task3",
         "test:task1": "react-scripts test --testPathPattern=\"supabase.test.ts\" --watchAll=false",

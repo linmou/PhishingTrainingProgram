@@ -13,6 +13,7 @@ import {
   EcologicalCaseVars
 } from './ecologicalTutorCall';
 import { TutorBehaviorMetric } from './tutorBehaviorHeuristics';
+import { DEFAULT_AI_MODEL } from './aiModels';
 
 export const GLOBAL_TEMPLATE_TUTOR_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -64,7 +65,7 @@ export function buildCasualPeerAIConfig(
 
   return {
     enabled: true,
-    model_name: options?.model_name || 'gpt-4o-mini',
+    model_name: options?.model_name || DEFAULT_AI_MODEL,
     temperature: options?.temperature ?? 0.3,
     max_tokens: options?.max_tokens ?? 100,
     preset: 'casual_peer',

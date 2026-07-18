@@ -183,6 +183,8 @@ export interface RoomContextType {
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
+    /** Student claims peer/adult tone (1:1 rooms only). */
+    setStudentAITone: (tone: 'peer' | 'adult') => Promise<void>;
     startTyping: () => void;
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;

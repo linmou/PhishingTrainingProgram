@@ -5,6 +5,7 @@ import { AI_MODELS, AIModelName, DEFAULT_AI_MODEL } from '../services/aiService'
 import { ScenarioTemplate, SCENARIO_TEMPLATES } from '../services/detectionTemplates';
 import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
 import { SystemPromptConfig } from '../services/prompts/types';
+import { isTutorRoleLocked, roleIntensityToTone } from '../utils/studentAITone';
 import './AIAssistantSettings.css';
 
 interface AIAssistantSettingsProps {
@@ -180,6 +181,11 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         setConfidenceBuilding(presetConfig.emotional_parameters.confidence_building);
     };
 
+    const roleLockedByStudent = isTutorRoleLocked(aiConfig?.prompt_config);
+    const lockedRoleIntensity =
+        aiConfig?.prompt_config?.student_tone_lock?.chosen_role ||
+        aiConfig?.prompt_config?.role?.role;
+
     // Handle modular prompt generation
     const handleGenerateModularPrompt = useCallback(() => {
         if (useModularPrompts) {
@@ -187,11 +193,18 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 detectionAreas: finalDetectionAreas,
                 verificationSteps: finalVerificationSteps
             } = getEffectiveScenarioContent();
+
+            const roleForPrompt =
+                roleLockedByStudent && lockedRoleIntensity
+                    ? lockedRoleIntensity
+                    : selectedPreset === 'casual_peer'
+                      ? ('low' as const)
+                      : ('high' as const);
             
             // Use individual parameter settings instead of preset
             const config = {
                 role: {
-                    role: selectedPreset === 'casual_peer' ? 'low' as const : 'high' as const
+                    role: roleForPrompt
                 },
                 communication_style: {
                     teen_slang: teenSlang,
@@ -220,7 +233,8 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     }, [useModularPrompts, selectedPreset, getEffectiveScenarioContent,
         teenSlang, conversationalMarkers, uncertaintyExpression,
         conceptDensity, perspectiveTaking, personalExamples, consequenceHighlighting,
-        enthusiasmLevel, validationFrequency, mistakeNormalization, confidenceBuilding]);
+        enthusiasmLevel, validationFrequency, mistakeNormalization, confidenceBuilding,
+        roleLockedByStudent, lockedRoleIntensity]);
 
     // Auto-generate when modular settings change
     useEffect(() => {
@@ -239,9 +253,16 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 verificationSteps: finalVerificationSteps
             } = getEffectiveScenarioContent();
 
+            const effectiveRole =
+                roleLockedByStudent && lockedRoleIntensity
+                    ? lockedRoleIntensity
+                    : selectedPreset === 'casual_peer'
+                      ? ('low' as const)
+                      : ('high' as const);
+
             const promptConfig = useModularPrompts ? {
                 role: {
-                    role: selectedPreset === 'casual_peer' ? 'low' as const : 'high' as const
+                    role: effectiveRole
                 },
                 communication_style: {
                     teen_slang: teenSlang,
@@ -261,7 +282,10 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                     confidence_building: confidenceBuilding
                 },
                 detection_areas: finalDetectionAreas,
-                verification_steps: finalVerificationSteps
+                verification_steps: finalVerificationSteps,
+                ...(roleLockedByStudent && aiConfig?.prompt_config?.student_tone_lock
+                    ? { student_tone_lock: aiConfig.prompt_config.student_tone_lock }
+                    : {})
             } : null;
 
             const finalSystemPrompt = promptConfig
@@ -369,19 +393,49 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                             {useModularPrompts && (
                                 <>
                                     <div className="ai-setting-group">
-                                        <label className="ai-setting-label">AI Personality (Preset)</label>
+                                        <label className="ai-setting-label" htmlFor="ai-personality-preset">
+                                            AI Personality (Preset)
+                                            {roleLockedByStudent && (
+                                                <span
+                                                    className="ai-tone-lock-indicator"
+                                                    data-testid="ai-tone-lock-indicator"
+                                                    title="Student chose AI tone"
+                                                    style={{ marginLeft: '0.5rem' }}
+                                                >
+                                                    🔒
+                                                </span>
+                                            )}
+                                        </label>
                                         <select
-                                            value={selectedPreset}
+                                            id="ai-personality-preset"
+                                            value={
+                                                roleLockedByStudent && lockedRoleIntensity
+                                                    ? lockedRoleIntensity === 'low'
+                                                        ? 'casual_peer'
+                                                        : 'supportive_adult'
+                                                    : selectedPreset
+                                            }
                                             onChange={(e) => handlePresetChange(e.target.value as 'casual_peer' | 'supportive_adult')}
-                                            disabled={isSaving || loadingAI}
+                                            disabled={isSaving || loadingAI || roleLockedByStudent}
                                             className="ai-setting-select"
+                                            aria-label="AI Personality (Preset)"
                                         >
                                             <option value="supportive_adult">Trusted Adult - Mature and protective guidance</option>
                                             <option value="casual_peer">Casual Peer - Fellow learner, relatable language</option>
                                         </select>
-                                        <p className="ai-setting-description">
-                                            Selecting a preset will load default values for all parameters below. You can then customize individual settings.
-                                        </p>
+                                        {roleLockedByStudent ? (
+                                            <p className="ai-setting-description">
+                                                Locked — student chose{' '}
+                                                {roleIntensityToTone(lockedRoleIntensity) === 'peer'
+                                                    ? 'Peer'
+                                                    : 'Adult'}
+                                                . Tone cannot be changed by the tutor.
+                                            </p>
+                                        ) : (
+                                            <p className="ai-setting-description">
+                                                Selecting a preset will load default values for all parameters below. You can then customize individual settings.
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="ai-setting-group">

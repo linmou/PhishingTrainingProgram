@@ -14,11 +14,11 @@ Feature: AI Assistant for Tutors
     Given the tutor is in the "AI-Enhanced Learning" room
     When the tutor clicks the "AI Settings" button
     And the tutor toggles "Enable AI Assistant" to on
-    And the tutor selects model "GPT-4o"
+    And the tutor selects model "GPT-4o Mini"
     And the tutor sets temperature to 0.7
     And the tutor saves the settings
     Then the AI assistant should be enabled for the room
-    And the AI status should show as "AI: On (GPT-4o)"
+    And the AI status should show as "AI: On (GPT-4o Mini)"
 
   Scenario: Tutor disables AI assistant
     Given the AI assistant is enabled in the room
@@ -87,7 +87,7 @@ Feature: AI Assistant for Tutors
     When the tutor leaves the room
     And the tutor rejoins the room
     Then the AI settings should be preserved
-    And the AI status should show "AI: On (GPT-4o)"
+    And the AI status should show "AI: On (GPT-4o Mini)"
 
   Scenario: AI handles no student messages gracefully
     Given the AI assistant is enabled

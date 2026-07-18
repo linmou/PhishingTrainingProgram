@@ -57,7 +57,7 @@ describe('aiService external backend failures', () => {
             single: jest.fn().mockResolvedValue({
               data: {
                 ai_assistant_enabled: true,
-                ai_assistant_model: 'gpt-4o'
+                ai_assistant_model: 'gpt-4o-mini'
               },
               error: null
             })
@@ -71,7 +71,7 @@ describe('aiService external backend failures', () => {
               data: {
                 id: 'room-1',
                 ai_assistant_enabled: true,
-                ai_assistant_model: 'gpt-4o',
+                ai_assistant_model: 'gpt-4o-mini',
                 ai_assistant_prompt: 'Scenario prompt',
                 created_at: '2026-04-02T00:00:00Z',
                 updated_at: '2026-04-02T00:00:00Z'

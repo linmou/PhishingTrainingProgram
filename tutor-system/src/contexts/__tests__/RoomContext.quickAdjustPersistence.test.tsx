@@ -68,7 +68,7 @@ describe('RoomContext Quick Adjust persistence', () => {
         image_url: null,
         is_active: true,
         ai_assistant_enabled: true,
-        ai_assistant_model: 'gpt-4o',
+        ai_assistant_model: 'gpt-4o-mini',
         ai_assistant_prompt: 'Original prompt',
         op_id: null,
         op_display_name: null,
@@ -168,7 +168,7 @@ describe('RoomContext Quick Adjust persistence', () => {
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: {
-                    model_name: 'gpt-4o',
+                    model_name: 'gpt-4o-mini',
                     system_prompt: 'Original prompt',
                     prompt_config: null,
                     temperature: 0.7,
@@ -181,7 +181,7 @@ describe('RoomContext Quick Adjust persistence', () => {
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: {
-                    model_name: 'gpt-4o',
+                    model_name: 'gpt-4o-mini',
                     system_prompt: 'Updated quick-adjust prompt',
                     prompt_config: {
                         role: { role: 'low' },
@@ -213,7 +213,7 @@ describe('RoomContext Quick Adjust persistence', () => {
         (updateAIConfig as jest.Mock).mockResolvedValue({
             id: 'room-1',
             room_id: 'room-1',
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: 'Updated quick-adjust prompt',
             prompt_config: {
                 role: { role: 'low' },
@@ -277,7 +277,7 @@ describe('RoomContext Quick Adjust persistence', () => {
         expect(updateAIConfig).toHaveBeenCalledWith(
             'room-1',
             {
-                model_name: 'gpt-4o',
+                model_name: 'gpt-4o-mini',
                 system_prompt: 'Updated quick-adjust prompt',
                 prompt_config: {
                     role: { role: 'low' },
@@ -310,7 +310,7 @@ describe('RoomContext Quick Adjust persistence', () => {
         );
 
         expect(roomApi!.aiConfig).toMatchObject({
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: 'Updated quick-adjust prompt',
             prompt_config: {
                 role: { role: 'low' }
@@ -322,7 +322,7 @@ describe('RoomContext Quick Adjust persistence', () => {
 
     it('records the effective AI config snapshot with each interaction', async () => {
         const generatedSnapshot: AIAssistantConfigSnapshot = {
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: 'Original prompt',
             prompt_config: null,
             temperature: 0.7,
@@ -331,7 +331,7 @@ describe('RoomContext Quick Adjust persistence', () => {
         };
 
         const regeneratedSnapshot: AIAssistantConfigSnapshot = {
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: 'Updated quick-adjust prompt',
             prompt_config: {
                 role: { role: 'low' }

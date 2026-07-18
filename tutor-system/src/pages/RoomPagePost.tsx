@@ -6,6 +6,7 @@ import RoomPost from '../components/RoomPost';
 import PostComment from '../components/PostComment';
 import CommentInput from '../components/CommentInput';
 import AIAssistantSettings from '../components/AIAssistantSettings';
+import StudentAIToneControl from '../components/StudentAIToneControl';
 import AISuggestionBox from '../components/AISuggestionBox';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
@@ -474,6 +475,7 @@ const RoomPagePost: React.FC = () => {
                     </Link>
                     
                     <div className="room-post-nav-actions">
+                        <StudentAIToneControl />
                         {/* Learning Progress Button - Only for tutors */}
                         {user?.current_role === 'tutor' && canUseAI && (
                             <button

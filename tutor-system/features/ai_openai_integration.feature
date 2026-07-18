@@ -35,7 +35,7 @@ Feature: OpenAI API Integration
     Given OpenAI integration is active
     And a room has AI settings:
       | Setting      | Value                              |
-      | model        | gpt-4o                            |
+      | model        | gpt-4o-mini                       |
       | temperature  | 0.7                               |
       | max_tokens   | 300                               |
       | prompt       | Focus on cybersecurity education   |
@@ -78,6 +78,7 @@ Feature: OpenAI API Integration
     Given OpenAI integration is active
     When a tutor selects different models:
       | Model Selected    | API Model Used     |
+      | GPT-4o Mini      | gpt-4o-mini       |
       | GPT-4o           | gpt-4o            |
       | GPT-4            | gpt-4             |
     Then the system should use the appropriate model

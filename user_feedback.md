@@ -23,7 +23,7 @@ relevant google doc: https://docs.google.com/document/d/1-cYuVZW2eU4M9TCgseWvwEx
 | 6 | Third-person examples | **Done (prompt)** | Third-person only; demo room “Did this ever happen to you?” |
 | 7 | Latency / typing indicator | **Open** | Needs UI/runtime (not prompt-only) |
 | 8 | Simpler language | **Done (prompt)** | Reading-level substitutions; short replies reduce jargon piles |
-| 9 | Multi-bot simulation | **Open** | Needs multi-agent product design + separate evals |
+| 9 | Multi-bot simulation | **Reinterpreted (product)** | Student opt-in Peer/Adult tone (1:1 only); locks tutor personality control — not dual bots |
 
 ---
 
@@ -85,8 +85,8 @@ Implementation commits:
    - Likely work: typing indicator state, streaming or staged response behavior, and latency instrumentation.
 
 9. Consider multi-bot simulation.
-   - Reason: this needs product design and additional evaluation fixtures for multiple agent voices.
-   - A single system prompt can adjust tone, but it cannot reliably create a multi-bot simulation.
+   - Original idea: formal bot + informal peer bot in one thread (multi-agent).
+   - **Product reinterpretation (implemented):** student may opt in to choose AI tone (Peer | Adult) in single-student rooms; tutor AI Personality locks after choice. Multi-student blocked for now. See `features/student_ai_tone.feature`.
 
 ### Evaluation Gate Passed (Phase 1)
 

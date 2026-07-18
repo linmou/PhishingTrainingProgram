@@ -14,7 +14,7 @@ describe('buildRoomExportData', () => {
     image_url: null,
     is_active: true,
     ai_assistant_enabled: true,
-    ai_assistant_model: 'gpt-4o',
+    ai_assistant_model: 'gpt-4o-mini',
     ai_assistant_prompt: 'Stay focused on scam detection.',
     created_at: '2026-03-28T12:00:00Z',
     updated_at: '2026-03-28T12:10:00Z',
@@ -41,7 +41,7 @@ describe('buildRoomExportData', () => {
       content: 'Look at the domain and the urgency language.',
       user_role: 'tutor' as UserRole,
       is_ai_generated: false,
-      ai_model_used: 'gpt-4o',
+      ai_model_used: 'gpt-4o-mini',
       ai_response_time_ms: 2100,
       parent_message_id: 'msg-1',
       created_at: '2026-03-28T12:02:00Z',
@@ -69,7 +69,7 @@ describe('buildRoomExportData', () => {
       tutor_final_response: 'Look at the domain and the urgency language.',
       response_time_ms: 5000,
       ai_config_snapshot: {
-        model_name: 'gpt-4o',
+        model_name: 'gpt-4o-mini',
         system_prompt: 'Stay focused on scam detection.',
         prompt_config: {
           role: { role: 'high' },
@@ -100,7 +100,7 @@ describe('buildRoomExportData', () => {
 
     expect(exportData.feedback_summary).toEqual(feedbackSummary);
     expect(exportData.room.ai_enabled).toBe(true);
-    expect(exportData.room.ai_model).toBe('gpt-4o');
+    expect(exportData.room.ai_model).toBe('gpt-4o-mini');
     expect(exportData.ai_interactions).toEqual(aiInteractions);
     expect(exportData.ai_config_history).toBeUndefined();
     expect(exportData.export_metadata.total_ai_interactions).toBe(1);
@@ -113,13 +113,13 @@ describe('buildRoomExportData', () => {
       expect.objectContaining({
         id: 'msg-2',
         feedback_stats: messageFeedbackStats['msg-2'],
-        ai_model_used: 'gpt-4o',
+        ai_model_used: 'gpt-4o-mini',
       }),
     ]);
     expect(exportData.ai_interactions?.[0]).toEqual(
       expect.objectContaining({
         ai_config_snapshot: {
-          model_name: 'gpt-4o',
+          model_name: 'gpt-4o-mini',
           system_prompt: 'Stay focused on scam detection.',
           prompt_config: {
             role: { role: 'high' },

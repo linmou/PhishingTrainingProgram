@@ -2,6 +2,12 @@
  * TypeScript type definitions for system prompt configuration
  */
 
+export interface StudentToneLock {
+  locked: true;
+  chosen_by_user_id: string;
+  chosen_role: 'low' | 'high';
+}
+
 export interface SystemPromptConfig {
   role: {
     role: 'low' | 'high';
@@ -25,6 +31,8 @@ export interface SystemPromptConfig {
   };
   detection_areas: string[];
   verification_steps: string[];
+  /** Present when a student claimed peer/adult tone (1:1 rooms). Ignored by prompt text generation. */
+  student_tone_lock?: StudentToneLock | null;
 }
 
 export interface ParameterConfig {

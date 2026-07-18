@@ -52,7 +52,7 @@ describe('AI Service room source of truth', () => {
                             data: {
                                 id: 'room-1',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Room-backed AI prompt.',
                                 created_at: '2026-03-25T00:00:00Z',
                                 updated_at: '2026-03-26T00:00:00Z'
@@ -84,7 +84,7 @@ describe('AI Service room source of truth', () => {
         await expect(getAIConfig('room-1')).resolves.toMatchObject({
             id: 'room-1',
             room_id: 'room-1',
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: generateSystemPrompt({
                 ...normalizedPromptConfig,
                 detection_areas: [],
@@ -137,7 +137,7 @@ describe('AI Service room source of truth', () => {
                             data: {
                                 id: 'room-9',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Generic stale prompt',
                                 created_at: '2026-04-02T00:00:00Z',
                                 updated_at: '2026-04-02T00:00:00Z'
@@ -225,7 +225,7 @@ describe('AI Service room source of truth', () => {
             });
 
         await expect(
-            initializeAIAssistant('room-1', 'gpt-4o', 'Initialize prompt', 'tutor-1')
+            initializeAIAssistant('room-1', 'gpt-4o-mini', 'Initialize prompt', 'tutor-1')
         ).resolves.toBe('room-1');
 
         expect(mockSupabaseFrom).toHaveBeenCalledTimes(4);
@@ -244,7 +244,7 @@ describe('AI Service room source of truth', () => {
                             data: {
                                 id: 'room-2',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Old prompt.',
                                 created_at: '2026-03-20T00:00:00Z',
                                 updated_at: '2026-03-26T11:00:00Z'
@@ -354,7 +354,7 @@ describe('AI Service room source of truth', () => {
             change_reason: 'settings_update',
             changed_fields: ['model_name', 'system_prompt', 'prompt_config', 'temperature', 'max_tokens'],
             previous_config: {
-                model_name: 'gpt-4o',
+                model_name: 'gpt-4o-mini',
                 system_prompt: 'Old prompt.',
                 prompt_config: null,
                 temperature: 0.7,
@@ -385,7 +385,7 @@ describe('AI Service room source of truth', () => {
                             data: {
                                 id: 'room-3',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Original prompt.',
                                 created_at: '2026-03-20T00:00:00Z',
                                 updated_at: '2026-03-26T11:00:00Z'
@@ -419,7 +419,7 @@ describe('AI Service room source of truth', () => {
                                 data: {
                                     id: 'room-3',
                                     ai_assistant_enabled: true,
-                                    ai_assistant_model: 'gpt-4o',
+                                    ai_assistant_model: 'gpt-4o-mini',
                                     ai_assistant_prompt: 'Adjusted prompt.',
                                     created_at: '2026-03-20T00:00:00Z',
                                     updated_at: '2026-03-26T12:00:00Z'
@@ -484,7 +484,7 @@ describe('AI Service room source of truth', () => {
                             data: {
                                 id: 'room-4',
                                 ai_assistant_enabled: true,
-                                ai_assistant_model: 'gpt-4o',
+                                ai_assistant_model: 'gpt-4o-mini',
                                 ai_assistant_prompt: 'Original prompt.',
                                 created_at: '2026-03-20T00:00:00Z',
                                 updated_at: '2026-03-26T11:00:00Z'
@@ -518,7 +518,7 @@ describe('AI Service room source of truth', () => {
                                 data: {
                                     id: 'room-4',
                                     ai_assistant_enabled: true,
-                                    ai_assistant_model: 'gpt-4o',
+                                    ai_assistant_model: 'gpt-4o-mini',
                                     ai_assistant_prompt: 'Adjusted prompt.',
                                     created_at: '2026-03-20T00:00:00Z',
                                     updated_at: '2026-03-26T12:00:00Z'
