@@ -475,7 +475,6 @@ const RoomPagePost: React.FC = () => {
                     </Link>
                     
                     <div className="room-post-nav-actions">
-                        <StudentAIToneControl />
                         {/* Learning Progress Button - Only for tutors */}
                         {user?.current_role === 'tutor' && canUseAI && (
                             <button
@@ -620,40 +619,43 @@ const RoomPagePost: React.FC = () => {
 
                 {/* Comment Input with AI Button */}
                 {canSendMessages ? (
-                    <div className="comment-input-with-ai">
-                        <CommentInput
-                            user={user}
-                            value={messageText}
-                            onChange={handleInputChange}
-                            onSubmit={handleSendMessage}
-                            onTyping={startTyping}
-                            onStopTyping={stopTyping}
-                            placeholder="Write a comment..."
-                            disabled={sendingMessage}
-                            isLoading={sendingMessage}
-                            replyingTo={replyingTo}
-                            onCancelReply={() => setReplyingTo(null)}
-                        />
-                        {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
-                            <button
-                                onClick={() => handleGenerateAIResponse()}
-                                disabled={loadingAI || messages.length === 0}
-                                className="ai-generate-btn"
-                                title={loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
-                            >
-                                {loadingAI ? (
-                                    <>
-                                        <div className="ai-loading-spinner"></div>
-                                        <span className="ai-btn-text">AI</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="ai-btn-icon">✨</span>
-                                        <span className="ai-btn-text">AI</span>
-                                    </>
-                                )}
-                            </button>
-                        )}
+                    <div className="comment-composer">
+                        <StudentAIToneControl />
+                        <div className="comment-input-with-ai">
+                            <CommentInput
+                                user={user}
+                                value={messageText}
+                                onChange={handleInputChange}
+                                onSubmit={handleSendMessage}
+                                onTyping={startTyping}
+                                onStopTyping={stopTyping}
+                                placeholder="Write a comment..."
+                                disabled={sendingMessage}
+                                isLoading={sendingMessage}
+                                replyingTo={replyingTo}
+                                onCancelReply={() => setReplyingTo(null)}
+                            />
+                            {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
+                                <button
+                                    onClick={() => handleGenerateAIResponse()}
+                                    disabled={loadingAI || messages.length === 0}
+                                    className="ai-generate-btn"
+                                    title={loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
+                                >
+                                    {loadingAI ? (
+                                        <>
+                                            <div className="ai-loading-spinner"></div>
+                                            <span className="ai-btn-text">AI</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="ai-btn-icon">✨</span>
+                                            <span className="ai-btn-text">AI</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <div className="comment-input-container">
