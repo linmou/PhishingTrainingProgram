@@ -26,6 +26,12 @@ const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() ===
 const shouldAllowDummyAISuggestions = (): boolean => getRuntimeEnvironment() === 'debug' && !OAI_API_KEY;
 
 export const AI_MODELS = {
+    'gpt-4o-mini': {
+        name: 'GPT-4o Mini',
+        description: 'Fast, low-cost model for everyday tutoring responses',
+        maxTokens: 4000,
+        temperature: 0.7
+    },
     'gpt-4o': {
         name: 'GPT-4o',
         description: 'Most capable multimodal model for complex reasoning',
@@ -41,6 +47,9 @@ export const AI_MODELS = {
 } as const;
 
 export type AIModelName = keyof typeof AI_MODELS;
+
+/** Cheap default when a room has no model configured. */
+export const DEFAULT_AI_MODEL: AIModelName = 'gpt-4o-mini';
 
 interface ParameterOverrides {
     role?: { role: 'low' | 'high' };
@@ -264,7 +273,7 @@ const persistExtendedAIConfig = async (
 
     const configPayload = {
         room_id: roomId,
-        model_name: updates.model_name || 'gpt-4o',
+        model_name: updates.model_name || DEFAULT_AI_MODEL,
         system_prompt: updates.system_prompt ?? null,
         prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,
@@ -343,7 +352,7 @@ class AIConfigurationManager {
         return {
             id: roomId,
             room_id: roomId,
-            model_name: roomData.ai_assistant_model || 'gpt-4o',
+            model_name: roomData.ai_assistant_model || DEFAULT_AI_MODEL,
             system_prompt: systemPrompt,
             prompt_config: {
                 ...defaultConfig,
@@ -896,7 +905,7 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
     return {
         id: room.id,
         room_id: room.id,
-        model_name: room.ai_assistant_model || 'gpt-4o',
+        model_name: room.ai_assistant_model || DEFAULT_AI_MODEL,
         system_prompt: effectiveSystemPrompt,
         prompt_config: extendedConfig?.prompt_config ?? null,
         temperature: extendedConfig?.temperature ?? 0.7,
@@ -912,7 +921,7 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
  */
 export const initializeAIAssistant = async (
     roomId: string,
-    modelName: string = 'gpt-4o',
+    modelName: string = DEFAULT_AI_MODEL,
     systemPrompt?: string,
     userId?: string,
     promptConfig?: {
@@ -1052,7 +1061,7 @@ export const updateAIConfig = async (
     }
 
     await persistExtendedAIConfig(roomId, {
-        model_name: data.ai_assistant_model || updates.model_name || 'gpt-4o',
+        model_name: data.ai_assistant_model || updates.model_name || DEFAULT_AI_MODEL,
         system_prompt: data.ai_assistant_prompt,
         prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,
@@ -1063,7 +1072,7 @@ export const updateAIConfig = async (
     const savedConfig = {
         id: data.id,
         room_id: data.id,
-        model_name: data.ai_assistant_model || updates.model_name || 'gpt-4o',
+        model_name: data.ai_assistant_model || updates.model_name || DEFAULT_AI_MODEL,
         system_prompt: data.ai_assistant_prompt,
         prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,
