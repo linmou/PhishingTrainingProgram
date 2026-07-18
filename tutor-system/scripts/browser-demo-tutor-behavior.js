@@ -72,11 +72,11 @@ async function loginAsTutor(page, name) {
   await page.fill('#displayName', name);
   await page.check('input[name="role"][value="tutor"]');
   await page.click('button[type="submit"], button:has-text("Join"), button:has-text("Start")');
-  // Tutor lands on tutor dashboard
+  // Behavior demos live on Test Rooms page (not main Tutor "Your Rooms")
   await page.waitForURL(/#\/tutor/, { timeout: TIMEOUT }).catch(async () => {
-    // Some builds land on home then role routes; force tutor view
     await page.goto(`${BASE_URL}/#/tutor`, { waitUntil: 'domcontentloaded' });
   });
+  await page.goto(`${BASE_URL}/#/tutor/test-rooms`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('text=Create a new Room', { timeout: TIMEOUT });
 }
 
@@ -278,8 +278,8 @@ async function main() {
       };
 
       try {
-        // Always start from tutor dashboard for a clean create flow
-        await page.goto(`${BASE_URL}/#/tutor`, { waitUntil: 'domcontentloaded' });
+        // Always start from Test Rooms page (template-only; not main /tutor rooms list)
+        await page.goto(`${BASE_URL}/#/tutor/test-rooms`, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector('text=Create a new Room', { timeout: TIMEOUT });
 
         entry.roomId = await createRoomFromTemplate(page, demo.templateName);

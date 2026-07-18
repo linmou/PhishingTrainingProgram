@@ -8,6 +8,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TutorView from '../pages/TutorView';
+import TestRoomsView from '../pages/TestRoomsView';
 import * as supabaseService from '../services/supabase';
 import * as aiService from '../services/aiService';
 
@@ -169,14 +170,58 @@ describe('Room Template Management', () => {
             expect(aiService.initializeAIAssistant).not.toHaveBeenCalled();
         });
 
-        test('should enable improved AI tutor when creating from a behavior template', async () => {
+        test('should hide behavior-demo templates on main Tutor dashboard', async () => {
+            const mockTemplates = [
+                {
+                    id: 'template-demo',
+                    template_name: 'Demo: Lock Icon Myth (Direct Correction)',
+                    title_template: 'Demo: Lock Icon Myth',
+                    description_template: 'x',
+                    image_url: null,
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
+                },
+                {
+                    id: 'template-normal',
+                    template_name: 'Global Privacy Template',
+                    title_template: 'Privacy',
+                    description_template: 'y',
+                    image_url: null,
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
+                }
+            ];
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(mockTemplates);
+
+            render(
+                <TestWrapper>
+                    <TutorView />
+                </TestWrapper>
+            );
+
+            fireEvent.click(screen.getByText('➕ Create a new Room'));
+
+            await waitFor(() => {
+                expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
+            });
+
+            const select = screen.getByLabelText(/use template/i) as HTMLSelectElement;
+            const optionTexts = Array.from(select.options).map((o) => o.textContent || '');
+            expect(optionTexts.join(' ')).toContain('Global Privacy Template');
+            expect(optionTexts.join(' ')).not.toContain('Demo: Lock Icon Myth');
+            expect(screen.getByTestId('test-rooms-link')).toHaveAttribute('href', '/tutor/test-rooms');
+        });
+
+        test('should create test rooms only from behavior templates on Test Rooms page', async () => {
             const mockCreateRoom = supabaseService.createRoom as jest.Mock;
             const mockTemplates = [
                 {
                     id: 'template-ai-1',
                     template_name: 'Demo: Lock Icon Myth (Direct Correction)',
                     title_template: 'Demo: Lock Icon Myth',
-                    description_template: 'Practice lock icon myth',
+                    description_template: 'Security notice shared in feed',
                     image_url: '/images/room-presets/phishing_2.png',
                     pre_populated_dialogue: [
                         {
@@ -229,21 +274,47 @@ describe('Room Template Management', () => {
 
             render(
                 <TestWrapper>
-                    <TutorView />
+                    <TestRoomsView />
                 </TestWrapper>
             );
 
-            fireEvent.click(screen.getByText('➕ Create a new Room'));
+            await waitFor(() => {
+                expect(supabaseService.getRoomTemplatesByTutor).toHaveBeenCalled();
+            });
+
+            fireEvent.click(screen.getByTestId('create-test-room'));
 
             await waitFor(() => {
                 expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
             });
 
-            fireEvent.change(screen.getByLabelText(/use template/i), {
+            const templateSelect = screen.getByLabelText(/use template/i);
+            await waitFor(() => {
+                expect(
+                    Array.from((templateSelect as HTMLSelectElement).options).some(
+                        (o) => o.value === 'template-ai-1'
+                    )
+                ).toBe(true);
+            });
+
+            fireEvent.change(templateSelect, {
                 target: { value: 'template-ai-1' }
             });
 
+            await waitFor(() => {
+                expect((templateSelect as HTMLSelectElement).value).toBe('template-ai-1');
+            });
+
             fireEvent.click(screen.getByText('🚀 Create Room'));
+
+            await waitFor(() => {
+                expect(mockCreateRoom).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        title: 'Demo: Lock Icon Myth',
+                        description: expect.stringContaining('[behavior-test-room]')
+                    })
+                );
+            });
 
             await waitFor(() => {
                 expect(aiService.initializeAIAssistant).toHaveBeenCalledWith(
@@ -258,21 +329,8 @@ describe('Room Template Management', () => {
                 );
             });
 
-            await waitFor(() => {
-                expect(aiService.updateAIConfig).toHaveBeenCalledWith(
-                    'room-ai-123',
-                    expect.objectContaining({
-                        temperature: 0.3,
-                        max_tokens: 100,
-                        is_active: true
-                    }),
-                    'tutor-123',
-                    'template_room_create'
-                );
-            });
-
             expect(
-                await screen.findByText(/Room created with improved AI tutor prompt enabled/i)
+                await screen.findByText(/Test room created with improved AI tutor prompt/i)
             ).toBeInTheDocument();
         });
 

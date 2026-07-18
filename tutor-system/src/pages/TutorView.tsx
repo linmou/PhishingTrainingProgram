@@ -9,6 +9,11 @@ import AvatarDisplay from '../components/AvatarDisplay';
 import DialogueCustomizer from '../components/DialogueCustomizer';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { ImageUploadResult, PrePopulatedMessage, RoomTemplate } from '../types';
+import {
+    isBehaviorDemoTemplateName,
+    isBehaviorTestRoom,
+    markBehaviorTestDescription
+} from '../utils/behaviorTestRooms';
 import '../components/TutorView.css';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
@@ -183,9 +188,18 @@ const TutorView: React.FC = () => {
         try {
             const imageUrl = getImageUrl();
 
+            const selectedTemplate = selectedTemplateId
+                ? templates.find((t) => t.id === selectedTemplateId)
+                : null;
+            // Behavior-demo templates belong on /tutor/test-rooms; tag if used here.
+            const isBehaviorDemo = isBehaviorDemoTemplateName(selectedTemplate?.template_name);
+            const roomDescription = isBehaviorDemo
+                ? markBehaviorTestDescription(description.trim())
+                : description.trim();
+
             const roomData = {
                 title: title.trim(),
-                description: description.trim(),
+                description: roomDescription,
                 tutor_id: user.id,
                 image_url: imageUrl,
                 pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null,
@@ -199,9 +213,6 @@ const TutorView: React.FC = () => {
 
             // If a global template ships AI config (improved casual_peer prompts),
             // enable the AI assistant so the fixed tutor behavior is live in the room.
-            const selectedTemplate = selectedTemplateId
-                ? templates.find((t) => t.id === selectedTemplateId)
-                : null;
             const aiTemplate = selectedTemplate?.ai_config_template;
             if (aiTemplate?.enabled && user?.id) {
                 const modelName = aiTemplate.model_name || 'gpt-4o-mini';
@@ -329,18 +340,27 @@ const TutorView: React.FC = () => {
                         <h1 className="dashboard-title">Tutor Dashboard</h1>
                         <p className="dashboard-subtitle">Welcome! You are logged in as a Tutor.</p>
                     </div>
-                    <Link 
-                        to="/profile" 
-                        className="dashboard-profile-link"
-                    >
-                        <AvatarDisplay
-                            avatarUrl={user?.avatar_url}
-                            displayName={user?.display_name || 'User'}
-                            size="small"
-                            className="nav-avatar"
-                        />
-                        <span>Profile</span>
-                    </Link>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <Link
+                            to="/tutor/test-rooms"
+                            className="dashboard-profile-link"
+                            data-testid="test-rooms-link"
+                        >
+                            <span>🧪 Test Rooms</span>
+                        </Link>
+                        <Link
+                            to="/profile"
+                            className="dashboard-profile-link"
+                        >
+                            <AvatarDisplay
+                                avatarUrl={user?.avatar_url}
+                                displayName={user?.display_name || 'User'}
+                                size="small"
+                                className="nav-avatar"
+                            />
+                            <span>Profile</span>
+                        </Link>
+                    </div>
                 </div>
 
                 {successMessage && (
@@ -384,7 +404,9 @@ const TutorView: React.FC = () => {
                                         disabled={isCreating}
                                     >
                                         <option value="">Create from scratch</option>
-                                        {templates.map((template) => (
+                                        {templates
+                                            .filter((t) => !isBehaviorDemoTemplateName(t.template_name))
+                                            .map((template) => (
                                             <option key={template.id} value={template.id}>
                                                 {template.template_name}
                                             </option>
@@ -647,6 +669,10 @@ const TutorView: React.FC = () => {
 
                 <div className="form-section">
                     <h2 className="form-section-title">📚 Your Rooms</h2>
+                    <p className="form-helper-text" style={{ marginBottom: '12px' }}>
+                        Behavior-eval rooms live on{' '}
+                        <Link to="/tutor/test-rooms">Test Rooms</Link>, not here.
+                    </p>
                     {/* Filter Bar */}
                     <div className="rooms-filter-bar">
                         <input
@@ -666,10 +692,12 @@ const TutorView: React.FC = () => {
                             <option value="inactive">Inactive</option>
                         </select>
                     </div>
-                    {rooms.length > 0 ? (
+                    {rooms.filter((r) => !isBehaviorTestRoom(r)).length > 0 ? (
                         <div className="rooms-grid">
                             {rooms
                                 .filter((room) => {
+                                    // Keep behavior-eval rooms off the main dashboard
+                                    if (isBehaviorTestRoom(room)) return false;
                                     // Status filter
                                     if (statusFilter === 'active' && !room.is_active) return false;
                                     if (statusFilter === 'inactive' && room.is_active) return false;
