@@ -100,3 +100,31 @@ Feature: Room Discovery and Joining
     When I view the student dashboard
     Then I should see the room card for "Art History"
     And the room card should display the "art-history.jpg" preview image
+
+  # --- Hide behavior-test / browser-demo harness rooms from student discovery ---
+  # Spec coverage: features/student_view.feature (same rules) + mock tests
+  # src/pages/__tests__/StudentView.roomVisibility.test.tsx
+  # src/utils/__tests__/behaviorTestRooms.test.ts
+
+  Scenario: Student does not discover behavior-test or DemoTutor harness rooms
+    Given I am logged in as "Jane Student" with role "student"
+    And the tutor "John Tutor" has created a room titled "Math Basics" with description "Introduction to algebra"
+    And a behavior-test room titled "Demo: Lock Icon Myth" exists
+    And a behavior-test room titled "Internal Eval" is tagged with the behavior-test marker
+    And the harness tutor "DemoTutor_615166" has created a room titled "Account Security Alert Scam"
+    When I view the student dashboard
+    Then I should see the available rooms section
+    And I should see a room card with:
+      | Title       | Math Basics              |
+      | Tutor       | John Tutor               |
+      | Description | Introduction to algebra  |
+    And I should not see a room titled "Demo: Lock Icon Myth"
+    And I should not see a room titled "Internal Eval"
+    And I should not see tutor "DemoTutor_615166" on the student dashboard
+
+  Scenario: Student still discovers classic teaching rooms from real tutors
+    Given I am logged in as "Jane Student" with role "student"
+    And the tutor "Adele" has created a room titled "Account Security Alert Scam" with description "class period 4"
+    When I view the student dashboard
+    Then I should see a room card for "Account Security Alert Scam"
+    And I should see tutor "Adele" on the student dashboard

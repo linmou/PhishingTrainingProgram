@@ -5,6 +5,7 @@ import { Database } from '../types/database';
 import RoomCard from '../components/RoomCard';
 import AvatarDisplay from '../components/AvatarDisplay';
 import { useAuth } from '../contexts/AuthContext';
+import { filterRoomsForStudentList } from '../utils/behaviorTestRooms';
 // Reuse grid and card styles from Tutor dashboard
 import '../components/TutorView.css';
 
@@ -77,8 +78,8 @@ const StudentView: React.FC = () => {
                 return;
             }
 
-            // No capacity limits - all rooms are always available
-            const roomsWithStatus = (roomsData || []).map((room) => ({
+            // No capacity limits. Hide test/harness rooms (marker, Demo: titles, DemoTutor_*).
+            const roomsWithStatus = filterRoomsForStudentList(roomsData || []).map((room) => ({
                 ...room,
                 status: 'Available',
                 isJoinDisabled: false

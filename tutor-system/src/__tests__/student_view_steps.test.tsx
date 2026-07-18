@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import StudentView from '../pages/StudentView';
 import RoomPage from '../pages/RoomPage';
+import { BEHAVIOR_TEST_ROOM_MARKER } from '../utils/behaviorTestRooms';
 
 const feature = loadFeature('./features/student_view.feature');
 
@@ -288,6 +289,209 @@ defineFeature(feature, test => {
         then('the user should be navigated to the room page for "Phishing 101"', async () => {
             await waitFor(() => {
                 expect(location.pathname).toBe('/room/r-1');
+            });
+        });
+    });
+
+    // --- Test / harness room visibility (features/student_view.feature) ---
+    // Parallel mock depth: StudentView.roomVisibility.test.tsx + behaviorTestRooms.test.ts
+
+    test('Student does not see behavior-test rooms tagged with the marker', ({ given, and, when, then }) => {
+        given('a user is authenticated', () => {});
+        given('the user is logged in as a "Student"', () => {});
+        and('an active teaching room titled "Phishing 101" exists', () => {
+            mockRoomsData = [
+                {
+                    id: 'teach-1',
+                    title: 'Phishing 101',
+                    description: 'Normal class',
+                    is_active: true,
+                    tutor: { id: 'g', display_name: 'Grace' },
+                },
+            ];
+        });
+        and('an active room titled "Internal Eval Room" is tagged as a behavior-test room', () => {
+            mockRoomsData = [
+                ...mockRoomsData,
+                {
+                    id: 'test-1',
+                    title: 'Internal Eval Room',
+                    description: `harness\n\n${BEHAVIOR_TEST_ROOM_MARKER}`,
+                    is_active: true,
+                    tutor: { id: 'g', display_name: 'Grace' },
+                },
+            ];
+        });
+        when('the student is on the dashboard', () => {
+            renderStudentView();
+        });
+        then('the student should see the room "Phishing 101" in the list', async () => {
+            await waitFor(() => {
+                expect(screen.getByText('Phishing 101')).toBeInTheDocument();
+            });
+        });
+        and('the student should not see the room "Internal Eval Room" in the list', () => {
+            expect(screen.queryByText('Internal Eval Room')).not.toBeInTheDocument();
+        });
+    });
+
+    test('Student does not see Demo-titled test rooms', ({ given, and, when, then }) => {
+        given('a user is authenticated', () => {});
+        given('the user is logged in as a "Student"', () => {});
+        and('an active teaching room titled "Phishing 101" exists', () => {
+            mockRoomsData = [
+                {
+                    id: 'teach-1',
+                    title: 'Phishing 101',
+                    is_active: true,
+                    tutor: { id: 'g', display_name: 'Grace' },
+                },
+            ];
+        });
+        and('an active room titled "Demo: Lock Icon Myth" exists', () => {
+            mockRoomsData = [
+                ...mockRoomsData,
+                {
+                    id: 'demo-1',
+                    title: 'Demo: Lock Icon Myth',
+                    description: 'practice',
+                    is_active: true,
+                    tutor: { id: 'g', display_name: 'Grace' },
+                },
+            ];
+        });
+        when('the student is on the dashboard', () => {
+            renderStudentView();
+        });
+        then('the student should see the room "Phishing 101" in the list', async () => {
+            await waitFor(() => {
+                expect(screen.getByText('Phishing 101')).toBeInTheDocument();
+            });
+        });
+        and('the student should not see the room "Demo: Lock Icon Myth" in the list', () => {
+            expect(screen.queryByText('Demo: Lock Icon Myth')).not.toBeInTheDocument();
+        });
+    });
+
+    test('Student does not see rooms owned by DemoTutor harness accounts', ({ given, and, when, then }) => {
+        given('a user is authenticated', () => {});
+        given('the user is logged in as a "Student"', () => {});
+        and('an active teaching room titled "Phishing 101" exists with tutor "Grace"', () => {
+            mockRoomsData = [
+                {
+                    id: 'teach-1',
+                    title: 'Phishing 101',
+                    is_active: true,
+                    tutor: { id: 'g', display_name: 'Grace' },
+                },
+            ];
+        });
+        and('an active room titled "Account Security Alert Scam" is owned by tutor "DemoTutor_615166"', () => {
+            mockRoomsData = [
+                ...mockRoomsData,
+                {
+                    id: 'h1',
+                    title: 'Account Security Alert Scam',
+                    description: 'YOUR ACCOUNT IS AT RISK',
+                    is_active: true,
+                    tutor: { id: 'd1', display_name: 'DemoTutor_615166' },
+                },
+            ];
+        });
+        and('an active room titled "Nintendo Switch Deal Scam" is owned by tutor "DemoTutor_962226"', () => {
+            mockRoomsData = [
+                ...mockRoomsData,
+                {
+                    id: 'h2',
+                    title: 'Nintendo Switch Deal Scam',
+                    description: 'Get a BRAND new Nintendo Switch',
+                    is_active: true,
+                    tutor: { id: 'd2', display_name: 'DemoTutor_962226' },
+                },
+            ];
+        });
+        when('the student is on the dashboard', () => {
+            renderStudentView();
+        });
+        then('the student should see the room "Phishing 101" in the list', async () => {
+            await waitFor(() => {
+                expect(screen.getByText('Phishing 101')).toBeInTheDocument();
+            });
+        });
+        and('the student should not see the room "Nintendo Switch Deal Scam" in the list', () => {
+            expect(screen.queryByText('Nintendo Switch Deal Scam')).not.toBeInTheDocument();
+        });
+        and('the student should not see tutor "DemoTutor_615166" on the dashboard', () => {
+            expect(screen.queryByText('DemoTutor_615166')).not.toBeInTheDocument();
+        });
+        and('the student should not see tutor "DemoTutor_962226" on the dashboard', () => {
+            expect(screen.queryByText('DemoTutor_962226')).not.toBeInTheDocument();
+        });
+    });
+
+    test('Student still sees real classic teaching rooms from normal tutors', ({ given, and, when, then }) => {
+        given('a user is authenticated', () => {});
+        given('the user is logged in as a "Student"', () => {});
+        and('an active room titled "Account Security Alert Scam" is owned by tutor "Adele"', () => {
+            mockRoomsData = [
+                {
+                    id: 'real-1',
+                    title: 'Account Security Alert Scam',
+                    description: 'class period 4',
+                    is_active: true,
+                    tutor: { id: 'a', display_name: 'Adele' },
+                },
+            ];
+        });
+        when('the student is on the dashboard', () => {
+            renderStudentView();
+        });
+        then('the student should see the room "Account Security Alert Scam" in the list', async () => {
+            await waitFor(() => {
+                expect(screen.getByText('Account Security Alert Scam')).toBeInTheDocument();
+            });
+        });
+        and('the student should see tutor "Adele" on the dashboard', async () => {
+            await waitFor(() => {
+                expect(screen.getByText('Adele')).toBeInTheDocument();
+            });
+        });
+    });
+
+    test('Student sees empty list when only test or harness rooms are active', ({ given, and, when, then }) => {
+        given('a user is authenticated', () => {});
+        given('the user is logged in as a "Student"', () => {});
+        and('the only active rooms are behavior-test or DemoTutor harness rooms', () => {
+            mockRoomsData = [
+                {
+                    id: 'd1',
+                    title: 'Demo: Pressure Words',
+                    description: 'x',
+                    is_active: true,
+                    tutor: { id: 'd', display_name: 'DemoTutor_000001' },
+                },
+                {
+                    id: 'm1',
+                    title: 'Any',
+                    description: BEHAVIOR_TEST_ROOM_MARKER,
+                    is_active: true,
+                    tutor: { id: 'g', display_name: 'Grace' },
+                },
+            ];
+        });
+        when('the student is on the dashboard', () => {
+            renderStudentView();
+        });
+        then('the student should see the message "No rooms available"', async () => {
+            await waitFor(() => {
+                expect(screen.getByText('No rooms available')).toBeInTheDocument();
+            });
+        });
+        and('the student should see the message "Please wait for a tutor to create a room."', async () => {
+            await waitFor(() => {
+                expect(
+                    screen.getByText('Please wait for a tutor to create a room.')
+                ).toBeInTheDocument();
             });
         });
     });

@@ -4,14 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
-import App from '../../App';
-import StudentView from '../../pages/StudentView';
-import ObserverView from '../../pages/ObserverView';
-import RoomPage from '../../pages/RoomPage';
-import { supabase } from '../../services/supabase';
+import App from '../App';
+import StudentView from '../pages/StudentView';
+import ObserverView from '../pages/ObserverView';
+import RoomPage from '../pages/RoomPage';
+import { supabase } from '../services/supabase';
 
 // Mock Supabase
-jest.mock('../../services/supabase', () => ({
+jest.mock('../services/supabase', () => ({
   supabase: {
     auth: {
       signInWithPassword: jest.fn(),
@@ -38,7 +38,7 @@ jest.mock('react-router-dom', () => {
 // Mock AuthContext
 let mockAuthUser: any = null;
 const mockJoinWithNameAndRole = jest.fn();
-jest.mock('../../contexts/AuthContext', () => ({
+jest.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
     user: mockAuthUser,
     loading: false,
@@ -69,7 +69,7 @@ let mockRoomContextValue: any = {
   downloadChatHistory: jest.fn(),
 };
 
-jest.mock('../../contexts/RoomContext', () => ({
+jest.mock('../contexts/RoomContext', () => ({
   useRoom: () => mockRoomContextValue,
   RoomProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -255,6 +255,10 @@ describe('Feature: Room Discovery and Joining', () => {
           expect(screen.getByText('Available')).toBeInTheDocument();
         });
       });
+
+      // Student test/harness room visibility: see
+      // pages/__tests__/StudentView.roomVisibility.test.tsx and
+      // utils/__tests__/behaviorTestRooms.test.ts (filterRoomsForStudentList).
     });
 
     describe('Scenario: Student sees waiting message when no rooms available', () => {
