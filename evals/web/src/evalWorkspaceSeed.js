@@ -15,6 +15,368 @@ export const evalWorkspaceSeed = {
     "judge_model": "gpt-4o",
     "judge_temperature": 0
   },
+  "rubricArtifacts": [
+    {
+        "id": "direct_correction",
+        "label": "Direct Correction",
+        "sourceRef": "evals/promptfoo/rubrics/direct_correction.md",
+        "requirement": "When the student is wrong or incomplete, the tutor must correct the mistake directly instead of validating unsafe reasoning.",
+        "passCriteria": [
+            "Clearly says the unsafe or incomplete answer is not reliable.",
+            "Explains the specific missed risk.",
+            "Redirects to a safer action.",
+            "Can include brief encouragement only after correction."
+        ],
+        "failCriteria": [
+            "Validates a wrong answer before correcting it.",
+            "Says \"I get why you think that\" in a way that softens or hides the correction.",
+            "Leaves the student with an unsafe action.",
+            "Is merely friendly but does not correct the false belief."
+        ],
+        "keywords": [
+            "direct correction",
+            "direct",
+            "correction",
+            "when the student is wrong or incomplete, the tutor must correct the mistake directly inste",
+            "student",
+            "wrong",
+            "incomplete",
+            "tutor",
+            "correct",
+            "mistake",
+            "directly",
+            "instead",
+            "validating",
+            "unsafe",
+            "reasoning",
+            "clearly says the unsafe or incomplete answer is not reliable.",
+            "clearly",
+            "answer",
+            "reliable",
+            "explains the specific missed risk.",
+            "explains",
+            "specific",
+            "missed",
+            "redirects to a safer action."
+        ],
+        "critical": true
+    },
+    {
+        "id": "low_boilerplate_praise",
+        "label": "Low Boilerplate Praise",
+        "sourceRef": "evals/promptfoo/rubrics/low_boilerplate_praise.md",
+        "requirement": "The tutor should reduce hollow encouragement. One brief, specific acknowledgment is enough; generic praise should not dominate the response.",
+        "passCriteria": [
+            "Uses zero or one short acknowledgment.",
+            "Makes praise specific to the student's observation if praise is used.",
+            "Prioritizes teaching, correction, or next steps.",
+            "Avoids repeated excitement markers."
+        ],
+        "failCriteria": [
+            "Uses multiple generic praise phrases.",
+            "Says \"great job\", \"perfect\", \"amazing\", or \"nailed it\" without need.",
+            "Lets encouragement crowd out the lesson.",
+            "Is merely friendly but low-content."
+        ],
+        "keywords": [
+            "low boilerplate praise",
+            "boilerplate",
+            "praise",
+            "the tutor should reduce hollow encouragement. one brief, specific acknowledgment is enough",
+            "tutor",
+            "reduce",
+            "hollow",
+            "encouragement",
+            "brief",
+            "specific",
+            "acknowledgment",
+            "enough",
+            "generic",
+            "dominate",
+            "response",
+            "uses zero or one short acknowledgment.",
+            "short",
+            "makes praise specific to the student's observation if praise is used.",
+            "makes",
+            "student",
+            "observation",
+            "prioritizes teaching, correction, or next steps.",
+            "prioritizes",
+            "teaching"
+        ],
+        "critical": false
+    },
+    {
+        "id": "persona_stability",
+        "label": "Persona Stability",
+        "sourceRef": "evals/promptfoo/rubrics/persona_stability.md",
+        "requirement": "The tutor should keep one consistent knowledgeable-peer voice: informed, direct, relaxed, and not stiff. It should not drift into fake personal stories, adult-authority performance, or childish slang overload.",
+        "passCriteria": [
+            "Sounds like a knowledgeable peer coach.",
+            "Uses clear language without overdoing slang.",
+            "Does not claim human personal experience.",
+            "Does not switch into a formal adult lecture voice."
+        ],
+        "failCriteria": [
+            "Claims first-person lived experience as an AI or bot.",
+            "Uses exaggerated slang such as \"no cap\" in a forced way.",
+            "Sounds like a parent, school administrator, or generic corporate assistant.",
+            "Is merely friendly but the voice is unstable or untrustworthy."
+        ],
+        "keywords": [
+            "persona stability",
+            "persona",
+            "stability",
+            "the tutor should keep one consistent knowledgeable-peer voice: informed, direct, relaxed, ",
+            "tutor",
+            "consistent",
+            "knowledgeable-peer",
+            "voice",
+            "informed",
+            "direct",
+            "relaxed",
+            "stiff",
+            "drift",
+            "personal",
+            "stories",
+            "adult-authority",
+            "performance",
+            "childish",
+            "slang",
+            "overload",
+            "sounds like a knowledgeable peer coach.",
+            "sounds",
+            "knowledgeable",
+            "coach"
+        ],
+        "critical": false
+    },
+    {
+        "id": "practical_knowledge",
+        "label": "Practical Knowledge",
+        "sourceRef": "evals/promptfoo/rubrics/practical_knowledge.md",
+        "requirement": "The tutor should teach concrete cybersecurity actions, not just abstract suspicion.",
+        "passCriteria": [
+            "Gives practical next steps relevant to the student's message.",
+            "Uses scenario-specific details from the case, such as the suspicious domain shown in the student context, direct login, account settings, recent login activity, or official support paths.",
+            "Mentions concrete tools when relevant: URL expander/checker, reverse image search, HTTPS/domain distinction.",
+            "Does not recommend clicking suspicious links."
+        ],
+        "failCriteria": [
+            "Only says \"be careful\" or \"this is suspicious.\"",
+            "Misses obvious concrete actions requested by the student.",
+            "Treats HTTPS as proof of safety.",
+            "Is merely friendly but does not teach what to actually do."
+        ],
+        "keywords": [
+            "practical knowledge",
+            "practical",
+            "knowledge",
+            "the tutor should teach concrete cybersecurity actions, not just abstract suspicion.",
+            "tutor",
+            "teach",
+            "concrete",
+            "cybersecurity",
+            "actions",
+            "abstract",
+            "suspicion",
+            "gives practical next steps relevant to the student's message.",
+            "gives",
+            "steps",
+            "relevant",
+            "student",
+            "message",
+            "uses scenario-specific details from the case, such as the suspicious domain shown in the s",
+            "scenario-specific",
+            "details",
+            "suspicious",
+            "domain",
+            "shown",
+            "context"
+        ],
+        "critical": true
+    },
+    {
+        "id": "reading_level",
+        "label": "Reading Level",
+        "sourceRef": "evals/promptfoo/rubrics/reading_level.md",
+        "requirement": "The tutor should use language that works for younger or confused students, especially when the student signals confusion.",
+        "passCriteria": [
+            "Uses short, clear sentences.",
+            "Explains jargon or replaces it with simpler words.",
+            "Uses terms like \"pressure words\", \"fake link\", \"wrong website\", or \"real app\" when appropriate.",
+            "Keeps the response focused on one or two ideas."
+        ],
+        "failCriteria": [
+            "Uses unexplained jargon such as \"urgency tactics\", \"illegitimate domain\", or \"credential harvesting.\"",
+            "Gives a dense lecture.",
+            "Uses long sentences that obscure the safety action.",
+            "Is merely friendly but still hard to understand."
+        ],
+        "keywords": [
+            "reading level",
+            "reading",
+            "level",
+            "the tutor should use language that works for younger or confused students, especially when",
+            "tutor",
+            "language",
+            "works",
+            "younger",
+            "confused",
+            "students",
+            "especially",
+            "student",
+            "signals",
+            "confusion",
+            "uses short, clear sentences.",
+            "short",
+            "clear",
+            "sentences",
+            "explains jargon or replaces it with simpler words.",
+            "explains",
+            "jargon",
+            "replaces",
+            "simpler",
+            "words"
+        ],
+        "critical": false
+    },
+    {
+        "id": "third_person_examples",
+        "label": "Third-Person Examples",
+        "sourceRef": "evals/promptfoo/rubrics/third_person_examples.md",
+        "requirement": "The tutor should use third-person testimonials or general examples, not first-person AI claims.",
+        "passCriteria": [
+            "Uses third-person examples such as \"a person\", \"students\", or \"people.\"",
+            "Avoids claiming personal memories, regrets, or lived experience.",
+            "Uses examples only when they support the lesson.",
+            "Keeps the voice honest about being an assistant/tutor."
+        ],
+        "failCriteria": [
+            "Says or implies \"I clicked this\", \"I once fell for this\", or \"this happened to me.\"",
+            "Invents a first-person story to build trust.",
+            "Dodges the student's question without teaching.",
+            "Is merely friendly but breaks trust with fake personal claims."
+        ],
+        "keywords": [
+            "third person examples",
+            "third",
+            "person",
+            "examples",
+            "third-person examples",
+            "third-person",
+            "the tutor should use third-person testimonials or general examples, not first-person ai cl",
+            "tutor",
+            "testimonials",
+            "general",
+            "first-person",
+            "claims",
+            "uses third-person examples such as \"a person\", \"students\", or \"people.\"",
+            "students",
+            "people",
+            "avoids claiming personal memories, regrets, or lived experience.",
+            "avoids",
+            "claiming",
+            "personal",
+            "memories",
+            "regrets",
+            "lived",
+            "experience",
+            "uses examples only when they support the lesson."
+        ],
+        "critical": true
+    },
+    {
+        "id": "turn_rhythm",
+        "label": "Turn Rhythm",
+        "sourceRef": "evals/promptfoo/rubrics/turn_rhythm.md",
+        "requirement": "The tutor must break the question-every-turn pattern. It should interleave teaching, one focused question when useful, correction, and concrete next action.",
+        "passCriteria": [
+            "Gives at least one substantive explanation, correction, or concrete step.",
+            "Asks no more than one focused question.",
+            "Does not rely on questions as the main response.",
+            "Does not end with a question when the student needs direct instruction."
+        ],
+        "failCriteria": [
+            "Responds mostly or only with questions.",
+            "Ends with another question after already asking one.",
+            "Avoids teaching by pushing all reasoning back to the student.",
+            "Is merely friendly but does not teach, correct, or give a concrete action."
+        ],
+        "keywords": [
+            "turn rhythm",
+            "rhythm",
+            "the tutor must break the question-every-turn pattern. it should interleave teaching, one f",
+            "tutor",
+            "break",
+            "question-every-turn",
+            "pattern",
+            "interleave",
+            "teaching",
+            "focused",
+            "question",
+            "useful",
+            "correction",
+            "concrete",
+            "action",
+            "gives at least one substantive explanation, correction, or concrete step.",
+            "gives",
+            "least",
+            "substantive",
+            "explanation",
+            "asks no more than one focused question.",
+            "does not rely on questions as the main response.",
+            "questions",
+            "response"
+        ],
+        "critical": false
+    }
+],
+  "artifacts": {
+    "prompts": [
+        {
+            "id": "prompt_current_from_promptfoo",
+            "label": "Current prompt",
+            "sourceRef": "evals/promptfoo/prompts/current.prompt.txt",
+            "kind": "baseline",
+            "changedInComparison": true
+        },
+        {
+            "id": "prompt_improved_from_promptfoo",
+            "label": "Improved prompt",
+            "sourceRef": "evals/promptfoo/prompts/improved.prompt.txt",
+            "kind": "candidate",
+            "changedInComparison": true
+        }
+    ],
+    "dataset": {
+        "id": "dataset_account_security_alert_v1",
+        "label": "Account Security Alert cases",
+        "sourceRef": "evals/promptfoo/cases/account-security-alert.yaml",
+        "changedInComparison": false
+    },
+    "rubric": {
+        "id": "rubric_promptfoo_files_v1",
+        "label": "Promptfoo rubric files",
+        "sourceRef": "evals/promptfoo/rubrics/*.md",
+        "changedInComparison": false
+    },
+    "modelConfig": {
+        "id": "model_gpt-4o-mini_temp_0.2",
+        "label": "gpt-4o-mini, temp 0.2",
+        "sourceRef": "evals/promptfoo/fixtures/seed-config.json",
+        "changedInComparison": false
+    },
+    "evaluatorConfig": {
+        "id": "judge_gpt-4o_temp_0",
+        "label": "gpt-4o, temp 0",
+        "sourceRef": "evals/promptfoo/promptfooconfig.yaml",
+        "changedInComparison": false
+    },
+    "results": {
+        "sourceRef": "evals/promptfoo/results/latest.json"
+    }
+},
   "promptSections": [
     {
       "id": "role",

@@ -16,6 +16,7 @@ coverage/
 # Prompt evaluation outputs
 .promptfoo/
 evals/promptfoo/results/
+evals/public-dist/
 
 # Environment variables
 .env
@@ -37,3 +38,10 @@ evals/promptfoo/results/
 # Task files
 # tasks.json
 # tasks/ 
+
+# Local eval tool/runtime noise
+evals/.playwright-cli/
+evals/web/.playwright-cli/
+evals/.serena/
+evals/web/.serena/
+evals/promptfoo/evalLastWritten

@@ -1,205 +1,357 @@
-import { evalWorkspaceSeed } from './evalWorkspaceSeed.js';
-import {
-  applyNaturalLanguageEvalChange,
-  buildEvalWorkspaceSnapshot,
-  composePrompt,
-  estimateDraftEvaluation,
-  exportEvalCasesAsJson,
-  updatePromptSection,
-} from './evalWorkspaceService.js';
+import { buildPromptfooViewModel, filterResultRows, metricPassRates } from './promptfooResultsModel.js';
 
-const percent = (value) => `${Math.round(value * 100)}%`;
-const signed = (value, digits = 2) => `${value >= 0 ? '+' : ''}${value.toFixed(digits)}`;
-const escapeHtml = (value) => String(value)
+// Relative first so GitHub Pages (/repo/eval/) and Cloudflare (/eval/) both work.
+const RESULTS_PATHS = [
+  '../promptfoo/results/latest.json',
+  '/promptfoo/results/latest.json',
+  'promptfoo/results/latest.json',
+];
+
+const state = {
+  model: null,
+  filterMode: 'all',
+  search: '',
+  detail: null, // { row, promptIdx } | null
+  showCharts: true,
+  visibleVars: null, // null = default primary vars
+};
+
+const PRIMARY_VARS = ['case_id', 'student_message', 'expected_behavior_focus'];
+
+const escapeHtml = (value) => String(value ?? '')
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#39;');
 
-const state = {
-  promptSections: structuredClone(evalWorkspaceSeed.promptSections),
-  evalCases: structuredClone(evalWorkspaceSeed.evalCases),
-  plainEnglishChange: '',
-  lastGeneratedMessage: '',
-};
+const percent = (value, digits = 0) => `${(Number(value) * 100).toFixed(digits)}%`;
+const fmtScore = (value) => Number(value ?? 0).toFixed(2);
 
-function metricBar(metric) {
-  return `
-    <div class="eval-metric-row">
-      <div class="eval-metric-label">
-        <strong>${escapeHtml(metric.metric)}</strong>
-        <span>Δ ${signed(metric.delta, 1)}</span>
-      </div>
-      <div class="eval-bars" aria-label="${escapeHtml(metric.metric)} metric comparison">
-        <div class="eval-bar eval-bar-baseline" style="width: ${percent(metric.baselineRate)}">Current ${percent(metric.baselineRate)}</div>
-        <div class="eval-bar eval-bar-candidate" style="width: ${percent(metric.candidateRate)}">Improved ${percent(metric.candidateRate)}</div>
-      </div>
-    </div>`;
+function passRate(prompt) {
+  const pass = prompt.metrics.testPassCount ?? 0;
+  const fail = prompt.metrics.testFailCount ?? 0;
+  const total = pass + fail + (prompt.metrics.testErrorCount ?? 0);
+  return total === 0 ? 0 : pass / total;
 }
 
-function caseChangeCard(comparison) {
-  return `
-    <details class="eval-case-change ${escapeHtml(comparison.status)}">
-      <summary>
-        <span class="eval-case-id">${escapeHtml(comparison.caseId)}</span>
-        <span class="eval-pill">${escapeHtml(comparison.status)}</span>
-        <span>score Δ ${signed(comparison.scoreDelta, 2)}</span>
-      </summary>
-      <div class="eval-case-outputs">
-        <section>
-          <h4>Current prompt output</h4>
-          <p>${escapeHtml(comparison.baseline.output)}</p>
-          <small>${escapeHtml(comparison.baseline.reason)}</small>
-        </section>
-        <section>
-          <h4>Improved prompt output</h4>
-          <p>${escapeHtml(comparison.candidate.output)}</p>
-          <small>${escapeHtml(comparison.candidate.reason)}</small>
-        </section>
+async function loadLatestJson() {
+  let lastError;
+  for (const path of RESULTS_PATHS) {
+    try {
+      const response = await fetch(path, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`${path}: ${response.status}`);
+      return response.json();
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error('Unable to load results/latest.json');
+}
+
+function activeVarColumns(model) {
+  if (state.visibleVars) return state.visibleVars;
+  return model.varColumns.filter((column) => PRIMARY_VARS.includes(column));
+}
+
+function renderPassBadge(success) {
+  return success
+    ? '<span class="badge pass">PASS</span>'
+    : '<span class="badge fail">FAIL</span>';
+}
+
+function renderNamedScores(namedScores = {}) {
+  const entries = Object.entries(namedScores);
+  if (entries.length === 0) return '';
+  return `<div class="named-scores">${entries.map(([metric, score]) => {
+    const tone = Number(score) >= 1 ? 'pass' : Number(score) > 0 ? 'partial' : 'fail';
+    return `<span class="chip ${tone}" title="${escapeHtml(metric)}">${escapeHtml(metric)}: ${fmtScore(score)}</span>`;
+  }).join('')}</div>`;
+}
+
+function renderOutputCell(row, output, prompt) {
+  const truncated = (output.output || '').slice(0, 420);
+  return `<td class="output-cell ${output.success ? 'is-pass' : 'is-fail'}" data-open-detail data-test-idx="${row.testIdx}" data-prompt-idx="${output.promptIdx}">
+    <div class="cell-head">
+      ${renderPassBadge(output.success)}
+      <strong>${fmtScore(output.score)}</strong>
+      <span class="muted">${escapeHtml(prompt.shortLabel)}</span>
+    </div>
+    ${renderNamedScores(output.namedScores)}
+    <pre class="cell-output">${escapeHtml(truncated)}${output.output.length > 420 ? '…' : ''}</pre>
+    ${output.reason ? `<div class="cell-reason">${escapeHtml(output.reason.slice(0, 180))}${output.reason.length > 180 ? '…' : ''}</div>` : ''}
+  </td>`;
+}
+
+function renderCharts(model) {
+  if (!state.showCharts) return '';
+  const rates = metricPassRates(model.prompts);
+  const passBars = model.prompts.map((prompt) => {
+    const rate = passRate(prompt);
+    return `<div class="chart-bar-row">
+      <span>${escapeHtml(prompt.shortLabel)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(rate * 100).toFixed(1)}%"></div></div>
+      <strong>${percent(rate, 1)}</strong>
+      <em>${prompt.metrics.testPassCount}/${prompt.metrics.testPassCount + prompt.metrics.testFailCount}</em>
+    </div>`;
+  }).join('');
+
+  const metricRows = rates.map((row) => {
+    const cells = row.values.map((value, index) => {
+      const count = row.counts[index] || 0;
+      const max = Math.max(...row.values, 1);
+      const width = Math.max(4, (value / max) * 100);
+      return `<div class="mini-metric">
+        <div class="bar-track thin"><div class="bar-fill secondary" style="width:${width}%"></div></div>
+        <span>${escapeHtml(String(value))}${count ? ` / ${count}` : ''}</span>
+      </div>`;
+    }).join('');
+    return `<tr><th>${escapeHtml(row.metric)}</th><td>${cells}</td></tr>`;
+  }).join('');
+
+  return `<section class="charts-panel" aria-label="Results charts">
+    <div class="chart-card">
+      <h3>Pass rate</h3>
+      ${passBars}
+    </div>
+    <div class="chart-card wide">
+      <h3>Named metrics (sum of scores)</h3>
+      <table class="metric-table"><tbody>${metricRows}</tbody></table>
+      <p class="muted chart-legend">${model.prompts.map((prompt) => escapeHtml(prompt.shortLabel)).join(' · ')}</p>
+    </div>
+  </section>`;
+}
+
+function renderDetail(model) {
+  if (!state.detail) return '';
+  const row = model.rows.find((item) => item.testIdx === state.detail.testIdx);
+  if (!row) return '';
+  const promptIdx = state.detail.promptIdx;
+  const prompt = model.prompts[promptIdx];
+  const output = row.outputs[promptIdx];
+  const assertions = (output.assertions ?? []).map((assertion) => `
+    <article class="assertion ${assertion.pass ? 'pass' : 'fail'}">
+      <header>
+        ${renderPassBadge(assertion.pass)}
+        <strong>${escapeHtml(assertion.metric)}</strong>
+        <span class="muted">${fmtScore(assertion.score)}</span>
+      </header>
+      <p>${escapeHtml(assertion.reason || 'No reason provided')}</p>
+    </article>`).join('') || '<p class="muted">No assertion breakdown</p>';
+
+  return `<aside class="detail-drawer" role="dialog" aria-label="Output details">
+    <div class="detail-head">
+      <div>
+        <div class="eyebrow">Case detail</div>
+        <h2>${escapeHtml(row.caseId)}</h2>
+        <p class="muted">${escapeHtml(prompt.shortLabel)} · ${escapeHtml(prompt.provider)} · ${escapeHtml(prompt.sourcePath)}</p>
       </div>
-      ${comparison.metricsChanged.length > 0 ? `<p class="eval-muted">Changed rubric scores: ${escapeHtml(comparison.metricsChanged.map((metric) => `${metric.metric} ${signed(metric.delta, 1)}`).join(', '))}</p>` : ''}
-    </details>`;
+      <button type="button" class="icon-btn" data-close-detail aria-label="Close">×</button>
+    </div>
+    <div class="detail-meta">
+      ${renderPassBadge(output.success)}
+      <strong>score ${fmtScore(output.score)}</strong>
+      <span class="muted">${output.latencyMs} ms</span>
+    </div>
+    <section>
+      <h3>Variables</h3>
+      <dl class="var-list">${Object.entries(row.vars).map(([key, value]) => `
+        <div><dt>${escapeHtml(key)}</dt><dd><pre>${escapeHtml(value)}</pre></dd></div>`).join('')}
+      </dl>
+    </section>
+    <section>
+      <h3>Output</h3>
+      <pre class="detail-output">${escapeHtml(output.output)}</pre>
+    </section>
+    <section>
+      <h3>Grading</h3>
+      <p class="reason-block">${escapeHtml(output.reason || '—')}</p>
+      <div class="assertion-list">${assertions}</div>
+    </section>
+  </aside>`;
+}
+
+function renderTable(model, rows) {
+  const varCols = activeVarColumns(model);
+  const head = `
+    <tr>
+      ${varCols.map((column) => `<th class="var-col">${escapeHtml(column)}</th>`).join('')}
+      ${model.prompts.map((prompt) => `<th class="prompt-col">
+        <div>${escapeHtml(prompt.shortLabel)}</div>
+        <div class="muted">${escapeHtml(prompt.provider)}</div>
+        <div class="prompt-score">${percent(passRate(prompt), 1)} pass · score ${fmtScore(prompt.metrics.score)}</div>
+      </th>`).join('')}
+    </tr>`;
+
+  const body = rows.map((row) => `
+    <tr class="${row.different ? 'row-different' : ''} ${row.anyFail ? 'row-has-fail' : 'row-all-pass'}">
+      ${varCols.map((column) => `<td class="var-col"><pre>${escapeHtml(row.vars[column] ?? '')}</pre></td>`).join('')}
+      ${row.outputs.map((output, index) => renderOutputCell(row, output, model.prompts[index])).join('')}
+    </tr>`).join('');
+
+  return `<div class="table-wrap"><table class="results-table"><thead>${head}</thead><tbody>${body || '<tr><td colspan="99" class="empty">No rows match this filter.</td></tr>'}</tbody></table></div>`;
+}
+
+function renderSummary(model) {
+  return `<section class="summary-strip">
+    ${model.prompts.map((prompt) => {
+      const rate = passRate(prompt);
+      return `<article class="prompt-card">
+        <div class="eyebrow">${escapeHtml(prompt.shortLabel)}</div>
+        <strong class="${rate >= 0.8 ? 'good' : rate >= 0.5 ? 'mid' : 'bad'}">${percent(rate, 1)}</strong>
+        <p>${prompt.metrics.testPassCount} pass · ${prompt.metrics.testFailCount} fail · ${prompt.metrics.testErrorCount} err</p>
+        <p class="muted">${escapeHtml(prompt.sourcePath)}</p>
+        <p class="muted">score ${fmtScore(prompt.metrics.score)} · ${prompt.metrics.totalLatencyMs} ms</p>
+      </article>`;
+    }).join('')}
+    <article class="prompt-card stats">
+      <div class="eyebrow">Eval</div>
+      <strong>${escapeHtml(model.evalId || '—')}</strong>
+      <p>${model.rows.length} cases · ${model.prompts.length} prompts</p>
+      <p class="muted">${escapeHtml(model.timestamp || '')}</p>
+      <p class="muted">source: evals/promptfoo/results/latest.json</p>
+    </article>
+  </section>`;
+}
+
+function renderToolbar(model, visibleCount) {
+  const modes = [
+    ['all', 'All'],
+    ['failures', 'Failures'],
+    ['passes', 'Passes'],
+    ['different', 'Different'],
+  ];
+  return `<section class="toolbar">
+    <div class="mode-group" role="tablist" aria-label="Display mode">
+      ${modes.map(([id, label]) => `
+        <button type="button" class="mode-btn ${state.filterMode === id ? 'active' : ''}" data-filter-mode="${id}">${label}</button>`).join('')}
+    </div>
+    <label class="search-field">
+      <span class="sr-only">Search</span>
+      <input type="search" id="search-input" placeholder="Search cases, outputs, metrics…" value="${escapeHtml(state.search)}" />
+    </label>
+    <div class="toolbar-meta">
+      <span>${visibleCount} / ${model.rows.length} cases</span>
+      <button type="button" class="ghost-btn" data-toggle-charts>${state.showCharts ? 'Hide charts' : 'Show charts'}</button>
+      <button type="button" class="ghost-btn" data-toggle-vars>${state.visibleVars ? 'Fewer vars' : 'More vars'}</button>
+    </div>
+  </section>`;
 }
 
 function render() {
-  const snapshot = buildEvalWorkspaceSnapshot(evalWorkspaceSeed);
-  const composedPrompt = composePrompt(state.promptSections);
-  const exportText = exportEvalCasesAsJson(state.evalCases);
-  const draftEvaluation = estimateDraftEvaluation(composedPrompt, state.evalCases);
-  const comparison = snapshot.promptComparison;
+  const root = document.querySelector('#app');
+  if (!state.model) {
+    root.innerHTML = '<div class="boot">Loading Promptfoo results…</div>';
+    return;
+  }
 
-  document.querySelector('#app').innerHTML = `
-    <header class="eval-hero">
-      <div>
-        <p class="eval-eyebrow">Standalone promptfoo eval website</p>
-        <h1>Eval Workspace</h1>
-        <p>
-          A non-technical view of ../promptfoo: how the tutor prompt is composed, what cases are tested,
-          which parameters matter, and what changed between the current and improved prompts.
-        </p>
-        <p class="eval-note">
-          This site is now separate from tutor-system. Browser edits are safe drafts. Export the prompt or eval set and copy it back into evals/promptfoo when ready.
-          Running live Promptfoo still requires the CLI and provider API keys.
-        </p>
-      </div>
-      <div class="eval-hero-card">
-        <strong>${escapeHtml(evalWorkspaceSeed.metadata.scenarioTemplate)}</strong>
-        <span>Agent preset: ${escapeHtml(evalWorkspaceSeed.metadata.agentPreset)}</span>
-        <span>Eval ID: ${escapeHtml(evalWorkspaceSeed.metadata.evalId)}</span>
-        <span>Source: evals/promptfoo/results/latest.json</span>
-      </div>
-    </header>
+  const model = state.model;
+  const rows = filterResultRows(model.rows, { filterMode: state.filterMode, search: state.search });
 
-    <section class="eval-grid two-columns">
-      <div class="eval-panel">
-        <h2>Prompt Composer</h2>
-        <p class="eval-muted">Edit plain-language sections and watch the composed prompt preview update.</p>
-        ${state.promptSections.map((section) => `
-          <label class="eval-section-editor">
-            <span>${escapeHtml(section.title)}</span>
-            <small>${escapeHtml(section.plainLanguagePurpose)}</small>
-            <textarea data-section-id="${escapeHtml(section.id)}" aria-label="${escapeHtml(section.title)}">${escapeHtml(section.content)}</textarea>
-          </label>
-        `).join('')}
-      </div>
-
-      <div class="eval-panel prompt-preview">
-        <h2>Composed Prompt Preview</h2>
-        <p class="eval-muted">Prompt length: ${composedPrompt.length.toLocaleString()} characters</p>
-        <pre>${escapeHtml(composedPrompt)}</pre>
-      </div>
-    </section>
-
-    <section class="eval-grid two-columns">
-      <div class="eval-panel" data-testid="eval-set-builder">
-        <h2>Eval Set Builder</h2>
-        <label class="eval-section-editor">
-          <span>Describe an eval change in plain English</span>
-          <small>Example: Add a case where a student trusts a Discord Nitro giveaway because it has many comments.</small>
-          <textarea id="plain-english-change" aria-label="Describe an eval change in plain English">${escapeHtml(state.plainEnglishChange)}</textarea>
-        </label>
-        <button id="generate-case" class="eval-button" ${state.plainEnglishChange.trim() ? '' : 'disabled'}>Generate/Update Eval Case</button>
-        ${state.lastGeneratedMessage ? `<p class="eval-success">${escapeHtml(state.lastGeneratedMessage)}</p>` : ''}
-        <div class="eval-case-list">
-          ${state.evalCases.map((testCase) => `
-            <article class="eval-case-card">
-              <h3>${escapeHtml(testCase.caseId)}</h3>
-              <p>${escapeHtml(testCase.studentMessage)}</p>
-              <small>${escapeHtml(testCase.applicableRequirements.join(', '))}</small>
-            </article>
-          `).join('')}
+  root.innerHTML = `
+    <div class="viewer ${state.detail ? 'has-detail' : ''}">
+      <header class="topbar">
+        <div class="brand">
+          <span class="logo">pf</span>
+          <div>
+            <div class="brand-title">promptfoo results</div>
+            <div class="brand-sub">${escapeHtml(model.description)}</div>
+          </div>
         </div>
-      </div>
+        <div class="topbar-actions">
+          <a class="ghost-btn" href="../promptfoo/results/latest.html" target="_blank" rel="noreferrer">Raw HTML export</a>
+          <a class="ghost-btn" href="../promptfoo/README.md" target="_blank" rel="noreferrer">README</a>
+        </div>
+      </header>
+      ${renderSummary(model)}
+      ${renderCharts(model)}
+      ${renderToolbar(model, rows.length)}
+      ${renderTable(model, rows)}
+      ${renderDetail(model)}
+      ${state.detail ? '<div class="detail-backdrop" data-close-detail></div>' : ''}
+    </div>`;
 
-      <div class="eval-panel">
-        <h2>Exportable eval set</h2>
-        <p class="eval-muted">Copy this draft into a repo file or a backend save flow.</p>
-        <textarea aria-label="Exportable eval set" class="eval-export" readonly>${escapeHtml(exportText)}</textarea>
-      </div>
-    </section>
-
-    <section class="eval-panel">
-      <h2>Parameter Dashboard</h2>
-      <div class="eval-parameter-grid">
-        <div><strong>Target model</strong><span>${escapeHtml(comparison.candidate.provider)}</span></div>
-        <div><strong>Configured model</strong><span>${escapeHtml(evalWorkspaceSeed.seedConfig.model_name)}</span></div>
-        <div><strong>Temperature</strong><span>${evalWorkspaceSeed.seedConfig.temperature}</span></div>
-        <div><strong>Max tokens</strong><span>${evalWorkspaceSeed.seedConfig.max_tokens}</span></div>
-        <div><strong>Judge model</strong><span>${escapeHtml(evalWorkspaceSeed.seedConfig.judge_model)}</span></div>
-        <div><strong>Judge temperature</strong><span>${evalWorkspaceSeed.seedConfig.judge_temperature}</span></div>
-        <div><strong>Cases</strong><span>${state.evalCases.length}</span></div>
-        <div><strong>Rubrics</strong><span>${comparison.metricComparisons.length}</span></div>
-        <div><strong>Draft prompt quality</strong><span>${percent(draftEvaluation.promptQuality)}</span></div>
-        <div><strong>Draft pass estimate</strong><span>${draftEvaluation.passedCases}/${draftEvaluation.caseCount}</span></div>
-      </div>
-    </section>
-
-    <section class="eval-panel">
-      <h2>Before/After Impact</h2>
-      <div class="eval-score-cards">
-        <div><strong>Draft prompt impact</strong><span>${percent(draftEvaluation.passRate)}</span></div>
-        <div><strong>Draft score estimate</strong><span>${draftEvaluation.score.toFixed(2)}</span></div>
-        <div><strong>Draft cases passing</strong><span>${draftEvaluation.passedCases} pass / ${draftEvaluation.failedCases} fail</span></div>
-        <div><strong>Prompt length</strong><span>${draftEvaluation.promptLength.toLocaleString()} chars</span></div>
-      </div>
-      <p class="eval-muted">Draft prompt impact is a local heuristic preview for immediate feedback. The baseline vs improved numbers below come from the saved Promptfoo run.</p>
-
-      <div class="eval-score-cards">
-        <div><strong>Current pass rate</strong><span>${percent(comparison.baseline.testPassRate)}</span></div>
-        <div><strong>Improved pass rate</strong><span>${percent(comparison.candidate.testPassRate)}</span></div>
-        <div><strong>Score Δ</strong><span>${signed(comparison.scoreDelta, 2)}</span></div>
-        <div><strong>Case changes</strong><span>${snapshot.changeCounts.improved} improved / ${snapshot.changeCounts.regressed} regressed</span></div>
-      </div>
-
-      <div class="eval-metric-list">${comparison.metricComparisons.map(metricBar).join('')}</div>
-      <h3>Case-level changes</h3>
-      ${snapshot.caseComparisons.map(caseChangeCard).join('')}
-    </section>`;
-
-  attachHandlers();
+  bindEvents();
 }
 
-function attachHandlers() {
-  document.querySelectorAll('[data-section-id]').forEach((textarea) => {
-    textarea.addEventListener('input', (event) => {
-      state.promptSections = updatePromptSection(state.promptSections, event.target.dataset.sectionId, event.target.value);
+function bindEvents() {
+  document.querySelectorAll('[data-filter-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.filterMode = button.getAttribute('data-filter-mode');
       render();
     });
   });
 
-  const plainEnglishInput = document.querySelector('#plain-english-change');
-  plainEnglishInput?.addEventListener('input', (event) => {
-    state.plainEnglishChange = event.target.value;
-    render();
+  const search = document.querySelector('#search-input');
+  if (search) {
+    search.addEventListener('input', (event) => {
+      state.search = event.target.value;
+      // keep cursor; re-render replaces input so restore focus/selection
+      const start = event.target.selectionStart;
+      const end = event.target.selectionEnd;
+      render();
+      const next = document.querySelector('#search-input');
+      if (next) {
+        next.focus();
+        next.setSelectionRange(start, end);
+      }
+    });
+  }
+
+  document.querySelectorAll('[data-toggle-charts]').forEach((button) => {
+    button.addEventListener('click', () => {
+      state.showCharts = !state.showCharts;
+      render();
+    });
   });
 
-  document.querySelector('#generate-case')?.addEventListener('click', () => {
-    const result = applyNaturalLanguageEvalChange(state.evalCases, state.plainEnglishChange);
-    state.evalCases = result.cases;
-    state.lastGeneratedMessage = `${result.message} ${result.generatedCase.caseId}`;
-    render();
+  document.querySelectorAll('[data-toggle-vars]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (state.visibleVars) {
+        state.visibleVars = null;
+      } else {
+        state.visibleVars = state.model.varColumns.slice();
+      }
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-open-detail]').forEach((cell) => {
+    cell.addEventListener('click', () => {
+      state.detail = {
+        testIdx: Number(cell.getAttribute('data-test-idx')),
+        promptIdx: Number(cell.getAttribute('data-prompt-idx')),
+      };
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-close-detail]').forEach((el) => {
+    el.addEventListener('click', () => {
+      state.detail = null;
+      render();
+    });
   });
 }
 
-render();
+async function boot() {
+  const root = document.querySelector('#app');
+  root.innerHTML = '<div class="boot">Loading Promptfoo results from evals/promptfoo…</div>';
+  try {
+    const latest = await loadLatestJson();
+    state.model = buildPromptfooViewModel(latest);
+    // URL params like promptfoo view
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('filterMode')) state.filterMode = params.get('filterMode');
+    if (params.get('search')) state.search = params.get('search');
+    render();
+  } catch (error) {
+    root.innerHTML = `<div class="boot error">
+      <h1>Could not load eval results</h1>
+      <p>${escapeHtml(error.message)}</p>
+      <p class="muted">Expected <code>evals/promptfoo/results/latest.json</code>. Serve from the <code>evals/</code> folder via <code>npm start</code>.</p>
+    </div>`;
+  }
+}
+
+boot();

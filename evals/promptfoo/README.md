@@ -43,10 +43,56 @@ npm run eval:prompts
 npm run eval:prompts:report
 npm run eval:prompts:gate
 npm run eval:prompts:ci
+npm run eval:prompts:import
 npm run eval:prompts:view
+npm run eval:prompts:share
 ```
 
 Do not run `eval:prompts` or `eval:prompts:report` until the evaluation set and rubrics have been reviewed. Those commands call live LLM providers through Promptfoo and require `OPENAI_API_KEY`.
+
+### Official visualization and sharing (Promptfoo only)
+
+Use Promptfoo’s own UI and share flow — not a custom website.
+
+1. **Interactive viewer (local)** — after a run, or after importing a saved export:
+
+   ```bash
+   # If you only have results/latest.json on disk:
+   npm run eval:prompts:import
+   npm run eval:prompts:view
+   ```
+
+   This starts Promptfoo’s browser UI (default [http://localhost:15500](http://localhost:15500)). See [Web viewer](https://www.promptfoo.dev/docs/usage/web-ui/).
+
+2. **Standalone HTML report** — produced by `eval:prompts:report`:
+
+   ```text
+   evals/promptfoo/results/latest.html
+   ```
+
+   Self-contained file; open in a browser or attach in email/Slack. See [Output formats](https://www.promptfoo.dev/docs/configuration/outputs/).
+
+3. **Public web (official Promptfoo UI, shared on the internet)** — run the real `promptfoo view` server, then tunnel it:
+
+   ```bash
+   # terminal 1 — official viewer (do not rebuild a custom site)
+   npm run eval:prompts:import
+   npm run eval:prompts:view:public
+
+   # terminal 2 — public URL (ephemeral trycloudflare hostname)
+   cloudflared tunnel --url http://127.0.0.1:15500
+   ```
+
+   Open the printed `https://….trycloudflare.com` URL (Promptfoo serves the app at `/` and `/eval`). Anyone with the link can use the real Promptfoo results UI while the tunnel and laptop are up.
+
+4. **Promptfoo cloud share** (stable org-private link, needs API key from [promptfoo.app/welcome](https://promptfoo.app/welcome)):
+
+   ```bash
+   npx promptfoo auth login -k YOUR_API_KEY
+   npm run eval:prompts:share
+   ```
+
+   Or Share from the web UI: Eval actions → Share. See [Sharing](https://www.promptfoo.dev/docs/usage/sharing/).
 
 The quality gate is deterministic and runs after a JSON report exists. It requires the improved prompt to pass at least 80% for each metric and to match or beat the current prompt on every metric.
 

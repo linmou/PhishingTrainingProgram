@@ -1,49 +1,22 @@
-# Prompt Eval Workspace
+# Deprecated: custom eval website
 
-Standalone website for non-technical prompt and eval review.
+**Do not use this folder as the evaluation UI.**
 
-This folder is intentionally outside `tutor-system`. It reads a static browser seed copied from `evals/promptfoo` artifacts and lets reviewers:
+The official Promptfoo visualization is:
 
-- inspect how the prompt is composed
-- edit prompt sections as a safe draft
-- generate or update eval cases from plain English
-- export the draft eval set as JSON
-- inspect parameter coverage
-- compare saved current vs improved Promptfoo results
-- see case-level before/after output changes
+| Goal | Command (from `tutor-system/`) |
+|------|--------------------------------|
+| Interactive browser UI | `npm run eval:prompts:view` → `promptfoo view` |
+| Load saved JSON into the local viewer | `npm run eval:prompts:import` → `promptfoo import --force ../evals/promptfoo/results/latest.json` |
+| Standalone HTML report | open `evals/promptfoo/results/latest.html` (from `npm run eval:prompts:report`) |
+| Share URL with others | `npm run eval:prompts:share` after `promptfoo auth login -k YOUR_API_KEY` |
 
-## Run
+Docs:
 
-From this folder:
+- [Web viewer](https://www.promptfoo.dev/docs/usage/web-ui/)
+- [Outputs / HTML](https://www.promptfoo.dev/docs/configuration/outputs/)
+- [Sharing](https://www.promptfoo.dev/docs/usage/sharing/)
 
-```bash
-cd evals/web
-npm test
-npm start
-```
+Primary project docs: [`../promptfoo/README.md`](../promptfoo/README.md)
 
-Open:
-
-```text
-http://127.0.0.1:4174
-```
-
-No tutor-system dev server is required.
-
-## Data source
-
-The saved before/after comparison is migrated from:
-
-- `evals/promptfoo/results/latest.json`
-- `evals/promptfoo/prompts/current.prompt.txt`
-- `evals/promptfoo/prompts/improved.prompt.txt`
-- `evals/promptfoo/cases/account-security-alert.yaml`
-- `evals/promptfoo/fixtures/seed-config.json`
-
-The browser seed is stored at:
-
-- `evals/web/src/evalWorkspaceSeed.js`
-
-## Important limitation
-
-The `Draft prompt impact` panel is a local deterministic heuristic preview for immediate feedback. It is not a live model or Promptfoo run. Real Promptfoo evaluation still requires the CLI and provider credentials.
+This directory previously held experimental / PRD mock review surfaces and a homemade table UI. Those are **not** the Promptfoo product path and are not maintained for public hosting.

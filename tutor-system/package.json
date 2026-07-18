@@ -44,7 +44,10 @@
         "eval:prompts:report": "promptfoo eval -c ../evals/promptfoo/promptfooconfig.yaml --output ../evals/promptfoo/results/latest.json --output ../evals/promptfoo/results/latest.html",
         "eval:prompts:gate": "node scripts/check-promptfoo-quality-gate.js ../evals/promptfoo/results/latest.json 0.8",
         "eval:prompts:ci": "npm run eval:prompts:report && npm run eval:prompts:gate",
-        "eval:prompts:view": "promptfoo view -y -o ../evals/promptfoo/results/latest.html",
+        "eval:prompts:import": "promptfoo import --force ../evals/promptfoo/results/latest.json",
+        "eval:prompts:view": "promptfoo view -y",
+        "eval:prompts:view:public": "promptfoo view -n -p 15500",
+        "eval:prompts:share": "promptfoo share",
         "eval:prompts:export-current": "node scripts/export-promptfoo-fixture.js",
         "eject": "react-scripts eject",
         "deploy": "npm run build"

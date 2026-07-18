@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Standalone non-technical website for prompt and eval review.",
+  "description": "Deprecated experimental workspace. Use official promptfoo view/share from tutor-system.",
   "scripts": {
-    "start": "python3 -m http.server 4174 --bind 127.0.0.1",
+    "start": "echo 'Deprecated. From tutor-system run: npm run eval:prompts:import && npm run eval:prompts:view' && exit 1",
     "test": "node --test tests/*.test.mjs"
   }
 }
