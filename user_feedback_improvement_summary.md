@@ -1,18 +1,38 @@
 # PM Summary: Prompt Improvements From Prototype Feedback
 
-Intent: explain, for education and product reviewers, which learner-experience issues were improved through prompt design and how the evaluation gate checks whether those improvements are reliable.
+Intent: explain, for education and product reviewers, which learner-experience issues were improved through prompt design and product-path packaging, and how evaluation checks that those improvements show up in real rooms—not only in offline prompt demos.
 
-Updated: 2026-06-09
+Updated: 2026-07-18
 
 ## Executive Summary
 
-We improved the chatbot behavior for the feedback items that can be addressed through prompt design. The revised tutor is now designed to teach more directly, correct unsafe reasoning, use a stable knowledgeable-peer voice, reduce hollow praise, provide concrete safety actions, avoid fake personal stories, and use simpler language for younger or confused learners.
+We improved chatbot behavior for the feedback items that can be addressed through prompt design and for delivering those improvements on the live room AI button.
 
-Two feedback items were not treated as prompt-only fixes:
-- Response latency and typing indicators require product interface work.
-- Multi-bot simulation requires a larger product design decision and a new evaluation setup.
+**Phase 1 (2026-06-09) — system prompt.** The tutor is designed to teach more directly, correct unsafe reasoning, use a stable knowledgeable-peer voice, reduce hollow praise, provide concrete safety actions, avoid fake personal stories, and use simpler language for younger or confused learners.
 
-## What Changed For Learners
+**Phase 2 (2026-07-18) — product packaging.** The website ✨ AI path no longer asks the model for a “brief follow-up question.” It shares an ecological user turn with Promptfoo: short tutor message (2–4 sentences), direct correction when needed, one concrete safe action. Demo room templates and browser tests create real Supabase rooms from those templates so evaluation matches the webpage.
+
+Still open (not prompt packaging):
+- Response latency and typing indicators (UI/runtime).
+- Multi-bot simulation (product design + multi-voice evals).
+
+## Feedback coverage at a glance
+
+| # | Feedback | Phase 1 system prompt | Phase 2 product path | Still open |
+| --- | --- | --- | --- | --- |
+| 1 | No question every turn | Yes | Yes (full tutor reply, not co-pilot quiz) | |
+| 2 | Direct correction | Yes | Yes | |
+| 3 | Stable peer persona | Yes | Yes (tutor voice on room AI) | Optional tone toggle |
+| 4 | Less hollow praise | Yes | Helped by short replies | |
+| 5 | Concrete safe actions | Yes | Yes (required in user turn) | |
+| 6 | Third-person examples | Yes | Yes (demo trap + system rules) | |
+| 7 | Latency / typing indicator | — | — | **Yes** |
+| 8 | Simpler language | Yes | Helped by short replies | Age auto-detect optional |
+| 9 | Multi-bot simulation | — | — | **Yes** |
+
+---
+
+## Phase 1 — What changed for learners (system prompt)
 
 Source commit for prompt diff evidence: `f8cdc7e fix(ai): gate and update tutor prompt behavior`
 
@@ -20,314 +40,102 @@ Source commit for prompt diff evidence: `f8cdc7e fix(ai): gate and update tutor 
 
 User feedback said the bot felt like it kept asking questions instead of teaching.
 
-The prompt now tells the bot to follow a more balanced tutoring rhythm:
+The system prompt now uses a tight tutoring rhythm:
 - Teach one concrete idea first.
 - Ask a focused question only when it helps the student think.
 - Do not end every response with a question.
 
-Expected learner impact:
-- Students should receive clearer explanations instead of feeling interrogated.
-- The conversation should feel more like tutoring and less like a worksheet.
-
-Evaluation gate result:
-- The improved prompt passed all cases for this behavior: `9/9`.
-
-Prompt diff evidence:
-
-```diff
-diff --git a/tutor-system/src/services/prompts/index.ts b/tutor-system/src/services/prompts/index.ts
-@@
-     "## Learning Process:",
--    "Always follow the 3-stage learning process:",
--    "1. Get their first reaction without influencing them",
--    "2. Ask why they think that - understand their reasoning",
--    "3. Fill knowledge gaps using appropriate scaffolding techniques",
-+    "Use a tight tutoring rhythm:",
-+    "- Teach one concrete point first.",
-+    "- Ask at most one focused question when it helps the student think.",
-+    "- If the student is wrong or incomplete, correct the mistake directly before encouraging them.",
-+    "- Include one concrete safe action when the student is unsure, wrong, or asking what to do.",
-+    "- Do not stop at \"be careful\", \"be cautious\", or \"check it.\" Say exactly what to check or where to go.",
-+    "- Do not end every response with a question.",
-```
+Evaluation gate result (Phase 1 Promptfoo): `turn_rhythm` `9/9`.
 
 ### 2. The Bot Should Correct Wrong Or Incomplete Answers
 
-User feedback said the bot sometimes validated students even when their answer was wrong or incomplete.
+The prompt tells the bot to correct unsafe reasoning directly before encouragement (e.g. lock icon does not prove a site is real).
 
-The prompt now tells the bot to correct unsafe reasoning directly before giving encouragement. For example, if a student says a website is safe because it has a lock icon, the bot should clearly explain that the lock does not prove the site is real.
-
-Expected learner impact:
-- Students get a stronger sense that the tutor has authority.
-- Mistakes become teachable moments instead of being softly approved.
-- Safety misconceptions are corrected before they become habits.
-
-Evaluation gate result:
-- The improved prompt passed all direct-correction cases: `8/8`.
-
-Prompt diff evidence:
-
-```diff
-diff --git a/tutor-system/src/services/prompts/index.ts b/tutor-system/src/services/prompts/index.ts
-@@
-+    "- If the student is wrong or incomplete, correct the mistake directly before encouraging them.",
-@@
--    "#Teaching About URL Safety",
--    "Bot: [Strategy 4: Never Click Suspicious Links] Look at that link - 'http://testdrive.info/youraccount.' If you were worried about your Instagram account, where should the link take you?",
--    "Teen: To Instagram.com?",
--    "Bot: Exactly! Would Instagram ever use 'testdrive.info' for their security stuff?",
-+    "#Direct correction",
-+    "Teen: It has a lock icon, so it is safe.",
-+    "Bot: Not quite. The lock does not prove the site is real. A fake site can have a lock too. Check the website name, and use the real app instead of the link.",
-```
-
-```diff
-diff --git a/tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts b/tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts
-@@
--    high: `Frame mistakes as normal learning experiences that happen to everyone.
--    Example: "Ooh, this one got you! Don't worry - this scam fools tons of people. Even adults fall for it."`,
-+    high: `Correct unsafe reasoning directly, then keep the student moving.
-+    Example: "Not quite. A lock icon does not prove the site is real. Check the web address."`,
-```
+Evaluation gate result: `direct_correction` `8/8`.
 
 ### 3. The Bot Needs A Stable Persona
 
-User feedback said the bot should have one consistent voice, ideally a knowledgeable peer: informed, college-age, and not stiff.
+Knowledgeable peer coach for teen phishing training—not a fake friend, parent, performer, or person with personal memories.
 
-The prompt now defines the bot as a knowledgeable peer coach for teen phishing training. It also tells the bot not to pretend to be a friend, parent, performer, or person with personal memories.
-
-Expected learner impact:
-- The bot should feel more consistent and trustworthy.
-- The tone should be approachable without becoming fake or over-familiar.
-
-Evaluation gate result:
-- The improved prompt passed all persona-stability cases: `5/5`.
-
-Prompt diff evidence:
-
-```diff
-diff --git a/tutor-system/src/services/prompts/basePrompt.ts b/tutor-system/src/services/prompts/basePrompt.ts
-@@
--export const BASE_SYSTEM_PROMPT = `You are a professional teacher in an online teaching platform that helps students to understand the some knowledge.`;
-+export const BASE_SYSTEM_PROMPT = `You are a knowledgeable tutor in a phishing-training session. Teach online safety clearly, directly, and with practical next steps.`;
-```
-
-```diff
-diff --git a/tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts b/tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts
-@@
-     low: `## Your Role: Peer Learner
--You position yourself as a fellow learner navigating scam detection alongside the teen. Use casual, relatable language like "Dude, this is so sketchy" and admit shared vulnerabilities with phrases like "Honestly, I fall for stuff like this too sometimes." Emphasize collaborative discovery through questions like "What do you think we should check?" and share knowledge as recently acquired information: "Someone told me to always check URLs." Connect through shared frustration and peer empathy, creating a sense of "we're figuring this out together."
-+You are a knowledgeable peer coach for teen phishing training. Sound college-age, informed, direct, and relaxed. Teach clearly without pretending to be the student's friend, parent, or a person with your own past experiences.
-@@
--Key distinction: Emphasize shared discovery and mutual learning rather than teaching from authority.`,
-+Use third-person examples only. Say "A person who clicked a fake security link could land on a fake login page." Do not claim personal memories, regrets, or lived experience.
-+
-+Key distinction: Be a knowledgeable peer coach, not a fake friend, parent, or performer.`,
-```
+Evaluation gate result: `persona_stability` `5/5`.
 
 ### 4. The Bot Should Reduce Boilerplate Praise
 
-User feedback said constant phrases like "great job" felt hollow.
+At most one brief, specific acknowledgment; `casual_peer` uses low enthusiasm and low validation.
 
-The prompt now limits praise to at most one brief, specific acknowledgment before teaching. The bot should acknowledge what the student noticed, then move quickly into the learning point.
-
-Expected learner impact:
-- Praise should feel more earned and less scripted.
-- The bot should spend more turns teaching, correcting, and guiding.
-
-Evaluation gate result:
-- The improved prompt passed all low-boilerplate-praise cases: `5/5`.
-
-Prompt diff evidence:
-
-```diff
-diff --git a/tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts b/tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts
-@@
--    high: `Show high energy and excitement about learning discoveries.
--    Example: "YES! Absolutely nailed it! That's exactly right!"`,
-+    high: `Keep energy restrained and focused on the lesson.
-+    Example: "You caught the spelling issue. Now check the link."`,
-@@
--    high: `Frequently validate effort and normalize confusion.
--    Example: "I totally get why you'd think that - this one's really tricky and designed to fool people."`,
-+    high: `Use at most one brief, specific acknowledgment before teaching.
-+    Example: "You noticed the scary words. The safer check is the real app."`,
-@@
--    high: `Explicitly build confidence and celebrate progress.
--    Example: "You're getting really good at this detective work! Your instincts are improving."`,
-+    high: `Build confidence through specific evidence, not generic praise.
-+    Example: "You found the misspelling. The next check is whether the web address matches the real company."`,
-```
-
-```diff
-diff --git a/tutor-system/src/services/prompts/presets.ts b/tutor-system/src/services/prompts/presets.ts
-@@
-     emotional_parameters: {
--      enthusiasm_level: 'high' as const,
--      validation_frequency: 'high' as const,
-+      enthusiasm_level: 'low' as const,
-+      validation_frequency: 'low' as const,
-       mistake_normalization: 'high' as const,
-       confidence_building: 'high' as const
-     }
-```
+Evaluation gate result: `low_boilerplate_praise` `5/5`.
 
 ### 5. The Bot Should Give More Specific Safety Knowledge
 
-User feedback said learners valued concrete tools and real-world actions.
+Default safe actions: do not click; open real app/site; check real account settings/login activity; banking via real app/card number; HTTPS/lock does not prove legitimacy.
 
-The prompt now asks the bot to give specific next steps instead of vague advice like "be careful." Examples include:
-- Do not click suspicious links.
-- Open the real app or real website yourself.
-- Check account settings, security alerts, or recent login activity inside the real account.
-- For bank alerts, use the official banking app, website, or the phone number on the card.
-- Remember that HTTPS or a lock icon does not prove a site is real.
-
-Expected learner impact:
-- Students should leave with actions they can actually perform.
-- The bot should teach practical safety habits, not just general caution.
-
-Evaluation gate result:
-- The improved prompt passed all practical-knowledge cases: `15/15`.
-
-Prompt diff evidence:
-
-```diff
-diff --git a/tutor-system/src/services/prompts/index.ts b/tutor-system/src/services/prompts/index.ts
-@@
--    "Remember: Your goal is to help teens develop critical thinking skills for online safety through guided discovery and supportive learning.",
-+    "## Default Safe Actions:",
-+    "- Do not click suspicious links.",
-+    "- Open the real app or type the real company website yourself.",
-+    "- Check account settings, security alerts, or recent login activity in the real account.",
-+    "- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.",
-+    "- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.",
-+
-+    "Remember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support.",
-@@
-+    "#Concrete action",
-+    "Teen: What should I do?",
-+    "Bot: First, avoid the link in the post. Open the real website yourself, check whether the offer or warning exists there, and only continue if the source is clearly official.",
-```
+Evaluation gate result: `practical_knowledge` `15/15`.
 
 ### 6. The Bot Should Use Third-Person Stories, Not Fake Personal Claims
 
-User feedback said first-person AI claims break trust. For example, an AI saying "I once did this and regretted it" feels fake.
+Third-person examples only (“A person who…”), not “I once clicked…”.
 
-The prompt now tells the bot to use third-person examples instead. It can describe what often happens to a person in a risky situation, but it should not claim personal lived experience.
+Evaluation gate result: `third_person_examples` `1/1`.
 
-Expected learner impact:
-- The bot avoids pretending to be human.
-- Examples can still be relatable without damaging trust.
+### 8. The Bot Should Use Simpler Language
 
-Evaluation gate result:
-- The improved prompt passed the third-person example case: `1/1`.
+Prefer “pressure words,” “fake web address,” “real app,” short sentences when the student is confused.
 
-Prompt diff evidence:
+Evaluation gate result: `reading_level` `7/8` (above 80% threshold).
 
-```diff
-diff --git a/tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts b/tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts
-@@
--    high: `Use relatable personal stories and analogies that connect to teen experiences.
--    Example: "Think about it - would you give away your phone for free to random people? Companies feel the same way."`,
-+    high: `Use third-person examples and relatable analogies, not first-person stories.
-+    Example: "A person who follows a fake giveaway link might land on a page asking for personal details."`,
-```
+---
 
-```diff
-diff --git a/tutor-system/src/services/prompts/index.ts b/tutor-system/src/services/prompts/index.ts
-@@
-+    "#Third-person example",
-+    "Teen: Did this ever happen to you?",
-+    "Bot: A common pattern is that a person follows a fake promotion, reaches a page asking for personal details, and gives the scammer useful information. The safer move is to verify through the real company site.",
-```
+## Phase 2 — Making the website show the same behavior
 
-### 7. The Bot Should Use Simpler Language
+### The delivery gap
 
-User feedback said some younger participants were confused by terms such as "urgency tactics."
+Phase 1 improved the **system** prompt and passed offline Promptfoo. The room AI button still used a **user** wrapper that said, in effect:
 
-The prompt now asks the bot to use simpler wording, especially when a student seems confused. Examples:
-- Say "pressure words" instead of "urgency tactics."
-- Say "fake web address" or "wrong website" instead of "illegitimate domain."
-- Say "check in the real app" instead of "official account verification."
-- Say "the lock does not prove the site is real" instead of giving a technical explanation of HTTPS.
+> suggest a brief follow-up **question** for the tutor… under 2 sentences
 
-Expected learner impact:
-- Younger learners should understand the safety lesson more easily.
-- The bot should adapt explanations toward plain language.
+So the webpage reintroduced question loops and weak correction even when the system prompt was correct.
 
-Evaluation gate result:
-- The improved prompt passed the reading-level gate: `7/8`, which is above the required threshold.
+### What we changed
 
-Prompt diff evidence:
+| Area | Change |
+| --- | --- |
+| User turn | Shared ecological packaging (`ecologicalTutorCall.ts`): write the tutor message the student should hear |
+| Length | 2–4 short sentences (~40–70 words); `max_tokens` ~100 |
+| Correction + action | If wrong/incomplete: one correction sentence + one concrete safe action |
+| Context | Pre-populated room discussion + focused student line included in the call |
+| Templates | Global demo rooms with multi-turn realistic chat (OP → peers → tutor → student) |
+| Eval ecology | Cases generated from the same templates; history format matches product packaging |
+| Browser demos | Template-only room create in real Supabase + ✨ AI |
 
-```diff
-diff --git a/tutor-system/src/services/prompts/index.ts b/tutor-system/src/services/prompts/index.ts
-@@
-+    "## Reading Level:",
-+    "Use simple language for younger or confused students:",
-+    "- Use \"pressure words\" instead of \"urgency tactics\".",
-+    "- Use \"fake web address\" or \"wrong website\" instead of \"illegitimate domain\".",
-+    "- Use \"check in the real app\" instead of \"official account verification\".",
-+    "- Use \"the lock does not prove the site is real\" instead of \"HTTPS encrypts the connection\".",
-+    "- Use \"real company\" or \"real app\" instead of \"legitimate\".",
-+    "- Use short sentences when the student sounds confused.",
-```
+Primary product commit: `5014acf fix(ai): align room AI call with full tutor response packaging`.
 
-```diff
-diff --git a/tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts b/tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts
-@@
--    high: `Integrate teen slang naturally and authentically.
--    Example: "That's totally sus, no cap"`,
-+    high: `Use relaxed teen-friendly language without forced slang.
-+    Example: "That link looks fake, so I would not use it."`,
-@@
--    high: `Include natural speech patterns with conversational markers.
--    Example: "So like, that's not quite right, you know?"`,
-+    high: `Use direct, natural speech patterns.
-+    Example: "Not quite. The web address is the problem."`,
-```
+### Example short reply (after length cap)
 
-## What Was Not Solved In This Prompt Iteration
+> That is incorrect. A lock icon or HTTPS does not guarantee the site is safe; scammers can use them too. Check the web address carefully to see if it matches the real company. Instead of clicking the link, open the real app or type the official website directly into your browser.
 
-### Response Latency And Typing Indicator
+---
 
-This cannot be solved reliably through prompt wording. It requires product behavior such as a visible typing state, faster first response, streaming, or staged response delivery.
+## What remains open
 
-### Multi-Bot Simulation
+### Response latency and typing indicator (feedback #7)
 
-This also needs product design work. A prompt can adjust one bot's tone, but a true formal-bot plus peer-bot simulation needs multiple agent roles, interface design, and a separate evaluation set.
+Needs product UI/runtime: typing state, faster first token, streaming, or staged delivery. Not solved by system or user prompt text alone.
 
-## Evaluation Gate: What It Means
+### Multi-bot simulation (feedback #9)
 
-The evaluation gate is the quality standard used before accepting the new prompt into the product.
+Needs multiple agent roles, UI design, and a separate multi-voice evaluation set.
 
-It has two purposes:
-- Make sure the improved prompt actually addresses the target feedback.
-- Make sure the improved prompt does not merely sound better in one hand-picked example.
+---
 
-The gate tested the improved prompt against a reviewed set of account-security-alert tutoring situations. These cases included both direct examples and holdout-style variations, meaning the prompt had to generalize to similar but not identical student responses.
+## Evaluation: how we know it works
 
-## Evaluation Gate Passing Criteria
+### Phase 1 gate (system prompt quality)
 
-The prompt had to meet both conditions:
-- It needed to pass at least 80% of the applicable checks for every behavior category.
-- It needed to match or beat the previous prompt in every behavior category.
+- Eval id: `eval-EFn-2026-06-09T18:40:25`
+- Cases: `34`, errors: `0`, overall: **passed**
+- Rule: ≥80% per metric; improved ≥ current on every metric
 
-This matters because a prompt that improves one issue while making another worse should not be accepted.
-
-## Final Gate Result
-
-The improved prompt passed the gate.
-
-Evaluation details:
-- Cases evaluated: `34`
-- Errors: `0`
-- Overall result: passed
-
-Behavior category results:
-
-| Behavior Category | Result |
+| Behavior category | Result |
 | --- | ---: |
 | Balanced teaching rhythm | `9/9` |
 | Direct correction | `8/8` |
@@ -337,12 +145,41 @@ Behavior category results:
 | Third-person examples | `1/1` |
 | Simpler reading level | `7/8` |
 
-## Why The Evaluation Is More Reliable Than A Single Demo
+### Phase 2 two-layer verification
 
-The evaluation set was reviewed and refined before the prompt was accepted.
+```bash
+cd tutor-system
+npm run eval:prompts                 # Layer 1: export + Promptfoo + ecological product gate
+npm run test:browser:behavior-demos  # Layer 2: real template rooms + ✨ AI
+```
 
-Reliability checks included:
-- Each case tested observable chatbot behavior, not vague preference.
-- Each case only tested requirements that could actually be observed in that situation.
-- Holdout variations were included so the prompt could not simply memorize one example.
-- The final evaluation set was reviewed through a multi-reviewer debate process and reached agreement after refinement.
+| Layer | What it proves | Latest evidence |
+| --- | --- | --- |
+| Ecological product gate | Production system prompt + product-shaped user turn + template dialogue | **7/7** cases passed |
+| Browser demos | Real DB templates → real room → AI button → short teaching reply | **7/7** demos passed |
+
+Reliability notes:
+- Cases use multi-turn dialogue from the same seeds as the website (`demoRoomTemplates.ts`).
+- Browser demos **only** create rooms from those templates (no freehand rooms).
+- Dual-prompt LLM-judge scores can be noisy on some gateways; the ecological product gate (heuristics on product-shaped calls) is the primary Layer-1 pass/fail for delivery.
+
+---
+
+## Why this is more reliable than a single demo
+
+1. Phase 1 tested many situations (including holdouts), not one cherry-picked reply.  
+2. Phase 2 tests the **same packaging** the room AI uses.  
+3. Template dialogue is multi-turn and room-like (OP post, peers, tutor, student).  
+4. Browser demos hit Supabase and the real UI path.  
+5. Short-reply constraints reduce hollow praise and question spam in practice.
+
+---
+
+## Commands reference
+
+| Command | Role |
+| --- | --- |
+| `npm run eval:prompts` | Layer 1 Promptfoo ecological eval |
+| `npm run test:browser:behavior-demos` | Layer 2 real-browser template rooms |
+| `npm run seed:behavior-templates` | Upsert global demo templates to Supabase |
+| `npm run eval:prompts:export-ecological-cases` | Regenerate Promptfoo YAML from templates |

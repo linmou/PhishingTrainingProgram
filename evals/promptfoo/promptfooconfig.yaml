@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
-description: Account Security Alert prompt-behavior evaluation for phishing tutor prompts
+description: Ecological webpage-shaped prompt-behavior evaluation (same room data + call shape as product AI button)
 
 prompts:
   - file://prompts/current.chat.prompt.json
@@ -9,15 +9,20 @@ providers:
   - id: openai:chat:gpt-4o-mini
     label: target-gpt-4o-mini
     config:
-      temperature: 0.2
-      max_tokens: 220
+      # Align with product short tutor replies
+      temperature: 0.3
+      max_tokens: 100
 
 defaultTest:
   options:
     provider:
-      id: openai:chat:gpt-4o
+      # Same gateway-available model as the target (gpt-4o is often 503 here)
+      id: openai:chat:gpt-4o-mini
       config:
         temperature: 0
 
 tests:
+  # Primary: webpage demo templates + classic room shapes
+  - file://cases/webpage-ecological.yaml
+  # Holdout variations from original account-security suite
   - file://cases/account-security-alert.yaml

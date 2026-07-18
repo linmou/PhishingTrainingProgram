@@ -4,6 +4,7 @@
  */
 
 import {
+  buildEcologicalCaseVarsFromRoomDialogue,
   buildEcologicalChatCompletionMessages,
   buildEcologicalTutorUserTurn,
   formatPrePopulatedConversationHistory,
@@ -30,6 +31,40 @@ describe('ecologicalTutorCall', () => {
     expect(history).toContain('Tutor [TUTOR]:');
   });
 
+  it('builds case vars with product-path history packaging from room dialogue', () => {
+    const vars = buildEcologicalCaseVarsFromRoomDialogue(
+      'Demo: Lock Icon Myth',
+      'Security notice shared in feed',
+      [
+        {
+          user_name: 'Socail Media Testdrive',
+          role: 'others',
+          message: 'Verify now: http://testdrive.info/youraccount'
+        },
+        {
+          user_name: 'Chris',
+          role: 'others',
+          message: 'it has the little lock'
+        },
+        {
+          user_name: 'Tutor',
+          role: 'tutor',
+          message: 'What does the lock prove?'
+        },
+        {
+          user_name: 'Alex',
+          role: 'student',
+          message: 'If it has a lock icon it is safe, right?'
+        }
+      ]
+    );
+    expect(vars.scenario_context).toContain('Demo: Lock Icon Myth');
+    expect(vars.student_message).toContain('lock icon');
+    expect(vars.conversation_history).toContain('Participant: Others (Socail Media Testdrive):');
+    expect(vars.conversation_history).toContain('Tutor/AI: Tutor (Tutor):');
+    expect(vars.conversation_history).toContain('Participant: Student (Alex):');
+  });
+
   it('builds a full tutor-response user turn (not follow-up-question co-pilot)', () => {
     const turn = buildEcologicalTutorUserTurn({
       scenario_context: 'Demo: Lock Icon Myth — practice',
@@ -39,7 +74,7 @@ describe('ecologicalTutorCall', () => {
 
     expect(turn).toContain('Write the tutor response only');
     expect(turn).toContain('If it has a lock it is safe, right?');
-    expect(turn).toContain('Ask at most one focused question');
+    expect(turn).toMatch(/2–4 short sentences|2-4 short sentences|40–70 words|Keep it short/i);
     expect(turn).not.toMatch(/brief follow-up question/i);
   });
 

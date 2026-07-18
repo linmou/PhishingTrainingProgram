@@ -85,8 +85,9 @@ export function buildEcologicalTutorUserTurn({
     student_message,
     '',
     'Write the tutor response only. Do not prefix it with "Tutor:" or any speaker label.',
-    'Teach or correct directly when needed. Include one concrete safe action when the student is wrong, unsure, or asking what to do.',
-    'Ask at most one focused question, and only if it helps. Do not answer only with questions.'
+    'Keep it short: 2–4 short sentences (about 40–70 words). No lectures, no bullet lists, no long explanations.',
+    'If the student is wrong or incomplete, correct them in one clear sentence, then give one concrete safe action.',
+    'Ask at most one short question, and only if needed. Prefer teaching over questioning.'
   ].join('\n');
 }
 
@@ -115,6 +116,7 @@ export function buildEcologicalChatCompletionMessages(
 /**
  * Convert DB/context ConversationMessage[] into a single conversation_history
  * string matching room discussion style for the ecological user turn.
+ * Uses the same labels the product path uses when packaging history.
  */
 export function conversationMessagesToHistoryText(
   messages: ConversationMessage[]
@@ -127,6 +129,39 @@ export function conversationMessagesToHistoryText(
       return `${label}: ${m.content}`;
     })
     .join('\n');
+}
+
+/**
+ * Build ecological case vars from a real room title/description + pre_populated
+ * dialogue array — same packaging as TutorSuggestionService on the webpage.
+ * Latest student line is also exposed as student_message (product focus line).
+ */
+export function buildEcologicalCaseVarsFromRoomDialogue(
+  title: string,
+  description: string | null | undefined,
+  dialogue: PrePopulatedMessage[]
+): EcologicalCaseVars {
+  const lastStudentIndex = (() => {
+    for (let i = dialogue.length - 1; i >= 0; i -= 1) {
+      if (dialogue[i].role === 'student') return i;
+    }
+    return -1;
+  })();
+
+  const student_message =
+    lastStudentIndex >= 0 ? dialogue[lastStudentIndex].message : '';
+
+  // Include full discussion (including latest student line) — product history does too.
+  const contextMsgs = prePopulatedToContextMessages(
+    dialogue,
+    new Date(0).toISOString()
+  );
+
+  return {
+    scenario_context: formatRoomScenarioContext(title, description),
+    conversation_history: conversationMessagesToHistoryText(contextMsgs),
+    student_message
+  };
 }
 
 /**

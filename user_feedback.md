@@ -11,7 +11,23 @@ relevant google doc: https://docs.google.com/document/d/1-cYuVZW2eU4M9TCgseWvwEx
 8. Simplify language for younger audiences. Words like "urgency tactics" or "outright" confused child participants. The chatbot should detect user age/reading level and adjust.
 9. Consider multi-bot simulation. Claudia's insight: a formal bot alongside an informal peer bot would feel more like a real social forum, with the safety message reaching users through multiple voices.
 
-## Prompt Improvement Summary
+## Feedback status (as of 2026-07-18)
+
+| # | Feedback | Status | How addressed |
+| --- | --- | --- | --- |
+| 1 | No question-every-turn | **Done (prompt + product path)** | System prompt tight rhythm; room AI user turn asks for a short tutor reply, not a follow-up question |
+| 2 | Direct correction | **Done (prompt + product path)** | System prompt + ecological turn: correct wrong/incomplete answers, then one safe action |
+| 3 | Stable persona | **Done (prompt)** | Knowledgeable peer coach; no fake friend/parent/personal history |
+| 4 | Less hollow praise | **Done (prompt)** | Low enthusiasm/validation in `casual_peer`; brief specific acknowledgment only |
+| 5 | Concrete safety knowledge | **Done (prompt + product path)** | Default safe actions in system prompt; user turn requires one concrete action; short length keeps focus |
+| 6 | Third-person examples | **Done (prompt)** | Third-person only; demo room “Did this ever happen to you?” |
+| 7 | Latency / typing indicator | **Open** | Needs UI/runtime (not prompt-only) |
+| 8 | Simpler language | **Done (prompt)** | Reading-level substitutions; short replies reduce jargon piles |
+| 9 | Multi-bot simulation | **Open** | Needs multi-agent product design + separate evals |
+
+---
+
+## Phase 1 — Prompt improvement summary (2026-06-09)
 
 Intent: record which prototype feedback items were improved by the prompt-only work, which prompt changes were made for each item, and what evaluation gate passed before the prompt was moved into `tutor-system`.
 
@@ -72,7 +88,7 @@ Implementation commits:
    - Reason: this needs product design and additional evaluation fixtures for multiple agent voices.
    - A single system prompt can adjust tone, but it cannot reliably create a multi-bot simulation.
 
-### Evaluation Gate Passed
+### Evaluation Gate Passed (Phase 1)
 
 Promptfoo accepted run:
 - Eval id: `eval-EFn-2026-06-09T18:40:25`
@@ -87,35 +103,91 @@ Promptfoo accepted run:
 Gate definition:
 - The improved prompt must pass at least `80%` of applicable assertions for every metric.
 - The improved prompt must match or beat the current prompt on every metric.
-- The deterministic gate command is `npm run eval:prompts:gate`.
 
-Improved prompt metric results:
+---
 
-| Metric | Result | Pass rate |
-| --- | ---: | ---: |
-| `turn_rhythm` | `9/9` | `1.0` |
-| `direct_correction` | `8/8` | `1.0` |
-| `persona_stability` | `5/5` | `1.0` |
-| `low_boilerplate_praise` | `5/5` | `1.0` |
-| `practical_knowledge` | `15/15` | `1.0` |
-| `third_person_examples` | `1/1` | `1.0` |
-| `reading_level` | `7/8` | `0.875` |
+## Phase 2 — Product-path delivery so the website matches the prompt (2026-07-18)
 
-### Evaluation Reliability Checks
+Intent: the Phase 1 system prompt fixed feedback in eval, but the room ✨ AI button still asked the model for a “brief follow-up question,” so learners/tutors did not see the improvements on the real page. Phase 2 aligns the product call with the system prompt and adds ecological evaluation + browser demos.
 
-The evaluation set was reviewed with `$review-with-multi-debate`.
+Updated: 2026-07-18
 
-Final debate summary:
-- `audits/prompt_eval_set_quality_review_iteration3_summary.json`
+Implementation commit (AI packaging):
+- `5014acf fix(ai): align room AI call with full tutor response packaging`
 
-Reliability improvements made before accepting the prompt:
-- Case assertions are tied to observable behavior.
-- Each case only evaluates applicable requirements.
-- Holdout-style account-alert variations were added so the prompt is not only memorizing one exact example.
-- Improved prompt examples do not copy the holdout cases verbatim.
-- Promptfoo case loading and complex prompt formatting are covered by integration-style tests.
+Related local work (templates, short replies, eval/browser harness — commit separately if needed):
+- Ecological user turn + short length (2–4 sentences, ~40–70 words, `max_tokens` ~100)
+- Demo room templates with multi-turn realistic dialogue
+- Ecological cases generated from the same templates
+- Two-layer verification: `npm run eval:prompts` + `npm run test:browser:behavior-demos`
 
-Local verification passed:
-- `npm run eval:prompts:gate`
-- Prompt/eval Jest focused run: `9` suites, `47` tests passed.
-- `npm run test:tasks`
+### Gap that Phase 1 did not close
+
+| Path | What the model was asked to do |
+| --- | --- |
+| Promptfoo / system prompt | Write a full tutor teaching reply |
+| Website ✨ AI (before Phase 2) | “Suggest a brief **follow-up question**… under 2 sentences” |
+
+So even with the improved system prompt installed, the website produced question loops again (feedback #1) and soft, short co-pilot hints instead of correction + safe actions (#2, #5).
+
+### Product packaging changes (how the prompt is *used*)
+
+1. **User turn (shared product + Promptfoo)** — `ecologicalTutorCall.ts`
+   - Draft the next tutor message the student should hear (not a meta follow-up question).
+   - Keep it short: 2–4 short sentences (~40–70 words).
+   - If wrong/incomplete: one clear correction + one concrete safe action.
+   - At most one short question, and only if needed.
+
+2. **Room AI path** — `TutorSuggestionService` / `generateTutorSuggestion` / `RoomContext`
+   - Uses the ecological user turn.
+   - Passes the focused student message from the UI.
+   - Includes pre-populated discussion in AI context (same thread tutors see).
+   - Caps length (`max_tokens` ~100) so replies stay chat-sized.
+
+3. **System prompt content**
+   - Phase 1 pedagogy remains the system message (teach, correct, peer coach, safe actions, third-person, reading level).
+   - Phase 2 does not re-open multi-bot or latency; it makes the webpage obey Phase 1.
+
+### How packaging maps back to feedback
+
+| # | Feedback | Packaging contribution |
+| --- | --- | --- |
+| 1 | Question loops | User turn forbids answer-only-with-questions; prefer teaching |
+| 2 | Correction | Explicit “correct in one sentence” |
+| 3 | Persona | System prompt unchanged; full tutor voice instead of co-pilot quiz |
+| 4 | Hollow praise | Short form + system low-praise preset |
+| 5 | Concrete actions | One concrete safe action required in user turn |
+| 6 | Third-person | System prompt; demo “Did this happen to you?” |
+| 8 | Simple language | System reading-level rules; short replies |
+
+### Ecological validity
+
+Cases and demos now use the **same room-template dialogue** as the website:
+
+- Source: `tutor-system/src/services/demoRoomTemplates.ts`
+- Export: `npm run eval:prompts:export-ecological-cases` → `evals/promptfoo/cases/webpage-ecological.yaml`
+- History packaging matches the product path (`Participant:` / `Tutor/AI:` lines from pre-pop discussion)
+- Multi-turn threads: OP post → peer reactions → tutor → student wrong/confused line
+
+### Two-layer verification (current)
+
+```bash
+cd tutor-system
+
+# Layer 1 — Promptfoo ecological eval (export fixtures + run + ecological product gate)
+npm run eval:prompts
+
+# Layer 2 — real browser + real Supabase rooms from templates only
+# (app running, e.g. PORT=3001 npm start)
+npm run test:browser:behavior-demos
+```
+
+Evidence from Phase 2 verification runs:
+- Ecological product gate: **7/7** template-derived cases passed (deterministic heuristics on product-shaped calls).
+- Browser demos: **7/7** template-only rooms passed (login → create from template → ✨ AI → short teaching reply).
+- Unit suites for packaging/templates: passed after ecological dialogue updates.
+
+### Still open
+
+7. Latency / typing indicator — product UI/runtime.  
+9. Multi-bot simulation — product design + multi-voice evals.

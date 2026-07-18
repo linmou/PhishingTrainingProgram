@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createRoom, getRoomsByTutor, deleteRoom, getRoomTemplatesByTutor } from '../services/supabase';
+import { getAIConfig, initializeAIAssistant, updateAIConfig } from '../services/aiService';
 import { Database } from '../types/database';
 import ImageUpload from '../components/ImageUpload';
 import AvatarDisplay from '../components/AvatarDisplay';
@@ -196,10 +197,72 @@ const TutorView: React.FC = () => {
 
             const newRoom = await createRoom(roomData);
 
+            // If a global template ships AI config (improved casual_peer prompts),
+            // enable the AI assistant so the fixed tutor behavior is live in the room.
+            const selectedTemplate = selectedTemplateId
+                ? templates.find((t) => t.id === selectedTemplateId)
+                : null;
+            const aiTemplate = selectedTemplate?.ai_config_template;
+            if (aiTemplate?.enabled && user?.id) {
+                const modelName = aiTemplate.model_name || 'gpt-4o-mini';
+                // Prefer regenerating from prompt_config so rooms always get the
+                // current improved prompt code; fall back to stored system_prompt.
+                const promptConfig = aiTemplate.prompt_config
+                    ? {
+                        role: (aiTemplate.preset === 'casual_peer' || aiTemplate.prompt_config?.role?.role === 'low'
+                            ? 'peer'
+                            : 'trusted_adult') as 'peer' | 'trusted_adult',
+                        scenario: aiTemplate.scenario,
+                        communication_style: aiTemplate.prompt_config.communication_style,
+                        cognitive_parameters: aiTemplate.prompt_config.cognitive_parameters,
+                        emotional_parameters: aiTemplate.prompt_config.emotional_parameters,
+                        custom_detection_areas: aiTemplate.prompt_config.detection_areas,
+                        custom_verification_steps: aiTemplate.prompt_config.verification_steps
+                    }
+                    : undefined;
+                const systemPrompt = promptConfig
+                    ? undefined
+                    : (aiTemplate.system_prompt || undefined);
+
+                await initializeAIAssistant(
+                    newRoom.id,
+                    modelName,
+                    systemPrompt,
+                    user.id,
+                    promptConfig
+                );
+
+                if (
+                    typeof aiTemplate.temperature === 'number' ||
+                    typeof aiTemplate.max_tokens === 'number'
+                ) {
+                    // Preserve the prompt just written by initializeAIAssistant;
+                    // updateAIConfig would otherwise null out prompt_config.
+                    const current = await getAIConfig(newRoom.id);
+                    await updateAIConfig(
+                        newRoom.id,
+                        {
+                            model_name: current?.model_name || modelName,
+                            system_prompt: current?.system_prompt ?? null,
+                            prompt_config: current?.prompt_config ?? null,
+                            temperature: aiTemplate.temperature ?? current?.temperature ?? 0.3,
+                            max_tokens: aiTemplate.max_tokens ?? current?.max_tokens ?? 100,
+                            is_active: true
+                        },
+                        user.id,
+                        'template_room_create'
+                    );
+                }
+            }
+
             // Template creation removed - templates are now global and managed centrally
 
             // Show success message
-            setSuccessMessage('Room created successfully');
+            setSuccessMessage(
+                aiTemplate?.enabled
+                    ? 'Room created with improved AI tutor prompt enabled'
+                    : 'Room created successfully'
+            );
             
             // Reset form
             setTitle('');
@@ -328,7 +391,7 @@ const TutorView: React.FC = () => {
                                         ))}
                                     </select>
                                     <div className="form-helper-text">
-                                        Select a template to pre-fill the form with saved configurations
+                                        Select a template to pre-fill the form. Templates tagged Demo / Scam ship the improved AI tutor prompt automatically.
                                     </div>
                                 </div>
                             )}

@@ -9,6 +9,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TutorView from '../pages/TutorView';
 import * as supabaseService from '../services/supabase';
+import * as aiService from '../services/aiService';
 
 // Mock the supabase service
 jest.mock('../services/supabase', () => ({
@@ -18,6 +19,18 @@ jest.mock('../services/supabase', () => ({
     createRoomTemplate: jest.fn(),
     getRoomTemplatesByTutor: jest.fn(),
     deleteRoomTemplate: jest.fn(),
+}));
+
+jest.mock('../services/aiService', () => ({
+    initializeAIAssistant: jest.fn().mockResolvedValue('room-ai-id'),
+    updateAIConfig: jest.fn().mockResolvedValue({}),
+    getAIConfig: jest.fn().mockResolvedValue({
+        model_name: 'gpt-4o-mini',
+        system_prompt: 'Improved tutor prompt',
+        prompt_config: { role: { role: 'low' } },
+        temperature: 0.7,
+        max_tokens: 150
+    })
 }));
 
 // Mock RoomContext
@@ -153,6 +166,114 @@ describe('Room Template Management', () => {
             });
 
             expect(mockCreateTemplate).not.toHaveBeenCalled();
+            expect(aiService.initializeAIAssistant).not.toHaveBeenCalled();
+        });
+
+        test('should enable improved AI tutor when creating from a behavior template', async () => {
+            const mockCreateRoom = supabaseService.createRoom as jest.Mock;
+            const mockTemplates = [
+                {
+                    id: 'template-ai-1',
+                    template_name: 'Demo: Lock Icon Myth (Direct Correction)',
+                    title_template: 'Demo: Lock Icon Myth',
+                    description_template: 'Practice lock icon myth',
+                    image_url: '/images/room-presets/phishing_2.png',
+                    pre_populated_dialogue: [
+                        {
+                            user_name: 'Alex',
+                            role: 'student',
+                            message: 'If the site has a lock icon it is safe, right?'
+                        }
+                    ],
+                    ai_config_template: {
+                        enabled: true,
+                        model_name: 'gpt-4o-mini',
+                        temperature: 0.3,
+                        max_tokens: 100,
+                        preset: 'casual_peer',
+                        scenario: 'Account Security Alert',
+                        system_prompt: 'Ask at most one focused question',
+                        prompt_config: {
+                            role: { role: 'low' },
+                            communication_style: {
+                                teen_slang: 'low',
+                                conversational_markers: 'low',
+                                uncertainty_expression: 'high'
+                            },
+                            cognitive_parameters: {
+                                concept_density: 'low',
+                                perspective_taking: 'low',
+                                personal_examples: 'high',
+                                consequence_highlighting: 'low'
+                            },
+                            emotional_parameters: {
+                                enthusiasm_level: 'low',
+                                validation_frequency: 'low',
+                                mistake_normalization: 'high',
+                                confidence_building: 'high'
+                            },
+                            detection_areas: ['Fear-Based Urgency'],
+                            verification_steps: ['Do NOT Click']
+                        }
+                    },
+                    op_config_template: null,
+                    password_config: null
+                }
+            ];
+
+            mockCreateRoom.mockResolvedValue({
+                id: 'room-ai-123',
+                title: 'Demo: Lock Icon Myth'
+            });
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(mockTemplates);
+
+            render(
+                <TestWrapper>
+                    <TutorView />
+                </TestWrapper>
+            );
+
+            fireEvent.click(screen.getByText('➕ Create a new Room'));
+
+            await waitFor(() => {
+                expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
+            });
+
+            fireEvent.change(screen.getByLabelText(/use template/i), {
+                target: { value: 'template-ai-1' }
+            });
+
+            fireEvent.click(screen.getByText('🚀 Create Room'));
+
+            await waitFor(() => {
+                expect(aiService.initializeAIAssistant).toHaveBeenCalledWith(
+                    'room-ai-123',
+                    'gpt-4o-mini',
+                    undefined,
+                    'tutor-123',
+                    expect.objectContaining({
+                        role: 'peer',
+                        scenario: 'Account Security Alert'
+                    })
+                );
+            });
+
+            await waitFor(() => {
+                expect(aiService.updateAIConfig).toHaveBeenCalledWith(
+                    'room-ai-123',
+                    expect.objectContaining({
+                        temperature: 0.3,
+                        max_tokens: 100,
+                        is_active: true
+                    }),
+                    'tutor-123',
+                    'template_room_create'
+                );
+            });
+
+            expect(
+                await screen.findByText(/Room created with improved AI tutor prompt enabled/i)
+            ).toBeInTheDocument();
         });
 
         test('should load templates using the current tutor id', async () => {

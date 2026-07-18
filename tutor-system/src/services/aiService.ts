@@ -612,8 +612,9 @@ export class TutorSuggestionService {
 
             const temperature =
                 typeof config.temperature === 'number' ? config.temperature : 0.3;
+            // Keep room AI replies short (chat-length, not essays).
             const maxTokens =
-                typeof config.max_tokens === 'number' ? config.max_tokens : 250;
+                typeof config.max_tokens === 'number' ? Math.min(config.max_tokens, 120) : 100;
 
             const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
                 method: 'POST',

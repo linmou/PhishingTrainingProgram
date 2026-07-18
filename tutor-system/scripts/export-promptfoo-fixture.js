@@ -30,6 +30,7 @@ require.extensions['.ts'] = (module, filename) => {
 const { generateSystemPrompt, PRESET_CONFIGS } = require(path.join(tutorRoot, 'src', 'services', 'systemPrompts.ts'));
 const { SCENARIO_TEMPLATES } = require(path.join(tutorRoot, 'src', 'services', 'detectionTemplates.ts'));
 const { buildPromptfooChatMessages } = require(path.join(tutorRoot, 'src', 'services', 'promptfooEvaluationPromptBuilder.ts'));
+// Ecological chat messages = product TutorSuggestionService user-turn shape.
 
 const scenario = SCENARIO_TEMPLATES['Account Security Alert'];
 const currentPrompt = generateSystemPrompt({

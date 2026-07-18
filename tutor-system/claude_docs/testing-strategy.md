@@ -4,26 +4,35 @@ This document outlines the comprehensive testing strategy for the completed task
 
 ## Current Test Tiers
 
-The repository now uses two distinct validation tiers:
+Updated: 2026-07-18 (tutor behavior live E2E)
+
+The repository now uses these validation tiers:
 
 1. Deterministic regression:
    - Command: `npm test` or `npm run test:regression`
    - Purpose: stable per-change guardrail
    - Rule: must not require live vendor credentials or local browser-driver compatibility
+   - Includes offline tutor-behavior heuristics unit tests and E2E scaffold checks
 
-2. External integration:
+2. External integration (OpenAI checklist):
    - Command: `npm run test:integration:openai`
-   - Purpose: validate the real OpenAI boundary with live credentials
+   - Purpose: validate the real OpenAI boundary for checklist extraction/coverage
    - Rule: opt-in only because vendor/network state can fail without a code regression
 
-3. Browser end-to-end integration:
+3. Tutor behavior live E2E:
+   - Command: `npm run test:integration:tutor-behavior`
+   - Purpose: exercise the **production** `generateSystemPrompt` + `OpenAIService.generateResponse` path against Account Security Alert cases from `user_feedback_improvement_summary.md`, scored by deterministic heuristics
+   - Rule: opt-in (`RUN_LIVE_OPENAI_TESTS=true`); requires `REACT_APP_OAI_API_KEY`
+   - Complements Promptfoo (`npm run eval:prompts`) which is the LLM-as-judge quality gate over frozen fixtures
+
+4. Browser end-to-end integration:
    - Command: `npm run test:integration:browser`
    - Purpose: validate Selenium/browser wiring against a real local browser
    - Rule: opt-in only because Chrome/ChromeDriver version skew can fail without a product regression
 
-4. Full external validation:
+5. Full external validation:
    - Command: `npm run test:integration:external`
-   - Purpose: run both external tiers when preparing a release or checking environment health
+   - Purpose: run OpenAI checklist, tutor-behavior E2E, and browser tiers when preparing a release or checking environment health
 
 ## Overview
 

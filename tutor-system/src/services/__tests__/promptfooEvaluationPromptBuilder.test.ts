@@ -70,7 +70,9 @@ describe('Promptfoo evaluation prompt formatting', () => {
         'file://cases/account-security-alert.yaml'
       ])
     );
-    expect(ecoCases[0].vars.case_id).toContain('webpage_demo');
+    expect(ecoCases.map((c) => c.vars.case_id).join(' ')).toMatch(/webpage_/);
+    expect(ecoCases.some((c) => String(c.vars.case_id).includes('webpage_demo'))).toBe(true);
+    expect(ecoCases.some((c) => String(c.vars.template_name || '').length > 0)).toBe(true);
 
     config.prompts.forEach((promptRef) => {
       const promptPath = path.join(
