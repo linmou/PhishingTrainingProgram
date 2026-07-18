@@ -39,16 +39,22 @@ const {
   scoreTutorResponse,
   allHeuristicsPassed
 } = require(path.join(__dirname, '../src/services/tutorBehaviorHeuristics.ts'));
-const { getDemoRoomTemplateSeeds } = require(path.join(
-  __dirname,
-  '../src/services/demoRoomTemplates.ts'
-));
+const {
+  getDemoRoomTemplateSeeds,
+  getTestOnlyDemoTemplateSeeds
+} = require(path.join(__dirname, '../src/services/demoRoomTemplates.ts'));
 
 /**
- * Browser demos: ONLY rooms created from global AI templates
- * (getDemoRoomTemplateSeeds). No freehand rooms.
+ * Browser demos: create rooms only on /tutor/test-rooms from templates.
+ * Prefer test_only (Demo:) seeds; fall back to full catalog if needed.
+ * Every case still requires a template selection (no freehand rooms).
  */
-const DEMOS = getDemoRoomTemplateSeeds().map((seed) => ({
+const browserSeedSource =
+  typeof getTestOnlyDemoTemplateSeeds === 'function' && getTestOnlyDemoTemplateSeeds().length > 0
+    ? getTestOnlyDemoTemplateSeeds()
+    : getDemoRoomTemplateSeeds();
+
+const DEMOS = browserSeedSource.map((seed) => ({
   id: seed.case_id,
   templateName: seed.template_name,
   expect: seed.expected_behavior_focus,
@@ -56,7 +62,6 @@ const DEMOS = getDemoRoomTemplateSeeds().map((seed) => ({
   studentIsWrong: seed.studentIsWrong,
   studentAskedPersonalStory: seed.studentAskedPersonalStory,
   studentNeedsSimpleLanguage: seed.studentNeedsSimpleLanguage,
-  // For assertions after template select
   expectedStudentLine: [...seed.pre_populated_dialogue]
     .reverse()
     .find((m) => m.role === 'student')?.message

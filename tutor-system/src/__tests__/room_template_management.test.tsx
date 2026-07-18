@@ -209,9 +209,52 @@ describe('Room Template Management', () => {
 
             const select = screen.getByLabelText(/use template/i) as HTMLSelectElement;
             const optionTexts = Array.from(select.options).map((o) => o.textContent || '');
+            // Normal teaching templates stay on main create form
             expect(optionTexts.join(' ')).toContain('Global Privacy Template');
+            // Demo: / test_only templates are moved to /tutor/test-rooms
             expect(optionTexts.join(' ')).not.toContain('Demo: Lock Icon Myth');
             expect(screen.getByTestId('test-rooms-link')).toHaveAttribute('href', '/tutor/test-rooms');
+        });
+
+        test('keeps classic teaching templates on main Tutor create form', async () => {
+            const mockTemplates = [
+                {
+                    id: 'template-classic',
+                    template_name: 'Account Security Alert Scam',
+                    title_template: 'Account Security Alert Scam',
+                    description_template: 'class post',
+                    image_url: null,
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
+                },
+                {
+                    id: 'template-demo',
+                    template_name: 'Demo: Lock Icon Myth (Direct Correction)',
+                    title_template: 'Demo: Lock Icon Myth',
+                    description_template: 'x',
+                    image_url: null,
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
+                }
+            ];
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(mockTemplates);
+
+            render(
+                <TestWrapper>
+                    <TutorView />
+                </TestWrapper>
+            );
+
+            fireEvent.click(screen.getByText('➕ Create a new Room'));
+            await waitFor(() => {
+                expect(screen.getByLabelText(/use template/i)).toBeInTheDocument();
+            });
+            const select = screen.getByLabelText(/use template/i) as HTMLSelectElement;
+            const optionTexts = Array.from(select.options).map((o) => o.textContent || '');
+            expect(optionTexts.join(' ')).toContain('Account Security Alert Scam');
+            expect(optionTexts.join(' ')).not.toContain('Demo: Lock Icon Myth');
         });
 
         test('should create test rooms only from behavior templates on Test Rooms page', async () => {

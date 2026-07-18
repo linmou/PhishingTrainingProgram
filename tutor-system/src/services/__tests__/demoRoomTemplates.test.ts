@@ -42,7 +42,22 @@ describe('demoRoomTemplates', () => {
         .find((m) => m.role === 'student');
       expect(lastStudent?.message.length).toBeGreaterThan(10);
       expect(seed.description_template.toLowerCase()).not.toContain('practice room:');
+      expect(typeof seed.test_only).toBe('boolean');
     });
+  });
+
+  it('marks only Demo: catalog entries as test_only for the Test Rooms page', () => {
+    const seeds = getDemoRoomTemplateSeeds();
+    const testOnly = seeds.filter((s) => s.test_only);
+    const normal = seeds.filter((s) => !s.test_only);
+    expect(testOnly.every((s) => s.template_name.startsWith('Demo:'))).toBe(true);
+    expect(normal.map((s) => s.template_name)).toEqual(
+      expect.arrayContaining([
+        'Account Security Alert Scam',
+        'Nintendo Switch Deal Scam',
+        'iTunes Gift Card Survey Scam'
+      ])
+    );
   });
 
   it('builds ecological cases with product-shaped history packaging', () => {

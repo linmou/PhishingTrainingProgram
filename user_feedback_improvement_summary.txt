@@ -111,9 +111,13 @@ Phase 2 two-layer verification:
   npm run eval:prompts
   npm run test:browser:behavior-demos
 
+UI separation:
+- /#/tutor — normal class rooms; classic templates stay on the main create form.
+- /#/tutor/test-rooms — Demo: / test_only behavior-eval rooms; browser demos use this page.
+
 Layer results (Phase 2 verification runs):
 - Ecological product gate: 7/7 template-derived cases passed
-- Browser demos: 7/7 template-only rooms passed
+- Browser demos: template-only rooms on Test Rooms page
 
 Reliability notes:
 - Cases use multi-turn dialogue from the same seeds as the website (demoRoomTemplates.ts).

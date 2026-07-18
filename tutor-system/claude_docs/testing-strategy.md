@@ -4,7 +4,7 @@ This document outlines the comprehensive testing strategy for the completed task
 
 ## Current Test Tiers
 
-Updated: 2026-07-18 (tutor behavior live E2E)
+Updated: 2026-07-18 (tutor behavior live E2E + Test Rooms page)
 
 The repository now uses these validation tiers:
 
@@ -33,6 +33,12 @@ The repository now uses these validation tiers:
 5. Full external validation:
    - Command: `npm run test:integration:external`
    - Purpose: run OpenAI checklist, tutor-behavior E2E, and browser tiers when preparing a release or checking environment health
+
+6. Ecological Promptfoo + real-browser template demos (behavior feedback):
+   - Layer 1: `npm run eval:prompts` (export + ecological cases + product gate)
+   - Layer 2: `npm run test:browser:behavior-demos` (template-only rooms on **`/#/tutor/test-rooms`**, not the main room list)
+   - UI: main Tutor dashboard (`/#/tutor`) lists normal rooms only; **Test Rooms** page hosts `Demo:` / `test_only` rooms
+   - Classic teaching templates (Account Security, Nintendo, iTunes, Phone Number, etc.) stay on the normal create form
 
 ## Overview
 

@@ -150,8 +150,12 @@ Needs multiple agent roles, UI design, and a separate multi-voice evaluation set
 ```bash
 cd tutor-system
 npm run eval:prompts                 # Layer 1: export + Promptfoo + ecological product gate
-npm run test:browser:behavior-demos  # Layer 2: real template rooms + ✨ AI
+npm run test:browser:behavior-demos  # Layer 2: real template rooms on /tutor/test-rooms + ✨ AI
 ```
+
+UI separation:
+- `/#/tutor` — normal class rooms; create form keeps classic templates (Account Security, Nintendo, iTunes, …).
+- `/#/tutor/test-rooms` — `Demo:` / `test_only` behavior-eval rooms only; browser demos use this page.
 
 | Layer | What it proves | Latest evidence |
 | --- | --- | --- |

@@ -40,6 +40,11 @@ export interface DemoRoomTemplateSeed {
   pre_populated_dialogue: PrePopulatedMessage[];
   ai_config_template: DemoAIConfigTemplate;
   expected_behavior_focus: string;
+  /**
+   * When true, template is only offered on /tutor/test-rooms (not main Tutor create).
+   * Classic teaching templates stay on the normal dashboard.
+   */
+  test_only: boolean;
   studentIsWrong?: boolean;
   studentAskedPersonalStory?: boolean;
   studentNeedsSimpleLanguage?: boolean;
@@ -117,6 +122,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'Correct fear-based trust; concrete safe action; balanced teaching rhythm.',
+      test_only: false,
       studentIsWrong: true,
       studentNeedsSimpleLanguage: true
     },
@@ -161,6 +167,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'Stop click impulse; concrete official-site / price-check action; low praise spam.',
+      test_only: false,
       studentIsWrong: true
     },
     {
@@ -203,6 +210,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'Correct design-trust myth; official channel check; restrained praise.',
+      test_only: false,
       studentIsWrong: true
     },
     {
@@ -247,6 +255,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'Directly correct lock/HTTPS myth; concrete real app/domain action; simple language.',
+      test_only: true,
       studentIsWrong: true,
       studentNeedsSimpleLanguage: true
     },
@@ -290,6 +299,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'Correct click impulse; do not click; open real app/type real site.',
+      test_only: true,
       studentIsWrong: true
     },
     {
@@ -326,6 +336,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'Simple language for jargon; teach not interrogate; stable peer voice.',
+      test_only: true,
       studentNeedsSimpleLanguage: true
     },
     {
@@ -363,9 +374,20 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       ]),
       expected_behavior_focus:
         'No first-person lived experience; third-person/common pattern; practical next step.',
+      test_only: true,
       studentAskedPersonalStory: true
     }
   ];
+}
+
+/** Templates that only appear on /tutor/test-rooms. */
+export function getTestOnlyDemoTemplateSeeds(): DemoRoomTemplateSeed[] {
+  return getDemoRoomTemplateSeeds().filter((s) => s.test_only);
+}
+
+/** Classic teaching templates also usable from the main Tutor dashboard. */
+export function getNormalTeachingTemplateSeeds(): DemoRoomTemplateSeed[] {
+  return getDemoRoomTemplateSeeds().filter((s) => !s.test_only);
 }
 
 /** Ecological eval vars derived from the same dialogue the website seeds. */

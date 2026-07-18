@@ -179,8 +179,14 @@ npm run eval:prompts
 
 # Layer 2 — real browser + real Supabase rooms from templates only
 # (app running, e.g. PORT=3001 npm start)
+# Creates rooms on /#/tutor/test-rooms (not the main Tutor room list)
 npm run test:browser:behavior-demos
 ```
+
+UI note (2026-07-18):
+- Main Tutor dashboard (`/#/tutor`) “Create room” shows **normal teaching templates** (classics + non-demo catalog).
+- Behavior-eval templates named `Demo: …` live only on **`/#/tutor/test-rooms`**.
+- Browser demos use that Test Rooms page so they do not pollute “Your Rooms.”
 
 Evidence from Phase 2 verification runs:
 - Ecological product gate: **7/7** template-derived cases passed (deterministic heuristics on product-shaped calls).
