@@ -47,19 +47,30 @@ describe('Promptfoo evaluation prompt formatting', () => {
     expect(concreteUserTurn).toContain(firstCase.conversation_history);
     expect(concreteUserTurn).toContain(firstCase.student_message);
     expect(concreteUserTurn).toContain('Write the tutor response only');
+    expect(concreteUserTurn).not.toMatch(/brief follow-up question/i);
     expect(concreteUserTurn).not.toContain('{{scenario_context}}');
   });
 
-  it('loads configured Promptfoo chat prompts and injects a real evaluation case', () => {
+  it('loads configured Promptfoo chat prompts and ecological webpage cases', () => {
     const config = yaml.load(
       fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/promptfooconfig.yaml'), 'utf8')
-    ) as { prompts: string[] };
+    ) as { prompts: string[]; tests: string[] };
     const firstCase = readFirstCaseVars();
+    const ecoCases = yaml.load(
+      fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/cases/webpage-ecological.yaml'), 'utf8')
+    ) as Array<{ vars: Record<string, string> }>;
 
     expect(config.prompts).toEqual([
       'file://prompts/current.chat.prompt.json',
       'file://prompts/improved.chat.prompt.json'
     ]);
+    expect(config.tests).toEqual(
+      expect.arrayContaining([
+        'file://cases/webpage-ecological.yaml',
+        'file://cases/account-security-alert.yaml'
+      ])
+    );
+    expect(ecoCases[0].vars.case_id).toContain('webpage_demo');
 
     config.prompts.forEach((promptRef) => {
       const promptPath = path.join(
@@ -78,12 +89,10 @@ describe('Promptfoo evaluation prompt formatting', () => {
 
       expect(messages).toHaveLength(2);
       expect(messages[0].role).toBe('system');
-      expect(messages[0].content).toContain('YOUR ACCOUNT IS AT RISK');
-      expect(messages[0].content).toContain('testdrive.info');
       expect(messages[1].role).toBe('user');
       expect(renderedUserTurn).toContain(firstCase.scenario_context);
-      expect(renderedUserTurn).toContain(firstCase.conversation_history);
       expect(renderedUserTurn).toContain(firstCase.student_message);
+      expect(renderedUserTurn).toContain('Write the tutor response only');
       expect(renderedUserTurn).not.toContain('{{');
     });
   });

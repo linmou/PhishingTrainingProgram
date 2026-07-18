@@ -5,6 +5,6 @@
   },
   {
     "role": "user",
-    "content": "You are continuing this phishing-training tutoring conversation.\n\nScenario context:\n{{scenario_context}}\n\nRecent conversation:\n{{conversation_history}}\n\nStudent's latest message:\n{{student_message}}\n\nWrite the tutor response only. Do not prefix it with \"Tutor:\" or any speaker label."
+    "content": "You are continuing this phishing-training tutoring conversation on the product room page.\nDraft the next tutor message the student should hear.\n\nScenario context (room title and description):\n{{scenario_context}}\n\nRecent conversation (as shown in the room discussion):\n{{conversation_history}}\n\nStudent's latest message:\n{{student_message}}\n\nWrite the tutor response only. Do not prefix it with \"Tutor:\" or any speaker label.\nTeach or correct directly when needed. Include one concrete safe action when the student is wrong, unsure, or asking what to do.\nAsk at most one focused question, and only if it helps. Do not answer only with questions."
   }
 ]

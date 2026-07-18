@@ -13,6 +13,11 @@ import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
+import {
+    buildEcologicalChatCompletionMessages,
+    conversationMessagesToHistoryText,
+    formatRoomScenarioContext
+} from './ecologicalTutorCall';
 
 // ============================================================================
 // CONSTANTS AND TYPES
@@ -565,32 +570,50 @@ export class OpenAIService {
 }
 
 /**
- * Tutor Suggestion Service
+ * Tutor Suggestion Service — ecological product path.
+ * Uses the same user-turn packaging as Promptfoo (full tutor response to draft).
  */
 export class TutorSuggestionService {
     static async generateSuggestion(
         conversationHistory: ConversationMessage[],
-        config: AIAssistantConfig
+        config: AIAssistantConfig,
+        options?: {
+            focusStudentMessage?: string;
+            scenarioContext?: string;
+        }
     ): Promise<{ suggestion: string; success: boolean; error?: string }> {
         try {
-            const conversationText = conversationHistory
-                .slice(-10)
-                .map(msg => `${msg.role}: ${msg.content}`)
-                .join('\n');
-
             const systemPrompt = config.system_prompt ||
                 'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn. Be encouraging, patient, and focus on building understanding.';
 
-            const messages = [
-                {
-                    role: 'system',
-                    content: systemPrompt
-                },
-                {
-                    role: 'user',
-                    content: `Based on the recent conversation below, suggest a brief follow-up question or prompt that a tutor could use to engage the student further. The suggestion should be under 2 sentences, interactive, and focused on deepening the student's understanding.\n\nRecent conversation:\n${conversationText}\n\nTutor suggestion:`
-                }
-            ];
+            // Prefer explicit focus student line from the room UI; else last user turn.
+            let studentMessage = (options?.focusStudentMessage || '').trim();
+            if (!studentMessage) {
+                const lastUser = [...conversationHistory].reverse().find((m) => m.role === 'user');
+                studentMessage = lastUser?.content || 'What should I look for in this post?';
+            }
+
+            const historyWithoutLastStudent = conversationHistory.filter((m) => {
+                if (!options?.focusStudentMessage) return true;
+                // Keep full history; ecological turn re-states the latest student line explicitly.
+                return true;
+            });
+
+            const scenarioContext =
+                options?.scenarioContext ||
+                conversationHistory.find((m) => m.role === 'system')?.content ||
+                'Phishing training room';
+
+            const messages = buildEcologicalChatCompletionMessages(systemPrompt, {
+                scenario_context: scenarioContext,
+                conversation_history: conversationMessagesToHistoryText(historyWithoutLastStudent),
+                student_message: studentMessage
+            });
+
+            const temperature =
+                typeof config.temperature === 'number' ? config.temperature : 0.3;
+            const maxTokens =
+                typeof config.max_tokens === 'number' ? config.max_tokens : 250;
 
             const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
                 method: 'POST',
@@ -601,8 +624,8 @@ export class TutorSuggestionService {
                 body: JSON.stringify({
                     model: config.model_name,
                     messages,
-                    temperature: 0.7,
-                    max_tokens: 100
+                    temperature,
+                    max_tokens: maxTokens
                 })
             });
 
@@ -748,7 +771,10 @@ export class DummyAIService {
 export const generateTutorSuggestion = async (
     roomId: string,
     userId: string,
-    parameterOverrides?: ParameterOverrides
+    parameterOverrides?: ParameterOverrides,
+    options?: {
+        focusStudentMessage?: string;
+    }
 ): Promise<{
     suggestion: string;
     success: boolean;
@@ -769,12 +795,30 @@ export const generateTutorSuggestion = async (
         // 4. Log final configuration being used
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
         
-        // 5. Get conversation history
+        // 5. Get conversation history (includes pre-populated discussion for ecology)
         const conversationHistory = await buildAIContextFromExistingData(roomId);
         console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
+
+        // Scenario string from room fields when available
+        const { data: roomMeta } = await supabase
+            .from('rooms')
+            .select('title, description')
+            .eq('id', roomId)
+            .single();
+        const scenarioContext = formatRoomScenarioContext(
+            roomMeta?.title,
+            roomMeta?.description
+        );
         
         // 6. Generate suggestion using appropriate service
-        const suggestionResult = await generateSuggestionWithService(conversationHistory, aiConfig);
+        const suggestionResult = await generateSuggestionWithService(
+            conversationHistory,
+            aiConfig,
+            {
+                focusStudentMessage: options?.focusStudentMessage,
+                scenarioContext
+            }
+        );
         
         // 7. Get context messages for tracking
         const contextMessages = await getContextMessages(roomId);
@@ -830,14 +874,22 @@ async function validateRoom(roomId: string) {
  */
 async function generateSuggestionWithService(
     conversationHistory: ConversationMessage[],
-    aiConfig: AIAssistantConfig
+    aiConfig: AIAssistantConfig,
+    options?: {
+        focusStudentMessage?: string;
+        scenarioContext?: string;
+    }
 ) {
     const lastMessage = conversationHistory[conversationHistory.length - 1];
     const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
 
     if (OAI_API_KEY) {
-        console.log('Using OpenAI API for tutor suggestions');
-        const result = await TutorSuggestionService.generateSuggestion(conversationHistory, aiConfig);
+        console.log('Using OpenAI API for tutor suggestions (ecological path)');
+        const result = await TutorSuggestionService.generateSuggestion(
+            conversationHistory,
+            aiConfig,
+            options
+        );
 
         if (result.success) {
             return result;

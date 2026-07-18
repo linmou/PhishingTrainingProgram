@@ -604,7 +604,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             const result = await generateTutorSuggestion(
                 currentRoom.id,
-                user.id
+                user.id,
+                undefined,
+                {
+                    // Same student line the tutor is responding to in the UI
+                    focusStudentMessage: parentMessageContent || prompt
+                }
             );
 
             if (!result.success) {
@@ -660,7 +665,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const result = await generateTutorSuggestion(
                 currentRoom.id,
                 user.id,
-                parameterOverrides // Pass the parameter overrides
+                parameterOverrides,
+                {
+                    focusStudentMessage: currentSuggestionContext.parentMessageContent
+                }
             );
 
             if (!result.success) {

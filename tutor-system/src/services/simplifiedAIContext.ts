@@ -5,10 +5,18 @@
 
 import { supabase } from './supabase';
 import { ConversationMessage } from '../types';
+import {
+    formatRoomScenarioContext,
+    prePopulatedToContextMessages
+} from './ecologicalTutorCall';
 
 /**
  * Build AI conversation context directly from existing tables
  * No need for separate ai_conversation_contexts table!
+ *
+ * Ecological note: pre_populated_dialogue is shown in the room UI even when
+ * rows are not yet in `messages`. Include it so the model sees the same
+ * discussion the tutor sees when pressing ✨ AI.
  */
 export async function buildAIContextFromExistingData(roomId: string): Promise<ConversationMessage[]> {
     try {
@@ -35,23 +43,16 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
         if (room) {
             context.push({
                 role: 'system',
-                content: `Training scenario: "${room.title}" - ${room.description}`,
+                content: `Training scenario: ${formatRoomScenarioContext(room.title, room.description)}`,
                 timestamp: new Date(room.created_at).getTime() / 1000
             });
 
-            // Add the main phishing example if it exists
-            if (room.pre_populated_dialogue) {
-                const dialogue = room.pre_populated_dialogue as any;
-                if (dialogue.posts && Array.isArray(dialogue.posts)) {
-                    dialogue.posts.slice(0, 2).forEach((post: any) => {
-                        context.push({
-                            role: 'user',
-                            content: `Student shared for analysis: ${post.content || post.text || 'Content to analyze'}`,
-                            timestamp: new Date(room.created_at).getTime() / 1000 + 1
-                        });
-                    });
-                }
-            }
+            // Pre-populated discussion (array or legacy {posts}) — same as UI
+            const prePop = prePopulatedToContextMessages(
+                room.pre_populated_dialogue as any,
+                room.created_at
+            );
+            context.push(...prePop);
         }
 
         // Add recent chat messages
