@@ -4,7 +4,7 @@
  * Based on BDD scenarios from ai_checklist_integration.feature
  */
 
-import { OpenAIService } from './aiService';
+import { OpenAIService, DEFAULT_AI_MODEL } from './aiService';
 import { AIAssistantConfig, ConversationMessage } from '../types';
 import { ChecklistItem, CoverageEvidence, CoverageDetectionResult } from '../types/checklist';
 
@@ -33,7 +33,7 @@ export class CoverageDetectionService {
       const aiConfig: AIAssistantConfig = {
         id: 'coverage-analysis',
         room_id: 'temp',
-        model_name: 'gpt-4o',
+        model_name: DEFAULT_AI_MODEL,
         system_prompt: this.getCoverageAnalysisSystemPrompt(),
         temperature: 0.1, // Low temperature for consistent, reliable analysis
         max_tokens: 500,

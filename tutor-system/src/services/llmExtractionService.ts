@@ -3,7 +3,7 @@
  * Refactored to use OpenAIService for consistent API handling
  */
 
-import { OpenAIService, DummyAIService } from './aiService';
+import { OpenAIService, DummyAIService, DEFAULT_AI_MODEL } from './aiService';
 import { AIAssistantConfig } from '../types';
 
 export interface ExtractionResult {
@@ -17,7 +17,7 @@ export interface ExtractionResult {
 const EXTRACTION_CONFIG: AIAssistantConfig = {
   id: 'llm-extraction',
   room_id: 'system',
-  model_name: 'gpt-4o', // Use more capable model for complex prompt parsing
+  model_name: DEFAULT_AI_MODEL,
   system_prompt: 'You are a specialized AI for extracting structured learning objectives from educational prompts.',
   temperature: 0.05, // Very low temperature for consistent structured extraction
   max_tokens: 800, // Increased tokens to handle complex extraction results

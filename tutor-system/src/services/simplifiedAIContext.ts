@@ -91,7 +91,7 @@ export async function getAIConfigFromRoom(roomId: string) {
 
     if (!room?.ai_assistant_enabled) {
         return {
-            model_name: 'gpt-4o',
+            model_name: 'gpt-4o-mini',
             system_prompt: 'You are a helpful AI assistant in a phishing training session.',
             temperature: 0.7,
             max_tokens: 150
@@ -99,7 +99,7 @@ export async function getAIConfigFromRoom(roomId: string) {
     }
 
     return {
-        model_name: room.ai_assistant_model || 'gpt-4o',
+        model_name: room.ai_assistant_model || 'gpt-4o-mini',
         system_prompt: room.ai_assistant_prompt || 'You are a helpful AI assistant in a phishing training session.',
         temperature: 0.7,
         max_tokens: 150
