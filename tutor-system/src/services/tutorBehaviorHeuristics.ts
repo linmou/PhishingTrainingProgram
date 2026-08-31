@@ -14,12 +14,17 @@ export type TutorBehaviorMetric =
   | 'low_boilerplate_praise'
   | 'practical_knowledge'
   | 'third_person_examples'
-  | 'reading_level';
+  | 'reading_level'
+  | 'response_length';
 
 export interface HeuristicScore {
   metric: TutorBehaviorMetric;
   pass: boolean;
   reasons: string[];
+  score?: number;
+  reason?: string;
+  wordCount?: number;
+  sentenceCount?: number;
 }
 
 export interface ScoreTutorResponseOptions {
@@ -40,6 +45,7 @@ export interface ScoreTutorResponseOptions {
    * (used by reading_level).
    */
   studentNeedsSimpleLanguage?: boolean;
+  scaffoldingStatus?: 'not_started' | 'failed';
 }
 
 const GENERIC_PRAISE =
@@ -98,15 +104,19 @@ function hasSubstantiveTeaching(text: string): boolean {
   return words.length >= 12 || PRACTICAL_ACTION.test(text) || CORRECTION_MARKERS.test(text);
 }
 
-export function scoreTurnRhythm(response: string): HeuristicScore {
+export function scoreTurnRhythm(
+  response: string,
+  scaffoldingStatus: 'not_started' | 'failed' = 'failed'
+): HeuristicScore {
   const reasons: string[] = [];
   const questions = countQuestionSentences(response);
   const substantive = hasSubstantiveTeaching(response);
+  const focusedQuestion = questions === 1 && response.trim().split(/\s+/).filter(Boolean).length >= 5;
 
   if (questions >= 2) {
     reasons.push(`asks ${questions} questions (max 1 expected)`);
   }
-  if (!substantive) {
+  if (!substantive && !(scaffoldingStatus === 'not_started' && focusedQuestion)) {
     reasons.push('lacks a concrete teaching point, correction, or safe action');
   }
   // Ending with a question is OK only if there is real teaching and at most one question.
@@ -116,12 +126,16 @@ export function scoreTurnRhythm(response: string): HeuristicScore {
 
   return {
     metric: 'turn_rhythm',
-    pass: questions <= 1 && substantive,
+    pass: questions <= 1 && (substantive || (scaffoldingStatus === 'not_started' && focusedQuestion)),
     reasons
   };
 }
 
-export function scoreDirectCorrection(response: string, studentIsWrong = true): HeuristicScore {
+export function scoreDirectCorrection(
+  response: string,
+  studentIsWrong = true,
+  scaffoldingStatus: 'not_started' | 'failed' = 'failed'
+): HeuristicScore {
   const reasons: string[] = [];
   if (!studentIsWrong) {
     return {
@@ -132,22 +146,65 @@ export function scoreDirectCorrection(response: string, studentIsWrong = true): 
   }
 
   const corrects = CORRECTION_MARKERS.test(response);
+  const safeAction = PRACTICAL_ACTION.test(response);
+  const focusedQuestion =
+    countQuestionSentences(response) === 1 &&
+    response.trim().split(/\s+/).filter(Boolean).length >= 5 &&
+    /\b(link|url|domain|sender|alert|message|site|website|web address|offer|account|check|notice|sign|safe|real|risk|evidence|think|reason|trust)\b/i.test(response);
   const validatesFirst = VALIDATING_WRONG.test(response) && !corrects;
   const softValidates = /\bi (totally )?get why you('d| would) think\b/i.test(response) && !corrects;
 
-  if (!corrects) {
-    reasons.push('no explicit correction of unsafe or incomplete reasoning');
-  } else {
+  if (corrects) {
     reasons.push('contains an explicit correction marker');
+  } else if (scaffoldingStatus === 'not_started' && focusedQuestion) {
+    reasons.push('one focused question is acceptable before a scaffold starts');
+  } else {
+    reasons.push('no explicit correction of unsafe or incomplete reasoning');
   }
   if (validatesFirst || softValidates) {
     reasons.push('validates the wrong answer without correcting it');
   }
+  if (scaffoldingStatus === 'failed' && !safeAction) {
+    reasons.push('failed scaffold requires one concrete safe action');
+  }
 
   return {
     metric: 'direct_correction',
-    pass: corrects && !validatesFirst && !softValidates,
+    pass:
+      !validatesFirst &&
+      !softValidates &&
+      (scaffoldingStatus === 'not_started'
+        ? focusedQuestion || (corrects && safeAction)
+        : corrects && safeAction),
     reasons
+  };
+}
+
+export function scoreResponseLength(response: string): HeuristicScore {
+  const normalized = String(response || '').replace(/\r\n?/g, '\n').replace(/[ \t\n]+/g, ' ').trim();
+  const Segmenter = (Intl as any).Segmenter;
+  const wordSegments = Segmenter
+    ? Array.from(new Segmenter('en', { granularity: 'word' }).segment(normalized))
+    : normalized.split(/\s+/).filter(Boolean).map((segment: string) => ({ segment, isWordLike: true }));
+  const sentenceSegments = Segmenter
+    ? Array.from(new Segmenter('en', { granularity: 'sentence' }).segment(normalized))
+    : normalized.split(/[.!?]+/).filter(Boolean);
+  const wordCount = (wordSegments as Array<{ isWordLike?: boolean }>).filter((segment) => segment.isWordLike).length;
+  const sentenceCount = (sentenceSegments as Array<{ segment?: string } | string>)
+    .map((segment) => typeof segment === 'string' ? segment : segment.segment || '')
+    .filter((segment) => segment.trim().length > 0).length;
+  const pass = normalized.length > 0 && sentenceCount <= 3 && wordCount <= 50;
+  const reason = pass
+    ? `within limit (${sentenceCount} sentence${sentenceCount === 1 ? '' : 's'}, ${wordCount} words)`
+    : `length limit exceeded or empty (${sentenceCount} sentences, ${wordCount} words)`;
+  return {
+    metric: 'response_length',
+    pass,
+    score: pass ? 1 : 0,
+    reason,
+    reasons: [reason],
+    wordCount,
+    sentenceCount
   };
 }
 
@@ -309,16 +366,17 @@ const SCORERS: Record<
   TutorBehaviorMetric,
   (response: string, options: ScoreTutorResponseOptions) => HeuristicScore
 > = {
-  turn_rhythm: (response) => scoreTurnRhythm(response),
+  turn_rhythm: (response, options) => scoreTurnRhythm(response, options.scaffoldingStatus),
   direct_correction: (response, options) =>
-    scoreDirectCorrection(response, options.studentIsWrong ?? true),
+    scoreDirectCorrection(response, options.studentIsWrong ?? true, options.scaffoldingStatus),
   persona_stability: (response) => scorePersonaStability(response),
   low_boilerplate_praise: (response) => scoreLowBoilerplatePraise(response),
   practical_knowledge: (response) => scorePracticalKnowledge(response),
   third_person_examples: (response, options) =>
     scoreThirdPersonExamples(response, options.studentAskedPersonalStory ?? false),
   reading_level: (response, options) =>
-    scoreReadingLevel(response, options.studentNeedsSimpleLanguage ?? false)
+    scoreReadingLevel(response, options.studentNeedsSimpleLanguage ?? false),
+  response_length: (response) => scoreResponseLength(response)
 };
 
 /**

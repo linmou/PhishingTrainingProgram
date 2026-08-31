@@ -6,9 +6,9 @@
 import { LLMExtractionService } from '../services/llmExtractionService';
 import { ChecklistIntegration } from '../services/checklistIntegration';
 
-const describeLiveOpenAI = process.env.RUN_LIVE_OPENAI_TESTS === 'true' ? describe : describe.skip;
+const describeLiveQwen = process.env.RUN_LIVE_QWEN_TESTS === 'true' ? describe : describe.skip;
 
-describeLiveOpenAI('Checklist Extraction Specificity Problem', () => {
+describeLiveQwen('Checklist Extraction Specificity Problem', () => {
   jest.setTimeout(15000);
 
   describe('Specificity Preservation Tests (SHOULD NOW PASS)', () => {

@@ -17,13 +17,13 @@ relevant google doc: https://docs.google.com/document/d/1-cYuVZW2eU4M9TCgseWvwEx
 | --- | --- | --- | --- |
 | 1 | No question-every-turn | **Done (prompt + product path)** | System prompt tight rhythm; room AI user turn asks for a short tutor reply, not a follow-up question |
 | 2 | Direct correction | **Done (prompt + product path)** | System prompt + ecological turn: correct wrong/incomplete answers, then one safe action |
-| 3 | Stable persona | **Done (prompt)** | Knowledgeable peer coach; no fake friend/parent/personal history |
+| 3 | Stable persona | **Done (prompt + product)** | Knowledgeable peer coach by default; student may opt in to Peer/Adult tone near the comment box (1:1 AI rooms) |
 | 4 | Less hollow praise | **Done (prompt)** | Low enthusiasm/validation in `casual_peer`; brief specific acknowledgment only |
 | 5 | Concrete safety knowledge | **Done (prompt + product path)** | Default safe actions in system prompt; user turn requires one concrete action; short length keeps focus |
 | 6 | Third-person examples | **Done (prompt)** | Third-person only; demo room “Did this ever happen to you?” |
 | 7 | Latency / typing indicator | **Open** | Needs UI/runtime (not prompt-only) |
 | 8 | Simpler language | **Done (prompt)** | Reading-level substitutions; short replies reduce jargon piles |
-| 9 | Multi-bot simulation | **Reinterpreted (product)** | Student opt-in Peer/Adult tone (1:1 only); locks tutor personality control — not dual bots |
+| 9 | Multi-bot simulation | **Reinterpreted / done (product)** | Not dual bots. Student **Choose AI tone?** → Peer/Adult above comment input; tutor AI Personality locks after choice; multi-student blocked. Commits `6980272`, `29ba240` |
 
 ---
 
@@ -85,8 +85,9 @@ Implementation commits:
    - Likely work: typing indicator state, streaming or staged response behavior, and latency instrumentation.
 
 9. Consider multi-bot simulation.
-   - Original idea: formal bot + informal peer bot in one thread (multi-agent).
-   - **Product reinterpretation (implemented):** student may opt in to choose AI tone (Peer | Adult) in single-student rooms; tutor AI Personality locks after choice. Multi-student blocked for now. See `features/student_ai_tone.feature`.
+   - Original idea: formal bot + informal peer bot in one thread (multi-agent) — **not built**.
+   - **Product reinterpretation (implemented):** one AI voice; student opt-in **Choose AI tone?** → Peer | Adult, placed **above the comment input** (not top nav); tutor AI Personality locks after choice. Multi-student rooms: control hidden + write rejected. See `features/student_ai_tone.feature`.
+   - Commits: `6980272` (feature + default model `gpt-4o-mini`), `29ba240` (UI placement by input).
 
 ### Evaluation Gate Passed (Phase 1)
 
@@ -195,5 +196,10 @@ Evidence from Phase 2 verification runs:
 
 ### Still open
 
-7. Latency / typing indicator — product UI/runtime.  
-9. Multi-bot simulation — product design + multi-voice evals.
+7. Latency / typing indicator — product UI/runtime only remaining open item from the original list.
+
+### Phase 3 notes (product UX for #3/#9, 2026-07-18)
+
+- Student AI tone control: `StudentAIToneControl` in `RoomPagePost` **comment composer** (above `CommentInput`).
+- Default AI model: `gpt-4o-mini` (`DEFAULT_AI_MODEL` in `aiModels.ts`); `gpt-4o` remains selectable.
+- Misleading homepage “Run Connection Diagnostics” removed (`authDiagnostics` deleted).

@@ -1,6 +1,6 @@
 /**
  * Tests for AI Checklist Integration.
- * Covers real OpenAI-backed extraction, coverage detection, and AI adaptation as an opt-in external integration suite.
+ * Covers real Qwen-backed extraction, coverage detection, and AI adaptation as an opt-in external integration suite.
  */
 
 import { CoverageDetectionService } from '../services/coverageDetectionService';
@@ -9,11 +9,11 @@ import { generateSystemPromptWithChecklist } from '../services/prompts/checklist
 import { ChecklistItem, CoverageEvidence } from '../types/checklist';
 import { SystemPromptConfig } from '../services/prompts/types';
 
-// Use real OpenAI service - no mocking.
+// Use the real Qwen service - no mocking.
 // Keep this suite opt-in so default regression runs stay deterministic.
-const describeLiveOpenAI = process.env.RUN_LIVE_OPENAI_TESTS === 'true' ? describe : describe.skip;
+const describeLiveQwen = process.env.RUN_LIVE_QWEN_TESTS === 'true' ? describe : describe.skip;
 
-describeLiveOpenAI('AI Checklist Integration', () => {
+describeLiveQwen('AI Checklist Integration', () => {
   // Increase timeout for real API calls
   jest.setTimeout(30000);
 

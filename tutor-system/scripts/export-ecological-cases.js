@@ -31,8 +31,12 @@ require.extensions['.ts'] = (module, filename) => {
 };
 
 const { getEcologicalCasesFromTemplates } = require(path.join(
+      tutorRoot,
+      'src/services/demoRoomTemplates.ts'
+    ));
+const { buildEcologicalChatCompletionMessages } = require(path.join(
   tutorRoot,
-  'src/services/demoRoomTemplates.ts'
+  'src/services/ecologicalTutorCall.ts'
 ));
 
 const cases = getEcologicalCasesFromTemplates();
@@ -42,21 +46,35 @@ const rows = cases.map((c) => {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  return {
-    vars: {
+      return {
+        vars: {
       case_id: c.case_id,
       template_name: c.template_name,
       scenario_context: c.scenario_context,
       conversation_history: c.conversation_history,
       student_message: c.student_message,
       expected_behavior_focus: c.expected_behavior_focus,
-      applicable_requirements: c.applicable_requirements
-    },
-    assert: metrics.map((metric) => ({
-      type: 'llm-rubric',
-      metric,
-      value: `file://rubrics/${metric}.md`
-    }))
+          applicable_requirements: c.applicable_requirements,
+          source_type: c.source_type,
+          scaffolding_status: c.scaffolding_status,
+          student_answer_state: c.student_answer_state,
+          product_message_shape: buildEcologicalChatCompletionMessages(c.ai_config_template?.system_prompt || '', {
+            scenario_context: c.scenario_context,
+            conversation_history: c.conversation_history,
+            student_message: c.student_message
+          }).map((message) => message.role).join(',')
+        },
+        assert: metrics.map((metric) => metric === 'response_length'
+          ? {
+              type: 'javascript',
+              metric,
+              value: 'file://../../tutor-system/scripts/response-length-rubric.js'
+            }
+          : {
+              type: 'llm-rubric',
+              metric,
+              value: `file://rubrics/${metric}.md`
+            })
   };
 });
 
@@ -75,7 +93,8 @@ const body = yaml.dump(rows, {
   quotingType: '"'
 });
 
-fs.writeFileSync(outPath, header + body);
+const destination = process.env.ECOLOGICAL_OUTPUT_PATH || outPath;
+fs.writeFileSync(destination, header + body);
 console.log(`Wrote ${rows.length} ecological cases → ${path.relative(repoRoot, outPath)}`);
 for (const c of cases) {
   console.log(` - ${c.case_id} (${c.template_name})`);

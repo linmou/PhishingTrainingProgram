@@ -26,9 +26,9 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
     }
   },
   mistake_normalization: {
-    low: `Provide direct correction.
-    Example: "That's wrong."`,
-    high: `Correct unsafe reasoning directly, then keep the student moving.
+    low: `Use direct correction when a question scaffold has failed or the student is about to take an unsafe action.
+    Example: "Not quite. Check the real app instead."`,
+    high: `After a failed question scaffold, correct unsafe reasoning and give one concrete safe action.
     Example: "Not quite. A lock icon does not prove the site is real. Check the web address."`,
     labels: {
       low: 'corrective',

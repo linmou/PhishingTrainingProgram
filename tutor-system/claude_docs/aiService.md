@@ -1,7 +1,7 @@
 # aiService.ts - AI Assistant Functionality
 
 ## Purpose
-Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Supports both OpenAI API integration and dummy service fallback.
+Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Production requests use Qwen3.5 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key.
 
 ## Architecture Overview
 
@@ -10,7 +10,7 @@ The service is organized into four main architectural layers:
 
 1. **AI Configuration Management**: Config loading, creation, and upgrades
 2. **System Prompt Processing**: Prompt generation and parameter overrides  
-3. **AI Response Services**: OpenAI API and dummy service implementations
+3. **AI Response Services**: Qwen API and debug-only dummy service implementations
 4. **Public API**: Clean interface for external consumption
 
 ### Configuration Types
@@ -58,8 +58,9 @@ interface ParameterOverrides {
 - **Role**: `supportive_adult` preset (high authority, encouraging tone)
 - **Detection areas**: `['Suspicious links', 'Urgent language', 'Unexpected requests']`
 - **Verification steps**: `['Check sender authenticity', 'Verify through official channels', 'Think before clicking']`
-- **Model**: `gpt-4o-mini` (`DEFAULT_AI_MODEL` — cheap default; `gpt-4o` remains selectable)
-- **Response length**: 100 tokens (concise educational responses)
+- **Model**: `qwen3.5-flash` (`DEFAULT_AI_MODEL`, the only selectable model)
+- **Transport**: `POST {REACT_APP_OAI_BASE_URL}/chat/completions`, with `enable_thinking: false`
+- **Response policy**: prompt-controlled maximum of three sentences and 50 words; runtime output is not clipped or rewritten
 
 ## System Prompt Processing
 
@@ -70,15 +71,17 @@ interface ParameterOverrides {
 
 Intent: keep production prompt changes tied to reviewed student-behavior requirements instead of relying on ad hoc prompt edits.
 
-The phishing tutor prompt is evaluated through the Promptfoo benchmark in `../evals/promptfoo/` before the production prompt text is changed. The current quality gate requires the candidate prompt to pass at least 80% of applicable assertions for every metric and to match or beat the baseline prompt on every metric.
+The phishing tutor prompt is evaluated through the Promptfoo benchmark in `../evals/promptfoo/`. The active Qwen gate requires at least 80% of applicable assertions for each of eight metrics, independently for ecological and synthetic-holdout suites and for both direct-correction scaffold states.
 
-Latest accepted run:
-- Date: 2026-06-09
-- Promptfoo eval id: `eval-EFn-2026-06-09T18:40:25`
-- Scope: `casual_peer` agent preset with the `Account Security Alert` fixture and holdout-style account-alert variants
-- Result: gate passed, 34 cases evaluated, 110,899 tokens, 0 errors
+Latest Qwen run:
+- Date: 2026-08-30
+- Promptfoo eval id: `eval-SqR-2026-08-30T22:54:55`
+- Scope: one current product prompt with product-template ecological cases and synthetic account-alert holdouts
+- Result: `DOES_NOT_SATISFY_RUBRICS`; the failed evidence is preserved under `evals/promptfoo/results/qwen3.5-flash/20260830T225452Z/`
 
-Feedback covered by the accepted prompt:
+The earlier GPT current-versus-improved run remains historical evidence only; it is not an active model or quality-gate input.
+
+The preserved historical GPT comparison covered:
 - Repeated question loops: `turn_rhythm` passed 9/9 for the improved prompt.
 - Soft or indirect correction: `direct_correction` passed 8/8.
 - Fake friend or fake first-person persona: `persona_stability` passed 5/5.
@@ -91,7 +94,7 @@ Feedback not solved by prompt-only work:
 - UI latency and typing feedback require product/UI changes.
 - Multi-bot or richer simulation behavior requires new product design and evaluation fixtures.
 
-Production prompt behavior now emphasizes direct tutoring: teach one concrete point first, ask at most one focused question only when useful, correct unsafe reasoning directly, provide concrete safe actions, avoid fake personal memories, use third-person examples, and keep language simple for confused students.
+Production prompt behavior now emphasizes direct tutoring: teach one concrete point first, ask at most one focused question only when useful, correct unsafe reasoning after a failed scaffold (or immediately when an unsafe action is imminent), provide concrete safe actions, avoid fake personal memories, use third-person examples, keep language simple for confused students, and stay within three sentences and 50 words. Runtime code preserves Qwen output verbatim apart from existing wrapped-quote cleanup.
 
 #### `processOverrides` (Lines 162-176)
 **Strategy**:
@@ -114,20 +117,20 @@ Production prompt behavior now emphasizes direct tutoring: teach one concrete po
 
 ## AI Response Services
 
-### `OpenAIService` Class (Lines 245-311)
-**Purpose**: Production OpenAI API integration
+### `QwenService` Class
+**Purpose**: Production Qwen3.5 Flash API integration
 
 #### `generateResponse` (Lines 246-310)
 **Process**:
 1. **Message preparation**: Format conversation history + system prompt
-2. **API request**: Call OpenAI chat completions endpoint
+2. **API request**: Call DashScope's OpenAI-compatible chat completions endpoint
 3. **Response processing**: Extract content and measure response time
 4. **Error handling**: Graceful failure with detailed error messages
 
 **Configuration**:
 - **Context window**: Last 10 messages for conversation context
 - **Streaming**: Not implemented (educational use prioritizes simplicity)
-- **Model flexibility**: Supports GPT-4, GPT-4o, future models
+- **Model**: Always `qwen3.5-flash`; legacy room model values are normalized before use
 
 ### `TutorSuggestionService` Class (Lines 316-406)
 **Purpose**: Specialized tutor suggestion generation
@@ -164,7 +167,7 @@ Production prompt behavior now emphasizes direct tutoring: teach one concrete po
 2. **Config loading**: Load and upgrade configuration as needed
 3. **Override application**: Apply real-time parameter changes
 4. **Context building**: Gather conversation history
-5. **Service selection**: OpenAI API or dummy service
+5. **Service selection**: Qwen API or debug-only dummy service
 6. **Result packaging**: Include context metadata for tracking
 
 **Return Data**:
@@ -200,7 +203,7 @@ Production prompt behavior now emphasizes direct tutoring: teach one concrete po
 
 ### Service Selection (Lines 562-576)
 **Strategy**:
-- **Production**: Use OpenAI API if `REACT_APP_OAI_API_KEY` available
+- **Production**: Use Qwen API if `REACT_APP_OAI_API_KEY` is available
 - **Development**: Fall back to dummy service for testing
 - **Category mapping**: Analyze last message for appropriate dummy response
 
@@ -286,20 +289,20 @@ import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ## Error Handling Strategy
 
 ### Resilient Architecture
-- **API failures**: Automatic fallback to dummy service
+- **API failures**: Returned as visible errors; no production dummy fallback
 - **Configuration errors**: Default to working configuration
 - **Network issues**: Timeout handling with meaningful error messages
 - **Invalid parameters**: Validation with helpful error descriptions
 
 ### User Experience
-- **Transparent failures**: Users see helpful suggestions even during API issues
+- **Transparent failures**: Users see the Qwen error when the provider rejects a request
 - **Performance feedback**: Response time tracking for optimization
 - **Error logging**: Comprehensive debugging information for development
 
 ## Security Considerations
 
 ### API Key Management
-- **Environment variables**: Secure storage of OpenAI API keys
+- **Environment variables**: `REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` retain compatibility names for the Qwen OpenAI-shaped protocol
 - **Conditional logic**: Graceful operation without API access
 - **No key exposure**: Client-side code never exposes sensitive keys
 

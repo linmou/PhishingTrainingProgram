@@ -137,7 +137,8 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         }
 
         if (aiConfig) {
-            setSelectedModel(aiConfig.model_name as AIModelName);
+            // Legacy room values (including GPT names) are normalized to the sole Qwen option.
+            setSelectedModel(DEFAULT_AI_MODEL);
             setSystemPrompt(aiConfig.system_prompt || '');
             setTemperature(aiConfig.temperature);
             setMaxTokens(aiConfig.max_tokens);

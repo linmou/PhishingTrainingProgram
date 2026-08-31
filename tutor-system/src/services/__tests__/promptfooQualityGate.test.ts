@@ -1,7 +1,5 @@
-/**
- * Responsible for scripts/check-promptfoo-quality-gate.js: verifies deterministic
- * quality-gate behavior over saved Promptfoo JSON without running live LLM evaluation.
- */
+#!/usr/bin/env node
+/** Purpose: verify the active single-prompt Qwen quality gate and its blocking threshold. */
 
 const { evaluateGate } = require('../../../scripts/check-promptfoo-quality-gate.js');
 
@@ -12,95 +10,56 @@ const metrics = [
   'low_boilerplate_praise',
   'practical_knowledge',
   'third_person_examples',
-  'reading_level'
+  'reading_level',
+  'response_length'
 ];
 
-const componentResults = (failedMetrics: string[] = []) =>
-  metrics.map((metric) => ({
-    assertion: { metric },
-    pass: !failedMetrics.includes(metric)
-  }));
-
-const resultRow = (promptIdx: number, caseId: string, failedMetrics: string[] = []) => ({
-  promptIdx,
-  testCase: {
-    vars: {
-      case_id: caseId
-    }
-  },
+const row = (source_type: string, scaffolding_status: string, failed: string[] = []) => ({
+  promptIdx: 0,
+  testCase: { vars: { case_id: `${source_type}-${scaffolding_status}`, source_type, scaffolding_status } },
   gradingResult: {
-    componentResults: componentResults(failedMetrics)
+    componentResults: metrics.map((metric) => ({
+      assertion: { metric },
+      pass: !failed.includes(metric),
+      score: failed.includes(metric) ? 0 : 1
+    }))
   }
 });
 
+const passingReport = () => ({
+  ecological_product_gate: { passed: true },
+  results: { results: [
+    row('product_template', 'not_started'),
+    row('product_template', 'failed'),
+    row('synthetic_holdout', 'failed'),
+    row('synthetic_holdout', 'not_started')
+  ] }
+});
+
 describe('Promptfoo quality gate', () => {
-  it('passes when improved meets threshold and is not worse than current', () => {
-    const report = {
-      results: {
-        results: [
-          resultRow(0, 'case_1', ['turn_rhythm']),
-          resultRow(0, 'case_2', []),
-          resultRow(1, 'case_1', []),
-          resultRow(1, 'case_2', [])
-        ]
-      }
-    };
-
-    const gate = evaluateGate(report, 0.8);
-
+  it('passes when one current prompt reaches 80% for every metric and suite/state', () => {
+    const gate = evaluateGate(passingReport(), 0.8);
     expect(gate.passed).toBe(true);
-    expect(gate.summary.current.turn_rhythm.passRate).toBe(0.5);
-    expect(gate.summary.improved.turn_rhythm.passRate).toBe(1);
+    expect(gate.summary.improved).toBeUndefined();
   });
 
-  it('fails when improved is below the per-metric threshold', () => {
-    const report = {
-      results: {
-        results: [
-          resultRow(0, 'case_1', []),
-          resultRow(0, 'case_2', []),
-          resultRow(1, 'case_1', ['direct_correction']),
-          resultRow(1, 'case_2', ['direct_correction'])
-        ]
-      }
-    };
-
+  it('fails when the active prompt is below the per-metric threshold', () => {
+    const report = passingReport() as any;
+    report.results.results.forEach((result: any) => {
+      result.gradingResult.componentResults = result.gradingResult.componentResults.map((component: any) =>
+        component.assertion.metric === 'response_length' ? { ...component, pass: false, score: 0 } : component
+      );
+    });
     const gate = evaluateGate(report, 0.8);
-
     expect(gate.passed).toBe(false);
-    expect(gate.failures).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining('Improved direct_correction pass rate 0% is below 80%')
-      ])
-    );
+    expect(gate.failures.join('\n')).toMatch(/response_length/i);
   });
 
-  it('fails when improved performs worse than current even above threshold', () => {
-    const report = {
-      results: {
-        results: [
-          resultRow(0, 'case_1', []),
-          resultRow(0, 'case_2', []),
-          resultRow(0, 'case_3', []),
-          resultRow(0, 'case_4', []),
-          resultRow(0, 'case_5', []),
-          resultRow(1, 'case_1', []),
-          resultRow(1, 'case_2', []),
-          resultRow(1, 'case_3', []),
-          resultRow(1, 'case_4', []),
-          resultRow(1, 'case_5', ['reading_level'])
-        ]
-      }
-    };
-
+  it('requires both direct-correction scaffold states', () => {
+    const report = passingReport() as any;
+    report.results.results = report.results.results.filter((result: any) => result.testCase.vars.scaffolding_status !== 'not_started');
     const gate = evaluateGate(report, 0.8);
-
     expect(gate.passed).toBe(false);
-    expect(gate.summary.improved.reading_level.passRate).toBe(0.8);
-    expect(gate.failures).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining('Improved reading_level pass rate 80% is below current 100%')
-      ])
-    );
+    expect(gate.failures.join('\n')).toMatch(/not_started/i);
   });
 });

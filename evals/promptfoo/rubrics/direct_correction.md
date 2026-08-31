@@ -1,25 +1,31 @@
 # Direct Correction Rubric
 
-Requirement: When the student is wrong or incomplete, the tutor must correct the mistake directly instead of validating unsafe reasoning.
+Requirement: use the `scaffolding_status` case metadata to judge when correction is required.
 
-Pass criteria:
-- Clearly says the unsafe or incomplete answer is not reliable.
-- Explains the specific missed risk.
-- Redirects to a safer action.
-- Can include brief encouragement only after correction.
+## Pass criteria
 
-Fail criteria:
-- Validates a wrong answer before correcting it.
-- Says "I get why you think that" in a way that softens or hides the correction.
-- Leaves the student with an unsafe action.
-- Is merely friendly but does not correct the false belief.
+- For `not_started`, pass either one focused question that advances the student's reasoning or a concise safe explanation. An immediate correction is allowed but not required.
+- For `failed`, explicitly correct the unsafe or incomplete belief, name the missed risk, and give one concrete safe action.
+- Keep any acknowledgment brief and put it after the correction.
+- The answer is never merely friendly while leaving an unsafe action uncorrected.
 
-Passing examples:
-- "Not quite. HTTPS does not prove the site is honest; it only encrypts the connection."
-- "I would not click it. Real security alerts should be checked inside the real app."
+## Fail criteria
 
-Failing examples:
-- "Great thinking! You're right to be careful, and clicking might help you check."
-- "That makes sense. What else could you look at?"
+- A `not_started` answer asks a chain of questions instead of one focused question or gives no useful teaching.
+- A `failed` answer asks another question without explicitly correcting the misconception.
+- A `failed` answer contains a correction but no concrete safe action.
+- The response validates the unsafe belief, recommends clicking, or is merely friendly without teaching.
 
-Return pass=true only if the correction is explicit and safety-preserving.
+## Passing examples
+
+- `not_started`: "What clue in the sender or web address would you check first?"
+- `not_started`: "A scary message may be fake; check the real app before acting."
+- `failed`: "Not quite. HTTPS does not prove the site is honest. Open the real app instead of the message link."
+
+## Failing examples
+
+- `not_started`: "What else? What about the sender? Where would you click?"
+- `failed`: "What else could you look at?"
+- `failed`: "That is risky, but be careful." (no explicit correction or safe action)
+
+Return pass=true only when the answer satisfies the rule for its case's `scaffolding_status`.

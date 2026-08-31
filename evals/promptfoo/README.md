@@ -2,19 +2,20 @@
 
 Intent: document how to review and run the local Promptfoo benchmark for tutor prompt behavior before spending live LLM calls or changing production prompts.
 
-Updated: 2026-07-18
+Updated: 2026-08-30
 
 Source baseline commit: `530bd59`
 
-This benchmark uses ecological webpage-shaped cases (demo room templates) plus holdout account-security cases. The chat user turn matches the product room AI path (`ecologicalTutorCall` / `TutorSuggestionService`): draft the full tutor message, with room scenario + discussion history + latest student line.
+This benchmark uses ecological webpage-shaped cases (generated from demo room templates) plus explicitly synthetic holdout account-security cases. The chat user turn matches the product room AI path (`buildEcologicalChatCompletionMessages` / `TutorSuggestionService`): draft the full tutor message, with room scenario + discussion history + latest student line.
+
+The active model is only `qwen3.5-flash` through DashScope's OpenAI-compatible endpoint. Both runtime paths send `enable_thinking: false`; responses are preserved verbatim apart from the existing wrapped-quote cleanup.
 
 ## V1 Fixture (ecological)
 
 - Agent preset: `casual_peer`
 - Scenario template: `Account Security Alert` (+ demo rooms)
-- Baseline prompt: `prompts/current.prompt.txt` (export = live `generateSystemPrompt`)
-- Candidate prompt: `prompts/improved.prompt.txt`
-- Promptfoo runtime prompts: `prompts/current.chat.prompt.json` and `prompts/improved.chat.prompt.json`
+- Active prompt: `prompts/current.prompt.txt` (export = live `generateSystemPrompt`)
+- Promptfoo runtime prompt: `prompts/current.chat.prompt.json`
 - Cases: `cases/webpage-ecological.yaml` + `cases/account-security-alert.yaml`
 - Rubrics: `rubrics/*.md`
 - One-shot command: `npm run eval:prompts` (export + eval + gate)
@@ -22,14 +23,13 @@ This benchmark uses ecological webpage-shaped cases (demo room templates) plus h
 
 The `.chat.prompt.json` user turn is shared with the website AI button (not the old “brief follow-up question” co-pilot wrapper).
 
-The v1 benchmark stays on one fixture, but the case set includes holdout-style account-alert variations with different platform names, domains, and user relationships. These are intentionally not copied into the improved prompt examples, so the benchmark checks whether the behavior transfers within the scenario instead of only matching memorized strings.
+The v1 benchmark stays on one fixture, but the case set includes holdout-style account-alert variations with different platform names, domains, and user relationships. These synthetic holdouts are intentionally separate from the product-derived ecological cases, so the benchmark checks whether the behavior transfers within the scenario instead of only matching memorized strings.
 
 ## Review Order
 
 1. Read `cases/account-security-alert.yaml`.
 2. Read every rubric in `rubrics/`.
-3. Compare `prompts/current.prompt.txt` and `prompts/improved.prompt.txt`.
-4. Tighten any vague case or rubric before running live evaluation.
+3. Check that each case declares `source_type`, `scaffolding_status`, and `response_length`.
 
 The baseline should expose known weaknesses from `user_feedback.md`: repeated questions, excessive praise, soft validation of wrong answers, fake first-person examples, and limited practical guidance.
 
@@ -50,7 +50,7 @@ npm run eval:prompts
 npm run test:browser:behavior-demos
 ```
 
-`npm run eval:prompts` needs a live model key (`OPENAI_API_KEY` or `REACT_APP_OAI_API_KEY` in `.env`).
+`npm run eval:prompts` needs `REACT_APP_OAI_API_KEY` in `tutor-system/.env`; `REACT_APP_OAI_BASE_URL` defaults to the DashScope international endpoint.
 
 Optional low-level pieces (usually unused):
 
@@ -61,11 +61,13 @@ npm run eval:prompts:gate             # only score latest.json
 npm run eval:prompts:view             # open HTML report
 ```
 
-The quality gate requires the improved prompt to pass at least 80% for each metric and to match or beat the current prompt on every metric.
+The blocking quality gate applies the same 80% threshold to all eight metrics (`turn_rhythm`, `direct_correction`, `persona_stability`, `low_boilerplate_praise`, `practical_knowledge`, `third_person_examples`, `reading_level`, and deterministic `response_length`). It requires ecological and synthetic-holdout suites to pass independently, and requires `direct_correction` to pass independently for `not_started` and `failed` scaffold states. There is no improved-prompt comparison and no 100% requirement.
+
+`response_length` counts English word-like and sentence segments with `Intl.Segmenter`; empty output, over three sentences, or over 50 words fails. Runtime code does not clip, summarize, retry, or replace an over-limit Qwen answer.
 
 Each case declares its own applicable rubric assertions. Keep `applicable_requirements` and each case's `assert` list aligned so the judge only scores behavior that is observable in that case.
 
-## Latest Accepted Gate
+## Historical GPT Gate
 
 - Date: 2026-06-09
 - Promptfoo eval id: `eval-EFn-2026-06-09T18:40:25`
@@ -73,7 +75,7 @@ Each case declares its own applicable rubric assertions. Keep `applicable_requir
 - Tokens: 110,899
 - Errors: 0
 - Gate: passed
-- Threshold: 80% per metric, with the improved prompt required to match or beat the current prompt on every metric
+- Threshold: 80% per metric, with a historical current-versus-improved comparison (this rule is not used by the active Qwen gate)
 
 Improved prompt metric results:
 - `turn_rhythm`: 9/9
@@ -84,21 +86,21 @@ Improved prompt metric results:
 - `third_person_examples`: 1/1
 - `reading_level`: 7/8
 
-This gate supports production prompt changes for feedback about repeated question loops, soft correction, unstable persona, excessive generic praise, vague safety advice, fake personal testimonials, and over-complex language. It does not cover UI latency/typing indicators or multi-bot simulation requests.
+That record is retained as historical evidence. It is not the active Qwen verdict and is not used by the current gate.
 
 ## Related product-path E2E
 
-Promptfoo judges frozen prompt fixtures. For a live product-path smoke check that builds the current `casual_peer` prompt in code and calls `OpenAIService.generateResponse`, run from `tutor-system/`:
+Promptfoo judges the frozen current fixture. For a live product-path smoke check that builds the current `casual_peer` prompt in code and calls `QwenService.generateResponse`, run from `tutor-system/`:
 
 ```bash
 npm run test:integration:tutor-behavior
 ```
 
-That suite is opt-in (`RUN_LIVE_OPENAI_TESTS=true`), uses deterministic heuristics (not LLM judges), and covers the same feedback items (1–6, 8) with a smaller case set. Prefer Promptfoo for release-quality gates; use the product-path E2E to catch drift between production `generateSystemPrompt` and the evaluated behavior.
+That suite is opt-in (`RUN_LIVE_QWEN_TESTS=true`), uses deterministic heuristics (not LLM judges), and catches drift between production `generateSystemPrompt` and the evaluated behavior.
 
 ## Expansion Rule
 
-Only expand after the improved prompt passes the reviewed v1 benchmark:
+Only expand after the active Qwen prompt passes the reviewed v1 benchmark:
 
 1. Add `casual_peer + Nintendo Switch Deal ($19.99)`.
 2. Add `casual_peer + iTunes Gift Card Survey ($500)`.

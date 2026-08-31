@@ -7,7 +7,12 @@
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 import { PrePopulatedMessage } from '../types';
-import { SystemPromptConfig } from './prompts/types';
+import {
+  PromptComparisonMetadata,
+  PromptComparisonPairId,
+  SystemPromptConfig
+} from './prompts/types';
+import phase0Prompt from './prompts/phase0AccountSecurityAlertPrompt.json';
 import {
   buildEcologicalCaseVarsFromRoomDialogue,
   EcologicalCaseVars
@@ -381,6 +386,68 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
   ];
 }
 
+type ComparisonSource = {
+  pairId: PromptComparisonPairId;
+  sourceCaseId: string;
+  label: string;
+};
+
+const COMPARISON_SOURCES: ComparisonSource[] = [
+  { pairId: 'lock_icon', sourceCaseId: 'webpage_demo_lock_icon_myth', label: 'Lock Icon Myth' },
+  { pairId: 'click_impulse', sourceCaseId: 'webpage_demo_click_impulse', label: 'Click Impulse' },
+  { pairId: 'personal_story', sourceCaseId: 'webpage_demo_personal_story_trap', label: 'Personal Story' }
+];
+
+/** Separate six-room catalog used only for controlled screenshot comparisons. */
+export function getPromptComparisonTemplateSeeds(): DemoRoomTemplateSeed[] {
+  const coreSeeds = getDemoRoomTemplateSeeds();
+
+  return COMPARISON_SOURCES.flatMap(({ pairId, sourceCaseId, label }) => {
+    const source = coreSeeds.find((seed) => seed.case_id === sourceCaseId);
+    if (!source) {
+      throw new Error(`Missing comparison source template: ${sourceCaseId}`);
+    }
+
+    const refinedBase = buildCasualPeerAIConfig(
+      'Account Security Alert',
+      source.ai_config_template.behavior_focus,
+      { model_name: DEFAULT_AI_MODEL, temperature: 0, max_tokens: 100 }
+    );
+    const sharedScenarioContext = `${source.title_template} — ${source.description_template}`;
+
+    return (['phase0', 'refined'] as const).map((version) => {
+      const comparison: PromptComparisonMetadata = {
+        version,
+        pair_id: pairId,
+        shared_scenario_context: sharedScenarioContext,
+        system_prompt_source_commit: version === 'phase0' ? phase0Prompt.source_commit : 'working-tree'
+      };
+      const promptConfig: SystemPromptConfig = {
+        ...refinedBase.prompt_config,
+        prompt_comparison: comparison
+      };
+      const conditionLabel = version === 'phase0' ? 'Phase 0' : 'Refined';
+
+      return {
+        ...source,
+        case_id: `comparison_${pairId}_${version}`,
+        template_name: `Demo: ${conditionLabel} — ${label}`,
+        template_description: `${conditionLabel} controlled prompt comparison for ${label}.`,
+        title_template: `Demo: ${conditionLabel} — ${label}`,
+        pre_populated_dialogue: source.pre_populated_dialogue.map((message) => ({ ...message })),
+        ai_config_template: {
+          ...refinedBase,
+          system_prompt: version === 'phase0'
+            ? phase0Prompt.system_prompt
+            : refinedBase.system_prompt,
+          prompt_config: promptConfig
+        },
+        test_only: true
+      };
+    });
+  });
+}
+
 /** Templates that only appear on /tutor/test-rooms. */
 export function getTestOnlyDemoTemplateSeeds(): DemoRoomTemplateSeed[] {
   return getDemoRoomTemplateSeeds().filter((s) => s.test_only);
@@ -400,20 +467,33 @@ export function buildEcologicalCaseFromSeed(seed: DemoRoomTemplateSeed): Ecologi
   studentIsWrong?: boolean;
   studentAskedPersonalStory?: boolean;
   studentNeedsSimpleLanguage?: boolean;
+  source_type: 'product_template';
+  scaffolding_status: 'not_started' | 'failed';
+  student_answer_state: 'uncertain' | 'unsafe_or_incomplete';
 } {
   const vars = buildEcologicalCaseVarsFromRoomDialogue(
     seed.title_template,
     seed.description_template,
     seed.pre_populated_dialogue
   );
+  const hasTutorQuestion = seed.pre_populated_dialogue.some(
+    (message) => message.role === 'tutor' && message.message.includes('?')
+  );
+  const scaffolding_status = hasTutorQuestion ? 'failed' : 'not_started';
   return {
     case_id: seed.case_id,
     template_name: seed.template_name,
-    applicable_requirements: seed.ai_config_template.behavior_focus.join(', '),
+    applicable_requirements: Array.from(new Set([
+      ...seed.ai_config_template.behavior_focus,
+      'response_length'
+    ])).join(', '),
     expected_behavior_focus: seed.expected_behavior_focus,
     studentIsWrong: seed.studentIsWrong,
     studentAskedPersonalStory: seed.studentAskedPersonalStory,
     studentNeedsSimpleLanguage: seed.studentNeedsSimpleLanguage,
+    source_type: 'product_template',
+    scaffolding_status,
+    student_answer_state: scaffolding_status === 'failed' ? 'unsafe_or_incomplete' : 'uncertain',
     ...vars
   };
 }

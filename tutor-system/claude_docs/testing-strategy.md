@@ -14,15 +14,15 @@ The repository now uses these validation tiers:
    - Rule: must not require live vendor credentials or local browser-driver compatibility
    - Includes offline tutor-behavior heuristics unit tests and E2E scaffold checks
 
-2. External integration (OpenAI checklist):
-   - Command: `npm run test:integration:openai`
-   - Purpose: validate the real OpenAI boundary for checklist extraction/coverage
+2. External integration (Qwen checklist):
+   - Command: `npm run test:integration:qwen`
+   - Purpose: validate the real Qwen boundary for checklist extraction/coverage
    - Rule: opt-in only because vendor/network state can fail without a code regression
 
 3. Tutor behavior live E2E:
    - Command: `npm run test:integration:tutor-behavior`
-   - Purpose: exercise the **production** `generateSystemPrompt` + `OpenAIService.generateResponse` path against Account Security Alert cases from `user_feedback_improvement_summary.md`, scored by deterministic heuristics
-   - Rule: opt-in (`RUN_LIVE_OPENAI_TESTS=true`); requires `REACT_APP_OAI_API_KEY`
+   - Purpose: exercise the **production** `generateSystemPrompt` + `QwenService.generateResponse` path against Account Security Alert cases, scored by deterministic heuristics
+   - Rule: opt-in (`RUN_LIVE_QWEN_TESTS=true`); requires `REACT_APP_OAI_API_KEY`
    - Complements Promptfoo (`npm run eval:prompts`) which is the LLM-as-judge quality gate over frozen fixtures
 
 4. Browser end-to-end integration:
@@ -32,10 +32,10 @@ The repository now uses these validation tiers:
 
 5. Full external validation:
    - Command: `npm run test:integration:external`
-   - Purpose: run OpenAI checklist, tutor-behavior E2E, and browser tiers when preparing a release or checking environment health
+   - Purpose: run Qwen checklist, tutor-behavior E2E, and browser tiers when preparing a release or checking environment health
 
 6. Ecological Promptfoo + real-browser template demos (behavior feedback):
-   - Layer 1: `npm run eval:prompts` (export + ecological cases + product gate)
+   - Layer 1: `npm run eval:prompts` (export + one Promptfoo evaluation over ecological and synthetic cases + quality gate)
    - Layer 2: `npm run test:browser:behavior-demos` (template-only rooms on **`/#/tutor/test-rooms`**, not the main room list)
    - UI: main Tutor dashboard (`/#/tutor`) lists normal rooms only; **Test Rooms** page hosts `Demo:` / `test_only` rooms
    - Student Available Rooms (`/#/student`) uses `filterRoomsForStudentList` (marker / `Demo:` titles / test-only titles + `DemoTutor_*` harness owners); real teaching rooms stay visible
@@ -201,8 +201,8 @@ npm run test:regression
 # Run tests with Jest coverage
 npm run test:coverage
 
-# Run live OpenAI integration suites
-npm run test:integration:openai
+# Run live Qwen integration suites
+npm run test:integration:qwen
 
 # Run browser-backed external integration suites
 npm run test:integration:browser

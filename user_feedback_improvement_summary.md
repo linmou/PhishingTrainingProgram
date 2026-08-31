@@ -2,16 +2,20 @@
 
 **Intent:** Show, for each prototype feedback item, what changed from the Phase 0 (raw) prompt to the final prompt, which tests cover it, and a model reply that meets the requirement.
 
-**Updated:** 2026-07-18
+**Updated:** 2026-07-18 (docs refreshed after student tone UI placement + push)
 
 **Phase 0 (raw):** system prompt / pedagogy before `f8cdc7e` (3-stage discovery, high-praise peer, no reading-level block, no default safe actions, Socratic examples). Room AI user turn still asked for a “brief follow-up **question**” (`aiService.original.ts`).
 
 **Final:** production `generateSystemPrompt` + `casual_peer` preset + ecological user turn (`ecologicalTutorCall.ts`) used by the room ✨ AI and Promptfoo.
 
-**Key commits:** `f8cdc7e` (system prompt), `5014acf` (product packaging / ecological user turn).
+**Key commits:**  
+- `f8cdc7e` — system prompt  
+- `5014acf` — product packaging / ecological user turn  
+- `6980272` — student Peer/Adult tone (1:1), default `gpt-4o-mini`, drop auth diagnostics  
+- `29ba240` — student AI tone control placed above comment input  
 
-Open items (not prompt text): **#7 latency/typing indicator**.  
-**#9** reinterpreted as student Peer/Adult tone opt-in (1:1 rooms); multi-bot dual agents not built.
+Open items (not prompt text): **#7 latency/typing indicator** only.  
+**#9** product path **done** as student tone opt-in (not dual-bot multi-agent).
 
 ---
 
@@ -133,7 +137,7 @@ Ecological user turn:
 
 ## Feedback 3 — Stabilize the persona (knowledgeable peer)
 
-**Requirement:** One consistent voice — college-age knowledgeable peer, not fake friend / parent / performer with personal history. (Optional onboarding tone toggle still open.)
+**Requirement:** One consistent voice — college-age knowledgeable peer, not fake friend / parent / performer with personal history. Optional tone choice is product: student Peer/Adult opt-in near comment input (see Feedback 9; not a separate onboarding flow).
 
 ### Prompt change (Phase 0 → final)
 
@@ -407,12 +411,14 @@ Demo seed `Demo: Pressure Words` uses student line “What does urgency tactics 
 
 **Original requirement:** Formal bot + informal peer bot so the room feels more like a real forum.
 
-**Product reinterpretation:** One AI voice. In **single-student** rooms with AI on, the student may:
-1. Click **Choose AI tone?**
+**Product reinterpretation:** One AI voice (not dual bots). In **single-student** rooms with AI on, the student may:
+1. Click **Choose AI tone?** (above the comment input, not top nav)
 2. Pick **Peer** or **Adult** from a dropdown
 3. That sets `prompt_config.role` only and sets `student_tone_lock`; tutor **AI Personality** control is locked with a visible lock indicator
 
 Multi-student rooms: feature hidden and write path rejects apply.
+
+Also covers optional “tone toggle” from feedback #3 without a separate onboarding flow.
 
 ### Prompt change (Phase 0 → final)
 
@@ -432,9 +438,16 @@ Multi-student rooms: feature hidden and write path rejects apply.
 | Feature | `tutor-system/features/student_ai_tone.feature` |
 | Policy helpers | `tutor-system/src/utils/studentAITone.ts` |
 | Persist | `tutor-system/src/services/studentAIToneService.ts` |
-| Student UI | `tutor-system/src/components/StudentAIToneControl.tsx` (wired in `RoomPagePost`) |
+| Student UI | `StudentAIToneControl` in `RoomPagePost` **comment composer** (above `CommentInput`) |
+| Placement CSS | `RoomPagePost.css` (`.comment-composer`) |
 | Tutor lock | `AIAssistantSettings` personality select disabled + lock indicator |
 | Room API | `RoomContext.setStudentAITone` |
+| Default model | `DEFAULT_AI_MODEL = gpt-4o-mini` in `aiModels.ts` |
+
+### Commits
+
+- `6980272` — `feat(ai): student tone control, default gpt-4o-mini, drop auth diagnostics`
+- `29ba240` — `fix(ui): place student AI tone control above comment input`
 
 ### Tests
 
@@ -442,6 +455,7 @@ Multi-student rooms: feature hidden and write path rejects apply.
 - `src/services/__tests__/studentAIToneService.test.ts`
 - `src/components/__tests__/StudentAIToneControl.test.tsx`
 - `AIAssistantSettings` lock / unlocked cases
+- `src/__tests__/student_ai_tone_e2e.test.tsx` (page-level jest-cucumber; not browser Playwright)
 
 ---
 

@@ -14,6 +14,7 @@ import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
 import {
+    buildPhase0ChatCompletionMessages,
     buildEcologicalChatCompletionMessages,
     conversationMessagesToHistoryText,
     formatRoomScenarioContext
@@ -28,7 +29,8 @@ export type { AIModelName };
 // ============================================================================
 
 const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
-const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://api.openai.com/v1';
+const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
@@ -77,6 +79,8 @@ const stripWrappedQuotes = (value: string): string => {
 
     return innerContent.trim();
 };
+
+export const normalizeAIModel = (_modelName: unknown): AIModelName => DEFAULT_AI_MODEL;
 
 const getExtendedAIConfig = async (roomId: string): Promise<{
     prompt_config?: AIAssistantConfig['prompt_config'];
@@ -153,7 +157,7 @@ const buildConfigSnapshot = ({
     maxTokens: number | null | undefined;
     isActive: boolean;
 }): AIAssistantConfigSnapshot => ({
-    model_name: roomModelName ?? null,
+    model_name: roomModelName ? normalizeAIModel(roomModelName) : null,
     system_prompt: roomPrompt ?? null,
     prompt_config: promptConfig ?? null,
     temperature: temperature ?? null,
@@ -256,7 +260,7 @@ const persistExtendedAIConfig = async (
 
     const configPayload = {
         room_id: roomId,
-        model_name: updates.model_name || DEFAULT_AI_MODEL,
+        model_name: normalizeAIModel(updates.model_name),
         system_prompt: updates.system_prompt ?? null,
         prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,
@@ -335,7 +339,7 @@ class AIConfigurationManager {
         return {
             id: roomId,
             room_id: roomId,
-            model_name: roomData.ai_assistant_model || DEFAULT_AI_MODEL,
+            model_name: normalizeAIModel(roomData.ai_assistant_model),
             system_prompt: systemPrompt,
             prompt_config: {
                 ...defaultConfig,
@@ -368,6 +372,7 @@ class AIConfigurationManager {
 
         return {
             ...legacyConfig,
+            model_name: normalizeAIModel(legacyConfig.model_name),
             system_prompt: legacyConfig.system_prompt || fallbackSystemPrompt,
             prompt_config: {
                 ...defaultConfig,
@@ -476,10 +481,8 @@ class SystemPromptProcessor {
 // 3. AI RESPONSE SERVICES
 // ============================================================================
 
-/**
- * Real OpenAI API Service
- */
-export class OpenAIService {
+/** Qwen3.5 Flash transport using DashScope's OpenAI-compatible API. */
+export class QwenService {
     static async generateResponse(
         userMessage: string,
         conversationHistory: ConversationMessage[],
@@ -510,16 +513,17 @@ export class OpenAIService {
                     'Authorization': `Bearer ${OAI_API_KEY}`
                 },
                 body: JSON.stringify({
-                    model: config.model_name,
+                    model: QWEN_MODEL,
                     messages,
                     temperature: config.temperature,
-                    max_tokens: config.max_tokens
+                    max_tokens: config.max_tokens,
+                    enable_thinking: false
                 })
             });
 
             if (!response.ok) {
                 const error = await response.text();
-                throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+                throw new Error(`Qwen API error: ${response.status} - ${error}`);
             }
 
             const data = await response.json();
@@ -528,7 +532,7 @@ export class OpenAIService {
 
             return {
                 content: responseContent,
-                model_used: config.model_name,
+                model_used: QWEN_MODEL,
                 response_time_ms: responseTime,
                 success: true
             };
@@ -538,7 +542,7 @@ export class OpenAIService {
 
             return {
                 content: '',
-                model_used: config.model_name,
+                model_used: QWEN_MODEL,
                 response_time_ms: responseTime,
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -582,15 +586,25 @@ export class TutorSuggestionService {
                 conversationHistory.find((m) => m.role === 'system')?.content ||
                 'Phishing training room';
 
-            const messages = buildEcologicalChatCompletionMessages(systemPrompt, {
-                scenario_context: scenarioContext,
-                conversation_history: conversationMessagesToHistoryText(historyWithoutLastStudent),
-                student_message: studentMessage
-            });
+            const comparison = config.prompt_config?.prompt_comparison;
+            const comparisonScenario = comparison?.shared_scenario_context || scenarioContext;
+            const historyText = conversationMessagesToHistoryText(historyWithoutLastStudent);
+            const phase0HistoryText = historyWithoutLastStudent
+                .map((message) => `${message.role}: ${message.content}`)
+                .join('\n');
+            const messages = comparison?.version === 'phase0'
+                ? buildPhase0ChatCompletionMessages(
+                    systemPrompt,
+                    [`Scenario context: ${comparisonScenario}`, phase0HistoryText].filter(Boolean).join('\n')
+                )
+                : buildEcologicalChatCompletionMessages(systemPrompt, {
+                    scenario_context: comparisonScenario,
+                    conversation_history: historyText,
+                    student_message: studentMessage
+                });
 
             const temperature =
                 typeof config.temperature === 'number' ? config.temperature : 0.3;
-            // Keep room AI replies short (chat-length, not essays).
             const maxTokens =
                 typeof config.max_tokens === 'number' ? Math.min(config.max_tokens, 120) : 100;
 
@@ -601,16 +615,17 @@ export class TutorSuggestionService {
                     'Authorization': `Bearer ${OAI_API_KEY}`
                 },
                 body: JSON.stringify({
-                    model: config.model_name,
+                    model: QWEN_MODEL,
                     messages,
                     temperature,
-                    max_tokens: maxTokens
+                    max_tokens: maxTokens,
+                    enable_thinking: false
                 })
             });
 
             if (!response.ok) {
                 const error = await response.text();
-                throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+                throw new Error(`Qwen API error: ${response.status} - ${error}`);
             }
 
             const data = await response.json();
@@ -849,7 +864,7 @@ async function validateRoom(roomId: string) {
 }
 
 /**
- * Generate suggestion using the appropriate service (OpenAI or Dummy)
+ * Generate suggestion using the Qwen service (or the existing debug-only dummy).
  */
 async function generateSuggestionWithService(
     conversationHistory: ConversationMessage[],
@@ -863,7 +878,7 @@ async function generateSuggestionWithService(
     const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
 
     if (OAI_API_KEY) {
-        console.log('Using OpenAI API for tutor suggestions (ecological path)');
+        console.log('Using Qwen API for tutor suggestions (ecological path)');
         const result = await TutorSuggestionService.generateSuggestion(
             conversationHistory,
             aiConfig,
@@ -874,7 +889,7 @@ async function generateSuggestionWithService(
             return result;
         }
 
-        console.warn('OpenAI tutor suggestion failed:', result.error);
+        console.warn('Qwen tutor suggestion failed:', result.error);
         return result;
     }
 
@@ -882,7 +897,7 @@ async function generateSuggestionWithService(
         return {
             suggestion: '',
             success: false,
-            error: 'AI suggestions require a valid OpenAI API configuration'
+            error: 'AI suggestions require a valid Qwen API configuration'
         };
     }
 
@@ -936,7 +951,7 @@ export const getAIConfig = async (roomId: string): Promise<AIAssistantConfig | n
     return {
         id: room.id,
         room_id: room.id,
-        model_name: room.ai_assistant_model || DEFAULT_AI_MODEL,
+            model_name: normalizeAIModel(room.ai_assistant_model),
         system_prompt: effectiveSystemPrompt,
         prompt_config: extendedConfig?.prompt_config ?? null,
         temperature: extendedConfig?.temperature ?? 0.7,
@@ -993,7 +1008,7 @@ export const initializeAIAssistant = async (
         'Provide clear, educational responses to help students learn. ' +
         'Be encouraging, patient, and focus on building understanding.';
 
-    return await initializeAIAssistantFallback(roomId, modelName, defaultPrompt, userId, finalPromptConfig);
+    return await initializeAIAssistantFallback(roomId, DEFAULT_AI_MODEL, defaultPrompt, userId, finalPromptConfig);
 };
 
 /**
@@ -1032,7 +1047,7 @@ const initializeAIAssistantFallback = async (
         .from('rooms')
         .update({
             ai_assistant_enabled: true,
-            ai_assistant_model: modelName,
+            ai_assistant_model: DEFAULT_AI_MODEL,
             ai_assistant_prompt: systemPrompt,
             updated_at: new Date().toISOString()
         })
@@ -1045,7 +1060,7 @@ const initializeAIAssistantFallback = async (
     }
 
     await persistExtendedAIConfig(roomId, {
-        model_name: modelName,
+        model_name: DEFAULT_AI_MODEL,
         system_prompt: systemPrompt,
         prompt_config: promptConfig ?? null,
         temperature: 0.7,
@@ -1071,7 +1086,7 @@ export const updateAIConfig = async (
     };
 
     if (typeof updates.model_name !== 'undefined') {
-        roomUpdates.ai_assistant_model = updates.model_name;
+        roomUpdates.ai_assistant_model = normalizeAIModel(updates.model_name);
     }
     if (typeof updates.system_prompt !== 'undefined') {
         roomUpdates.ai_assistant_prompt = updates.system_prompt;
@@ -1092,7 +1107,7 @@ export const updateAIConfig = async (
     }
 
     await persistExtendedAIConfig(roomId, {
-        model_name: data.ai_assistant_model || updates.model_name || DEFAULT_AI_MODEL,
+        model_name: normalizeAIModel(data.ai_assistant_model || updates.model_name),
         system_prompt: data.ai_assistant_prompt,
         prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,
@@ -1103,7 +1118,7 @@ export const updateAIConfig = async (
     const savedConfig = {
         id: data.id,
         room_id: data.id,
-        model_name: data.ai_assistant_model || updates.model_name || DEFAULT_AI_MODEL,
+        model_name: normalizeAIModel(data.ai_assistant_model || updates.model_name),
         system_prompt: data.ai_assistant_prompt,
         prompt_config: updates.prompt_config ?? null,
         temperature: updates.temperature ?? 0.7,

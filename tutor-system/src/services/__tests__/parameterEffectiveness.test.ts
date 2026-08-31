@@ -133,7 +133,7 @@ describe('Parameter Effectiveness Tests', () => {
             const highNormalizationPrompt = generateSystemPrompt(highNormalizationConfig);
 
             expect(lowNormalizationPrompt).toContain('direct correction');
-            expect(highNormalizationPrompt).toContain('Correct unsafe reasoning directly');
+            expect(highNormalizationPrompt).toContain('After a failed question scaffold');
         });
     });
 
@@ -191,12 +191,12 @@ describe('Parameter Effectiveness Tests', () => {
             });
 
             expect(prompt).toContain('Ask at most one focused question');
-            expect(prompt).toContain('correct the mistake directly');
+            expect(prompt).toContain('After a failed question scaffold');
             expect(prompt).toContain('one concrete safe action');
             expect(prompt).toContain('Do not claim personal memories');
             expect(prompt).toContain('A person who clicked');
-            expect(prompt).toContain('The lock does not prove the site is real');
-            expect(prompt).toContain('Open the real app yourself');
+            expect(prompt).toMatch(/lock does not prove the site is real/i);
+            expect(prompt).toMatch(/open the real app/i);
             expect(prompt).not.toContain('Honestly, I fall for stuff like this too sometimes');
             expect(prompt).not.toContain('YES! Absolutely nailed it!');
         });
@@ -249,10 +249,10 @@ describe('Parameter Effectiveness Tests', () => {
             expect(prompt).toContain('Instructing');
 
             // Should include the current tutoring rhythm
-            expect(prompt).toContain('Use a tight tutoring rhythm');
+            expect(prompt).toContain('Keep it short: use no more than 3 sentences and 50 words');
             expect(prompt).toContain('Teach one concrete point first');
             expect(prompt).toContain('Ask at most one focused question');
-            expect(prompt).toContain('Include one concrete safe action');
+            expect(prompt).toContain('one concrete safe action');
         });
     });
 });

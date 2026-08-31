@@ -5,6 +5,7 @@
  */
 
 import { ConversationMessage, PrePopulatedMessage } from '../types';
+import { RESPONSE_POLICY } from './prompts/responsePolicy';
 
 export interface EcologicalCaseVars {
   scenario_context: string;
@@ -15,6 +16,23 @@ export interface EcologicalCaseVars {
 export interface EcologicalChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
+}
+
+/** Exact historical user turn from aiService.original.ts. */
+export function buildPhase0TutorUserTurn(conversationText: string): string {
+  return 'Based on the recent conversation below, suggest a brief follow-up question or prompt that a tutor could use to engage the student further. '
+    + "The suggestion should be under 2 sentences, interactive, and focused on deepening the student's understanding.\n\n"
+    + `Recent conversation:\n${conversationText}\n\nTutor suggestion:`;
+}
+
+export function buildPhase0ChatCompletionMessages(
+  systemPrompt: string,
+  conversationText: string
+): EcologicalChatMessage[] {
+  return [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: buildPhase0TutorUserTurn(conversationText) }
+  ];
 }
 
 /**
@@ -85,14 +103,13 @@ export function buildEcologicalTutorUserTurn({
     student_message,
     '',
     'Write the tutor response only. Do not prefix it with "Tutor:" or any speaker label.',
-    'Keep it short: 2–4 short sentences (about 40–70 words). No lectures, no bullet lists, no long explanations.',
-    'If the student is wrong or incomplete, correct them in one clear sentence, then give one concrete safe action.',
-    'Ask at most one short question, and only if needed. Prefer teaching over questioning.'
+    'Keep it short; no lectures, no bullet lists, no long explanations.',
+    RESPONSE_POLICY
   ].join('\n');
 }
 
 /**
- * Build OpenAI chat messages for the ecological product path:
+ * Build Qwen-compatible chat messages for the ecological product path:
  * system = room system prompt; user = ecological turn with latest student line.
  */
 export function buildEcologicalChatCompletionMessages(

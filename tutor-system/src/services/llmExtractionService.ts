@@ -1,9 +1,8 @@
 /**
- * LLM-based extraction service for checklist items from system prompts
- * Refactored to use OpenAIService for consistent API handling
+ * LLM-based extraction service for checklist items from system prompts using Qwen.
  */
 
-import { OpenAIService, DummyAIService, DEFAULT_AI_MODEL } from './aiService';
+import { QwenService, DummyAIService, DEFAULT_AI_MODEL } from './aiService';
 import { AIAssistantConfig } from '../types';
 
 export interface ExtractionResult {
@@ -27,18 +26,16 @@ const EXTRACTION_CONFIG: AIAssistantConfig = {
 };
 
 export class LLMExtractionService {
-  private static hasOpenAIKey = !!process.env.REACT_APP_OAI_API_KEY;
+  private static hasQwenKey = !!process.env.REACT_APP_OAI_API_KEY;
 
-  /**
-   * Single method to extract checklist items from system prompts using OpenAIService
-   */
+  /** Single method to extract checklist items from system prompts using Qwen. */
   static async extractFromSystemPrompt(systemPrompt: string): Promise<ExtractionResult> {
     if (!systemPrompt || systemPrompt.trim().length === 0) {
       return { understanding: [], behavior: [] };
     }
 
-    if (!this.hasOpenAIKey) {
-      console.warn('OpenAI API key not found, falling back to empty result');
+    if (!this.hasQwenKey) {
+      console.warn('Qwen API key not found, falling back to empty result');
       return { understanding: [], behavior: [] };
     }
 
@@ -106,19 +103,18 @@ System Prompt:
 ${systemPrompt}
 `;
 
-      // Use OpenAIService for consistent API handling
-      const aiResponse = await OpenAIService.generateResponse(
+      const aiResponse = await QwenService.generateResponse(
         extractionPrompt,
         [], // No conversation history for extraction
         EXTRACTION_CONFIG
       );
 
       if (!aiResponse.success || !aiResponse.content) {
-        console.warn('OpenAI extraction failed:', aiResponse.error);
+        console.warn('Qwen extraction failed:', aiResponse.error);
         return { understanding: [], behavior: [] };
       }
 
-      // Parse JSON response from OpenAIService
+      // Parse JSON response from QwenService
       let result = this.parseExtractionResponse(aiResponse.content);
       
       // Check if prefixes are missing and retry if needed
@@ -153,7 +149,7 @@ ${systemPrompt}
       
       // Validate structure
       if (!parsed.understanding || !parsed.behavior) {
-        console.warn('Invalid response structure from OpenAI:', parsed);
+        console.warn('Invalid response structure from Qwen:', parsed);
         return { understanding: [], behavior: [] };
       }
 
@@ -163,7 +159,7 @@ ${systemPrompt}
       };
 
     } catch (parseError) {
-      console.warn('Failed to parse OpenAI JSON response:', content);
+      console.warn('Failed to parse Qwen JSON response:', content);
       return { understanding: [], behavior: [] };
     }
   }
@@ -232,7 +228,7 @@ ${systemPrompt}
 `;
 
     try {
-      const aiResponse = await OpenAIService.generateResponse(
+      const aiResponse = await QwenService.generateResponse(
         stricterPrompt,
         [],
         { ...EXTRACTION_CONFIG, temperature: 0.01, max_tokens: 1000 } // Ultra-low temperature and more tokens for complex extraction
@@ -326,14 +322,14 @@ ${systemPrompt}
   }
 
   /**
-   * Categorize template items using OpenAIService
+   * Categorize template items using QwenService
    */
   static async categorizeTemplateItems(items: string[]): Promise<ExtractionResult> {
     if (!items || items.length === 0) {
       return { understanding: [], behavior: [] };
     }
 
-    if (!this.hasOpenAIKey) {
+    if (!this.hasQwenKey) {
       // Simple fallback categorization without LLM
       return this.simpleCategorization(items);
     }
@@ -352,20 +348,20 @@ Items to categorize:
 ${items.map((item, i) => `${i + 1}. ${item}`).join('\n')}
 `;
 
-      // Use OpenAIService with slightly higher temperature for categorization
+      // Use Qwen with slightly higher temperature for categorization
       const categorizationConfig = {
         ...EXTRACTION_CONFIG,
         temperature: 0.2
       };
 
-      const aiResponse = await OpenAIService.generateResponse(
+      const aiResponse = await QwenService.generateResponse(
         categorizationPrompt,
         [],
         categorizationConfig
       );
 
       if (!aiResponse.success || !aiResponse.content) {
-        console.warn('OpenAI categorization failed:', aiResponse.error);
+        console.warn('Qwen categorization failed:', aiResponse.error);
         return this.simpleCategorization(items);
       }
 
@@ -444,7 +440,7 @@ ${items.map((item, i) => `${i + 1}. ${item}`).join('\n')}
 }
 
 /**
- * Fallback service for when OpenAI API is not available
+ * Fallback service for when Qwen API is not available
  * Uses DummyAIService patterns from aiService
  */
 export class DummyLLMExtractionService {

@@ -108,7 +108,7 @@ sessions: {
 ai_assistant_configs: {
     id: string;
     room_id: string;
-    model_name: string;           // default: "gpt-4o-mini"; also "gpt-4o", "gpt-4"
+    model_name: string;           // default and only active value: "qwen3.5-flash"
     system_prompt: string | null; // AI behavior instructions
     temperature: number;          // AI randomness (0.0-2.0)
     max_tokens: number;           // Response length limit
@@ -119,7 +119,7 @@ ai_assistant_configs: {
 ```
 
 **AI Behavior Control**:
-- **Model selection**: Choose between different AI models
+- **Model selection**: The UI exposes only Qwen3.5 Flash; legacy stored values are migrated/normalized
 - **Prompt engineering**: Custom system prompts for educational scenarios
 - **Parameter tuning**: Temperature and token limits for response control
 - **Version management**: Enable/disable configurations

@@ -32,7 +32,8 @@ describe('Promptfoo evaluation scaffold', () => {
     'low_boilerplate_praise.md',
     'practical_knowledge.md',
     'third_person_examples.md',
-    'reading_level.md'
+    'reading_level.md',
+    'response_length.md'
   ];
 
   it('declares reviewable promptfoo commands without running evaluation', () => {
@@ -40,7 +41,7 @@ describe('Promptfoo evaluation scaffold', () => {
       fs.readFileSync(path.join(tutorRoot, 'package.json'), 'utf8')
     );
 
-    expect(packageJson.scripts['eval:prompts']).toBe('promptfoo eval -c ../evals/promptfoo/promptfooconfig.yaml');
+    expect(packageJson.scripts['eval:prompts']).toBe('node scripts/run-promptfoo-eval.js');
     expect(packageJson.scripts['eval:prompts:report']).toContain('--output ../evals/promptfoo/results/latest.json');
     expect(packageJson.scripts['eval:prompts:export-current']).toBe('node scripts/export-promptfoo-fixture.js');
   });
@@ -52,7 +53,7 @@ describe('Promptfoo evaluation scaffold', () => {
 
     expect(seedConfig.agent_preset).toBe('casual_peer');
     expect(seedConfig.scenario_template).toBe('Account Security Alert');
-    expect(seedConfig.model_name).toBe('gpt-4o-mini');
+    expect(seedConfig.model_name).toBe('qwen3.5-flash');
     expect(metadata.source_files).toEqual(
       expect.arrayContaining([
         'tutor-system/src/services/prompts/index.ts',
@@ -71,9 +72,9 @@ describe('Promptfoo evaluation scaffold', () => {
     const cases = readText('evals/promptfoo/cases/account-security-alert.yaml');
 
     expect(config).toContain('file://prompts/current.chat.prompt.json');
-    expect(config).toContain('file://prompts/improved.chat.prompt.json');
-    expect(config).toContain('openai:chat:gpt-4o-mini');
-    expect(config).toContain('openai:chat:gpt-4o');
+    expect(config).not.toContain('improved.chat.prompt.json');
+    expect(config).toContain('openai:chat:qwen3.5-flash');
+    expect((config.match(/openai:chat:qwen3\.5-flash/g) || []).length).toBe(2);
     expect(config).toContain('- file://cases/account-security-alert.yaml');
     expect((cases.match(/case_id:/g) || []).length).toBeGreaterThanOrEqual(12);
     expect(cases).toContain('student_trusts_https');
@@ -105,7 +106,11 @@ describe('Promptfoo evaluation scaffold', () => {
 
       expect(assertedMetrics).toEqual(applicableRequirements);
       testCase.assert.forEach((assertion) => {
-        expect(assertion.value).toContain(`/rubrics/${assertion.metric}.md`);
+        if (assertion.metric === 'response_length') {
+          expect(assertion.value).toContain('response-length-rubric.js');
+        } else {
+          expect(assertion.value).toContain(`/rubrics/${assertion.metric}.md`);
+        }
       });
     });
   });

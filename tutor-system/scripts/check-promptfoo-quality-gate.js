@@ -11,14 +11,12 @@ const METRICS = [
   'low_boilerplate_praise',
   'practical_knowledge',
   'third_person_examples',
-  'reading_level'
+  'reading_level',
+  'response_length'
 ];
 
 const DEFAULT_THRESHOLD = 0.8;
-const VARIANTS = {
-  current: 'current.chat.prompt.json',
-  improved: 'improved.chat.prompt.json'
-};
+const CURRENT_PROMPT = 'current.chat.prompt.json';
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -50,10 +48,7 @@ function getPromptText(result) {
 
 function getVariant(result) {
   const promptText = getPromptText(result);
-  if (promptText.includes(VARIANTS.improved)) {
-    return 'improved';
-  }
-  if (promptText.includes(VARIANTS.current)) {
+  if (promptText.includes(CURRENT_PROMPT)) {
     return 'current';
   }
 
@@ -61,11 +56,7 @@ function getVariant(result) {
   if (promptIdx === 0) {
     return 'current';
   }
-  if (promptIdx === 1) {
-    return 'improved';
-  }
-
-  return null;
+  return promptIdx === 0 ? 'current' : null;
 }
 
 function getAssertionMetric(component) {
@@ -102,7 +93,8 @@ function getComponents(result) {
 function emptySummary() {
   return {
     current: Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, passRate: 0 }])),
-    improved: Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, passRate: 0 }]))
+    bySuite: {},
+    directCorrectionByStatus: {}
   };
 }
 
@@ -117,6 +109,10 @@ function summarizeReport(report) {
       return;
     }
 
+    const suite = result?.testCase?.vars?.source_type || 'unknown_suite';
+    const status = result?.testCase?.vars?.scaffolding_status || 'unknown_status';
+    summary.bySuite[suite] ||= Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, passRate: 0 }]));
+    summary.directCorrectionByStatus[status] ||= { passed: 0, total: 0, passRate: 0 };
     getComponents(result).forEach((component) => {
       const metric = getAssertionMetric(component);
       if (!METRICS.includes(metric)) {
@@ -126,13 +122,23 @@ function summarizeReport(report) {
       if (getAssertionPass(component)) {
         summary[variant][metric].passed += 1;
       }
+      summary.bySuite[suite][metric].total += 1;
+      if (getAssertionPass(component)) summary.bySuite[suite][metric].passed += 1;
+      if (metric === 'direct_correction') {
+        summary.directCorrectionByStatus[status].total += 1;
+        if (getAssertionPass(component)) summary.directCorrectionByStatus[status].passed += 1;
+      }
     });
   });
 
-  Object.values(summary).forEach((variantSummary) => {
-    Object.values(variantSummary).forEach((metricSummary) => {
+  Object.values(summary.current).forEach((metricSummary) => {
       metricSummary.passRate = metricSummary.total === 0 ? 0 : metricSummary.passed / metricSummary.total;
-    });
+  });
+  Object.values(summary.bySuite).forEach((suiteSummary) => Object.values(suiteSummary).forEach((metricSummary) => {
+    metricSummary.passRate = metricSummary.total === 0 ? 0 : metricSummary.passed / metricSummary.total;
+  }));
+  Object.values(summary.directCorrectionByStatus).forEach((statusSummary) => {
+    statusSummary.passRate = statusSummary.total === 0 ? 0 : statusSummary.passed / statusSummary.total;
   });
 
   return { summary, unknownVariants };
@@ -143,31 +149,42 @@ function evaluateGate(report, threshold = DEFAULT_THRESHOLD) {
   const failures = [];
 
   if (unknownVariants.length > 0) {
-    failures.push(`Unable to classify ${unknownVariants.length} Promptfoo result(s) as current or improved`);
+    failures.push(`Unable to classify ${unknownVariants.length} Promptfoo result(s) as the active current prompt`);
   }
 
   METRICS.forEach((metric) => {
     const current = summary.current[metric];
-    const improved = summary.improved[metric];
-
-    if (improved.total === 0) {
-      failures.push(`Improved prompt has no results for metric ${metric}`);
-      return;
-    }
     if (current.total === 0) {
       failures.push(`Current prompt has no results for metric ${metric}`);
       return;
     }
-    if (improved.passRate < threshold) {
+    if (current.passRate < threshold) {
       failures.push(
-        `Improved ${metric} pass rate ${formatRate(improved.passRate)} is below ${formatRate(threshold)}`
+        `Current ${metric} pass rate ${formatRate(current.passRate)} is below ${formatRate(threshold)}`
       );
     }
-    if (improved.passRate < current.passRate) {
-      failures.push(
-        `Improved ${metric} pass rate ${formatRate(improved.passRate)} is below current ${formatRate(current.passRate)}`
-      );
+  });
+
+  ['not_started', 'failed'].forEach((status) => {
+    const result = summary.directCorrectionByStatus[status];
+    if (!result || result.total === 0) {
+      failures.push(`Direct-correction status ${status} has no results`);
+    } else if (result.passRate < threshold) {
+      failures.push(`Direct-correction status ${status} pass rate ${formatRate(result.passRate)} is below ${formatRate(threshold)}`);
     }
+  });
+
+  ['product_template', 'synthetic_holdout'].forEach((suite) => {
+    const suiteSummary = summary.bySuite[suite];
+    if (!suiteSummary) {
+      failures.push(`${suite} suite has no results`);
+      return;
+    }
+    METRICS.forEach((metric) => {
+      const result = suiteSummary[metric];
+      if (!result || result.total === 0) failures.push(`${suite} suite has no results for metric ${metric}`);
+      else if (result.passRate < threshold) failures.push(`${suite} ${metric} pass rate ${formatRate(result.passRate)} is below ${formatRate(threshold)}`);
+    });
   });
 
   return {

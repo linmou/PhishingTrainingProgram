@@ -23,6 +23,7 @@ jest.mock('../services/supabase', () => ({
 }));
 
 jest.mock('../services/aiService', () => ({
+    DEFAULT_AI_MODEL: 'qwen3.5-flash',
     initializeAIAssistant: jest.fn().mockResolvedValue('room-ai-id'),
     updateAIConfig: jest.fn().mockResolvedValue({}),
     getAIConfig: jest.fn().mockResolvedValue({
@@ -362,8 +363,8 @@ describe('Room Template Management', () => {
             await waitFor(() => {
                 expect(aiService.initializeAIAssistant).toHaveBeenCalledWith(
                     'room-ai-123',
-                    'gpt-4o-mini',
-                    undefined,
+                    'qwen3.5-flash',
+                    'Ask at most one focused question',
                     'tutor-123',
                     expect.objectContaining({
                         role: 'peer',
@@ -373,7 +374,7 @@ describe('Room Template Management', () => {
             });
 
             expect(
-                await screen.findByText(/Test room created with improved AI tutor prompt/i)
+                await screen.findByText(/Test room created from the selected AI tutor template/i)
             ).toBeInTheDocument();
         });
 

@@ -1,28 +1,30 @@
 # yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
-description: Ecological webpage-shaped prompt-behavior evaluation (same room data + call shape as product AI button)
+description: Qwen3.5 Flash ecological and synthetic-holdout tutor evaluation
 
 prompts:
   - file://prompts/current.chat.prompt.json
-  - file://prompts/improved.chat.prompt.json
 
 providers:
-  - id: openai:chat:gpt-4o-mini
-    label: target-gpt-4o-mini
+  - id: openai:chat:qwen3.5-flash
+    label: target-qwen3.5-flash
     config:
-      # Align with product short tutor replies
       temperature: 0.3
       max_tokens: 100
+      passthrough:
+        enable_thinking: false
 
 defaultTest:
   options:
     provider:
-      # Same gateway-available model as the target (gpt-4o is often 503 here)
-      id: openai:chat:gpt-4o-mini
+      id: openai:chat:qwen3.5-flash
       config:
         temperature: 0
+        max_tokens: 100
+        passthrough:
+          enable_thinking: false
 
 tests:
   # Primary: webpage demo templates + classic room shapes
   - file://cases/webpage-ecological.yaml
-  # Holdout variations from original account-security suite
+  # Synthetic transfer/holdout variations (not product-identical cases)
   - file://cases/account-security-alert.yaml

@@ -22,7 +22,7 @@ describe('demoRoomTemplates', () => {
     expect(config.enabled).toBe(true);
     expect(config.preset).toBe('casual_peer');
     expect(config.system_prompt).toContain('Ask at most one focused question');
-    expect(config.system_prompt).toContain('correct the mistake directly');
+    expect(config.system_prompt).toContain('After a failed question scaffold');
     expect(config.system_prompt).toMatch(/third-person|A person who/i);
     expect(config.prompt_config.detection_areas.length).toBeGreaterThan(0);
   });

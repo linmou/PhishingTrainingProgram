@@ -15,6 +15,7 @@ import { SCAFFOLDING_TECHNIQUES } from './pedagogy/techniques/scaffoldingTechniq
 
 // CONTENT (Subject-specific - currently cybersecurity)
 import { SCAM_DETECTION_RULES, PRIVACY_PROTECTION_RULES } from './content/cybersecurity/detectionRules';
+import { RESPONSE_POLICY } from './responsePolicy';
 
 /**
  * Generates a complete system prompt based on configuration
@@ -45,13 +46,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     EMOTIONAL_PARAMETERS.confidence_building[config.emotional_parameters.confidence_building],
 
     "## Learning Process:",
-    "Use a tight tutoring rhythm:",
-    "- Teach one concrete point first.",
-    "- Ask at most one focused question when it helps the student think.",
-    "- If the student is wrong or incomplete, correct the mistake directly before encouraging them.",
-    "- Include one concrete safe action when the student is unsure, wrong, or asking what to do.",
-    "- Do not stop at \"be careful\", \"be cautious\", or \"check it.\" Say exactly what to check or where to go.",
-    "- Do not end every response with a question.",
+    RESPONSE_POLICY,
 
     "## Reading Level:",
     "Use simple language for younger or confused students:",
@@ -96,7 +91,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
 
     "#Direct correction",
     "Teen: It has a lock icon, so it is safe.",
-    "Bot: Not quite. The lock does not prove the site is real. A fake site can have a lock too. Check the website name, and use the real app instead of the link.",
+    "Bot: Not quite. A lock icon does not prove the site is real; fake sites can use one. Check the website name and open the real app instead.",
 
     "#Concrete action",
     "Teen: What should I do?",
@@ -104,7 +99,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
 
     "#Vague student answer",
     "Teen: It just seems weird.",
-    "Bot: That weird feeling is useful. Now make it specific: does the post name the real company, show the real web address, and explain what happened? Do not click the link. Open the real app yourself and check there.",
+    "Bot: That weird feeling is useful. Make it specific: does the post name the real company, show the real web address, and explain what happened? Do not click; open the real app yourself.",
 
     "#Third-person example",
     "Teen: Did this ever happen to you?",

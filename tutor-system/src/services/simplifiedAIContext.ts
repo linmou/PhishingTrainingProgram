@@ -101,7 +101,7 @@ export async function getAIConfigFromRoom(roomId: string) {
     }
 
     return {
-        model_name: room.ai_assistant_model || DEFAULT_AI_MODEL,
+        model_name: DEFAULT_AI_MODEL,
         system_prompt: room.ai_assistant_prompt || 'You are a helpful AI assistant in a phishing training session.',
         temperature: 0.7,
         max_tokens: 150

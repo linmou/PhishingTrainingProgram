@@ -1,10 +1,10 @@
 /**
  * Coverage Detection Service
- * Uses existing OpenAI client to intelligently detect student understanding
+ * Uses the Qwen client to intelligently detect student understanding
  * Based on BDD scenarios from ai_checklist_integration.feature
  */
 
-import { OpenAIService, DEFAULT_AI_MODEL } from './aiService';
+import { QwenService, DEFAULT_AI_MODEL } from './aiService';
 import { AIAssistantConfig, ConversationMessage } from '../types';
 import { ChecklistItem, CoverageEvidence, CoverageDetectionResult } from '../types/checklist';
 
@@ -29,7 +29,7 @@ export class CoverageDetectionService {
     try {
       const analysisPrompt = this.buildAnalysisPrompt(studentMessage, currentChecklist);
       
-      // Use existing OpenAI service with low temperature for consistent analysis
+      // Use Qwen with low temperature for consistent analysis
       const aiConfig: AIAssistantConfig = {
         id: 'coverage-analysis',
         room_id: 'temp',
@@ -47,7 +47,7 @@ export class CoverageDetectionService {
         checklistItems: currentChecklist.length
       });
 
-      const response = await OpenAIService.generateResponse(
+      const response = await QwenService.generateResponse(
         analysisPrompt, 
         conversationHistory.slice(-5), // Only use recent context
         aiConfig
@@ -70,7 +70,7 @@ export class CoverageDetectionService {
   }
 
   /**
-   * Builds the analysis prompt for OpenAI
+   * Builds the analysis prompt for Qwen
    */
   private static buildAnalysisPrompt(
     studentMessage: string, 

@@ -302,7 +302,7 @@ describe('AI config loading edge cases', () => {
     await expect(getAIConfig(roomId)).resolves.toMatchObject({
       id: roomId,
       room_id: roomId,
-      model_name: 'gpt-4o-mini',
+            model_name: 'qwen3.5-flash',
       system_prompt: 'Use the room-level tutor guidance.',
       is_active: true
     });

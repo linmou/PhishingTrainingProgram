@@ -60,10 +60,7 @@ describe('Promptfoo evaluation prompt formatting', () => {
       fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/cases/webpage-ecological.yaml'), 'utf8')
     ) as Array<{ vars: Record<string, string> }>;
 
-    expect(config.prompts).toEqual([
-      'file://prompts/current.chat.prompt.json',
-      'file://prompts/improved.chat.prompt.json'
-    ]);
+    expect(config.prompts).toEqual(['file://prompts/current.chat.prompt.json']);
     expect(config.tests).toEqual(
       expect.arrayContaining([
         'file://cases/webpage-ecological.yaml',

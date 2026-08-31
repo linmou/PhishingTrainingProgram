@@ -52,7 +52,7 @@ export async function assessChecklistGenerationContext(roomId: string): Promise<
       aiConfig = {
         id: `room-${roomId}`,
         room_id: roomId,
-        model_name: roomData.ai_assistant_model || DEFAULT_AI_MODEL,
+        model_name: DEFAULT_AI_MODEL,
         system_prompt: defaultSystemPrompt,
         temperature: 0.7,
         max_tokens: 2000,

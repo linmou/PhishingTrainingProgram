@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Purpose: Upsert global room templates that ship the improved casual_peer tutor
+ * Purpose: Upsert global room templates that ship the Qwen casual_peer tutor
  * prompt so the website template picker can open rooms where the fixed AI
  * behavior is visible.
  *
@@ -45,6 +45,7 @@ loadEnv();
 
 const {
   getDemoRoomTemplateSeeds,
+  getPromptComparisonTemplateSeeds,
   toRoomTemplateInsertRow,
   GLOBAL_TEMPLATE_TUTOR_ID
 } = require(path.join(tutorRoot, 'src/services/demoRoomTemplates.ts'));
@@ -57,7 +58,7 @@ async function main() {
   }
 
   const supabase = createClient(url, key);
-  const seeds = getDemoRoomTemplateSeeds();
+  const seeds = [...getDemoRoomTemplateSeeds(), ...getPromptComparisonTemplateSeeds()];
 
   console.log(`Seeding ${seeds.length} global room templates (tutor_id=${GLOBAL_TEMPLATE_TUTOR_ID})`);
 

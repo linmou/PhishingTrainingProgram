@@ -1,6 +1,6 @@
 /**
  * AI Checklist Integration Test Suite.
- * Uses JSON test data files to validate real OpenAI-backed extraction and coverage detection as an opt-in external integration suite.
+ * Uses JSON test data files to validate real Qwen-backed extraction and coverage detection as an opt-in external integration suite.
  */
 
 import { extractDetectionAreasFromPromptAsync } from '../services/promptDetectionExtractor';
@@ -75,7 +75,7 @@ function calculateSemanticMatchRate(extracted: string[], expected: string[]): nu
   return totalMatches / expected.length;
 }
 
-// Remove mocking to use real OpenAI API calls
+// Remove mocking to use real Qwen API calls
 // jest.mock('../services/coverageDetectionService', () => ({
 //   CoverageDetectionService: {
 //     analyzeStudentResponse: jest.fn()
@@ -107,9 +107,9 @@ function categorizeItems(detectionAreas: string[], verificationSteps: string[]):
   };
 }
 
-const describeLiveOpenAI = process.env.RUN_LIVE_OPENAI_TESTS === 'true' ? describe : describe.skip;
+const describeLiveQwen = process.env.RUN_LIVE_QWEN_TESTS === 'true' ? describe : describe.skip;
 
-describeLiveOpenAI('AI Checklist Integration', () => {
+describeLiveQwen('AI Checklist Integration', () => {
   // Increase timeout for LLM API calls
   jest.setTimeout(15000);
   

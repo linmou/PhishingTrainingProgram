@@ -1,6 +1,6 @@
 {
   "purpose": "Frozen v1 current-prompt fixture for reviewing promptfoo cases and rubrics before live evaluation.",
-  "generated_at": "2026-07-18T13:52:10.833Z",
+  "generated_at": "2026-08-30T22:54:52.685Z",
   "generated_by": "tutor-system/scripts/export-promptfoo-fixture.js",
   "agent_preset": "casual_peer",
   "scenario_template": "Account Security Alert",
@@ -12,9 +12,14 @@
     "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts",
     "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts",
     "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+    "tutor-system/src/services/prompts/responsePolicy.ts",
     "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
     "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts",
     "tutor-system/src/services/detectionTemplates.ts"
   ],
-  "git_commit": "pending-review"
+  "git_commit": "pending-review",
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "enable_thinking": false
 }

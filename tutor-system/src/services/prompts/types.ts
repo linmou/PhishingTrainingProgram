@@ -8,6 +8,16 @@ export interface StudentToneLock {
   chosen_role: 'low' | 'high';
 }
 
+export type PromptComparisonVersion = 'phase0' | 'refined';
+export type PromptComparisonPairId = 'lock_icon' | 'click_impulse' | 'personal_story';
+
+export interface PromptComparisonMetadata {
+  version: PromptComparisonVersion;
+  pair_id: PromptComparisonPairId;
+  shared_scenario_context: string;
+  system_prompt_source_commit: string;
+}
+
 export interface SystemPromptConfig {
   role: {
     role: 'low' | 'high';
@@ -33,6 +43,8 @@ export interface SystemPromptConfig {
   verification_steps: string[];
   /** Present when a student claimed peer/adult tone (1:1 rooms). Ignored by prompt text generation. */
   student_tone_lock?: StudentToneLock | null;
+  /** Present only on controlled Phase 0/refined evidence rooms. */
+  prompt_comparison?: PromptComparisonMetadata | null;
 }
 
 export interface ParameterConfig {

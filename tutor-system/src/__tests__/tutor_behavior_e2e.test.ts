@@ -1,16 +1,16 @@
 /**
- * File: production tutor prompt path + OpenAIService.generateResponse
+ * File: production tutor prompt path + QwenService.generateResponse
  * Purpose: real end-to-end checks for AI tutor behaviors fixed in
  * user_feedback_improvement_summary.md. Builds the live casual_peer system
- * prompt from product code, calls the product OpenAI client, and scores the
+ * prompt from product code, calls the product Qwen client, and scores the
  * response with deterministic heuristics (smoke gate; Promptfoo remains the
  * LLM-as-judge quality gate).
  *
- * Opt-in: RUN_LIVE_OPENAI_TESTS=true
+ * Opt-in: RUN_LIVE_QWEN_TESTS=true
  * Requires: REACT_APP_OAI_API_KEY (and optional REACT_APP_OAI_BASE_URL)
  */
 
-import { OpenAIService } from '../services/aiService';
+import { QwenService } from '../services/aiService';
 import { generateSystemPrompt, PRESET_CONFIGS } from '../services/systemPrompts';
 import { SCENARIO_TEMPLATES } from '../services/detectionTemplates';
 import { buildEvaluationUserTurn } from '../services/promptfooEvaluationPromptBuilder';
@@ -21,8 +21,8 @@ import {
 } from '../services/tutorBehaviorHeuristics';
 import { AIAssistantConfig, ConversationMessage } from '../types';
 
-const describeLiveOpenAI =
-  process.env.RUN_LIVE_OPENAI_TESTS === 'true' ? describe : describe.skip;
+const describeLiveQwen =
+  process.env.RUN_LIVE_QWEN_TESTS === 'true' ? describe : describe.skip;
 
 interface TutorBehaviorCase {
   id: string;
@@ -126,7 +126,7 @@ function buildLiveConfig(systemPrompt: string): AIAssistantConfig {
   return {
     id: 'e2e-tutor-behavior',
     room_id: 'e2e-tutor-behavior-room',
-    model_name: process.env.REACT_APP_E2E_TUTOR_MODEL || 'gpt-4o-mini',
+    model_name: 'qwen3.5-flash',
     system_prompt: systemPrompt,
     prompt_config: null,
     temperature: 0.2,
@@ -137,7 +137,7 @@ function buildLiveConfig(systemPrompt: string): AIAssistantConfig {
   };
 }
 
-describeLiveOpenAI('Tutor behavior E2E (production prompt + live OpenAI)', () => {
+describeLiveQwen('Tutor behavior E2E (production prompt + live Qwen)', () => {
   jest.setTimeout(90000);
 
   const hasKey = Boolean(process.env.REACT_APP_OAI_API_KEY);
@@ -147,14 +147,14 @@ describeLiveOpenAI('Tutor behavior E2E (production prompt + live OpenAI)', () =>
   beforeAll(() => {
     if (!hasKey) {
       throw new Error(
-        'RUN_LIVE_OPENAI_TESTS=true requires REACT_APP_OAI_API_KEY in the environment'
+        'RUN_LIVE_QWEN_TESTS=true requires REACT_APP_OAI_API_KEY in the environment'
       );
     }
   });
 
   it('builds a production casual_peer prompt that still encodes the feedback gates', () => {
     expect(systemPrompt).toContain('Ask at most one focused question');
-    expect(systemPrompt).toContain('correct the mistake directly');
+    expect(systemPrompt).toContain('After a failed question scaffold, correct');
     expect(systemPrompt).toContain('concrete safe action');
     expect(systemPrompt).toMatch(/third-person|A person who/i);
     expect(systemPrompt).toMatch(/pressure words|lock does not prove/i);
@@ -170,10 +170,10 @@ describeLiveOpenAI('Tutor behavior E2E (production prompt + live OpenAI)', () =>
       });
 
       // Empty history: full context is in the user turn, matching Promptfoo chat shape
-      // and OpenAIService system + user ordering.
+      // and QwenService system + user ordering.
       const history: ConversationMessage[] = [];
 
-      const result = await OpenAIService.generateResponse(userTurn, history, config);
+      const result = await QwenService.generateResponse(userTurn, history, config);
 
       expect(result.success).toBe(true);
       expect(result.error).toBeUndefined();

@@ -35,7 +35,7 @@ describe('System Prompts', () => {
             expect(prompt).toContain('knowledgeable peer coach');
             expect(prompt).toContain('Test detection area');
             expect(prompt).toContain('Test verification step');
-            expect(prompt).toContain('Use a tight tutoring rhythm');
+            expect(prompt).toContain('Keep it short: use no more than 3 sentences and 50 words');
         });
 
         it('should generate a complete system prompt with trusted adult role', () => {

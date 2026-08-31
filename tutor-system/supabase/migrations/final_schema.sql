@@ -42,7 +42,7 @@ CREATE TABLE rooms (
     is_active BOOLEAN DEFAULT true NOT NULL,
     password TEXT,
     ai_assistant_enabled BOOLEAN DEFAULT false NOT NULL,
-    ai_assistant_model TEXT DEFAULT 'gpt-3.5-turbo',
+    ai_assistant_model TEXT DEFAULT 'qwen3.5-flash',
     ai_assistant_prompt TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -77,7 +77,7 @@ CREATE TABLE sessions (
 CREATE TABLE ai_assistant_configs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id UUID NOT NULL UNIQUE REFERENCES rooms(id) ON DELETE CASCADE,
-    model_name TEXT NOT NULL DEFAULT 'gpt-3.5-turbo',
+    model_name TEXT NOT NULL DEFAULT 'qwen3.5-flash',
     system_prompt TEXT,
     temperature DECIMAL(3,2) DEFAULT 0.7 CHECK (temperature >= 0 AND temperature <= 2),
     max_tokens INTEGER DEFAULT 150 CHECK (max_tokens > 0),

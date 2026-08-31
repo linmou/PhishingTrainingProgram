@@ -25,6 +25,12 @@ const getAIResponseErrorMessage = (error: unknown): string => {
     return `Failed to generate AI response.\n\n${error.message}`;
 };
 
+const COMPARISON_PAIR_LABELS = {
+    lock_icon: 'Lock Icon Myth',
+    click_impulse: 'Click Impulse',
+    personal_story: 'Personal Story'
+} as const;
+
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { user } = useAuth();
@@ -531,6 +537,22 @@ const RoomPagePost: React.FC = () => {
                     likeCount={roomEngagement.likeCount}
                     showOp={true}
                 />
+
+                {aiConfig?.prompt_config?.prompt_comparison && (
+                    <div className="prompt-comparison-badge" data-testid="prompt-comparison-badge">
+                        <span className="prompt-comparison-version">
+                            {aiConfig.prompt_config.prompt_comparison.version === 'phase0'
+                                ? 'Phase 0'
+                                : 'Refined'}
+                        </span>
+                        <span aria-hidden="true">·</span>
+                        <span>
+                            {COMPARISON_PAIR_LABELS[
+                                aiConfig.prompt_config.prompt_comparison.pair_id
+                            ]}
+                        </span>
+                    </div>
+                )}
 
 
                 {/* Comments Section */}

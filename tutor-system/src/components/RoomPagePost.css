@@ -100,6 +100,24 @@
     overflow: hidden;
 }
 
+.prompt-comparison-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 20px 0;
+    padding: 10px 14px;
+    border: 1px solid #c7d2fe;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.prompt-comparison-version {
+    font-weight: 800;
+}
+
 .comments-header {
     padding: 20px 24px;
     border-bottom: 1px solid #e5e5e5;

@@ -1,13 +1,13 @@
-@ai-openai
-Feature: OpenAI API Integration
+@ai-qwen
+Feature: Qwen API Integration
   As a system administrator
-  I want to configure real OpenAI API integration
+  I want to configure real Qwen API integration
   So that tutors can get high-quality AI suggestions
 
   Background:
     Given the system has environment variables configured:
       | Variable      | Description                          |
-      | OAI_API_KEY   | OpenAI API key for authentication   |
+      | OAI_API_KEY   | DashScope Qwen API key for authentication |
       | OAI_BASE_URL  | Optional custom API endpoint         |
 
   Scenario: System uses dummy AI when no API key is configured
@@ -17,11 +17,11 @@ Feature: OpenAI API Integration
     And the response should be from predefined templates
     And the response time should be simulated (200-800ms)
 
-  Scenario: System uses OpenAI when API key is configured
+  Scenario: System uses Qwen when API key is configured
     Given OAI_API_KEY is set to a valid API key
     When a tutor requests an AI suggestion
-    Then the system should use the OpenAIService
-    And the request should be sent to OpenAI's API
+    Then the system should use the QwenService
+    And the request should be sent to DashScope's Qwen API
     And the response should be dynamically generated
 
   Scenario: Custom API endpoint configuration
@@ -31,34 +31,34 @@ Feature: OpenAI API Integration
     Then the system should send requests to the custom endpoint
     And use the provided API key for authentication
 
-  Scenario: OpenAI service respects room configuration
-    Given OpenAI integration is active
+  Scenario: Qwen service respects room controls
+    Given Qwen integration is active
     And a room has AI settings:
       | Setting      | Value                              |
-      | model        | gpt-4o-mini                       |
+      | model        | qwen3.5-flash                    |
       | temperature  | 0.7                               |
       | max_tokens   | 300                               |
       | prompt       | Focus on cybersecurity education   |
     When generating a suggestion
-    Then the OpenAI request should use these exact settings
+    Then the Qwen request should use these exact settings
 
-  Scenario: Graceful fallback on OpenAI errors
-    Given OpenAI integration is active
-    And the OpenAI API returns an error
+  Scenario: Visible failure on Qwen errors
+    Given Qwen integration is active
+    And the Qwen API returns an error
     When a tutor requests an AI suggestion
     Then the system should show an error message
     And the error should be logged for debugging
     And the tutor can still type responses manually
 
-  Scenario: Response formatting from OpenAI
-    Given OpenAI integration is active
-    When OpenAI returns a response
+  Scenario: Response formatting from Qwen
+    Given Qwen integration is active
+    When Qwen returns a response
     Then the system should extract the content
     And format it as a suggested_response
     And include metadata (model_used, response_time_ms)
 
   Scenario: Cost-effective API usage
-    Given OpenAI integration is active
+    Given Qwen integration is active
     Then the system should:
       | Optimization           | Implementation                    |
       | Limit context         | Only send recent relevant messages |
@@ -74,17 +74,15 @@ Feature: OpenAI API Integration
       | Logs                 | Masked in log output           |
       | Database             | Environment variables only     |
 
-  Scenario: Model selection with OpenAI
-    Given OpenAI integration is active
+  Scenario: Only Qwen model is selectable
+    Given Qwen integration is active
     When a tutor selects different models:
       | Model Selected    | API Model Used     |
-      | GPT-4o Mini      | gpt-4o-mini       |
-      | GPT-4o           | gpt-4o            |
-      | GPT-4            | gpt-4             |
+      | Qwen3.5 Flash    | qwen3.5-flash    |
     Then the system should use the appropriate model
 
   Scenario: Temperature effects on suggestions
-    Given OpenAI integration is active
+    Given Qwen integration is active
     When temperature is set to different values:
       | Temperature | Expected Behavior                    |
       | 0.0        | Most deterministic responses         |

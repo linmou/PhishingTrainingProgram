@@ -114,7 +114,7 @@ const TestRoomsView: React.FC = () => {
 
       const aiTemplate = selectedTemplate.ai_config_template;
       if (aiTemplate?.enabled) {
-        const modelName = aiTemplate.model_name || DEFAULT_AI_MODEL;
+        const modelName = DEFAULT_AI_MODEL;
         const promptConfig = aiTemplate.prompt_config
           ? {
               role: (aiTemplate.preset === 'casual_peer' ||
@@ -126,14 +126,15 @@ const TestRoomsView: React.FC = () => {
               cognitive_parameters: aiTemplate.prompt_config.cognitive_parameters,
               emotional_parameters: aiTemplate.prompt_config.emotional_parameters,
               custom_detection_areas: aiTemplate.prompt_config.detection_areas,
-              custom_verification_steps: aiTemplate.prompt_config.verification_steps
+              custom_verification_steps: aiTemplate.prompt_config.verification_steps,
+              prompt_comparison: aiTemplate.prompt_config.prompt_comparison
             }
           : undefined;
 
         await initializeAIAssistant(
           newRoom.id,
           modelName,
-          promptConfig ? undefined : aiTemplate.system_prompt || undefined,
+          aiTemplate.system_prompt || undefined,
           user.id,
           promptConfig
         );
@@ -142,7 +143,7 @@ const TestRoomsView: React.FC = () => {
         await updateAIConfig(
           newRoom.id,
           {
-            model_name: current?.model_name || modelName,
+            model_name: DEFAULT_AI_MODEL,
             system_prompt: current?.system_prompt ?? null,
             prompt_config: current?.prompt_config ?? null,
             temperature: aiTemplate.temperature ?? 0.3,
@@ -154,7 +155,7 @@ const TestRoomsView: React.FC = () => {
         );
       }
 
-      setSuccessMessage('Test room created with improved AI tutor prompt');
+      setSuccessMessage('Test room created from the selected AI tutor template');
       setShowCreateForm(false);
       setSelectedTemplateId(null);
       await loadRooms();

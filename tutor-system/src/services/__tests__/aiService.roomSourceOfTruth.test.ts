@@ -84,7 +84,7 @@ describe('AI Service room source of truth', () => {
         await expect(getAIConfig('room-1')).resolves.toMatchObject({
             id: 'room-1',
             room_id: 'room-1',
-            model_name: 'gpt-4o-mini',
+            model_name: 'qwen3.5-flash',
             system_prompt: generateSystemPrompt({
                 ...normalizedPromptConfig,
                 detection_areas: [],
@@ -330,7 +330,7 @@ describe('AI Service room source of truth', () => {
         ).resolves.toMatchObject({
             id: 'room-2',
             room_id: 'room-2',
-            model_name: 'gpt-4',
+            model_name: 'qwen3.5-flash',
             system_prompt: 'Updated room prompt.',
             prompt_config: {
                 role: { role: 'low' }
@@ -352,9 +352,9 @@ describe('AI Service room source of truth', () => {
             room_id: 'room-2',
             changed_by_user_id: 'tutor-2',
             change_reason: 'settings_update',
-            changed_fields: ['model_name', 'system_prompt', 'prompt_config', 'temperature', 'max_tokens'],
+            changed_fields: ['system_prompt', 'prompt_config', 'temperature', 'max_tokens'],
             previous_config: {
-                model_name: 'gpt-4o-mini',
+                model_name: 'qwen3.5-flash',
                 system_prompt: 'Old prompt.',
                 prompt_config: null,
                 temperature: 0.7,
@@ -362,7 +362,7 @@ describe('AI Service room source of truth', () => {
                 is_active: true
             },
             new_config: {
-                model_name: 'gpt-4',
+                model_name: 'qwen3.5-flash',
                 system_prompt: 'Updated room prompt.',
                 prompt_config: {
                     role: { role: 'low' }

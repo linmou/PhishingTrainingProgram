@@ -30,7 +30,7 @@ CREATE TABLE rooms (
     image_url TEXT,
     is_active BOOLEAN DEFAULT true NOT NULL,
     ai_assistant_enabled BOOLEAN DEFAULT false NOT NULL,
-    ai_assistant_model TEXT DEFAULT 'gpt-3.5-turbo',
+    ai_assistant_model TEXT DEFAULT 'qwen3.5-flash',
     ai_assistant_prompt TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -65,7 +65,7 @@ CREATE TABLE sessions (
 CREATE TABLE ai_assistant_configs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4 (),
     room_id UUID NOT NULL UNIQUE REFERENCES rooms (id) ON DELETE CASCADE,
-    model_name TEXT NOT NULL DEFAULT 'gpt-3.5-turbo',
+    model_name TEXT NOT NULL DEFAULT 'qwen3.5-flash',
     system_prompt TEXT,
     temperature DECIMAL(3, 2) DEFAULT 0.7 CHECK (
         temperature >= 0
@@ -267,7 +267,7 @@ UPDATE USING (true);
 -- Function to initialize AI assistant for a room
 CREATE OR REPLACE FUNCTION initialize_ai_assistant(
     p_room_id UUID,
-    p_model_name TEXT DEFAULT 'gpt-3.5-turbo',
+    p_model_name TEXT DEFAULT 'qwen3.5-flash',
     p_system_prompt TEXT DEFAULT 'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn.'
 )
 RETURNS UUID
@@ -288,9 +288,9 @@ BEGIN
     
     -- Create or update AI assistant config
     INSERT INTO ai_assistant_configs (room_id, model_name, system_prompt)
-    VALUES (p_room_id, p_model_name, p_system_prompt)
+    VALUES (p_room_id, 'qwen3.5-flash', p_system_prompt)
     ON CONFLICT (room_id) DO UPDATE SET
-        model_name = EXCLUDED.model_name,
+        model_name = 'qwen3.5-flash',
         system_prompt = EXCLUDED.system_prompt,
         is_active = true,
         updated_at = NOW()
