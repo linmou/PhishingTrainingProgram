@@ -1,6 +1,6 @@
 /**
  * Tests for StudentAIToneControl.tsx
- * Purpose: opt-in "Choose AI tone?" then Peer/Adult dropdown; multi-student hide.
+ * Purpose: opt-in "Choose AI role?" then Peer/Adult dropdown; multi-student hide.
  * Spec: features/student_ai_tone.feature
  */
 
@@ -50,14 +50,15 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     });
   }
 
-  it('shows Choose AI tone? and not a tone dropdown before opt-in', () => {
+  it('shows Choose AI role? and not a role dropdown before opt-in', () => {
     mockRoom();
     render(<StudentAIToneControl />);
 
     expect(
-      screen.getByRole('button', { name: /choose ai tone\?/i })
+      screen.getByRole('button', { name: /choose ai role\?/i })
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText(/ai tone/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/AI tone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/ai role/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 
@@ -65,10 +66,11 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     mockRoom();
     render(<StudentAIToneControl />);
 
-    fireEvent.click(screen.getByRole('button', { name: /choose ai tone\?/i }));
+    fireEvent.click(screen.getByRole('button', { name: /choose ai role\?/i }));
 
-    const select = screen.getByLabelText(/ai tone/i);
+    const select = screen.getByLabelText(/ai role/i);
     expect(select).toBeInTheDocument();
+    expect(screen.queryByText(/AI tone/i)).not.toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Peer' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Adult' })).toBeInTheDocument();
   });
@@ -78,8 +80,8 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     mockRoom();
     render(<StudentAIToneControl />);
 
-    fireEvent.click(screen.getByRole('button', { name: /choose ai tone\?/i }));
-    fireEvent.change(screen.getByLabelText(/ai tone/i), {
+    fireEvent.click(screen.getByRole('button', { name: /choose ai role\?/i }));
+    fireEvent.change(screen.getByLabelText(/ai role/i), {
       target: { value: 'peer' },
     });
 
@@ -99,7 +101,7 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     render(<StudentAIToneControl />);
 
     expect(
-      screen.queryByRole('button', { name: /choose ai tone\?/i })
+      screen.queryByRole('button', { name: /choose ai role\?/i })
     ).not.toBeInTheDocument();
   });
 
@@ -110,7 +112,7 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     render(<StudentAIToneControl />);
 
     expect(
-      screen.queryByRole('button', { name: /choose ai tone\?/i })
+      screen.queryByRole('button', { name: /choose ai role\?/i })
     ).not.toBeInTheDocument();
   });
 
@@ -122,11 +124,11 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     render(<StudentAIToneControl />);
 
     expect(
-      screen.queryByRole('button', { name: /choose ai tone\?/i })
+      screen.queryByRole('button', { name: /choose ai role\?/i })
     ).not.toBeInTheDocument();
   });
 
-  it('shows dropdown already open when tone is already locked by student', () => {
+  it('shows dropdown already open when role is already locked by student', () => {
     mockRoom({
       aiConfig: {
         prompt_config: {
@@ -142,8 +144,9 @@ describe('StudentAIToneControl (features/student_ai_tone.feature)', () => {
     render(<StudentAIToneControl />);
 
     expect(
-      screen.queryByRole('button', { name: /choose ai tone\?/i })
+      screen.queryByRole('button', { name: /choose ai role\?/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/ai tone/i)).toHaveValue('peer');
+    expect(screen.getByLabelText(/ai role/i)).toHaveValue('peer');
+    expect(screen.queryByText(/AI tone/i)).not.toBeInTheDocument();
   });
 });

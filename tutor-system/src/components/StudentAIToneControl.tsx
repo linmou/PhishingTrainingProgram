@@ -1,6 +1,6 @@
 /**
- * Student opt-in control for AI response tone (peer vs adult).
- * Purpose: "Choose AI tone?" → dropdown; 1:1 AI-enabled rooms only.
+ * Student opt-in control for AI role (peer vs adult).
+ * Purpose: "Choose AI role?" → dropdown; 1:1 AI-enabled rooms only.
  */
 
 import React, { useMemo, useState } from 'react';
@@ -48,7 +48,7 @@ const StudentAIToneControl: React.FC = () => {
     try {
       await setStudentAITone(tone);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to set AI tone';
+      const message = err instanceof Error ? err.message : 'Failed to set AI role';
       setError(message);
     } finally {
       setSaving(false);
@@ -64,20 +64,20 @@ const StudentAIToneControl: React.FC = () => {
           onClick={() => setOptedIn(true)}
           disabled={loadingAI || saving}
         >
-          Choose AI tone?
+          Choose AI role?
         </button>
       ) : (
         <label className="student-ai-tone-label">
-          <span className="student-ai-tone-label-text">AI tone</span>
+          <span className="student-ai-tone-label-text">AI role</span>
           <select
-            aria-label="AI tone"
+            aria-label="AI role"
             value={selectedTone}
             disabled={loadingAI || saving}
             onChange={(e) => handleSelect(e.target.value as StudentToneValue)}
             className="ai-setting-select"
           >
             <option value="" disabled>
-              Select tone
+              Select role
             </option>
             {STUDENT_TONE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>

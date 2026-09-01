@@ -17,6 +17,7 @@ interface AISuggestionBoxProps {
     isRegenerating?: boolean;
     parameterConfig?: any; // Dynamic configuration structure
     initialParameters?: ParameterOverrides;
+    lockedRole?: 'low' | 'high';
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -28,16 +29,18 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     parentMessage,
     isRegenerating = false,
     parameterConfig = getDefaultParameterSelection(),
-    initialParameters
+    initialParameters,
+    lockedRole
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
     const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
     const [quickAdjustCollapsed, setQuickAdjustCollapsed] = useState(true); // Start collapsed by default
     const [showInfoModal, setShowInfoModal] = useState<string | null>(null);
-    const [parameters, setParameters] = useState<ParameterOverrides>(() => 
-        ({ ...createDefaultParameters(parameterConfig), ...initialParameters })
-    );
+    const [parameters, setParameters] = useState<ParameterOverrides>(() => {
+        const initial = { ...createDefaultParameters(parameterConfig), ...initialParameters };
+        return lockedRole ? { ...initial, role: { role: lockedRole } } : initial;
+    });
     
     const metadata = getParameterMetadata();
 
@@ -49,6 +52,12 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
         }
     }, [isVisible]);
 
+    useEffect(() => {
+        if (lockedRole) {
+            setParameters(prev => ({ ...prev, role: { role: lockedRole } }));
+        }
+    }, [lockedRole]);
+
     const handleCopy = () => {
         onCopy(suggestion);
         setCopied(true);
@@ -56,6 +65,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     };
 
     const handleParameterChange = (path: string, value: string) => {
+        if (lockedRole && path === 'role.role') return;
         console.log('🎛️ Parameter change:', path, '→', value);
         setParameters(prev => {
             const newParams = { ...prev };
@@ -74,7 +84,10 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     };
 
     const handleRegenerate = () => {
-        const filteredParams = filterParameterOverrides(parameters, parameterConfig);
+        const filteredParams = filterParameterOverrides(
+            lockedRole ? { ...parameters, role: { role: lockedRole } } : parameters,
+            parameterConfig
+        );
         console.log('🔄 Regenerating with filtered parameters:', filteredParams);
         if (onRegenerate) {
             onRegenerate(filteredParams);
@@ -128,13 +141,17 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                 const paramMeta = sectionMeta.parameters[paramKey];
                 const sectionParams = parameters[sectionKey as keyof ParameterOverrides] as any;
                 const currentValue = sectionParams?.[paramKey] || 'low';
+                const roleIsLocked = Boolean(
+                    lockedRole && sectionKey === 'role' && paramKey === 'role'
+                );
                 
                 return (
                     <div key={paramKey} className="ai-parameter-group">
                         <label className="ai-parameter-label">{paramMeta.label}:</label>
                         <select 
-                            value={currentValue}
+                            value={roleIsLocked ? lockedRole : currentValue}
                             onChange={(e) => handleParameterChange(`${sectionKey}.${paramKey}`, e.target.value)}
+                            disabled={roleIsLocked}
                             className="ai-parameter-select"
                         >
                             <option value="low">{paramMeta.labels?.low || 'low'}</option>

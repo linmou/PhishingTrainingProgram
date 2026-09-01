@@ -657,6 +657,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setLoadingAI(true);
         try {
+            const studentToneLock = aiConfig?.prompt_config?.student_tone_lock;
+            const lockedRole = studentToneLock?.locked
+                ? studentToneLock.chosen_role
+                : undefined;
+            const effectiveParameterOverrides = lockedRole
+                ? { ...parameterOverrides, role: { role: lockedRole } }
+                : parameterOverrides;
+
             // Mark the current suggestion as modified/ignored
             if (aiSuggestion) {
                 await recordAIFeedback('modified');
@@ -666,7 +674,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const result = await generateTutorSuggestion(
                 currentRoom.id,
                 user.id,
-                parameterOverrides,
+                effectiveParameterOverrides,
                 {
                     focusStudentMessage: currentSuggestionContext.parentMessageContent
                 }
