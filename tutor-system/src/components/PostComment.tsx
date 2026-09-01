@@ -86,6 +86,8 @@ const PostComment: React.FC<PostCommentProps> = ({
         }
     };
 
+    const getRoleLabel = (role: string) => role === 'tutor' ? 'AI chatbot' : role;
+
     const isOwnComment = currentUserId === message.user_id;
 
     // Feedback handling functions
@@ -156,8 +158,8 @@ const PostComment: React.FC<PostCommentProps> = ({
                             </span>
                             
                             {!message.is_ai_generated && currentUserRole !== 'student' && (
-                                <span className="comment-role-badge">
-                                    {getRoleIcon(message.user_role, false)} {message.user_role}
+                                <span className={`comment-role-badge ${message.user_role === 'tutor' ? 'comment-role-badge--tutor' : ''}`}>
+                                    {getRoleIcon(message.user_role, false)} {getRoleLabel(message.user_role)}
                                 </span>
                             )}
                             
