@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Purpose: verify visible Qwen provider failures and verbatim quote cleanup. */
+/** Purpose: verify visible Qwen provider failures and strict structured-decision parsing. */
 
 jest.mock('../simplifiedAIContext', () => ({
     buildAIContextFromExistingData: jest.fn()
@@ -52,6 +52,7 @@ function configureSupabaseMocks() {
 describe('AI Service provider failure behavior', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        process.env.REACT_APP_OAI_API_KEY = 'test-qwen-key';
         mockBuildAIContext.mockResolvedValue([
             { role: 'system', content: 'You are helping a tutor guide a phishing discussion.' },
             { role: 'user', content: 'Student: This Nintendo Switch offer looks suspicious.' }
@@ -64,7 +65,10 @@ describe('AI Service provider failure behavior', () => {
         } as Response);
     });
 
-    afterEach(() => jest.restoreAllMocks());
+    afterEach(() => {
+        delete process.env.REACT_APP_OAI_API_KEY;
+        jest.restoreAllMocks();
+    });
 
     it('returns the Qwen provider error instead of a dummy suggestion when the API responds with 401', async () => {
         const result = await generateTutorSuggestion('room-123', 'tutor-123');
@@ -74,10 +78,14 @@ describe('AI Service provider failure behavior', () => {
         expect(result.contextMessages).toEqual(['message-1', 'message-2']);
     });
 
-    it('strips only wrapping quotes from a successful Qwen suggestion', async () => {
+    it('accepts a successful structured Qwen decision', async () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
-            json: async () => ({ choices: [{ message: { content: '"What makes the sender address look suspicious to you?"' } }] })
+            json: async () => ({ choices: [{ message: { content: JSON.stringify({
+                mode: 'tutoring',
+                mode_reason: 'The student is examining the sender address.',
+                suggested_response: 'What makes the sender address look suspicious to you?'
+            }) } }] })
         } as Response);
 
         const result = await generateTutorSuggestion('room-123', 'tutor-123');

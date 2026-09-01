@@ -22,6 +22,11 @@ const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
 ```
 
+### Guard Mode Review State
+The AI review state contains `rawDecision`, `finalMode`, and `finalResponse` in addition to the legacy `aiSuggestion` display value. Tutors can edit wording and rectify the mode independently. A reviewed send uses one `send_reviewed_tutor_response` RPC, adopts the returned message and room state, and clears the review only after success; a failed send leaves the draft and review state intact.
+
+Room mode updates are received through the room realtime subscription. Historical message identity is derived from each message's persisted `response_mode`, so a prior Guard response remains `Security Supervisor` after the room returns to tutoring. Realtime message insertion is de-duplicated by message ID because an atomic send can be received both from the RPC response and the subscription.
+
 ### Message Processing Pipeline
 
 #### `addDisplayNameToMessage` (Lines 54-76)
@@ -73,6 +78,8 @@ channel.on('postgres_changes', { event: 'INSERT', table: 'messages' })
 - `ignored`: Suggestion times out without action
 
 **Data Collection**: Builds comprehensive AI effectiveness metrics
+
+Guard review records also preserve `raw_mode`, `mode_reason`, `final_mode`, and `mode_rectified`. Manual room overrides update only current room state and never rewrite historical messages.
 
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification
@@ -167,6 +174,7 @@ const {
 - **WebSocket failure**: Automatic fallback to polling
 - **Database errors**: Rollback optimistic updates
 - **AI service errors**: Graceful failure without blocking chat
+- **Reviewed-send errors**: The RPC is atomic; no message, feedback row, or room-mode update is adopted locally when it fails
 
 ### User Feedback
 - **Loading states**: Visual indicators for AI generation

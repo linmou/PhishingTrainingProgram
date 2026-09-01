@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-09-01
-Commit: 5e5d9bd
+Commit: not committed (Guard Mode implementation)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -24,6 +24,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Capacity Management**: 1 tutor + 1 student maximum
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
+- **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
 - **Required Response Ratings**: Students must rate the latest AI/Tutor response before sending their next reply
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
@@ -102,6 +103,7 @@ tutor-system/
 - **users**: User profiles and roles
 - **rooms**: Tutor-created learning spaces
 - **messages**: Chat messages with role-based access
+- **ai_suggestion_feedback**: Structured AI decision and tutor-review records
 - **sessions**: Active learning sessions
 
 ### Key Features
@@ -110,6 +112,8 @@ tutor-system/
 - **Real-time subscriptions**: Live updates for chat and room changes
 - **Triggers**: Automatic timestamp updates
 - **Enums**: Type-safe role and status management
+- **Guard Mode transaction**: Reviewed tutor sends atomically persist the final response, review metadata, and room mode
+- **Progress lock**: Guard Mode blocks checklist progression at both service and database boundaries while chat remains available
 
 ## 🔐 Security
 
@@ -177,6 +181,13 @@ npm run test:regression
 
 # Run tests with coverage
 npm test -- --coverage
+
+# Run Guard Mode and prompt quality-contract tests
+npm test -- --watchAll=false --runTestsByPath \
+  src/services/__tests__/aiService.guardMode.test.ts \
+  src/services/__tests__/guardModeService.test.ts \
+  src/components/__tests__/AISuggestionBox.guardMode.test.tsx \
+  src/components/__tests__/PostComment.guardMode.test.tsx
 
 # Run live OpenAI integration suites explicitly
 npm run test:integration:openai

@@ -26,6 +26,7 @@ interface ChecklistPanelProps {
   roomId: string;
   isVisible: boolean;
   onToggleVisibility: () => void;
+  progressLocked?: boolean;
 }
 
 interface ChecklistItemComponentProps {
@@ -35,6 +36,7 @@ interface ChecklistItemComponentProps {
   onAddNote: (itemId: string, note: string) => void;
   onViewEvidence: (itemId: string) => void;
   onEditItem: (itemId: string, newText: string) => void;
+  progressLocked?: boolean;
 }
 
 const serializeChecklistItem = (item: ChecklistItem) => ({
@@ -64,7 +66,8 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   onPriorityChange,
   onAddNote,
   onViewEvidence,
-  onEditItem
+  onEditItem,
+  progressLocked = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingNote, setEditingNote] = useState(false);
@@ -169,6 +172,7 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 value={item.status}
                 onChange={(e) => onStatusChange(item.id, e.target.value as ChecklistItem['status'])}
                 className="status-select"
+                disabled={progressLocked}
               >
                 <option value="pending">Pending</option>
                 <option value="partially_covered">Partially Covered</option>
@@ -289,7 +293,8 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
 const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   roomId,
   isVisible,
-  onToggleVisibility
+  onToggleVisibility,
+  progressLocked = false
 }) => {
   // Use the enhanced service layer hook
   const { 
@@ -313,6 +318,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const [showAddCustomArea, setShowAddCustomArea] = useState(false);
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
+    if (progressLocked) return;
     try {
       await updateItem(itemId, { status: newStatus });
     } catch (err) {
@@ -503,7 +509,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               <button 
                 onClick={() => startSmartGeneration('General Scam Indicators')} 
                 className="generate-checklist-button primary"
-                disabled={loading}
+                disabled={loading || progressLocked}
               >
                 <Zap size={16} />
                 {loading ? 'Generating...' : 'Smart Generate'}
@@ -511,7 +517,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               <button 
                 onClick={openManualInput} 
                 className="manual-checklist-button secondary"
-                disabled={loading}
+                disabled={loading || progressLocked}
               >
                 <Edit size={16} />
                 Manual Input
@@ -547,6 +553,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   return (
     <div className="checklist-panel">
       <div className="checklist-header">
+        {progressLocked && (
+          <div role="status" className="checklist-guard-notice">
+            Learning progression is locked while Guard Mode is active. Corrective messages remain enabled.
+          </div>
+        )}
         <div className="checklist-title">
           <Settings size={16} />
           <span>Learning Progress</span>
@@ -592,6 +603,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
                       onEditItem={handleEditItem}
+                      progressLocked={progressLocked}
                     />
                   ))}
                 </div>
@@ -610,6 +622,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
                       onEditItem={handleEditItem}
+                      progressLocked={progressLocked}
                     />
                   ))}
                 </div>
@@ -628,6 +641,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
                       onEditItem={handleEditItem}
+                      progressLocked={progressLocked}
                     />
                   ))}
                 </div>
@@ -640,6 +654,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
           <button 
             className="action-button primary"
             onClick={() => setShowAddCustomArea(true)}
+            disabled={progressLocked}
           >
             <Plus size={16} />
             Add Custom Area

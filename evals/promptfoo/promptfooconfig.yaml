@@ -28,3 +28,4 @@ tests:
   - file://cases/webpage-ecological.yaml
   # Synthetic transfer/holdout variations (not product-identical cases)
   - file://cases/account-security-alert.yaml
+  - file://cases/guard-mode.yaml

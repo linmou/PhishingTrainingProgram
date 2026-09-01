@@ -131,14 +131,17 @@ const PostComment: React.FC<PostCommentProps> = ({
     const hasUserLiked = userFeedback?.feedback_type === 'like';
     const hasUserDisliked = userFeedback?.feedback_type === 'dislike';
 
+    const isGuardMessage = message.response_mode === 'guard';
+    const displayName = isGuardMessage ? 'Security Supervisor' : (message.display_name || message.user_role);
+
     return (
-        <div className={`post-comment ${message.is_ai_generated ? 'post-comment-ai' : ''} ${className}`}>
+        <div className={`post-comment ${message.is_ai_generated ? 'post-comment-ai' : ''} ${isGuardMessage ? 'post-comment-guard' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
                     <AvatarDisplay
-                        avatarUrl={message.avatar_url || null}
-                        displayName={message.display_name || message.user_role}
+                        avatarUrl={isGuardMessage ? null : message.avatar_url || null}
+                        displayName={displayName}
                         size="small"
                         className="comment-avatar"
                     />
@@ -151,10 +154,10 @@ const PostComment: React.FC<PostCommentProps> = ({
                         <div className="comment-author-info">
                             <span 
                                 className="comment-author-name"
-                                style={{ color: getRoleColor(message.user_role, message.is_ai_generated) }}
+                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated) }}
                             >
-                                {message.is_ai_generated && getRoleIcon(message.user_role, message.is_ai_generated)}
-                                {message.is_ai_generated ? 'AI Assistant' : (message.display_name || message.user_role)}
+                                {!isGuardMessage && message.is_ai_generated && getRoleIcon(message.user_role, message.is_ai_generated)}
+                                {isGuardMessage ? displayName : message.is_ai_generated ? 'AI Assistant' : displayName}
                             </span>
                             
                             {!message.is_ai_generated && currentUserRole !== 'student' && (

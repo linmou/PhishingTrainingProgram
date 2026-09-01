@@ -1,16 +1,16 @@
 # AI Suggestion Tracking Implementation
 
 ## Overview
-This implementation modifies the AI assistant to only provide suggestions (not create posts) and tracks how tutors interact with these suggestions.
+This implementation modifies the AI assistant to only provide suggestions (not create posts), tracks how tutors interact with these suggestions, and records the Guard Mode decision separately from the reviewed wording.
 
 ## Key Changes
 
 ### 1. Database Schema
-A new table `ai_suggestion_feedback` has been created to track tutor interactions with AI suggestions:
+The `ai_suggestion_feedback` table tracks tutor interactions with AI suggestions. The canonical current migration is `023_guard_mode.sql`; the earlier `004_ai_suggestion_feedback.sql` definition is retained below as historical context:
 
 ```sql
 -- Run this migration in Supabase SQL Editor
--- File: supabase/migrations/004_ai_suggestion_feedback.sql
+-- Historical file: supabase/migrations/004_ai_suggestion_feedback.sql
 
 CREATE TABLE IF NOT EXISTS ai_suggestion_feedback (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS ai_suggestion_feedback (
 -- See full migration file for complete SQL
 ```
 
+Guard Mode uses `supabase/migrations/023_guard_mode.sql`. It adds `raw_mode`, `mode_reason`, `final_mode`, and `mode_rectified`, stores `response_mode` on messages, and makes a reviewed send atomic. Pre-populated suggestions may have a null parent message; ordinary generated suggestions continue to link to their parent when one exists.
+
 ### 2. AI Behavior Changes
 - **No more AI posts**: AI no longer creates messages in the chat
 - **Suggestions only**: AI provides suggested responses that tutors can:
@@ -37,6 +39,8 @@ CREATE TABLE IF NOT EXISTS ai_suggestion_feedback (
   - **Reject**: Explicitly dismiss the suggestion
   - **Modify**: Use the suggestion but change it before sending
   - **Ignore**: Generate a new suggestion without using the previous one
+- **Structured decision**: Each usable generation returns `mode`, `mode_reason`, and `suggested_response`; malformed decisions are surfaced as errors
+- **Guard review**: Tutors can independently edit final wording and final mode before sending
 
 ### 3. Tracking Features
 - Records which student message the AI is responding to
@@ -62,7 +66,7 @@ The download feature now supports two formats:
 
 1. **In Supabase Dashboard**:
    - Go to SQL Editor
-   - Copy and run the contents of `supabase/migrations/004_ai_suggestion_feedback.sql`
+   - Copy and run the contents of `supabase/migrations/023_guard_mode.sql`
    - Verify the table was created successfully
 
 2. **Test the Features**:
@@ -87,6 +91,8 @@ The download feature now supports two formats:
    - Reject it explicitly
    - Modify it before sending
    - Generate a new suggestion
+
+When Guard is selected, the tutor sees the mode reason, `Guard Mode Activated`, and a final-mode selector. A successful reviewed send persists the final mode and updates the room authority. Failed sends retain the editable draft.
 
 ### Data Collection
 Every interaction is tracked:

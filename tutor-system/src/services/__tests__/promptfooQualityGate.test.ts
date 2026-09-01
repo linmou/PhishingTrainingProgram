@@ -11,7 +11,12 @@ const metrics = [
   'practical_knowledge',
   'third_person_examples',
   'reading_level',
-  'response_length'
+  'response_length',
+  'structured_output',
+  'mode_selection',
+  'mode_reason_grounding',
+  'guard_response_quality',
+  'guard_tone_safety'
 ];
 
 const row = (source_type: string, scaffolding_status: string, failed: string[] = []) => ({

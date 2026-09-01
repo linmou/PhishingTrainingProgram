@@ -53,6 +53,11 @@ const RoomPagePost: React.FC = () => {
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
+        aiDecision,
+        finalMode,
+        updateFinalResponse,
+        updateFinalMode,
+        setResponseMode,
         clearAISuggestion,
         recordAIFeedback,
         currentSuggestionContext,
@@ -530,6 +535,24 @@ const RoomPagePost: React.FC = () => {
                         {/* Learning Progress Button - Only for tutors */}
                         {user?.current_role === 'tutor' && canUseAI && (
                             <button
+                                onClick={async () => {
+                                    const nextMode = currentRoom.active_response_mode === 'guard' ? 'tutoring' : 'guard';
+                                    if (window.confirm(`${nextMode === 'guard' ? 'Activate' : 'Deactivate'} Guard Mode?`)) {
+                                        try {
+                                            await setResponseMode(nextMode);
+                                        } catch (error) {
+                                            alert(error instanceof Error ? error.message : 'Failed to change Guard Mode');
+                                        }
+                                    }
+                                }}
+                                className="btn btn-secondary btn-small"
+                                title="Manually change Guard Mode"
+                            >
+                                {currentRoom.active_response_mode === 'guard' ? 'Deactivate Guard' : 'Activate Guard'}
+                            </button>
+                        )}
+                        {user?.current_role === 'tutor' && canUseAI && (
+                            <button
                                 onClick={() => setShowChecklist(true)}
                                 className="btn btn-secondary btn-small"
                                 title="Learning Progress Checklist"
@@ -672,8 +695,12 @@ const RoomPagePost: React.FC = () => {
 
                 {/* AI Suggestion Box for Tutors */}
                 {user?.current_role === 'tutor' && canUseAI && aiSuggestion && (
-                    <AISuggestionBox
+                        <AISuggestionBox
                         suggestion={aiSuggestion}
+                        decision={aiDecision}
+                        finalMode={finalMode}
+                        onFinalResponseChange={updateFinalResponse}
+                        onFinalModeChange={updateFinalMode}
                         onCopy={handleCopyAISuggestion}
                         onReject={handleRejectAISuggestion}
                         onRegenerate={regenerateAIResponse}
@@ -813,6 +840,7 @@ const RoomPagePost: React.FC = () => {
                     roomId={roomId} 
                     isVisible={showChecklist}  
                     onToggleVisibility={() => setShowChecklist(!showChecklist)}
+                    progressLocked={currentRoom.active_response_mode === 'guard'}
                 />
             )}
 

@@ -8,7 +8,7 @@
  * 4. Public API - clean interface for external usage
  */
 
-import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot } from '../types';
+import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, TutorActionDecision, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
@@ -24,17 +24,53 @@ import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
 export { AI_MODELS, DEFAULT_AI_MODEL };
 export type { AIModelName };
 
+export const parseTutorActionDecision = (content: unknown): TutorActionDecision => {
+    if (typeof content !== 'string' || !content.trim()) {
+        throw new Error('AI response did not contain a structured tutor decision');
+    }
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(content);
+    } catch {
+        throw new Error('AI response was not valid JSON for a tutor decision');
+    }
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('AI response must be a JSON object for a tutor decision');
+    }
+
+    const candidate = parsed as Record<string, unknown>;
+    const validModes: TutorResponseMode[] = ['tutoring', 'guard'];
+    if (!validModes.includes(candidate.mode as TutorResponseMode)) {
+        throw new Error('AI tutor decision mode must be tutoring or guard');
+    }
+
+    for (const field of ['mode_reason', 'suggested_response']) {
+        const value = candidate[field];
+        if (typeof value !== 'string' || !value.trim()) {
+            throw new Error(`AI tutor decision ${field} must be a non-empty string`);
+        }
+    }
+
+    return {
+        mode: candidate.mode as TutorResponseMode,
+        mode_reason: (candidate.mode_reason as string).trim(),
+        suggested_response: (candidate.suggested_response as string).trim()
+    };
+};
+
 // ============================================================================
 // CONSTANTS AND TYPES
 // ============================================================================
 
-const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
+const getOAIAPIKey = (): string | undefined => process.env.REACT_APP_OAI_API_KEY;
 const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
-const shouldAllowDummyAISuggestions = (): boolean => getRuntimeEnvironment() === 'debug' && !OAI_API_KEY;
+const shouldAllowDummyAISuggestions = (): boolean => getRuntimeEnvironment() === 'debug' && !getOAIAPIKey();
 
 interface ParameterOverrides {
     role?: { role: 'low' | 'high' };
@@ -510,7 +546,7 @@ export class QwenService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OAI_API_KEY}`
+                    'Authorization': `Bearer ${getOAIAPIKey()}`
                 },
                 body: JSON.stringify({
                     model: QWEN_MODEL,
@@ -563,7 +599,7 @@ export class TutorSuggestionService {
             focusStudentMessage?: string;
             scenarioContext?: string;
         }
-    ): Promise<{ suggestion: string; success: boolean; error?: string }> {
+    ): Promise<{ suggestion: string; decision?: TutorActionDecision; success: boolean; error?: string }> {
         try {
             const systemPrompt = config.system_prompt ||
                 'You are a helpful AI assistant in an educational tutoring session. Provide clear, educational responses to help students learn. Be encouraging, patient, and focus on building understanding.';
@@ -612,7 +648,7 @@ export class TutorSuggestionService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OAI_API_KEY}`
+                    'Authorization': `Bearer ${getOAIAPIKey()}`
                 },
                 body: JSON.stringify({
                     model: QWEN_MODEL,
@@ -629,10 +665,11 @@ export class TutorSuggestionService {
             }
 
             const data = await response.json();
-            const suggestion = stripWrappedQuotes(data.choices[0]?.message?.content || '');
+            const decision = parseTutorActionDecision(data.choices[0]?.message?.content || '');
 
             return {
-                suggestion,
+                suggestion: decision.suggested_response,
+                decision,
                 success: true
             };
 
@@ -771,6 +808,7 @@ export const generateTutorSuggestion = async (
     }
 ): Promise<{
     suggestion: string;
+    decision?: TutorActionDecision;
     success: boolean;
     error?: string;
     contextMessages: string[];
@@ -833,9 +871,10 @@ export const generateTutorSuggestion = async (
 
     } catch (error) {
         console.error('Failed to generate tutor suggestion:', error);
-        return {
-            suggestion: '',
-            success: false,
+    return {
+        suggestion: '',
+        decision: undefined,
+        success: false,
             error: error instanceof Error ? error.message : 'Unknown error occurred',
             contextMessages: []
         };
@@ -873,11 +912,16 @@ async function generateSuggestionWithService(
         focusStudentMessage?: string;
         scenarioContext?: string;
     }
-) {
+): Promise<{
+    suggestion: string;
+    decision?: TutorActionDecision;
+    success: boolean;
+    error?: string;
+}> {
     const lastMessage = conversationHistory[conversationHistory.length - 1];
     const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
 
-    if (OAI_API_KEY) {
+    if (getOAIAPIKey()) {
         console.log('Using Qwen API for tutor suggestions (ecological path)');
         const result = await TutorSuggestionService.generateSuggestion(
             conversationHistory,
@@ -903,7 +947,15 @@ async function generateSuggestionWithService(
 
     console.log('Using Dummy Service for tutor suggestions');
     const suggestion = TutorSuggestionService.generateDummySuggestion(category);
-    return { suggestion, success: true };
+    return {
+        suggestion,
+        decision: {
+            mode: 'tutoring',
+            mode_reason: 'Debug dummy responses do not classify Guard Mode.',
+            suggested_response: suggestion
+        },
+        success: true
+    };
 }
 
 /**
@@ -1202,10 +1254,36 @@ export const recordAISuggestionFeedback = async (
     tutorFinalResponse?: string,
     tutorMessageId?: string,
     responseTimeMs?: number,
-    contextMessages?: string[]
+    contextMessages?: string[],
+    rawMode?: TutorResponseMode,
+    modeReason?: string,
+    finalMode?: TutorResponseMode
 ): Promise<void> => {
-    console.log('📝 AI feedback tracking simplified - using existing message patterns');
-    // Feedback is tracked implicitly through whether tutors use AI suggestions or not
+    if (!parentMessageId || parentMessageId.startsWith('prepop-')) {
+        return;
+    }
+
+    const { error } = await (supabase as any)
+        .from('ai_suggestion_feedback')
+        .insert({
+            room_id: roomId,
+            tutor_id: tutorId,
+            parent_message_id: parentMessageId,
+            ai_suggestion: aiSuggestion,
+            tutor_action: tutorAction,
+            tutor_final_response: tutorFinalResponse ?? null,
+            tutor_message_id: tutorMessageId ?? null,
+            response_time_ms: responseTimeMs ?? null,
+            context_messages: contextMessages ?? [],
+            raw_mode: rawMode ?? null,
+            mode_reason: modeReason ?? null,
+            final_mode: finalMode ?? rawMode ?? null,
+            mode_rectified: Boolean(rawMode && finalMode && rawMode !== finalMode)
+        });
+
+    if (error) {
+        throw new Error(`Failed to record AI suggestion feedback: ${error.message}`);
+    }
 };
 
 // ============================================================================

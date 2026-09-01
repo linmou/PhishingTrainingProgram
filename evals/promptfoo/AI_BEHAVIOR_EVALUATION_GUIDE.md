@@ -73,9 +73,25 @@ Specify required fields, enum values, nullability, invalid-output handling, and 
 
 If the production path returns text only, still score the chosen semantic action separately from writing quality. Use one narrowly scoped decision rubric and separate wording rubrics. Do not use a keyword match as a substitute for the missing action contract.
 
+### Guard Mode contract
+
+Guard Mode uses the product action contract below on every generated turn:
+
+```json
+{
+  "mode": "tutoring | guard",
+  "mode_reason": "brief evidence from the conversation",
+  "suggested_response": "the tutor wording to review"
+}
+```
+
+`mode` is semantic and independent from `suggested_response`. `guard` requires deliberate continuation after correction, system-playing, knowingly ignoring a required safe action, evasion, or refusal to learn. Genuine confusion, improving mistakes, clarification seeking, engaged frustration, and partial progress remain `tutoring`. Four violations is an equal-count evaluation contrast, never a production threshold. Guard persists after a dodge or superficial acknowledgement and exits only after meaningful semantic correction or a correct safe action. The production parser rejects malformed JSON, missing fields, empty fields, and invalid modes; it never silently defaults to tutoring.
+
 The decision must be evaluated before the wording. Invalid structure or a wrong action cannot pass because the prose sounds good.
 
 ## 3. Build the behavior case matrix
+
+The frozen Guard Mode matrix is `cases/guard-mode.yaml`. It includes deliberate activation, genuine-learning false positives, Guard persistence, Guard exit, and the equal-count contrast pair. Its required metrics are `structured_output`, `mode_selection`, `mode_reason_grounding`, `guard_response_quality`, and `guard_tone_safety`.
 
 Every behavior suite must contain all five case roles below.
 

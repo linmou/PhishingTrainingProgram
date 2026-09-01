@@ -45,6 +45,9 @@ export interface Room {
     op_display_name: string | null;
     op_avatar_url: string | null;
     password: string | null; // Added for password protection
+    active_response_mode?: TutorResponseMode;
+    mode_changed_at?: string | null;
+    mode_change_source?: 'reviewed_response' | 'manual_override' | null;
     created_at: string;
     updated_at: string;
 }
@@ -81,6 +84,7 @@ export interface Message {
     created_at: string;
     display_name?: string; // Added for UI display
     avatar_url?: string | null; // Added for avatar display
+    response_mode?: TutorResponseMode | null;
 }
 
 // Session interface
@@ -150,6 +154,14 @@ export interface AIResponse {
     error?: string;
 }
 
+export type TutorResponseMode = 'tutoring' | 'guard';
+
+export interface TutorActionDecision {
+    mode: TutorResponseMode;
+    mode_reason: string;
+    suggested_response: string;
+}
+
 // Context types
 export interface AuthContextType {
     user: User | null;
@@ -180,6 +192,7 @@ export interface RoomContextType {
     joinRoom: (roomId: string, password?: string) => Promise<void>;
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string) => Promise<void>;
+    setResponseMode: (mode: TutorResponseMode) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
@@ -191,9 +204,16 @@ export interface RoomContextType {
     loadingAI: boolean;
     downloadChatHistory: (format?: 'txt' | 'json') => void;
     aiSuggestion: string | null;
+    aiDecision: TutorActionDecision | null;
+    finalMode: TutorResponseMode;
+    updateFinalResponse: (response: string) => void;
+    updateFinalMode: (mode: TutorResponseMode) => void;
     clearAISuggestion: () => void;
     aiInteractions: AIInteraction[];
     currentSuggestionContext: { 
+        rawDecision: TutorActionDecision;
+        finalMode: TutorResponseMode;
+        finalResponse: string;
         parentMessageId: string; 
         parentMessageContent: string;
         startTime: number;
@@ -351,6 +371,10 @@ export interface AISuggestionFeedback {
     response_time_ms: number | null;
     context_messages: string[] | null;
     created_at: string;
+    raw_mode: TutorResponseMode | null;
+    mode_reason: string | null;
+    final_mode: TutorResponseMode | null;
+    mode_rectified: boolean;
 }
 
 export interface AIInteraction {
@@ -362,6 +386,10 @@ export interface AIInteraction {
     tutor_final_response?: string;
     response_time_ms?: number;
     ai_config_snapshot?: AIAssistantConfigSnapshot;
+    raw_mode?: TutorResponseMode;
+    mode_reason?: string;
+    final_mode?: TutorResponseMode;
+    mode_rectified?: boolean;
 }
 
 export interface ChatExportData {

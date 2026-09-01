@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, X, CheckCircle, Sparkles, Settings, RotateCcw, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { DynamicParameterOverrides } from '../services/prompts/types';
+import { TutorActionDecision, TutorResponseMode } from '../types';
 import { getParameterMetadata, createDefaultParameters, filterParameterOverrides, getDefaultParameterSelection } from '../services/prompts/parameterConfig';
 import './AISuggestionBox.css';
 
@@ -18,6 +19,10 @@ interface AISuggestionBoxProps {
     parameterConfig?: any; // Dynamic configuration structure
     initialParameters?: ParameterOverrides;
     lockedRole?: 'low' | 'high';
+    decision?: TutorActionDecision | null;
+    finalMode?: TutorResponseMode;
+    onFinalResponseChange?: (response: string) => void;
+    onFinalModeChange?: (mode: TutorResponseMode) => void;
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -30,7 +35,11 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     isRegenerating = false,
     parameterConfig = getDefaultParameterSelection(),
     initialParameters,
-    lockedRole
+    lockedRole,
+    decision,
+    finalMode = decision?.mode || 'tutoring',
+    onFinalResponseChange,
+    onFinalModeChange
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
@@ -202,6 +211,9 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
 
     if (!isVisible) return null;
 
+    const modeRectified = decision ? finalMode !== decision.mode : false;
+    const wordingModified = decision ? suggestion.trim() !== decision.suggested_response.trim() : false;
+
     return (
         <>
             <div className={`ai-suggestion-box ${fadeIn ? 'fade-in' : ''}`}>
@@ -226,6 +238,27 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                 </div>
             )}
 
+            {decision && (
+                <div className="ai-guard-review" data-testid="ai-mode-review">
+                    <div><strong>AI-selected mode:</strong> {decision.mode}</div>
+                    <div><strong>Mode reason:</strong> {decision.mode_reason}</div>
+                    {finalMode === 'guard' && <div>Guard Mode Activated</div>}
+                    {modeRectified && <div>Mode rectified by tutor</div>}
+                    {wordingModified && <div>Wording modified by tutor</div>}
+                    <label>
+                        <span>Final mode</span>
+                        <select
+                            aria-label="Final response mode"
+                            value={finalMode}
+                            onChange={(event) => onFinalModeChange?.(event.target.value as TutorResponseMode)}
+                        >
+                            <option value="tutoring">Tutoring</option>
+                            <option value="guard">Guard</option>
+                        </select>
+                    </label>
+                </div>
+            )}
+
             <div className="ai-suggestion-parameters">
                 <div className="ai-parameters-header" onClick={() => setQuickAdjustCollapsed(!quickAdjustCollapsed)}>
                     <div className="ai-parameters-header-content">
@@ -246,7 +279,15 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
             </div>
             
             <div className="ai-suggestion-content">
-                <p>{isRegenerating ? "Generating new response..." : suggestion}</p>
+                {isRegenerating ? (
+                    <p>Generating new response...</p>
+                ) : (
+                    <textarea
+                        aria-label="Final tutor response"
+                        value={suggestion}
+                        onChange={(event) => onFinalResponseChange?.(event.target.value)}
+                    />
+                )}
             </div>
             
             <div className="ai-suggestion-actions">

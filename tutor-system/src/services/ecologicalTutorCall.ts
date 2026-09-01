@@ -18,11 +18,24 @@ export interface EcologicalChatMessage {
   content: string;
 }
 
+export const GUARD_MODE_POLICY = [
+  'Return exactly one JSON object with these required string fields: mode, mode_reason, suggested_response.',
+  'mode must be exactly "tutoring" or "guard" and must be decided independently on every turn.',
+  'Use guard only when the student deliberately continues after explicit correction, plays with the system, knowingly ignores a required safe action, manipulates or evades correction, or refuses the intended learning behavior.',
+  'Repeated genuine mistakes, confusion, clarification requests, imperfect but improving attempts, frustration with engagement, and partial progress remain tutoring.',
+  'A count of four violations is only an evaluation example and never a decision threshold.',
+  'While guard is active, superficial acknowledgement, promises without corrective behavior, and unrelated dodges keep guard active.',
+  'Return to tutoring only after meaningful semantic correction or a correct safe action.',
+  'mode_reason must briefly cite conversational evidence. Guard suggested_response must state the required correction and concrete next action.',
+  'Guard tone is serious and direct, never insulting, humiliating, ridiculing, threatening, sarcastic, or personally attacking.',
+  'Output only the required JSON object; do not add markdown, labels, or explanation outside it.'
+].join('\n');
+
 /** Exact historical user turn from aiService.original.ts. */
 export function buildPhase0TutorUserTurn(conversationText: string): string {
-  return 'Based on the recent conversation below, suggest a brief follow-up question or prompt that a tutor could use to engage the student further. '
-    + "The suggestion should be under 2 sentences, interactive, and focused on deepening the student's understanding.\n\n"
-    + `Recent conversation:\n${conversationText}\n\nTutor suggestion:`;
+  return 'Based on the recent conversation below, draft the next tutor response. '
+    + "The suggested_response should be under 2 sentences, interactive, and focused on deepening the student's understanding.\n\n"
+    + `${GUARD_MODE_POLICY}\n\nRecent conversation:\n${conversationText}\n\nTutor decision JSON:`;
 }
 
 export function buildPhase0ChatCompletionMessages(
@@ -103,8 +116,12 @@ export function buildEcologicalTutorUserTurn({
     student_message,
     '',
     'Write the tutor response only. Do not prefix it with "Tutor:" or any speaker label.',
+    'The response must be the suggested_response field of the required structured decision.',
     'Keep it short; no lectures, no bullet lists, no long explanations.',
-    RESPONSE_POLICY
+    RESPONSE_POLICY,
+    '',
+    'Guard Mode decision policy:',
+    GUARD_MODE_POLICY
   ].join('\n');
 }
 

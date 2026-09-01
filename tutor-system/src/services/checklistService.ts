@@ -18,6 +18,20 @@ import { ConversationMessage } from '../types';
 import { generateChecklistFromSystemPrompt } from './checklistIntegration';
 
 export class ChecklistService {
+  private static async assertProgressUnlocked(roomId: string): Promise<void> {
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('active_response_mode')
+      .eq('id', roomId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to verify room response mode: ${error.message}`);
+    }
+    if (data?.active_response_mode === 'guard') {
+      throw new Error('Learning progression is locked while Guard Mode is active');
+    }
+  }
   
   /**
    * Initialize checklist from scenario template
@@ -27,6 +41,7 @@ export class ChecklistService {
     roomId: string,
     templateName: string
   ): Promise<SessionChecklist> {
+    await this.assertProgressUnlocked(roomId);
     try {
       console.log('🚀 Initializing checklist for room:', roomId, 'with template:', templateName);
 
@@ -295,6 +310,7 @@ export class ChecklistService {
     detectionResults: any;
     promptRegenerated: boolean;
   }> {
+    await this.assertProgressUnlocked(roomId);
     try {
       console.log('🔍 Processing student message for coverage detection:', {
         roomId,
@@ -474,6 +490,16 @@ export class ChecklistService {
       throw new Error(`Failed to fetch current item: ${getCurrentError.message}`);
     }
 
+    const { data: checklistRoom, error: checklistRoomError } = await supabase
+      .from('session_checklists')
+      .select('room_id')
+      .eq('id', currentItem.checklist_id)
+      .single();
+    if (checklistRoomError) {
+      throw new Error(`Failed to fetch checklist room: ${checklistRoomError.message}`);
+    }
+    await this.assertProgressUnlocked(checklistRoom.room_id);
+
     // Update the item
     const updateData: any = {
       status: newStatus,
@@ -574,6 +600,7 @@ export class ChecklistService {
     itemType: 'detection_area' | 'verification_step',
     priority: ChecklistItem['priority'] = 'important'
   ): Promise<ChecklistItem> {
+    await this.assertProgressUnlocked(roomId);
     
     // Get the checklist for this room
     const { data: checklist, error: checklistError } = await supabase
@@ -839,6 +866,8 @@ export class ChecklistService {
     detectionAreas: string[], 
     verificationSteps: string[]
   ): Promise<SessionChecklist> {
+    await this.assertProgressUnlocked(roomId);
+
     // First, deactivate any existing active checklists for this room
     const { error: deactivateError } = await supabase
       .from('session_checklists')
@@ -957,6 +986,8 @@ export class ChecklistService {
    * Convenience method: Delete checklist
    */
   static async delete(roomId: string): Promise<void> {
+    await this.assertProgressUnlocked(roomId);
+
     const { error } = await supabase
       .from('session_checklists')
       .delete()

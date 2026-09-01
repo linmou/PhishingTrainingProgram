@@ -52,6 +52,9 @@ Row: {
     op_display_name: string | null;
     op_avatar_url: string | null;
     password: string | null;       // Optional room protection
+    active_response_mode: 'tutoring' | 'guard';
+    mode_changed_at: string | null;
+    mode_change_source: 'reviewed_response' | 'manual_override' | null;
     created_at: string;
     updated_at: string;
 }
@@ -76,6 +79,7 @@ Row: {
     ai_model_used: string | null;  // Model identification
     ai_response_time_ms: number | null; // Performance metrics
     parent_message_id: string | null;   // Conversation threading
+    response_mode: 'tutoring' | 'guard' | null; // Historical tutor response identity
     created_at: string;
 }
 ```
@@ -85,6 +89,10 @@ Row: {
 - **Performance tracking**: Response time measurement
 - **Conversation threading**: Parent-child message relationships
 - **Model identification**: Which AI model generated responses
+- **Historical Guard identity**: Rendering uses the message's persisted response mode, never the room's current mode
+
+### Guard Mode Persistence and Atomic Send
+Migration `supabase/migrations/023_guard_mode.sql` adds the room and message mode fields, extends (or recreates) `ai_suggestion_feedback` with raw/final mode metadata, and defines `send_reviewed_tutor_response`. The RPC inserts the reviewed tutor message and feedback and updates the room mode in one transaction. The same migration adds database triggers that reject checklist progression mutations, deletions, and direct completion-field changes while `rooms.active_response_mode = 'guard'`; ordinary corrective chat remains available.
 
 ## Educational System Tables
 

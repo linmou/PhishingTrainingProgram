@@ -71,7 +71,7 @@ interface ParameterOverrides {
 
 Intent: keep production prompt changes tied to reviewed student-behavior requirements instead of relying on ad hoc prompt edits.
 
-The phishing tutor prompt is evaluated through the Promptfoo benchmark in `../evals/promptfoo/`. The active Qwen gate requires at least 80% of applicable assertions for each of eight metrics, independently for ecological and synthetic-holdout suites and for both direct-correction scaffold states.
+The phishing tutor prompt is evaluated through the Promptfoo benchmark in `../evals/promptfoo/`. The active Qwen gate requires at least 80% of applicable assertions for each existing and Guard Mode metric, independently for ecological and synthetic-holdout suites and for both direct-correction scaffold states.
 
 Latest Qwen run:
 - Date: 2026-08-30
@@ -116,6 +116,11 @@ Production prompt behavior now emphasizes direct tutoring: teach one concrete po
 - **Emotional parameters**: Enthusiasm, validation levels, mistake normalization
 
 ## AI Response Services
+
+### Guard Mode Action Contract
+Every usable production tutor suggestion is parsed as a strict JSON object with non-empty `mode`, `mode_reason`, and `suggested_response` fields. `mode` is exactly `tutoring` or `guard`; malformed JSON, missing fields, empty fields, and invalid modes become visible generation errors. The parser does not infer mode from wording or silently default malformed output to tutoring. The debug-only dummy path returns an explicit tutoring decision for local development.
+
+The ecological prompt includes semantic Guard activation, persistence, exit, and tone-safety rules. The production UI consumes `decision.suggested_response`; the raw decision and final tutor edits are persisted through the Guard review flow.
 
 ### `QwenService` Class
 **Purpose**: Production Qwen3.5 Flash API integration

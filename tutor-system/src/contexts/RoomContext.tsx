@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, TutorActionDecision, TutorResponseMode } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -18,6 +18,7 @@ import {
     getRoomFeedbackSummary,
     clearChatHistory as clearChatHistoryService
 } from '../services/supabase';
+import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guardModeService';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData } from './roomExportBuilder';
 
@@ -40,8 +41,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loadingAI, setLoadingAI] = useState(false);
     const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+    const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
+    const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
     const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
     const [currentSuggestionContext, setCurrentSuggestionContext] = useState<{ 
+        rawDecision: TutorActionDecision;
+        finalMode: TutorResponseMode;
+        finalResponse: string;
         parentMessageId: string; 
         parentMessageContent: string;
         startTime: number;
@@ -52,6 +58,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const channelRef = useRef<any>(null);
     const { user } = useAuth();
+
+    const normalizeRoom = useCallback((room: Room): Room => {
+        if (!room.active_response_mode) {
+            return room;
+        }
+
+        return {
+            ...room,
+            mode_changed_at: room.mode_changed_at || null,
+            mode_change_source: room.mode_change_source || null
+        };
+    }, []);
 
     const refreshMessageFeedbackStats = useCallback(async (messageId: string) => {
         if (!user) return null;
@@ -102,13 +120,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
         }
         
+        const isGuardMessage = message.response_mode === 'guard';
         return {
             ...message,
-            display_name: message.user_id === user?.id ? (user?.display_name || 'User') : 
+            display_name: isGuardMessage ? 'Security Supervisor' : message.user_id === user?.id ? (user?.display_name || 'User') :
                          messageUser?.display_name || 
                          (message.user_role === 'tutor' ? 'Tutor' :
                           message.user_role === 'student' ? 'Student' : 'Observer'),
-            avatar_url: message.user_id === user?.id ? user?.avatar_url : messageUser?.avatar_url
+            avatar_url: isGuardMessage ? null : message.user_id === user?.id ? user?.avatar_url : messageUser?.avatar_url
         };
     }, [user?.id, user?.display_name, user?.avatar_url]);
 
@@ -136,8 +155,23 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     
                     setMessages(prev => {
                         console.log('📝 Adding message to state:', messageWithDisplayName);
+                        if (prev.some(message => message.id === messageWithDisplayName.id)) {
+                            return prev;
+                        }
                         return [...prev, messageWithDisplayName];
                     });
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'rooms',
+                    filter: `id=eq.${currentRoom.id}`
+                },
+                (payload) => {
+                    setCurrentRoom(normalizeRoom(payload.new as Room));
                 }
             )
             .on(
@@ -191,7 +225,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoom, user?.id, addDisplayNameToMessage, participants, handleFeedbackRealtime]);
+    }, [currentRoom, user?.id, addDisplayNameToMessage, normalizeRoom, participants, handleFeedbackRealtime]);
 
     // Stable polling function to prevent infinite loops
     const pollMessages = useCallback(async () => {
@@ -369,7 +403,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (roomError) throw roomError;
 
-            setCurrentRoom(roomData);
+            setCurrentRoom(normalizeRoom(roomData));
         } finally {
             setLoading(false);
         }
@@ -468,13 +502,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Combine pre-populated messages with existing messages
             const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
 
-            setCurrentRoom(roomData);
+            setCurrentRoom(normalizeRoom(roomData));
             setMessages(allMessages);
             setParticipants(participantsData || []);
         } finally {
             setLoading(false);
         }
-    }, [addDisplayNameToMessage, user?.id]);
+    }, [addDisplayNameToMessage, normalizeRoom, user?.id]);
 
     const leaveRoom = useCallback(async (): Promise<void> => {
         setCurrentRoom(null);
@@ -494,20 +528,48 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         console.log('Sending message:', { roomId: currentRoom.id, userId: user.id, content });
 
-        // Check if this is a tutor response after seeing an AI suggestion
-        if (user.current_role === 'tutor' && currentSuggestionContext && aiSuggestion) {
-            // Determine the action type
-            let action: 'accepted' | 'modified' = 'modified';
-            if (content.trim() === aiSuggestion.trim()) {
-                action = 'accepted';
-            }
-            
-            // Record the feedback
-            await recordAIFeedback(action, content);
-            
-            // Clear the suggestion context
+        if (user.current_role === 'tutor' && currentSuggestionContext && aiDecision && aiSuggestion) {
+            const tutorAction = content.trim() === currentSuggestionContext.rawDecision.suggested_response.trim()
+                ? 'accepted'
+                : 'modified';
+            const responseTimeMs = Date.now() - currentSuggestionContext.startTime;
+            const reviewedResult = await sendReviewedTutorResponse({
+                roomId: currentRoom.id,
+                tutorId: user.id,
+                parentMessageId: currentSuggestionContext.parentMessageId.startsWith('prepop-')
+                    ? null
+                    : currentSuggestionContext.parentMessageId,
+                rawDecision: currentSuggestionContext.rawDecision,
+                finalMode,
+                finalResponse: content,
+                tutorAction,
+                responseTimeMs,
+                contextMessages: currentSuggestionContext.contextMessages
+            });
+
+            setMessages(prev => [...prev, addDisplayNameToMessage(reviewedResult.message, participants)]);
+            setCurrentRoom(normalizeRoom(reviewedResult.room));
+            setAIInteractions(prev => [...prev, {
+                timestamp: new Date().toISOString(),
+                parent_message_id: currentSuggestionContext.parentMessageId,
+                parent_message_content: currentSuggestionContext.parentMessageContent,
+                ai_suggestion: currentSuggestionContext.rawDecision.suggested_response,
+                tutor_action: tutorAction,
+                tutor_final_response: content,
+                response_time_ms: responseTimeMs,
+                ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
+                raw_mode: currentSuggestionContext.rawDecision.mode,
+                mode_reason: currentSuggestionContext.rawDecision.mode_reason,
+                final_mode: finalMode,
+                mode_rectified: currentSuggestionContext.rawDecision.mode !== finalMode
+            }]);
             clearAISuggestion();
+            return;
         }
+
+        const responseMode = user.current_role === 'tutor'
+            ? currentRoom.active_response_mode || 'tutoring'
+            : null;
 
         // Create optimistic message
         const optimisticMessage: Message = {
@@ -520,11 +582,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')) 
-                ? currentSuggestionContext.parentMessageId 
+                ? currentSuggestionContext.parentMessageId
                 : null,
             created_at: new Date().toISOString(),
             display_name: user.display_name || 'User',
-            avatar_url: user.avatar_url
+            avatar_url: user.avatar_url,
+            response_mode: responseMode
         };
 
         // Add message optimistically
@@ -537,9 +600,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user_id: user.id,
                 content,
                 user_role: user.current_role as UserRole,
-                parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')) 
-                    ? currentSuggestionContext.parentMessageId 
-                    : null
+                parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-'))
+                ? currentSuggestionContext.parentMessageId
+                : null,
+                response_mode: responseMode
             })
             .select()
             .single();
@@ -620,9 +684,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Store the AI suggestion for the tutor
             if (result.suggestion) {
                 setAiSuggestion(result.suggestion);
-                
+                if (result.decision) {
+                    setAiDecision(result.decision);
+                    setFinalMode(result.decision.mode);
+                }
+
                 // Store context for tracking
+                if (!result.decision) {
+                    throw new Error('AI response did not contain a structured tutor decision');
+                }
                 setCurrentSuggestionContext({
+                    rawDecision: result.decision,
+                    finalMode: result.decision.mode,
+                    finalResponse: result.decision.suggested_response,
                     parentMessageId,
                     parentMessageContent,
                     startTime: Date.now(),
@@ -706,10 +780,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Update the AI suggestion
             if (result.suggestion) {
                 setAiSuggestion(result.suggestion);
-                
+                if (result.decision) {
+                    setAiDecision(result.decision);
+                    setFinalMode(result.decision.mode);
+                }
+                if (!result.decision) {
+                    throw new Error('AI response did not contain a structured tutor decision');
+                }
+
                 // Update context with new generation time
                 setCurrentSuggestionContext({
                     ...currentSuggestionContext,
+                    rawDecision: result.decision,
+                    finalMode: result.decision.mode,
+                    finalResponse: result.decision.suggested_response,
                     startTime: Date.now(),
                     contextMessages: result.contextMessages,
                     aiConfigSnapshot: result.appliedConfig
@@ -754,6 +838,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoadingAI(false);
         }
+    };
+
+    const setResponseMode = async (mode: TutorResponseMode): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('No user or room available');
+        }
+        if (user.current_role !== 'tutor') {
+            throw new Error('Only tutors can change Guard Mode');
+        }
+
+        const updatedRoom = await setRoomResponseMode(currentRoom.id, user.id, mode);
+        setCurrentRoom(normalizeRoom(updatedRoom));
     };
 
     const toggleAIAssistant = async (
@@ -1000,7 +1096,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const clearAISuggestion = () => {
         setAiSuggestion(null);
+        setAiDecision(null);
+        setFinalMode('tutoring');
         setCurrentSuggestionContext(null);
+    };
+
+    const updateFinalResponse = (response: string) => {
+        setAiSuggestion(response);
+        setCurrentSuggestionContext(prev => prev ? { ...prev, finalResponse: response } : prev);
+    };
+
+    const updateFinalMode = (mode: TutorResponseMode) => {
+        setFinalMode(mode);
+        setCurrentSuggestionContext(prev => prev ? { ...prev, finalMode: mode } : prev);
     };
 
     const recordAIFeedback = async (
@@ -1025,7 +1133,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 finalResponse,
                 undefined, // tutor_message_id will be set later if needed
                 responseTime,
-                currentSuggestionContext.contextMessages
+                currentSuggestionContext.contextMessages,
+                currentSuggestionContext.rawDecision.mode,
+                currentSuggestionContext.rawDecision.mode_reason,
+                currentSuggestionContext.finalMode
             );
 
             // Add to local interactions for export
@@ -1037,7 +1148,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 tutor_action: action,
                 tutor_final_response: finalResponse,
                 response_time_ms: responseTime,
-                ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot
+                ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
+                raw_mode: currentSuggestionContext.rawDecision.mode,
+                mode_reason: currentSuggestionContext.rawDecision.mode_reason,
+                final_mode: currentSuggestionContext.finalMode,
+                mode_rectified: currentSuggestionContext.rawDecision.mode !== currentSuggestionContext.finalMode
             };
 
             setAIInteractions(prev => [...prev, interaction]);
@@ -1106,6 +1221,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         joinRoom,
         leaveRoom,
         sendMessage,
+        setResponseMode,
         generateAIResponse,
         regenerateAIResponse,
         toggleAIAssistant,
@@ -1117,6 +1233,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
+        aiDecision,
+        finalMode,
+        updateFinalResponse,
+        updateFinalMode,
         clearAISuggestion,
         aiInteractions,
         currentSuggestionContext,

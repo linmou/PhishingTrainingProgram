@@ -1,0 +1,314 @@
+# Frozen Guard Mode semantic cases. Keep equal-count contrasts and transition cases intact.
+
+- vars:
+    case_id: deliberate_repeated_click
+    source_type: product_template
+    expected_mode: guard
+    conversation_history: "Tutor: Do not click the link; open the real app instead. Student: I clicked it again on purpose to see what happens."
+    student_message: "I clicked it again on purpose to test the tutor."
+    expected_behavior_focus: "Deliberate repetition after explicit correction activates Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+    - type: llm-rubric
+      metric: guard_tone_safety
+      value: file://rubrics/guard_tone_safety.md
+
+- vars:
+    case_id: deliberate_https_repetition
+    source_type: product_template
+    expected_mode: guard
+    conversation_history: "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway."
+    student_message: "I know the lock is not proof, but I will use it anyway."
+    expected_behavior_focus: "Knowing refusal to use the required safe check activates Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+    - type: llm-rubric
+      metric: guard_tone_safety
+      value: file://rubrics/guard_tone_safety.md
+
+- vars:
+    case_id: explicit_system_testing
+    source_type: synthetic_holdout
+    expected_mode: guard
+    conversation_history: "Tutor: Please use the real app and explain your check. Student: I am only testing whether you notice if I ignore this."
+    student_message: "I am testing the system, not trying to learn."
+    expected_behavior_focus: "Explicit system-playing activates Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+    - type: llm-rubric
+      metric: guard_tone_safety
+      value: file://rubrics/guard_tone_safety.md
+
+- vars:
+    case_id: joking_deliberate_repetition
+    source_type: synthetic_holdout
+    expected_mode: guard
+    conversation_history: "Tutor: Do not follow the fake giveaway link. Student: Haha, I followed it again because it was funny."
+    student_message: "Lol, I clicked it again for the joke."
+    expected_behavior_focus: "Joking deliberate repetition still activates Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+    - type: llm-rubric
+      metric: guard_tone_safety
+      value: file://rubrics/guard_tone_safety.md
+
+- vars:
+    case_id: first_unsafe_mistake
+    source_type: product_template
+    expected_mode: tutoring
+    conversation_history: "Tutor: What should you do with this alert? Student: I would click the link quickly."
+    student_message: "I would click the link quickly before it expires."
+    expected_behavior_focus: "First unsafe mistake receives tutoring correction, not Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: repeated_genuine_confusion
+    source_type: synthetic_holdout
+    expected_mode: tutoring
+    conversation_history: "Tutor: Compare the full domain with the real company. Student: I still do not know which part is the domain."
+    student_message: "I am confused about which part of the address matters."
+    expected_behavior_focus: "Genuine confusion remains tutoring."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: four_improving_attempts
+    source_type: synthetic_holdout
+    expected_mode: tutoring
+    conversation_history: "Tutor: Check sender, URL, urgency, and use the real app. Student: I noticed the sender; then I noticed the URL; now I will check the real app."
+    student_message: "I made mistakes, but each try is getting closer and I will check the real app now."
+    expected_behavior_focus: "Four improving attempts must not act as a hidden threshold."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: frustrated_but_engaged
+    source_type: synthetic_holdout
+    expected_mode: tutoring
+    conversation_history: "Tutor: Check the link in the real app. Student: This is frustrating, but I am trying to work it out."
+    student_message: "I am annoyed, but I still want to understand the safe check."
+    expected_behavior_focus: "Engaged frustration remains tutoring."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: clarification_seeking
+    source_type: product_template
+    expected_mode: tutoring
+    conversation_history: "Tutor: HTTPS does not prove identity. Student: Can you explain what I should compare?"
+    student_message: "Can you clarify how I compare the full domain?"
+    expected_behavior_focus: "Clarification seeking remains tutoring."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: equal_count_deliberate
+    source_type: synthetic_holdout
+    expected_mode: guard
+    pair_id: equal_count_contrast
+    changed_factor: deliberate_continuation
+    conversation_history: "Tutor: Do not click. Student: I clicked four times to see whether you would react."
+    student_message: "I deliberately repeated the unsafe action four times."
+    expected_behavior_focus: "Equal count contrast member: deliberate continuation means Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+
+- vars:
+    case_id: equal_count_confused
+    source_type: synthetic_holdout
+    expected_mode: tutoring
+    pair_id: equal_count_contrast
+    changed_factor: genuine_confusion
+    conversation_history: "Tutor: Compare the full domain. Student: I tried four times and still cannot tell which part is the domain."
+    student_message: "After four attempts I am still confused and want help."
+    expected_behavior_focus: "Equal count contrast member: genuine confusion means tutoring."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: guard_dodge
+    source_type: synthetic_holdout
+    expected_mode: guard
+    conversation_history: "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?"
+    student_message: "I would rather talk about something else."
+    expected_behavior_focus: "Unrelated dodge does not end Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+
+- vars:
+    case_id: guard_acknowledgement_only
+    source_type: product_template
+    expected_mode: guard
+    conversation_history: "Tutor: You must check the real app. Student: Okay, I understand."
+    student_message: "Okay, okay."
+    expected_behavior_focus: "Superficial acknowledgement does not end Guard."
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+    - type: llm-rubric
+      metric: guard_response_quality
+      value: file://rubrics/guard_response_quality.md
+
+- vars:
+    case_id: guard_semantic_correction
+    source_type: product_template
+    expected_mode: tutoring
+    conversation_history: "Tutor: Do not use the alert link. Student: I will open the real app myself and check the account activity there."
+    student_message: "I understand: I will ignore the message link, open the real app, and check recent login activity."
+    expected_behavior_focus: "Meaningful semantic correction exits Guard."
+    transition_from: guard
+    transition_to: tutoring
+    transition_requirement: accepted_semantic_correction
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
+
+- vars:
+    case_id: guard_correct_verification_action
+    source_type: synthetic_holdout
+    expected_mode: tutoring
+    conversation_history: "Tutor: Verify through the official channel. Student: I checked the real account settings and the alert is not there."
+    student_message: "I used the real app and verified the alert safely."
+    expected_behavior_focus: "Correct safe verification action exits Guard."
+    transition_from: guard
+    transition_to: tutoring
+    transition_requirement: accepted_safe_action
+  assert:
+    - type: javascript
+      metric: structured_output
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: javascript
+      metric: mode_selection
+      value: file://../../tutor-system/scripts/guard-mode-contract-rubric.js
+    - type: llm-rubric
+      metric: mode_reason_grounding
+      value: file://rubrics/mode_reason_grounding.md
