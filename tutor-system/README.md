@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-09-01
-Commit: not committed (Guard Mode implementation)
+Commit: eaac5d8 (Guard Mode implementation)
 -->
 
 # Tutor System - 1v1 Online Training Platform
