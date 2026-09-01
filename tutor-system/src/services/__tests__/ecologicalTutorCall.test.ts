@@ -28,7 +28,8 @@ describe('ecologicalTutorCall', () => {
     const history = formatPrePopulatedConversationHistory(lockDemo!.pre_populated_dialogue);
     expect(history).toContain('Alex [STUDENT]:');
     expect(history).toContain('lock icon');
-    expect(history).toContain('Tutor [TUTOR]:');
+    expect(history).toContain('AI chatbot [TUTOR]:');
+    expect(history).not.toContain('Tutor [TUTOR]:');
   });
 
   it('builds case vars with product-path history packaging from room dialogue', () => {
