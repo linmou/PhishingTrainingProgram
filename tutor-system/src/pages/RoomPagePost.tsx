@@ -67,6 +67,11 @@ const RoomPagePost: React.FC = () => {
     const [clearingChat, setClearingChat] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+    const [ratingReminder, setRatingReminder] = useState<{ id: string; content: string } | null>(null);
+    const [ratingFeedbackType, setRatingFeedbackType] = useState<'like' | 'dislike' | null>(null);
+    const [ratingValue, setRatingValue] = useState(0);
+    const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
+    const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -209,10 +214,32 @@ const RoomPagePost: React.FC = () => {
     // Find tutor from participants
     const tutor = participants?.find(p => p.current_role === 'tutor') || null;
 
+    const getUnratedResponse = () => {
+        if (user?.current_role !== 'student') return null;
+
+        const response = [...messages]
+            .reverse()
+            .find(message => message.is_ai_generated || message.user_role === 'tutor');
+
+        if (!response) return null;
+        if (completedRatingMessageId === response.id) return null;
+        if (messageFeedbackStats[response.id]?.user_feedback) return null;
+
+        return response;
+    };
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!messageText.trim() || sendingMessage) return;
+
+        const unratedResponse = getUnratedResponse();
+        if (unratedResponse) {
+            setRatingReminder(current => current?.id === unratedResponse.id
+                ? current
+                : { id: unratedResponse.id, content: unratedResponse.content });
+            return;
+        }
 
         setSendingMessage(true);
         stopTyping(); // Stop typing when message is sent
@@ -226,6 +253,24 @@ const RoomPagePost: React.FC = () => {
             alert('Failed to send message. Please try again.');
         } finally {
             setSendingMessage(false);
+        }
+    };
+
+    const handleRequiredRatingSubmit = async () => {
+        if (!ratingReminder || !ratingFeedbackType || ratingValue === 0 || submittingRequiredRating) return;
+
+        setSubmittingRequiredRating(true);
+        try {
+            await submitMessageFeedback(ratingReminder.id, ratingFeedbackType, ratingValue);
+            setCompletedRatingMessageId(ratingReminder.id);
+            setRatingReminder(null);
+            setRatingFeedbackType(null);
+            setRatingValue(0);
+        } catch (error) {
+            console.error('Failed to submit required response rating:', error);
+            alert('Failed to save your rating. Please try again.');
+        } finally {
+            setSubmittingRequiredRating(false);
         }
     };
 
@@ -687,6 +732,74 @@ const RoomPagePost: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {ratingReminder && (
+                <div
+                    className="rating-reminder-backdrop"
+                    data-testid="rating-reminder-backdrop"
+                >
+                    <section
+                        className="rating-reminder-dialog rating-reminder-animated"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="rating-reminder-title"
+                    >
+                        <div className="rating-reminder-icon" aria-hidden="true">⭐</div>
+                        <h2 id="rating-reminder-title">Rate the previous response</h2>
+                        <p>Please rate the latest AI or Tutor response before sending your reply.</p>
+                        <blockquote>{ratingReminder.content}</blockquote>
+
+                        <div className="rating-reminder-choice" aria-label="Response usefulness">
+                            <button
+                                type="button"
+                                className={ratingFeedbackType === 'like' ? 'selected' : ''}
+                                aria-pressed={ratingFeedbackType === 'like'}
+                                disabled={submittingRequiredRating}
+                                onClick={() => setRatingFeedbackType('like')}
+                            >
+                                Helpful
+                            </button>
+                            <button
+                                type="button"
+                                className={ratingFeedbackType === 'dislike' ? 'selected' : ''}
+                                aria-pressed={ratingFeedbackType === 'dislike'}
+                                disabled={submittingRequiredRating}
+                                onClick={() => setRatingFeedbackType('dislike')}
+                            >
+                                Not helpful
+                            </button>
+                        </div>
+
+                        {ratingFeedbackType && (
+                            <div className="rating-reminder-details">
+                                <p>Choose a rating</p>
+                                <div className="rating-reminder-stars" aria-label="Rating">
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            className={ratingValue >= star ? 'selected' : ''}
+                                            aria-label={`${star} star${star === 1 ? '' : 's'}`}
+                                            disabled={submittingRequiredRating}
+                                            onClick={() => setRatingValue(star)}
+                                        >
+                                            ★
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    className="rating-reminder-submit"
+                                    disabled={ratingValue === 0 || submittingRequiredRating}
+                                    onClick={handleRequiredRatingSubmit}
+                                >
+                                    Submit rating
+                                </button>
+                            </div>
+                        )}
+                    </section>
+                </div>
+            )}
 
             {/* Checklist Panel - Only for tutors */}
             {roomId && user?.current_role === 'tutor' && (

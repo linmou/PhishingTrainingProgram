@@ -652,6 +652,131 @@
     }
 }
 
+.rating-reminder-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(17, 24, 39, 0.58);
+    backdrop-filter: blur(3px);
+}
+
+.rating-reminder-dialog {
+    width: min(460px, 100%);
+    padding: 28px;
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 24px 70px rgba(17, 24, 39, 0.3);
+    text-align: center;
+}
+
+.rating-reminder-animated {
+    animation: ratingReminderPop 350ms ease-out;
+}
+
+@keyframes ratingReminderPop {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.rating-reminder-icon {
+    font-size: 42px;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+
+.rating-reminder-dialog h2 {
+    margin: 0 0 8px;
+    color: #1f2937;
+    font-size: 24px;
+}
+
+.rating-reminder-dialog > p,
+.rating-reminder-details > p {
+    margin: 0 0 16px;
+    color: #5b6472;
+}
+
+.rating-reminder-dialog blockquote {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-left: 4px solid #8b5cf6;
+    border-radius: 8px;
+    background: #f5f3ff;
+    color: #374151;
+    text-align: left;
+}
+
+.rating-reminder-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.rating-reminder-choice button,
+.rating-reminder-submit {
+    min-height: 44px;
+    border: 1px solid #d8dce3;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #374151;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.rating-reminder-choice button.selected {
+    border-color: #7c3aed;
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.rating-reminder-details {
+    margin-top: 20px;
+}
+
+.rating-reminder-stars {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.rating-reminder-stars button {
+    border: 0;
+    background: transparent;
+    color: #d1d5db;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.rating-reminder-stars button.selected {
+    color: #f59e0b;
+}
+
+.rating-reminder-submit {
+    width: 100%;
+    border-color: #7c3aed;
+    background: #7c3aed;
+    color: #ffffff;
+}
+
+.rating-reminder-choice button:disabled,
+.rating-reminder-stars button:disabled,
+.rating-reminder-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 /* Ensure comments section is positioned relative for absolute positioning of indicator */
 .comments-section {
     position: relative;
