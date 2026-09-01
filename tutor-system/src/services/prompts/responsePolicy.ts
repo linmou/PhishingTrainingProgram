@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /** Purpose: define the concise, conditional tutoring response policy shared by product prompts and evaluation turns. */
 
 export const RESPONSE_POLICY = [
