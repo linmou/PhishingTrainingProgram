@@ -1,7 +1,7 @@
 /**
  * E2E (page-level) for features/student_ai_tone.feature
  * Purpose: drive the product room route (RoomPagePost) end-to-end for student
- * AI tone opt-in → Peer/Adult selection → tutor lock, and multi-student block.
+ * AI role opt-in → Peer/Adult selection → tutor and Quick Adjust role lock, and multi-student block.
  * Uses real StudentAIToneControl + AIAssistantSettings; mocks room/auth I/O only.
  */
 
@@ -49,8 +49,12 @@ jest.mock('../components/ChecklistPanel', () => {
 });
 
 jest.mock('../components/AISuggestionBox', () => {
-  return function MockAISuggestionBox() {
-    return <div data-testid="ai-suggestion-box">Suggestion</div>;
+  return function MockAISuggestionBox({ lockedRole }: { lockedRole?: 'low' | 'high' }) {
+    return (
+      <div data-testid="ai-suggestion-box" data-locked-role={lockedRole || ''}>
+        Suggestion
+      </div>
+    );
   };
 });
 
@@ -155,6 +159,7 @@ defineFeature(feature, (test) => {
   let currentUser: User;
   let aiEnabled: boolean;
   let aiConfig: AIAssistantConfig | null;
+  let aiSuggestion: string | null;
 
   const mockRoom = () => {
     (useAuth as jest.Mock).mockReturnValue({
@@ -178,7 +183,7 @@ defineFeature(feature, (test) => {
       aiConfig,
       downloadChatHistory: jest.fn(),
       clearChatHistory: jest.fn(),
-      aiSuggestion: null,
+      aiSuggestion,
       clearAISuggestion: jest.fn(),
       recordAIFeedback: jest.fn(),
       currentSuggestionContext: null,
@@ -222,13 +227,14 @@ defineFeature(feature, (test) => {
     currentUser = studentUser();
     aiEnabled = true;
     aiConfig = buildAIConfig();
+    aiSuggestion = null;
     Object.defineProperty(window.HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: jest.fn(),
     });
   });
 
-  test('Student sees opt-in control before any tone dropdown', ({
+  test('Student sees opt-in control before any role dropdown', ({
     given,
     and,
     when,
@@ -242,17 +248,17 @@ defineFeature(feature, (test) => {
     when('the student is viewing the room', () => {
       renderRoom();
     });
-    then(/^the student should see a "Choose AI tone\?" control$/, () => {
+    then(/^the student should see a "Choose AI role\?" control$/, () => {
       expect(
-        screen.getByRole('button', { name: /choose ai tone\?/i })
+        screen.getByRole('button', { name: /choose ai role\?/i })
       ).toBeInTheDocument();
     });
-    and('the student should not see a tone dropdown yet', () => {
-      expect(screen.queryByLabelText(/ai tone/i)).not.toBeInTheDocument();
+    and('the student should not see a role dropdown yet', () => {
+      expect(screen.queryByLabelText(/ai role/i)).not.toBeInTheDocument();
     });
   });
 
-  test('Student opens tone choices after opt-in', ({ given, and, when, then }) => {
+  test('Student opens role choices after opt-in', ({ given, and, when, then }) => {
     bindBackground(given, and);
     given('exactly one student is in the room', () => {
       participants = [tutorUser(), studentUser()];
@@ -261,21 +267,21 @@ defineFeature(feature, (test) => {
     and('the student is viewing the room', () => {
       renderRoom();
     });
-    when(/^the student clicks "Choose AI tone\?"$/, () => {
+    when(/^the student clicks "Choose AI role\?"$/, () => {
       fireEvent.click(
-        screen.getByRole('button', { name: /choose ai tone\?/i })
+        screen.getByRole('button', { name: /choose ai role\?/i })
       );
     });
-    then('the student should see a tone dropdown', () => {
-      expect(screen.getByLabelText(/ai tone/i)).toBeInTheDocument();
+    then('the student should see a role dropdown', () => {
+      expect(screen.getByLabelText(/ai role/i)).toBeInTheDocument();
     });
-    and(/^the tone options should include "Peer" and "Adult"$/, () => {
+    and(/^the role options should include "Peer" and "Adult"$/, () => {
       expect(screen.getByRole('option', { name: 'Peer' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Adult' })).toBeInTheDocument();
     });
   });
 
-  test('Student selects Peer tone updates room AI role and locks tutor control', ({
+  test('Student selects Peer role updates room AI role and locks tutor control', ({
     given,
     and,
     when,
@@ -286,14 +292,14 @@ defineFeature(feature, (test) => {
       participants = [tutorUser(), studentUser()];
       currentUser = studentUser();
     });
-    and('the student has opened the tone dropdown', () => {
+    and('the student has opened the role dropdown', () => {
       renderRoom();
       fireEvent.click(
-        screen.getByRole('button', { name: /choose ai tone\?/i })
+        screen.getByRole('button', { name: /choose ai role\?/i })
       );
     });
-    when(/^the student selects tone "Peer"$/, async () => {
-      fireEvent.change(screen.getByLabelText(/ai tone/i), {
+    when(/^the student selects role "Peer"$/, async () => {
+      fireEvent.change(screen.getByLabelText(/ai role/i), {
         target: { value: 'peer' },
       });
       await waitFor(() => {
@@ -316,19 +322,26 @@ defineFeature(feature, (test) => {
     });
     and('the tutor AI personality control should be locked', () => {
       currentUser = tutorUser();
+      aiSuggestion = 'Suggestion';
       renderRoom();
       fireEvent.click(screen.getByTitle('AI Assistant Settings'));
       expect(
         screen.getByRole('combobox', { name: /AI Personality/i })
       ).toBeDisabled();
     });
-    and('the tutor should see a visual lock indicator for AI tone', () => {
+    and('the tutor should see a visual lock indicator for AI role', () => {
       expect(screen.getByTestId('ai-tone-lock-indicator')).toBeInTheDocument();
       expect(screen.getByText(/student chose/i)).toBeInTheDocument();
     });
+    and('Quick Adjust should receive the student-selected role', () => {
+      expect(screen.getByTestId('ai-suggestion-box')).toHaveAttribute(
+        'data-locked-role',
+        'low'
+      );
+    });
   });
 
-  test('Student selects Adult tone updates room AI role and locks tutor control', ({
+  test('Student selects Adult role updates room AI role and locks tutor control', ({
     given,
     and,
     when,
@@ -339,14 +352,14 @@ defineFeature(feature, (test) => {
       participants = [tutorUser(), studentUser()];
       currentUser = studentUser();
     });
-    and('the student has opened the tone dropdown', () => {
+    and('the student has opened the role dropdown', () => {
       renderRoom();
       fireEvent.click(
-        screen.getByRole('button', { name: /choose ai tone\?/i })
+        screen.getByRole('button', { name: /choose ai role\?/i })
       );
     });
-    when(/^the student selects tone "Adult"$/, async () => {
-      fireEvent.change(screen.getByLabelText(/ai tone/i), {
+    when(/^the student selects role "Adult"$/, async () => {
+      fireEvent.change(screen.getByLabelText(/ai role/i), {
         target: { value: 'adult' },
       });
       await waitFor(() => {
@@ -377,7 +390,7 @@ defineFeature(feature, (test) => {
     });
   });
 
-  test('Tutor can still edit AI personality before student chooses a tone', ({
+  test('Tutor can still edit AI personality before student chooses a role', ({
     given,
     and,
     when,
@@ -387,7 +400,7 @@ defineFeature(feature, (test) => {
     given('exactly one student is in the room', () => {
       participants = [tutorUser(), studentUser()];
     });
-    and('the student has not chosen an AI tone', () => {
+    and('the student has not chosen an AI role', () => {
       aiConfig = buildAIConfig(basePromptConfig());
       currentUser = tutorUser();
     });
@@ -400,7 +413,7 @@ defineFeature(feature, (test) => {
         screen.getByRole('combobox', { name: /AI Personality/i })
       ).not.toBeDisabled();
     });
-    and('there should be no visual lock indicator for AI tone', () => {
+    and('there should be no visual lock indicator for AI role', () => {
       expect(
         screen.queryByTestId('ai-tone-lock-indicator')
       ).not.toBeInTheDocument();
@@ -425,17 +438,17 @@ defineFeature(feature, (test) => {
     when('a student is viewing the room', () => {
       renderRoom();
     });
-    then(/^the student should not see a "Choose AI tone\?" control$/, () => {
+    then(/^the student should not see a "Choose AI role\?" control$/, () => {
       expect(
-        screen.queryByRole('button', { name: /choose ai tone\?/i })
+        screen.queryByRole('button', { name: /choose ai role\?/i })
       ).not.toBeInTheDocument();
     });
-    and('the student should not see a tone dropdown', () => {
-      expect(screen.queryByLabelText(/ai tone/i)).not.toBeInTheDocument();
+    and('the student should not see a role dropdown', () => {
+      expect(screen.queryByLabelText(/ai role/i)).not.toBeInTheDocument();
     });
   });
 
-  test('Student cannot apply tone when a second student joins before selection', ({
+  test('Student cannot apply role when a second student joins before selection', ({
     given,
     and,
     when,
@@ -446,10 +459,10 @@ defineFeature(feature, (test) => {
       participants = [tutorUser(), studentUser()];
       currentUser = studentUser();
     });
-    and('the student has opened the tone dropdown', () => {
+    and('the student has opened the role dropdown', () => {
       renderRoom();
       fireEvent.click(
-        screen.getByRole('button', { name: /choose ai tone\?/i })
+        screen.getByRole('button', { name: /choose ai role\?/i })
       );
     });
     when('a second student joins the room', () => {
@@ -464,12 +477,12 @@ defineFeature(feature, (test) => {
         )
       );
     });
-    and(/^the first student tries to select tone "Peer"$/, async () => {
+    and(/^the first student tries to select role "Peer"$/, async () => {
       await expect(setStudentAITone('peer')).rejects.toThrow(
         /single-student|multi-student|not available/i
       );
     });
-    then('the tone change should be rejected', () => {
+    then('the role change should be rejected', () => {
       expect(setStudentAITone).toHaveBeenCalledWith('peer');
     });
     and('the tutor AI personality control should remain unlocked', () => {
@@ -501,14 +514,14 @@ defineFeature(feature, (test) => {
     when('the student is viewing the room', () => {
       renderRoom();
     });
-    then(/^the student should not see a "Choose AI tone\?" control$/, () => {
+    then(/^the student should not see a "Choose AI role\?" control$/, () => {
       expect(
-        screen.queryByRole('button', { name: /choose ai tone\?/i })
+        screen.queryByRole('button', { name: /choose ai role\?/i })
       ).not.toBeInTheDocument();
     });
   });
 
-  test('Observers cannot choose AI tone', ({ given, and, then }) => {
+  test('Observers cannot choose AI role', ({ given, and, then }) => {
     bindBackground(given, and);
     given('exactly one student is in the room', () => {
       participants = [tutorUser(), studentUser(), observerUser()];
@@ -517,9 +530,9 @@ defineFeature(feature, (test) => {
       currentUser = observerUser();
       renderRoom();
     });
-    then(/^the observer should not see a "Choose AI tone\?" control$/, () => {
+    then(/^the observer should not see a "Choose AI role\?" control$/, () => {
       expect(
-        screen.queryByRole('button', { name: /choose ai tone\?/i })
+        screen.queryByRole('button', { name: /choose ai role\?/i })
       ).not.toBeInTheDocument();
     });
   });

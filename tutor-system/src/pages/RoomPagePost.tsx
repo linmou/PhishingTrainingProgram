@@ -11,6 +11,7 @@ import AISuggestionBox from '../components/AISuggestionBox';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
+import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
 
 const getAIResponseErrorMessage = (error: unknown): string => {
@@ -681,6 +682,11 @@ const RoomPagePost: React.FC = () => {
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
                         initialParameters={aiConfig?.prompt_config || undefined}
+                        lockedRole={
+                            isTutorRoleLocked(aiConfig?.prompt_config)
+                                ? aiConfig?.prompt_config?.student_tone_lock?.chosen_role
+                                : undefined
+                        }
                     />
                 )}
 

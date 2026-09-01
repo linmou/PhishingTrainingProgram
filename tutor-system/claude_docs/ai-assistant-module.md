@@ -85,6 +85,17 @@ Quick Adjust persistence:
 - The app persists that config immediately
 - Reopening Quick Adjust or AI Assistant Settings reflects the saved role and parameter values instead of default values
 
+Student-selected AI role lock:
+- In an AI-enabled room with exactly one student, the student-facing control is
+  labelled `AI role` and offers `Peer` or `Adult`.
+- Selecting a role persists the corresponding low/high role and a
+  `student_tone_lock` marker in the room's structured prompt configuration.
+- Once selected, tutor AI Assistant Settings and Quick Adjust rehydrate the
+  chosen role, while the Quick Adjust role selector is disabled. Regeneration
+  also forces the persisted role so a client-side override cannot change it.
+- The student role control is unavailable when AI is disabled or when multiple
+  students are present.
+
 ### 3. Conversation Context
 
 Maintains chat history for:

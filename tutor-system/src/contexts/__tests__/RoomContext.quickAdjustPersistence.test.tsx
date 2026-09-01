@@ -161,6 +161,133 @@ describe('RoomContext Quick Adjust persistence', () => {
         });
     });
 
+    it('preserves a student-locked role when Quick Adjust requests a different role', async () => {
+        const lockedPromptConfig = {
+            role: { role: 'low' as const },
+            communication_style: {
+                teen_slang: 'high' as const,
+                conversational_markers: 'low' as const,
+                uncertainty_expression: 'low' as const
+            },
+            cognitive_parameters: {
+                concept_density: 'low' as const,
+                perspective_taking: 'high' as const,
+                personal_examples: 'high' as const,
+                consequence_highlighting: 'high' as const
+            },
+            emotional_parameters: {
+                enthusiasm_level: 'low' as const,
+                validation_frequency: 'high' as const,
+                mistake_normalization: 'high' as const,
+                confidence_building: 'high' as const
+            },
+            detection_areas: ['Suspicious links'],
+            verification_steps: ['Check sender'],
+            student_tone_lock: {
+                locked: true as const,
+                chosen_by_user_id: 'student-1',
+                chosen_role: 'low' as const
+            }
+        };
+
+        (getAIConfig as jest.Mock).mockResolvedValue({
+            id: 'cfg-1',
+            room_id: 'room-1',
+            model_name: 'gpt-4o-mini',
+            system_prompt: 'Locked prompt',
+            prompt_config: lockedPromptConfig,
+            temperature: 0.7,
+            max_tokens: 150,
+            is_active: true,
+            created_at: '2026-03-20T00:00:00Z',
+            updated_at: '2026-03-26T00:00:00Z'
+        });
+        (generateTutorSuggestion as jest.Mock)
+            .mockResolvedValueOnce({
+                suggestion: 'Initial suggestion',
+                success: true,
+                contextMessages: ['message-1'],
+                appliedConfig: {
+                    model_name: 'gpt-4o-mini',
+                    system_prompt: 'Locked prompt',
+                    prompt_config: lockedPromptConfig,
+                    temperature: 0.7,
+                    max_tokens: 150,
+                    is_active: true
+                }
+            })
+            .mockResolvedValueOnce({
+                suggestion: 'Regenerated suggestion',
+                success: true,
+                contextMessages: ['message-1'],
+                appliedConfig: {
+                    model_name: 'gpt-4o-mini',
+                    system_prompt: 'Locked prompt after Quick Adjust',
+                    prompt_config: lockedPromptConfig,
+                    temperature: 0.4,
+                    max_tokens: 120,
+                    is_active: true
+                }
+            });
+        (updateAIConfig as jest.Mock).mockResolvedValue({
+            id: 'cfg-1',
+            room_id: 'room-1',
+            model_name: 'gpt-4o-mini',
+            system_prompt: 'Locked prompt after Quick Adjust',
+            prompt_config: lockedPromptConfig,
+            temperature: 0.4,
+            max_tokens: 120,
+            is_active: true,
+            created_at: '2026-03-20T00:00:00Z',
+            updated_at: '2026-03-26T12:00:00Z'
+        });
+
+        let roomApi: ReturnType<typeof useRoom> | undefined;
+
+        render(
+            <RoomProvider>
+                <TestRoomHelper onReady={(api) => { roomApi = api; }} />
+            </RoomProvider>
+        );
+
+        await waitFor(() => {
+            expect(roomApi).toBeDefined();
+        });
+
+        await act(async () => {
+            await roomApi!.joinRoom('room-1');
+        });
+        await act(async () => {
+            await roomApi!.generateAIResponse();
+        });
+        await act(async () => {
+            await roomApi!.regenerateAIResponse({
+                role: { role: 'high' },
+                temperature: 0.4,
+                max_tokens: 120
+            });
+        });
+
+        expect(generateTutorSuggestion).toHaveBeenNthCalledWith(
+            2,
+            'room-1',
+            'tutor-1',
+            expect.objectContaining({ role: { role: 'low' } }),
+            expect.objectContaining({ focusStudentMessage: 'Is this email fake?' })
+        );
+        expect(updateAIConfig).toHaveBeenCalledWith(
+            'room-1',
+            expect.objectContaining({
+                prompt_config: expect.objectContaining({
+                    role: { role: 'low' },
+                    student_tone_lock: expect.objectContaining({ locked: true })
+                })
+            }),
+            'tutor-1',
+            'suggestion_regeneration'
+        );
+    });
+
     it('persists the effective AI config after Quick Adjust regenerate succeeds', async () => {
         (generateTutorSuggestion as jest.Mock)
             .mockResolvedValueOnce({
