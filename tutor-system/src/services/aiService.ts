@@ -60,6 +60,27 @@ export const parseTutorActionDecision = (content: unknown): TutorActionDecision 
     };
 };
 
+const isTutorDecisionFormatError = (error: unknown): boolean =>
+    error instanceof Error &&
+    (error.message.startsWith('AI response ') || error.message.startsWith('AI tutor decision '));
+
+const appendTutorDecisionRepairInstruction = (
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> => {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) {
+        return messages;
+    }
+
+    return [
+        ...messages.slice(0, -1),
+        {
+            ...lastMessage,
+            content: `${lastMessage.content}\n\n${TUTOR_DECISION_REPAIR_INSTRUCTION}`
+        }
+    ];
+};
+
 // ============================================================================
 // CONSTANTS AND TYPES
 // ============================================================================
@@ -67,6 +88,10 @@ export const parseTutorActionDecision = (content: unknown): TutorActionDecision 
 const getOAIAPIKey = (): string | undefined => process.env.REACT_APP_OAI_API_KEY;
 const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
+const MAX_TUTOR_DECISION_ATTEMPTS = 2;
+const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
+const TUTOR_DECISION_REPAIR_INSTRUCTION =
+    'Return exactly one valid JSON object with the required string fields mode, mode_reason, and suggested_response. Do not include markdown, code fences, or any text outside the JSON object.';
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
@@ -644,34 +669,52 @@ export class TutorSuggestionService {
             const maxTokens =
                 typeof config.max_tokens === 'number' ? Math.min(config.max_tokens, 120) : 100;
 
-            const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getOAIAPIKey()}`
-                },
-                body: JSON.stringify({
-                    model: QWEN_MODEL,
-                    messages,
-                    temperature,
-                    max_tokens: maxTokens,
-                    enable_thinking: false
-                })
-            });
+            let requestMessages = messages;
+            let lastError: unknown;
 
-            if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`Qwen API error: ${response.status} - ${error}`);
+            for (let attempt = 0; attempt < MAX_TUTOR_DECISION_ATTEMPTS; attempt += 1) {
+                try {
+                    const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${getOAIAPIKey()}`
+                        },
+                        body: JSON.stringify({
+                            model: QWEN_MODEL,
+                            messages: requestMessages,
+                            temperature,
+                            max_tokens: maxTokens,
+                            enable_thinking: false,
+                            response_format: TUTOR_DECISION_RESPONSE_FORMAT
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.text();
+                        throw new Error(`Qwen API error: ${response.status} - ${error}`);
+                    }
+
+                    const data = await response.json();
+                    const decision = parseTutorActionDecision(data.choices[0]?.message?.content || '');
+
+                    return {
+                        suggestion: decision.suggested_response,
+                        decision,
+                        success: true
+                    };
+                } catch (error) {
+                    lastError = error;
+                    const canRetry = attempt < MAX_TUTOR_DECISION_ATTEMPTS - 1 && isTutorDecisionFormatError(error);
+                    if (!canRetry) {
+                        throw error;
+                    }
+
+                    requestMessages = appendTutorDecisionRepairInstruction(requestMessages);
+                }
             }
 
-            const data = await response.json();
-            const decision = parseTutorActionDecision(data.choices[0]?.message?.content || '');
-
-            return {
-                suggestion: decision.suggested_response,
-                decision,
-                success: true
-            };
+            throw lastError instanceof Error ? lastError : new Error('AI tutor decision generation failed');
 
         } catch (error) {
             return {

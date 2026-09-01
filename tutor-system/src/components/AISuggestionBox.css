@@ -158,6 +158,201 @@
     -webkit-box-orient: vertical;
 }
 
+/* Guard review keeps the inherited card language while separating decision metadata from the draft. */
+.ai-review-panel {
+    margin: 0 16px 16px;
+    padding: 14px;
+    background: #ffffff;
+    border: 1px solid #d4e5ff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(25, 118, 210, 0.08);
+}
+
+.ai-review-header,
+.ai-review-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ai-review-kicker,
+.ai-response-label,
+.ai-review-label {
+    color: #65676b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    text-transform: uppercase;
+}
+
+.ai-review-title {
+    margin-top: 3px;
+    color: #1c1e21;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ai-review-mode {
+    flex: 0 0 auto;
+    padding: 5px 10px;
+    border: 1px solid #b8d5fa;
+    border-radius: 999px;
+    background: #e8f1ff;
+    color: #1976d2;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ai-review-mode-guard {
+    border-color: #f3c58f;
+    background: #fff5e8;
+    color: #a85d00;
+}
+
+.ai-review-reason {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-left: 3px solid #1976d2;
+    border-radius: 0 6px 6px 0;
+    background: #f8fafe;
+}
+
+.ai-review-reason p {
+    margin: 5px 0 0;
+    color: #34373b;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.ai-review-footer {
+    align-items: flex-end;
+    margin-top: 12px;
+}
+
+.ai-review-statuses {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ai-review-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.ai-review-status-guard {
+    background: #fff0d9;
+    color: #995400;
+}
+
+.ai-review-status-neutral {
+    background: #eef2f7;
+    color: #59636f;
+}
+
+.ai-review-mode-control {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 8px;
+    color: #65676b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ai-review-mode-control select {
+    padding: 7px 28px 7px 9px;
+    border: 1px solid #b8d5fa;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1c1e21;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ai-review-mode-control select:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+}
+
+/* The editable draft uses the same white inset surface as the inherited suggestion copy. */
+.ai-response-section {
+    padding-top: 14px;
+}
+
+.ai-response-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ai-response-hint,
+.ai-response-count {
+    margin-top: 4px;
+    color: #7a828c;
+    font-size: 12px;
+}
+
+.ai-response-count {
+    flex: 0 0 auto;
+    margin-top: 0;
+}
+
+.ai-response-editor {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: 112px;
+    margin-top: 10px;
+    padding: 12px 14px;
+    resize: vertical;
+    border: 1px solid #b8d5fa;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1c1e21;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-response-editor:hover {
+    border-color: #1976d2;
+}
+
+.ai-response-editor:focus {
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.12);
+}
+
+.ai-response-generating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 112px;
+    margin-top: 10px;
+    padding: 12px 14px;
+    border: 1px dashed #b8d5fa;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #65676b;
+}
+
+.ai-response-generating p {
+    margin: 0;
+    font-size: 14px;
+}
+
 /* Parameter Controls - Menu Style */
 .ai-suggestion-parameters {
     margin: 0 16px;
@@ -270,6 +465,31 @@
     .ai-parameter-section-content {
         grid-template-columns: 1fr;
         gap: 8px;
+    }
+}
+
+@media (max-width: 640px) {
+    .ai-review-footer,
+    .ai-response-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ai-review-mode-control {
+        justify-content: space-between;
+    }
+
+    .ai-review-mode-control select {
+        flex: 1;
+    }
+
+    .ai-suggestion-actions {
+        flex-wrap: wrap;
+    }
+
+    .ai-suggestion-button {
+        flex: 1 1 auto;
+        justify-content: center;
     }
 }
 

@@ -196,4 +196,55 @@ describe('Guard Mode AI decision contract', () => {
         expect(result.success).toBe(true);
         expect(result.decision).toMatchObject({ mode: 'tutoring' });
     });
+
+    it('retries a malformed provider decision once with JSON regulation', async () => {
+        const validDecision = {
+            mode: 'guard',
+            mode_reason: 'The student repeated the unsafe action after correction.',
+            suggested_response: 'Pause and verify the destination before continuing.'
+        };
+        const fetchMock = jest
+            .fn()
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ choices: [{ message: { content: '{"mode":"guard"' } }] })
+            } as Response)
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ choices: [{ message: { content: JSON.stringify(validDecision) } }] })
+            } as Response);
+        global.fetch = fetchMock;
+
+        const { TutorSuggestionService } = await import('../aiService');
+        const result = await TutorSuggestionService.generateSuggestion(
+            [{ role: 'user', content: 'I clicked it again.', timestamp: 1 }],
+            {
+                id: 'config-retry',
+                room_id: 'room-retry',
+                model_name: 'qwen3.5-flash',
+                system_prompt: 'Keep the response concise.',
+                prompt_config: null,
+                temperature: 0.2,
+                max_tokens: 80,
+                is_active: true,
+                created_at: '2026-04-02T00:00:00Z',
+                updated_at: '2026-04-02T00:00:00Z'
+            },
+            { focusStudentMessage: 'I clicked it again.', scenarioContext: 'Link safety' }
+        );
+
+        expect(result).toMatchObject({
+            success: true,
+            suggestion: validDecision.suggested_response,
+            decision: validDecision
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        fetchMock.mock.calls.forEach((call) => {
+            expect(JSON.parse(call[1].body).response_format).toEqual({ type: 'json_object' });
+        });
+        const retryRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
+        expect(retryRequest.messages[retryRequest.messages.length - 1].content)
+            .toContain('Return exactly one valid JSON object');
+    });
+
 });

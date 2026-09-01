@@ -30,6 +30,11 @@ describe('AISuggestionBox Guard Mode review', () => {
             />
         );
 
+        expect(screen.getByTestId('ai-mode-review')).toHaveClass('ai-review-panel');
+        expect(screen.getByTestId('ai-review-mode')).toHaveClass('ai-review-mode');
+        expect(screen.getByTestId('ai-review-reason')).toHaveClass('ai-review-reason');
+        expect(screen.getByTestId('ai-review-statuses')).toHaveClass('ai-review-statuses');
+        expect(screen.getByLabelText('Final tutor response')).toHaveClass('ai-response-editor');
         expect(screen.getByText('Guard Mode Activated')).toBeInTheDocument();
         expect(screen.getByText(/deliberately repeated/)).toBeInTheDocument();
 
@@ -56,6 +61,8 @@ describe('AISuggestionBox Guard Mode review', () => {
             />
         );
 
+        expect(screen.getByTestId('ai-mode-review')).toHaveClass('ai-review-panel');
+        expect(screen.getByTestId('ai-review-statuses')).toHaveClass('ai-review-statuses');
         expect(screen.getByText('Mode rectified by tutor')).toBeInTheDocument();
         expect(screen.getByText('Wording modified by tutor')).toBeInTheDocument();
         expect(screen.queryByText('Guard Mode Activated')).not.toBeInTheDocument();

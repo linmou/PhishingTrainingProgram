@@ -3,6 +3,11 @@
 ## Purpose
 Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Production requests use Qwen3.5 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key.
 
+## Update Metadata
+
+- Updated: 2026-09-01
+- Commit ID: pending at update time
+
 ## Architecture Overview
 
 ### Modular Design (Lines 17-52)
@@ -120,6 +125,13 @@ Production prompt behavior now emphasizes direct tutoring: teach one concrete po
 ### Guard Mode Action Contract
 Every usable production tutor suggestion is parsed as a strict JSON object with non-empty `mode`, `mode_reason`, and `suggested_response` fields. `mode` is exactly `tutoring` or `guard`; malformed JSON, missing fields, empty fields, and invalid modes become visible generation errors. The parser does not infer mode from wording or silently default malformed output to tutoring. The debug-only dummy path returns an explicit tutoring decision for local development.
 
+The ecological structured-decision request sends `response_format: { type:
+'json_object' }` and the prompt explicitly requires JSON. If the provider returns
+malformed JSON or a decision that fails validation, the service makes one
+corrective retry with the same context plus a JSON-only instruction. The retry
+is bounded at two total attempts and applies only to response-format errors;
+HTTP and network failures remain visible provider errors.
+
 The ecological prompt includes semantic Guard activation, persistence, exit, and tone-safety rules. The production UI consumes `decision.suggested_response`; the raw decision and final tutor edits are persisted through the Guard review flow.
 
 ### `QwenService` Class
@@ -146,6 +158,7 @@ The ecological prompt includes semantic Guard activation, persistence, exit, and
 - **Prompt engineering**: Specialized prompt for educational guidance
 - **Length optimization**: Under 2 sentences, interaction-focused
 - **Response filtering**: Educational, engaging, understanding-focused
+- **Structured output**: JSON Object mode plus one bounded corrective retry
 
 #### Dummy Suggestion Categories (Lines 377-404)
 **Fallback Categories**:
