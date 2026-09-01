@@ -17,8 +17,7 @@
 
       Participant: Others (Maya R.): wait this just showed up on my feed too is this real??
 
-      Tutor/AI: Tutor (AI chatbot): Take a look at this alert post. What stands out to you before anyone clicks
-      anything?
+      Tutor/AI: Tutor (Tutor): Take a look at this alert post. What stands out to you before anyone clicks anything?
 
       Participant: Student (Jake Matthews): I think it is real because it says my account is at risk.
     student_message: I think it is real because it says my account is at risk.
@@ -56,7 +55,7 @@
 
       Participant: Others (Dev_gamer12): bro $20 for a switch?? linking this to my group chat rn
 
-      Tutor/AI: Tutor (AI chatbot): A friend just shared this deal post with you. What would you do first?
+      Tutor/AI: Tutor (Tutor): A friend just shared this deal post with you. What would you do first?
 
       Participant: Student (Brinlee): I would click it fast before the deal ends.
     student_message: I would click it fast before the deal ends.
@@ -94,7 +93,7 @@
 
       Participant: Others (Kai): the photo looks so real tho... has anyone tried it?
 
-      Tutor/AI: Tutor (AI chatbot): Does this offer make sense to you? What are you basing that on?
+      Tutor/AI: Tutor (Tutor): Does this offer make sense to you? What are you basing that on?
 
       Participant: Student (Sam): It must be real because the photo looks professional.
     student_message: It must be real because the photo looks professional.
@@ -132,8 +131,7 @@
 
       Participant: Others (Chris): it has the little lock when I open the preview so idk
 
-      Tutor/AI: Tutor (AI chatbot): Let's focus on the link and that lock icon. What do you think the lock actually
-      proves?
+      Tutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?
 
       Participant: Student (Alex): If the site has HTTPS or a lock icon, then it should be safe, right?
     student_message: 'If the site has HTTPS or a lock icon, then it should be safe, right?'
@@ -171,7 +169,7 @@
 
       Participant: Others (Noa): I almost clicked this last night when I was half asleep
 
-      Tutor/AI: Tutor (AI chatbot): What would you do if this popped up while you were scrolling?
+      Tutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?
 
       Participant: Student (Jordan): I would click it quickly just in case.
     student_message: I would click it quickly just in case.
@@ -209,7 +207,7 @@
 
       Participant: Others (Noa): I almost clicked this last night when I was half asleep
 
-      Tutor/AI: Tutor (AI chatbot): What would you do if this popped up while you were scrolling?
+      Tutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?
 
       Participant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.
     student_message: I would not click it. I would open the real app myself and check for alerts there.
@@ -248,8 +246,7 @@
 
       Participant: Others (Chris): it has the little lock when I open the preview so idk
 
-      Tutor/AI: Tutor (AI chatbot): Let's focus on the link and that lock icon. What do you think the lock actually
-      proves?
+      Tutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?
 
       Participant: Student (Alex): The lock only protects the connection; it does not prove the site is real. I would
       check the exact address and use the real app.
@@ -288,8 +285,8 @@
     conversation_history: >-
       Participant: Others (Socail Media Testdrive): YOUR ACCOUNT IS AT RISK — act now or lose access!!
 
-      Tutor/AI: Tutor (AI chatbot): This alert is using pressure words to rush you. Have you heard people call that
-      "urgency tactics" before?
+      Tutor/AI: Tutor (Tutor): This alert is using pressure words to rush you. Have you heard people call that "urgency
+      tactics" before?
 
       Participant: Student (Mia): What does urgency tactics mean?
     student_message: What does urgency tactics mean?
@@ -322,8 +319,7 @@
       Participant: Others (Socail Media Testdrive): YOUR ACCOUNT IS AT RISK — fix it now
       http://testdrive.info/youraccount
 
-      Tutor/AI: Tutor (AI chatbot): Scammers often use fear to rush people into clicking. What feels risky about this
-      post?
+      Tutor/AI: Tutor (Tutor): Scammers often use fear to rush people into clicking. What feels risky about this post?
 
       Participant: Student (Riley): Did this ever happen to you?
     student_message: Did this ever happen to you?

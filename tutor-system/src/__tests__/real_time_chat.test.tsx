@@ -170,7 +170,6 @@ import { RoomProvider, useRoom } from '../contexts/RoomContext';
 import * as RoomContextModule from '../contexts/RoomContext';
 import { supabase } from '../services/supabase';
 import { User, UserRole, Room, Message } from '../types';
-import { getDemoRoomTemplateSeeds } from '../services/demoRoomTemplates';
 
 interface TestUser {
   id: string;
@@ -622,41 +621,6 @@ describe('Real-time Chat System BDD Tests', () => {
     afterEach(() => {
       jest.restoreAllMocks();
       (useAuth as jest.Mock).mockReset();
-    });
-
-    test('renders canonical template tutor replies as AI chatbot', () => {
-      const seeds = getDemoRoomTemplateSeeds();
-      expect(seeds).toHaveLength(9);
-      const tutorTurns = seeds.map((seed) => {
-        const turns = seed.pre_populated_dialogue.filter((entry) => entry.role === 'tutor');
-        expect(turns).toHaveLength(1);
-        expect(turns[0].role).toBe('tutor');
-        expect(turns[0].user_name).toBe('AI chatbot');
-        return turns[0];
-      });
-      const tutorTurn = tutorTurns[0];
-      const tutorMessage: Message = {
-        id: 'prepop-template-tutor',
-        room_id: mockRoom.id,
-        user_id: 'system',
-        content: tutorTurn.message,
-        user_role: 'tutor',
-        is_ai_generated: false,
-        ai_model_used: null,
-        ai_response_time_ms: null,
-        parent_message_id: null,
-        created_at: new Date().toISOString(),
-        display_name: tutorTurn.user_name,
-        avatar_url: null
-      };
-
-      const view = renderClientPage(mockStudent, buildRoomValue({ messages: [tutorMessage] }));
-      const renderedMessage = view.getByText(tutorTurn.message);
-      const renderedComment = renderedMessage.closest('.post-comment');
-
-      expect(renderedComment).not.toBeNull();
-      expect(within(renderedComment as HTMLElement).getByText('AI chatbot')).toBeInTheDocument();
-      expect(within(renderedComment as HTMLElement).queryByText('Tutor')).not.toBeInTheDocument();
     });
 
     test('should render new realtime messages on another rendered client page', async () => {

@@ -109,7 +109,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'wait this just showed up on my feed too is this real??'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message:
             'Take a look at this alert post. What stands out to you before anyone clicks anything?'
@@ -154,7 +154,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'bro $20 for a switch?? linking this to my group chat rn'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message:
             'A friend just shared this deal post with you. What would you do first?'
@@ -198,7 +198,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'the photo looks so real tho... has anyone tried it?'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message: 'Does this offer make sense to you? What are you basing that on?'
         },
@@ -241,7 +241,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'it has the little lock when I open the preview so idk'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message:
             "Let's focus on the link and that lock icon. What do you think the lock actually proves?"
@@ -287,7 +287,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'I almost clicked this last night when I was half asleep'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message: 'What would you do if this popped up while you were scrolling?'
         },
@@ -330,7 +330,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'I almost clicked this last night when I was half asleep'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message: 'What would you do if this popped up while you were scrolling?'
         },
@@ -373,7 +373,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'it has the little lock when I open the preview so idk'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message:
             "Let's focus on the link and that lock icon. What do you think the lock actually proves?"
@@ -411,7 +411,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'YOUR ACCOUNT IS AT RISK — act now or lose access!!'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message:
             'This alert is using pressure words to rush you. Have you heard people call that "urgency tactics" before?'
@@ -449,7 +449,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
             'YOUR ACCOUNT IS AT RISK — fix it now http://testdrive.info/youraccount'
         },
         {
-          user_name: 'AI chatbot',
+          user_name: 'Tutor',
           role: 'tutor',
           message:
             'Scammers often use fear to rush people into clicking. What feels risky about this post?'
