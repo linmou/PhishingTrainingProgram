@@ -74,6 +74,41 @@ describe('demoRoomTemplates', () => {
     expect(lock!.conversation_history).toContain('Others (Socail Media Testdrive)');
   });
 
+  it('derives correct-student ecological cases from the matching database scenarios', () => {
+    const seeds = getDemoRoomTemplateSeeds();
+    const clickSource = seeds.find((seed) => seed.case_id === 'webpage_demo_click_impulse');
+    const clickCorrect = seeds.find((seed) => seed.case_id === 'webpage_demo_correct_safe_action');
+    const lockSource = seeds.find((seed) => seed.case_id === 'webpage_demo_lock_icon_myth');
+    const lockCorrect = seeds.find((seed) => seed.case_id === 'webpage_demo_correct_lock_reasoning');
+
+    expect(clickCorrect).toBeTruthy();
+    expect(lockCorrect).toBeTruthy();
+    expect(clickCorrect!.pre_populated_dialogue.slice(0, -1)).toEqual(
+      clickSource!.pre_populated_dialogue.slice(0, -1)
+    );
+    expect(lockCorrect!.pre_populated_dialogue.slice(0, -1)).toEqual(
+      lockSource!.pre_populated_dialogue.slice(0, -1)
+    );
+
+    [clickCorrect!, lockCorrect!].forEach((seed) => {
+      expect(seed.studentIsWrong).toBe(false);
+      expect(seed.test_only).toBe(true);
+      expect(seed.ai_config_template.model_name).toBe('qwen3.5-flash');
+      expect(seed.ai_config_template.behavior_focus).toEqual([
+        'low_boilerplate_praise',
+        'practical_knowledge',
+        'turn_rhythm'
+      ]);
+      expect(seed.ai_config_template.behavior_focus).not.toContain('direct_correction');
+      expect(seed.ai_config_template.prompt_config.detection_areas.length).toBeGreaterThan(0);
+      expect(seed.ai_config_template.prompt_config.verification_steps.length).toBeGreaterThan(0);
+      expect(seed.expected_behavior_focus).toMatch(/^Covered: .+Eligible untouched set includes:?.+/i);
+      expect(seed.expected_behavior_focus).toMatch(/any relevant remaining configured item is acceptable/i);
+      expect(seed.expected_behavior_focus).toMatch(/select at most one untouched point/i);
+      expect(seed.expected_behavior_focus).toMatch(/without a question is also acceptable/i);
+    });
+  });
+
   it('maps seeds to global template insert rows', () => {
     const seed = getDemoRoomTemplateSeeds()[0];
     const row = toRoomTemplateInsertRow(seed);

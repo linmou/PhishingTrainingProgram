@@ -2,7 +2,7 @@
 
 Intent: document how to review and run the local Promptfoo benchmark for tutor prompt behavior before spending live LLM calls or changing production prompts.
 
-Updated: 2026-08-30
+Updated: 2026-08-31
 
 Source baseline commit: `530bd59`
 
@@ -24,6 +24,24 @@ The active model is only `qwen3.5-flash` through DashScope's OpenAI-compatible e
 The `.chat.prompt.json` user turn is shared with the website AI button (not the old “brief follow-up question” co-pilot wrapper).
 
 The v1 benchmark stays on one fixture, but the case set includes holdout-style account-alert variations with different platform names, domains, and user relationships. These synthetic holdouts are intentionally separate from the product-derived ecological cases, so the benchmark checks whether the behavior transfers within the scenario instead of only matching memorized strings.
+
+## Ecological case provenance
+
+Ecological demo-room templates must be based on real `room_templates` records used by the web app. Before adding or changing an ecological case, inspect the corresponding database record and preserve its scenario fields, pre-populated dialogue, and AI configuration in `tutor-system/src/services/demoRoomTemplates.ts`. A derived behavior variant may use a distinct template name and replace only the turn under test; for example, a correct-student variant preserves the source room through the tutor question and changes the final student answer. Do not invent an ecological dialogue only in TypeScript or edit `cases/webpage-ecological.yaml` by hand.
+
+After aligning the version-controlled template with the database record, run `npm run eval:prompts:export-ecological-cases`. Synthetic holdouts in `cases/account-security-alert.yaml` remain independently authored and must stay labeled `source_type: synthetic_holdout`.
+
+Seed only the intended derived records with `npm run seed:behavior-templates -- --case-id=<case_id>`; repeat `--case-id` to select more than one record. Correctness-sensitive rubrics must infer the student's behavior from the scenario and messages instead of introducing another `student_answer_state` value.
+
+The 2026-08-31 correct-student variants derive from `Demo: Click Impulse (Practical Action)` (`f493c771-4cee-468c-a0a9-4c567f0db2c0`) and `Demo: Lock Icon Myth (Direct Correction)` (`14f8b656-6b9c-41cd-b438-bdbf73883782`). Their source scenario and dialogue through the tutor turn are preserved. The source records still stored `gpt-4o-mini`, so the derived records intentionally rebuild the AI configuration with the current `qwen3.5-flash` default.
+
+## Correct-answer continuation
+
+For a correct student answer, the configured `detection_areas` and `verification_steps` form the room's complete knowledge inventory. A point is covered only when the student has demonstrated it in any message; semantically equivalent wording counts, while a tutor mention alone does not. The tutor may give concise useful reinforcement without a question or ask one focused question about any applicable untouched point. Repeated covered points, broad “What else?” prompts, question chains, and praise-only replies fail.
+
+Each correct-answer case records the student's covered set and an eligible untouched set. The judge accepts any semantically valid remaining inventory point and must not require the example question. Synthetic correct-answer holdouts use the `Account Security Alert` inventory, limited to points applicable to their actual scenario.
+
+Targeted live evidence from 2026-08-31 is stored under `results/qwen3.5-flash/20260831T063908Z/`. Three of four cases passed. `webpage_demo_correct_safe_action` failed because the turn-rhythm judge returned non-JSON and the deterministic sentence counter treated `!!ALERT!!` as extra sentence boundaries (37 words but five counted segments). The report and `targeted-run-metadata.json` preserve every input, output, rubric component, model setting, and failure reason.
 
 ## Review Order
 

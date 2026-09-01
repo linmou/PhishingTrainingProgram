@@ -90,6 +90,88 @@ describe('Promptfoo brevity and ecological scaffold', () => {
     });
   });
 
+  /**
+   * Files: correct-answer Promptfoo cases and knowledge-continuation rubrics.
+   * Purpose: require set-valued untouched knowledge and both valid response paths without a new correctness state.
+   */
+  it('evaluates correct-answer continuation from each template knowledge inventory', () => {
+    const ecologicalCases = yaml.load(
+      readText('evals/promptfoo/cases/webpage-ecological.yaml')
+    ) as Array<any>;
+    const holdoutCases = yaml.load(
+      readText('evals/promptfoo/cases/account-security-alert.yaml')
+    ) as Array<any>;
+    const expectedCaseIds = [
+      'webpage_demo_correct_safe_action',
+      'webpage_demo_correct_lock_reasoning',
+      'student_correctly_uses_real_bank_channel',
+      'student_correctly_rejects_https_identity'
+    ];
+    const correctStudentCases = [...ecologicalCases, ...holdoutCases].filter((testCase) =>
+      expectedCaseIds.includes(testCase.vars.case_id)
+    );
+
+    expect(correctStudentCases.map((testCase) => testCase.vars.case_id).sort()).toEqual(
+      [...expectedCaseIds].sort()
+    );
+    correctStudentCases.forEach((testCase) => {
+      const metrics = testCase.assert.map((assertion: any) => assertion.metric);
+      const coveredText = testCase.vars.expected_behavior_focus.match(/^Covered: (.+?)\. Eligible/i)?.[1] || '';
+      const untouchedText = testCase.vars.expected_behavior_focus.match(/Eligible untouched set includes (.+?)\. Any/i)?.[1] || '';
+      const coveredPoints = coveredText.split(';').map((point: string) => point.trim()).filter(Boolean);
+      const untouchedPoints = untouchedText.split(/,|\band\b/).map((point: string) => point.trim()).filter(Boolean);
+      expect(metrics).toEqual([
+        'low_boilerplate_praise',
+        'practical_knowledge',
+        'turn_rhythm',
+        'response_length'
+      ]);
+      expect(testCase.vars.applicable_requirements).not.toContain('direct_correction');
+      expect(testCase.vars.expected_behavior_focus).toMatch(/^Covered: .+/i);
+      expect(testCase.vars.expected_behavior_focus).toMatch(/Eligible untouched set includes .+/i);
+      expect(testCase.vars.expected_behavior_focus).toMatch(/any relevant remaining configured item is acceptable/i);
+      expect(testCase.vars.expected_behavior_focus).toMatch(/select at most one untouched point/i);
+      expect(testCase.vars.expected_behavior_focus).toMatch(/without a question is also acceptable/i);
+      expect(testCase.vars.expected_behavior_focus).not.toMatch(/required follow-up|must ask/i);
+      expect(testCase.vars.student_answer_state).not.toBe('correct');
+      expect(coveredPoints.length).toBeGreaterThan(0);
+      expect(untouchedPoints.length).toBeGreaterThan(0);
+    });
+
+    const source = require('../detectionTemplates').SCENARIO_TEMPLATES['Account Security Alert'];
+    expect(source.detection_areas.length).toBeGreaterThan(0);
+    expect(source.verification_steps.length).toBeGreaterThan(0);
+    expect(source.detection_areas.length + source.verification_steps.length).toBeGreaterThan(3);
+    correctStudentCases
+      .filter((testCase) => testCase.vars.source_type === 'synthetic_holdout')
+      .forEach((testCase) => expect(testCase.vars.knowledge_inventory_source).toBe('Account Security Alert'));
+
+    const praiseRubric = readText('evals/promptfoo/rubrics/low_boilerplate_praise.md');
+    const rhythmRubric = readText('evals/promptfoo/rubrics/turn_rhythm.md');
+    const practicalRubric = readText('evals/promptfoo/rubrics/practical_knowledge.md');
+    expect(praiseRubric).toMatch(/student's latest message is correct from the scenario/i);
+    expect(praiseRubric).toMatch(/natural variation in wording/i);
+    expect(praiseRubric).toMatch(/generic acknowledgment.*acceptable.*specific teaching/i);
+    expect(praiseRubric).toMatch(/do not use `student_answer_state` or `scaffolding_status`/i);
+    expect(praiseRubric).toMatch(/useful teaching or focused elicitation/i);
+    expect(rhythmRubric).toContain('You separated connection security from site identity. Does this alert identify a specific account or event?');
+    expect(rhythmRubric).toContain('That is correct. HTTPS protects the connection, not the site\'s identity. Check the exact domain and use the real app.');
+    expect(rhythmRubric).toMatch(/different eligible untouched point/i);
+    expect(rhythmRubric).toMatch(/repeated covered point/i);
+    expect(rhythmRubric).toMatch(/broad question/i);
+    expect(rhythmRubric).toMatch(/two-question chain/i);
+    expect(rhythmRubric).toMatch(/tutor-mentioned but student-undemonstrated/i);
+    expect(rhythmRubric).toMatch(/no remaining useful point/i);
+    expect(practicalRubric).toMatch(/applicable configured Detection Area or Verification Step/i);
+    expect(practicalRubric).toMatch(/generic question.*not tied.*configured knowledge inventory/i);
+
+    const productionSources = [
+      readText('tutor-system/src/services/prompts/responsePolicy.ts'),
+      readText('tutor-system/src/services/demoRoomTemplates.ts')
+    ].join('\n');
+    expect(productionSources).not.toMatch(/studentAnswerState|classifyCoveredConcept|conceptMatcher/i);
+  });
+
   it('keeps fresh schemas and the migration on the sole Qwen model', () => {
     const migration = readText('tutor-system/supabase/migrations/022_qwen_model_defaults.sql');
     const finalSchema = readText('tutor-system/supabase/migrations/final_schema.sql');

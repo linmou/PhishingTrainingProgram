@@ -6,6 +6,7 @@
  *
  * Usage (from tutor-system/):
  *   node scripts/seed-behavior-demo-templates.js
+ *   node scripts/seed-behavior-demo-templates.js --case-id=<case_id>
  */
 
 const fs = require('fs');
@@ -58,7 +59,19 @@ async function main() {
   }
 
   const supabase = createClient(url, key);
-  const seeds = [...getDemoRoomTemplateSeeds(), ...getPromptComparisonTemplateSeeds()];
+  const requestedCaseIds = process.argv
+    .filter((arg) => arg.startsWith('--case-id='))
+    .map((arg) => arg.slice('--case-id='.length));
+  const allSeeds = [...getDemoRoomTemplateSeeds(), ...getPromptComparisonTemplateSeeds()];
+  const seeds = requestedCaseIds.length === 0
+    ? allSeeds
+    : allSeeds.filter((seed) => requestedCaseIds.includes(seed.case_id));
+
+  if (requestedCaseIds.length > 0 && seeds.length !== requestedCaseIds.length) {
+    const foundCaseIds = new Set(seeds.map((seed) => seed.case_id));
+    const missingCaseIds = requestedCaseIds.filter((caseId) => !foundCaseIds.has(caseId));
+    throw new Error(`Unknown case_id: ${missingCaseIds.join(', ')}`);
+  }
 
   console.log(`Seeding ${seeds.length} global room templates (tutor_id=${GLOBAL_TEMPLATE_TUTOR_ID})`);
 

@@ -309,6 +309,93 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
       studentIsWrong: true
     },
     {
+      case_id: 'webpage_demo_correct_safe_action',
+      template_name: 'Demo: Click Impulse (Correct Safe Action)',
+      template_description:
+        'Click Impulse database scenario with a correct student response for restrained, specific acknowledgment.',
+      title_template: 'Demo: Click Impulse — Correct Safe Action',
+      description_template:
+        'Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.',
+      image_url: '/images/room-presets/phishing_2.png',
+      pre_populated_dialogue: [
+        {
+          user_name: 'Socail Media Testdrive',
+          role: 'others',
+          message:
+            '!!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount'
+        },
+        {
+          user_name: 'Noa',
+          role: 'others',
+          message: 'I almost clicked this last night when I was half asleep'
+        },
+        {
+          user_name: 'Tutor',
+          role: 'tutor',
+          message: 'What would you do if this popped up while you were scrolling?'
+        },
+        {
+          user_name: 'Jordan',
+          role: 'student',
+          message:
+            'I would not click it. I would open the real app myself and check for alerts there.'
+        }
+      ],
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
+        'low_boilerplate_praise',
+        'practical_knowledge',
+        'turn_rhythm'
+      ]),
+      expected_behavior_focus:
+        'Covered: do not click; use the real app; check official alerts. Eligible untouched set includes urgency, pressure wording, suspicious domain, sender/source, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.',
+      test_only: true,
+      studentIsWrong: false
+    },
+    {
+      case_id: 'webpage_demo_correct_lock_reasoning',
+      template_name: 'Demo: Lock Icon Myth (Correct Reasoning)',
+      template_description:
+        'Lock Icon Myth database scenario with correct HTTPS reasoning for restrained, specific acknowledgment.',
+      title_template: 'Demo: Lock Icon Myth — Correct Reasoning',
+      description_template:
+        'Security notice shared in feed: verify your login at http://testdrive.info/youraccount (students often trust the lock icon).',
+      image_url: '/images/room-presets/phishing_2.png',
+      pre_populated_dialogue: [
+        {
+          user_name: 'Socail Media Testdrive',
+          role: 'others',
+          message:
+            'Security warning — unusual sign-in detected. Verify now: http://testdrive.info/youraccount'
+        },
+        {
+          user_name: 'Chris',
+          role: 'others',
+          message: 'it has the little lock when I open the preview so idk'
+        },
+        {
+          user_name: 'Tutor',
+          role: 'tutor',
+          message:
+            "Let's focus on the link and that lock icon. What do you think the lock actually proves?"
+        },
+        {
+          user_name: 'Alex',
+          role: 'student',
+          message:
+            'The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.'
+        }
+      ],
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
+        'low_boilerplate_praise',
+        'practical_knowledge',
+        'turn_rhythm'
+      ]),
+      expected_behavior_focus:
+        'Covered: HTTPS is not site identity; inspect the exact address; use the real app. Eligible untouched set includes urgency, source legitimacy, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.',
+      test_only: true,
+      studentIsWrong: false
+    },
+    {
       case_id: 'webpage_demo_pressure_words',
       template_name: 'Demo: Pressure Words (Simple Language)',
       template_description:

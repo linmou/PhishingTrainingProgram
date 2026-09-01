@@ -311,6 +311,56 @@
         value: file://../../tutor-system/scripts/response-length-rubric.js
 
   - vars:
+      case_id: student_correctly_uses_real_bank_channel
+      source_type: synthetic_holdout
+      scaffolding_status: failed
+      student_answer_state: unsafe_or_incomplete
+      scenario_context: "A parent forwards a text saying 'Bank profile suspended' with a link to https://secure-bank-help.example.com/reactivate."
+      conversation_history: "Tutor: What should your parent do before acting on this bank alert?"
+      student_message: "I would tell them not to use the message link. They should open the real banking app or call the number on the back of the card."
+      knowledge_inventory_source: "Account Security Alert"
+      expected_behavior_focus: "Covered: avoid the message link; use the real banking app; use the card's official phone number. Eligible untouched set includes checking official account notifications, reviewing recent activity, and identifying urgency or vague account claims. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable."
+      applicable_requirements: "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length"
+    assert:
+      - type: llm-rubric
+        metric: low_boilerplate_praise
+        value: file://rubrics/low_boilerplate_praise.md
+      - type: llm-rubric
+        metric: practical_knowledge
+        value: file://rubrics/practical_knowledge.md
+      - type: llm-rubric
+        metric: turn_rhythm
+        value: file://rubrics/turn_rhythm.md
+      - type: javascript
+        metric: response_length
+        value: file://../../tutor-system/scripts/response-length-rubric.js
+
+  - vars:
+      case_id: student_correctly_rejects_https_identity
+      source_type: synthetic_holdout
+      scaffolding_status: failed
+      student_answer_state: unsafe_or_incomplete
+      scenario_context: "A polished account alert links to https://account-check.example.net/login and shows a lock icon."
+      conversation_history: "Tutor: Does HTTPS prove this alert belongs to the real company?"
+      student_message: "HTTPS protects the connection, but a fake site can use it too. I would compare the full domain with the real company's site."
+      knowledge_inventory_source: "Account Security Alert"
+      expected_behavior_focus: "Covered: HTTPS protects only the connection; fake sites can use HTTPS; compare the full domain. Eligible untouched set includes avoiding the alert link, using the real app/site, checking official account alerts, and evaluating urgency or source legitimacy. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable."
+      applicable_requirements: "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length"
+    assert:
+      - type: llm-rubric
+        metric: low_boilerplate_praise
+        value: file://rubrics/low_boilerplate_praise.md
+      - type: llm-rubric
+        metric: practical_knowledge
+        value: file://rubrics/practical_knowledge.md
+      - type: llm-rubric
+        metric: turn_rhythm
+        value: file://rubrics/turn_rhythm.md
+      - type: javascript
+        metric: response_length
+        value: file://../../tutor-system/scripts/response-length-rubric.js
+
+  - vars:
       case_id: student_asks_reverse_image
       source_type: synthetic_holdout
       scaffolding_status: failed

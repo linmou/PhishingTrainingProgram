@@ -1,6 +1,7 @@
 import { generateSystemPrompt, PRESET_CONFIGS } from '../systemPrompts';
 import { applyPresetConfiguration } from '../aiService';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
+import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
 
 describe('System Prompts', () => {
     describe('generateSystemPrompt', () => {
@@ -36,6 +37,47 @@ describe('System Prompts', () => {
             expect(prompt).toContain('Test detection area');
             expect(prompt).toContain('Test verification step');
             expect(prompt).toContain('Keep it short: use no more than 3 sentences and 50 words');
+        });
+
+        /**
+         * File: src/services/prompts/responsePolicy.ts and peer roleParameters.ts
+         * Purpose: require correct-answer continuation to use the configured inventory without repeating covered knowledge.
+         */
+        it('should continue correct answers from one untouched configured knowledge point', () => {
+            const prompt = generateSystemPrompt({
+                ...PRESET_CONFIGS.casual_peer,
+                detection_areas: ['Visible source clue: sender name is misspelled'],
+                verification_steps: ['Safety-critical check: review recent login activity']
+            });
+
+            expect(prompt).toContain('Visible source clue: sender name is misspelled');
+            expect(prompt).toContain('Safety-critical check: review recent login activity');
+            [
+                'Treat the configured Detection Areas and Verification Steps as the complete knowledge inventory for this room.',
+                "Treat a point as covered only when the student has demonstrated the idea in any of their messages; semantically equivalent wording counts.",
+                'A tutor mention alone does not mark a point covered.',
+                'After a correct answer, briefly acknowledge or directly reinforce what the student demonstrated.',
+                'Useful teaching or focused elicitation is required; do not stop at praise alone.',
+                'Review the configured knowledge inventory for applicable points the student has not demonstrated.',
+                'When useful, ask one focused question about one relevant untouched point; asking a question is optional, and concise direct reinforcement without a question is acceptable.',
+                'Prefer a point directly visible in the current room and safety-critical checks before optional hardening advice.',
+                'Never ask more than one question, repeat a covered concept or the answered point, ask a broad "What else?" question, or produce a question chain.',
+                'If no useful untouched point remains, give a concise consolidation or next step without forcing another question.'
+            ].forEach((instruction) => expect(prompt).toContain(instruction));
+            expect(prompt).toContain(
+                'If the immediately preceding tutor turn asked a question and the latest student answer remains unsafe or incomplete, directly correct the misconception and give one concrete safe action; do not ask another question instead.'
+            );
+            expect(prompt).toContain('Keep it short: use no more than 3 sentences and 50 words.');
+
+            expect(ROLE_PARAMETERS.role.low).toContain(
+                'After a correct answer, briefly acknowledge or directly reinforce what the student demonstrated.'
+            );
+            expect(ROLE_PARAMETERS.role.low).toContain(
+                'Use the configured Detection Areas and Verification Steps to choose at most one relevant point the student has not demonstrated.'
+            );
+            expect(ROLE_PARAMETERS.role.low).toContain(
+                'A question is optional; concise reinforcement or direct teaching may stand alone.'
+            );
         });
 
         it('should generate a complete system prompt with trusted adult role', () => {

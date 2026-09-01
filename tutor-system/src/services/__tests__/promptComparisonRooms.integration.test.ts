@@ -404,6 +404,8 @@ describe('controlled prompt comparison integration', () => {
         'webpage_itunes_professional_photo',
         'webpage_demo_lock_icon_myth',
         'webpage_demo_click_impulse',
+        'webpage_demo_correct_safe_action',
+        'webpage_demo_correct_lock_reasoning',
         'webpage_demo_pressure_words',
         'webpage_demo_personal_story_trap',
       ]));

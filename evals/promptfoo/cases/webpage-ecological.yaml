@@ -196,6 +196,87 @@
       metric: response_length
       value: 'file://../../tutor-system/scripts/response-length-rubric.js'
 - vars:
+    case_id: webpage_demo_correct_safe_action
+    template_name: 'Demo: Click Impulse (Correct Safe Action)'
+    scenario_context: >-
+      Demo: Click Impulse — Correct Safe Action — Scary account alert in the feed with a resolve link — tests click
+      impulse and safe redirect habits.
+    conversation_history: >-
+      Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve:
+      http://testdrive.info/youraccount
+
+      Participant: Others (Noa): I almost clicked this last night when I was half asleep
+
+      Tutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?
+
+      Participant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.
+    student_message: I would not click it. I would open the real app myself and check for alerts there.
+    expected_behavior_focus: >-
+      Covered: do not click; use the real app; check official alerts. Eligible untouched set includes urgency, pressure
+      wording, suspicious domain, sender/source, vague account details, specific login activity, official support, and
+      account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point.
+      Concise useful reinforcement without a question is also acceptable.
+    applicable_requirements: 'low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length'
+    source_type: product_template
+    scaffolding_status: failed
+    student_answer_state: unsafe_or_incomplete
+    product_message_shape: 'system,user'
+  assert:
+    - type: llm-rubric
+      metric: low_boilerplate_praise
+      value: 'file://rubrics/low_boilerplate_praise.md'
+    - type: llm-rubric
+      metric: practical_knowledge
+      value: 'file://rubrics/practical_knowledge.md'
+    - type: llm-rubric
+      metric: turn_rhythm
+      value: 'file://rubrics/turn_rhythm.md'
+    - type: javascript
+      metric: response_length
+      value: 'file://../../tutor-system/scripts/response-length-rubric.js'
+- vars:
+    case_id: webpage_demo_correct_lock_reasoning
+    template_name: 'Demo: Lock Icon Myth (Correct Reasoning)'
+    scenario_context: >-
+      Demo: Lock Icon Myth — Correct Reasoning — Security notice shared in feed: verify your login at
+      http://testdrive.info/youraccount (students often trust the lock icon).
+    conversation_history: >-
+      Participant: Others (Socail Media Testdrive): Security warning — unusual sign-in detected. Verify now:
+      http://testdrive.info/youraccount
+
+      Participant: Others (Chris): it has the little lock when I open the preview so idk
+
+      Tutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?
+
+      Participant: Student (Alex): The lock only protects the connection; it does not prove the site is real. I would
+      check the exact address and use the real app.
+    student_message: >-
+      The lock only protects the connection; it does not prove the site is real. I would check the exact address and use
+      the real app.
+    expected_behavior_focus: >-
+      Covered: HTTPS is not site identity; inspect the exact address; use the real app. Eligible untouched set includes
+      urgency, source legitimacy, vague account details, specific login activity, official support, and account
+      hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise
+      useful reinforcement without a question is also acceptable.
+    applicable_requirements: 'low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length'
+    source_type: product_template
+    scaffolding_status: failed
+    student_answer_state: unsafe_or_incomplete
+    product_message_shape: 'system,user'
+  assert:
+    - type: llm-rubric
+      metric: low_boilerplate_praise
+      value: 'file://rubrics/low_boilerplate_praise.md'
+    - type: llm-rubric
+      metric: practical_knowledge
+      value: 'file://rubrics/practical_knowledge.md'
+    - type: llm-rubric
+      metric: turn_rhythm
+      value: 'file://rubrics/turn_rhythm.md'
+    - type: javascript
+      metric: response_length
+      value: 'file://../../tutor-system/scripts/response-length-rubric.js'
+- vars:
     case_id: webpage_demo_pressure_words
     template_name: 'Demo: Pressure Words (Simple Language)'
     scenario_context: >-

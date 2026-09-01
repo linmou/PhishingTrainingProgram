@@ -2,20 +2,30 @@
 
 **Intent:** Show, for each prototype feedback item, what changed from the Phase 0 (raw) prompt to the final prompt, which tests cover it, and a model reply that meets the requirement.
 
-**Updated:** 2026-07-18 (docs refreshed after student tone UI placement + push)
+**Updated:** 2026-08-31 (correct-answer knowledge-inventory continuation and live evidence)
 
 **Phase 0 (raw):** system prompt / pedagogy before `f8cdc7e` (3-stage discovery, high-praise peer, no reading-level block, no default safe actions, Socratic examples). Room AI user turn still asked for a “brief follow-up **question**” (`aiService.original.ts`).
 
-**Final:** production `generateSystemPrompt` + `casual_peer` preset + ecological user turn (`ecologicalTutorCall.ts`) used by the room ✨ AI and Promptfoo.
+**Final:** production `generateSystemPrompt` + `casual_peer` preset + ecological user turn (`ecologicalTutorCall.ts`) used by the room ✨ AI and evaluated by the Qwen Promptfoo benchmark.
 
 **Key commits:**  
 - `f8cdc7e` — system prompt  
 - `5014acf` — product packaging / ecological user turn  
 - `6980272` — student Peer/Adult tone (1:1), default `gpt-4o-mini`, drop auth diagnostics  
 - `29ba240` — student AI tone control placed above comment input  
+- `1b90c40` — Qwen Promptfoo evaluation made the sole active LLM evaluator; concise response policy
 
 Open items (not prompt text): **#7 latency/typing indicator** only.  
 **#9** product path **done** as student tone opt-in (not dual-bot multi-agent).
+
+### Active evaluator after `1b90c40`
+
+- The active LLM evaluator is `qwen3.5-flash` through the DashScope OpenAI-compatible endpoint, with `enable_thinking: false`.
+- Promptfoo evaluates one active prompt, `evals/promptfoo/prompts/current.chat.prompt.json`; the old current-versus-improved prompt comparison was removed.
+- The blocking gate covers eight metrics, including deterministic `response_length`, with an 80% threshold applied independently to product-template ecological cases, synthetic holdouts, and `not_started` / `failed` direct-correction states.
+- The active Qwen run recorded in `tutor-system/claude_docs/aiService.md` did **not** satisfy the rubrics: `eval-SqR-2026-08-30T22:54:55`. Evidence is preserved under `evals/promptfoo/results/qwen3.5-flash/20260830T225452Z/`.
+- Historical GPT comparison results below remain useful evidence about the earlier prompt, but are not the active Qwen verdict or gate input.
+- The real-browser demos and deterministic product-path E2E remain separate validation layers; they are not additional LLM evaluators.
 
 ---
 
@@ -51,8 +61,11 @@ Product **user turn** (Phase 2) — was co-pilot quiz, now full tutor reply:
 -that a tutor could use to engage the student further. The suggestion should be under
 -2 sentences, interactive, and focused on deepening the student's understanding.
 +Draft the next tutor message the student should hear.
-+Keep it short: 2–4 short sentences (about 40–70 words).
-+Ask at most one short question, and only if needed. Prefer teaching over questioning.
++Keep it short: use no more than 3 sentences and 50 words.
++Teach one point or ask one focused question; do not use question chains.
++Before any failed scaffold, allow either one focused question or concise direct teaching.
++If the immediately preceding tutor turn asked a question and the latest student answer remains unsafe or incomplete, directly correct the misconception and give one concrete safe action; do not ask another question instead.
++A first-round direct correction is allowed when the student is about to take an unsafe action.
 ```
 
 Sources: Phase 0 `aiService.original.ts`; final `ecologicalTutorCall.ts` → `buildEcologicalTutorUserTurn`.
@@ -185,7 +198,7 @@ Trusted-adult role: removed “In my experience helping people with scams…”.
 | Ecological / browser | `webpage_demo_pressure_words` | `persona_stability` |
 | Ecological / browser | `webpage_demo_personal_story_trap` | `persona_stability` |
 | Live E2E | `younger_student_confused`, `student_asks_personal_story` | `persona_stability` |
-| Promptfoo (Phase 1 gate) | `persona_stability` suite | `5/5` |
+| Historical GPT Promptfoo gate | `persona_stability` suite | `5/5` |
 
 ### Model response that satisfies
 
@@ -200,7 +213,7 @@ Trusted-adult role: removed “In my experience helping people with scams…”.
 
 ## Feedback 4 — Reduce boilerplate encouragement
 
-**Requirement:** One genuine acknowledgment is enough; constant “great job” reads hollow.
+**Requirement:** One genuine acknowledgment is enough; constant “great job” reads hollow. After a correct student answer, a short, varied response is acceptable when it either gives a specific acknowledgment or directly reinforces the correct idea with useful teaching. A brief “That is correct” is acceptable when it is followed by specific teaching and is not repeated boilerplate.
 
 ### Prompt change (Phase 0 → final)
 
@@ -231,18 +244,21 @@ Phase 0 few-shot examples used “Great catch!”, “Perfect!”, “That’s a
 
 | Layer | Case | Metrics |
 | --- | --- | --- |
-| Ecological / browser | `webpage_nintendo_click_deal`, `webpage_itunes_professional_photo`, `webpage_demo_click_impulse` | `low_boilerplate_praise` |
-| Live E2E | `student_wants_to_click`, `student_notices_misspelling_only`, `student_gives_vague_answer` | `low_boilerplate_praise` |
+| Ecological / browser, correct student | `webpage_demo_correct_safe_action`, `webpage_demo_correct_lock_reasoning` | `low_boilerplate_praise`, `practical_knowledge`, `turn_rhythm`, `response_length` |
+| Synthetic holdout, correct student | `student_correctly_uses_real_bank_channel`, `student_correctly_rejects_https_identity` | `low_boilerplate_praise`, `practical_knowledge`, `turn_rhythm`, `response_length` |
+| Existing incorrect/incomplete student coverage | `webpage_nintendo_click_deal`, `webpage_itunes_professional_photo`, `webpage_demo_click_impulse`, `student_wants_to_click` | `low_boilerplate_praise` plus case-specific teaching metrics |
 | Heuristics unit | canned “Great job! Amazing!” fails | `low_boilerplate_praise` |
 
 ### Model response that satisfies
 
-**Student:** “I would click it fast before the deal ends.”  
-**Case:** `webpage_nintendo_click_deal`
+**Student:** “The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.”
+**Case:** `webpage_demo_correct_lock_reasoning`
 
-> That is incorrect. Clicking the link could lead to a fake website… Instead, do not click the link. Open the real Nintendo website yourself and check if this deal exists there.
+> You identified the key distinction: the lock protects the connection, not the site's identity. Checking the full address and opening the real app are stronger trust checks.
 
-**Why it matches:** No “great job / amazing / perfect”; goes straight to correction + action.
+**Why it matches:** It gives one specific acknowledgment, then reinforces the practical check without stacked praise.
+
+**2026-08-31 targeted live Qwen result:** three of four correct-answer cases passed with the final prompt and rubrics. Both synthetic holdouts and `webpage_demo_correct_lock_reasoning` passed all four applicable metrics. `webpage_demo_correct_safe_action` produced useful reinforcement about an untouched urgency clue, but failed because the turn-rhythm judge returned non-JSON and the deterministic length check counted the quoted `!!ALERT!!` punctuation as five sentence segments despite a 37-word response. Full inputs, outputs, rubric components, model settings, and failure reasons are preserved under `evals/promptfoo/results/qwen3.5-flash/20260831T063908Z/`.
 
 ---
 
@@ -285,7 +301,7 @@ Ecological user turn requires one concrete safe action when wrong/unsure.
 | --- | --- | --- |
 | Ecological / browser | All 7 `webpage_*` cases | `practical_knowledge` (where asserted) |
 | Live E2E | click / HTTPS / vague / personal-story cases | `practical_knowledge` |
-| Promptfoo Phase 1 | `practical_knowledge` | `15/15` |
+| Historical GPT Promptfoo gate | `practical_knowledge` | `15/15` |
 
 ### Model response that satisfies
 
@@ -392,7 +408,7 @@ Demo seed `Demo: Pressure Words` uses student line “What does urgency tactics 
 | Ecological / browser | `webpage_demo_pressure_words` | `reading_level`, `turn_rhythm`, `persona_stability` |
 | Ecological / browser | `webpage_demo_lock_icon_myth`, `webpage_account_security_alert_classic` | `reading_level` |
 | Live E2E | `younger_student_confused`, `student_trusts_https` | `reading_level` |
-| Promptfoo Phase 1 | `reading_level` | `7/8` (≥80%) |
+| Historical GPT Promptfoo gate | `reading_level` | `7/8` (≥80%) |
 
 ### Model response that satisfies
 
@@ -442,7 +458,7 @@ Also covers optional “tone toggle” from feedback #3 without a separate onboa
 | Placement CSS | `RoomPagePost.css` (`.comment-composer`) |
 | Tutor lock | `AIAssistantSettings` personality select disabled + lock indicator |
 | Room API | `RoomContext.setStudentAITone` |
-| Default model | `DEFAULT_AI_MODEL = gpt-4o-mini` in `aiModels.ts` |
+| Active model | `qwen3.5-flash` in `aiModels.ts` |
 
 ### Commits
 
@@ -488,11 +504,11 @@ Final few-shots (all in `index.ts`):
 
 ```bash
 cd tutor-system
-npm run eval:prompts                 # Layer 1: export ecological YAML + Promptfoo
+npm run eval:prompts                 # Layer 1: export cases + one Qwen Promptfoo eval + gate
 npm run test:browser:behavior-demos  # Layer 2: real rooms on /#/tutor/test-rooms + ✨ AI
-# optional live OpenAI E2E:
-RUN_LIVE_OPENAI_TESTS=true npm test -- --testPathPattern=tutor_behavior_e2e --watchAll=false
+# optional live Qwen E2E:
+RUN_LIVE_QWEN_TESTS=true npm test -- --testPathPattern=tutor_behavior_e2e --watchAll=false
 ```
 
 Browser evidence file: `tmp/browser_demo_runs/report.json`  
-Ecological cases source: `tutor-system/src/services/demoRoomTemplates.ts` → `evals/promptfoo/cases/webpage-ecological.yaml`
+Ecological case provenance: real Supabase `room_templates` record → aligned `tutor-system/src/services/demoRoomTemplates.ts` representation → generated `evals/promptfoo/cases/webpage-ecological.yaml`. Synthetic holdouts remain independently authored.

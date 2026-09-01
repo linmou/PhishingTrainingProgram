@@ -4,7 +4,7 @@ This document outlines the comprehensive testing strategy for the completed task
 
 ## Current Test Tiers
 
-Updated: 2026-07-18 (commit 687fc6d base; student Available Rooms hides behavior-test rooms — see doc_update_record)
+Updated: 2026-08-31 (correct-answer knowledge-inventory continuation; commit pending)
 
 The repository now uses these validation tiers:
 
@@ -37,6 +37,12 @@ The repository now uses these validation tiers:
 6. Ecological Promptfoo + real-browser template demos (behavior feedback):
    - Layer 1: `npm run eval:prompts` (export + one Promptfoo evaluation over ecological and synthetic cases + quality gate)
    - Layer 2: `npm run test:browser:behavior-demos` (template-only rooms on **`/#/tutor/test-rooms`**, not the main room list)
+   - Provenance rule: ecological demo templates must be derived from real Supabase `room_templates` records used by the Test Rooms page; inspect the database record before changing `demoRoomTemplates.ts`, then regenerate `webpage-ecological.yaml`
+   - Derived behavior variants keep the source room through the tutor turn and change only the student turn under test; use `seed:behavior-templates -- --case-id=<case_id>` to avoid rewriting unrelated database templates
+   - For correct-student behavior, `detection_areas` plus `verification_steps` are the room's complete knowledge inventory. The tutor may reinforce directly or ask one focused question about any applicable point the student has not demonstrated; a tutor mention alone does not count as student coverage.
+   - The LLM rubric infers semantic student coverage from the conversation itself; do not add another `student_answer_state`, persistent progress field, or deterministic concept matcher.
+   - Correct-answer cases use `low_boilerplate_praise`, `practical_knowledge`, `turn_rhythm`, and `response_length`; they deliberately exclude `direct_correction`.
+   - Synthetic holdouts are independently authored evaluation cases and must not be presented as database-derived ecological rooms
    - UI: main Tutor dashboard (`/#/tutor`) lists normal rooms only; **Test Rooms** page hosts `Demo:` / `test_only` rooms
    - Student Available Rooms (`/#/student`) uses `filterRoomsForStudentList` (marker / `Demo:` titles / test-only titles + `DemoTutor_*` harness owners); real teaching rooms stay visible
    - Classic teaching templates (Account Security, Nintendo, iTunes, Phone Number, etc.) stay on the normal create form
