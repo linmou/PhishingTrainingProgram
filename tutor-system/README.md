@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-04-02
-Commit: fc41c9d
+Updated: 2026-09-01
+Commit: 5e5d9bd
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -24,6 +24,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Capacity Management**: 1 tutor + 1 student maximum
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
+- **Required Response Ratings**: Students must rate the latest AI/Tutor response before sending their next reply
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
 

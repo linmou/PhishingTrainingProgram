@@ -120,6 +120,11 @@ channel.on('postgres_changes', { event: 'INSERT', table: 'messages' })
 - Statistical aggregation
 - User-specific feedback tracking
 
+**Student reply gate**:
+- Before sending, students must rate the latest AI-generated or Tutor response if they have not personally rated it yet.
+- The mandatory animated dialog preserves the draft and cannot be dismissed with Escape or the backdrop.
+- Sending remains blocked until feedback persistence succeeds; Tutors and rooms without a qualifying response are unaffected.
+
 ## Room Management Operations
 
 ### Room Creation (Lines 256-301)
