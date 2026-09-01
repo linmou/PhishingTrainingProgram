@@ -16,5 +16,5 @@ and the tutor-side configuration lock delivered on 2026-09-01.
   persisted role.
 - Documented the disabled/multi-student availability gate.
 
-Commit: pending until the feature worktree is committed and merged after the
-browser E2E gate.
+Code feature commit: `b15be6e` (`feat(ai): lock tutor role to student choice`).
+The documentation record is committed immediately after that feature commit.
