@@ -1,5 +1,9 @@
 # AI Suggestion Tracking Implementation
 
+> Intent: Document how AI suggestions are displayed, transferred to the composer, and tracked after the Guard Mode UI update.
+> Updated: 2026-09-02
+> Commit ID: pending at update time
+
 ## Overview
 This implementation modifies the AI assistant to only provide suggestions (not create posts), tracks how tutors interact with these suggestions, and records the Guard Mode decision separately from the reviewed wording.
 
@@ -35,12 +39,12 @@ Guard Mode uses `supabase/migrations/023_guard_mode.sql`. It adds `raw_mode`, `m
 ### 2. AI Behavior Changes
 - **No more AI posts**: AI no longer creates messages in the chat
 - **Suggestions only**: AI provides suggested responses that tutors can:
-  - **Accept**: Copy the suggestion exactly as-is
+  - **Accept**: Copy the display-only suggestion exactly as-is into the composer
   - **Reject**: Explicitly dismiss the suggestion
-  - **Modify**: Use the suggestion but change it before sending
+  - **Modify**: Edit the copied suggestion in the composer before sending
   - **Ignore**: Generate a new suggestion without using the previous one
 - **Structured decision**: Each usable generation returns `mode`, `mode_reason`, and `suggested_response`; malformed decisions are surfaced as errors
-- **Guard review**: Tutors can independently edit final wording and final mode before sending
+- **Guard authority**: Guard activation is controlled at the room level. The AI suggestion card does not display internal reasoning or a final-mode selector.
 
 ### 3. Tracking Features
 - Records which student message the AI is responding to
@@ -84,15 +88,15 @@ The download feature now supports two formats:
 2. Tutor clicks the sparkly AI button
 3. AI suggestion appears showing:
    - Which message it's responding to
-   - The suggested response
+   - The suggested response as display-only text
    - Copy and Reject buttons
 4. Tutor can:
    - Copy the suggestion to the input field
+   - Edit the copied text in the input field before sending
    - Reject it explicitly
-   - Modify it before sending
    - Generate a new suggestion
 
-When Guard is selected, the tutor sees the mode reason, `Guard Mode Activated`, and a final-mode selector. A successful reviewed send persists the final mode and updates the room authority. Failed sends retain the editable draft.
+When Guard Mode is active for a tutor, the composer profile switches to the `Security Supervisor` identity. The AI card continues to show only the response content; internal AI reasoning and mode metadata remain non-visual. A successful reviewed send persists the resolved response mode and updates the room authority. Failed sends retain the editable composer draft.
 
 ### Data Collection
 Every interaction is tracked:

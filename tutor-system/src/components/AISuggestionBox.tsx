@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, X, CheckCircle, Sparkles, Settings, RotateCcw, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { DynamicParameterOverrides } from '../services/prompts/types';
-import { TutorActionDecision, TutorResponseMode } from '../types';
 import { getParameterMetadata, createDefaultParameters, filterParameterOverrides, getDefaultParameterSelection } from '../services/prompts/parameterConfig';
 import './AISuggestionBox.css';
 
@@ -19,10 +18,6 @@ interface AISuggestionBoxProps {
     parameterConfig?: any; // Dynamic configuration structure
     initialParameters?: ParameterOverrides;
     lockedRole?: 'low' | 'high';
-    decision?: TutorActionDecision | null;
-    finalMode?: TutorResponseMode;
-    onFinalResponseChange?: (response: string) => void;
-    onFinalModeChange?: (mode: TutorResponseMode) => void;
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -35,11 +30,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     isRegenerating = false,
     parameterConfig = getDefaultParameterSelection(),
     initialParameters,
-    lockedRole,
-    decision,
-    finalMode = decision?.mode || 'tutoring',
-    onFinalResponseChange,
-    onFinalModeChange
+    lockedRole
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
@@ -211,9 +202,6 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
 
     if (!isVisible) return null;
 
-    const modeRectified = decision ? finalMode !== decision.mode : false;
-    const wordingModified = decision ? suggestion.trim() !== decision.suggested_response.trim() : false;
-
     return (
         <>
             <div className={`ai-suggestion-box ${fadeIn ? 'fade-in' : ''}`}>
@@ -238,59 +226,6 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                 </div>
             )}
 
-            {decision && (
-                <div className="ai-guard-review ai-review-panel" data-testid="ai-mode-review">
-                    <div className="ai-review-header">
-                        <div>
-                            <div className="ai-review-kicker">AI review</div>
-                            <div className="ai-review-title">Review before sending</div>
-                        </div>
-                        <span
-                            className={`ai-review-mode ai-review-mode-${finalMode}`}
-                            data-testid="ai-review-mode"
-                        >
-                            {finalMode === 'guard' ? 'Guard mode' : 'Tutoring mode'}
-                        </span>
-                    </div>
-
-                    <div className="ai-review-reason" data-testid="ai-review-reason">
-                        <span className="ai-review-label">Why this mode</span>
-                        <p>{decision.mode_reason}</p>
-                    </div>
-
-                    <div className="ai-review-footer">
-                        <div className="ai-review-statuses" data-testid="ai-review-statuses">
-                            {finalMode === 'guard' && (
-                                <span className="ai-review-status ai-review-status-guard">
-                                    Guard Mode Activated
-                                </span>
-                            )}
-                            {modeRectified && (
-                                <span className="ai-review-status ai-review-status-neutral">
-                                    Mode rectified by tutor
-                                </span>
-                            )}
-                            {wordingModified && (
-                                <span className="ai-review-status ai-review-status-neutral">
-                                    Wording modified by tutor
-                                </span>
-                            )}
-                        </div>
-                        <label className="ai-review-mode-control">
-                            <span>Send as</span>
-                        <select
-                            aria-label="Final response mode"
-                            value={finalMode}
-                            onChange={(event) => onFinalModeChange?.(event.target.value as TutorResponseMode)}
-                        >
-                            <option value="tutoring">Tutoring</option>
-                            <option value="guard">Guard</option>
-                        </select>
-                        </label>
-                    </div>
-                </div>
-            )}
-
             <div className="ai-suggestion-parameters">
                 <div className="ai-parameters-header" onClick={() => setQuickAdjustCollapsed(!quickAdjustCollapsed)}>
                     <div className="ai-parameters-header-content">
@@ -310,29 +245,11 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                 )}
             </div>
             
-            <div className="ai-suggestion-content ai-response-section">
-                <div className="ai-response-heading">
-                    <div>
-                        <div className="ai-response-label">Final tutor response</div>
-                        <div className="ai-response-hint">Review and edit before sending</div>
-                    </div>
-                    {!isRegenerating && (
-                        <span className="ai-response-count">{suggestion.length} characters</span>
-                    )}
-                </div>
+            <div className="ai-suggestion-content">
                 {isRegenerating ? (
-                    <div className="ai-response-generating">
-                        <RotateCcw size={16} className="spinning" />
-                        <p>Generating new response...</p>
-                    </div>
+                    <p>Generating new response...</p>
                 ) : (
-                    <textarea
-                        aria-label="Final tutor response"
-                        className="ai-response-editor"
-                        rows={4}
-                        value={suggestion}
-                        onChange={(event) => onFinalResponseChange?.(event.target.value)}
-                    />
+                    <p>{suggestion}</p>
                 )}
             </div>
             

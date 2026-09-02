@@ -53,10 +53,6 @@ const RoomPagePost: React.FC = () => {
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
-        aiDecision,
-        finalMode,
-        updateFinalResponse,
-        updateFinalMode,
         setResponseMode,
         clearAISuggestion,
         recordAIFeedback,
@@ -73,6 +69,10 @@ const RoomPagePost: React.FC = () => {
     const [clearingChat, setClearingChat] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
+    const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.active_response_mode === 'guard';
+    const composerIdentity = isGuardComposer
+        ? { displayName: 'Security Supervisor', avatarUrl: null, isGuard: true }
+        : undefined;
     const [ratingReminder, setRatingReminder] = useState<{ id: string; content: string } | null>(null);
     const [ratingFeedbackType, setRatingFeedbackType] = useState<'like' | 'dislike' | null>(null);
     const [ratingValue, setRatingValue] = useState(0);
@@ -697,10 +697,6 @@ const RoomPagePost: React.FC = () => {
                 {user?.current_role === 'tutor' && canUseAI && aiSuggestion && (
                         <AISuggestionBox
                         suggestion={aiSuggestion}
-                        decision={aiDecision}
-                        finalMode={finalMode}
-                        onFinalResponseChange={updateFinalResponse}
-                        onFinalModeChange={updateFinalMode}
                         onCopy={handleCopyAISuggestion}
                         onReject={handleRejectAISuggestion}
                         onRegenerate={regenerateAIResponse}
@@ -724,6 +720,7 @@ const RoomPagePost: React.FC = () => {
                         <div className="comment-input-with-ai">
                             <CommentInput
                                 user={user}
+                                composerIdentity={composerIdentity}
                                 value={messageText}
                                 onChange={handleInputChange}
                                 onSubmit={handleSendMessage}

@@ -649,8 +649,27 @@ code {
     background-color: #f8f9fa;
 }
 
-.comment-input-avatar {
+.comment-input-profile {
+    align-items: center;
+    display: flex;
     flex-shrink: 0;
+    flex-direction: column;
+    gap: 4px;
+    width: 68px;
+}
+
+.comment-input-author-name {
+    color: #4b4f56;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    max-width: 68px;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.comment-input-profile-guard .comment-input-author-name {
+    color: #995400;
 }
 
 .comment-input-form {

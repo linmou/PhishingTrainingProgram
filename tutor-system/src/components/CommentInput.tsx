@@ -5,6 +5,11 @@ import AvatarDisplay from './AvatarDisplay';
 
 interface CommentInputProps {
     user: User | null;
+    composerIdentity?: {
+        displayName: string;
+        avatarUrl: string | null;
+        isGuard: boolean;
+    };
     value: string;
     onChange: (value: string) => void;
     onSubmit: (e: React.FormEvent) => void;
@@ -23,6 +28,7 @@ interface CommentInputProps {
 
 const CommentInput: React.FC<CommentInputProps> = ({
     user,
+    composerIdentity,
     value,
     onChange,
     onSubmit,
@@ -88,6 +94,8 @@ const CommentInput: React.FC<CommentInputProps> = ({
     };
 
     const canSubmit = value.trim().length > 0 && !disabled && !isLoading;
+    const displayName = composerIdentity?.displayName || user?.display_name || 'User';
+    const avatarUrl = composerIdentity ? composerIdentity.avatarUrl : user?.avatar_url;
 
     return (
         <div className="comment-input-container">
@@ -109,13 +117,14 @@ const CommentInput: React.FC<CommentInputProps> = ({
             )}
 
             <div className={`comment-input-wrapper ${isFocused ? 'comment-input-focused' : ''}`}>
-                {/* User Avatar */}
-                <div className="comment-input-avatar">
+                {/* Composer identity */}
+                <div className={`comment-input-profile ${composerIdentity?.isGuard ? 'comment-input-profile-guard' : ''}`}>
                     <AvatarDisplay
-                        avatarUrl={user?.avatar_url}
-                        displayName={user?.display_name || 'User'}
+                        avatarUrl={avatarUrl}
+                        displayName={displayName}
                         size="small"
                     />
+                    <span className="comment-input-author-name">{displayName}</span>
                 </div>
 
                 {/* Input Area */}
@@ -186,7 +195,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
             {user && (
                 <div className="comment-input-role">
                     <span className="input-role-text">
-                        Commenting as {user.current_role}
+                        Commenting as {composerIdentity ? displayName : user.current_role}
                     </span>
                 </div>
             )}
