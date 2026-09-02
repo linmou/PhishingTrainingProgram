@@ -436,6 +436,21 @@ const RoomPagePost: React.FC = () => {
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
 
+    const handleToggleGuardMode = async () => {
+        if (!currentRoom) return;
+
+        const nextMode = currentRoom.active_response_mode === 'guard' ? 'tutoring' : 'guard';
+        if (!window.confirm(`${nextMode === 'guard' ? 'Activate' : 'Deactivate'} Guard Mode?`)) {
+            return;
+        }
+
+        try {
+            await setResponseMode(nextMode);
+        } catch (error) {
+            alert(error instanceof Error ? error.message : 'Failed to change Guard Mode');
+        }
+    };
+
 
     // Show password prompt if needed
     if (showPasswordPrompt) {
@@ -535,16 +550,7 @@ const RoomPagePost: React.FC = () => {
                         {/* Learning Progress Button - Only for tutors */}
                         {user?.current_role === 'tutor' && canUseAI && (
                             <button
-                                onClick={async () => {
-                                    const nextMode = currentRoom.active_response_mode === 'guard' ? 'tutoring' : 'guard';
-                                    if (window.confirm(`${nextMode === 'guard' ? 'Activate' : 'Deactivate'} Guard Mode?`)) {
-                                        try {
-                                            await setResponseMode(nextMode);
-                                        } catch (error) {
-                                            alert(error instanceof Error ? error.message : 'Failed to change Guard Mode');
-                                        }
-                                    }
-                                }}
+                                onClick={handleToggleGuardMode}
                                 className="btn btn-secondary btn-small"
                                 title="Manually change Guard Mode"
                             >
@@ -705,6 +711,8 @@ const RoomPagePost: React.FC = () => {
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
                         initialParameters={aiConfig?.prompt_config || undefined}
+                        isGuardMode={currentRoom.active_response_mode === 'guard'}
+                        onToggleGuard={handleToggleGuardMode}
                         lockedRole={
                             isTutorRoleLocked(aiConfig?.prompt_config)
                                 ? aiConfig?.prompt_config?.student_tone_lock?.chosen_role

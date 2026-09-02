@@ -44,7 +44,7 @@ Guard Mode uses `supabase/migrations/023_guard_mode.sql`. It adds `raw_mode`, `m
   - **Modify**: Edit the copied suggestion in the composer before sending
   - **Ignore**: Generate a new suggestion without using the previous one
 - **Structured decision**: Each usable generation returns `mode`, `mode_reason`, and `suggested_response`; malformed decisions are surfaced as errors
-- **Guard authority**: Guard activation is controlled at the room level. The AI suggestion card does not display internal reasoning or a final-mode selector.
+- **Guard authority**: Guard activation is controlled at the room level. The AI suggestion card does not display internal reasoning or a final-mode selector, and provides an `Activate Guard` / `Deactivate Guard` control immediately above `Quick Adjust` for tutors.
 
 ### 3. Tracking Features
 - Records which student message the AI is responding to
@@ -95,6 +95,7 @@ The download feature now supports two formats:
    - Edit the copied text in the input field before sending
    - Reject it explicitly
    - Generate a new suggestion
+   - Activate or deactivate Guard directly from the AI suggestion card; the control confirms the change and persists the room response mode.
 
 When Guard Mode is active for a tutor, the composer profile switches to the `Security Supervisor` identity. The AI card continues to show only the response content; internal AI reasoning and mode metadata remain non-visual. A successful reviewed send persists the resolved response mode and updates the room authority. Failed sends retain the editable composer draft.
 

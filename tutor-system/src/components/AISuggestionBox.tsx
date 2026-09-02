@@ -18,6 +18,8 @@ interface AISuggestionBoxProps {
     parameterConfig?: any; // Dynamic configuration structure
     initialParameters?: ParameterOverrides;
     lockedRole?: 'low' | 'high';
+    isGuardMode?: boolean;
+    onToggleGuard?: () => void;
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -30,7 +32,9 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     isRegenerating = false,
     parameterConfig = getDefaultParameterSelection(),
     initialParameters,
-    lockedRole
+    lockedRole,
+    isGuardMode = false,
+    onToggleGuard = () => undefined
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
@@ -225,6 +229,17 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                     <div className="ai-context-message">"{parentMessage}"</div>
                 </div>
             )}
+
+            <div className="ai-guard-toggle">
+                <button
+                    type="button"
+                    className={`ai-guard-toggle-button ${isGuardMode ? 'active' : ''}`}
+                    onClick={onToggleGuard}
+                    title={isGuardMode ? 'Deactivate Guard Mode' : 'Activate Guard Mode'}
+                >
+                    {isGuardMode ? 'Deactivate Guard' : 'Activate Guard'}
+                </button>
+            </div>
 
             <div className="ai-suggestion-parameters">
                 <div className="ai-parameters-header" onClick={() => setQuickAdjustCollapsed(!quickAdjustCollapsed)}>

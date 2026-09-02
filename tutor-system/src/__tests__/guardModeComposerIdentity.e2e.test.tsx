@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../pages/RoomPagePost';
@@ -58,7 +58,9 @@ const room = (mode: 'tutoring' | 'guard'): Room => ({
   updated_at: '2026-09-01T00:00:00Z'
 });
 
-const renderRoom = (user: User, mode: 'tutoring' | 'guard') => {
+const renderRoom = (user: User, mode: 'tutoring' | 'guard', suggestion: string | null = null) => {
+  const setResponseMode = jest.fn();
+
   (useAuth as jest.Mock).mockReturnValue({ user, loading: false });
   (useRoom as jest.Mock).mockReturnValue({
     currentRoom: room(mode),
@@ -77,12 +79,12 @@ const renderRoom = (user: User, mode: 'tutoring' | 'guard') => {
     loadingAI: false,
     downloadChatHistory: jest.fn(),
     clearChatHistory: jest.fn(),
-    aiSuggestion: null,
+    aiSuggestion: suggestion,
     aiDecision: null,
     finalMode: 'tutoring',
     updateFinalResponse: jest.fn(),
     updateFinalMode: jest.fn(),
-    setResponseMode: jest.fn(),
+    setResponseMode,
     clearAISuggestion: jest.fn(),
     recordAIFeedback: jest.fn(),
     currentSuggestionContext: null,
@@ -90,17 +92,22 @@ const renderRoom = (user: User, mode: 'tutoring' | 'guard') => {
     messageFeedbackStats: {}
   });
 
-  return render(
+  const renderResult = render(
     <MemoryRouter initialEntries={['/room/room-1']}>
       <Routes>
         <Route path="/room/:roomId" element={<RoomPagePost />} />
       </Routes>
     </MemoryRouter>
   );
+
+  return { ...renderResult, setResponseMode };
 };
 
 describe('Guard Mode composer identity', () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    jest.restoreAllMocks();
+  });
 
   it('shows the tutor name beside the normal composer profile', () => {
     renderRoom(tutor, 'tutoring');
@@ -124,5 +131,41 @@ describe('Guard Mode composer identity', () => {
     expect(screen.getByText('Sam Student')).toBeInTheDocument();
     expect(screen.getByTitle('Sam Student')).toBeInTheDocument();
     expect(screen.queryByText('Security Supervisor')).not.toBeInTheDocument();
+  });
+
+  it('activates Guard from the AI suggestion card using the existing room transition', () => {
+    const { setResponseMode } = renderRoom(tutor, 'tutoring', 'Guard suggestion');
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const suggestionCard = screen.getByText('Guard suggestion').closest('.ai-suggestion-box');
+    expect(suggestionCard).not.toBeNull();
+    fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Activate Guard' }));
+
+    expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
+    expect(setResponseMode).toHaveBeenCalledWith('guard');
+  });
+
+  it('deactivates Guard from the AI suggestion card using the existing room transition', () => {
+    const { setResponseMode } = renderRoom(tutor, 'guard', 'Guard suggestion');
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    const suggestionCard = screen.getByText('Guard suggestion').closest('.ai-suggestion-box');
+    expect(suggestionCard).not.toBeNull();
+    fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Deactivate Guard' }));
+
+    expect(window.confirm).toHaveBeenCalledWith('Deactivate Guard Mode?');
+    expect(setResponseMode).toHaveBeenCalledWith('tutoring');
+  });
+
+  it('does not change Guard Mode when the card confirmation is cancelled', () => {
+    const { setResponseMode } = renderRoom(tutor, 'tutoring', 'Guard suggestion');
+    jest.spyOn(window, 'confirm').mockReturnValue(false);
+
+    const suggestionCard = screen.getByText('Guard suggestion').closest('.ai-suggestion-box');
+    expect(suggestionCard).not.toBeNull();
+    fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Activate Guard' }));
+
+    expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
+    expect(setResponseMode).not.toHaveBeenCalled();
   });
 });

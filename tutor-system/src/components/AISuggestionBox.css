@@ -158,6 +158,34 @@
     -webkit-box-orient: vertical;
 }
 
+.ai-guard-toggle {
+    margin: 0 16px 12px;
+}
+
+.ai-guard-toggle-button {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #f0b35b;
+    border-radius: 6px;
+    background: #fff5e8;
+    color: #995400;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.ai-guard-toggle-button:hover {
+    background: #ffedd0;
+    border-color: #d98a24;
+}
+
+.ai-guard-toggle-button.active {
+    border-color: #d98a24;
+    background: #fff0d9;
+}
+
 /* Parameter Controls - Menu Style */
 .ai-suggestion-parameters {
     margin: 0 16px;
