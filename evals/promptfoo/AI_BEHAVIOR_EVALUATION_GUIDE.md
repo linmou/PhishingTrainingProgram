@@ -2,20 +2,20 @@
 
 Intent: define the canonical, reusable workflow for adding an observable AI behavior metric and proving that the behavior survives the production and browser paths.
 
-Updated: 2026-09-01
+Updated: 2026-09-05
 
-Source baseline commit: `ac77389`
+Source baseline commit: `4a6f8ee`
 
-Use this guide for every new AI behavior evaluation. The behavior is not complete when a Promptfoo case passes. It is complete only when its claim, cases, assertions, blocking gate, production-path test, browser-consumption test, and preserved evidence agree.
+Use this guide for every new AI behavior evaluation. The behavior is not complete when a Promptfoo case passes. It is complete only when its spec, cases, assertions, blocking gate, production-path test, browser-consumption test, and preserved evidence agree.
 
 ## Required evaluation chain
 
 ```text
-Behavioral claim
+Behavior spec
     ↓
-AI action contract and generated wording
+Response contract: required reason and response, optional decisions
     ↓
-Decision cases, paired cases, and transition sequences
+Behavior cases, paired cases, and transition sequences
     ↓
 Deterministic assertions and LLM rubrics
     ↓
@@ -32,78 +32,83 @@ Preserved inputs, outputs, settings, scores, and failures
 
 Do not skip a layer because another layer passed. Each catches a different class of defect.
 
-## 1. Define an observable behavioral claim
+## 1. Define an observable behavior spec
 
-Write one claim before writing cases or changing a prompt. Use this form:
+Write one spec before writing cases or changing a prompt. Use this form:
 
-> Given **observable input and prior state**, when **the production AI path runs**, the system chooses **an observable action**, avoids **a prohibited action**, and the downstream product **consumes the action in an observable way**.
+> Given **observable input and prior state**, when **the production AI path runs**, the system produces **an observable result**, avoids **a prohibited result**, and the downstream product **consumes the result in an observable way**.
 
 Record:
 
 - Behavior name and stable metric ID, using `snake_case`.
 - Triggering input and relevant prior state.
-- Required action and prohibited action.
-- Required state transition, if any.
+- Required result and prohibited result.
+- Required decision fields or state transition, if any.
 - User-visible effect.
 - Explicit non-goals.
 - Safety or product impact if the behavior fails.
 
-Bad claims describe an internal quality: “the AI understands context” or “the response is helpful.” Good claims describe evidence: “after an incorrect answer to a prior tutor question, the AI chooses direct correction rather than another question and gives one safe action.”
+Bad specs describe an internal quality: “the AI understands context” or “the response is helpful.” Good specs describe evidence: “after an incorrect answer to a prior tutor question, the AI chooses direct correction rather than another question and gives one safe action.”
 
-Keep one metric tied to one behavioral claim. Split claims that can fail independently.
+Keep one metric tied to one behavior spec. Split specs that can fail independently.
 
-## 2. Separate the AI decision from its wording
+## 2. Define a general response contract
 
-Treat these as different outputs:
+Every evaluated AI response must be a structured object whose first serialized
+field is a non-empty `reason`. The reason must briefly cite observable input
+evidence for the output. It is a concise justification, not hidden
+chain-of-thought.
 
-1. **Decision:** what the system chose to do.
-2. **Wording:** how generated text expresses that decision.
+The rest of the contract depends on the behavior:
 
-For new structured behaviors, define an action contract before authoring prose rubrics. A minimal contract should contain only fields the product uses, for example:
+| Field | Requirement | Purpose |
+| --- | --- | --- |
+| `reason` | Required and first | Grounds the output in observable input. |
+| `decision` | Optional object | Contains one or more named action fields when the behavior makes explicit decisions. |
+| `response` | Required | Contains generated user-facing wording or other product-facing content. |
 
-```json
-{
-  "action": "<allowed enum value>",
-  "reason_code": "<stable enum value>",
-  "message": "<generated user-facing text>"
-}
-```
+Every output must contain `reason` and `response`. A response-only behavior does
+not need an invented decision.
 
-Specify required fields, enum values, nullability, invalid-output handling, and which product component consumes each field. Do not add fields only to make the evaluation easier.
-
-If the production path returns text only, still score the chosen semantic action separately from writing quality. Use one narrowly scoped decision rubric and separate wording rubrics. Do not use a keyword match as a substitute for the missing action contract.
-
-### Guard Mode contract
-
-Guard Mode uses the product action contract below on every generated turn:
+A behavior with multiple action fields places each independently named field
+inside `decision`, for example:
 
 ```json
 {
-  "mode": "tutoring | guard",
-  "mode_reason": "brief evidence from the conversation",
-  "suggested_response": "the tutor wording to review"
+  "reason": "The supplied evidence requires escalation and a paused workflow.",
+  "decision": {
+    "routing": "escalate",
+    "workflow_state": "paused"
+  },
+  "response": "I have paused this step and sent it for review."
 }
 ```
 
-`mode` is semantic and independent from `suggested_response`. `guard` requires deliberate continuation after correction, system-playing, knowingly ignoring a required safe action, evasion, or refusal to learn. Genuine confusion, improving mistakes, clarification seeking, engaged frustration, and partial progress remain `tutoring`. Four violations is an equal-count evaluation contrast, never a production threshold. Guard persists after a dodge or superficial acknowledgement and exits only after meaningful semantic correction or a correct safe action. The production parser rejects malformed JSON, missing fields, empty fields, and invalid modes; it never silently defaults to tutoring.
+Define the type, allowed values, nullability, invalid-output handling, and
+downstream consumer for every decision field. Do not compress independent
+actions into one ambiguous `action` value, and do not add fields only to make
+evaluation easier.
 
-The decision must be evaluated before the wording. Invalid structure or a wrong action cannot pass because the prose sounds good.
+When both `decision` and `response` exist, evaluate them separately. A wrong or
+invalid decision cannot pass because the wording sounds good. When no decision
+exists, evaluate the observable behavior of `response` directly instead of
+inferring a hidden action with keyword matching.
 
 ## 3. Build the behavior case matrix
 
-The frozen Guard Mode matrix is `cases/guard-mode.yaml`. It includes deliberate activation, genuine-learning false positives, Guard persistence, Guard exit, and the equal-count contrast pair. Its required metrics are `structured_output`, `mode_selection`, `mode_reason_grounding`, `guard_response_quality`, and `guard_tone_safety`.
-
-Every behavior suite must contain all five case roles below.
+Every behavior suite should cover all five case roles below. If a role is not
+applicable, record that decision and its rationale instead of silently omitting
+it.
 
 | Case role | Purpose | Required evidence |
 | --- | --- | --- |
-| Positive | The behavior should activate. | Expected action and visible result. |
-| Negative | Similar input must not activate it. | Allowed alternative action and prohibited false positive. |
-| Boundary | Exercise ambiguity, empty values, limits, and threshold-adjacent inputs. | Exact expected action at the boundary. |
-| Recovery | Begin from an error, bad model output, or earlier wrong state. | Recovery action and valid next state. |
+| Positive | The required behavior should appear. | Expected output and visible result. |
+| Negative | Similar input must not produce the prohibited behavior. | Allowed alternative and prohibited false positive. |
+| Boundary | Exercise ambiguity, empty values, limits, and threshold-adjacent inputs. | Exact expected output at the boundary. |
+| Recovery | Begin from an error, bad model output, or earlier wrong state. | Recovery output and valid next state. |
 | Regression | Reproduce a previously observed failure. | Failure provenance and assertion that would have caught it. |
 
-For stateful behavior, add transition sequences. A sequence must preserve every turn and assert both the chosen action and the resulting state after each step. Do not flatten a multi-turn decision into unrelated single-turn cases.
+For stateful behavior, add transition sequences. A sequence must preserve every turn and assert both the relevant decision fields and the resulting state after each step. Do not flatten a multi-turn behavior into unrelated single-turn cases.
 
 Each case needs:
 
@@ -111,8 +116,8 @@ Each case needs:
 - `source_type`: `product_template` or `synthetic_holdout`.
 - Case role.
 - Full input and prior state.
-- Expected action or allowed action set.
-- Prohibited action.
+- Expected decision fields or output behavior, when applicable.
+- Prohibited decision or output behavior.
 - Expected transition and downstream effect, when applicable.
 - Applicable metric IDs.
 - Short rationale explaining what defect the case detects.
@@ -127,9 +132,9 @@ Each pair should:
 
 - Keep most wording, length, entities, and keyword counts the same.
 - Change one meaning-bearing fact.
-- Require different decisions because of that fact.
+- Require different decision fields or response behavior because of that fact.
 - Declare a shared `pair_id` and the changed semantic factor.
-- Pass only when both members receive their correct decisions.
+- Pass only when both members produce their correct expected results.
 
 Useful pair patterns include:
 
@@ -139,7 +144,7 @@ Useful pair patterns include:
 - Negation or quoted speech that preserves keywords while reversing meaning.
 - Same facts in a different order or paraphrase.
 
-Add a pair-level deterministic assertion. Per-case pass rates alone can hide a model or implementation that always chooses the majority action.
+Add a pair-level deterministic assertion. Per-case pass rates alone can hide a model or implementation that always produces the majority result.
 
 ## 5. Assign the right assertion type
 
@@ -147,19 +152,21 @@ Use deterministic assertions whenever the expected result can be computed withou
 
 Deterministic assertions should cover:
 
-- Output parses and matches the action schema.
-- Required fields exist and enums are valid.
-- The expected action, state transition, or invariant is exact.
-- Prohibited actions are absent.
+- Output parses and matches the response schema.
+- `reason` exists, is first, and is non-empty.
+- `response` exists and is non-empty.
+- Optional decision fields exist only when applicable and their enums are valid.
+- Expected decision fields, state transitions, or invariants are exact.
+- Prohibited decisions and outputs are absent.
 - Length, count, ordering, and formatting limits.
-- Both members of a semantic pair receive different, correct decisions.
+- Both members of a semantic pair produce their different, correct results.
 - Missing results and evaluation errors fail closed.
 
 Use an LLM rubric only for semantic properties that a fixed program cannot reliably judge, such as:
 
-- Whether the selected action is supported by free-text context when no structured source of truth exists.
-- Whether an explanation is factually grounded in the supplied input.
-- Whether wording clearly communicates the selected action.
+- Whether a decision field is supported by free-text context when no structured source of truth exists.
+- Whether `reason` is factually grounded in the supplied input.
+- Whether a generated response communicates the intended behavior or decision fields.
 - Tone, reading level, relevance, or pedagogical quality.
 
 Every LLM rubric must define:
@@ -172,7 +179,7 @@ Every LLM rubric must define:
 - A strict machine-readable result format.
 - The judge model and settings.
 
-Do not let an LLM judge override a failed schema or exact-action assertion. Do not use regular expressions, keyword lists, or sentence counters to infer semantic correctness.
+Do not let an LLM judge override a failed schema or exact decision-field assertion. Do not use regular expressions, keyword lists, or sentence counters to infer semantic correctness.
 
 ## 6. Add ecological product cases
 
@@ -196,9 +203,9 @@ Ecological data proves product relevance. It is not a holdout and must not be pr
 Holdouts test transfer beyond the examples used to design the prompt and rubric.
 
 - A person or agent that did not author the target prompt should write them.
-- Freeze the behavioral claim and rubric before revealing holdouts to the prompt author.
+- Freeze the behavior spec and rubric before revealing holdouts to the prompt author.
 - Use different names, entities, phrasing, ordering, and surface cues from ecological and prompt examples.
-- Cover the same behavioral claim without copying an ecological dialogue.
+- Cover the same behavior spec without copying an ecological dialogue.
 - Include positive, negative, boundary, recovery, and semantic-pair coverage where relevant.
 - Label every case `source_type: synthetic_holdout`.
 - Keep holdout failures visible; do not silently move a failing holdout into the development set.
@@ -229,11 +236,11 @@ The test must use:
 
 - The production prompt or request builder.
 - The production model client.
-- The production action parser and validation path.
+- The production response parser and validation path.
 - Production model settings, except an explicitly documented test limit.
 - At least one positive, negative, boundary, and recovery case appropriate to the behavior.
 
-Assert the structured action first, then any deterministic wording requirements. Preserve the exact request, response, parsed action, model settings, and assertion results. A skipped live test is not release evidence.
+Assert the response schema and `reason` first. Then assert applicable decision fields and deterministic generated-response requirements. Preserve the exact request, raw response, parsed response, model settings, and assertion results. A skipped live test is not release evidence.
 
 ## 10. Add a browser downstream-consumption test
 
@@ -242,13 +249,13 @@ The browser test proves that the application consumes the AI result correctly. I
 Starting from the real user workflow, prove:
 
 - The user action reaches the production AI path.
-- The returned action is parsed and stored or dispatched correctly.
-- The correct component consumes the action.
-- The visible UI or application state changes as claimed.
+- The returned response is parsed and stored or dispatched correctly.
+- The correct component consumes each applicable decision field and generated response.
+- The visible UI or application state changes as specified.
 - A prohibited downstream effect does not occur.
 - Recovery behavior is visible after invalid output or a failed request, when applicable.
 
-Capture the browser inputs, resulting UI state, screenshots for failures, console or network errors, and the linked AI run ID. A test that only checks that generated text appears does not prove decision consumption.
+Capture the browser inputs, resulting UI state, screenshots for failures, console or network errors, and the linked AI run ID. When decision fields exist, a test that only checks that generated text appears does not prove those fields were consumed.
 
 ## 11. Preserve complete evaluation evidence
 
@@ -262,7 +269,7 @@ The run must preserve:
 
 - Complete target-model inputs, including system prompt, user input, history, and prior state.
 - Raw target-model output before cleanup or parsing.
-- Parsed action and final displayed wording.
+- Parsed `reason`, decision fields when present, and the final displayed response.
 - Model, provider endpoint, temperature, token limit, seed when supported, and provider-specific settings.
 - Prompt filename, version or hash, and full prompt content or an immutable reference.
 - Case and rubric versions or hashes.
@@ -282,16 +289,16 @@ Write thresholds before running the holdouts. Unless the behavior requires stric
 
 | Gate | Merge threshold | Release threshold |
 | --- | --- | --- |
-| Schema, enum, and exact transition assertions | 100% | 100% |
+| Required `reason`, schema, enum, and exact transition assertions | 100% | 100% |
 | Semantic discrimination pairs | 100% of pairs pass both members | 100% of pairs pass both members |
 | New LLM-rubric metric | At least 80% overall and at least 80% in each source suite | Same, on a preserved release-candidate run |
-| Safety-critical cases | 100%; no critical false negative or prohibited action | 100% |
+| Safety-critical cases | 100%; no critical false negative or prohibited result | 100% |
 | Evaluation, parsing, API, and judge errors | 0 | 0 |
 | Live production-path cases | May be deferred only when the PR is not release-bound and the deferral is explicit | 100% of required cases pass |
 | Browser downstream-consumption cases | May be deferred only when the PR is not release-bound and the deferral is explicit | 100% of required cases pass |
 | Existing blocking AI metrics | All current gates pass | All current gates pass |
 
-Raise thresholds when the cost of a wrong action is high. Do not lower a threshold after seeing results without documenting a changed requirement and reauthoring the evaluation contract.
+Raise thresholds when the cost of a wrong result is high. Do not lower a threshold after seeing results without documenting a changed requirement and reauthoring the evaluation contract.
 
 The release verdict must name the exact preserved Promptfoo run, live run, and browser run used as evidence.
 
@@ -308,14 +315,14 @@ The gate must:
 - Report old-metric regressions separately from failures of the new metric.
 - Require explicit product approval for any intentional behavior-contract change; a prompt edit alone cannot redefine an existing metric.
 
-When a legitimate requirement changes, update the behavioral claim, cases, rubric, threshold rationale, and version metadata together. Preserve the last comparable run.
+When a legitimate requirement changes, update the behavior spec, cases, rubric, threshold rationale, and version metadata together. Preserve the last comparable run.
 
 ## Required authoring order
 
 Use this order so the implementation cannot define its own test after the fact:
 
-1. Write and review the behavioral claim.
-2. Define the action contract and downstream consumer.
+1. Write and review the behavior spec.
+2. Define the response contract, optional decision fields, and downstream consumers.
 3. Freeze merge and release thresholds.
 4. Author the five case roles and transition sequences.
 5. Add semantic discrimination pairs.
@@ -332,8 +339,10 @@ Use this order so the implementation cannot define its own test after the fact:
 
 A new AI behavior evaluation is complete only when all items are true:
 
-- [ ] The behavioral claim is observable and has explicit non-goals.
-- [ ] Decision correctness is separated from generated wording.
+- [ ] The behavior spec is observable and has explicit non-goals.
+- [ ] The response contract requires a grounded `reason` as its first field.
+- [ ] The response contract requires a non-empty `response`.
+- [ ] Decision fields and generated response are evaluated separately when both exist.
 - [ ] Positive, negative, boundary, recovery, and regression cases exist.
 - [ ] Semantic discrimination pairs defeat keyword and counter matching.
 - [ ] Deterministic and LLM-judged assertions have clear ownership.
