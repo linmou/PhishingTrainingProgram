@@ -1,39 +1,54 @@
 ---
 name: ai-behavior-design-eval
-description: "AI behavior specs: use when designing a behavior, preparing its evaluation, refining its prompt, or reviewing a candidate against a baseline."
+description: "Design AI behavior constitutions and grounded specs, prepare evaluations, refine prompts, or review candidates against a baseline."
 ---
 
 # AI Behavior Design and Evaluation
 
-Intent: specify AI behavior before measuring it, then accept prompt changes only on comparable evidence.
+Intent: ground observable behavior specs in shared principles and priorities before measuring them, then accept prompt changes only on comparable evidence.
 
 ## Choose the endpoint
 
-- **Design:** complete step 1.
-- **Preparation:** complete steps 1–4; record unrun calibration and missing inputs as pending.
-- **Evaluation or prompt refinement:** complete steps 1–7, reusing verified artifacts from completed stages.
-- **Saved-run review:** load the saved spec, evaluation contract, manifest, and reports; complete steps 6–7. Missing evidence produces an incomplete verdict, not an automatic rerun.
+- **Constitution design or revision:** complete step 0 only; do not silently redesign downstream specs.
+- **Design:** complete steps 0–1.
+- **Preparation:** complete steps 0–4; record unrun calibration and missing inputs as pending.
+- **Evaluation or prompt refinement:** complete steps 0–7, reusing verified artifacts from completed stages.
+- **Saved-run review:** load the pinned constitution and grounding review alongside the saved spec, evaluation contract, manifest, and reports; complete steps 6–7. Missing evidence produces an incomplete verdict, not an automatic rerun or retroactive approval.
 - **Release verification:** include the product checks in step 6.
 
 Discussion stays in conversation. Perform writes and live actions only within the requested endpoint. This workflow does not invoke a TDD skill.
 
-Keep one canonical behavior document in the project's documentation tree; default to `docs/ai-behaviors/<behavior_id>.md` when there is no convention. Use [the record template](assets/behavior-record.md), filling only reached stages and linking it from the project index. Keep rubrics/cases in the harness and raw runs in immutable directories. For a Promptfoo project, read [the integration reference](references/promptfoo.md) before choosing project paths or changing the harness.
+Keep one shared `constitution.md`. Use separate artifacts with one responsibility: a behavior design from [the design template](assets/behavior-design.md), a response/consumer contract when needed, an evaluation plan from [the plan template](assets/evaluation-plan.md), immutable harness cases/rubrics, and one executed-run report from [the run-record template](assets/behavior-record.md). The project index links them. Reuse the existing specification path; design and specification name the same artifact responsibility, so do not create a second active requirement source or retain a duplicate composite file as an archive. A retained old filename can contain only a pointer. Keep raw runs in immutable directories. For a Promptfoo project, read [the integration reference](references/promptfoo.md) before choosing project paths or changing the harness.
+
+## 0. Establish constitutional grounding
+
+Read [the constitution reference](references/constitution.md) when designing or revising principles/specs, or reviewing their grounding. The constitution owns overall principles and their priorities; each spec interprets them for a particular behavior. Reuse the applicable version rather than rewriting it for every spec.
+
+This stage is human-in-the-loop: draft principles, priorities, exceptions, and changes for human review; only an explicit decision by the responsible human can adopt or revise them. Reuse recorded human decisions for unchanged versions, not agent-inferred approval. Constitutional changes require an impact inventory of affected specs and evaluations. Present the proposal and unresolved choices, then pause adoption and dependent acceptance work for human feedback.
+
+**Complete when:** the constitution has a stable identity/version, explicit principles and conflict rules, and a recorded human-review/adoption status; revisions identify downstream work. A requested draft can be delivered complete, but adoption remains pending until the human decision is recorded.
 
 ## 1. Persist the spec
 
-Write numbered requirements defining the user or learning outcome, triggering input/history/state, required and prohibited results, permitted alternatives, downstream effect, and non-goals. Give the behavior a stable ID and version. Examples should resolve ambiguity without prescribing exact model wording.
+Write numbered requirements defining the user or learning outcome, triggering input/history/state, required and prohibited results, permitted alternatives, downstream effect, and non-goals. Give the behavior and each requirement stable IDs. Draft edits remain unversioned; freeze content hashes for execution and register a spec version only with its completed experiment package. Examples should resolve ambiguity without prescribing exact model wording.
+
+Pin the constitution reference and annotate each requirement with its applicable principle IDs, contextual interpretation, and any priority/exception used. The downstream requirement owns this mapping. Do not create a separate constitutional-grounding section, duplicated mapping table, or reverse mapping in the upstream constitution. Record the grounding-review status in the design metadata. A spec cannot silently override the constitution. Resolve or flag inconsistent existing requirements rather than removing their regression checks.
 
 Preserve the existing response contract and explicitly record conflicts with project guidance. For a newly designed structured contract, require non-empty `reason` first and non-empty `response`; the reason cites observable evidence, not hidden chain-of-thought. Add `decision` only for explicit decisions, naming independent actions separately. Specify field types, enums, nullability, invalid-output handling, and consumers. Schema migration is a separate declared change.
 
-**Complete when:** the project file exists and every requirement has an observable trigger and outcome; behavior-changing ambiguities are resolved or explicitly pending. Persist it before authoring rubrics or changing prompts.
+**Complete when:** the design file exists and every requirement has an observable trigger, outcome, and constitutional-grounding annotation; behavior-changing ambiguities are resolved or explicitly pending. A design edit has no experimental version until an executed run pins it with its prompt, rubrics, cases, and results. Persist it before authoring rubrics or changing prompts.
 
 ## 2. Derive the checks
 
 Read [the evaluation contract reference](references/evaluation-contract.md) before authoring rubrics/cases or assessing saved results. It owns calibration, provenance, holdout eligibility, gate rules, and run evidence.
 
-Map every requirement to stable metrics: one semantic property per rubric, with separate deterministic assertions for computable constraints. A behavior may require several metrics. Prepare annotated calibration responses; execute calibration before the baseline when evaluation is authorized.
+Map each behavior requirement to stable metrics, choosing deterministic checks for computable outcomes and LLM rubrics for meaning-based judgments. One spec may use both; independent checks do not automatically require separate specs. Keep supporting contract/operational checks outside the behavior scorecard when they are not evaluation objectives.
 
-**Complete when:** every requirement has a check, allowed judge inputs, pass/fail/boundary examples, and a defined result format; calibration evidence or an explicit unrun status is recorded.
+Use a separate evaluation-plan artifact to declare method, checked output, applicability, expected evidence, snapshots, and thresholds. Validate deterministic check logic and expected labels; calibrate LLM judges before baseline evaluation. Do not substitute either method silently when the other is unavailable.
+
+Identify requirements that can apply together, including across behavior specs sharing the same response or state. Record known dependencies, tensions, and adopted priority rules; unresolved contradictions remain design gaps. Declare any joint acceptance checks before freezing; later exploratory interaction analysis does not create a new gate.
+
+**Complete when:** every requirement has a mapped metric or supporting check, allowed evaluator inputs, pass/fail/boundary examples, and a defined result format; check-validation and judge-calibration evidence or an explicit unrun status is recorded.
 
 ## 3. Audit existing cases
 
@@ -45,7 +60,7 @@ Annotate every existing case as `reuse`, `refine`, or `not_applicable` to the ne
 
 Add ecological cases and independently authored synthetic holdouts using the reference's provenance and exposure rules. Add controlled semantic pairs and stateful sequences where relevant. Label inapplicable roles and unavailable coverage explicitly.
 
-Build a manifest containing full inputs/prior state, case versions, source and role, requirement mappings, expected/prohibited results, expected assertions, pairs/transitions, holdout eligibility, and required partitions. Keep evaluator annotations outside target inputs. Freeze the spec, rubrics, settings, thresholds, and manifest before baseline comparison.
+Build a manifest containing full inputs/prior state, case versions, source and role, requirement mappings, expected/prohibited results, expected assertions, pairs/transitions, holdout eligibility, and required partitions. Keep evaluator annotations outside target inputs. Before freezing, require adopted constitutional authority and a resolved grounding review. Freeze the constitution reference, behavior-design snapshot, response-contract snapshot, rubrics, settings, thresholds, and manifest before baseline comparison.
 
 **Complete when:** every required coverage cell has traceable cases or a named gap, every original assertion remains represented, and the manifest is explicitly draft or frozen. Preparation may end with gaps; evaluation readiness requires resolved coverage and calibration.
 
@@ -63,12 +78,18 @@ Focused runs support diagnosis; acceptance candidates require the complete exist
 
 Apply every gate in [the evaluation contract](references/evaluation-contract.md#acceptance-gates) to the frozen manifest and comparable runs. Assess new-metric failures and existing regressions separately. Record every pass-to-fail case and permitted residual failure. During authorized refinement, a failed candidate returns to step 5; a review-only request reports the verdict.
 
+Read [the final analysis reference](references/final-analysis.md) to investigate metric interactions and synthesize the report. Check joint outcomes where requirements apply together; distinguish empirical tradeoffs, evaluator defects, and incompatible requirements. Report material unresolved conflicts before acceptance without changing frozen gates or adopting new priorities. Established contradictions pause prompt-only refinement pending spec/grounding resolution.
+
+Report constitutional grounding separately from model conformance. A passing benchmark cannot validate an unjustified spec interpretation or confer constitutional adoption.
+
 For release-bound changes, read and execute [product verification](references/product-verification.md). Keep benchmark acceptance and release readiness as separate verdicts.
 
 **Complete when:** every required case/assertion/partition is reconciled, every gate has a verdict supported by run evidence, and missing data remains visibly blocking. Acceptance requires all gates to pass; stopping work does not confer acceptance.
 
 ## 7. Complete the record
 
-Finalize the original project document with the spec version, requirement/check mapping, coverage decisions, modifications and rationale, baseline/candidate snapshot, failure dispositions, and immutable evidence links. Add product evidence and the documentation update record when required by project conventions.
+Create or finalize the executed-run record with immutable links to the design, contract, plan, prompt, rubrics, cases, baseline/candidate evidence, failure dispositions, and product evidence when required by project conventions. Do not place run results, planned cases, or prompt history in the behavior design.
 
-**Complete when:** every claimed modification and evaluation result is traceable to preserved artifacts, all linked files exist, and the verdict distinguishes completed work, unrun checks, failures, and the exact remaining step. Design/preparation can be complete while evaluation remains unrun.
+For evaluation and saved-run review, complete the run record's final analysis and metric-interaction sections using [the reporting reference](references/final-analysis.md). Lead with the supported conclusion, explain gains and remaining weaknesses, distinguish observations from hypotheses, and give the next action. Earlier endpoints do not create an unrun run record or an unrun behavior-spec version.
+
+**Complete when:** every claimed evaluation result is traceable to preserved artifacts, all linked files exist, and the run verdict distinguishes completed work, failures, and the exact remaining step. An experimental behavior version denotes a completed run of the full declared suite: its pinned specification, prompt, rubric/assertion set, case manifest, and per-case results must all exist. Failed behavior scores may still form a completed experiment; partial/interrupted runs keep their raw evidence and run IDs without becoming completed spec versions. Design/preparation can be complete without an experimental version.

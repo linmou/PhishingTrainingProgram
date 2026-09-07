@@ -1,4 +1,4 @@
 interface:
   display_name: "AI Behavior Design and Evaluation"
-  short_description: "Specify AI behavior and evaluate without regression"
-  default_prompt: "Use $ai-behavior-design-eval to document this AI behavior, derive its rubrics, review case coverage, and evaluate prompt changes against the baseline."
+  short_description: "Ground behavior specs in principles and evaluate changes"
+  default_prompt: "Use $ai-behavior-design-eval to ground this behavior in the project constitution, derive its spec and rubrics, review coverage, and evaluate prompt changes against the baseline."
