@@ -3,7 +3,7 @@ Document the current tutor-system architecture and highlight behavior that affec
 
 ## Metadata
 - Updated: 2026-09-07
-- Commit ID: `ba95540` (pre-change baseline; the commit containing this update is recorded by this file's Git history)
+- Commit ID: `6cbe728` (pre-change baseline; the commit containing this update is recorded by this file's Git history)
 
 # Tutor-System Documentation Hub
 
@@ -28,7 +28,8 @@ This directory contains comprehensive architectural and implementation documenta
 ### AI Assistant System
 - **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-approved tutoring principles, P3 subprinciples, conditional priorities, and pending behavior-spec alignment
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
-- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Deployed object and designed reasoning/instructional-decision extension; production migration pending
+- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Designed reason/decision/response object, decision order and category grounding, retry policy, and separate deployed format; production migration pending
+- **[Response-contract documentation update](./doc_update_record/documentation_update_record_v2026_09_07_response_contract_grounding.md)** - Template alignment, specification references, and validation evidence
 - **[Tutor behavior evaluation plan](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - v0/v1 mappings, independent deterministic and semantic checks, and remaining readiness gates; no current performance claim
 - **[Versioned tutor evaluators](../../evals/promptfoo/rubrics/README.md)** - Exact legacy v0 snapshots, clean LLM-facing v1 rubrics, metadata manifests, and locally validated decision checks
 - **[Behavior evaluator documentation update](./doc_update_record/documentation_update_record_v2026_09_07_behavior_evaluator_versions.md)** - Commit scope, preserved evidence, and validation boundary
