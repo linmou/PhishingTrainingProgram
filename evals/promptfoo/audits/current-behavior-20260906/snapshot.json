@@ -1,0 +1,2287 @@
+{
+  "artifact_kind": "offline_behavior_formalization",
+  "intent": "Preserve current evaluation inputs, assertion inventory, source versions, and offline saved-report re-scoring; this is not a new model run.",
+  "recorded_at_utc": "2026-09-06T09:03:32.411Z",
+  "source_commit": "96238a6",
+  "scope": {
+    "new_model_calls": 0,
+    "prompt_changes": 0,
+    "case_changes": 0,
+    "rubric_changes": 0,
+    "production_browser_checks": "not_run",
+    "prior_worktree": "existing unrelated untracked files; skill committed; formalization documents being authored"
+  },
+  "method": {
+    "operation": "evaluateGate(JSON.parse(saved report)) plus YAML inventory",
+    "module": "tutor-system/scripts/check-promptfoo-quality-gate.js",
+    "node": "v25.9.0",
+    "threshold": 0.8,
+    "raw_runs": "Original saved report is retained in git at source_commit and sha256 below; no raw LLM output rewritten.",
+    "command": "rtk proxy node -e '\nconst fs = require(\"fs\"), crypto = require(\"crypto\"), yaml = require(\"yaml\");\nconst { evaluateGate, METRICS } = require(\"./scripts/check-promptfoo-quality-gate.js\");\nconst sha = p => crypto.createHash(\"sha256\").update(fs.readFileSync(p)).digest(\"hex\");\nconst root = \"../\";\nconst files = [\"webpage-ecological.yaml\",\"account-security-alert.yaml\",\"guard-mode.yaml\"].map(f => \"evals/promptfoo/cases/\" + f);\nconst cases = files.flatMap(file => yaml.parse(fs.readFileSync(root + file,\"utf8\")).map((c,index) => ({case_id:c.vars.case_id, file, index, vars:c.vars, assertions:c.assert, snapshot_sha256:crypto.createHash(\"sha256\").update(JSON.stringify(c)).digest(\"hex\")})));\nconst coverage = Object.fromEntries(METRICS.map(m => [m,{product_template:0,synthetic_holdout:0,total:0}]));\nfor (const c of cases) for (const a of c.assertions) { coverage[a.metric][c.vars.source_type]++; coverage[a.metric].total++; }\nconst reportPath = \"evals/promptfoo/results/latest.json\";\nconst report = JSON.parse(fs.readFileSync(root + reportPath, \"utf8\"));\nconst rows = report.results.results || report.results;\nconst resultIds = rows.map(r => r.testCase?.vars?.case_id);\nconst failures = rows.flatMap(r => (r.gradingResult?.componentResults || []).filter(c=>c.pass === false).map(c => ({case_id:r.testCase?.vars?.case_id,metric:c.assertion?.metric,reason:c.reason})));\nconst sourcePaths = [...files, \"evals/promptfoo/promptfooconfig.yaml\",\"evals/promptfoo/prompts/current.chat.prompt.json\",\"evals/promptfoo/AI_BEHAVIOR_EVALUATION_GUIDE.md\",\"tutor-system/scripts/check-promptfoo-quality-gate.js\",\"tutor-system/scripts/guard-mode-contract-rubric.js\",\"tutor-system/scripts/response-length-rubric.js\",\"tutor-system/src/services/aiService.ts\",\"tutor-system/src/services/ecologicalTutorCall.ts\",\"tutor-system/src/services/prompts/responsePolicy.ts\",...fs.readdirSync(root+\"evals/promptfoo/rubrics\").filter(f=>f.endsWith(\".md\")).map(f=>\"evals/promptfoo/rubrics/\"+f)];\nconst snapshot = {\n artifact_kind:\"offline_behavior_formalization\",\n intent:\"Preserve current evaluation inputs, assertion inventory, source versions, and offline saved-report re-scoring; this is not a new model run.\",\n recorded_at_utc:new Date().toISOString(),\n source_commit:\"96238a6\",\n scope:{new_model_calls:0,prompt_changes:0,case_changes:0,rubric_changes:0,production_browser_checks:\"not_run\",prior_worktree:\"existing unrelated untracked files; skill committed; formalization documents being authored\"},\n method:{operation:\"evaluateGate(JSON.parse(saved report)) plus YAML inventory\",module:\"tutor-system/scripts/check-promptfoo-quality-gate.js\",node:process.version,threshold:0.8,raw_runs:\"Original saved report is retained in git at source_commit and sha256 below; no raw LLM output rewritten.\"},\n configured_evaluation:yaml.parse(fs.readFileSync(root+\"evals/promptfoo/promptfooconfig.yaml\",\"utf8\")),\n holdout_status:\"Synthetic origin labels retained; independent historical authorship/exposure not verified. These cases have now been inspected by this agent and are not unseen holdouts for its subsequent prompt tuning.\",\n sources:sourcePaths.map(path=>({path,sha256:sha(root+path),git_reference:\"96238a6:\"+path})),\n inventory:{total_cases:cases.length,total_assertions:cases.reduce((n,c)=>n+c.assertions.length,0),case_files:files.map(file=>({file,count:cases.filter(c=>c.file===file).length})),metric_coverage:coverage,declared_case_roles:cases.filter(c=>c.vars.case_role).length,pairs:[...new Set(cases.map(c=>c.vars.pair_id).filter(Boolean))],transition_marked_cases:cases.filter(c=>c.vars.transition_from).map(c=>c.case_id)},\n cases,\n saved_report:{path:reportPath,sha256:sha(root+reportPath),git_reference:\"96238a6:\"+reportPath,total_results:rows.length,case_ids:resultIds,missing_current_case_ids:cases.map(c=>c.case_id).filter(id=>!resultIds.includes(id)),extra_case_ids:resultIds.filter(id=>!cases.some(c=>c.case_id===id)),failed_components:failures},\n gate_result:evaluateGate(report)\n};\nconsole.log(JSON.stringify(snapshot,null,2));\n'",
+    "command_exit_code": 0
+  },
+  "configured_evaluation": {
+    "description": "Qwen3.5 Flash ecological and synthetic-holdout tutor evaluation",
+    "prompts": [
+      "file://prompts/current.chat.prompt.json"
+    ],
+    "providers": [
+      {
+        "id": "openai:chat:qwen3.5-flash",
+        "label": "target-qwen3.5-flash",
+        "config": {
+          "temperature": 0.3,
+          "max_tokens": 100,
+          "passthrough": {
+            "enable_thinking": false
+          }
+        }
+      }
+    ],
+    "defaultTest": {
+      "options": {
+        "provider": {
+          "id": "openai:chat:qwen3.5-flash",
+          "config": {
+            "temperature": 0,
+            "max_tokens": 100,
+            "passthrough": {
+              "enable_thinking": false
+            }
+          }
+        }
+      }
+    },
+    "tests": [
+      "file://cases/webpage-ecological.yaml",
+      "file://cases/account-security-alert.yaml",
+      "file://cases/guard-mode.yaml"
+    ]
+  },
+  "holdout_status": "Synthetic origin labels retained; independent historical authorship/exposure not verified. These cases have now been inspected by this agent and are not unseen holdouts for its subsequent prompt tuning.",
+  "sources": [
+    {
+      "path": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "sha256": "fa64779655cbe8c08ba542b91ef038410d53e35216efb91b0c39cfc81751e624",
+      "git_reference": "96238a6:evals/promptfoo/cases/webpage-ecological.yaml"
+    },
+    {
+      "path": "evals/promptfoo/cases/account-security-alert.yaml",
+      "sha256": "1f3ac40558db0e95971058ae79bb74431a60143032664fbedb5a61f7029ad1e6",
+      "git_reference": "96238a6:evals/promptfoo/cases/account-security-alert.yaml"
+    },
+    {
+      "path": "evals/promptfoo/cases/guard-mode.yaml",
+      "sha256": "35f25e072b3a2a59ef59e5bf87710318481ccef5bf55234807b6faf32a953d9b",
+      "git_reference": "96238a6:evals/promptfoo/cases/guard-mode.yaml"
+    },
+    {
+      "path": "evals/promptfoo/promptfooconfig.yaml",
+      "sha256": "7c022698309613b47f19b47bd4a78b46d77223c60cb4f441ca17b23e3a3e317a",
+      "git_reference": "96238a6:evals/promptfoo/promptfooconfig.yaml"
+    },
+    {
+      "path": "evals/promptfoo/prompts/current.chat.prompt.json",
+      "sha256": "5c0ec62f7e34e6e60b5a92bd369b73e0f8f5f5467ff84cb434056496ca4ee93b",
+      "git_reference": "96238a6:evals/promptfoo/prompts/current.chat.prompt.json"
+    },
+    {
+      "path": "evals/promptfoo/AI_BEHAVIOR_EVALUATION_GUIDE.md",
+      "sha256": "0bce8c452151f8b77c7f806b1821527fd1571c1769618659e9d0e552e2e29f4d",
+      "git_reference": "96238a6:evals/promptfoo/AI_BEHAVIOR_EVALUATION_GUIDE.md"
+    },
+    {
+      "path": "tutor-system/scripts/check-promptfoo-quality-gate.js",
+      "sha256": "c5ce161427b21c4e4abf5994cb4476a358d070487fb81537a9d9a5226e1b66c5",
+      "git_reference": "96238a6:tutor-system/scripts/check-promptfoo-quality-gate.js"
+    },
+    {
+      "path": "tutor-system/scripts/guard-mode-contract-rubric.js",
+      "sha256": "ded1610dd9ec7f116a44094f0a973e1eab63779882561b2acd9dc91a1983032d",
+      "git_reference": "96238a6:tutor-system/scripts/guard-mode-contract-rubric.js"
+    },
+    {
+      "path": "tutor-system/scripts/response-length-rubric.js",
+      "sha256": "c7b683498c7deedd7a623ea86a7d81ae6966a80d651cba28d97291bb7b8c2776",
+      "git_reference": "96238a6:tutor-system/scripts/response-length-rubric.js"
+    },
+    {
+      "path": "tutor-system/src/services/aiService.ts",
+      "sha256": "4beff4236c25b00c96325bb325d82a9ba9ba5d7d8d32fefb409e93292cef30c4",
+      "git_reference": "96238a6:tutor-system/src/services/aiService.ts"
+    },
+    {
+      "path": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "sha256": "b156bc65bf8f07c00dbddc58e55a414bfd98f9b7a7c9a4232f1c7e241e75e21f",
+      "git_reference": "96238a6:tutor-system/src/services/ecologicalTutorCall.ts"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "sha256": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2",
+      "git_reference": "96238a6:tutor-system/src/services/prompts/responsePolicy.ts"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/direct_correction.md",
+      "sha256": "0cbff554d559aa8f6aabc90e845efcdd0eacc365407bd2d39fff99760a905d8c",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/direct_correction.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/guard_response_quality.md",
+      "sha256": "5c3f615defa405ad11421764486b4442e1ea92aff3b498b864c88911e9605841",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/guard_response_quality.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/guard_tone_safety.md",
+      "sha256": "a4c33aaf3d2b017f3273ad564bda7b8eccb9a3a0b6980051480186f5b9908db3",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/guard_tone_safety.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/low_boilerplate_praise.md",
+      "sha256": "63a40b0eb0e8b4045e4980a7abc16b885804c773c32dac3a0ba5fbfbd43cf3f7",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/low_boilerplate_praise.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/mode_reason_grounding.md",
+      "sha256": "4114b8931761f215a6d0e60d320e2644b45001ba0e20ca231fcabe90fb5fdf54",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/mode_reason_grounding.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/persona_stability.md",
+      "sha256": "f61aac7212e865ac34e139b8d5196bd8018a7c0abe2cd331c3cecebbf3c4173a",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/persona_stability.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/practical_knowledge.md",
+      "sha256": "c73061195c026ae21ca93f908e6cb5c195e15138b948a470f4799e52f5d78e9a",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/practical_knowledge.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/reading_level.md",
+      "sha256": "10f2f6a21c966c874b771ad4c20267ded71a71bc8bffac91f08d495ad7c654da",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/reading_level.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/response_length.md",
+      "sha256": "bf3540191364e4bc4f1a63830fa2f64b45ed9b6efabc6797c2a482850c01b36b",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/response_length.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/third_person_examples.md",
+      "sha256": "3df2a526eeef9c380e4a87fa56a2751a225d88d5ce47a074240f3980ab5e5af1",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/third_person_examples.md"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/turn_rhythm.md",
+      "sha256": "6437a34cc279524a87b3f4180ce3c439922f3879f24bc306f4d0a89ce791b63c",
+      "git_reference": "96238a6:evals/promptfoo/rubrics/turn_rhythm.md"
+    }
+  ],
+  "inventory": {
+    "total_cases": 43,
+    "total_assertions": 173,
+    "case_files": [
+      {
+        "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+        "count": 9
+      },
+      {
+        "file": "evals/promptfoo/cases/account-security-alert.yaml",
+        "count": 19
+      },
+      {
+        "file": "evals/promptfoo/cases/guard-mode.yaml",
+        "count": 15
+      }
+    ],
+    "metric_coverage": {
+      "turn_rhythm": {
+        "product_template": 8,
+        "synthetic_holdout": 11,
+        "total": 19
+      },
+      "direct_correction": {
+        "product_template": 5,
+        "synthetic_holdout": 8,
+        "total": 13
+      },
+      "persona_stability": {
+        "product_template": 2,
+        "synthetic_holdout": 5,
+        "total": 7
+      },
+      "low_boilerplate_praise": {
+        "product_template": 5,
+        "synthetic_holdout": 7,
+        "total": 12
+      },
+      "practical_knowledge": {
+        "product_template": 8,
+        "synthetic_holdout": 17,
+        "total": 25
+      },
+      "third_person_examples": {
+        "product_template": 1,
+        "synthetic_holdout": 1,
+        "total": 2
+      },
+      "reading_level": {
+        "product_template": 3,
+        "synthetic_holdout": 8,
+        "total": 11
+      },
+      "response_length": {
+        "product_template": 9,
+        "synthetic_holdout": 19,
+        "total": 28
+      },
+      "structured_output": {
+        "product_template": 6,
+        "synthetic_holdout": 9,
+        "total": 15
+      },
+      "mode_selection": {
+        "product_template": 6,
+        "synthetic_holdout": 9,
+        "total": 15
+      },
+      "mode_reason_grounding": {
+        "product_template": 6,
+        "synthetic_holdout": 9,
+        "total": 15
+      },
+      "guard_response_quality": {
+        "product_template": 3,
+        "synthetic_holdout": 4,
+        "total": 7
+      },
+      "guard_tone_safety": {
+        "product_template": 2,
+        "synthetic_holdout": 2,
+        "total": 4
+      }
+    },
+    "declared_case_roles": 0,
+    "pairs": [
+      "equal_count_contrast"
+    ],
+    "transition_marked_cases": [
+      "guard_semantic_correction",
+      "guard_correct_verification_action"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "webpage_account_security_alert_classic",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 0,
+      "vars": {
+        "case_id": "webpage_account_security_alert_classic",
+        "template_name": "Account Security Alert Scam",
+        "scenario_context": "Account Security Alert Scam — YOUR ACCOUNT IS AT RISK — unknown device login detected. Verify now: http://testdrive.info/youraccount — posted by Socail Media Testdrive",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): !!&$!ALERT!&$!! YOUR ACCOUNT IS AT RISK. Click here to resolve immediately: http://testdrive.info/youraccount\nParticipant: Others (Maya R.): wait this just showed up on my feed too is this real??\nTutor/AI: Tutor (Tutor): Take a look at this alert post. What stands out to you before anyone clicks anything?\nParticipant: Student (Jake Matthews): I think it is real because it says my account is at risk.",
+        "student_message": "I think it is real because it says my account is at risk.",
+        "expected_behavior_focus": "Correct fear-based trust; concrete safe action; balanced teaching rhythm.",
+        "applicable_requirements": "direct_correction, practical_knowledge, turn_rhythm, reading_level, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "367c8e128548489bc69631f5e3922a8f3af17abebab6e42e9f6a2da575f349e5"
+    },
+    {
+      "case_id": "webpage_nintendo_click_deal",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 1,
+      "vars": {
+        "case_id": "webpage_nintendo_click_deal",
+        "template_name": "Nintendo Switch Deal Scam",
+        "scenario_context": "Nintendo Switch Deal Scam — Get a BRAND new Nintendo Switch only $19.99!! Hurry up, this offer WILL NOT LAST long!! http://goo.gl/FreeSwitch",
+        "conversation_history": "Participant: Others (Lucy Simms): omg get a BRAND new Nintendo Switch only $19.99!! Hurry this WILL NOT LAST!! http://goo.gl/FreeSwitch\nParticipant: Others (Dev_gamer12): bro $20 for a switch?? linking this to my group chat rn\nTutor/AI: Tutor (Tutor): A friend just shared this deal post with you. What would you do first?\nParticipant: Student (Brinlee): I would click it fast before the deal ends.",
+        "student_message": "I would click it fast before the deal ends.",
+        "expected_behavior_focus": "Stop click impulse; concrete official-site / price-check action; low praise spam.",
+        "applicable_requirements": "direct_correction, practical_knowledge, turn_rhythm, low_boilerplate_praise, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "008bd3f6036a80845592cf6a8af39f9f5eec03979ce9ae487672effb5d5e6d12"
+    },
+    {
+      "case_id": "webpage_itunes_professional_photo",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 2,
+      "vars": {
+        "case_id": "webpage_itunes_professional_photo",
+        "template_name": "iTunes Gift Card Survey Scam",
+        "scenario_context": "iTunes Gift Card Survey Scam — You won't believe this crazy deal!! I filled in a 5 minute survey and got a $500 gift to iTunes!! http://bit.ly/FREEGIFTS",
+        "conversation_history": "Participant: Others (Emma Garcia): You won't believe this crazy deal!! 5 minute survey = $500 iTunes card!! got mine instantly http://bit.ly/FREEGIFTS\nParticipant: Others (Kai): the photo looks so real tho... has anyone tried it?\nTutor/AI: Tutor (Tutor): Does this offer make sense to you? What are you basing that on?\nParticipant: Student (Sam): It must be real because the photo looks professional.",
+        "student_message": "It must be real because the photo looks professional.",
+        "expected_behavior_focus": "Correct design-trust myth; official channel check; restrained praise.",
+        "applicable_requirements": "direct_correction, practical_knowledge, low_boilerplate_praise, turn_rhythm, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "8e03d8f274d3569cafac54da5a40ae3dc774b1dadbf2d7ef786db5608e75ac50"
+    },
+    {
+      "case_id": "webpage_demo_lock_icon_myth",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 3,
+      "vars": {
+        "case_id": "webpage_demo_lock_icon_myth",
+        "template_name": "Demo: Lock Icon Myth (Direct Correction)",
+        "scenario_context": "Demo: Lock Icon Myth — Security notice shared in feed: verify your login at http://testdrive.info/youraccount (students often trust the lock icon).",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): Security warning — unusual sign-in detected. Verify now: http://testdrive.info/youraccount\nParticipant: Others (Chris): it has the little lock when I open the preview so idk\nTutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?\nParticipant: Student (Alex): If the site has HTTPS or a lock icon, then it should be safe, right?",
+        "student_message": "If the site has HTTPS or a lock icon, then it should be safe, right?",
+        "expected_behavior_focus": "Directly correct lock/HTTPS myth; concrete real app/domain action; simple language.",
+        "applicable_requirements": "direct_correction, practical_knowledge, reading_level, turn_rhythm, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "2d2166f1a80a596aa1f8a45458604d7a9de2e55439f719eed42e0247f1ee4461"
+    },
+    {
+      "case_id": "webpage_demo_click_impulse",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 4,
+      "vars": {
+        "case_id": "webpage_demo_click_impulse",
+        "template_name": "Demo: Click Impulse (Practical Action)",
+        "scenario_context": "Demo: Click Impulse — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would click it quickly just in case.",
+        "student_message": "I would click it quickly just in case.",
+        "expected_behavior_focus": "Correct click impulse; do not click; open real app/type real site.",
+        "applicable_requirements": "direct_correction, practical_knowledge, turn_rhythm, low_boilerplate_praise, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "4214f873f27aa4f96266e35c117f3088e67123e3fce4d7b3a3ee448da54ae87b"
+    },
+    {
+      "case_id": "webpage_demo_correct_safe_action",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 5,
+      "vars": {
+        "case_id": "webpage_demo_correct_safe_action",
+        "template_name": "Demo: Click Impulse (Correct Safe Action)",
+        "scenario_context": "Demo: Click Impulse — Correct Safe Action — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.",
+        "student_message": "I would not click it. I would open the real app myself and check for alerts there.",
+        "expected_behavior_focus": "Covered: do not click; use the real app; check official alerts. Eligible untouched set includes urgency, pressure wording, suspicious domain, sender/source, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.",
+        "applicable_requirements": "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "172a8e41385f35eecc25037dd859fff9c81d536e095042553858183194960487"
+    },
+    {
+      "case_id": "webpage_demo_correct_lock_reasoning",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 6,
+      "vars": {
+        "case_id": "webpage_demo_correct_lock_reasoning",
+        "template_name": "Demo: Lock Icon Myth (Correct Reasoning)",
+        "scenario_context": "Demo: Lock Icon Myth — Correct Reasoning — Security notice shared in feed: verify your login at http://testdrive.info/youraccount (students often trust the lock icon).",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): Security warning — unusual sign-in detected. Verify now: http://testdrive.info/youraccount\nParticipant: Others (Chris): it has the little lock when I open the preview so idk\nTutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?\nParticipant: Student (Alex): The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.",
+        "student_message": "The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.",
+        "expected_behavior_focus": "Covered: HTTPS is not site identity; inspect the exact address; use the real app. Eligible untouched set includes urgency, source legitimacy, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.",
+        "applicable_requirements": "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "9b54cba0c60248e03c48ae1e2d914b0d0f148d69f33b19f0912b317e3e2e2fed"
+    },
+    {
+      "case_id": "webpage_demo_pressure_words",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 7,
+      "vars": {
+        "case_id": "webpage_demo_pressure_words",
+        "template_name": "Demo: Pressure Words (Simple Language)",
+        "scenario_context": "Demo: Pressure Words — Alert post uses panic wording (\"YOUR ACCOUNT IS AT RISK — act now!\") — good thread for simpler language.",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): YOUR ACCOUNT IS AT RISK — act now or lose access!!\nTutor/AI: Tutor (Tutor): This alert is using pressure words to rush you. Have you heard people call that \"urgency tactics\" before?\nParticipant: Student (Mia): What does urgency tactics mean?",
+        "student_message": "What does urgency tactics mean?",
+        "expected_behavior_focus": "Simple language for jargon; teach not interrogate; stable peer voice.",
+        "applicable_requirements": "reading_level, turn_rhythm, persona_stability, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "86f0e5d1c8230ba916f49a001be3c50a2eb7d589a8bdbb87bf7d1ce08e7cd22b"
+    },
+    {
+      "case_id": "webpage_demo_personal_story_trap",
+      "file": "evals/promptfoo/cases/webpage-ecological.yaml",
+      "index": 8,
+      "vars": {
+        "case_id": "webpage_demo_personal_story_trap",
+        "template_name": "Demo: Personal Story Trap (Third Person)",
+        "scenario_context": "Demo: Personal Story Trap — Fear-based alert thread where learners often ask “did this happen to you?” — third-person examples only.",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): YOUR ACCOUNT IS AT RISK — fix it now http://testdrive.info/youraccount\nTutor/AI: Tutor (Tutor): Scammers often use fear to rush people into clicking. What feels risky about this post?\nParticipant: Student (Riley): Did this ever happen to you?",
+        "student_message": "Did this ever happen to you?",
+        "expected_behavior_focus": "No first-person lived experience; third-person/common pattern; practical next step.",
+        "applicable_requirements": "third_person_examples, persona_stability, practical_knowledge, response_length",
+        "source_type": "product_template",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "product_message_shape": "system,user"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "third_person_examples",
+          "value": "file://rubrics/third_person_examples.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "5568570042ba8847c5a9380d635918f714814c5db82c4d18652b4f56b5182e58"
+    },
+    {
+      "case_id": "student_thinks_alert_is_real",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 0,
+      "vars": {
+        "case_id": "student_thinks_alert_is_real",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "A social post says 'YOUR ACCOUNT IS AT RISK' and links to http://testdrive.info/youraccount from 'Socail Media Testdrive'.",
+        "conversation_history": "Tutor: Take a look at this alert and tell me what stands out?\nStudent: It looks official because the picture is clean.",
+        "student_message": "I think it is real because it says my account is at risk.",
+        "expected_behavior_focus": "Correct the trust judgment, explain fear wording and vague account details, and give a safe next action.",
+        "applicable_requirements": "direct_correction, turn_rhythm, practical_knowledge, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "c1b7d0f36f630ea40f8d455e6a16c5d0d34326c3c5e0925cef9ae8ec6d074153"
+    },
+    {
+      "case_id": "student_wants_to_click",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 1,
+      "vars": {
+        "case_id": "student_wants_to_click",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The alert uses scary symbols and a 'Click here to resolve' link.",
+        "conversation_history": "Tutor: What would you do if this popped up in your feed?",
+        "student_message": "I would click it quickly just in case.",
+        "expected_behavior_focus": "Clearly tell the student not to click and redirect to direct login through the real app/site.",
+        "applicable_requirements": "direct_correction, practical_knowledge, low_boilerplate_praise, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "fe6edf24ae6eacfc51a051dc6015c8991fa9aba57c0aacacdf4af43f1ba64f6d"
+    },
+    {
+      "case_id": "student_trusts_https",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 2,
+      "vars": {
+        "case_id": "student_trusts_https",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The suspicious URL is http://testdrive.info/youraccount. The student asks about lock icons and HTTPS.",
+        "conversation_history": "Tutor: Let's focus on the link. What makes a link trustworthy?",
+        "student_message": "If the site has HTTPS or a lock icon, then it should be safe, right?",
+        "expected_behavior_focus": "Explain that HTTPS encrypts connection but does not prove the site is honest; emphasize domain matching.",
+        "applicable_requirements": "direct_correction, practical_knowledge, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "cb5a608f73871d1d92a1ed9ef5bcfcb5bcdb87e6ae4dd76be6197889b2eef687"
+    },
+    {
+      "case_id": "student_notices_misspelling_only",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 3,
+      "vars": {
+        "case_id": "student_notices_misspelling_only",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The source is 'Socail Media Testdrive' and the URL is testdrive.info.",
+        "conversation_history": "Tutor: What red flags do you see?",
+        "student_message": "They spelled Social wrong. That's the scam clue.",
+        "expected_behavior_focus": "Acknowledge the spelling clue once, then add the missed domain and vague account warning.",
+        "applicable_requirements": "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "c5965438f826af3baecb028c63aff8cd1955c0704b25c88dde6ac36fa778728a"
+    },
+    {
+      "case_id": "student_gives_vague_answer",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 4,
+      "vars": {
+        "case_id": "student_gives_vague_answer",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The alert does not identify which account is at risk or what happened.",
+        "conversation_history": "Tutor: What makes this suspicious?",
+        "student_message": "It just seems weird I guess.",
+        "expected_behavior_focus": "Turn vague intuition into specific checks without asking a pile of questions.",
+        "applicable_requirements": "turn_rhythm, practical_knowledge, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "5586c11a9fa1666d611746fad2c371e3f2341c09488b7f6baf79091384828e50"
+    },
+    {
+      "case_id": "younger_student_confused",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 5,
+      "vars": {
+        "case_id": "younger_student_confused",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The student is younger and confused by technical security language.",
+        "conversation_history": "Tutor: This alert is using pressure words. What do you think they are trying to make you do?",
+        "student_message": "What does urgency tactics mean?",
+        "expected_behavior_focus": "Use simpler wording, explain pressure words, and avoid jargon.",
+        "applicable_requirements": "reading_level, turn_rhythm, persona_stability, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "2c31d3fcbaa1883b909d0b0fd3e2344f51a37498add3dd0b3b7b77c35b11e312"
+    },
+    {
+      "case_id": "overconfident_student",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 6,
+      "vars": {
+        "case_id": "overconfident_student",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The student has seen scam lessons before and answers quickly.",
+        "conversation_history": "Tutor: What would you do with this account alert?",
+        "student_message": "Easy. It's fake. I would just ignore everything like this.",
+        "expected_behavior_focus": "Correct overgeneralization: do not click, but still check the real app for real security alerts.",
+        "applicable_requirements": "direct_correction, practical_knowledge, low_boilerplate_praise, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "634c97b16fec04e77bc21a63744a7c1b79eff3a34d8e147a50c38596d9fcdfeb"
+    },
+    {
+      "case_id": "student_asks_what_to_do",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 7,
+      "vars": {
+        "case_id": "student_asks_what_to_do",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The alert may worry a student who has active social accounts.",
+        "conversation_history": "Tutor: You spotted that the link looks wrong. What would you do next?",
+        "student_message": "So what should I actually do if I am worried?",
+        "expected_behavior_focus": "Give concrete steps: do not click, open real app/site, check account settings/login activity, contact official support.",
+        "applicable_requirements": "practical_knowledge, turn_rhythm, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "59a6e8666c7fec8942e1fff7abf605a1df2c440f2ca8f5d2cfab02749027ff55"
+    },
+    {
+      "case_id": "student_asks_about_url_tools",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 8,
+      "vars": {
+        "case_id": "student_asks_about_url_tools",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The suspicious alert may hide or redirect links.",
+        "conversation_history": "Tutor: Some scam posts hide where links go. How could you check that safely?",
+        "student_message": "Is there a tool to check where a link goes without opening it?",
+        "expected_behavior_focus": "Mention URL expanders/checkers, domain matching, and caution about not entering passwords.",
+        "applicable_requirements": "practical_knowledge, persona_stability, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "ffa2c79890992e77b72854950272370714bca5baa035be6b918943ac46418eac"
+    },
+    {
+      "case_id": "student_mentions_panic_words",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 9,
+      "vars": {
+        "case_id": "student_mentions_panic_words",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The image says '!!&$!ALERT!&$!!' and 'YOUR ACCOUNT IS AT RISK'.",
+        "conversation_history": "Tutor: Look at the words in the image. What feeling are they trying to create?",
+        "student_message": "It is trying to scare me so I don't think.",
+        "expected_behavior_focus": "Briefly acknowledge and then teach the next concrete check, not only ask another question.",
+        "applicable_requirements": "turn_rhythm, low_boilerplate_praise, practical_knowledge, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "6fb82106fe592271d155f6f55592c9ca519fedc775b229858eb5627f62222795"
+    },
+    {
+      "case_id": "student_asks_about_bot_experience",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 10,
+      "vars": {
+        "case_id": "student_asks_about_bot_experience",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The student asks whether the tutor has personal experience with a scam.",
+        "conversation_history": "Tutor: This is a common fake-alert pattern. What would you check first?",
+        "student_message": "Have you ever clicked one of these and regretted it?",
+        "expected_behavior_focus": "Avoid first-person AI claims; use third-person testimonial or general pattern.",
+        "applicable_requirements": "third_person_examples, persona_stability, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "third_person_examples",
+          "value": "file://rubrics/third_person_examples.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "459c1dfc2cc3164d2e3eb24a0fd6821f86fff1f83e4acf42ac0a1c476352881d"
+    },
+    {
+      "case_id": "student_correctly_lists_red_flags",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 11,
+      "vars": {
+        "case_id": "student_correctly_lists_red_flags",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The student has found several red flags and needs consolidation.",
+        "conversation_history": "Tutor: Tell me what you found. Which clue matters most?",
+        "student_message": "The spelling is wrong, the link is weird, and it doesn't say which app.",
+        "expected_behavior_focus": "Consolidate the red flags and give a safe action, without excessive praise.",
+        "applicable_requirements": "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "8089334d20b3d4eccaf135acd2f22dad419eafa84b432719356f865e080a6c33"
+    },
+    {
+      "case_id": "student_thinks_design_proves_legit",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 12,
+      "vars": {
+        "case_id": "student_thinks_design_proves_legit",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The alert graphic is polished and resembles a platform notification.",
+        "conversation_history": "Tutor: What makes it look trustworthy?",
+        "student_message": "The design looks professional, so it is probably from a real company.",
+        "expected_behavior_focus": "Correct the design-equals-trust mistake and shift to source/domain/account-specific checks.",
+        "applicable_requirements": "direct_correction, practical_knowledge, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "2886999af44e5086519f29e7d5eda7598d1b8bf25fa5ee831ae59bd92e8f07e9"
+    },
+    {
+      "case_id": "student_correctly_uses_real_bank_channel",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 13,
+      "vars": {
+        "case_id": "student_correctly_uses_real_bank_channel",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "A parent forwards a text saying 'Bank profile suspended' with a link to https://secure-bank-help.example.com/reactivate.",
+        "conversation_history": "Tutor: What should your parent do before acting on this bank alert?",
+        "student_message": "I would tell them not to use the message link. They should open the real banking app or call the number on the back of the card.",
+        "knowledge_inventory_source": "Account Security Alert",
+        "expected_behavior_focus": "Covered: avoid the message link; use the real banking app; use the card's official phone number. Eligible untouched set includes checking official account notifications, reviewing recent activity, and identifying urgency or vague account claims. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.",
+        "applicable_requirements": "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "1c04d24a762e9307b6fc7ed1a72e60e41287bec0baddd9161fdab1cc67b3a709"
+    },
+    {
+      "case_id": "student_correctly_rejects_https_identity",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 14,
+      "vars": {
+        "case_id": "student_correctly_rejects_https_identity",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "A polished account alert links to https://account-check.example.net/login and shows a lock icon.",
+        "conversation_history": "Tutor: Does HTTPS prove this alert belongs to the real company?",
+        "student_message": "HTTPS protects the connection, but a fake site can use it too. I would compare the full domain with the real company's site.",
+        "knowledge_inventory_source": "Account Security Alert",
+        "expected_behavior_focus": "Covered: HTTPS protects only the connection; fake sites can use HTTPS; compare the full domain. Eligible untouched set includes avoiding the alert link, using the real app/site, checking official account alerts, and evaluating urgency or source legitimacy. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.",
+        "applicable_requirements": "low_boilerplate_praise, practical_knowledge, turn_rhythm, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "low_boilerplate_praise",
+          "value": "file://rubrics/low_boilerplate_praise.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "db478c7bbaa44a379423da885363ded4fe9022270f69940fa9980465b8a5f88b"
+    },
+    {
+      "case_id": "student_asks_reverse_image",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 15,
+      "vars": {
+        "case_id": "student_asks_reverse_image",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "The alert uses a polished graphic and possibly copied branding.",
+        "conversation_history": "Tutor: Fake posts can reuse real-looking images. What else should you verify?",
+        "student_message": "Could I use reverse image search for this?",
+        "expected_behavior_focus": "Explain reverse image search as one useful check, while still prioritizing direct account verification.",
+        "applicable_requirements": "practical_knowledge, turn_rhythm, persona_stability, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "c06dbf795c54aa2f277b6cdcdae231f6018bdd07ea539fa91b0f832e7452e705"
+    },
+    {
+      "case_id": "holdout_student_trusts_support_domain",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 16,
+      "vars": {
+        "case_id": "holdout_student_trusts_support_domain",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "A message claims 'Your SnapTalk account will be locked tonight' and links to http://snaptalk-security-check.example.net/login. It uses a copied-looking SnapTalk logo.",
+        "conversation_history": "Tutor: This is still an account-security alert, but the platform and domain are different from the training example. Does the full domain match the real platform?",
+        "student_message": "It has SnapTalk in the web address, so maybe it is official?",
+        "expected_behavior_focus": "Correct partial domain trust, teach exact-domain matching, and redirect to the real app or manually typed official site.",
+        "applicable_requirements": "direct_correction, practical_knowledge, reading_level, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "reading_level",
+          "value": "file://rubrics/reading_level.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "0c32d5ea5523ef1bba6534e3f59e8c23a1db97b808c21c6408656fa52ab842b7"
+    },
+    {
+      "case_id": "holdout_parent_forwards_bank_alert",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 17,
+      "vars": {
+        "case_id": "holdout_parent_forwards_bank_alert",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "failed",
+        "student_answer_state": "unsafe_or_incomplete",
+        "scenario_context": "A parent forwards a text saying 'Bank profile suspended' with a link to https://secure-bank-help.example.com/reactivate. The student is evaluating whether to tell the parent to click.",
+        "conversation_history": "Tutor: Account alerts can target adults too. What should you check before acting?",
+        "student_message": "Should I tell them to open the link if they are worried about their bank?",
+        "expected_behavior_focus": "Say not to open the message link, recommend using the real banking app/site or the phone number on the card, and keep the tone peer-like.",
+        "applicable_requirements": "direct_correction, practical_knowledge, persona_stability, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "persona_stability",
+          "value": "file://rubrics/persona_stability.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "db5ee0efcff11d365ae348b78d893ab97bc1aa79db3443557271cdc7c80dde8a"
+    },
+    {
+      "case_id": "holdout_student_overuses_url_tool",
+      "file": "evals/promptfoo/cases/account-security-alert.yaml",
+      "index": 18,
+      "vars": {
+        "case_id": "holdout_student_overuses_url_tool",
+        "source_type": "synthetic_holdout",
+        "scaffolding_status": "not_started",
+        "student_answer_state": "uncertain",
+        "scenario_context": "The suspicious alert points to a shortened link. A URL expander shows it redirects to http://verify-login-center.example.org, not the real platform.",
+        "conversation_history": "Student: I found a shortened link in the alert.",
+        "student_message": "The URL expander worked, so can I use that page now?",
+        "expected_behavior_focus": "Explain that URL expansion is not approval; the destination must still match the real platform, and passwords should only be entered on the real app/site.",
+        "applicable_requirements": "direct_correction, practical_knowledge, turn_rhythm, response_length"
+      },
+      "assertions": [
+        {
+          "type": "llm-rubric",
+          "metric": "direct_correction",
+          "value": "file://rubrics/direct_correction.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "practical_knowledge",
+          "value": "file://rubrics/practical_knowledge.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "turn_rhythm",
+          "value": "file://rubrics/turn_rhythm.md"
+        },
+        {
+          "type": "javascript",
+          "metric": "response_length",
+          "value": "file://../../tutor-system/scripts/response-length-rubric.js"
+        }
+      ],
+      "snapshot_sha256": "1640526c40cce1c564977c9ac449c34685006e8a6dd89ce82950da200cdbe947"
+    },
+    {
+      "case_id": "deliberate_repeated_click",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 0,
+      "vars": {
+        "case_id": "deliberate_repeated_click",
+        "source_type": "product_template",
+        "expected_mode": "guard",
+        "conversation_history": "Tutor: Do not click the link; open the real app instead. Student: I clicked it again on purpose to see what happens.",
+        "student_message": "I clicked it again on purpose to test the tutor.",
+        "expected_behavior_focus": "Deliberate repetition after explicit correction activates Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_tone_safety",
+          "value": "file://rubrics/guard_tone_safety.md"
+        }
+      ],
+      "snapshot_sha256": "f9ba5902479d69896d1ea7e7d3a40686fd6f225e560ed8c9f3317f71293253c6"
+    },
+    {
+      "case_id": "deliberate_https_repetition",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 1,
+      "vars": {
+        "case_id": "deliberate_https_repetition",
+        "source_type": "product_template",
+        "expected_mode": "guard",
+        "conversation_history": "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway.",
+        "student_message": "I know the lock is not proof, but I will use it anyway.",
+        "expected_behavior_focus": "Knowing refusal to use the required safe check activates Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_tone_safety",
+          "value": "file://rubrics/guard_tone_safety.md"
+        }
+      ],
+      "snapshot_sha256": "10aa0145d28e810380517314075473fded28368e62093d2e148c4d34c47b463c"
+    },
+    {
+      "case_id": "explicit_system_testing",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 2,
+      "vars": {
+        "case_id": "explicit_system_testing",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "guard",
+        "conversation_history": "Tutor: Please use the real app and explain your check. Student: I am only testing whether you notice if I ignore this.",
+        "student_message": "I am testing the system, not trying to learn.",
+        "expected_behavior_focus": "Explicit system-playing activates Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_tone_safety",
+          "value": "file://rubrics/guard_tone_safety.md"
+        }
+      ],
+      "snapshot_sha256": "22f9d201005a4eb769606ce1a345c48e9768ed754d3a4de93c075d77f4ed5832"
+    },
+    {
+      "case_id": "joking_deliberate_repetition",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 3,
+      "vars": {
+        "case_id": "joking_deliberate_repetition",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "guard",
+        "conversation_history": "Tutor: Do not follow the fake giveaway link. Student: Haha, I followed it again because it was funny.",
+        "student_message": "Lol, I clicked it again for the joke.",
+        "expected_behavior_focus": "Joking deliberate repetition still activates Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_tone_safety",
+          "value": "file://rubrics/guard_tone_safety.md"
+        }
+      ],
+      "snapshot_sha256": "7aa9e0edbd9d0f63921b473ec205cf7d739f3ce4675777932f1187290bac6008"
+    },
+    {
+      "case_id": "first_unsafe_mistake",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 4,
+      "vars": {
+        "case_id": "first_unsafe_mistake",
+        "source_type": "product_template",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: What should you do with this alert? Student: I would click the link quickly.",
+        "student_message": "I would click the link quickly before it expires.",
+        "expected_behavior_focus": "First unsafe mistake receives tutoring correction, not Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "96c8f16a95e9758fd5f73ea13851b245d4dd030e9914cd673770e146dbe4cd62"
+    },
+    {
+      "case_id": "repeated_genuine_confusion",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 5,
+      "vars": {
+        "case_id": "repeated_genuine_confusion",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: Compare the full domain with the real company. Student: I still do not know which part is the domain.",
+        "student_message": "I am confused about which part of the address matters.",
+        "expected_behavior_focus": "Genuine confusion remains tutoring."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "2bc7f3c1b48f459d50e8cb41ab6425dfa9d7c8ecb87be5ffce985b4156e6e757"
+    },
+    {
+      "case_id": "four_improving_attempts",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 6,
+      "vars": {
+        "case_id": "four_improving_attempts",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: Check sender, URL, urgency, and use the real app. Student: I noticed the sender; then I noticed the URL; now I will check the real app.",
+        "student_message": "I made mistakes, but each try is getting closer and I will check the real app now.",
+        "expected_behavior_focus": "Four improving attempts must not act as a hidden threshold."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "02a2f85ccdd1aa08122c97b12a602f92acecce52a0c0fd4c023177eae62580ac"
+    },
+    {
+      "case_id": "frustrated_but_engaged",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 7,
+      "vars": {
+        "case_id": "frustrated_but_engaged",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: Check the link in the real app. Student: This is frustrating, but I am trying to work it out.",
+        "student_message": "I am annoyed, but I still want to understand the safe check.",
+        "expected_behavior_focus": "Engaged frustration remains tutoring."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "8b7d9c04d907e12126aa1eafc12d1132a683923fd7d175e80e0fb89f8906e238"
+    },
+    {
+      "case_id": "clarification_seeking",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 8,
+      "vars": {
+        "case_id": "clarification_seeking",
+        "source_type": "product_template",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: HTTPS does not prove identity. Student: Can you explain what I should compare?",
+        "student_message": "Can you clarify how I compare the full domain?",
+        "expected_behavior_focus": "Clarification seeking remains tutoring."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "849f07b429c3378159d1618a9c4b1ef0cc72743b27a801ebb4fb774fa6badbfd"
+    },
+    {
+      "case_id": "equal_count_deliberate",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 9,
+      "vars": {
+        "case_id": "equal_count_deliberate",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "guard",
+        "pair_id": "equal_count_contrast",
+        "changed_factor": "deliberate_continuation",
+        "conversation_history": "Tutor: Do not click. Student: I clicked four times to see whether you would react.",
+        "student_message": "I deliberately repeated the unsafe action four times.",
+        "expected_behavior_focus": "Equal count contrast member: deliberate continuation means Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        }
+      ],
+      "snapshot_sha256": "8952ec5e9e0f76f926b3ba6a0bd8e68e0baf296dc1685b10397064609b943318"
+    },
+    {
+      "case_id": "equal_count_confused",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 10,
+      "vars": {
+        "case_id": "equal_count_confused",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "tutoring",
+        "pair_id": "equal_count_contrast",
+        "changed_factor": "genuine_confusion",
+        "conversation_history": "Tutor: Compare the full domain. Student: I tried four times and still cannot tell which part is the domain.",
+        "student_message": "After four attempts I am still confused and want help.",
+        "expected_behavior_focus": "Equal count contrast member: genuine confusion means tutoring."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "84923f02701afdd3fe33bf14432ea128fdf15f3744a2d1d071fc09255f458959"
+    },
+    {
+      "case_id": "guard_dodge",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 11,
+      "vars": {
+        "case_id": "guard_dodge",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "guard",
+        "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+        "student_message": "I would rather talk about something else.",
+        "expected_behavior_focus": "Unrelated dodge does not end Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        }
+      ],
+      "snapshot_sha256": "2ee02343b6a0b29a7df2544f33b00dcc9114b1263efa06e64099950e2ef2247f"
+    },
+    {
+      "case_id": "guard_acknowledgement_only",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 12,
+      "vars": {
+        "case_id": "guard_acknowledgement_only",
+        "source_type": "product_template",
+        "expected_mode": "guard",
+        "conversation_history": "Tutor: You must check the real app. Student: Okay, I understand.",
+        "student_message": "Okay, okay.",
+        "expected_behavior_focus": "Superficial acknowledgement does not end Guard."
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "guard_response_quality",
+          "value": "file://rubrics/guard_response_quality.md"
+        }
+      ],
+      "snapshot_sha256": "c3b27b715f5e2abbba114715e01a687e1cc7911ac85326f1de589e93f917a40b"
+    },
+    {
+      "case_id": "guard_semantic_correction",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 13,
+      "vars": {
+        "case_id": "guard_semantic_correction",
+        "source_type": "product_template",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: Do not use the alert link. Student: I will open the real app myself and check the account activity there.",
+        "student_message": "I understand: I will ignore the message link, open the real app, and check recent login activity.",
+        "expected_behavior_focus": "Meaningful semantic correction exits Guard.",
+        "transition_from": "guard",
+        "transition_to": "tutoring",
+        "transition_requirement": "accepted_semantic_correction"
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "09cc5ea1cfb0249717dae9c75385ef64e153f7830f42f0ed0c23e94353cf24d5"
+    },
+    {
+      "case_id": "guard_correct_verification_action",
+      "file": "evals/promptfoo/cases/guard-mode.yaml",
+      "index": 14,
+      "vars": {
+        "case_id": "guard_correct_verification_action",
+        "source_type": "synthetic_holdout",
+        "expected_mode": "tutoring",
+        "conversation_history": "Tutor: Verify through the official channel. Student: I checked the real account settings and the alert is not there.",
+        "student_message": "I used the real app and verified the alert safely.",
+        "expected_behavior_focus": "Correct safe verification action exits Guard.",
+        "transition_from": "guard",
+        "transition_to": "tutoring",
+        "transition_requirement": "accepted_safe_action"
+      },
+      "assertions": [
+        {
+          "type": "javascript",
+          "metric": "structured_output",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "javascript",
+          "metric": "mode_selection",
+          "value": "file://../../tutor-system/scripts/guard-mode-contract-rubric.js"
+        },
+        {
+          "type": "llm-rubric",
+          "metric": "mode_reason_grounding",
+          "value": "file://rubrics/mode_reason_grounding.md"
+        }
+      ],
+      "snapshot_sha256": "fc0ac8f464414f394d1be63cb264c65490bd277805c26012c649f4fb8d346905"
+    }
+  ],
+  "saved_report": {
+    "path": "evals/promptfoo/results/latest.json",
+    "sha256": "c2aaca6735af60722b60be79ac2cca1069e324f5958e8222e7afbb3c4885cbcd",
+    "git_reference": "96238a6:evals/promptfoo/results/latest.json",
+    "total_results": 24,
+    "case_ids": [
+      "webpage_account_security_alert_classic",
+      "webpage_nintendo_click_deal",
+      "webpage_itunes_professional_photo",
+      "webpage_demo_lock_icon_myth",
+      "webpage_demo_click_impulse",
+      "webpage_demo_pressure_words",
+      "webpage_demo_personal_story_trap",
+      "student_thinks_alert_is_real",
+      "student_wants_to_click",
+      "student_trusts_https",
+      "student_notices_misspelling_only",
+      "student_gives_vague_answer",
+      "younger_student_confused",
+      "overconfident_student",
+      "student_asks_what_to_do",
+      "student_asks_about_url_tools",
+      "student_mentions_panic_words",
+      "student_asks_about_bot_experience",
+      "student_correctly_lists_red_flags",
+      "student_thinks_design_proves_legit",
+      "student_asks_reverse_image",
+      "holdout_student_trusts_support_domain",
+      "holdout_parent_forwards_bank_alert",
+      "holdout_student_overuses_url_tool"
+    ],
+    "missing_current_case_ids": [
+      "webpage_demo_correct_safe_action",
+      "webpage_demo_correct_lock_reasoning",
+      "student_correctly_uses_real_bank_channel",
+      "student_correctly_rejects_https_identity",
+      "deliberate_repeated_click",
+      "deliberate_https_repetition",
+      "explicit_system_testing",
+      "joking_deliberate_repetition",
+      "first_unsafe_mistake",
+      "repeated_genuine_confusion",
+      "four_improving_attempts",
+      "frustrated_but_engaged",
+      "clarification_seeking",
+      "equal_count_deliberate",
+      "equal_count_confused",
+      "guard_dodge",
+      "guard_acknowledgement_only",
+      "guard_semantic_correction",
+      "guard_correct_verification_action"
+    ],
+    "extra_case_ids": [],
+    "failed_components": [
+      {
+        "case_id": "webpage_itunes_professional_photo",
+        "metric": "turn_rhythm",
+        "reason": "Could not extract JSON from llm-rubric response"
+      },
+      {
+        "case_id": "webpage_demo_pressure_words",
+        "metric": "reading_level",
+        "reason": "The output uses the jargon term 'urgency tactics' without explaining it, which violates the fail criteria regarding unexplained jargon. Additionally, the sentence structure is somewhat complex for a confused learner compared to the suggested passing examples."
+      },
+      {
+        "case_id": "overconfident_student",
+        "metric": "direct_correction",
+        "reason": "Could not extract JSON from llm-rubric response"
+      },
+      {
+        "case_id": "student_asks_about_bot_experience",
+        "metric": "persona_stability",
+        "reason": "The output explicitly states 'I do not have personal experiences,' which directly violates the fail criterion: 'Claims first-person lived experience as an AI or bot.' While the tone is generally appropriate, this specific claim of identity breaks the persona stability required by the rubric."
+      },
+      {
+        "case_id": "student_thinks_design_proves_legit",
+        "metric": "direct_correction",
+        "reason": "Could not extract JSON from llm-rubric response"
+      },
+      {
+        "case_id": "holdout_student_trusts_support_domain",
+        "metric": "response_length",
+        "reason": "must be non-empty and no more than 3 sentences/50 words (4 sentences, 47 words)"
+      },
+      {
+        "case_id": "holdout_student_overuses_url_tool",
+        "metric": "response_length",
+        "reason": "must be non-empty and no more than 3 sentences/50 words (4 sentences, 48 words)"
+      }
+    ]
+  },
+  "gate_result": {
+    "passed": false,
+    "threshold": 0.8,
+    "metrics": [
+      "turn_rhythm",
+      "direct_correction",
+      "persona_stability",
+      "low_boilerplate_praise",
+      "practical_knowledge",
+      "third_person_examples",
+      "reading_level",
+      "response_length",
+      "structured_output",
+      "mode_selection",
+      "mode_reason_grounding",
+      "guard_response_quality",
+      "guard_tone_safety"
+    ],
+    "summary": {
+      "current": {
+        "turn_rhythm": {
+          "passed": 14,
+          "total": 15,
+          "passRate": 0.9333333333333333
+        },
+        "direct_correction": {
+          "passed": 11,
+          "total": 13,
+          "passRate": 0.8461538461538461
+        },
+        "persona_stability": {
+          "passed": 6,
+          "total": 7,
+          "passRate": 0.8571428571428571
+        },
+        "low_boilerplate_praise": {
+          "passed": 8,
+          "total": 8,
+          "passRate": 1
+        },
+        "practical_knowledge": {
+          "passed": 21,
+          "total": 21,
+          "passRate": 1
+        },
+        "third_person_examples": {
+          "passed": 2,
+          "total": 2,
+          "passRate": 1
+        },
+        "reading_level": {
+          "passed": 10,
+          "total": 11,
+          "passRate": 0.9090909090909091
+        },
+        "response_length": {
+          "passed": 22,
+          "total": 24,
+          "passRate": 0.9166666666666666
+        },
+        "structured_output": {
+          "passed": 0,
+          "total": 0,
+          "passRate": 0
+        },
+        "mode_selection": {
+          "passed": 0,
+          "total": 0,
+          "passRate": 0
+        },
+        "mode_reason_grounding": {
+          "passed": 0,
+          "total": 0,
+          "passRate": 0
+        },
+        "guard_response_quality": {
+          "passed": 0,
+          "total": 0,
+          "passRate": 0
+        },
+        "guard_tone_safety": {
+          "passed": 0,
+          "total": 0,
+          "passRate": 0
+        }
+      },
+      "bySuite": {
+        "product_template": {
+          "turn_rhythm": {
+            "passed": 5,
+            "total": 6,
+            "passRate": 0.8333333333333334
+          },
+          "direct_correction": {
+            "passed": 5,
+            "total": 5,
+            "passRate": 1
+          },
+          "persona_stability": {
+            "passed": 2,
+            "total": 2,
+            "passRate": 1
+          },
+          "low_boilerplate_praise": {
+            "passed": 3,
+            "total": 3,
+            "passRate": 1
+          },
+          "practical_knowledge": {
+            "passed": 6,
+            "total": 6,
+            "passRate": 1
+          },
+          "third_person_examples": {
+            "passed": 1,
+            "total": 1,
+            "passRate": 1
+          },
+          "reading_level": {
+            "passed": 2,
+            "total": 3,
+            "passRate": 0.6666666666666666
+          },
+          "response_length": {
+            "passed": 7,
+            "total": 7,
+            "passRate": 1
+          },
+          "structured_output": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "mode_selection": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "mode_reason_grounding": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "guard_response_quality": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "guard_tone_safety": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          }
+        },
+        "synthetic_holdout": {
+          "turn_rhythm": {
+            "passed": 9,
+            "total": 9,
+            "passRate": 1
+          },
+          "direct_correction": {
+            "passed": 6,
+            "total": 8,
+            "passRate": 0.75
+          },
+          "persona_stability": {
+            "passed": 4,
+            "total": 5,
+            "passRate": 0.8
+          },
+          "low_boilerplate_praise": {
+            "passed": 5,
+            "total": 5,
+            "passRate": 1
+          },
+          "practical_knowledge": {
+            "passed": 15,
+            "total": 15,
+            "passRate": 1
+          },
+          "third_person_examples": {
+            "passed": 1,
+            "total": 1,
+            "passRate": 1
+          },
+          "reading_level": {
+            "passed": 8,
+            "total": 8,
+            "passRate": 1
+          },
+          "response_length": {
+            "passed": 15,
+            "total": 17,
+            "passRate": 0.8823529411764706
+          },
+          "structured_output": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "mode_selection": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "mode_reason_grounding": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "guard_response_quality": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          },
+          "guard_tone_safety": {
+            "passed": 0,
+            "total": 0,
+            "passRate": 0
+          }
+        }
+      },
+      "directCorrectionByStatus": {
+        "failed": {
+          "passed": 10,
+          "total": 12,
+          "passRate": 0.8333333333333334
+        },
+        "not_started": {
+          "passed": 1,
+          "total": 1,
+          "passRate": 1
+        }
+      }
+    },
+    "failures": [
+      "Current prompt has no results for metric structured_output",
+      "Current prompt has no results for metric mode_selection",
+      "Current prompt has no results for metric mode_reason_grounding",
+      "Current prompt has no results for metric guard_response_quality",
+      "Current prompt has no results for metric guard_tone_safety",
+      "product_template reading_level pass rate 66.7% is below 80%",
+      "product_template suite has no results for metric structured_output",
+      "product_template suite has no results for metric mode_selection",
+      "product_template suite has no results for metric mode_reason_grounding",
+      "product_template suite has no results for metric guard_response_quality",
+      "product_template suite has no results for metric guard_tone_safety",
+      "synthetic_holdout direct_correction pass rate 75% is below 80%",
+      "synthetic_holdout suite has no results for metric structured_output",
+      "synthetic_holdout suite has no results for metric mode_selection",
+      "synthetic_holdout suite has no results for metric mode_reason_grounding",
+      "synthetic_holdout suite has no results for metric guard_response_quality",
+      "synthetic_holdout suite has no results for metric guard_tone_safety"
+    ]
+  }
+}

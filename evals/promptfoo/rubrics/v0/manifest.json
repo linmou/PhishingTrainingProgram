@@ -1,0 +1,75 @@
+{
+  "intent": "Preserve the legacy v0 evaluators byte-for-byte without changing existing case assertions.",
+  "version": "v0",
+  "recorded": "2026-09-07",
+  "source_revision": "96238a6586a4930509ce4a4dd2b3fbfe97b4c9b3",
+  "source_state": "working-tree files as inspected; hashes are authoritative",
+  "files": [
+    {
+      "file": "direct_correction.md",
+      "source_path": "evals/promptfoo/rubrics/direct_correction.md",
+      "sha256": "0cbff554d559aa8f6aabc90e845efcdd0eacc365407bd2d39fff99760a905d8c"
+    },
+    {
+      "file": "guard_response_quality.md",
+      "source_path": "evals/promptfoo/rubrics/guard_response_quality.md",
+      "sha256": "5c3f615defa405ad11421764486b4442e1ea92aff3b498b864c88911e9605841"
+    },
+    {
+      "file": "guard_tone_safety.md",
+      "source_path": "evals/promptfoo/rubrics/guard_tone_safety.md",
+      "sha256": "a4c33aaf3d2b017f3273ad564bda7b8eccb9a3a0b6980051480186f5b9908db3"
+    },
+    {
+      "file": "low_boilerplate_praise.md",
+      "source_path": "evals/promptfoo/rubrics/low_boilerplate_praise.md",
+      "sha256": "63a40b0eb0e8b4045e4980a7abc16b885804c773c32dac3a0ba5fbfbd43cf3f7"
+    },
+    {
+      "file": "mode_reason_grounding.md",
+      "source_path": "evals/promptfoo/rubrics/mode_reason_grounding.md",
+      "sha256": "4114b8931761f215a6d0e60d320e2644b45001ba0e20ca231fcabe90fb5fdf54"
+    },
+    {
+      "file": "persona_stability.md",
+      "source_path": "evals/promptfoo/rubrics/persona_stability.md",
+      "sha256": "f61aac7212e865ac34e139b8d5196bd8018a7c0abe2cd331c3cecebbf3c4173a"
+    },
+    {
+      "file": "practical_knowledge.md",
+      "source_path": "evals/promptfoo/rubrics/practical_knowledge.md",
+      "sha256": "c73061195c026ae21ca93f908e6cb5c195e15138b948a470f4799e52f5d78e9a"
+    },
+    {
+      "file": "reading_level.md",
+      "source_path": "evals/promptfoo/rubrics/reading_level.md",
+      "sha256": "10f2f6a21c966c874b771ad4c20267ded71a71bc8bffac91f08d495ad7c654da"
+    },
+    {
+      "file": "response_length.md",
+      "source_path": "evals/promptfoo/rubrics/response_length.md",
+      "sha256": "bf3540191364e4bc4f1a63830fa2f64b45ed9b6efabc6797c2a482850c01b36b"
+    },
+    {
+      "file": "third_person_examples.md",
+      "source_path": "evals/promptfoo/rubrics/third_person_examples.md",
+      "sha256": "3df2a526eeef9c380e4a87fa56a2751a225d88d5ce47a074240f3980ab5e5af1"
+    },
+    {
+      "file": "turn_rhythm.md",
+      "source_path": "evals/promptfoo/rubrics/turn_rhythm.md",
+      "sha256": "6437a34cc279524a87b3f4180ce3c439922f3879f24bc306f4d0a89ce791b63c"
+    },
+    {
+      "file": "guard-mode-contract-rubric.js",
+      "source_path": "tutor-system/scripts/guard-mode-contract-rubric.js",
+      "sha256": "ded1610dd9ec7f116a44094f0a973e1eab63779882561b2acd9dc91a1983032d"
+    },
+    {
+      "file": "response-length-rubric.js",
+      "source_path": "tutor-system/scripts/response-length-rubric.js",
+      "sha256": "c7b683498c7deedd7a623ea86a7d81ae6966a80d651cba28d97291bb7b8c2776"
+    }
+  ],
+  "legacy_entrypoints": "Unversioned root Markdown and original script paths remain unchanged for existing cases. Do not edit them; v0 records their exact content."
+}

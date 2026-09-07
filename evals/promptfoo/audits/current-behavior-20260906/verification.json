@@ -1,0 +1,23 @@
+{
+  "intent": "Verify formalization documents against unchanged evaluation artifacts and the existing saved-report gate.",
+  "recorded_at_utc": "2026-09-06T09:08:58.282Z",
+  "source_commit": "96238a6",
+  "kind": "offline_document_and_inventory_verification",
+  "command": "rtk proxy node -e '\nconst fs=require(\"fs\"),path=require(\"path\"),crypto=require(\"crypto\"),assert=require(\"assert\"),yaml=require(\"yaml\");\nconst base=path.resolve(\"..\"),skill=path.join(base,\".agents/skills/ai-behavior-design-eval\");\nconst snap=JSON.parse(fs.readFileSync(path.join(base,\"evals/promptfoo/audits/current-behavior-20260906/snapshot.json\"),\"utf8\"));\nconst hash=p=>crypto.createHash(\"sha256\").update(fs.readFileSync(p)).digest(\"hex\");\nfor(const src of snap.sources) assert.equal(hash(path.join(base,src.path)),src.sha256,src.path+\" changed\");\nassert.equal(hash(path.join(base,snap.saved_report.path)),snap.saved_report.sha256);\nlet count=0;\nfor(const file of snap.inventory.case_files){\n const current=yaml.parse(fs.readFileSync(path.join(base,file.file),\"utf8\"));\n for(const c of snap.cases.filter(c=>c.file===file.file)){\n  assert.deepStrictEqual(current[c.index].vars,c.vars);\n  assert.deepStrictEqual(current[c.index].assert,c.assertions);\n  count+=c.assertions.length;\n }\n}\nassert.equal(count,173);assert.equal(snap.cases.length,43);\nconst gate=require(\"./scripts/check-promptfoo-quality-gate.js\").evaluateGate(JSON.parse(fs.readFileSync(path.join(base,snap.saved_report.path),\"utf8\")));\nassert.deepStrictEqual(gate,snap.gate_result);assert.equal(gate.passed,false);assert.equal(gate.failures.length,17);\nconst docs=[\"tutor-system/claude_docs/ai-behaviors/current-tutor-behavior.md\",\"tutor-system/claude_docs/ai-behaviors/current-tutor-case-audit.md\",\"tutor-system/claude_docs/ai-behaviors/current-tutor-evaluation-record.md\",\"tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_06_ai_behavior_formalization.md\"];\nlet links=0;\nfor(const doc of docs){\n const content=fs.readFileSync(path.join(base,doc),\"utf8\");\n for(const m of content.matchAll(/\\]\\(([^)]+)\\)/g)){\n  const [p,anchor]=m[1].split(\"#\"); const dest=path.resolve(base,path.dirname(doc),p);assert(fs.existsSync(dest),doc+\" -> \"+m[1]);\n  if(anchor){const headings=[...fs.readFileSync(dest,\"utf8\").matchAll(/^#+ (.+)$/gm)].map(h=>h[1].toLowerCase().replace(/[^a-z0-9 -]/g,\"\").replace(/ /g,\"-\"));assert(headings.includes(anchor),doc+\" -> \"+m[1]);} links++;\n }\n}\nconst audit=fs.readFileSync(path.join(base,docs[1]),\"utf8\");\nconst ids=[...audit.matchAll(/^\\| `([^`]+)` \\|/gm)].map(m=>m[1]).filter(id=>snap.cases.some(c=>c.case_id===id));\nassert.equal(ids.length,43);assert.equal(new Set(ids).size,43);\nassert.equal(snap.saved_report.missing_current_case_ids.length,19);\nconsole.log(JSON.stringify({source_hashes_verified:snap.sources.length,case_rows_verified:ids.length,assertions_preserved:count,document_links_and_anchors:links,saved_gate_reproduced:true,gate_failures:gate.failures.length,new_model_calls:0},null,2));\n'",
+  "exit_code": 0,
+  "stdout": "{\n  \"source_hashes_verified\": 23,\n  \"case_rows_verified\": 43,\n  \"assertions_preserved\": 173,\n  \"document_links_and_anchors\": 26,\n  \"saved_gate_reproduced\": true,\n  \"gate_failures\": 17,\n  \"new_model_calls\": 0\n}\n",
+  "checks": {
+    "source_hashes_verified": 23,
+    "case_rows_verified": 43,
+    "assertions_preserved": 173,
+    "document_links_and_anchors": 26,
+    "saved_gate_reproduced": true,
+    "gate_failures": 17,
+    "new_model_calls": 0
+  },
+  "limitations": [
+    "No live model or judge evaluation",
+    "No prompt/rubric/case modification",
+    "No production or browser execution"
+  ]
+}

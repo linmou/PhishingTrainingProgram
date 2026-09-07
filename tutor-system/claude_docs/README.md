@@ -2,8 +2,8 @@
 Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-03-28
-- Commit ID: pending at update time
+- Updated: 2026-09-07
+- Commit ID: `ba95540` (pre-change baseline; the commit containing this update is recorded by this file's Git history)
 
 # Tutor-System Documentation Hub
 
@@ -26,6 +26,14 @@ This directory contains comprehensive architectural and implementation documenta
 ## 📚 **Implementation Documentation**
 
 ### AI Assistant System
+- **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-approved tutoring principles, P3 subprinciples, conditional priorities, and pending behavior-spec alignment
+- **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
+- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Deployed object and designed reasoning/instructional-decision extension; production migration pending
+- **[Tutor behavior evaluation plan](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - v0/v1 mappings, independent deterministic and semantic checks, and remaining readiness gates; no current performance claim
+- **[Versioned tutor evaluators](../../evals/promptfoo/rubrics/README.md)** - Exact legacy v0 snapshots, clean LLM-facing v1 rubrics, metadata manifests, and locally validated decision checks
+- **[Behavior evaluator documentation update](./doc_update_record/documentation_update_record_v2026_09_07_behavior_evaluator_versions.md)** - Commit scope, preserved evidence, and validation boundary
+- **[Historical case audit](./ai-behaviors/tutor-behavior-case-audit.md)** - Preserved applicability and coverage findings for the audited cases
+- **[Historical evaluation evidence](./ai-behaviors/tutor-behavior-evaluation-record.md)** - Saved-run findings, metric-interaction limitations, and review evidence
 - **[ai-assistant-module.md](./ai-assistant-module.md)** - Comprehensive guide to the AI assistant functionality including configuration, integration, and testing
 - **[ai-suggestion-tracking.md](./ai-suggestion-tracking.md)** - AI suggestion tracking implementation with tutor feedback collection
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login
