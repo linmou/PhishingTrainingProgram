@@ -3,7 +3,7 @@
 Intent: preserve the real-browser test-room evidence, its fixture setup, and the boundary between UI/provider execution and the legacy quick-heuristic score.
 
 Updated: 2026-09-08
-Implementation commit ID: pending; recorded in Git history after commit.
+Implementation commit ID: follow-up evidence commit recorded in Git history.
 
 ## Scope
 
@@ -16,9 +16,9 @@ Implementation commit ID: pending; recorded in Git history after commit.
 
 - Six `test_only` behavior-demo rooms were created and six AI suggestion boxes rendered.
 - The run report preserves room IDs, suggestions, scores, errors, and screenshot paths: [report.json](../../../tmp/browser_demo_runs/report.json).
-- The legacy quick-heuristic result was 4/6. The only two failures were `webpage_demo_correct_safe_action` and `webpage_demo_correct_lock_reasoning`; both failed the old `practical_knowledge` check because the learner had already supplied the safe action and the response progressed to a remaining target.
+- The clean rerun's legacy quick-heuristic result was 3/6. `webpage_demo_correct_safe_action` and `webpage_demo_correct_lock_reasoning` failed the old `practical_knowledge` check because the learner had already supplied the safe action and the response progressed to a remaining target. `webpage_demo_personal_story_trap` also failed because this provider sample omitted a concrete next step after the honest no-experience disclosure.
 - `npm run build` passed after the header fix, with existing ESLint warnings only.
 
 ## Interpretation boundary
 
-This is browser/provider/UI smoke evidence, not a replacement for the frozen v1 semantic evaluation. The old browser heuristic still encodes a stricter repeated-safe-action expectation than the current response-contract and learning-progression specification. The two failures remain visible for scorer refinement and are not silently waived.
+This is browser/provider/UI smoke evidence, not a replacement for the frozen v1 semantic evaluation. The old browser heuristic still encodes a stricter repeated-safe-action expectation than the current response-contract and learning-progression specification. The clean report supersedes an earlier interrupted/pre-seed record and the earlier 4/6 provider sample; all three failures remain visible for scorer/prompt refinement and are not silently waived.
