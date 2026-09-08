@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+// #!/usr/bin/env node
 // Purpose: expose the evaluated candidate 11 policy as the active production tutor-agent prompt.
 
 export const ACTIVE_TUTOR_AGENT_PROMPT = String.raw`

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+// #!/usr/bin/env node
 // Purpose: validate the tutor's reason-first v2 decision without inferring missing fields or semantic decisions.
 import { TutorBehaviorDecision, TutorInstruction } from '../types';
 

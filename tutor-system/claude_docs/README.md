@@ -38,6 +38,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Historical evaluation evidence](./ai-behaviors/tutor-behavior-evaluation-record.md)** - Saved-run findings, metric-interaction limitations, and review evidence
 - **[Tutor refinement run record](./ai-behaviors/tutor-behavior-refinement-record.md)** - Candidate 11 evaluation, human selection, simulated multi-turn evidence, remaining formal-gate exceptions, and production verification
 - **[Candidate 11 documentation update](./doc_update_record/documentation_update_record_v2026_09_08_candidate_11_production.md)** - Production prompt/contract integration, local verification, and release-evidence boundary
+- **[Web test-room E2E update](./doc_update_record/documentation_update_record_v2026_09_08_web_test_rooms_e2e.md)** - Real-browser room creation, provider-backed suggestions, and legacy heuristic boundary
 - **[ai-assistant-module.md](./ai-assistant-module.md)** - Comprehensive guide to the AI assistant functionality including configuration, integration, and testing
 - **[ai-suggestion-tracking.md](./ai-suggestion-tracking.md)** - AI suggestion tracking implementation with tutor feedback collection
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login

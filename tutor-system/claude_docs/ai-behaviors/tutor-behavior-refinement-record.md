@@ -16,7 +16,7 @@ Experimental changes: candidate prompt content differs from the contract-aligned
 
 Evaluation verdict: **failed the complete frozen gate**. Every primary metric cleared its ordinary percentage threshold except the exact `decision_reasoning` gate, but retained-v0 regression, pair, and Guard-quality gates also failed.
 Grounding verdict: **resolved** against the adopted constitution and requirement annotations; no constitutional principle or priority changed during refinement.
-Release verdict: **incomplete**. On 2026-09-08 the responsible human explicitly selected candidate 11 for production integration despite the failed formal gate. Local prompt/parser/request/build checks pass; live provider and browser/downstream verification remain unrun.
+Release verdict: **incomplete**. On 2026-09-08 the responsible human explicitly selected candidate 11 for production integration despite the failed formal gate. Local prompt/parser/request/build checks pass. The web test-room E2E smoke run completed against the live provider, but its legacy quick-heuristic gate reported 4/6 because two already-demonstrated-safe-action cases were judged by a stale `practical_knowledge` rule that requires repeating a safe action.
 Blocking evidence: 13 gate issues: six regressions, three below-threshold rows, three pair failures, and one failed-baseline-to-inapplicable change. The selection is a recorded human release exception, not retroactive benchmark acceptance.
 
 ## Result summary
@@ -71,6 +71,18 @@ Gains and remaining weaknesses: compared with the aligned baseline, mode selecti
 Explanation and limits: the comparison does not isolate prompt wording from every production configuration difference. The additional simulated-user run is synthetic diagnostic evidence, not a baseline, holdout, or human-learning measurement. Production uses the exact candidate text, but its non-thinking and token settings differ from the target evaluation.
 
 Recommended action: integrate candidate 11 under human review as directed, preserve the failed automated verdict, and treat live provider/browser verification plus production feedback as pending release evidence rather than claiming formal benchmark acceptance.
+
+## Web test-room E2E smoke run
+
+Run date: 2026-09-08. The existing browser walkthrough was run against the CRA app at `http://localhost:3001` after the idempotent behavior-template seeder updated 15 global templates. The flow logged in as a tutor, opened `/tutor/test-rooms`, created each of the six `test_only` behavior-demo rooms, verified the seeded learner dialogue, generated an AI suggestion, and captured room/suggestion screenshots.
+
+| Result | Cases | Evidence |
+| --- | --- | --- |
+| Browser/provider/UI completed | 6/6 rooms created; 6/6 suggestion boxes rendered | [local report](../../../tmp/browser_demo_runs/report.json) and per-case screenshots in the same directory |
+| Legacy quick-heuristic score | 4/6 passed | `webpage_demo_correct_safe_action` and `webpage_demo_correct_lock_reasoning` failed only `practical_knowledge`; both responses acknowledged an already-completed safe action and advanced one remaining learning target |
+| Compile check after the browser-found header defect | Passed | `npm run build` completed with existing ESLint warnings and no compile/type errors |
+
+The two heuristic failures are not evidence that the rendered UI flow failed. They expose that this older browser-only scorer still treats every applicable response as requiring a new concrete safe-action phrase, unlike the current v1 learning-progression contract that permits concise reinforcement or progression after the learner has already demonstrated the safe action. The report preserves the raw suggestions and screenshots; no result was silently converted to a pass.
 
 ## Evidence
 

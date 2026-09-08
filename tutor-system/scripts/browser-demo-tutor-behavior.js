@@ -92,6 +92,12 @@ async function createRoomFromTemplate(page, templateName) {
   // Template-only path: must pick an existing global template.
   const select = page.locator('#template-select');
   await select.waitFor({ timeout: TIMEOUT });
+  // Template options arrive asynchronously after the page shell renders.
+  // Wait for the requested option so a fast browser cannot read a placeholder-only dropdown.
+  await select.locator('option').filter({ hasText: templateName }).first().waitFor({
+    state: 'attached',
+    timeout: TIMEOUT
+  });
   const options = await select.locator('option').allTextContents();
   const match = options.find(
     (o) => o.trim() === templateName || o.includes(templateName)
