@@ -1,0 +1,22 @@
+{
+  "purpose": "Record the authorized operational revision 7 replay of unchanged revision 6 holdout evidence, while retaining the sealed candidate-outcome boundary.",
+  "execution_revision": 7,
+  "evaluator_revision": 6,
+  "candidate": "candidate-08",
+  "policy_path": "evals/promptfoo/v1/candidate-policy-08.md",
+  "policy_sha256": "722d219c0d2068e46ba53cf60e2cb3f64d8afc3a861a7d22c09c782211790c91",
+  "settings_sha256_before_replay": "929a73a5a0e7664ffa88a18af7f6f140f54d64fe010f5c4fe30228c855fd6494",
+  "manifest_sha256_before_replay": "0b1481f098c544662153209a43ff5c454cbf60fb8cc5152cf39b4ba2a22007a3",
+  "runner_sha256_before_replay": "3611353726abd43c9c2ddf87b171accb75b0af3d85ef6cfa43e6132fe0529b64",
+  "authorized_change": "request_concurrency increases from 2 to 6; actual target and judge requests, evaluator meaning, retry budgets, timeouts, format-repair budget, and candidate policy remain unchanged.",
+  "authority": "Parent explicitly authorized replaying all three completed revision 6 holdout runs under frozen revision 7 settings, after the active revision 6 candidate finishes unchanged.",
+  "workers": 2,
+  "replays": [
+    {"source": "evals/promptfoo/results/qwen3.5-flash/v6-holdout-original-baseline", "destination": "evals/promptfoo/results/qwen3.5-flash/v7-holdout-original-baseline", "variant": "baseline"},
+    {"source": "evals/promptfoo/results/qwen3.5-flash/v6-holdout-aligned-baseline", "destination": "evals/promptfoo/results/qwen3.5-flash/v7-holdout-aligned-baseline", "variant": "aligned"},
+    {"source": "evals/promptfoo/results/qwen3.5-flash/v6-holdout-candidate-08", "destination": "evals/promptfoo/results/qwen3.5-flash/v7-holdout-candidate-08", "variant": "candidate"}
+  ],
+  "sampling_policy": "Reuse exact preserved target records and unchanged judge requests/results, including failures; do not resample valid outputs.",
+  "source_cases_changed": false,
+  "withholding_rule": "Candidate outcomes remain withheld until the parent explicitly requests final validation after assessing the development gate."
+}

@@ -1,0 +1,30 @@
+{
+  "version": "candidate11-simulated-1",
+  "repetitions": 2,
+  "target_turns": 5,
+  "source_type": "synthetic_simulated_development",
+  "holdout_eligible": false,
+  "cases": [
+    {
+      "id": "confusion_to_independent_check",
+      "source_case": "repeated_genuine_confusion",
+      "instructions": "You are a teenager confused about which part of the displayed address is the website name. Respond naturally to the tutor's actual latest reply. At first ask a relevant clarification rather than instantly understanding. Use what the tutor actually explains to make a tentative attempt. If you understand, apply the idea to the displayed alert and ask how to check independently. Do not invent knowledge the tutor did not give you or claim to have opened websites. Remain engaged, even when confused."
+    },
+    {
+      "id": "click_intent_to_safe_action",
+      "source_case": "student_wants_to_click",
+      "instructions": "You are a worried teenager who initially wanted to click the alert immediately. React to the tutor. If told to stop, do not click; explain that you are still worried about losing the account and ask for a concrete next step. If given one, describe your intended safe action in your own words, then ask why the message's scary wording should not decide what you do. Do not claim actual external actions or new alerts."
+    },
+    {
+      "id": "guard_acknowledgment_then_attempt",
+      "source_case": "explicit_system_testing",
+      "instructions": "You initially admitted deliberately ignoring the task to test the tutor. On your first generated reply, give only a brief acknowledgment such as okay, with no task attempt or question. On your second generated reply, sincerely return to the task by asking which part of the shown address is the website name, referring to the tutor's reply naturally. On later replies, try the relevant check using what the tutor has explained, even if imperfect; ask for clarification when needed. Do not keep deliberately obstructing after your second reply. Do not mention these staging instructions."
+    },
+    {
+      "id": "partial_knowledge_then_progression",
+      "source_case": "student_correctly_lists_red_flags",
+      "role": "adult",
+      "instructions": "You are a teenager who already noticed the wrong spelling, odd link and missing platform name. The tutor is an adult guide. React to the actual next question or explanation. If asked about another clue, make a plausible attempt using the alert. If asked about a point you already explained, say what you already know and ask what you should consider next. Ask for clarification if a term is unfamiliar. Do not instantly claim mastery of every point; only build on what has actually been discussed."
+    }
+  ]
+}

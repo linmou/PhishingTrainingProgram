@@ -20,43 +20,17 @@ import {
     formatRoomScenarioContext
 } from './ecologicalTutorCall';
 import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
+import { parseTutorDecision } from './tutorDecisionContract';
 
 export { AI_MODELS, DEFAULT_AI_MODEL };
 export type { AIModelName };
 
 export const parseTutorActionDecision = (content: unknown): TutorActionDecision => {
-    if (typeof content !== 'string' || !content.trim()) {
-        throw new Error('AI response did not contain a structured tutor decision');
-    }
-
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(content);
-    } catch {
-        throw new Error('AI response was not valid JSON for a tutor decision');
-    }
-
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('AI response must be a JSON object for a tutor decision');
-    }
-
-    const candidate = parsed as Record<string, unknown>;
-    const validModes: TutorResponseMode[] = ['tutoring', 'guard'];
-    if (!validModes.includes(candidate.mode as TutorResponseMode)) {
-        throw new Error('AI tutor decision mode must be tutoring or guard');
-    }
-
-    for (const field of ['mode_reason', 'suggested_response']) {
-        const value = candidate[field];
-        if (typeof value !== 'string' || !value.trim()) {
-            throw new Error(`AI tutor decision ${field} must be a non-empty string`);
-        }
-    }
-
+    const candidate = parseTutorDecision(content);
     return {
-        mode: candidate.mode as TutorResponseMode,
-        mode_reason: (candidate.mode_reason as string).trim(),
-        suggested_response: (candidate.suggested_response as string).trim()
+        mode: candidate.decision.mode,
+        mode_reason: candidate.reason,
+        suggested_response: candidate.response
     };
 };
 
@@ -91,7 +65,7 @@ const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
 const TUTOR_DECISION_REPAIR_INSTRUCTION =
-    'Return exactly one valid JSON object with the required string fields mode, mode_reason, and suggested_response. Do not include markdown, code fences, or any text outside the JSON object.';
+    'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"tutoring","instruction":"scaffolding"},"response":"learner-facing message"}. Do not emit legacy fields, markdown, code fences, or text outside the object.';
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
@@ -623,6 +597,7 @@ export class TutorSuggestionService {
         options?: {
             focusStudentMessage?: string;
             scenarioContext?: string;
+            priorMode?: TutorResponseMode | 'unknown';
         }
     ): Promise<{ suggestion: string; decision?: TutorActionDecision; success: boolean; error?: string }> {
         try {
@@ -661,7 +636,8 @@ export class TutorSuggestionService {
                 : buildEcologicalChatCompletionMessages(systemPrompt, {
                     scenario_context: comparisonScenario,
                     conversation_history: historyText,
-                    student_message: studentMessage
+                    student_message: studentMessage,
+                    prior_mode: options?.priorMode || 'unknown'
                 });
 
             const temperature =
@@ -891,7 +867,8 @@ export const generateTutorSuggestion = async (
             aiConfig,
             {
                 focusStudentMessage: options?.focusStudentMessage,
-                scenarioContext
+                scenarioContext,
+                priorMode: roomData.active_response_mode || 'unknown'
             }
         );
         
@@ -934,7 +911,7 @@ export const generateTutorSuggestion = async (
 async function validateRoom(roomId: string) {
     const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model')
+        .select('ai_assistant_enabled, ai_assistant_model, active_response_mode')
         .eq('id', roomId)
         .single();
 
@@ -954,6 +931,7 @@ async function generateSuggestionWithService(
     options?: {
         focusStudentMessage?: string;
         scenarioContext?: string;
+        priorMode?: TutorResponseMode | 'unknown';
     }
 ): Promise<{
     suggestion: string;

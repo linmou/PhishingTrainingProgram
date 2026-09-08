@@ -12,6 +12,9 @@ import {
   prePopulatedToContextMessages
 } from '../ecologicalTutorCall';
 import { getDemoRoomTemplateSeeds } from '../demoRoomTemplates';
+import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
+import fs from 'fs';
+import path from 'path';
 
 describe('ecologicalTutorCall', () => {
   it('formats room scenario like the webpage header', () => {
@@ -69,12 +72,13 @@ describe('ecologicalTutorCall', () => {
     const turn = buildEcologicalTutorUserTurn({
       scenario_context: 'Demo: Lock Icon Myth — practice',
       conversation_history: 'Tutor [TUTOR]: Look at the link.',
-      student_message: 'If it has a lock it is safe, right?'
+      student_message: 'If it has a lock it is safe, right?',
+      prior_mode: 'guard'
     });
 
-    expect(turn).toContain('Write the tutor response only');
+    expect(turn).toContain('Draft the next tutor decision');
     expect(turn).toContain('If it has a lock it is safe, right?');
-    expect(turn).toMatch(/2–4 short sentences|2-4 short sentences|40–70 words|Keep it short/i);
+    expect(turn).toContain('"prior_mode":"guard"');
     expect(turn).not.toMatch(/brief follow-up question/i);
   });
 
@@ -82,12 +86,23 @@ describe('ecologicalTutorCall', () => {
     const messages = buildEcologicalChatCompletionMessages('SYSTEM', {
       scenario_context: 'room',
       conversation_history: 'history',
-      student_message: 'student line'
+      student_message: 'student line',
+      prior_mode: 'tutoring'
     });
     expect(messages).toHaveLength(2);
-    expect(messages[0]).toEqual({ role: 'system', content: 'SYSTEM' });
+    expect(messages[0].role).toBe('system');
+    expect(messages[0].content).toContain('SYSTEM');
+    expect(messages[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
     expect(messages[1].role).toBe('user');
     expect(messages[1].content).toContain('student line');
+  });
+
+  it('uses the frozen candidate 11 text as the active agent prompt', () => {
+    const evaluatedPrompt = fs.readFileSync(
+      path.resolve(__dirname, '../../../../evals/promptfoo/v1/candidate-policy-11-contract-v2.md'),
+      'utf8'
+    ).trim();
+    expect(ACTIVE_TUTOR_AGENT_PROMPT).toBe(evaluatedPrompt);
   });
 
   it('converts pre-populated arrays into context messages for AI history', () => {

@@ -1,7 +1,7 @@
 # AI Suggestion Tracking Implementation
 
 > Intent: Document how AI suggestions are displayed, transferred to the composer, and tracked after the Guard Mode UI update.
-> Updated: 2026-09-02
+> Updated: 2026-09-08
 > Commit ID: pending at update time
 
 ## Overview
@@ -43,7 +43,7 @@ Guard Mode uses `supabase/migrations/023_guard_mode.sql`. It adds `raw_mode`, `m
   - **Reject**: Explicitly dismiss the suggestion
   - **Modify**: Edit the copied suggestion in the composer before sending
   - **Ignore**: Generate a new suggestion without using the previous one
-- **Structured decision**: Each usable generation returns `mode`, `mode_reason`, and `suggested_response`; malformed decisions are surfaced as errors
+- **Structured decision**: Candidate 11 returns `reason`, nested `decision.mode` / `decision.instruction`, and `response`; malformed decisions are surfaced as errors. The product adapter maps these to the existing `mode`, `mode_reason`, and `suggested_response` review/persistence fields.
 - **Guard authority**: Guard activation is controlled at the room level. The AI suggestion card does not display internal reasoning or a final-mode selector, and provides an `Activate Guard` / `Deactivate Guard` control immediately above `Quick Adjust` for tutors.
 
 ### 3. Tracking Features

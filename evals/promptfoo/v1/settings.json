@@ -1,0 +1,18 @@
+{
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "target_max_tokens": 8000,
+  "target_enable_thinking": true,
+  "target_format_attempts": 2,
+  "judge_max_tokens": 8000,
+  "judge_enable_thinking": true,
+  "repetitions": 2,
+  "transport_attempts": 3,
+  "transport_retry_delay_ms": 10000,
+  "request_concurrency": 6,
+  "timeout_ms": 180000,
+  "judge_method": "One check per request, scoped fields; at most one explicit schema-only repair; all attempts retained.",
+  "seed_policy": "Provider seed not configured; preserve both repetitions without selection.",
+  "changed_factors": "Execution revision 7 changes only per-process concurrency from two to six after older overlapping runs drained. Model, target/judge sampling requests, token limits, format repair, timeout, retry budget, evaluator revision 6 and all thresholds remain unchanged. Both baselines are matched replays. Candidate 08 reuses its preserved preflight target responses; partial revision 6 judging is retained as interrupted evidence, not accepted or resampled target behavior. No production migration."
+}

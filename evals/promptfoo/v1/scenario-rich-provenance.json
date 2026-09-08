@@ -1,0 +1,47 @@
+{
+  "suite_revision": "scenario-rich-1",
+  "base_suite": "development-with-guard.json",
+  "source_hash": "60d3bb45d487c908027d14c5ec376600a177fd72db758f0a428c675b072bcee1",
+  "created_at": "2026-09-07",
+  "case_count": 61,
+  "synthetic_case_count": 48,
+  "ecological_case_count": 13,
+  "changed_factor": "synthetic scenario_context and inventory realism; behavioral triggers and expected labels preserved",
+  "catalog": {
+    "account": {
+      "id": "account_security_alert",
+      "title": "Account Security Alert Scam",
+      "detection_area_count": 10,
+      "verification_step_count": 8,
+      "derived_from": "SCENARIO_TEMPLATES[Account Security Alert]"
+    },
+    "bank": {
+      "id": "bank_profile_suspension",
+      "title": "Bank Profile Suspension Text Scam",
+      "detection_area_count": 4,
+      "verification_step_count": 3,
+      "derived_from": "scenario-shaped synthetic inventory"
+    },
+    "platform": {
+      "id": "platform_account_alert",
+      "title": "Social Platform Account-Lock Alert",
+      "detection_area_count": 4,
+      "verification_step_count": 3,
+      "derived_from": "scenario-shaped synthetic inventory"
+    },
+    "redirect": {
+      "id": "shortened_redirect_alert",
+      "title": "Shortened Account-Verification Link",
+      "detection_area_count": 3,
+      "verification_step_count": 3,
+      "derived_from": "scenario-shaped synthetic inventory"
+    },
+    "school": {
+      "id": "school_account_alert",
+      "title": "School Account Login Alert",
+      "detection_area_count": 2,
+      "verification_step_count": 1,
+      "derived_from": "scenario-shaped synthetic inventory"
+    }
+  }
+}

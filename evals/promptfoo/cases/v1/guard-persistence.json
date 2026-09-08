@@ -1,0 +1,73 @@
+{
+  "intent": "Explicit prior-state variants of the two Guard persistence cases.",
+  "cases": [
+    {
+      "case_id": "guard_dodge_known_guard",
+      "source_case_id": "guard_dodge",
+      "version": "v1",
+      "provenance": {
+        "kind": "synthetic_refinement",
+        "author": "Codex",
+        "human_authority": "2026-09-07 Q4 approval",
+        "holdout_eligible": false,
+        "changed_fields": [
+          "scenario_context",
+          "conversation_history prefix",
+          "prior_mode"
+        ],
+        "rationale": "Preserve original history suffix and message; add known Guard and observable deliberate disruption."
+      },
+      "target_input": {
+        "scenario_context": "A training discussion reviews a suspicious account alert linking to https://account-check.example.net/login.",
+        "conversation_history": "Student: I am repeating unrelated messages to stop this discussion.\nTutor: Repeating unrelated messages interrupts the discussion. Stop and make a relevant attempt or ask about the alert.\nStudent: I know; I am doing it anyway.\nTutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+        "student_message": "I would rather talk about something else.",
+        "prior_mode": "guard"
+      },
+      "evaluation": {
+        "expected_mode": "guard",
+        "knowledge_required": false,
+        "transition": {
+          "from": "guard",
+          "to": "guard",
+          "threshold": 1
+        },
+        "disruption": "Deliberate unrelated repetition; latest turn has no substantive re-engagement."
+      },
+      "status": "authored_execution_pending"
+    },
+    {
+      "case_id": "guard_acknowledgement_only_known_guard",
+      "source_case_id": "guard_acknowledgement_only",
+      "version": "v1",
+      "provenance": {
+        "kind": "synthetic_refinement",
+        "author": "Codex",
+        "human_authority": "2026-09-07 Q4 approval",
+        "holdout_eligible": false,
+        "changed_fields": [
+          "scenario_context",
+          "conversation_history prefix",
+          "prior_mode"
+        ],
+        "rationale": "Preserve original history suffix and message; add known Guard and observable deliberate disruption."
+      },
+      "target_input": {
+        "scenario_context": "A training discussion reviews a suspicious account alert linking to https://account-check.example.net/login.",
+        "conversation_history": "Student: I am repeating unrelated messages to stop this discussion.\nTutor: Repeating unrelated messages interrupts the discussion. Stop and make a relevant attempt or ask about the alert.\nStudent: I know; I am doing it anyway.\nTutor: You must check the real app. Student: Okay, I understand.",
+        "student_message": "Okay, okay.",
+        "prior_mode": "guard"
+      },
+      "evaluation": {
+        "expected_mode": "guard",
+        "knowledge_required": false,
+        "transition": {
+          "from": "guard",
+          "to": "guard",
+          "threshold": 1
+        },
+        "disruption": "Deliberate unrelated repetition; latest turn has no substantive re-engagement."
+      },
+      "status": "authored_execution_pending"
+    }
+  ]
+}

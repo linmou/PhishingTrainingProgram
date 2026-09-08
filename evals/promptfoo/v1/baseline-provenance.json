@@ -1,0 +1,25 @@
+{
+  "intent": "Unchanged prompt snapshot with declared input/configuration repairs before candidate authoring.",
+  "created_at": "2026-09-07T11:36:12.801Z",
+  "count": 45,
+  "changed_factors": [
+    "matching room inventory",
+    "explicit scenarios for previously absent Guard contexts",
+    "prior state supplied consistently",
+    "new structured fields will be a separately declared contract adaptation"
+  ],
+  "source_hashes": [
+    {
+      "file": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "sha256": "b156bc65bf8f07c00dbddc58e55a414bfd98f9b7a7c9a4232f1c7e241e75e21f"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "sha256": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2"
+    },
+    {
+      "file": "tutor-system/src/services/demoRoomTemplates.ts",
+      "sha256": "37c247bc20b914c6259ac1ec52b97ee4c59463d49845ba843429f67b5c967e47"
+    }
+  ]
+}

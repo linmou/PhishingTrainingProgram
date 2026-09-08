@@ -2,6 +2,8 @@ Allowed evaluator inputs: parsed `suggested_response`, scenario_context, convers
 
 Return only JSON: {"pass":true,"score":1,"reason":"Brief observable evidence"} or {"pass":false,"score":0,"reason":"Brief observable evidence"}. Keep reason under 25 words. Missing/empty required text fails this rubric; malformed target objects are handled as C01 validity errors before judging. Invalid/unavailable judge output is an evaluator error, never a pass.
 
+Apply to expected instructional turns with supplied learner history and the actual configured knowledge inventory sufficient to assess the target. Missing required inventory/history is an evaluation gap, not evidence of mastery or inapplicability. Participation-only turns do not require a learning target; a wrong returned mode must not suppress an expected instructional-turn check.
+
 Pass when the response uses learner-demonstrated meaning to choose at most one relevant, unmet configured target, or consolidates if no useful target remains. A tutor-mentioned point is not learner mastery. Semantic equivalents count; later learner contradiction reopens the relevant target. Distinguish selecting a new target from restating a fact to consolidate it. Prefer scenario-visible/safety-critical gaps; do not impose a unique target where several are equally eligible.
 
 Fail on needless re-testing of a demonstrated point, inferring permanent mastery, ignoring a later contradiction, selecting multiple new targets, or inventing unrelated curriculum. Do not require a question or judge teaching style.

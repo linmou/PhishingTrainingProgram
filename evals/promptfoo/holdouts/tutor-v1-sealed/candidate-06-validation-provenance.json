@@ -1,0 +1,16 @@
+{
+  "purpose": "Record candidate freeze authority and policy identity before independent holdout execution, without exposing outcomes during development validation.",
+  "candidate": "candidate-06",
+  "policy_path": "evals/promptfoo/v1/candidate-policy-06.md",
+  "policy_sha256_before_execution": "a506c16f334da40a48013c75dd75e86778f35ce76d2f51691262bce0c82e3115",
+  "freeze_authority": "Parent agent explicitly declared candidate 06 frozen and authorized this unchanged policy for sealed validation.",
+  "packaged_cases_path": "evals/promptfoo/holdouts/tutor-v1-sealed/packaged-cases.json",
+  "packaged_cases_sha256": "fc304bd689223bf3a8b96594367cd3b3a5ddaf6d1c82abdab80b63bc2e40e4ba",
+  "run_path": "evals/promptfoo/results/qwen3.5-flash/v3-holdout-candidate-06",
+  "workers": 4,
+  "settings_path": "evals/promptfoo/v1/settings.json",
+  "settings_policy": "Use unchanged settings through runner.js and preserve the full run snapshot.",
+  "withholding_rule": "Keep all candidate outcomes, including aggregate pass/fail/error counts, withheld until the parent explicitly requests validation results after the development gate. Report only execution completion and paths in the interim.",
+  "prompt_content_inspected_by_validator": false,
+  "cases_changed_after_authorship": false
+}

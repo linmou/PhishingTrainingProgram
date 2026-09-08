@@ -34,21 +34,23 @@ describe('Promptfoo evaluation prompt formatting', () => {
     });
 
     expect(messages).toHaveLength(2);
-    expect(messages[0]).toEqual({
-      role: 'system',
-      content: currentSystemPrompt
-    });
+    expect(messages[0].role).toBe('system');
+    expect(messages[0].content).toContain(currentSystemPrompt);
+    expect(messages[0].content).toContain('ACTIVE RESPONSE CONTRACT (v2)');
     expect(messages[1].role).toBe('user');
     expect(messages[1].content).toContain('{{scenario_context}}');
     expect(messages[1].content).toContain('{{conversation_history}}');
     expect(messages[1].content).toContain('{{student_message}}');
 
     expect(concreteUserTurn).toContain(firstCase.scenario_context);
-    expect(concreteUserTurn).toContain(firstCase.conversation_history);
     expect(concreteUserTurn).toContain(firstCase.student_message);
-    expect(concreteUserTurn).toContain('Write the tutor response only');
+    expect(concreteUserTurn).toContain('Draft the next tutor decision');
     expect(concreteUserTurn).not.toMatch(/brief follow-up question/i);
     expect(concreteUserTurn).not.toContain('{{scenario_context}}');
+    const contextLines = concreteUserTurn.split('\n');
+    const serializedContext = JSON.parse(contextLines[contextLines.length - 1] || '{}');
+    expect(serializedContext.conversation_history).toBe(firstCase.conversation_history);
+    expect(serializedContext.prior_mode).toBe('unknown');
   });
 
   it('loads configured Promptfoo chat prompts and ecological webpage cases', () => {

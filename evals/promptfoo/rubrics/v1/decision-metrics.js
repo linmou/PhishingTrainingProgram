@@ -59,7 +59,19 @@ function modeSelection(output, context) {
   return compare(output, context, 'mode_selection', 'expected_mode', MODES, value => value.mode);
 }
 
+function modeSelectionV2(output, context) {
+  return compare(output, context, 'mode_selection', 'expected_mode', MODES,
+    value => value.decision && !Array.isArray(value.decision) && typeof value.decision === 'object'
+      ? value.decision.mode : undefined);
+}
+
 function instructionSelection(output, context) {
+  return compare(output, context, 'instruction_selection', 'expected_instruction', INSTRUCTIONS,
+    value => value.decision && !Array.isArray(value.decision) && typeof value.decision === 'object'
+      ? value.decision.instruction : undefined);
+}
+
+function instructionSelectionV2(output, context) {
   return compare(output, context, 'instruction_selection', 'expected_instruction', INSTRUCTIONS,
     value => value.decision && !Array.isArray(value.decision) && typeof value.decision === 'object'
       ? value.decision.instruction : undefined);
@@ -90,4 +102,30 @@ function contractValidity(output) {
     'v1 contract', value);
 }
 
-module.exports = { modeSelection, instructionSelection, contractValidity };
+function contractValidityV2(output) {
+  const parsed = parse(output);
+  if (!parsed.value) return result('contract_validity', parsed.status, parsed.reason, 'v2 contract', undefined);
+  const value = parsed.value;
+  const issues = [];
+  for (const field of ['reason', 'response']) {
+    if (typeof value[field] !== 'string' || !value[field].trim()) issues.push(`${field} must be a non-empty string`);
+  }
+  const first = output.match(/^\s*\{\s*("(?:[^"\\]|\\.)*")\s*:/);
+  if (!first || JSON.parse(first[1]) !== 'reason') issues.push('reason must be serialized first');
+  if ('mode' in value || 'mode_reason' in value) issues.push('mode and mode_reason must be nested under decision');
+  const decision = value.decision;
+  if (!decision || typeof decision !== 'object' || Array.isArray(decision)) {
+    issues.push('decision must be an object');
+  } else {
+    if (!MODES.includes(decision.mode)) issues.push('decision.mode must be tutoring or guard');
+    if (!INSTRUCTIONS.includes(decision.instruction)) issues.push('decision.instruction is missing or invalid');
+    if (INSTRUCTIONS.includes(decision.instruction) && decision.instruction === null && decision.mode !== 'guard') {
+      issues.push('null instruction is allowed only in Guard');
+    }
+  }
+  return result('contract_validity', issues.length ? 'error' : 'pass',
+    issues.length ? issues.join('; ') : 'Valid v2 object; semantic correctness is checked separately.',
+    'v2 contract', value);
+}
+
+module.exports = { modeSelection, instructionSelection, contractValidity, modeSelectionV2, instructionSelectionV2, contractValidityV2 };

@@ -3,7 +3,7 @@
 Intent: separate legacy v0 evidence from specification-derived v1 checks without silently changing an existing benchmark.
 
 Updated: 2026-09-07
-Commit ID: `ba95540` (pre-change baseline; this update's containing commit is recorded in Git history).
+Commit ID: `6cbe728` (pre-change baseline; this update's containing commit is recorded in Git history).
 
 ## Version ownership
 
@@ -18,12 +18,22 @@ v1 Markdown files contain only LLM-facing judging instructions, criteria, and ex
 
 ## Responsibility changes
 
-- v0 `turn_rhythm` has no composite v1 replacement. T01 uses deterministic [instruction_selection](v1/instruction_selection.js) plus [direct_correction](v1/direct_correction.md) for action realization. T02 uses [learning_state_target](v1/learning_state_target.md) for learner-evidenced target choice. The old mixed rubric remains available for historical analysis, not as the definition of v1 behavior.
+- v0 `turn_rhythm` has no composite v1 replacement. T01 uses deterministic [instruction_selection](v1/instruction_selection.js) plus [instruction_realization](v1/instruction_realization.md) for action realization. T02 uses [learning_state_target](v1/learning_state_target.md) for learner-evidenced target choice. The old mixed rubric remains available for historical analysis, not as the definition of v1 behavior.
 - v0 `guard_response_quality` becomes v1 [disruption_correction](v1/disruption_correction.md) for G02 only. v1 [guard_tone_safety](v1/guard_tone_safety.md) owns G03 delivery. Neither requires task knowledge or a safe action merely because Guard applies. T04 still governs any knowledge actually supplied in either mode.
 - v0's combined schema/mode function is preserved, not reused as two independent v1 metrics. v1 [mode_selection](v1/mode_selection.js) checks G01; [contract_validity](v1/contract_validity.js) is a separate supporting check.
 - [decision_reasoning](v1/decision_reasoning.md) covers C01's broader explanation; the v0 mode-reason rubric does not prove this new field's quality.
 
 Preserve existing assertions and failure evidence. The user's 2026-09-07 decisions authorize these responsibility changes, not retroactive regrading. Audit retained comparable checks and superseded criteria before wiring v1; baseline and candidate must use the same v1 snapshots/settings, while historical v0 results remain labeled v0.
+
+## Approved v1 review rules
+
+The user approved these v1 metric renames on 2026-09-07: `direct_correction` → `instruction_realization`, `low_boilerplate_praise` → `contribution_feedback`, `practical_knowledge` → `contextual_knowledge_quality`, and `third_person_examples` → `honest_self_representation`. v0 IDs retain their historical meanings.
+
+G03 quality requires 80%, with dignity separately requiring 100%. T04 quality requires 80%, its safety-critical partition 100%, and its `accuracy_pass` hard-constraint verdict 100%. Rubric output can distinguish vague-but-true advice from false claims.
+
+T03 emits conditional applicability when feedback is present; T04 does so when knowledge is optional and absent. Valid inapplicability uses null pass/score and cannot become an automatic pass. Every expected applicability assessment, its reason, and baseline/candidate applicability changes must remain visible. The [evaluation plan](../../../tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md) owns denominators and gates; active reporting does not yet implement this extension.
+
+The [v1 case review](../../../tutor-system/claude_docs/ai-behaviors/tutor-behavior-case-review.md) covers the 43 existing cases and preserves all 173 assertions, with explicit refinements and review questions.
 
 ## Deterministic check use
 

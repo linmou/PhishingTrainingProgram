@@ -156,10 +156,19 @@ export interface AIResponse {
 
 export type TutorResponseMode = 'tutoring' | 'guard';
 
+export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation';
+
 export interface TutorActionDecision {
     mode: TutorResponseMode;
     mode_reason: string;
     suggested_response: string;
+}
+
+// Raw v2 model contract; the reviewed-response workflow maps this to TutorActionDecision.
+export interface TutorBehaviorDecision {
+    reason: string;
+    decision: { mode: TutorResponseMode; instruction: TutorInstruction | null };
+    response: string;
 }
 
 // Context types

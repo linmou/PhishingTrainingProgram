@@ -11,6 +11,7 @@ const crypto = require('node:crypto');
 const mode = require('./mode_selection');
 const instruction = require('./instruction_selection');
 const contract = require('./contract_validity');
+const metrics = require('./decision-metrics');
 
 function raw(overrides = {}) {
   return JSON.stringify({
@@ -129,6 +130,33 @@ test('all instructional enum values are supported and absent decisions remain er
   assert.equal(mode(raw({ mode: 'guard' }), { vars: { expected_mode: ['tutoring', 'guard'] } }).status, 'pass');
 });
 
+test('v2 contract uses reason first and nests mode under decision', () => {
+  const output = JSON.stringify({
+    reason: 'The learner is asking for help with the check.',
+    decision: { mode: 'tutoring', instruction: 'scaffolding' },
+    response: 'Which part of the address looks different from the real service?'
+  });
+  assert.equal(metrics.contractValidityV2(output).status, 'pass');
+  assert.equal(metrics.modeSelectionV2(output, { vars: { expected_mode: 'tutoring' } }).status, 'pass');
+  assert.equal(metrics.instructionSelectionV2(output, { vars: { expected_instruction: 'scaffolding' } }).status, 'pass');
+});
+
+test('v2 contract rejects duplicated top-level mode fields and tutoring null instruction', () => {
+  const duplicate = JSON.stringify({
+    reason: 'evidence',
+    mode: 'tutoring',
+    decision: { mode: 'tutoring', instruction: 'scaffolding' },
+    response: 'Ask one focused question.'
+  });
+  assert.equal(metrics.contractValidityV2(duplicate).status, 'error');
+  const nullTutoring = JSON.stringify({
+    reason: 'evidence',
+    decision: { mode: 'tutoring', instruction: null },
+    response: 'Let us return to the task.'
+  });
+  assert.equal(metrics.contractValidityV2(nullTutoring).status, 'error');
+});
+
 test('v0 archives match all 13 legacy evaluators without modifying their existing entrypoints', () => {
   const archive = path.resolve(__dirname, '../v0');
   const root = path.resolve(__dirname, '../../../..');
@@ -144,7 +172,7 @@ test('v0 archives match all 13 legacy evaluators without modifying their existin
 test('v1 file hashes and requirement mappings reconcile, with no composite turn_rhythm', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'manifest.json'), 'utf8'));
   assert.equal(manifest.version, 'v1');
-  assert.equal(manifest.status, 'draft_uncalibrated');
+  assert.ok(['draft_uncalibrated', 'frozen'].includes(manifest.status));
   for (const entry of manifest.files) {
     assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, entry.file))).digest('hex'), entry.sha256);
   }
@@ -153,7 +181,7 @@ test('v1 file hashes and requirement mappings reconcile, with no composite turn_
   assert.deepEqual(check('learning_state_target').requirements, ['T02']);
   assert.deepEqual(check('disruption_correction').requirements, ['G02']);
   assert.equal(check('mode_selection').method, 'deterministic');
-  assert.equal(check('direct_correction').method, 'llm_rubric');
+  assert.equal(check('instruction_realization').method, 'llm_rubric');
   assert.equal(check('turn_rhythm'), undefined);
   for (const entry of manifest.files.filter(file => file.file.endsWith('.md'))) {
     const rubric = fs.readFileSync(path.join(__dirname, entry.file), 'utf8');

@@ -1,0 +1,253 @@
+{
+  "purpose": "Record post-authorship packaging of immutable sealed holdouts with the unchanged production baseline builders.",
+  "schema_version": 1,
+  "set_id": "tutor-v1-sealed",
+  "created_at_utc": "2026-09-07T12:02:14.527Z",
+  "packager": "/root/independent_holdouts",
+  "original_artifacts": [
+    {
+      "path": "evals/promptfoo/holdouts/tutor-v1-sealed/cases.json",
+      "sha256": "92b56265d6d80f05dedf93db533933efd61461b064c5feba76dd56c2fa9a4c91"
+    },
+    {
+      "path": "evals/promptfoo/holdouts/tutor-v1-sealed/provenance.json",
+      "sha256": "e75bcf1c7acf4cc891bcf4c6e2c25653bae707100d364aedfa70b4a8b3ab9735"
+    }
+  ],
+  "exposure": {
+    "chronology": "Product prompt builder inspection and transpilation occurred only after cases.json and provenance.json were sealed and their hashes recorded.",
+    "authorized_purpose": "Post-authorship baseline message packaging only.",
+    "original_case_content_changed": false,
+    "prompt_author_case_content_exposed": false,
+    "independent_author_now_exposed_to_product_baseline": true,
+    "development_case_content_inspected": false,
+    "candidate_prompt_inspected": false,
+    "model_outputs_inspected": false,
+    "existing_provenance_note": "Original provenance.json records authorship-time independence and remains immutable. This separate record documents later product-builder exposure without changing authored cases.",
+    "quarantine": "Packaged inputs remain sealed from the prompt author until the candidate is frozen."
+  },
+  "packaging": {
+    "base_preset": "PRESET_CONFIGS.casual_peer",
+    "peer_role_override": "low",
+    "adult_role_override": "high",
+    "remaining_preset_values": "unchanged",
+    "inventory_source": "Each frozen case inventory",
+    "system_builder": "generateSystemPrompt",
+    "message_builder": "buildEcologicalChatCompletionMessages(baseline_system, input)",
+    "appended_user_turn_suffix": "A newline followed by Known prior participation mode: and (prior_mode || unknown).",
+    "target_annotations": "Original expected fields remain evaluator-only; the production message builder consumes scenario_context, conversation_history, and student_message, with explicit prior mode appended.",
+    "typescript_hook": "Same CommonJS / ES2019 / esModuleInterop transpileModule hook as evals/promptfoo/v1/prepare.js; development preparation was not executed.",
+    "typescript_version": "4.9.5"
+  },
+  "loaded_product_sources": [
+    {
+      "path": "tutor-system/src/services/systemPrompts.ts",
+      "sha256": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/index.ts",
+      "sha256": "a4946ebe9461def95c0fba3316073e93f518114455793856bd4565da285e0c1f"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/basePrompt.ts",
+      "sha256": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "sha256": "3416473893908b7df049d11a7d571db01a933b6405fec3d7732738390e8bd2cc"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts",
+      "sha256": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts",
+      "sha256": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "sha256": "4a126f3f2e56c27c1d9bf9229518740d6277344052874247417c745f78be2890"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+      "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts",
+      "sha256": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "sha256": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/presets.ts",
+      "sha256": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/types.ts",
+      "sha256": "468a11262670a539770017ff0456e44d95279c713ec44aee40a007410447a479"
+    },
+    {
+      "path": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "sha256": "b156bc65bf8f07c00dbddc58e55a414bfd98f9b7a7c9a4232f1c7e241e75e21f"
+    }
+  ],
+  "verification": {
+    "case_count": 24,
+    "case_ids_match": true,
+    "input_fields_match": true,
+    "expected_fields_match": true,
+    "all_original_case_fields_match": true,
+    "baseline_system_matches_system_message": true,
+    "prior_mode_suffix_matches": true,
+    "source_hashes_match_authorship_seal": true,
+    "model_calls": 0
+  },
+  "per_case_hashes": [
+    {
+      "id": "sealed-tutor-01",
+      "original_case_sha256": "ef6ad89efd6be565582ab779ad4e4d070333137965eb3c24dee939342ea52480",
+      "baseline_system_sha256": "e88aabaf38dfa4755423ab185812e09967ee487a91ed827a83e90646d0ef26c4",
+      "baseline_messages_sha256": "924598050432a485bf349719e99afa092bf6fadb36a199a6b93bf1cc5f29a13c"
+    },
+    {
+      "id": "sealed-tutor-02",
+      "original_case_sha256": "bae68daac94a5bf931b88400935b1e3b65de9f7abf0cf1c3d01c32fb01b00440",
+      "baseline_system_sha256": "e88aabaf38dfa4755423ab185812e09967ee487a91ed827a83e90646d0ef26c4",
+      "baseline_messages_sha256": "0d5fb666112ef9d53312fb17cb018a20d20f0fe3d0794444c68787a60274934a"
+    },
+    {
+      "id": "sealed-tutor-03",
+      "original_case_sha256": "54ef29e47ead8a1b5e59e3403f56b4471b68a5464960d48a850d2f83e1b5bbae",
+      "baseline_system_sha256": "e43b2ea7bcd4f8421a4cba3e9280b5e53c86f2c93d22d71eb85ee178e8121a46",
+      "baseline_messages_sha256": "e4321e36f7c73babeccfb079af29eaeeaba41b25529daf163672ae01e8263456"
+    },
+    {
+      "id": "sealed-tutor-04",
+      "original_case_sha256": "6d6ac1aeb83d24b14bac50a3804d8313695db780115f325b9f00fb8c425e81a5",
+      "baseline_system_sha256": "e43b2ea7bcd4f8421a4cba3e9280b5e53c86f2c93d22d71eb85ee178e8121a46",
+      "baseline_messages_sha256": "30981261dd987195b8aee979618ce51954430fcaaed49253f731cfc08947e3ac"
+    },
+    {
+      "id": "sealed-tutor-05",
+      "original_case_sha256": "e1dcb035bfdddd7c3a6744334408da87dbb276b01fc6cb3ecbd0486f63e1d652",
+      "baseline_system_sha256": "1f7a3ba80b3e037884c4f474176320cc7cb913bc13a91975dc28a479d63e2f4d",
+      "baseline_messages_sha256": "a2bd39e97f7fbb1c8904e9bbac6229ef03085a87c5a28032bb5a2e812a70431b"
+    },
+    {
+      "id": "sealed-tutor-06",
+      "original_case_sha256": "d374b80c368f90f7d32630664be60bb04d58d61703741e5f6f8fd65fd11347ea",
+      "baseline_system_sha256": "43bb776ef480ba2de9d179626d2d56d207434742bd585cc2b99074dbb61eaf9a",
+      "baseline_messages_sha256": "876910f9c2a3cafcdfaae609ed3789cca563041b0158010e83b15496867f1144"
+    },
+    {
+      "id": "sealed-tutor-07",
+      "original_case_sha256": "f41b2d4f6328e0a59ba6ae30a3bd17255e676a500004672719157d35d176d1ee",
+      "baseline_system_sha256": "2802d4aa75a842c979e1f7d89cb654f57305da7206e2b469d0f5c3f7989782a3",
+      "baseline_messages_sha256": "bcd95d9ff3c9490c1dac8a3048796c9245c464a1f41537eb4a42d83065ecb1f4"
+    },
+    {
+      "id": "sealed-tutor-08",
+      "original_case_sha256": "1beaf62e3462e341c9332dccf7e3c345e20341f9e3e5efe6e479a6845bac1b1a",
+      "baseline_system_sha256": "181261e2486bc23ef43554a828adfdf04f7287965a244db6742bf0f8aca8a4c0",
+      "baseline_messages_sha256": "816b5feaf8904afe6cc83276ee56042c8fcba76bc3731bd9423574af3d1b13bc"
+    },
+    {
+      "id": "sealed-tutor-09",
+      "original_case_sha256": "f4b84faed57ee51aab467bff759fe881898aabde586d6181bd8c3d8c4ac54fc5",
+      "baseline_system_sha256": "0d00858950384fbaff187e7e9aa4e2533b214acdca338ef88b4d475c1bcf24fb",
+      "baseline_messages_sha256": "35d514ecf7d526adaf179a97a86388afe26d670ec81a06177f5ea06919f9e5bf"
+    },
+    {
+      "id": "sealed-tutor-10",
+      "original_case_sha256": "0d6643c23d80deeb03120412f56848d341522c19a2ea942594495917311785c8",
+      "baseline_system_sha256": "bfc02947e8b91f7e7cc777fbc0e92a0f8e0ddadf90847aa97ab794e6400a9c17",
+      "baseline_messages_sha256": "6dd1379273acfe46e3b095ae4d808fd1ae013d5bd163a62c573d5c204417555a"
+    },
+    {
+      "id": "sealed-tutor-11",
+      "original_case_sha256": "d4e87716320ae1344440d32993125ac04f40871a2188762d9e76c3b0fd6c8055",
+      "baseline_system_sha256": "5f0d1a9d2eb9d753efb653526ef5b2913055e7e6a39d049929e835c8f0ef87a0",
+      "baseline_messages_sha256": "5bce3d325f8687a707ab9c8e316b53c81e2b729a34255a410d796b3e4933fc4b"
+    },
+    {
+      "id": "sealed-tutor-12",
+      "original_case_sha256": "9944e80f5635b10281b78509678975900c405c4562ee71c90c68caf51d22db0d",
+      "baseline_system_sha256": "e6fb199b13ffe0ab5e10aecb709b306ff15d281d2b145e20bab24f6543acfd57",
+      "baseline_messages_sha256": "12e33322c797e197f5ac31b6f76f2077965ed7dd6b6c8cbe35a80a0e5d279f6e"
+    },
+    {
+      "id": "sealed-tutor-13",
+      "original_case_sha256": "5f236733f42ee0f295e9ef68f9b58d104521153b1eba3aef21cf33af25acd8ae",
+      "baseline_system_sha256": "b0496771231cab4b9e2f9fd8fe2f78a0ae5c4c434251971ea4610a68108d9061",
+      "baseline_messages_sha256": "efbe9cf682b0a3402b21c57d7351e5a8a879b41cf914ed929f7c323cb5ea705e"
+    },
+    {
+      "id": "sealed-tutor-14",
+      "original_case_sha256": "cdcd2477df9eec7b9ca0d7b3ce7ee16a6fd9c397ca273d099d173dc759898fba",
+      "baseline_system_sha256": "298f1008b1208036c086779470b9873ba2be4dbd6b74a77f4cfb77801ef4a77c",
+      "baseline_messages_sha256": "7f7441f9c46583821981e5037231591855c199774a51e7c0b751a923f5b6d518"
+    },
+    {
+      "id": "sealed-tutor-15",
+      "original_case_sha256": "cfcf6992c92b4ac7e074897cbd97d5792083f156baf2d31db84108cc96c9bab3",
+      "baseline_system_sha256": "7ebed53656a54e893491ebbd0a139860d9e9e0236ff0891ca96cbf2dd7fc1c50",
+      "baseline_messages_sha256": "585c4f286a613b8592cb843241c0fedfafcc4fbda6cac1604274175547268590"
+    },
+    {
+      "id": "sealed-tutor-16",
+      "original_case_sha256": "40e21762ae22712b61fe5fe3a7d10e2f5eb9b6b3b18ea463bb2aa96bb3d74b1e",
+      "baseline_system_sha256": "0eafbfe21e47ab94eefd3d770df77d1e572e89094d2eb3e93a256ca04856e73b",
+      "baseline_messages_sha256": "d7432c12a023d44bc46bfa7603f736519b5bc826220d74818c540c70855628b3"
+    },
+    {
+      "id": "sealed-tutor-17",
+      "original_case_sha256": "9fb7b43f1f69d2dc433a58107b47fd6118b776f3890570273b69b81c18937451",
+      "baseline_system_sha256": "c94eb0f68fff36fcfbab4db0a488fa5ce85137732e50727226360cd2361103d1",
+      "baseline_messages_sha256": "405d441ac19de7675e4b39d3188ede8bf29ba3f70bdcb1ffe805255f522b6b54"
+    },
+    {
+      "id": "sealed-tutor-18",
+      "original_case_sha256": "a1431608024434bdae76caf3bfd795405552bf773d5d6dca5bd98e77173a4a84",
+      "baseline_system_sha256": "c7d1fc67f025ec3a871e8d0b7690f703acb7ab69518be2e38e6d15f60da0bdbb",
+      "baseline_messages_sha256": "64e2e63a11d3385a7f90fe1ae0a6a7150460625077591ed89d1f0e4786dc2e90"
+    },
+    {
+      "id": "sealed-tutor-19",
+      "original_case_sha256": "defda3e3b1241b3f92e838f5bc686ba4a633288607836d8762e3053931b8ae19",
+      "baseline_system_sha256": "d3605d1d20e441823e6018cc45af24e0962b6d2d83b1474ed18a08d1bfbd5f33",
+      "baseline_messages_sha256": "646275b0725d5bab91ca0896840b9c3fa66ff5fe18cb0bc750f488e803e0f656"
+    },
+    {
+      "id": "sealed-tutor-20",
+      "original_case_sha256": "3ae77471ee45699a48d0ddfb94419e07621964851cdc235a0eb7328c63615a11",
+      "baseline_system_sha256": "88fa54f642109fc0cb8be52b94220dbc76a4ed0f27809a8a39d9c0614c87f434",
+      "baseline_messages_sha256": "6c039575aa3056b729d975d5745b7e41e0fb252def4fabf14e26f9ba3c9fa78d"
+    },
+    {
+      "id": "sealed-tutor-21",
+      "original_case_sha256": "1fd0bad4a098946113e5d6d9dacca0802fdab502c070370c12500fd7ec98808e",
+      "baseline_system_sha256": "813313e9312f959b30c729eb2c73ce3c7bc240160083ff4e6c84a2d4d64daa8e",
+      "baseline_messages_sha256": "36fec33ef837208d17bb441eb9e5f59b8d9d7a95037ddbbe098961ddcb2d04b5"
+    },
+    {
+      "id": "sealed-tutor-22",
+      "original_case_sha256": "28a85153054167776f52947f443820a83297863f23c6cce39bccb3f531766d4f",
+      "baseline_system_sha256": "a7c9829f03f8eb47df35661b2e26883562ee908cef907f970f658786df727000",
+      "baseline_messages_sha256": "b89fc6c9a61c0ce6ec0cc5cc2eb64cdadd66df3c86eb07874b2c8991513cb08c"
+    },
+    {
+      "id": "sealed-tutor-23",
+      "original_case_sha256": "db4a520ced0ff54246ed93887e176738fd7a4c188d21b96d5c8bb3ea1d91f43d",
+      "baseline_system_sha256": "a69acfbfc7587b1becddb6e4cefd8e350db23c2a9cd7d7a70cba04236f7bd07c",
+      "baseline_messages_sha256": "fd2b9fbcd4e80fd9657e1f14f62fc5746823574342de3ac7ac712822fa46fa76"
+    },
+    {
+      "id": "sealed-tutor-24",
+      "original_case_sha256": "036e80d5532dbec7ddeadd08cdc1fb6de4d4b83c0d45e39c8da6565d2144038a",
+      "baseline_system_sha256": "c05910735d63bb6a9beea94f778e135b6130b56a1d46aca0d8ecc8a360833e21",
+      "baseline_messages_sha256": "1fe8a7116b19cbeb0e67d109784e78b08cc97eb8d51b6aeb944d3fe49c2c41ca"
+    }
+  ]
+}

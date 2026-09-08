@@ -22,18 +22,16 @@ describe('Promptfoo brevity and ecological scaffold', () => {
     expect(config.match(/enable_thinking: false/g)).toHaveLength(2);
   });
 
-  it('requires one shared compact policy and conditional scaffold wording', () => {
-    const systemPrompt = readText('tutor-system/src/services/prompts/responsePolicy.ts');
+  it('uses candidate 11 as the active compact production policy', () => {
+    const agentPrompt = readText('tutor-system/src/services/prompts/activeTutorAgentPrompt.ts');
     const ecologicalTurn = readText('tutor-system/src/services/ecologicalTutorCall.ts');
     const currentPrompt = readText('evals/promptfoo/prompts/current.chat.prompt.json');
-    [systemPrompt, currentPrompt].forEach((text) => {
-      expect(text).toMatch(/3 sentences/i);
-      expect(text).toMatch(/50 words/i);
-      expect(text).toMatch(/failed|previous tutor|scaffold/i);
-      expect(text).not.toMatch(/2.?4 short sentences|40.?70 words/i);
-    });
-    expect(ecologicalTurn).toContain('RESPONSE_POLICY');
-    expect(systemPrompt).not.toMatch(/If the student is wrong or incomplete, correct the mistake directly before encouraging them/i);
+    expect(agentPrompt).toMatch(/two short sentences and 35 words/i);
+    expect(agentPrompt).toMatch(/protective_instruction/);
+    expect(agentPrompt).toMatch(/Prior-mode boundary/);
+    expect(ecologicalTurn).toContain('ACTIVE_TUTOR_AGENT_PROMPT');
+    expect(currentPrompt).toMatch(/3 sentences/i);
+    expect(currentPrompt).toMatch(/50 words/i);
   });
 
   it('keeps ecological cases product-derived and holdouts explicitly synthetic', () => {
@@ -166,7 +164,7 @@ describe('Promptfoo brevity and ecological scaffold', () => {
     expect(practicalRubric).toMatch(/generic question.*not tied.*configured knowledge inventory/i);
 
     const productionSources = [
-      readText('tutor-system/src/services/prompts/responsePolicy.ts'),
+      readText('tutor-system/src/services/prompts/activeTutorAgentPrompt.ts'),
       readText('tutor-system/src/services/demoRoomTemplates.ts')
     ].join('\n');
     expect(productionSources).not.toMatch(/studentAnswerState|classifyCoveredConcept|conceptMatcher/i);

@@ -1,0 +1,18 @@
+{
+  "purpose": "Record revision 5 freeze authority before independent candidate holdout execution while withholding outcomes during development validation.",
+  "revision": 5,
+  "candidate": "candidate-06",
+  "policy_path": "evals/promptfoo/v1/candidate-policy-06.md",
+  "policy_sha256_before_execution": "a506c16f334da40a48013c75dd75e86778f35ce76d2f51691262bce0c82e3115",
+  "freeze_authority": "Parent explicitly froze revision 5 and authorized this unchanged candidate policy for a fresh 48-generation sealed validation run.",
+  "packaged_cases_path": "evals/promptfoo/holdouts/tutor-v1-sealed/packaged-cases.json",
+  "packaged_cases_sha256": "fc304bd689223bf3a8b96594367cd3b3a5ddaf6d1c82abdab80b63bc2e40e4ba",
+  "run_path": "evals/promptfoo/results/qwen3.5-flash/v5-holdout-candidate-06",
+  "workers": 4,
+  "settings_path": "evals/promptfoo/v1/settings.json",
+  "target_configuration": "Thinking enabled, 8000 target max_tokens, one bounded schema-format repair; preserve invalid initial response and repair evidence, with no retry of schema-valid wrong decisions.",
+  "settings_identity": "Pinned by the runner snapshot before execution.",
+  "withholding_rule": "All candidate outcomes, including aggregate pass/fail/error counts, remain withheld until the parent explicitly requests validation results after the development gate.",
+  "prompt_content_inspected_by_validator": false,
+  "cases_changed_after_authorship": false
+}

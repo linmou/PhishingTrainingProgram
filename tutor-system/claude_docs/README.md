@@ -2,8 +2,8 @@
 Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-09-07
-- Commit ID: `6cbe728` (pre-change baseline; the commit containing this update is recorded by this file's Git history)
+- Updated: 2026-09-08
+- Commit ID: pending at update time; the final commit is recorded by this file's Git history
 
 # Tutor-System Documentation Hub
 
@@ -26,15 +26,18 @@ This directory contains comprehensive architectural and implementation documenta
 ## 📚 **Implementation Documentation**
 
 ### AI Assistant System
-- **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-approved tutoring principles, P3 subprinciples, conditional priorities, and pending behavior-spec alignment
+- **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-adopted tutoring principles, P3 subprinciples and conditional priorities; each behavior requirement records its downstream interpretation
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
-- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Designed reason/decision/response object, decision order and category grounding, retry policy, and separate deployed format; production migration pending
+- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Deployed reason/decision/response object, decision order and category grounding, retry policy, and production persistence adapter
 - **[Response-contract documentation update](./doc_update_record/documentation_update_record_v2026_09_07_response_contract_grounding.md)** - Template alignment, specification references, and validation evidence
 - **[Tutor behavior evaluation plan](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - v0/v1 mappings, independent deterministic and semantic checks, and remaining readiness gates; no current performance claim
 - **[Versioned tutor evaluators](../../evals/promptfoo/rubrics/README.md)** - Exact legacy v0 snapshots, clean LLM-facing v1 rubrics, metadata manifests, and locally validated decision checks
 - **[Behavior evaluator documentation update](./doc_update_record/documentation_update_record_v2026_09_07_behavior_evaluator_versions.md)** - Commit scope, preserved evidence, and validation boundary
 - **[Historical case audit](./ai-behaviors/tutor-behavior-case-audit.md)** - Preserved applicability and coverage findings for the audited cases
+- **[v1 case review](./ai-behaviors/tutor-behavior-case-review.md)** - All 43 cases / 173 assertions mapped to revised rubrics, with provenance checks, proposed refinements and grouped label decisions
 - **[Historical evaluation evidence](./ai-behaviors/tutor-behavior-evaluation-record.md)** - Saved-run findings, metric-interaction limitations, and review evidence
+- **[Tutor refinement run record](./ai-behaviors/tutor-behavior-refinement-record.md)** - Candidate 11 evaluation, human selection, simulated multi-turn evidence, remaining formal-gate exceptions, and production verification
+- **[Candidate 11 documentation update](./doc_update_record/documentation_update_record_v2026_09_08_candidate_11_production.md)** - Production prompt/contract integration, local verification, and release-evidence boundary
 - **[ai-assistant-module.md](./ai-assistant-module.md)** - Comprehensive guide to the AI assistant functionality including configuration, integration, and testing
 - **[ai-suggestion-tracking.md](./ai-suggestion-tracking.md)** - AI suggestion tracking implementation with tutor feedback collection
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login

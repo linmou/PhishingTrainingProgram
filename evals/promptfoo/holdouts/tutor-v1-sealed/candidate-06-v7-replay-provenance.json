@@ -1,0 +1,20 @@
+{
+  "purpose": "Record the authorized complete candidate 06 holdout replay under the current evaluator for final comparison, without releasing holdout outcomes during development assessment.",
+  "execution_revision": 7,
+  "evaluator_revision": 6,
+  "candidate": "candidate-06",
+  "policy_path": "evals/promptfoo/v1/candidate-policy-06.md",
+  "policy_sha256": "a506c16f334da40a48013c75dd75e86778f35ce76d2f51691262bce0c82e3115",
+  "source_run": "evals/promptfoo/results/qwen3.5-flash/v5-holdout-candidate-06",
+  "destination_run": "evals/promptfoo/results/qwen3.5-flash/v7-holdout-candidate-06",
+  "packaged_cases_path": "evals/promptfoo/holdouts/tutor-v1-sealed/packaged-cases.json",
+  "packaged_cases_sha256": "fc304bd689223bf3a8b96594367cd3b3a5ddaf6d1c82abdab80b63bc2e40e4ba",
+  "settings_sha256": "929a73a5a0e7664ffa88a18af7f6f140f54d64fe010f5c4fe30228c855fd6494",
+  "manifest_sha256": "0b1481f098c544662153209a43ff5c454cbf60fb8cc5152cf39b4ba2a22007a3",
+  "authority": "Parent requested this replay to complete the full current-evaluator baseline/candidate06 comparison after abandoning further prompt tuning in this pass based on development evidence.",
+  "workers": 2,
+  "execution_sequence": "After current candidate08 execution and planned exact revision7 replays finish.",
+  "sampling_policy": "Replay preserved target responses; reuse identical judge requests/results exactly, including failures. Only changed evaluator requests or bounded remaining transient recovery may create new judge calls.",
+  "cases_changed": false,
+  "withholding_rule": "Keep all candidate outcomes sealed until the parent explicitly requests final validation after the root v7-candidate06 development gate finishes. Candidate08 remains diagnostic evidence."
+}

@@ -1,0 +1,20 @@
+{
+  "version": "simulated-diagnostic-1",
+  "status": "diagnostic; no benchmark acceptance or regression claim",
+  "intent": "Assess candidate 11 over evolving conversations while preserving room and generated history.",
+  "candidate": "../candidate-policy-11-contract-v2.md",
+  "simulator": { "engine": "promptfoo:simulated-user", "installed_version": "0.121.15", "backend": "project Qwen via sendMessageToUser override", "settings": "../settings.json", "role": "synthetic learner, not human or unseen holdout" },
+  "state_policy": "Every generated tutor response is assumed sent unchanged; its selected mode is the next prior_mode. This simulates immediate human acceptance, not actual production enforcement.",
+  "changed_factors": ["generated learner continuations", "five evolving tutor turns", "candidate only", "conversation-level diagnostic judges"],
+  "supporting_checks": ["complete context each turn", "contract v2 validity", "response length", "five tutor turns"],
+  "metrics": [
+    {"id":"knowledge","file":"rubrics/knowledge.md","requirements":["T04"],"method":"llm_rubric","version":"simulated-1"},
+    {"id":"participation","file":"rubrics/participation.md","requirements":["G01","G02","G03"],"method":"llm_rubric","version":"simulated-1"},
+    {"id":"progression","file":"rubrics/progression.md","requirements":["T02"],"method":"llm_rubric","version":"simulated-1"},
+    {"id":"decision","file":"rubrics/decision.md","requirements":["T01","C01"],"method":"llm_rubric","version":"simulated-1"},
+    {"id":"relationship","file":"rubrics/relationship.md","requirements":["T03","T05","T06","T07","H2"],"method":"llm_rubric","version":"simulated-1"}
+  ],
+  "calibration": "Local transport/context integration tests; live conversation judgments exploratory and not independently calibrated for acceptance. Preserve disputes for human review.",
+  "existing_case_disposition": "Four fixed cases supply scenario/history seeds; generated continuations are new synthetic tests. All original 61 cases and assertions stay in their frozen suite. No original coverage is retired.",
+  "reporting": "Report all eight trajectories, expected 40 tutor turns, deterministic checks, each metric out of eight, and errors separately. No new acceptance threshold."
+}

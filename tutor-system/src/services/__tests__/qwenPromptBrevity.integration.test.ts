@@ -101,7 +101,14 @@ describe('Qwen prompt brevity HTTP behavior', () => {
         body: await readBody(request),
       });
       response.writeHead(200, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ choices: [{ message: { content: overLimit } }] }));
+      const content = received.length === 1
+        ? overLimit
+        : JSON.stringify({
+          reason: 'The learner needs a contextual explanation.',
+          decision: { mode: 'tutoring', instruction: 'explanation' },
+          response: overLimit,
+        });
+      response.end(JSON.stringify({ choices: [{ message: { content } }] }));
     });
     const port = await listen(server);
     process.env.REACT_APP_OAI_BASE_URL = `http://127.0.0.1:${port}`;
@@ -117,6 +124,7 @@ describe('Qwen prompt brevity HTTP behavior', () => {
       const suggestion = await aiService.TutorSuggestionService.generateSuggestion(history, config('SUGGESTION'), {
         focusStudentMessage: 'The alert looks real?',
         scenarioContext: 'Account Security Alert',
+        priorMode: 'tutoring',
       });
 
       expect(direct.success).toBe(true);
@@ -150,7 +158,8 @@ describe('Qwen prompt brevity HTTP behavior', () => {
     expect(suggestionBody.messages).toEqual(buildEcologicalChatCompletionMessages('SUGGESTION', {
       scenario_context: 'Account Security Alert',
       conversation_history: 'Participant: The alert looks real.',
-      student_message: 'The alert looks real?'
+      student_message: 'The alert looks real?',
+      prior_mode: 'tutoring'
     }));
   });
 

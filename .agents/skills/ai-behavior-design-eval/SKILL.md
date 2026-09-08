@@ -30,6 +30,8 @@ This stage is human-in-the-loop: draft principles, priorities, exceptions, and c
 
 ## 1. Persist the spec
 
+Define domain behavior here. Keep base model abilities such as response formatting and general justification in the response contract and supporting checks; do not create a behavior requirement solely for them.
+
 Write numbered requirements defining the user or learning outcome, triggering input/history/state, required and prohibited results, permitted alternatives, downstream effect, and non-goals. Give the behavior and each requirement stable IDs. Draft edits remain unversioned; freeze content hashes for execution and register a spec version only with its completed experiment package. Examples should resolve ambiguity without prescribing exact model wording.
 
 Pin the constitution reference and annotate each requirement with its applicable principle IDs, contextual interpretation, and any priority/exception used. The downstream requirement owns this mapping. Do not create a separate constitutional-grounding section, duplicated mapping table, or reverse mapping in the upstream constitution. Record the grounding-review status in the design metadata. A spec cannot silently override the constitution. Resolve or flag inconsistent existing requirements rather than removing their regression checks.

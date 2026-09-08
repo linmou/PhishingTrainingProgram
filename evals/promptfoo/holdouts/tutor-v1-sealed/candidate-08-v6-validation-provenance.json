@@ -1,0 +1,22 @@
+{
+  "purpose": "Pin candidate 08 and revision 6 before independent holdout execution, preserving the original unseen-case boundary and withholding validation feedback until the development gate is assessed.",
+  "revision": 6,
+  "candidate": "candidate-08",
+  "freeze_authority": "Parent explicitly declared candidate-policy-08.md the frozen final candidate for this refinement pass and authorized its holdout run after both sequential revision 6 baseline replays finish.",
+  "policy_path": "evals/promptfoo/v1/candidate-policy-08.md",
+  "policy_sha256_before_execution": "722d219c0d2068e46ba53cf60e2cb3f64d8afc3a861a7d22c09c782211790c91",
+  "settings_path": "evals/promptfoo/v1/settings.json",
+  "settings_sha256_before_execution": "c688a9e369cccc8d952b3d61611d14a4ee2ef8ca5c6a8879a735abfd65b51056",
+  "manifest_path": "evals/promptfoo/rubrics/v1/manifest.json",
+  "manifest_sha256_before_execution": "65f8f6b6bd0f5d271a641781d579efd1df4f78a4dd3c1584eb2e5eb7a014dd3a",
+  "packaged_cases_path": "evals/promptfoo/holdouts/tutor-v1-sealed/packaged-cases.json",
+  "packaged_cases_sha256": "fc304bd689223bf3a8b96594367cd3b3a5ddaf6d1c82abdab80b63bc2e40e4ba",
+  "run_path": "evals/promptfoo/results/qwen3.5-flash/v6-holdout-candidate-08",
+  "workers": 2,
+  "execution_sequence": "Run only after v6-holdout-original-baseline and v6-holdout-aligned-baseline complete.",
+  "source_cases_changed_after_authorship": false,
+  "candidate_policy_content_inspected_by_validator": false,
+  "candidate06_outcomes_disclosed": false,
+  "withholding_rule": "Keep ALL candidate outcomes, including aggregate pass/fail/error counts, withheld until the parent explicitly requests final validation after assessing the development gate. No case-level feedback may inform further prompt tuning in this pass.",
+  "raw_evidence_policy": "Preserve initial target responses, bounded format repairs, transport attempts, judge calls and verdicts, full snapshot, and complete per-generation records through the frozen runner."
+}
