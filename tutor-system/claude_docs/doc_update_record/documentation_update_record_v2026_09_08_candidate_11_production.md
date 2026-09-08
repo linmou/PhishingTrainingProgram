@@ -3,7 +3,7 @@
 Intent: record the documentation changed with the candidate 11 production-prompt integration and its evidence boundary.
 
 Updated: 2026-09-08
-Commit ID: this file's containing commit, recorded by Git; pre-change HEAD `8097f19f81369007bcfcd611901d6b89f68787d2`
+Implementation commit ID: `dce8611c1d196b4baed505b05f3ed3c97adacd05`
 
 ## Changes
 

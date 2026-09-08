@@ -3,7 +3,7 @@ Document the current tutor-system architecture and highlight behavior that affec
 
 ## Metadata
 - Updated: 2026-09-08
-- Commit ID: pending at update time; the final commit is recorded by this file's Git history
+- Implementation commit ID: `dce8611c1d196b4baed505b05f3ed3c97adacd05`
 
 # Tutor-System Documentation Hub
 

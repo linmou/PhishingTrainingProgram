@@ -3,7 +3,7 @@
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
 Updated: 2026-09-08
-Status: implemented in the working tree after human selection of candidate 11; commit/release pending. `decision.instruction` is validated but not yet separately displayed or persisted.
+Status: implemented in commit `dce8611c1d196b4baed505b05f3ed3c97adacd05` after human selection of candidate 11; external release verification remains pending. `decision.instruction` is validated but not yet separately displayed or persisted.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -86,6 +86,6 @@ The implemented model boundary uses the designed v2 shape. The reviewed-response
 | `response` | `suggested_response` | Implemented for the suggestion that a human may copy, edit, reject, and send. |
 | `decision.instruction` | None | Validated at the model boundary and evaluated in saved runs, but not separately displayed or persisted. That consumer migration remains pending. |
 
-The prompt and parser migration is implemented in the working tree. Persistence and UI continue through the explicit mapping above; evaluator v2 extraction is implemented in the candidate 11 harness. The parser requires `reason` serialized first, rejects legacy decision/rationale fields, and permits one format-repair retry. This contract grants no automatic sending, enforcement, or room-mode authority. See [the suggestion workflow](../ai-suggestion-tracking.md) for human review and persistence.
+The prompt and parser migration is implemented in commit `dce8611c1d196b4baed505b05f3ed3c97adacd05`. Persistence and UI continue through the explicit mapping above; evaluator v2 extraction is implemented in the candidate 11 harness. The parser requires `reason` serialized first, rejects legacy decision/rationale fields, and permits one format-repair retry. This contract grants no automatic sending, enforcement, or room-mode authority. See [the suggestion workflow](../ai-suggestion-tracking.md) for human review and persistence.
 
 Preserve frozen runs under their original contract snapshots. Contract changes require a new contract/evaluation version and fresh comparable baseline before acceptance; updating this template does not migrate production or reinterpret historical evidence.
