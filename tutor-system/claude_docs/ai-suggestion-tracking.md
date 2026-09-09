@@ -2,7 +2,7 @@
 
 > Intent: Document how AI suggestions are displayed, transferred to the composer, and tracked after the Guard Mode UI update.
 > Updated: 2026-09-09
-> Commit ID: pending at update time
+> Commit ID: `20f6e32`
 
 ## Overview
 This implementation modifies the AI assistant to only provide suggestions (not create posts), tracks how tutors interact with these suggestions, and records the Guard Mode decision separately from the reviewed wording.

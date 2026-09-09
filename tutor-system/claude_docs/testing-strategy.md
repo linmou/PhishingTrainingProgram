@@ -4,7 +4,7 @@ This document outlines the comprehensive testing strategy for the completed task
 
 ## Current Test Tiers
 
-Updated: 2026-09-09 (shared tutor behavior evaluator and hosted seven-room product adapter; commit pending)
+Updated: 2026-09-09 (shared tutor behavior evaluator and hosted seven-room product adapter; commit `20f6e32`)
 
 The repository now uses these validation tiers:
 

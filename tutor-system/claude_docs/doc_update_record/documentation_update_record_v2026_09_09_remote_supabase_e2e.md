@@ -3,7 +3,7 @@
 Intent: record the switch from local-only browser evaluation to the configured hosted Supabase endpoint and preserve the incomplete persistence finding.
 
 Updated: 2026-09-09
-Implementation commit ID: pending at update time
+Implementation commit ID: `20f6e32` (amended after documentation update)
 
 ## Scope
 
