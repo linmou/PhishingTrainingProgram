@@ -57,7 +57,7 @@ export function formatRoomScenarioContext(
   description: string | null | undefined
 ): string {
   const t = (title || '').trim();
-  const d = (description || '').trim();
+  const d = (description || '').replace(/\s*\[behavior-test-room\]\s*$/i, '').trim();
   if (t && d) return `${t} — ${d}`;
   return t || d || 'Phishing training room';
 }

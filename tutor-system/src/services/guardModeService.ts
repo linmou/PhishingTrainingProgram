@@ -33,6 +33,7 @@ export async function sendReviewedTutorResponse(
     p_parent_message_id: input.parentMessageId,
     p_content: input.finalResponse.trim(),
     p_raw_mode: input.rawDecision.mode,
+    p_raw_instruction: input.rawDecision.instruction,
     p_mode_reason: input.rawDecision.mode_reason,
     p_final_mode: input.finalMode,
     p_ai_suggestion: input.rawDecision.suggested_response,

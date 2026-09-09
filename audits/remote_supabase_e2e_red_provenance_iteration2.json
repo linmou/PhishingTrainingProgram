@@ -1,0 +1,34 @@
+{
+  "decision": "provenance_valid",
+  "feature": "remote_supabase_e2e",
+  "iteration": 2,
+  "monitor_agent_id": "/root/phase_monitor",
+  "monitor_source": "native collaboration-agent delegation",
+  "phase": "red",
+  "reviewers": [
+    {
+      "audit_path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/audits/remote_supabase_e2e_red_audit1_iteration2.json",
+      "audit_sha256": "06632715961ee7b0e7e620d2015725261aea559425de84b1720215c0c14bb97f",
+      "reviewer_agent_id": "/root/red_audit1",
+      "reviewer_id": "audit1",
+      "reviewer_source": "native collaboration-agent delegation"
+    },
+    {
+      "audit_path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/audits/remote_supabase_e2e_red_audit2_iteration2.json",
+      "audit_sha256": "5ade17e9b8bffd3bdc0b7ea533ace2052485effd462fee5b343ec7ad4956636e",
+      "reviewer_agent_id": "/root/red_audit2",
+      "reviewer_id": "audit2",
+      "reviewer_source": "native collaboration-agent delegation"
+    },
+    {
+      "audit_path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/audits/remote_supabase_e2e_red_audit3_iteration2.json",
+      "audit_sha256": "8a3618e81f5fd2f41506d7f94ece11540b6e73d64c098f16ce0e068032350733",
+      "reviewer_agent_id": "/root/red_audit3",
+      "reviewer_id": "audit3",
+      "reviewer_source": "native collaboration-agent delegation"
+    }
+  ],
+  "role_receipt_path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/audits/remote_supabase_e2e_role_receipt.json",
+  "role_receipt_sha256": "22d345b1bbe0f010d87d7f631c2ea387b37d875eaf3ec774e1b3ca376b7cd0af",
+  "schema": 1
+}

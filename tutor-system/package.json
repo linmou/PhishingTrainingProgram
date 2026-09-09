@@ -50,7 +50,7 @@
         "eval:prompts:view": "promptfoo view -y -o ../evals/promptfoo/results/latest.html",
         "eval:prompts:ci": "npm run eval:prompts",
         "seed:behavior-templates": "node scripts/seed-behavior-demo-templates.js",
-        "test:browser:behavior-demos": "node scripts/browser-demo-tutor-behavior.js",
+        "eval:behavior:web": "node scripts/browser-demo-tutor-behavior.js",
         "eject": "react-scripts eject",
         "deploy": "npm run build"
     },

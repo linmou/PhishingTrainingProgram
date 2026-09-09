@@ -1,0 +1,129 @@
+{
+  "feature_name": "remote_supabase_e2e",
+  "phase": "red",
+  "iteration": 1,
+  "reviewer_id": "audit2",
+  "reviewer_agent_id": "/root/red_audit2",
+  "reviewer_source": "native collaboration-agent delegation",
+  "claim": "the proposed regression test correctly specifies the smallest executable change needed to restore the browser runner's prior acceptance of a configured hosted Supabase URL without weakening required credential validation or changing browser/evaluator behavior.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.96,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "A valid hosted URL with a process-level override is accepted and the override is observable in the loader result.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.97,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:36-47",
+          "text": "The hosted test sets REACT_APP_SUPABASE_URL to https://remote-test-project.supabase.co and REACT_APP_SUPABASE_ANON_KEY to test-anon-key, calls loadLocalEnvironment(), then asserts the returned env URL, key, origin, and Supabase client interface."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_run.md:7-11",
+          "text": "Observed result: exit code 1, with 2 passing tests and 1 failing test. The hosted subtest failed at browser-demo-tutor-behavior.js:104 with: eval:behavior:web refuses non-local Supabase URLs."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_request_map.md:37-43",
+          "text": "Hosted URL is accepted ... Loader returns the configured origin and a client ... Environment precedence is preserved ... the returned origin equals the process value."
+        }
+      ],
+      "reasoning": "The process-level hosted URL and key are non-neutral and asserted directly from the loader result. The captured Red failure reaches the existing hostname rejection, so the test rejects retaining the local-only allow-list or silently substituting localhost.",
+      "counterevidence": []
+    },
+    {
+      "id": "c2",
+      "text": "A valid local URL remains accepted.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:50-58",
+          "text": "The local control sets http://127.0.0.1:54321 with an anon key, then asserts the returned URL and Supabase client interface."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_run.md:13",
+          "text": "The local URL acceptance subtest passed."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_request_map.md:40",
+          "text": "Local URL remains accepted ... Replacing the allow-list with a hosted-only rule [is the rejected shortcut]."
+        }
+      ],
+      "reasoning": "The independent local control executes successfully in the captured Red run and prevents the minimal Green change from becoming hosted-only.",
+      "counterevidence": []
+    },
+    {
+      "id": "c3",
+      "text": "Missing URL and missing anon key remain rejected with the existing configuration error.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:60-68",
+          "text": "Separate assertions clear the URL with a key present and clear the key with a hosted URL present; both require /Missing local Supabase configuration/."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_run.md:13",
+          "text": "The missing URL/anon-key rejection subtest passed."
+        },
+        {
+          "kind": "quote",
+          "location": "tutor-system/scripts/browser-demo-tutor-behavior.js:99-104",
+          "text": "The loader reads URL and key, throws Missing local Supabase configuration when either is absent, and separately applies the current hostname rejection."
+        }
+      ],
+      "reasoning": "Both missing-credential branches retain the exact existing error and pass before production changes, independently constraining removal to the hostname policy.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "The test is isolated to the URL-policy/environment boundary and does not add a second scorer, touch remote data, or weaken unrelated behavior.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_scope.json:5-15",
+          "text": "The pre-Red baseline is refs/tdd/remote_supabase_e2e/pre_red; the browser runner, documentation, and audits are protected, and only evals/promptfoo/v1/browser-demo-tutor-behavior.test.js is editable."
+        },
+        {
+          "kind": "hash_comparison",
+          "location": "refs/tdd/remote_supabase_e2e/pre_red and current workspace",
+          "text": "browser-demo-tutor-behavior.js is unchanged at SHA-256 00c0e8121638266f0b938b710ea25f996be93a00fa27c423f5ab431de31166fb; browser-adapter.js is unchanged at SHA-256 4a58057fd715b4248bc7bc6715a8956c8fe409ec5da58f7b220afc9c4de98d22; the new test is absent from the pre-Red tree."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:9-34",
+          "text": "The test imports only loadLocalEnvironment; withEnvironment mutates only the two required process variables and restores both in finally."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:36-68",
+          "text": "The three tests call only loadLocalEnvironment and inspect returned configuration/client shape or thrown validation errors; no Supabase query, browser action, evaluator, scorer, or persistence call occurs."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_request_map.md:31-33,46-51,57-58",
+          "text": "The Red test must isolate the policy branch so it does not create remote data; no migration or separate scoring implementation is added; Red is the test file and Green is the browser runner."
+        }
+      ],
+      "reasoning": "The Red delta is a new loader-boundary test, while the protected runner and shared adapter are byte-identical to the pre-Red snapshot. Constructing a client and checking its from method performs no remote operation, and environment restoration prevents cross-test leakage.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": []
+}

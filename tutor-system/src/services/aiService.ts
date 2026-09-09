@@ -8,7 +8,7 @@
  * 4. Public API - clean interface for external usage
  */
 
-import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, TutorActionDecision, TutorResponseMode } from '../types';
+import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, TutorActionDecision, TutorInstruction, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
@@ -29,6 +29,7 @@ export const parseTutorActionDecision = (content: unknown): TutorActionDecision 
     const candidate = parseTutorDecision(content);
     return {
         mode: candidate.decision.mode,
+        instruction: candidate.decision.instruction,
         mode_reason: candidate.reason,
         suggested_response: candidate.response
     };
@@ -116,6 +117,19 @@ const stripWrappedQuotes = (value: string): string => {
 };
 
 export const normalizeAIModel = (_modelName: unknown): AIModelName => DEFAULT_AI_MODEL;
+
+export const resolveTutorPriorMode = (roomData: {
+    active_response_mode?: TutorResponseMode | null;
+    mode_changed_at?: string | null;
+}): TutorResponseMode | 'unknown' => {
+    if (roomData.active_response_mode === 'guard') {
+        return 'guard';
+    }
+    if (roomData.active_response_mode && roomData.mode_changed_at) {
+        return roomData.active_response_mode;
+    }
+    return 'unknown';
+};
 
 const getExtendedAIConfig = async (roomId: string): Promise<{
     prompt_config?: AIAssistantConfig['prompt_config'];
@@ -868,7 +882,7 @@ export const generateTutorSuggestion = async (
             {
                 focusStudentMessage: options?.focusStudentMessage,
                 scenarioContext,
-                priorMode: roomData.active_response_mode || 'unknown'
+                priorMode: resolveTutorPriorMode(roomData)
             }
         );
         
@@ -911,7 +925,7 @@ export const generateTutorSuggestion = async (
 async function validateRoom(roomId: string) {
     const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model, active_response_mode')
+        .select('ai_assistant_enabled, ai_assistant_model, active_response_mode, mode_changed_at')
         .eq('id', roomId)
         .single();
 
@@ -972,6 +986,7 @@ async function generateSuggestionWithService(
         suggestion,
         decision: {
             mode: 'tutoring',
+            instruction: 'explanation',
             mode_reason: 'Debug dummy responses do not classify Guard Mode.',
             suggested_response: suggestion
         },
@@ -1272,34 +1287,36 @@ export const recordAISuggestionFeedback = async (
     parentMessageId: string,
     aiSuggestion: string,
     tutorAction: 'accepted' | 'rejected' | 'modified' | 'ignored',
-    tutorFinalResponse?: string,
-    tutorMessageId?: string,
-    responseTimeMs?: number,
-    contextMessages?: string[],
-    rawMode?: TutorResponseMode,
-    modeReason?: string,
-    finalMode?: TutorResponseMode
+    tutorFinalResponse: string | undefined,
+    tutorMessageId: string | undefined,
+    responseTimeMs: number | undefined,
+    contextMessages: string[] | undefined,
+    rawMode: TutorResponseMode,
+    rawInstruction: TutorInstruction | null,
+    modeReason: string,
+    finalMode: TutorResponseMode
 ): Promise<void> => {
-    if (!parentMessageId || parentMessageId.startsWith('prepop-')) {
-        return;
-    }
+    const persistedParentMessageId = !parentMessageId || parentMessageId.startsWith('prepop-')
+        ? null
+        : parentMessageId;
 
     const { error } = await (supabase as any)
         .from('ai_suggestion_feedback')
         .insert({
             room_id: roomId,
             tutor_id: tutorId,
-            parent_message_id: parentMessageId,
+            parent_message_id: persistedParentMessageId,
             ai_suggestion: aiSuggestion,
             tutor_action: tutorAction,
             tutor_final_response: tutorFinalResponse ?? null,
             tutor_message_id: tutorMessageId ?? null,
             response_time_ms: responseTimeMs ?? null,
             context_messages: contextMessages ?? [],
-            raw_mode: rawMode ?? null,
-            mode_reason: modeReason ?? null,
-            final_mode: finalMode ?? rawMode ?? null,
-            mode_rectified: Boolean(rawMode && finalMode && rawMode !== finalMode)
+            raw_mode: rawMode,
+            raw_instruction: rawInstruction,
+            mode_reason: modeReason,
+            final_mode: finalMode,
+            mode_rectified: rawMode !== finalMode
         });
 
     if (error) {

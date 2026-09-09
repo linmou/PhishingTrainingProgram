@@ -17,7 +17,6 @@ import {
   buildEcologicalCaseVarsFromRoomDialogue,
   EcologicalCaseVars
 } from './ecologicalTutorCall';
-import { TutorBehaviorMetric } from './tutorBehaviorHeuristics';
 import { DEFAULT_AI_MODEL } from './aiModels';
 
 export const GLOBAL_TEMPLATE_TUTOR_ID = '00000000-0000-0000-0000-000000000000';
@@ -31,8 +30,6 @@ export interface DemoAIConfigTemplate {
   scenario: ScenarioTemplate;
   system_prompt: string;
   prompt_config: SystemPromptConfig;
-  /** Metrics this room is meant to exercise (also used by eval/browser scoring). */
-  behavior_focus: TutorBehaviorMetric[];
 }
 
 export interface DemoRoomTemplateSeed {
@@ -45,20 +42,15 @@ export interface DemoRoomTemplateSeed {
   image_url: string;
   pre_populated_dialogue: PrePopulatedMessage[];
   ai_config_template: DemoAIConfigTemplate;
-  expected_behavior_focus: string;
   /**
    * When true, template is only offered on /tutor/test-rooms (not main Tutor create).
    * Classic teaching templates stay on the normal dashboard.
    */
   test_only: boolean;
-  studentIsWrong?: boolean;
-  studentAskedPersonalStory?: boolean;
-  studentNeedsSimpleLanguage?: boolean;
 }
 
 export function buildCasualPeerAIConfig(
   scenario: ScenarioTemplate,
-  behaviorFocus: TutorBehaviorMetric[],
   options?: { model_name?: string; temperature?: number; max_tokens?: number }
 ): DemoAIConfigTemplate {
   const scenarioData = SCENARIO_TEMPLATES[scenario];
@@ -76,8 +68,7 @@ export function buildCasualPeerAIConfig(
     preset: 'casual_peer',
     scenario,
     system_prompt: generateSystemPrompt(prompt_config),
-    prompt_config,
-    behavior_focus: behaviorFocus
+    prompt_config
   };
 }
 
@@ -120,17 +111,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'I think it is real because it says my account is at risk.'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'direct_correction',
-        'practical_knowledge',
-        'turn_rhythm',
-        'reading_level'
-      ]),
-      expected_behavior_focus:
-        'Correct fear-based trust; concrete safe action; balanced teaching rhythm.',
-      test_only: false,
-      studentIsWrong: true,
-      studentNeedsSimpleLanguage: true
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: false
     },
     {
       case_id: 'webpage_nintendo_click_deal',
@@ -165,16 +147,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'I would click it fast before the deal ends.'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Nintendo Switch Deal ($19.99)', [
-        'direct_correction',
-        'practical_knowledge',
-        'turn_rhythm',
-        'low_boilerplate_praise'
-      ]),
-      expected_behavior_focus:
-        'Stop click impulse; concrete official-site / price-check action; low praise spam.',
-      test_only: false,
-      studentIsWrong: true
+      ai_config_template: buildCasualPeerAIConfig('Nintendo Switch Deal ($19.99)'),
+      test_only: false
     },
     {
       case_id: 'webpage_itunes_professional_photo',
@@ -208,16 +182,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'It must be real because the photo looks professional.'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('iTunes Gift Card Survey ($500)', [
-        'direct_correction',
-        'practical_knowledge',
-        'low_boilerplate_praise',
-        'turn_rhythm'
-      ]),
-      expected_behavior_focus:
-        'Correct design-trust myth; official channel check; restrained praise.',
-      test_only: false,
-      studentIsWrong: true
+      ai_config_template: buildCasualPeerAIConfig('iTunes Gift Card Survey ($500)'),
+      test_only: false
     },
     {
       case_id: 'webpage_demo_lock_icon_myth',
@@ -253,17 +219,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
             'If the site has HTTPS or a lock icon, then it should be safe, right?'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'direct_correction',
-        'practical_knowledge',
-        'reading_level',
-        'turn_rhythm'
-      ]),
-      expected_behavior_focus:
-        'Directly correct lock/HTTPS myth; concrete real app/domain action; simple language.',
-      test_only: true,
-      studentIsWrong: true,
-      studentNeedsSimpleLanguage: true
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
     },
     {
       case_id: 'webpage_demo_click_impulse',
@@ -297,16 +254,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'I would click it quickly just in case.'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'direct_correction',
-        'practical_knowledge',
-        'turn_rhythm',
-        'low_boilerplate_praise'
-      ]),
-      expected_behavior_focus:
-        'Correct click impulse; do not click; open real app/type real site.',
-      test_only: true,
-      studentIsWrong: true
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
     },
     {
       case_id: 'webpage_demo_correct_safe_action',
@@ -341,15 +290,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
             'I would not click it. I would open the real app myself and check for alerts there.'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'low_boilerplate_praise',
-        'practical_knowledge',
-        'turn_rhythm'
-      ]),
-      expected_behavior_focus:
-        'Covered: do not click; use the real app; check official alerts. Eligible untouched set includes urgency, pressure wording, suspicious domain, sender/source, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.',
-      test_only: true,
-      studentIsWrong: false
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
     },
     {
       case_id: 'webpage_demo_correct_lock_reasoning',
@@ -385,15 +327,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
             'The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'low_boilerplate_praise',
-        'practical_knowledge',
-        'turn_rhythm'
-      ]),
-      expected_behavior_focus:
-        'Covered: HTTPS is not site identity; inspect the exact address; use the real app. Eligible untouched set includes urgency, source legitimacy, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.',
-      test_only: true,
-      studentIsWrong: false
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
     },
     {
       case_id: 'webpage_demo_pressure_words',
@@ -422,15 +357,8 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'What does urgency tactics mean?'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'reading_level',
-        'turn_rhythm',
-        'persona_stability'
-      ]),
-      expected_behavior_focus:
-        'Simple language for jargon; teach not interrogate; stable peer voice.',
-      test_only: true,
-      studentNeedsSimpleLanguage: true
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
     },
     {
       case_id: 'webpage_demo_personal_story_trap',
@@ -460,15 +388,45 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           message: 'Did this ever happen to you?'
         }
       ],
-      ai_config_template: buildCasualPeerAIConfig('Account Security Alert', [
-        'third_person_examples',
-        'persona_stability',
-        'practical_knowledge'
-      ]),
-      expected_behavior_focus:
-        'No first-person lived experience; third-person/common pattern; practical next step.',
-      test_only: true,
-      studentAskedPersonalStory: true
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
+    },
+    {
+      case_id: 'ecological_participation_disruption',
+      template_name: 'Demo: Participation Disruption (Guard)',
+      template_description:
+        'Canonical Guard case where the learner deliberately obstructs the phishing discussion.',
+      title_template: 'Account Security Alert Scam',
+      description_template:
+        'YOUR ACCOUNT IS AT RISK — unknown device login detected. Verify now: http://testdrive.info/youraccount — posted by Socail Media Testdrive',
+      image_url: '/images/room-presets/phishing_2.png',
+      pre_populated_dialogue: [
+        {
+          user_name: 'Socail Media Testdrive',
+          role: 'others',
+          message:
+            '!!&$!ALERT!&$!! YOUR ACCOUNT IS AT RISK. Click here to resolve immediately: http://testdrive.info/youraccount'
+        },
+        {
+          user_name: 'Maya R.',
+          role: 'others',
+          message: 'wait this just showed up on my feed too is this real??'
+        },
+        {
+          user_name: 'Tutor',
+          role: 'tutor',
+          message:
+            'Take a look at this alert post. What stands out to you before anyone clicks anything?'
+        },
+        {
+          user_name: 'Jake Matthews',
+          role: 'student',
+          message:
+            'I understand this task, but I will deliberately repeat unrelated lyrics to stop this discussion.'
+        }
+      ],
+      ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),
+      test_only: true
     }
   ];
 }
@@ -495,11 +453,11 @@ export function getPromptComparisonTemplateSeeds(): DemoRoomTemplateSeed[] {
       throw new Error(`Missing comparison source template: ${sourceCaseId}`);
     }
 
-    const refinedBase = buildCasualPeerAIConfig(
-      'Account Security Alert',
-      source.ai_config_template.behavior_focus,
-      { model_name: DEFAULT_AI_MODEL, temperature: 0, max_tokens: 100 }
-    );
+    const refinedBase = buildCasualPeerAIConfig('Account Security Alert', {
+      model_name: DEFAULT_AI_MODEL,
+      temperature: 0,
+      max_tokens: 100
+    });
     const sharedScenarioContext = `${source.title_template} — ${source.description_template}`;
 
     return (['phase0', 'refined'] as const).map((version) => {
@@ -548,39 +506,16 @@ export function getNormalTeachingTemplateSeeds(): DemoRoomTemplateSeed[] {
 /** Ecological eval vars derived from the same dialogue the website seeds. */
 export function buildEcologicalCaseFromSeed(seed: DemoRoomTemplateSeed): EcologicalCaseVars & {
   case_id: string;
-  applicable_requirements: string;
-  expected_behavior_focus: string;
   template_name: string;
-  studentIsWrong?: boolean;
-  studentAskedPersonalStory?: boolean;
-  studentNeedsSimpleLanguage?: boolean;
-  source_type: 'product_template';
-  scaffolding_status: 'not_started' | 'failed';
-  student_answer_state: 'uncertain' | 'unsafe_or_incomplete';
 } {
   const vars = buildEcologicalCaseVarsFromRoomDialogue(
     seed.title_template,
     seed.description_template,
     seed.pre_populated_dialogue
   );
-  const hasTutorQuestion = seed.pre_populated_dialogue.some(
-    (message) => message.role === 'tutor' && message.message.includes('?')
-  );
-  const scaffolding_status = hasTutorQuestion ? 'failed' : 'not_started';
   return {
     case_id: seed.case_id,
     template_name: seed.template_name,
-    applicable_requirements: Array.from(new Set([
-      ...seed.ai_config_template.behavior_focus,
-      'response_length'
-    ])).join(', '),
-    expected_behavior_focus: seed.expected_behavior_focus,
-    studentIsWrong: seed.studentIsWrong,
-    studentAskedPersonalStory: seed.studentAskedPersonalStory,
-    studentNeedsSimpleLanguage: seed.studentNeedsSimpleLanguage,
-    source_type: 'product_template',
-    scaffolding_status,
-    student_answer_state: scaffolding_status === 'failed' ? 'unsafe_or_incomplete' : 'uncertain',
     ...vars
   };
 }

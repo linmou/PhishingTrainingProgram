@@ -1,0 +1,13 @@
+{
+  "schema": 2,
+  "feature": "remote_supabase_e2e",
+  "route": "full",
+  "monitor_agent_id": "/root/phase_monitor",
+  "monitor_source": "native collaboration-agent delegation",
+  "red_reviewer_agent_ids": [
+    "/root/red_audit1",
+    "/root/red_audit2",
+    "/root/red_audit3"
+  ],
+  "reviewer_source": "native collaboration-agent delegation"
+}

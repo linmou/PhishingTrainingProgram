@@ -160,6 +160,7 @@ export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffo
 
 export interface TutorActionDecision {
     mode: TutorResponseMode;
+    instruction: TutorInstruction | null;
     mode_reason: string;
     suggested_response: string;
 }
@@ -381,6 +382,7 @@ export interface AISuggestionFeedback {
     context_messages: string[] | null;
     created_at: string;
     raw_mode: TutorResponseMode | null;
+    raw_instruction: TutorInstruction | null;
     mode_reason: string | null;
     final_mode: TutorResponseMode | null;
     mode_rectified: boolean;
@@ -396,6 +398,7 @@ export interface AIInteraction {
     response_time_ms?: number;
     ai_config_snapshot?: AIAssistantConfigSnapshot;
     raw_mode?: TutorResponseMode;
+    raw_instruction: TutorInstruction | null;
     mode_reason?: string;
     final_mode?: TutorResponseMode;
     mode_rectified?: boolean;

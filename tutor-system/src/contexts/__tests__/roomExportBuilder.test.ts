@@ -2,8 +2,10 @@
  * Test responsible for roomExportBuilder.ts and ensures room JSON exports merge chat, feedback, and tutor-only AI interaction snapshots without overlapping message shapes.
  */
 
-import { buildRoomExportData } from '../roomExportBuilder';
+import { buildRoomExportData, buildRoomTextExport, buildTutorInteractionText } from '../roomExportBuilder';
 import { AIInteraction, Message, MessageFeedbackStats, Room, UserRole } from '../../types';
+import fs from 'fs';
+import path from 'path';
 
 describe('buildRoomExportData', () => {
   const room: Room = {
@@ -68,6 +70,11 @@ describe('buildRoomExportData', () => {
       tutor_action: 'modified',
       tutor_final_response: 'Look at the domain and the urgency language.',
       response_time_ms: 5000,
+      raw_mode: 'tutoring',
+      raw_instruction: 'correction',
+      mode_reason: 'The learner trusted an unsafe signal.',
+      final_mode: 'guard',
+      mode_rectified: true,
       ai_config_snapshot: {
         model_name: 'gpt-4o-mini',
         system_prompt: 'Stay focused on scam detection.',
@@ -118,6 +125,11 @@ describe('buildRoomExportData', () => {
     ]);
     expect(exportData.ai_interactions?.[0]).toEqual(
       expect.objectContaining({
+        raw_mode: 'tutoring',
+        raw_instruction: 'correction',
+        mode_reason: 'The learner trusted an unsafe signal.',
+        final_mode: 'guard',
+        mode_rectified: true,
         ai_config_snapshot: {
           model_name: 'gpt-4o-mini',
           system_prompt: 'Stay focused on scam detection.',
@@ -153,6 +165,97 @@ describe('buildRoomExportData', () => {
         id: 'msg-2',
         feedback_stats: messageFeedbackStats['msg-2'],
       })
+    );
+  });
+
+  it('formats the complete raw and reviewed decision trail for tutor TXT exports', () => {
+    const text = buildTutorInteractionText(aiInteractions[0], 0);
+
+    expect(text).toContain('Raw Mode: tutoring');
+    expect(text).toContain('Raw Instruction: correction');
+    expect(text).toContain('Mode Reason: The learner trusted an unsafe signal.');
+    expect(text).toContain('Final Mode: guard');
+    expect(text).toContain('Mode Changed: yes');
+  });
+
+  it('formats a contract-valid Guard decision without inventing an instruction', () => {
+    const text = buildTutorInteractionText(
+      {
+        ...aiInteractions[0],
+        raw_mode: 'guard',
+        raw_instruction: null,
+        final_mode: 'guard',
+        mode_rectified: false,
+      },
+      0
+    );
+
+    expect(text).toContain('Raw Instruction: none');
+    expect(text).toContain('Mode Changed: no');
+    expect(text).not.toContain('undefined');
+  });
+
+  it('does not print placeholder garbage for historical interactions with missing decision metadata', () => {
+    const text = buildTutorInteractionText(
+      {
+        ...aiInteractions[0],
+        raw_mode: 'tutoring',
+        raw_instruction: null,
+        mode_reason: undefined,
+        final_mode: undefined,
+        mode_rectified: undefined,
+      },
+      0
+    );
+
+    expect(text).not.toMatch(/undefined|Raw Instruction: null/);
+    expect(text).toContain('Raw Instruction: not recorded');
+  });
+
+  it('reports mode changes from the raw and final modes rather than a contradictory flag', () => {
+    const text = buildTutorInteractionText(
+      {
+        ...aiInteractions[0],
+        raw_mode: 'guard',
+        final_mode: 'guard',
+        mode_rectified: true,
+      },
+      0
+    );
+
+    expect(text).toContain('Mode Changed: no');
+
+    const changedText = buildTutorInteractionText(
+      {
+        ...aiInteractions[0],
+        raw_mode: 'guard',
+        final_mode: 'tutoring',
+        mode_rectified: false,
+      },
+      0
+    );
+    expect(changedText).toContain('Mode Changed: yes');
+  });
+
+  it('keeps the decision trail in the tutor TXT export and out of the student TXT export', () => {
+    const args = { room, messages, messageFeedbackStats, aiInteractions };
+
+    const tutorText = buildRoomTextExport({ ...args, isTutor: true });
+    const studentText = buildRoomTextExport({ ...args, isTutor: false });
+
+    expect(tutorText).toContain('Raw Mode: tutoring');
+    expect(tutorText).toContain('Raw Instruction: correction');
+    expect(tutorText).toContain('Mode Reason: The learner trusted an unsafe signal.');
+    expect(tutorText).toContain('Final Mode: guard');
+    expect(tutorText).toContain('Mode Changed: yes');
+    expect(studentText).not.toMatch(/Raw Mode:|Raw Instruction:|Mode Reason:|Final Mode:|Mode Changed:/);
+  });
+
+  it('wires the tested TXT export builder into the room download path', () => {
+    const roomContext = fs.readFileSync(path.resolve(process.cwd(), 'src/contexts/RoomContext.tsx'), 'utf8');
+
+    expect(roomContext).toMatch(
+      /const downloadChatHistory[\s\S]*?if \(format === 'json'\)[\s\S]*?\} else \{[\s\S]*?const content = buildRoomTextExport\s*\(\s*\{[\s\S]*?isTutor[\s\S]*?\}\s*\);[\s\S]*?new Blob\s*\(\s*\[content\]/
     );
   });
 });

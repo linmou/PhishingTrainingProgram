@@ -45,6 +45,14 @@ describe('Guard Mode AI decision contract', () => {
         global.fetch = originalFetch;
     });
 
+    it('treats a newly created tutoring room with no mode history as unknown prior mode', async () => {
+        const { resolveTutorPriorMode } = await import('../aiService');
+
+        expect(resolveTutorPriorMode({ active_response_mode: 'tutoring', mode_changed_at: null })).toBe('unknown');
+        expect(resolveTutorPriorMode({ active_response_mode: 'guard', mode_changed_at: null })).toBe('guard');
+        expect(resolveTutorPriorMode({ active_response_mode: 'tutoring', mode_changed_at: '2026-04-02T00:00:00Z' })).toBe('tutoring');
+    });
+
     it('returns an independent semantic mode, reason, and response from the provider', async () => {
         const providerDecision = {
             reason: 'The student explicitly repeated the unsafe click to test the tutor after correction.',

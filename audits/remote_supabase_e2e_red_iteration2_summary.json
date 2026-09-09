@@ -1,0 +1,26 @@
+{
+  "feature_name": "remote_supabase_e2e",
+  "phase": "red",
+  "iteration": 2,
+  "reviewer_count": 3,
+  "status": "converged",
+  "disputed_criteria": [],
+  "criteria": {
+    "c1": {
+      "criterion_text": "A valid hosted URL with a process-level override is accepted and the override is observable in the loader result.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        1.0,
+        0.99,
+        0.99
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    }
+  }
+}

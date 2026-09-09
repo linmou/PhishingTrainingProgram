@@ -30,7 +30,7 @@ require.extensions['.ts'] = (module, filename) => {
   module._compile(output.outputText, filename);
 };
 
-const { getEcologicalCasesFromTemplates } = require(path.join(
+const { getDemoRoomTemplateSeeds, buildEcologicalCaseFromSeed } = require(path.join(
       tutorRoot,
       'src/services/demoRoomTemplates.ts'
     ));
@@ -39,7 +39,22 @@ const { buildEcologicalChatCompletionMessages } = require(path.join(
   'src/services/ecologicalTutorCall.ts'
 ));
 
-const cases = getEcologicalCasesFromTemplates();
+const metadata = JSON.parse(fs.readFileSync(path.join(
+  repoRoot,
+  'evals/promptfoo/rubrics/v0/ecological-metadata.json'
+), 'utf8'));
+const cases = getDemoRoomTemplateSeeds()
+  .filter((seed) => metadata[seed.case_id])
+  .map((seed) => {
+    const annotations = metadata[seed.case_id];
+    return {
+      ...buildEcologicalCaseFromSeed(seed),
+      ...annotations,
+      applicable_requirements: [...annotations.behavior_focus, 'response_length'].join(', '),
+      ai_config_template: seed.ai_config_template,
+      source_type: 'product_template'
+    };
+  });
 
 const rows = cases.map((c) => {
   const metrics = c.applicable_requirements

@@ -1,0 +1,125 @@
+{
+  "feature_name": "remote_supabase_e2e",
+  "phase": "red",
+  "iteration": 1,
+  "reviewer_id": "audit3",
+  "reviewer_agent_id": "/root/red_audit3",
+  "reviewer_source": "native collaboration-agent delegation",
+  "claim": "The proposed regression test correctly specifies the smallest executable change needed to restore the browser runner's prior acceptance of a configured hosted Supabase URL without weakening required credential validation or changing browser/evaluator behavior.",
+  "overall_verdict": "fail",
+  "overall_confidence": 0.98,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "A valid hosted URL with a process-level override is accepted and the override is observable in the loader result.",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "requirement_quote",
+          "location": "audits/remote_supabase_e2e_request_map.md:33,43",
+          "text": "The mapped control requires a non-neutral .env URL/key fixture plus a distinct process override and expressly says this must reject implementations that read only .env or only process state."
+        },
+        {
+          "kind": "test_inspection",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:36-47",
+          "text": "The hosted case writes only process.env values, invokes loadLocalEnvironment, and asserts those same values and a Supabase client. It does not install, mock, or assert any competing .env fixture value."
+        },
+        {
+          "kind": "production_inspection",
+          "location": "tutor-system/scripts/browser-demo-tutor-behavior.js:95-105",
+          "text": "The frozen loader currently merges parsed .env values followed by process.env and then rejects non-local hostnames. The hosted assertion targets the hostname rejection, but its claimed environment-precedence observation is not independently controlled."
+        }
+      ],
+      "reasoning": "The hosted value and client assertions non-neutrally reject retaining the hostname allow-list or substituting localhost, but they do not prove process-over-.env precedence as required by the request map. A Green implementation that ignores .env entirely and reads only process.env would satisfy this test. Therefore c1's override claim is incompletely specified.",
+      "counterevidence": [
+        {
+          "kind": "partial_coverage",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:36-47",
+          "text": "The test does assert the exact hosted origin, exact key, and a usable client surface, so the remote-host acceptance half of c1 is directly covered."
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "text": "A valid local URL remains accepted.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "test_inspection",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:50-58",
+          "text": "The local control supplies http://127.0.0.1:54321 with a nonempty anon key, asserts the exact returned URL, and requires a Supabase client exposing from()."
+        },
+        {
+          "kind": "production_inspection",
+          "location": "tutor-system/scripts/browser-demo-tutor-behavior.js:99-105",
+          "text": "The frozen production allow-list explicitly accepts 127.0.0.1, so this control protects local acceptance while the hosted-only restriction is removed in Green."
+        }
+      ],
+      "reasoning": "The local case is distinct from the hosted case and would fail a hosted-only replacement rule or a loader that did not return the configured local client.",
+      "counterevidence": []
+    },
+    {
+      "id": "c3",
+      "text": "Missing URL and missing anon key remain rejected with the existing configuration error.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "test_inspection",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:60-68",
+          "text": "Two independent assertions make the effective URL empty with a valid key and the effective key empty with a valid hosted URL; both require the existing Missing local Supabase configuration error."
+        },
+        {
+          "kind": "production_inspection",
+          "location": "tutor-system/scripts/browser-demo-tutor-behavior.js:97-99",
+          "text": "The frozen loader uses the same !url || !key presence guard and exact error text targeted by the regression assertions."
+        }
+      ],
+      "reasoning": "Both credential dimensions are controlled independently, and using explicit empty process overrides prevents a repository .env value from silently filling the credential under test. The assertions preserve the current validation contract while allowing only the hostname policy to change.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "The test is isolated to the URL-policy/environment boundary and does not add a second scorer, touch remote data, or weaken unrelated behavior.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "kind": "scope_receipt",
+          "location": "audits/remote_supabase_e2e_red_scope.json:5-15",
+          "text": "The pre-Red snapshot is refs/tdd/remote_supabase_e2e/pre_red; the sole editable Red path is browser-demo-tutor-behavior.test.js, while the runner and documentation are protected."
+        },
+        {
+          "kind": "baseline_comparison",
+          "location": "refs/tdd/remote_supabase_e2e/pre_red versus current tutor-system/scripts/browser-demo-tutor-behavior.js",
+          "text": "The protected production runner has no diff from the pre-Red snapshot; its SHA-256 remains 00c0e8121638266f0b938b710ea25f996be93a00fa27c423f5ab431de31166fb."
+        },
+        {
+          "kind": "test_inspection",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:1-69",
+          "text": "The test only manipulates two environment keys, calls the exported environment loader, inspects returned configuration/client shape, and restores process state. It never invokes from(), browser orchestration, a judge, evaluator logic, or a remote write."
+        },
+        {
+          "kind": "route_receipt",
+          "location": "audits/remote_supabase_e2e_role_receipt.json:3-6",
+          "text": "The feature is classified as the full route under monitor /root/phase_monitor through native collaboration-agent delegation, consistent with deferring network and persistence evidence beyond Red."
+        }
+      ],
+      "reasoning": "The attributable Red change is confined to the new loader-boundary test, production is frozen against the named snapshot, and the test constructs clients without performing queries. No scoring, prompt, case, evaluator, browser, migration, or persistence behavior is introduced or weakened in Red.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [
+    "No durable failing-Red command output or tdd_snapshot run receipt was present among the supplied remote_supabase_e2e artifacts. The frozen source makes the hosted hostname failure mechanism inspectable, but the claimed captured execution could not be independently cited.",
+    "Will the c1 test be amended to provide a controlled .env value distinct from the process override, as required by request-map lines 33 and 43?"
+  ],
+  "disputed_points_if_any": [
+    "c1: The test title and assertions demonstrate hosted process-env acceptance, but they do not establish process-over-.env precedence; a process-only loader remains an allowed shortcut despite the request map explicitly rejecting it."
+  ]
+}

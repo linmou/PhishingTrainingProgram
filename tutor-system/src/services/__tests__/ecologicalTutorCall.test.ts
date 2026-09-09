@@ -23,6 +23,12 @@ describe('ecologicalTutorCall', () => {
     );
   });
 
+  it('does not send the test-room classification marker as scenario content', () => {
+    expect(formatRoomScenarioContext('Demo: Lock Icon Myth', 'Practice room\n\n[behavior-test-room]')).toBe(
+      'Demo: Lock Icon Myth — Practice room'
+    );
+  });
+
   it('formats demo-template pre_populated_dialogue the way the room shows it', () => {
     const lockDemo = getDemoRoomTemplateSeeds().find((s) =>
       s.template_name.includes('Lock Icon')

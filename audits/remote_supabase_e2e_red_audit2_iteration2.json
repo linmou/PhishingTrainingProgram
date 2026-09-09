@@ -1,0 +1,74 @@
+{
+  "feature_name": "remote_supabase_e2e",
+  "phase": "red",
+  "iteration": 2,
+  "reviewer_id": "audit2",
+  "reviewer_agent_id": "/root/red_audit2",
+  "reviewer_source": "native collaboration-agent delegation",
+  "claim": "The proposed regression test correctly specifies the smallest executable change needed to restore the browser runner's prior acceptance of a configured hosted Supabase URL without weakening required credential validation or changing browser/evaluator behavior.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.99,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "A valid hosted URL with a process-level override is accepted and the override is observable in the loader result.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "kind": "prior_disagreement",
+          "location": "audits/remote_supabase_e2e_red_audit3_iteration1.json:c1",
+          "text": "Audit3 correctly identified that the iteration-1 test supplied only process.env values, so a loader that ignored .env entirely could pass."
+        },
+        {
+          "kind": "summary",
+          "location": "audits/remote_supabase_e2e_red_iteration1_summary.json:c1",
+          "text": "Iteration 1 was not converged for c1: audit1 and audit2 passed it, while audit3 failed it because process-over-.env precedence lacked an independent fixture control."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_correction_round2.md:3-11",
+          "text": "The correction plan accepts the precedence gap and limits remediation to a temporary .env fixture, distinct process overrides, a fixture-only marker, and an optional loader env-file seam; no production file is edited in Red."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:38-47",
+          "text": "withEnvFile creates a temporary directory and .env file, passes its path to the callback, and removes the directory in finally."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:49-64",
+          "text": "The hosted test writes dotenv-only URL/key values and REMOTE_E2E_FIXTURE=from-dotenv, passes that file to loadLocalEnvironment, sets distinct hosted process URL/key values, then asserts the fixture marker and exact process URL, key, origin, and client surface."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_request_map.md:33,39-43",
+          "text": "The corrected control requires a temporary non-neutral .env fixture, distinct process overrides, a fixture-only variable proving the file was read, and rejects reading only .env, only process state, or ignoring the supplied env file."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_run.md:15-17",
+          "text": "The round-2 targeted run exited 1 with two passes and one failure; the hosted subtest still failed at runner line 104 with eval:behavior:web refuses non-local Supabase URLs."
+        },
+        {
+          "kind": "hash_comparison",
+          "location": "refs/tdd/remote_supabase_e2e/pre_red_round_2 and current workspace",
+          "text": "The production browser runner remains byte-identical at SHA-256 00c0e8121638266f0b938b710ea25f996be93a00fa27c423f5ab431de31166fb, while the test changed from 2b8e0328227a3e7d8c8255f915b8d22831ab10b94f3741d346bb43af4f6d306c to 986ec6df2c231c7b09d14d33f961cde4f46c6298c99a6e9f46efec813d48e921."
+        },
+        {
+          "kind": "provenance",
+          "location": "audits/remote_supabase_e2e_red_provenance_iteration1.json",
+          "text": "The iteration-1 provenance binds audit2 to /root/red_audit2 and all three independent reviewer artifacts to native collaboration-agent delegation."
+        }
+      ],
+      "reasoning": "I accept audit3's iteration-1 objection and retract audit2's earlier assumption that setting process variables alone proved precedence. The corrected marker fails a process-only loader, the distinct URL/key assertions fail an env-file-only loader, and passing the temporary path fails an implementation that ignores the supplied file. The captured failure remains genuine against unchanged production: execution still reaches the existing hosted-hostname rejection before the new marker assertion.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": [
+    "c1: Accepted audit3 iteration1's process-only-loader shortcut; the temporary fixture marker and distinct overrides now close it.",
+    "c1: Audit2 iteration1's pass overstated the original evidence; the iteration-2 verdict relies on the corrected test and fresh round-2 failure."
+  ]
+}

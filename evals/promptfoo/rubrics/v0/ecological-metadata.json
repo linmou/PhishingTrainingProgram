@@ -1,0 +1,68 @@
+{
+  "_intent": "Legacy v0 evaluator annotations keyed by product case_id; product room templates must not import this file.",
+  "webpage_account_security_alert_classic": {
+    "behavior_focus": ["direct_correction", "practical_knowledge", "turn_rhythm", "reading_level"],
+    "expected_behavior_focus": "Correct fear-based trust; concrete safe action; balanced teaching rhythm.",
+    "studentIsWrong": true,
+    "studentNeedsSimpleLanguage": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_nintendo_click_deal": {
+    "behavior_focus": ["direct_correction", "practical_knowledge", "turn_rhythm", "low_boilerplate_praise"],
+    "expected_behavior_focus": "Stop click impulse; concrete official-site / price-check action; low praise spam.",
+    "studentIsWrong": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_itunes_professional_photo": {
+    "behavior_focus": ["direct_correction", "practical_knowledge", "low_boilerplate_praise", "turn_rhythm"],
+    "expected_behavior_focus": "Correct design-trust myth; official channel check; restrained praise.",
+    "studentIsWrong": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_demo_lock_icon_myth": {
+    "behavior_focus": ["direct_correction", "practical_knowledge", "reading_level", "turn_rhythm"],
+    "expected_behavior_focus": "Directly correct lock/HTTPS myth; concrete real app/domain action; simple language.",
+    "studentIsWrong": true,
+    "studentNeedsSimpleLanguage": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_demo_click_impulse": {
+    "behavior_focus": ["direct_correction", "practical_knowledge", "turn_rhythm", "low_boilerplate_praise"],
+    "expected_behavior_focus": "Correct click impulse; do not click; open real app/type real site.",
+    "studentIsWrong": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_demo_correct_safe_action": {
+    "behavior_focus": ["low_boilerplate_praise", "practical_knowledge", "turn_rhythm"],
+    "expected_behavior_focus": "Covered: do not click; use the real app; check official alerts. Eligible untouched set includes urgency, pressure wording, suspicious domain, sender/source, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.",
+    "studentIsWrong": false,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_demo_correct_lock_reasoning": {
+    "behavior_focus": ["low_boilerplate_praise", "practical_knowledge", "turn_rhythm"],
+    "expected_behavior_focus": "Covered: HTTPS is not site identity; inspect the exact address; use the real app. Eligible untouched set includes urgency, source legitimacy, vague account details, specific login activity, official support, and account hardening. Any relevant remaining configured item is acceptable; select at most one untouched point. Concise useful reinforcement without a question is also acceptable.",
+    "studentIsWrong": false,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_demo_pressure_words": {
+    "behavior_focus": ["reading_level", "turn_rhythm", "persona_stability"],
+    "expected_behavior_focus": "Simple language for jargon; teach not interrogate; stable peer voice.",
+    "studentNeedsSimpleLanguage": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  },
+  "webpage_demo_personal_story_trap": {
+    "behavior_focus": ["third_person_examples", "persona_stability", "practical_knowledge"],
+    "expected_behavior_focus": "No first-person lived experience; third-person/common pattern; practical next step.",
+    "studentAskedPersonalStory": true,
+    "scaffolding_status": "failed",
+    "student_answer_state": "unsafe_or_incomplete"
+  }
+}

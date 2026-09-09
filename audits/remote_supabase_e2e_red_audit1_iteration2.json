@@ -1,0 +1,59 @@
+{
+  "feature_name": "remote_supabase_e2e",
+  "phase": "red",
+  "iteration": 2,
+  "reviewer_id": "audit1",
+  "reviewer_agent_id": "/root/red_audit1",
+  "reviewer_source": "native collaboration-agent delegation",
+  "claim": "The proposed regression test correctly specifies the smallest executable change needed to restore the browser runner's prior acceptance of a configured hosted Supabase URL without weakening required credential validation or changing browser/evaluator behavior.",
+  "overall_verdict": "pass",
+  "overall_confidence": 1.0,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "A valid hosted URL with a process-level override is accepted and the override is observable in the loader result.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 1.0,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:38-47",
+          "text": "withEnvFile creates a unique temporary directory, writes the supplied `.env` fixture, passes its exact path to the callback, and removes the directory in `finally`."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:49-64",
+          "text": "The hosted case supplies fixture URL/key values for `dotenv-project`, a fixture-only `REMOTE_E2E_FIXTURE=from-dotenv` marker, and distinct process overrides for `remote-test-project` and `test-anon-key`, then calls `loadLocalEnvironment(envFile)`."
+        },
+        {
+          "kind": "quote",
+          "location": "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js:60-64",
+          "text": "The assertions require the fixture marker to survive while the returned URL, anon key, and origin equal the distinct process overrides and a Supabase client is constructed."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_request_map.md:33,43",
+          "text": "The corrected map requires a temporary `.env` fixture plus a distinct process override through a testable env-file seam; its named rejected shortcuts are reading only `.env`, reading only process state, or ignoring the supplied env file."
+        },
+        {
+          "kind": "quote",
+          "location": "audits/remote_supabase_e2e_red_run.md:15-17",
+          "text": "Round 2 exits 1 with two passing tests and the hosted case failing at the unchanged non-local hostname rejection; the fixture-marker assertion remains unreachable while production lacks the env-file seam and retains the allow-list."
+        },
+        {
+          "kind": "command_output",
+          "location": "refs/tdd/remote_supabase_e2e/pre_red_round_2 comparison",
+          "text": "The protected browser runner remains byte-identical to the Round 2 pre-Red snapshot at SHA-256 `00c0e8121638266f0b938b710ea25f996be93a00fa27c423f5ab431de31166fb`; no protected production or documentation path differs."
+        }
+      ],
+      "reasoning": "The Round 2 test makes both sides of precedence independently observable. A process-only loader loses the fixture marker; a dotenv-only loader returns the fixture URL/key rather than the process values; ignoring the supplied file loses the marker; retaining the hostname allow-list produces the captured Red failure. Therefore the earlier c1 evidence gap is closed and the remaining failure is genuine missing production behavior.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": [
+    "Accepted audit3 iteration-1's objection that the original process-only fixture did not reject a loader that ignored `.env`; that objection motivated the Round 2 correction.",
+    "The iteration-1 audit1/audit2 pass conclusion is superseded only for its precedence-evidence rationale, not for its hosted-origin observation. The updated fixture marker, distinct values, and injectable path now supply the missing independent control, so audit3's prior c1 failure no longer applies."
+  ]
+}

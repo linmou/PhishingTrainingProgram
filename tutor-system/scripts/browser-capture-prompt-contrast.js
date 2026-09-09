@@ -55,7 +55,6 @@ function buildCaptureRecord(capture) {
     userTurn: capture.input.userTurn,
     response: capture.generation.response,
     latencyMs: capture.generation.latencyMs,
-    heuristicScores: capture.generation.heuristicScores,
     screenshotPath: capture.screenshotPath
   };
 }
@@ -138,7 +137,6 @@ async function main() {
     buildPhase0TutorUserTurn,
     prePopulatedToContextMessages
   } = require(path.join(tutorRoot, 'src/services/ecologicalTutorCall.ts'));
-  const { scoreTutorResponse } = require(path.join(tutorRoot, 'src/services/tutorBehaviorHeuristics.ts'));
 
   const seeds = getPromptComparisonTemplateSeeds();
   const browser = await chromium.launch({ headless: true, channel: process.env.PW_CHANNEL || 'chrome' });
@@ -178,13 +176,6 @@ async function main() {
       const generation = await generateWithTransportRetry(() => generateOnce(page));
       const screenshotName = `${comparison.pair_id}-${comparison.version}.png`;
       await page.screenshot({ path: path.join(screenshotDir, screenshotName), fullPage: true });
-      const scores = scoreTutorResponse(generation.response, {
-        metrics: seed.ai_config_template.behavior_focus,
-        studentIsWrong: seed.studentIsWrong,
-        studentAskedPersonalStory: seed.studentAskedPersonalStory,
-        studentNeedsSimpleLanguage: seed.studentNeedsSimpleLanguage
-      });
-
       records.push(buildCaptureRecord({
         comparison: { pairId: comparison.pair_id, version: comparison.version },
         template: { id: templateId },
@@ -205,10 +196,7 @@ async function main() {
           temperature: seed.ai_config_template.temperature,
           maxTokens: seed.ai_config_template.max_tokens
         },
-        generation: {
-          ...generation,
-          heuristicScores: scores
-        },
+        generation,
         screenshotPath: `screenshots/${screenshotName}`
       }));
     }

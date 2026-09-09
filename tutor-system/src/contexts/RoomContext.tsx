@@ -20,7 +20,7 @@ import {
 } from '../services/supabase';
 import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guardModeService';
 import { ParameterOverrides } from '../components/AISuggestionBox';
-import { buildRoomExportData } from './roomExportBuilder';
+import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -559,6 +559,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 response_time_ms: responseTimeMs,
                 ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
                 raw_mode: currentSuggestionContext.rawDecision.mode,
+                raw_instruction: currentSuggestionContext.rawDecision.instruction,
                 mode_reason: currentSuggestionContext.rawDecision.mode_reason,
                 final_mode: finalMode,
                 mode_rectified: currentSuggestionContext.rawDecision.mode !== finalMode
@@ -995,62 +996,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-        } else {
-            // TXT format - only include AI data for tutors
-            const aiSummary = isTutor && aiInteractions.length > 0 ? [
-                '',
-                'AI Assistant Summary:',
-                '====================',
-                `Total AI suggestions: ${aiInteractions.length}`,
-                `Accepted: ${aiInteractions.filter(i => i.tutor_action === 'accepted').length} (${(aiInteractions.filter(i => i.tutor_action === 'accepted').length / aiInteractions.length * 100).toFixed(2)}%)`,
-                `Modified: ${aiInteractions.filter(i => i.tutor_action === 'modified').length} (${(aiInteractions.filter(i => i.tutor_action === 'modified').length / aiInteractions.length * 100).toFixed(2)}%)`,
-                `Rejected: ${aiInteractions.filter(i => i.tutor_action === 'rejected').length} (${(aiInteractions.filter(i => i.tutor_action === 'rejected').length / aiInteractions.length * 100).toFixed(2)}%)`,
-                `Ignored: ${aiInteractions.filter(i => i.tutor_action === 'ignored').length} (${(aiInteractions.filter(i => i.tutor_action === 'ignored').length / aiInteractions.length * 100).toFixed(2)}%)`,
-                '',
-                'Detailed AI Interactions:',
-                '========================',
-                ...aiInteractions.map((interaction, idx) => [
-                    `#${idx + 1} - ${interaction.timestamp}`,
-                    `Parent Message: "${interaction.parent_message_content}"`,
-                    `AI Suggestion: "${interaction.ai_suggestion}"`,
-                    `Tutor Action: ${interaction.tutor_action}`,
-                    interaction.tutor_final_response ? `Final Response: "${interaction.tutor_final_response}"` : '',
-                    `Response Time: ${interaction.response_time_ms}ms`,
-                    ''
-                ].filter(line => line).join('\n'))
-            ] : [];
-
-            // Add feedback summary for TXT format
-            const messagesWithFeedback = Object.keys(messageFeedbackStats).length;
-            const totalFeedbackCount = Object.values(messageFeedbackStats).reduce((sum, stats) => sum + stats.total_feedback_count, 0);
-            const feedbackSummaryTxt = messagesWithFeedback > 0 ? [
-                '',
-                'Feedback Summary:',
-                '================',
-                `Messages with feedback: ${messagesWithFeedback}`,
-                `Total feedback entries: ${totalFeedbackCount}`,
-                ''
-            ] : [];
-
-            const content = [
-                `Room: ${currentRoom.title}`,
-                `Created: ${new Date(currentRoom.created_at).toISOString()}`,
-                ...(isTutor ? [
-                    `AI Assistant: ${currentRoom.ai_assistant_enabled ? 'Enabled' : 'Disabled'}`,
-                    currentRoom.ai_assistant_model ? `AI Model: ${currentRoom.ai_assistant_model}` : ''
-                ] : []),
-                ...feedbackSummaryTxt,
-                'Messages:',
-                '=========',
-                ...messages.map(message => {
-                    const feedbackStats = messageFeedbackStats[message.id];
-                    const feedbackInfo = feedbackStats && feedbackStats.total_feedback_count > 0 
-                        ? ` [👍${feedbackStats.like_count} 👎${feedbackStats.dislike_count}${feedbackStats.overall_average_rating ? ` ★${feedbackStats.overall_average_rating.toFixed(1)}` : ''}]`
-                        : '';
-                    return `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
-                }),
-                ...aiSummary
-            ].filter(line => line !== '').join('\n');
+            } else {
+            const content = buildRoomTextExport({
+                room: currentRoom,
+                messages,
+                messageFeedbackStats,
+                aiInteractions,
+                isTutor
+            });
 
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
@@ -1135,6 +1088,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 responseTime,
                 currentSuggestionContext.contextMessages,
                 currentSuggestionContext.rawDecision.mode,
+                currentSuggestionContext.rawDecision.instruction,
                 currentSuggestionContext.rawDecision.mode_reason,
                 currentSuggestionContext.finalMode
             );
@@ -1150,6 +1104,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 response_time_ms: responseTime,
                 ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
                 raw_mode: currentSuggestionContext.rawDecision.mode,
+                raw_instruction: currentSuggestionContext.rawDecision.instruction,
                 mode_reason: currentSuggestionContext.rawDecision.mode_reason,
                 final_mode: currentSuggestionContext.finalMode,
                 mode_rectified: currentSuggestionContext.rawDecision.mode !== currentSuggestionContext.finalMode

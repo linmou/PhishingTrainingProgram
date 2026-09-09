@@ -205,6 +205,12 @@ describe('RoomContext Quick Adjust persistence', () => {
         (generateTutorSuggestion as jest.Mock)
             .mockResolvedValueOnce({
                 suggestion: 'Initial suggestion',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'scaffolding',
+                    mode_reason: 'The learner needs a prompt to inspect the message.',
+                    suggested_response: 'Initial suggestion'
+                },
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: {
@@ -218,6 +224,12 @@ describe('RoomContext Quick Adjust persistence', () => {
             })
             .mockResolvedValueOnce({
                 suggestion: 'Regenerated suggestion',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'correction',
+                    mode_reason: 'The learner needs a more direct prompt.',
+                    suggested_response: 'Regenerated suggestion'
+                },
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: {
@@ -292,6 +304,12 @@ describe('RoomContext Quick Adjust persistence', () => {
         (generateTutorSuggestion as jest.Mock)
             .mockResolvedValueOnce({
                 suggestion: 'What makes this message suspicious?',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'scaffolding',
+                    mode_reason: 'The learner has not yet identified a red flag.',
+                    suggested_response: 'What makes this message suspicious?'
+                },
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: {
@@ -305,6 +323,12 @@ describe('RoomContext Quick Adjust persistence', () => {
             })
             .mockResolvedValueOnce({
                 suggestion: 'Which red flags stand out first?',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'correction',
+                    mode_reason: 'The learner needs a direct correction after the first attempt.',
+                    suggested_response: 'Which red flags stand out first?'
+                },
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: {
@@ -471,12 +495,24 @@ describe('RoomContext Quick Adjust persistence', () => {
         (generateTutorSuggestion as jest.Mock)
             .mockResolvedValueOnce({
                 suggestion: 'What makes this message suspicious?',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'scaffolding',
+                    mode_reason: 'The learner has not yet identified a red flag.',
+                    suggested_response: 'What makes this message suspicious?'
+                },
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: generatedSnapshot
             })
             .mockResolvedValueOnce({
                 suggestion: 'Which red flags stand out first?',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'correction',
+                    mode_reason: 'The learner needs a direct correction after the first attempt.',
+                    suggested_response: 'Which red flags stand out first?'
+                },
                 success: true,
                 contextMessages: ['message-1'],
                 appliedConfig: regeneratedSnapshot
@@ -527,11 +563,13 @@ describe('RoomContext Quick Adjust persistence', () => {
         expect(roomApi!.aiInteractions).toEqual([
             expect.objectContaining({
                 tutor_action: 'modified',
-                ai_config_snapshot: generatedSnapshot
+                ai_config_snapshot: generatedSnapshot,
+                raw_instruction: 'scaffolding'
             }),
             expect.objectContaining({
                 tutor_action: 'accepted',
-                ai_config_snapshot: regeneratedSnapshot
+                ai_config_snapshot: regeneratedSnapshot,
+                raw_instruction: 'correction'
             })
         ]);
     });

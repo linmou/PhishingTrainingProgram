@@ -4,7 +4,7 @@ This document outlines the comprehensive testing strategy for the completed task
 
 ## Current Test Tiers
 
-Updated: 2026-08-31 (correct-answer knowledge-inventory continuation; commit pending)
+Updated: 2026-09-09 (shared tutor behavior evaluator and hosted seven-room product adapter; commit pending)
 
 The repository now uses these validation tiers:
 
@@ -12,18 +12,18 @@ The repository now uses these validation tiers:
    - Command: `npm test` or `npm run test:regression`
    - Purpose: stable per-change guardrail
    - Rule: must not require live vendor credentials or local browser-driver compatibility
-   - Includes offline tutor-behavior heuristics unit tests and E2E scaffold checks
+   - Includes production request/parser/contract tests; prose-quality heuristics are not used
 
 2. External integration (Qwen checklist):
    - Command: `npm run test:integration:qwen`
    - Purpose: validate the real Qwen boundary for checklist extraction/coverage
    - Rule: opt-in only because vendor/network state can fail without a code regression
 
-3. Tutor behavior live E2E:
-   - Command: `npm run test:integration:tutor-behavior`
-   - Purpose: exercise the **production** `generateSystemPrompt` + `QwenService.generateResponse` path against Account Security Alert cases, scored by deterministic heuristics
-   - Rule: opt-in (`RUN_LIVE_QWEN_TESTS=true`); requires `REACT_APP_OAI_API_KEY`
-   - Complements Promptfoo (`npm run eval:prompts`) which is the LLM-as-judge quality gate over frozen fixtures
+3. Tutor behavior evaluation:
+   - Offline command: run `evals/promptfoo/v1/runner.js` from the repository root for frozen-case candidate comparison
+   - Product command: `npm run eval:behavior:web`
+   - Purpose: offline and real-room generations use one canonical evaluator; the web command separately gates the UI/request/parser/review/persistence path
+   - Rule: the web command requires a running local app, a configured local or hosted Supabase endpoint, and configured model/judge credentials. Persistence checks additionally require `024_raw_instruction.sql` at the target endpoint.
 
 4. Browser end-to-end integration:
    - Command: `npm run test:integration:browser`
@@ -34,9 +34,11 @@ The repository now uses these validation tiers:
    - Command: `npm run test:integration:external`
    - Purpose: run Qwen checklist, tutor-behavior E2E, and browser tiers when preparing a release or checking environment health
 
-6. Ecological Promptfoo + real-browser template demos (behavior feedback):
+6. Ecological Promptfoo + real-browser product verification:
    - Layer 1: `npm run eval:prompts` (export + one Promptfoo evaluation over ecological and synthetic cases + quality gate)
-   - Layer 2: `npm run test:browser:behavior-demos` (template-only rooms on **`/#/tutor/test-rooms`**, not the main room list)
+   - Layer 2: `npm run eval:behavior:web` (seven template-only rooms on **`/#/tutor/test-rooms`**, not the main room list)
+   - One Guard room reuses frozen case `ecological_participation_disruption`; the other six exercise tutoring decisions
+   - Browser automation captures the production path and delegates behavior judgment to `evals/promptfoo/v1/evaluator.js`
    - Provenance rule: ecological demo templates must be derived from real Supabase `room_templates` records used by the Test Rooms page; inspect the database record before changing `demoRoomTemplates.ts`, then regenerate `webpage-ecological.yaml`
    - Derived behavior variants keep the source room through the tutor turn and change only the student turn under test; use `seed:behavior-templates -- --case-id=<case_id>` to avoid rewriting unrelated database templates
    - For correct-student behavior, `detection_areas` plus `verification_steps` are the room's complete knowledge inventory. The tutor may reinforce directly or ask one focused question about any applicable point the student has not demonstrated; a tutor mention alone does not count as student coverage.

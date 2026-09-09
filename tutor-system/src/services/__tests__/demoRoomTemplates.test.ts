@@ -12,12 +12,12 @@ import {
   toRoomTemplateInsertRow,
   GLOBAL_TEMPLATE_TUTOR_ID
 } from '../demoRoomTemplates';
+import fs from 'fs';
+import path from 'path';
 
 describe('demoRoomTemplates', () => {
   it('builds an AI config with the improved tutoring markers', () => {
-    const config = buildCasualPeerAIConfig('Account Security Alert', [
-      'direct_correction'
-    ]);
+    const config = buildCasualPeerAIConfig('Account Security Alert');
 
     expect(config.enabled).toBe(true);
     expect(config.preset).toBe('casual_peer');
@@ -91,22 +91,58 @@ describe('demoRoomTemplates', () => {
     );
 
     [clickCorrect!, lockCorrect!].forEach((seed) => {
-      expect(seed.studentIsWrong).toBe(false);
       expect(seed.test_only).toBe(true);
       expect(seed.ai_config_template.model_name).toBe('qwen3.5-flash');
-      expect(seed.ai_config_template.behavior_focus).toEqual([
-        'low_boilerplate_praise',
-        'practical_knowledge',
-        'turn_rhythm'
-      ]);
-      expect(seed.ai_config_template.behavior_focus).not.toContain('direct_correction');
       expect(seed.ai_config_template.prompt_config.detection_areas.length).toBeGreaterThan(0);
       expect(seed.ai_config_template.prompt_config.verification_steps.length).toBeGreaterThan(0);
-      expect(seed.expected_behavior_focus).toMatch(/^Covered: .+Eligible untouched set includes:?.+/i);
-      expect(seed.expected_behavior_focus).toMatch(/any relevant remaining configured item is acceptable/i);
-      expect(seed.expected_behavior_focus).toMatch(/select at most one untouched point/i);
-      expect(seed.expected_behavior_focus).toMatch(/without a question is also acceptable/i);
     });
+  });
+
+  it('keeps evaluator-only labels out of every product template', () => {
+    for (const seed of getDemoRoomTemplateSeeds()) {
+      expect(seed).not.toHaveProperty('expected_behavior_focus');
+      expect(seed).not.toHaveProperty('studentIsWrong');
+      expect(seed).not.toHaveProperty('studentAskedPersonalStory');
+      expect(seed).not.toHaveProperty('studentNeedsSimpleLanguage');
+      expect(seed.ai_config_template).not.toHaveProperty('behavior_focus');
+    }
+  });
+
+  it('maps seven unique behavior-room IDs to canonical frozen v1 cases', () => {
+    const frozenCases = JSON.parse(fs.readFileSync(
+      path.resolve(process.cwd(), '../evals/promptfoo/v1/development-with-guard-scenario-rich.json'),
+      'utf8'
+    ));
+    const frozenById = new Map(frozenCases.map((entry: any) => [entry.id, entry]));
+    const behaviorSeeds = getDemoRoomTemplateSeeds().filter((seed) => seed.test_only);
+    const ids = behaviorSeeds.map((seed) => seed.case_id);
+
+    expect(ids).toHaveLength(7);
+    expect(new Set(ids).size).toBe(7);
+    ids.forEach((id) => expect(frozenById.has(id)).toBe(true));
+
+    const guardSeed = behaviorSeeds.find(
+      (seed) => seed.case_id === 'ecological_participation_disruption'
+    );
+    const guardCase: any = frozenById.get('ecological_participation_disruption');
+    expect(guardSeed).toBeTruthy();
+    const productInput = buildEcologicalCaseFromSeed(guardSeed!);
+    expect({
+      scenario_context: productInput.scenario_context,
+      conversation_history: productInput.conversation_history,
+      student_message: productInput.student_message
+    }).toEqual({
+      scenario_context: guardCase.input.scenario_context,
+      conversation_history: guardCase.input.conversation_history,
+      student_message: guardCase.input.student_message
+    });
+    expect(guardSeed!.ai_config_template.prompt_config.detection_areas).toEqual(
+      guardCase.inventory.detection_areas
+    );
+    expect(guardSeed!.ai_config_template.prompt_config.verification_steps).toEqual(
+      guardCase.inventory.verification_steps
+    );
+    expect(guardCase.expected.mode).toBe('guard');
   });
 
   it('maps seeds to global template insert rows', () => {

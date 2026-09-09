@@ -1,375 +1,507 @@
 #!/usr/bin/env node
 /**
- * Purpose: Browser UI walkthrough for behavior-demo room templates.
- * Follows claude_docs/ai-assistant-module.md Manual Testing:
- *   1) login as tutor
- *   2) create room from template (AI auto-enabled)
- *   3) open room
- *   4) generate AI suggestion against the seeded student message
- *   5) capture and score the AI suggestion text
- *
- * Usage (from tutor-system/, app on PORT 3001 by default):
- *   node scripts/browser-demo-tutor-behavior.js
+ * Purpose: exercise seven canonical behavior rooms through the real product UI,
+ * preserve target/audit evidence, and delegate raw v2 outputs to the shared evaluator.
  */
+'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const ts = require('typescript');
 const { chromium } = require('playwright');
+const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
 
+const tutorRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(tutorRoot, '..');
+const evalRoot = path.join(repoRoot, 'evals/promptfoo');
 const BASE_URL = process.env.DEMO_BASE_URL || 'http://localhost:3001';
-const OUT_DIR = path.resolve(__dirname, '../../tmp/browser_demo_runs');
 const TIMEOUT = 60000;
 
-// Load TypeScript heuristics the same way product-gate does.
 require.extensions['.ts'] = (module, filename) => {
   const source = fs.readFileSync(filename, 'utf8');
   const output = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2019,
-      esModuleInterop: true
+      esModuleInterop: true,
+      resolveJsonModule: true
     },
     fileName: filename
   });
   module._compile(output.outputText, filename);
 };
 
+const { getTestOnlyDemoTemplateSeeds, buildEcologicalCaseFromSeed } = require(path.join(
+  tutorRoot,
+  'src/services/demoRoomTemplates.ts'
+));
+const { buildEcologicalChatCompletionMessages } = require(path.join(
+  tutorRoot,
+  'src/services/ecologicalTutorCall.ts'
+));
+const { parseTutorDecision } = require(path.join(
+  tutorRoot,
+  'src/services/tutorDecisionContract.ts'
+));
 const {
-  scoreTutorResponse,
-  allHeuristicsPassed
-} = require(path.join(__dirname, '../src/services/tutorBehaviorHeuristics.ts'));
-const {
-  getDemoRoomTemplateSeeds,
-  getTestOnlyDemoTemplateSeeds
-} = require(path.join(__dirname, '../src/services/demoRoomTemplates.ts'));
+  evaluateBrowserCapture,
+  appendPersistenceEvidence,
+  appendProductFailure,
+  roomContentVisible,
+  behaviorChecksComplete,
+  productChecksComplete,
+  redactSecrets
+} = require(path.join(
+  evalRoot,
+  'v1/browser-adapter.js'
+));
+const { call: judgeCall } = require(path.join(evalRoot, 'v1/runner.js'));
 
-/**
- * Browser demos: create rooms only on /tutor/test-rooms from templates.
- * Prefer test_only (Demo:) seeds; fall back to full catalog if needed.
- * Every case still requires a template selection (no freehand rooms).
- */
-const browserSeedSource =
-  typeof getTestOnlyDemoTemplateSeeds === 'function' && getTestOnlyDemoTemplateSeeds().length > 0
-    ? getTestOnlyDemoTemplateSeeds()
-    : getDemoRoomTemplateSeeds();
+const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
+const sha = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const writeNew = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const productCheck = (id, pass, reason, evidence) => ({
+  id,
+  method: 'product_verification',
+  status: pass ? 'pass' : 'fail',
+  pass,
+  reason,
+  ...(evidence === undefined ? {} : { evidence })
+});
 
-const DEMOS = browserSeedSource.map((seed) => ({
-  id: seed.case_id,
-  templateName: seed.template_name,
-  expect: seed.expected_behavior_focus,
-  metrics: seed.ai_config_template.behavior_focus,
-  studentIsWrong: seed.studentIsWrong,
-  studentAskedPersonalStory: seed.studentAskedPersonalStory,
-  studentNeedsSimpleLanguage: seed.studentNeedsSimpleLanguage,
-  expectedStudentLine: [...seed.pre_populated_dialogue]
-    .reverse()
-    .find((m) => m.role === 'student')?.message
-}));
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+async function closeBrowserPreservingFatal(browser, fatalError) {
+  if (!browser) return fatalError;
+  try {
+    await browser.close();
+    return fatalError;
+  } catch (error) {
+    return fatalError ?? error;
+  }
 }
 
-async function loginAsTutor(page, name) {
+async function captureFailureScreenshot(page, screenshotDir, caseId) {
+  const screenshotPath = path.join(screenshotDir, `${caseId}-failure.png`);
+  try {
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+    return path.relative(path.dirname(screenshotDir), screenshotPath);
+  } catch {
+    return null;
+  }
+}
+
+function loadLocalEnvironment(envFilePath) {
+  const envFile = envFilePath || path.join(tutorRoot, '.env');
+  const env = { ...(fs.existsSync(envFile) ? dotenv.parse(fs.readFileSync(envFile)) : {}), ...process.env };
+  const url = env.REACT_APP_SUPABASE_URL;
+  const key = env.REACT_APP_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Missing local Supabase configuration.');
+  return { env, supabase: createClient(url, key), secrets: [key, env.REACT_APP_OAI_API_KEY].filter(Boolean) };
+}
+
+async function loginAsTutor(page, displayName) {
   await page.goto(`${BASE_URL}/#/`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#displayName', { timeout: TIMEOUT });
-  await page.fill('#displayName', name);
+  await page.fill('#displayName', displayName);
   await page.check('input[name="role"][value="tutor"]');
   await page.click('button[type="submit"], button:has-text("Join"), button:has-text("Start")');
-  // Behavior demos live on Test Rooms page (not main Tutor "Your Rooms")
-  await page.waitForURL(/#\/tutor/, { timeout: TIMEOUT }).catch(async () => {
-    await page.goto(`${BASE_URL}/#/tutor`, { waitUntil: 'domcontentloaded' });
-  });
-  await page.goto(`${BASE_URL}/#/tutor/test-rooms`, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('text=Create a new Room', { timeout: TIMEOUT });
+  await page.waitForURL(/#\/tutor/, { timeout: TIMEOUT });
 }
 
 async function createRoomFromTemplate(page, templateName) {
-  await page.click('text=Create a new Room');
-  await page.waitForSelector('#template-select, label:has-text("Use Template")', { timeout: TIMEOUT });
-
-  // Template-only path: must pick an existing global template.
+  await page.goto(`${BASE_URL}/#/tutor/test-rooms`, { waitUntil: 'domcontentloaded' });
+  await page.getByText('Create a new Room').click();
   const select = page.locator('#template-select');
-  await select.waitFor({ timeout: TIMEOUT });
-  // Template options arrive asynchronously after the page shell renders.
-  // Wait for the requested option so a fast browser cannot read a placeholder-only dropdown.
-  await select.locator('option').filter({ hasText: templateName }).first().waitFor({
-    state: 'attached',
-    timeout: TIMEOUT
-  });
-  const options = await select.locator('option').allTextContents();
-  const match = options.find(
-    (o) => o.trim() === templateName || o.includes(templateName)
-  );
-  if (!match || !match.trim() || match.includes('Select') || match.includes('None')) {
-    throw new Error(
-      `Template-only policy: "${templateName}" not in dropdown. Options: ${options.join(' | ')}`
-    );
-  }
-  await select.selectOption({ label: match.trim() });
-  await sleep(500);
-
-  // Refuse create if template select cleared somehow
-  const selected = await select.inputValue();
-  if (!selected) {
-    throw new Error(`Template-only policy: no template selected for ${templateName}`);
-  }
-
-  await page.click('button:has-text("Create Room")');
-  // Wait for navigation into room or success then auto-navigate
+  const option = select.locator('option').filter({ hasText: templateName }).first();
+  await option.waitFor({ state: 'attached', timeout: TIMEOUT });
+  const templateId = await option.getAttribute('value');
+  if (!templateId) throw new Error(`Missing template id for ${templateName}`);
+  await select.selectOption(templateId);
+  await page.getByRole('button', { name: /create room/i }).click();
   await page.waitForURL(/#\/room\//, { timeout: 90000 });
-  const url = page.url();
-  const roomId = (url.match(/room\/([^/?#]+)/) || [])[1];
-  if (!roomId) throw new Error(`No room id after create: ${url}`);
-  return roomId;
+  const roomId = (page.url().match(/room\/([^/?#]+)/) || [])[1];
+  if (!roomId) throw new Error(`Missing room id for ${templateName}`);
+  return { templateId, roomId };
 }
 
-async function ensureAIEnabled(page) {
-  const body = await page.locator('body').innerText();
-  if (body.includes('AI: On') || body.includes('AI Enabled') || body.includes('✨')) {
-    // Already looks enabled; still open settings if Off is shown
-  }
-  if (body.includes('AI: Off')) {
-    // Open settings and enable
-    const settingsBtn = page.locator('button:has-text("AI"), button:has-text("Settings")').first();
-    if (await settingsBtn.count()) {
-      await settingsBtn.click();
-      await sleep(800);
-      const toggle = page.locator('text=Enable AI Assistant').first();
-      if (await toggle.count()) {
-        const checkbox = page.locator('input[type="checkbox"]').first();
-        if (await checkbox.count()) {
-          const checked = await checkbox.isChecked();
-          if (!checked) await checkbox.check();
+function beginTargetCapture(page) {
+  const attempts = [];
+  const pending = [];
+  let sequence = 0;
+  const listener = (response) => {
+    if (!response.url().includes('/chat/completions')) return;
+    sequence += 1;
+    const attempt = {
+      sequence,
+      request_body: null,
+      response_body: null,
+      raw_output: '',
+      parser_status: 'rejected',
+      parsed_decision: null
+    };
+    attempts.push(attempt);
+    pending.push((async () => {
+      let requestBody = null;
+      let responseBody = null;
+      let rawOutput = '';
+      try {
+        requestBody = response.request().postDataJSON();
+        const responseText = await response.text();
+        try {
+          responseBody = JSON.parse(responseText);
+          rawOutput = responseBody.choices?.[0]?.message?.content || '';
+        } catch {
+          responseBody = responseText;
         }
+        try {
+          const parsedDecision = parseTutorDecision(rawOutput);
+          Object.assign(attempt, { parser_status: 'accepted', parsed_decision: parsedDecision });
+        } catch {
+          Object.assign(attempt, { parser_status: 'rejected' });
+        }
+      } catch (error) {
+        responseBody = { capture_error: error.message };
       }
-      const save = page.locator('button:has-text("Save")').first();
-      if (await save.count()) await save.click();
-      await sleep(1000);
-    }
-  }
-}
-
-async function dumpControls(page) {
-  return page.evaluate(() => {
-    const buttons = Array.from(document.querySelectorAll('button')).map((b) => ({
-      text: (b.innerText || '').trim().slice(0, 80),
-      title: b.getAttribute('title') || '',
-      className: b.className,
-      disabled: b.disabled
-    }));
-    const bodySnippet = (document.body.innerText || '').slice(0, 1500);
-    return { buttons: buttons.filter((b) => b.text || b.title).slice(0, 40), bodySnippet };
-  });
-}
-
-async function generateAI(page) {
-  page._lastDialog = null;
-  page.once('dialog', async (d) => {
-    const msg = d.message();
-    await d.dismiss().catch(() => {});
-    page._lastDialog = msg;
-  });
-
-  // RoomPagePost uses a purple floating "✨ AI" button (class ai-generate-btn).
-  // See claude_docs/ai-assistant-module.md: "Generate AI Responses".
-  const aiBtn = page.locator('button.ai-generate-btn').first();
-  await aiBtn.waitFor({ state: 'visible', timeout: TIMEOUT });
-
-  // Wait until enabled (not loading, messages present)
-  const readyStart = Date.now();
-  while (Date.now() - readyStart < 20000) {
-    const disabled = await aiBtn.isDisabled().catch(() => true);
-    if (!disabled) break;
-    await sleep(300);
-  }
-  if (await aiBtn.isDisabled()) {
-    const dump = await dumpControls(page);
-    throw new Error(`AI button stayed disabled. Body=${dump.bodySnippet.slice(0, 500)}`);
-  }
-
-  await aiBtn.click();
-  console.log('Clicked AI generate button');
-
-  // Wait for suggestion box or failure dialog
-  const start = Date.now();
-  while (Date.now() - start < 90000) {
-    if (page._lastDialog) {
-      throw new Error(`AI dialog error: ${page._lastDialog}`);
-    }
-    const hasBox =
-      (await page.locator('.ai-suggestion-box').count()) > 0 ||
-      (await page.getByText('AI Suggested Response').count()) > 0;
-    if (hasBox) {
-      console.log('AI suggestion box appeared');
-      break;
-    }
-    // still generating?
-    const loading = await page.locator('button.ai-generate-btn:disabled, .ai-loading-spinner').count();
-    if (loading === 0 && Date.now() - start > 8000) {
-      // finished loading without box — dump state
-      const dump = await dumpControls(page);
-      // keep waiting a bit more in case of slow paint
-      if (Date.now() - start > 20000) {
-        throw new Error(
-          `AI finished without suggestion UI. Body=${dump.bodySnippet.slice(0, 700)}`
-        );
-      }
-    }
-    await sleep(500);
-  }
-  if (
-    (await page.locator('.ai-suggestion-box').count()) === 0 &&
-    (await page.getByText('AI Suggested Response').count()) === 0
-  ) {
-    const dump = await dumpControls(page);
-    throw new Error(
-      `Timed out waiting for AI suggestion. Body=${dump.bodySnippet.slice(0, 700)}`
-    );
-  }
-  await sleep(1000);
-}
-
-async function readSuggestion(page) {
-  const box = page.locator('.ai-suggestion-content p, .ai-suggestion-box p, .ai-suggestion-content');
-  if ((await box.count()) > 0) {
-    return (await box.first().innerText()).trim();
-  }
-  // Fallback: text near AI Suggested Response
-  const body = await page.locator('body').innerText();
-  const m = body.match(/AI Suggested Response[\s\S]{0,40}([\s\S]{20,600})/);
-  return m ? m[1].split('\n').slice(0, 8).join(' ').trim() : '';
-}
-
-function scoreDemo(text, demo) {
-  const scores = scoreTutorResponse(text, {
-    metrics: demo.metrics,
-    studentIsWrong: demo.studentIsWrong,
-    studentAskedPersonalStory: demo.studentAskedPersonalStory,
-    studentNeedsSimpleLanguage: demo.studentNeedsSimpleLanguage
-  });
-  return {
-    pass: allHeuristicsPassed(scores),
-    scores,
-    failed: scores.filter((s) => !s.pass).map((s) => s.metric)
+      Object.assign(attempt, {
+        request_body: requestBody,
+        response_body: responseBody,
+        raw_output: rawOutput
+      });
+    })());
+  };
+  page.on('response', listener);
+  return async () => {
+    page.off('response', listener);
+    await Promise.all(pending);
+    return attempts.sort((left, right) => left.sequence - right.sequence);
   };
 }
 
-async function main() {
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  // Prefer system Chrome so we do not depend on a matching Playwright browser cache.
-  const browser = await chromium.launch({
-    headless: true,
-    channel: process.env.PW_CHANNEL || 'chrome'
-  });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await context.newPage();
-  page.setDefaultTimeout(TIMEOUT);
-
-  const results = [];
-  console.log(`BASE_URL=${BASE_URL}`);
-  console.log('Following ai-assistant-module.md Manual Testing flow');
-
-  try {
-    await loginAsTutor(page, `DemoTutor_${Date.now().toString().slice(-6)}`);
-    console.log('Logged in as tutor');
-
-    for (const demo of DEMOS) {
-      console.log(`\n======== ${demo.id}: ${demo.templateName} ========`);
-      const entry = {
-        id: demo.id,
-        templateName: demo.templateName,
-        expect: demo.expect,
-        roomId: null,
-        suggestion: '',
-        score: null,
-        error: null,
-        screenshot: null
-      };
-
-      try {
-        // Always start from Test Rooms page (template-only; not main /tutor rooms list)
-        await page.goto(`${BASE_URL}/#/tutor/test-rooms`, { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector('text=Create a new Room', { timeout: TIMEOUT });
-
-        entry.roomId = await createRoomFromTemplate(page, demo.templateName);
-        console.log('Created room from template', demo.templateName, entry.roomId);
-        await sleep(2000);
-        await page.waitForSelector('body', { timeout: TIMEOUT });
-
-        // Verify template dialogue (student line) is visible in the room
-        if (demo.expectedStudentLine) {
-          const bodyText = await page.locator('body').innerText();
-          if (!bodyText.includes(demo.expectedStudentLine.slice(0, 40))) {
-            throw new Error(
-              `Template dialogue missing in room UI. Expected student line snippet: ${demo.expectedStudentLine.slice(0, 60)}`
-            );
-          }
-        }
-
-        // Capture room landing
-        const shot1 = path.join(OUT_DIR, `${demo.id}_room.png`);
-        await page.screenshot({ path: shot1, fullPage: true });
-
-        await ensureAIEnabled(page);
-        await generateAI(page);
-        entry.suggestion = await readSuggestion(page);
-        entry.score = scoreDemo(entry.suggestion, demo);
-
-        const shot2 = path.join(OUT_DIR, `${demo.id}_ai.png`);
-        await page.screenshot({ path: shot2, fullPage: true });
-        entry.screenshot = shot2;
-
-        console.log('SUGGESTION:', entry.suggestion.slice(0, 300));
-        console.log(entry.score.pass ? 'PASS' : 'FAIL', entry.score.failed);
-        if (!entry.score.pass) {
-          console.log(
-            '  scores:',
-            entry.score.scores
-              .filter((s) => !s.pass)
-              .map((s) => `${s.metric}: ${s.reasons.join('; ')}`)
-          );
-        }
-      } catch (e) {
-        entry.error = e.message || String(e);
-        console.error('ERROR', entry.error);
-        try {
-          const shotE = path.join(OUT_DIR, `${demo.id}_error.png`);
-          await page.screenshot({ path: shotE, fullPage: true });
-          entry.screenshot = shotE;
-        } catch (_) {
-          /* ignore */
-        }
-      }
-
-      results.push(entry);
-    }
-  } finally {
-    await browser.close();
-  }
-
-  const reportPath = path.join(OUT_DIR, 'report.json');
-  fs.writeFileSync(
-    reportPath,
-    JSON.stringify({ baseUrl: BASE_URL, ranAt: new Date().toISOString(), results }, null, 2)
-  );
-
-  const passed = results.filter((r) => !r.error && r.score?.pass).length;
-  console.log('\n======== SUMMARY ========');
-  console.log(`${passed}/${results.length} demos passed quick UI checks`);
-  for (const r of results) {
-    console.log(
-      r.error ? 'ERROR' : r.score?.pass ? 'PASS' : 'FAIL',
-      r.id,
-      r.error || r.suggestion.slice(0, 80).replace(/\s+/g, ' ')
-    );
-  }
-  console.log('Report:', reportPath);
-  process.exit(passed === results.length ? 0 : 1);
+async function generateSuggestion(page) {
+  const button = page.locator('button.ai-generate-btn').first();
+  await button.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await page.waitForFunction(() => {
+    const value = document.querySelector('button.ai-generate-btn');
+    return value && !value.disabled;
+  }, null, { timeout: 20000 });
+  await button.click();
+  const box = page.locator('.ai-suggestion-box').first();
+  await box.waitFor({ state: 'visible', timeout: 90000 });
+  await page.waitForFunction(() => {
+    const paragraph = document.querySelector('.ai-suggestion-box .ai-suggestion-content p');
+    const text = paragraph?.textContent?.trim() || '';
+    return text.length > 0 && text !== 'Generating new response...';
+  }, null, { timeout: 90000 });
+  const suggestion = (await box.locator('.ai-suggestion-content p').first().innerText()).trim();
+  const guardButton = box.locator('.ai-guard-toggle-button');
+  const displayedMode = (await guardButton.getAttribute('class') || '').includes('active')
+    ? 'guard'
+    : 'tutoring';
+  return { suggestion, displayedMode };
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+async function sendReviewedSuggestion(page, suggestion) {
+  await page.getByRole('button', { name: /copy to input/i }).click();
+  const textarea = page.locator('textarea.comment-input-field');
+  if (await textarea.inputValue() !== suggestion) throw new Error('Copy to Input changed the suggestion.');
+  let dialogMessage = null;
+  const dialogHandler = async (dialog) => {
+    dialogMessage = dialog.message();
+    await dialog.dismiss();
+  };
+  page.on('dialog', dialogHandler);
+  let dialogCheck = null;
+  try {
+    await page.locator('form.comment-input-form button[type="submit"]').click();
+    const dialogFailure = new Promise((_, reject) => {
+      dialogCheck = setInterval(() => {
+        if (dialogMessage) {
+          clearInterval(dialogCheck);
+          reject(new Error(dialogMessage));
+        }
+      }, 50);
+    });
+    await Promise.race([
+      page.locator('.ai-suggestion-box').waitFor({ state: 'hidden', timeout: TIMEOUT }),
+      dialogFailure
+    ]);
+  } finally {
+    if (dialogCheck) clearInterval(dialogCheck);
+    page.off('dialog', dialogHandler);
+  }
+}
+
+async function readAuditRecord(supabase, roomId) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data, error } = await supabase
+      .from('ai_suggestion_feedback')
+      .select('room_id, tutor_action, raw_mode, raw_instruction, mode_reason, final_mode, mode_rectified, ai_suggestion, tutor_final_response')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(`Audit lookup failed: ${error.message}`);
+    if (data) return data;
+    await sleep(250);
+  }
+  return null;
+}
+
+function exactRequestMatches(attempts, seed, productInput) {
+  const first = attempts[0]?.request_body;
+  if (!first) return false;
+  const expectedMessages = buildEcologicalChatCompletionMessages(
+    seed.ai_config_template.system_prompt,
+    productInput
+  );
+  return JSON.stringify(first.messages) === JSON.stringify(expectedMessages)
+    && first.model === seed.ai_config_template.model_name
+    && first.temperature === seed.ai_config_template.temperature
+    && first.max_tokens === Math.min(seed.ai_config_template.max_tokens, 120)
+    && first.enable_thinking === false;
+}
+
+function containsEvaluatorLabels(attempts) {
+  const serialized = JSON.stringify(attempts.map((attempt) => attempt.request_body)).replaceAll('\\', '');
+  return /expected_behavior_focus|expected_mode|expected_instruction|case[_ ]rationale|rubric|"expected"\s*:\s*\{[^{}]*"(?:mode|instruction)"\s*:/i.test(serialized);
+}
+
+function persistenceMatches(audit, parsed) {
+  return Boolean(audit && parsed
+    && audit.raw_mode === parsed.decision.mode
+    && audit.raw_instruction === parsed.decision.instruction
+    && audit.mode_reason === parsed.reason
+    && audit.final_mode === parsed.decision.mode
+    && audit.ai_suggestion === parsed.response
+    && audit.tutor_final_response === parsed.response);
+}
+
+async function runCase({ page, seed, caseDefinition, settings, supabase, screenshotDir, secrets }) {
+  const { templateId, roomId } = await createRoomFromTemplate(page, seed.template_name);
+  const derivedInput = buildEcologicalCaseFromSeed(seed);
+  const body = await page.locator('body').innerText();
+  const roomVisible = roomContentVisible(body, [seed.title_template, seed.description_template, ...seed.pre_populated_dialogue.map((message) => message.message)]);
+  const roomScreenshot = path.join(screenshotDir, `${caseDefinition.id}-room.png`);
+  await page.screenshot({ path: roomScreenshot, fullPage: true });
+
+  const stopCapture = beginTargetCapture(page);
+  let ui = null;
+  let generationError = null;
+  let attempts = [];
+  try {
+    ui = await generateSuggestion(page);
+  } catch (error) {
+    generationError = error;
+  } finally {
+    attempts = await stopCapture();
+  }
+  const suggestionScreenshot = path.join(screenshotDir, `${caseDefinition.id}-suggestion.png`);
+  if (ui) await page.screenshot({ path: suggestionScreenshot, fullPage: true });
+
+  const capture = {
+    case_id: seed.case_id,
+    template_id: templateId,
+    room_id: roomId,
+    request_equivalent: exactRequestMatches(attempts, seed, derivedInput),
+    product_input: {
+      scenario_context: derivedInput.scenario_context,
+      conversation_history: derivedInput.conversation_history,
+      student_message: derivedInput.student_message,
+      configured_role: seed.ai_config_template.preset === 'casual_peer' ? 'peer' : 'adult',
+      detection_areas: seed.ai_config_template.prompt_config.detection_areas,
+      verification_steps: seed.ai_config_template.prompt_config.verification_steps,
+      prior_mode: derivedInput.prior_mode
+    },
+    target_attempts: attempts,
+    displayed_suggestion: ui?.suggestion || null,
+    displayed_mode: ui?.displayedMode || null,
+    screenshots: {
+      room: path.relative(path.dirname(screenshotDir), roomScreenshot),
+      ...(ui ? { suggestion: path.relative(path.dirname(screenshotDir), suggestionScreenshot) } : {})
+    }
+  };
+
+  if (generationError) {
+    const failureScreenshot = await captureFailureScreenshot(page, screenshotDir, caseDefinition.id);
+    return appendProductFailure({
+      capture,
+      target_attempts: attempts,
+      final_raw_output: null,
+      parsed_decision: null,
+      product_checks: [productCheck('generation_completed', false, generationError.message)],
+      behavior_checks: null
+    }, generationError, failureScreenshot ? { failure: failureScreenshot } : {}, secrets);
+  }
+
+  const evaluated = await evaluateBrowserCapture({
+    caseDefinition,
+    capture,
+    contractVersion: 'v2',
+    settings,
+    judgeCall,
+    replayEvidence: null,
+    configuredSecrets: secrets
+  });
+  const parsed = evaluated.parsed_decision;
+  let audit = null;
+  try {
+    await sendReviewedSuggestion(page, ui.suggestion);
+    audit = await readAuditRecord(supabase, roomId);
+  } catch (error) {
+    const failureScreenshot = await captureFailureScreenshot(page, screenshotDir, caseDefinition.id);
+    return appendProductFailure(evaluated,
+      error,
+      failureScreenshot ? { failure: failureScreenshot } : {},
+      secrets
+    );
+  }
+  const extraChecks = [
+    productCheck('correct_template', Boolean(templateId && seed.case_id === caseDefinition.id), 'Selected template uses the stable case_id.'),
+    productCheck('seeded_room_visible', roomVisible, 'Scenario and latest learner message are visible.'),
+    productCheck('production_request_fields', exactRequestMatches(attempts, seed, derivedInput), 'Captured request fields match the production builder and seed config.'),
+    productCheck('evaluator_labels_absent', !containsEvaluatorLabels(attempts), 'Target requests contain no evaluator labels or rubrics.'),
+    productCheck('review_reached_persistence', Boolean(audit), 'Reviewed suggestion produced a local audit row.'),
+    productCheck('persisted_decision_matches', persistenceMatches(audit, parsed), 'Persisted raw and final decision fields match the captured v2 output.')
+  ];
+  evaluated.product_checks.push(...extraChecks);
+  return appendPersistenceEvidence(evaluated, audit, secrets);
+}
+
+async function main() {
+  const { env, supabase, secrets } = loadLocalEnvironment();
+  const casesFile = path.join(evalRoot, 'v1/development-with-guard-scenario-rich.json');
+  const settingsFile = path.join(evalRoot, 'v1/settings.json');
+  const evaluatorFile = path.join(evalRoot, 'v1/evaluator.js');
+  const rubricManifestFile = path.join(evalRoot, 'rubrics/v1/manifest.json');
+  const candidatePromptFile = path.join(evalRoot, 'v1/candidate-policy-11-contract-v2.md');
+  const cases = readJson(casesFile);
+  const settings = readJson(settingsFile);
+  const byId = new Map(cases.map((entry) => [entry.id, entry]));
+  const seeds = getTestOnlyDemoTemplateSeeds();
+  const ids = seeds.map((seed) => seed.case_id);
+  if (ids.length !== 7 || new Set(ids).size !== 7 || ids.some((id) => !byId.has(id))) {
+    throw new Error('Behavior-room manifest must contain seven unique canonical case IDs.');
+  }
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const runDir = path.join(evalRoot, `results/qwen3.5-flash/web-test-rooms-${stamp}`);
+  const screenshotDir = path.join(runDir, 'screenshots');
+  fs.mkdirSync(screenshotDir, { recursive: true });
+  const startedAt = new Date().toISOString();
+  const gitStatus = execFileSync('git', ['status', '--porcelain=v1'], { cwd: repoRoot, encoding: 'utf8' });
+  const gitDiff = execFileSync('git', ['diff', '--binary', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' });
+  const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
+    cwd: repoRoot,
+    encoding: 'utf8'
+  }).trim().split('\n').filter(Boolean);
+  const untrackedContents = untracked.map((file) => `${file}:${sha(fs.readFileSync(path.join(repoRoot, file)))}`).join('\n');
+  const snapshot = {
+    command: process.argv,
+    commit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim(),
+    dirty_tree_hash: sha(`${gitStatus}\n${gitDiff}\n${untrackedContents}`),
+    model_settings: settings,
+    prompt_hash: sha(fs.readFileSync(candidatePromptFile)),
+    case_hash: sha(fs.readFileSync(casesFile)),
+    rubric_manifest_hash: sha(fs.readFileSync(rubricManifestFile)),
+    evaluator_hash: sha(fs.readFileSync(evaluatorFile)),
+    started_at: startedAt,
+    app_base_url: BASE_URL,
+    supabase_origin: new URL(env.REACT_APP_SUPABASE_URL).origin
+  };
+  writeNew(path.join(runDir, 'snapshot.json'), snapshot);
+
+  const records = [];
+  let browser = null;
+  let page = null;
+  let fatalError = null;
+  try {
+    browser = await chromium.launch({ headless: true, channel: process.env.PW_CHANNEL || 'chrome' });
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    page = await context.newPage();
+    page.setDefaultTimeout(TIMEOUT);
+    await loginAsTutor(page, `BehaviorTutor_${Date.now().toString().slice(-6)}`);
+    for (const seed of seeds) {
+      try {
+        const record = await runCase({
+          page,
+          seed,
+          caseDefinition: byId.get(seed.case_id),
+          settings,
+          supabase,
+          screenshotDir,
+          secrets
+        });
+        records.push(record);
+        writeNew(path.join(runDir, `${seed.case_id}.json`), record);
+      } catch (error) {
+        const failureScreenshot = await captureFailureScreenshot(page, screenshotDir, seed.case_id);
+        const record = appendProductFailure({
+          capture: { case_id: seed.case_id },
+          target_attempts: [],
+          product_checks: [],
+          behavior_checks: null
+        }, error, failureScreenshot ? { failure: failureScreenshot } : {}, secrets);
+        records.push(record);
+        writeNew(path.join(runDir, `${seed.case_id}.json`), record);
+      }
+    }
+  } catch (error) {
+    fatalError = error;
+  } finally {
+    fatalError = await closeBrowserPreservingFatal(browser, fatalError);
+  }
+
+  if (fatalError) {
+    for (const seed of seeds.slice(records.length)) {
+      const record = appendProductFailure({
+        capture: { case_id: seed.case_id, screenshots: {} },
+        target_attempts: [],
+        product_checks: [],
+        behavior_checks: null
+      }, fatalError, {}, secrets);
+      records.push(record);
+      writeNew(path.join(runDir, `${seed.case_id}.json`), record);
+    }
+  }
+
+  const productComplete = !fatalError && records.length === 7
+    && records.every((record) => productChecksComplete(record.product_checks));
+  const behaviorComplete = records.every((record, index) => behaviorChecksComplete(record.behavior_checks, byId.get(ids[index])));
+  const behaviorPass = behaviorComplete && records.every((record) =>
+    record.behavior_checks.results.every((result) => ['pass', 'not_applicable'].includes(result.status))
+  );
+  const safeFatalError = fatalError ? redactSecrets(fatalError.message, secrets) : null;
+  const report = { snapshot, completed_at: new Date().toISOString(), results: records, fatal_error: safeFatalError };
+  const verdict = {
+    product: { complete: productComplete, pass: productComplete },
+    behavior_subset: {
+      diagnostic_only: true,
+      complete: behaviorComplete,
+      pass: behaviorPass
+    },
+    fatal_error: safeFatalError
+  };
+  writeNew(path.join(runDir, 'report.json'), report);
+  writeNew(path.join(runDir, 'verdict.json'), verdict);
+  console.log(JSON.stringify({ run: runDir, verdict }));
+  if (!productComplete || !behaviorComplete) process.exitCode = 1;
+}
+
+module.exports = {
+  loadLocalEnvironment,
+  beginTargetCapture,
+  exactRequestMatches,
+  containsEvaluatorLabels,
+  persistenceMatches,
+  closeBrowserPreservingFatal,
+  captureFailureScreenshot
+};
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

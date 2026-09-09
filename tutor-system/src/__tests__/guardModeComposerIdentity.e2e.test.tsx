@@ -58,8 +58,14 @@ const room = (mode: 'tutoring' | 'guard'): Room => ({
   updated_at: '2026-09-01T00:00:00Z'
 });
 
-const renderRoom = (user: User, mode: 'tutoring' | 'guard', suggestion: string | null = null) => {
+const renderRoom = (
+  user: User,
+  mode: 'tutoring' | 'guard',
+  suggestion: string | null = null,
+  finalMode: 'tutoring' | 'guard' = mode
+) => {
   const setResponseMode = jest.fn();
+  const updateFinalMode = jest.fn();
 
   (useAuth as jest.Mock).mockReturnValue({ user, loading: false });
   (useRoom as jest.Mock).mockReturnValue({
@@ -81,9 +87,9 @@ const renderRoom = (user: User, mode: 'tutoring' | 'guard', suggestion: string |
     clearChatHistory: jest.fn(),
     aiSuggestion: suggestion,
     aiDecision: null,
-    finalMode: 'tutoring',
+    finalMode,
     updateFinalResponse: jest.fn(),
-    updateFinalMode: jest.fn(),
+    updateFinalMode,
     setResponseMode,
     clearAISuggestion: jest.fn(),
     recordAIFeedback: jest.fn(),
@@ -100,7 +106,7 @@ const renderRoom = (user: User, mode: 'tutoring' | 'guard', suggestion: string |
     </MemoryRouter>
   );
 
-  return { ...renderResult, setResponseMode };
+  return { ...renderResult, setResponseMode, updateFinalMode };
 };
 
 describe('Guard Mode composer identity', () => {
@@ -133,39 +139,59 @@ describe('Guard Mode composer identity', () => {
     expect(screen.queryByText('Security Supervisor')).not.toBeInTheDocument();
   });
 
-  it('activates Guard from the AI suggestion card using the existing room transition', () => {
-    const { setResponseMode } = renderRoom(tutor, 'tutoring', 'Guard suggestion');
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
-
-    const suggestionCard = screen.getByText('Guard suggestion').closest('.ai-suggestion-box');
-    expect(suggestionCard).not.toBeNull();
-    fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Activate Guard' }));
-
-    expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
-    expect(setResponseMode).toHaveBeenCalledWith('guard');
-  });
-
-  it('deactivates Guard from the AI suggestion card using the existing room transition', () => {
-    const { setResponseMode } = renderRoom(tutor, 'guard', 'Guard suggestion');
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
+  it('shows parsed Guard on the suggestion card and edits only the pending review mode', () => {
+    const { setResponseMode, updateFinalMode } = renderRoom(
+      tutor,
+      'tutoring',
+      'Guard suggestion',
+      'guard'
+    );
+    const confirm = jest.spyOn(window, 'confirm');
 
     const suggestionCard = screen.getByText('Guard suggestion').closest('.ai-suggestion-box');
     expect(suggestionCard).not.toBeNull();
     fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Deactivate Guard' }));
 
-    expect(window.confirm).toHaveBeenCalledWith('Deactivate Guard Mode?');
-    expect(setResponseMode).toHaveBeenCalledWith('tutoring');
+    expect(updateFinalMode).toHaveBeenCalledWith('tutoring');
+    expect(setResponseMode).not.toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
   });
 
-  it('does not change Guard Mode when the card confirmation is cancelled', () => {
-    const { setResponseMode } = renderRoom(tutor, 'tutoring', 'Guard suggestion');
-    jest.spyOn(window, 'confirm').mockReturnValue(false);
+  it('shows parsed tutoring on the suggestion card even while the room remains in Guard', () => {
+    const { setResponseMode, updateFinalMode } = renderRoom(
+      tutor,
+      'guard',
+      'Tutoring suggestion',
+      'tutoring'
+    );
 
-    const suggestionCard = screen.getByText('Guard suggestion').closest('.ai-suggestion-box');
+    const suggestionCard = screen.getByText('Tutoring suggestion').closest('.ai-suggestion-box');
     expect(suggestionCard).not.toBeNull();
     fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Activate Guard' }));
 
+    expect(updateFinalMode).toHaveBeenCalledWith('guard');
+    expect(setResponseMode).not.toHaveBeenCalled();
+  });
+
+  it('keeps the header toggle as the confirmed persisted room transition', () => {
+    const { setResponseMode, updateFinalMode } = renderRoom(tutor, 'tutoring', 'Guard suggestion', 'guard');
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    fireEvent.click(screen.getByTitle('Manually change Guard Mode'));
+
+    expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
+    expect(setResponseMode).toHaveBeenCalledWith('guard');
+    expect(updateFinalMode).not.toHaveBeenCalled();
+  });
+
+  it('does not persist a header mode transition when confirmation is cancelled', () => {
+    const { setResponseMode, updateFinalMode } = renderRoom(tutor, 'tutoring', null, 'tutoring');
+    jest.spyOn(window, 'confirm').mockReturnValue(false);
+
+    fireEvent.click(screen.getByTitle('Manually change Guard Mode'));
+
     expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
     expect(setResponseMode).not.toHaveBeenCalled();
+    expect(updateFinalMode).not.toHaveBeenCalled();
   });
 });

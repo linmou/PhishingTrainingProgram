@@ -29,6 +29,7 @@ describe('guardModeService', () => {
             parentMessageId: 'student-message-1',
             rawDecision: {
                 mode: 'guard',
+                instruction: null,
                 mode_reason: 'Deliberate unsafe repetition after correction.',
                 suggested_response: 'Stop and verify the destination.'
             },
@@ -43,6 +44,7 @@ describe('guardModeService', () => {
             p_room_id: 'room-1',
             p_tutor_id: 'tutor-1',
             p_raw_mode: 'guard',
+            p_raw_instruction: null,
             p_final_mode: 'guard',
             p_tutor_action: 'accepted'
         }));
@@ -60,6 +62,7 @@ describe('guardModeService', () => {
             parentMessageId: null,
             rawDecision: {
                 mode: 'tutoring',
+                instruction: 'correction',
                 mode_reason: 'The learner is asking for clarification.',
                 suggested_response: 'Which part feels unclear?'
             },
@@ -69,6 +72,10 @@ describe('guardModeService', () => {
             responseTimeMs: 100,
             contextMessages: []
         })).rejects.toThrow('transaction failed');
+
+        expect(supabase.rpc).toHaveBeenCalledWith('send_reviewed_tutor_response',
+            expect.objectContaining({ p_raw_instruction: 'correction' })
+        );
     });
 
     it('updates only the current room mode for a manual override', async () => {

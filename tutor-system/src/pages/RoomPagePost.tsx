@@ -53,6 +53,8 @@ const RoomPagePost: React.FC = () => {
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
+        finalMode,
+        updateFinalMode,
         setResponseMode,
         clearAISuggestion,
         recordAIFeedback,
@@ -451,6 +453,10 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    const handleToggleSuggestionMode = () => {
+        updateFinalMode(finalMode === 'guard' ? 'tutoring' : 'guard');
+    };
+
 
     // Show password prompt if needed
     if (showPasswordPrompt) {
@@ -711,8 +717,8 @@ const RoomPagePost: React.FC = () => {
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
                         initialParameters={aiConfig?.prompt_config || undefined}
-                        isGuardMode={currentRoom.active_response_mode === 'guard'}
-                        onToggleGuard={handleToggleGuardMode}
+                        isGuardMode={finalMode === 'guard'}
+                        onToggleGuard={handleToggleSuggestionMode}
                         lockedRole={
                             isTutorRoleLocked(aiConfig?.prompt_config)
                                 ? aiConfig?.prompt_config?.student_tone_lock?.chosen_role

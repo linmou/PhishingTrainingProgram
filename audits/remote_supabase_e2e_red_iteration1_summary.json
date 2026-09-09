@@ -1,0 +1,76 @@
+{
+  "feature_name": "remote_supabase_e2e",
+  "phase": "red",
+  "iteration": 1,
+  "reviewer_count": 3,
+  "status": "not_converged",
+  "disputed_criteria": [
+    "c1"
+  ],
+  "criteria": {
+    "c1": {
+      "criterion_text": "A valid hosted URL with a process-level override is accepted and the override is observable in the loader result.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "fail"
+      ],
+      "confidences": [
+        0.99,
+        0.97,
+        0.99
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    },
+    "c2": {
+      "criterion_text": "A valid local URL remains accepted.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        1.0,
+        0.99,
+        0.99
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c3": {
+      "criterion_text": "Missing URL and missing anon key remain rejected with the existing configuration error.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        1.0,
+        0.99,
+        0.99
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c4": {
+      "criterion_text": "The test is isolated to the URL-policy/environment boundary and does not add a second scorer, touch remote data, or weaken unrelated behavior.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.99,
+        0.91,
+        0.98
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    }
+  }
+}

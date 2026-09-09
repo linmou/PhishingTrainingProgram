@@ -1,7 +1,7 @@
 # AI Suggestion Tracking Implementation
 
 > Intent: Document how AI suggestions are displayed, transferred to the composer, and tracked after the Guard Mode UI update.
-> Updated: 2026-09-08
+> Updated: 2026-09-09
 > Commit ID: pending at update time
 
 ## Overview
@@ -10,7 +10,7 @@ This implementation modifies the AI assistant to only provide suggestions (not c
 ## Key Changes
 
 ### 1. Database Schema
-The `ai_suggestion_feedback` table tracks tutor interactions with AI suggestions. The canonical current migration is `023_guard_mode.sql`; the earlier `004_ai_suggestion_feedback.sql` definition is retained below as historical context:
+The `ai_suggestion_feedback` table tracks tutor interactions with AI suggestions. The canonical current migrations are `023_guard_mode.sql` and `024_raw_instruction.sql`; the earlier `004_ai_suggestion_feedback.sql` definition is retained below as historical context:
 
 ```sql
 -- Run this migration in Supabase SQL Editor
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS ai_suggestion_feedback (
 -- See full migration file for complete SQL
 ```
 
-Guard Mode uses `supabase/migrations/023_guard_mode.sql`. It adds `raw_mode`, `mode_reason`, `final_mode`, and `mode_rectified`, stores `response_mode` on messages, and makes a reviewed send atomic. Pre-populated suggestions may have a null parent message; ordinary generated suggestions continue to link to their parent when one exists.
+Guard Mode uses `supabase/migrations/023_guard_mode.sql`. Migration `024_raw_instruction.sql` adds constrained nullable `raw_instruction`, drops the obsolete reviewed-send RPC signature, and creates the new signature with `p_raw_instruction`. A null instruction is allowed only for Guard; Guard may still carry one of the five contract labels, while tutoring requires one. Existing rows remain null without speculative backfill.
 
 ### 2. AI Behavior Changes
 - **No more AI posts**: AI no longer creates messages in the chat
@@ -44,13 +44,14 @@ Guard Mode uses `supabase/migrations/023_guard_mode.sql`. It adds `raw_mode`, `m
   - **Modify**: Edit the copied suggestion in the composer before sending
   - **Ignore**: Generate a new suggestion without using the previous one
 - **Structured decision**: Candidate 11 returns `reason`, nested `decision.mode` / `decision.instruction`, and `response`; malformed decisions are surfaced as errors. The product adapter maps these to the existing `mode`, `mode_reason`, and `suggested_response` review/persistence fields.
-- **Guard authority**: Guard activation is controlled at the room level. The AI suggestion card does not display internal reasoning or a final-mode selector, and provides an `Activate Guard` / `Deactivate Guard` control immediately above `Quick Adjust` for tutors.
+- **Guard authority**: The suggestion-card toggle edits the pending reviewed mode; the header toggle is the confirmed room-level manual override. Internal reason/instruction labels are not shown to learners.
 
 ### 3. Tracking Features
 - Records which student message the AI is responding to
 - Tracks the time between showing a suggestion and the tutor's action
 - Stores the tutor's final response for comparison
 - Maintains context of which messages were used to generate the suggestion
+- Preserves the model's raw instructional decision for accepted, modified, rejected, and ignored suggestions
 
 ### 4. Export Functionality
 The download feature now supports two formats:
@@ -59,6 +60,7 @@ The download feature now supports two formats:
 - Includes all messages in chronological order
 - Adds AI interaction summary at the end
 - Shows acceptance/rejection rates
+- Tutor exports include raw mode, raw instruction, concise reason, final mode, and whether the tutor changed the mode
 
 #### JSON Format
 - Complete structured data export
@@ -68,10 +70,10 @@ The download feature now supports two formats:
 
 ## How to Apply the Migration
 
-1. **In Supabase Dashboard**:
-   - Go to SQL Editor
-   - Copy and run the contents of `supabase/migrations/023_guard_mode.sql`
-   - Verify the table was created successfully
+1. **Against a configured Supabase endpoint**:
+   - Apply migrations through `024_raw_instruction.sql`
+   - Verify the old RPC overload is absent and the new 12-argument signature is callable
+   - Hosted test-room/template writes are permitted for the browser evaluation when explicitly authorized; hosted schema migration still requires separate authorization
 
 2. **Test the Features**:
    - Login as a tutor

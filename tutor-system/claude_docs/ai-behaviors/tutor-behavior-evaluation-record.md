@@ -2,12 +2,22 @@
 
 Intent: preserve the saved benchmark findings and the limits of the 2026-09-06 offline review.
 
-Updated: 2026-09-06
+Updated: 2026-09-09
 Source baseline commit: `96238a6`
 Offline inspection time: `2026-09-06T09:03:32.411Z`
 Scope: historical prompt/rubric/case artifacts pinned by the evidence snapshot. The former post-hoc specification reconstruction is no longer available; it was not a pre-run frozen specification.
 Scope note added 2026-09-07: these historical results do not evaluate the [current behavior specification](tutor-behavior-specification.md); a new comparable evaluation contract is required.
 Evidence snapshot: [snapshot.json](../../../evals/promptfoo/audits/current-behavior-20260906/snapshot.json)
+
+## 2026-09-08 evaluator implementation record
+
+The current v1 evaluator was extracted to `evals/promptfoo/v1/evaluator.js` and is shared by offline generation and the browser product adapter. Candidate 11's preserved result directory replayed through the extracted evaluator with all 122 case/repetition results unchanged across metric, method, status, pass, score, and applicability. Candidate 11's prompt and the frozen cases, labels, rubrics, thresholds, and model policy were not edited.
+
+The browser suite now has seven stable canonical case IDs, including the existing `ecological_participation_disruption` Guard case. It stores product checks separately from diagnostic behavior checks and refuses mismatched inputs or secret-bearing evidence. On 2026-09-09 the hosted run completed all seven generations, product input/request/parser/display checks, and diagnostic behavior evaluations. The product verdict remains incomplete because the hosted `ai_suggestion_feedback` table lacks `raw_instruction`, so the new reviewed-send RPC cannot persist the final audit row. No hosted schema migration was applied.
+
+Run evidence is preserved at `evals/promptfoo/results/qwen3.5-flash/web-test-rooms-2026-09-09T07-49-06-849Z/`. The run inserted the missing Guard test template and created seven test rooms in the hosted project; no test data was deleted.
+
+Changed experimental factors: evaluation implementation, product audit shape, and the additional Guard web fixture. Unchanged factors: prompt, model policy, rubrics, frozen expected labels, and behavior thresholds. The historical heuristic 3/6 browser result remains historical evidence only and is not a valid v1 verdict.
 
 ## Operation and artifact identity
 

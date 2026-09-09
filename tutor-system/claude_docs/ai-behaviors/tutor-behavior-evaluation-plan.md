@@ -3,14 +3,21 @@
 Intent: define specification-derived checks, frozen experiments and comparable acceptance evidence without redefining behavior or claiming unmeasured performance.
 
 Plan ID: `tutor_behavior_v1`
-Status: draft scope revision after removal of C01 from domain behavior; scenario-rich case revision and response-contract-v2 evaluation are pending.
+Status: canonical v2 evaluator extracted and shared by offline and browser adapters; hosted seven-room browser verification completed generation and behavior checks, while persistence remains pending hosted migration `024_raw_instruction.sql`.
 Prepared: 2026-09-07
+Updated: 2026-09-09
 Current behavior specification: [tutor-behavior-specification.md](tutor-behavior-specification.md). Prior frozen snapshot SHA-256 `013c2e27b2c5897a0ab906893515e6d56d49c8ce3cbf6ee740fdfa0218df74c0`
 Current response contract: [tutor-response-contract.md](tutor-response-contract.md). Prior frozen snapshot SHA-256 `b4669fbde41f856b40114d762b227f058a625b30538e20542e4d465925654ad6`
 Constitution: human-adopted `phishing_tutor_constitution 1.0`, SHA-256 `8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e`; grounding applies to the eleven remaining requirements; supervision remains a response-contract responsibility.
 Shared rules: [evaluation contract](../../../.agents/skills/ai-behavior-design-eval/references/evaluation-contract.md).
 
 ## Version and decision record
+
+On 2026-09-08 evaluation implementation was consolidated without changing candidate 11's production prompt, the frozen v1 cases, approved labels, rubrics, thresholds, or model policy. `evals/promptfoo/v1/evaluator.js` now owns contract normalization, exact mode/instruction checks, canonical response length, applicable v0 checks, rubric selection, typed judge verdicts, one format-only judge retry, and complete judge evidence. The offline runner owns generation/replay; the browser runner owns the real product path and passes its final captured raw output to that same evaluator.
+
+Browser results keep `product_checks` separate from diagnostic `behavior_checks`. Product checks are a 100% path gate; missing or malformed judge evidence makes behavior evaluation incomplete rather than passed. Browser input equivalence is required before expected labels may be used. The seven-room set reuses six tutoring cases and the existing frozen `ecological_participation_disruption` Guard case. Keyword/punctuation heuristics are not a v1 evaluation method.
+
+Changed experimental factors are the evaluation implementation, the product audit shape, and addition of the Guard web fixture. Unchanged factors are the production prompt, model policy, v1 rubrics, thresholds, frozen cases, and expected labels.
 
 On 2026-09-07 the user removed C01 from the domain-behavior specification because response formatting and general justification are base model abilities. `contract_validity` remains a supporting response-contract check; `decision_reasoning` is retired from the current domain-behavior scorecard. Existing run results, rubric snapshots, and their C01 labels retain their historical meanings. The current scope requires revised evaluator configuration and comparable evidence before a new acceptance claim; this document does not rewrite frozen runs or declare the existing harness migrated.
 

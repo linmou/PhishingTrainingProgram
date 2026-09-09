@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "feature": "remote_supabase_e2e",
+  "phase": "green",
+  "baseline_ref": "refs/tdd/remote_supabase_e2e/pre_green",
+  "protected": [
+    "evals/promptfoo/v1/browser-demo-tutor-behavior.test.js",
+    "evals/promptfoo/v1/README.md",
+    "tutor-system/claude_docs/**",
+    "audits/**"
+  ],
+  "editable": [
+    "tutor-system/scripts/browser-demo-tutor-behavior.js"
+  ],
+  "semantic_overrides": {}
+}
