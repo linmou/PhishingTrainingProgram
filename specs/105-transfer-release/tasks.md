@@ -22,7 +22,7 @@ description: "Release-planning task list for dedicated transfer browser, privacy
 **Checkpoint**: The runner can validate configuration, create a unique run directory, capture a redacted snapshot, and preserve non-pass results before any product flow runs.
 
 - [ ] T004 Define the stable W11 scenario IDs and the forged-identity, cross-learner, cross-room, stale-question, direct-write, and legacy-RPC attack cases in `tutor-system/scripts/transfer-assessment-release-attack-matrix.json`.
-- [ ] T005 [P] Add contract tests, beginning with a file-purpose comment, for status validation, required artifact names, immutable exclusive writes, redaction, and missing-result blocking in `tutor-system/scripts/transfer-assessment-release.test.js`.
+- [ ] T005 [P] Add contract tests, beginning with a file-purpose comment, for the closed six-value status vocabulary, upstream `pending`/`partial` to release-row `blocked` normalization, absent-evidence to `missing` normalization, source-status metadata preservation, required artifact names, immutable exclusive writes, redaction, and missing-result blocking in `tutor-system/scripts/transfer-assessment-release.test.js`.
 - [ ] T006 Implement the release runner entry point with a shebang and purpose comment in `tutor-system/scripts/transfer-assessment-release.js`; validate configuration, record start commit/dirty-tree/configuration hashes, resolve the isolated target, and preserve `pass`, `fail`, `blocked`, `missing`, `error`, and `not_applicable` results.
 - [ ] T007 Implement the shared evidence helpers in `tutor-system/scripts/transfer-assessment-release.js` for exclusive artifact writes, SHA-256 links, screenshot/network/console/storage/export registration, redacted errors, and final exit status.
 - [ ] T008 Add the runner `--verify <run-id>` mode in `tutor-system/scripts/transfer-assessment-release.js` to validate the public evidence contract and recompute artifact hashes without modifying the bundle.
@@ -78,15 +78,15 @@ description: "Release-planning task list for dedicated transfer browser, privacy
 
 ### Tests for User Story 3
 
-- [ ] T024 [US3] Add activation/rollback assertions, beginning with a file-purpose comment, for disabled-by-default state, blocked activation on any non-pass gate, authorized backend enablement metadata, and non-destructive rollback in `tutor-system/scripts/transfer-assessment-release.test.js`.
+- [ ] T024 [US3] Add activation/rollback assertions, beginning with a file-purpose comment, for disabled-by-default state, closed release-row statuses, preserved upstream source status/reason, `pending`/`partial` to `blocked` mapping, absent required evidence to `missing` mapping, blocked activation on any non-pass gate, authorized backend enablement metadata, and non-destructive rollback in `tutor-system/scripts/transfer-assessment-release.test.js`.
 - [ ] T025 [US3] Add final-report assertions, beginning with a file-purpose comment, for starting/ending commits, migration/auth/key status references, command exit statuses, linked AI/browser run IDs, feature flag, rollback path, and remaining gaps in `tutor-system/scripts/transfer-assessment-release.test.js`.
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Implement upstream evidence-link validation and separate product, privacy, attack, activation, rollback, and legacy-regression gate reconciliation in `tutor-system/scripts/transfer-assessment-release.js`.
+- [ ] T026 [US3] Implement upstream evidence-link validation and separate product, privacy, attack, activation, rollback, and legacy-regression gate reconciliation in `tutor-system/scripts/transfer-assessment-release.js`; normalize present upstream `pending`/`partial` to release-row `blocked`, absent required evidence to `missing`, and retain the original source status/reason as metadata.
 - [ ] T027 [US3] Implement `activation.json` generation and backend capability eligibility checks in `tutor-system/scripts/transfer-assessment-release.js`; do not enable the flag as an incidental runner side effect.
 - [ ] T028 [US3] Implement `rollback.json` rehearsal evidence in `tutor-system/scripts/transfer-assessment-release.js`, including already-delivered question handling, capability disablement, assessment/history/evidence hashes, and unchanged legacy semantics.
-- [ ] T029 [US3] Implement `report.json` and `verdict.json` generation in `tutor-system/scripts/transfer-assessment-release.js` with explicit blockers, missing stages, linked AI run IDs, exact commands, statuses, and evidence paths.
+- [ ] T029 [US3] Implement `report.json` and `verdict.json` generation in `tutor-system/scripts/transfer-assessment-release.js` with closed-vocabulary release statuses, preserved upstream source status/reason metadata, explicit blockers, missing stages, linked AI run IDs, exact commands, and evidence paths.
 - [ ] T030 [US3] Add the release documentation update record for the final browser, privacy, attack, activation, and rollback contract in `tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_11_transfer_release.md` after implementation evidence exists.
 
 **Checkpoint**: The final report is reproducible, activation is authorized only after all gates pass, and rollback preserves data, evidence, history, and legacy semantics.
@@ -148,9 +148,9 @@ Every functional requirement and buildable success criterion has at least one ta
 ### Parallel Opportunities
 
 - T005 and T004 can be prepared in parallel because they touch separate foundational files.
-- T009-T011 can be authored in parallel as separate scenario assertion groups before runner implementation.
-- T017-T019 can be authored in parallel as separate privacy/attack assertion groups.
-- T024-T025 can be authored in parallel as separate activation/report assertion groups.
+- T009-T011 must be authored serially because they edit the same test file.
+- T017-T019 must be authored serially because they edit the same test file.
+- T024-T025 must be authored serially because they edit the same test file.
 - US1 and US2 execution can run in separate isolated contexts after foundational setup, then be reconciled into one release bundle only when their environment/configuration snapshots match.
 
 ## Implementation Strategy

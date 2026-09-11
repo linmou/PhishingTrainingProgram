@@ -21,7 +21,7 @@ All records for one execution live under `evals/transfer-assessment/release/<run
 | `feature_flag_state` | yes | Backend capability state observed during run | `disabled` until activation is separately authorized |
 | `linked_ai_run_ids` | yes | Promptfoo/production-path evidence references | IDs/paths only; no fabricated run IDs |
 | `scenario_results` | yes | Per-scenario status and evidence references | No omitted required scenario |
-| `gate_verdict` | yes | Aggregate status | Derived from applicable result statuses and upstream evidence |
+| `gate_verdict` | yes | Aggregate status | Uses only `pass`, `fail`, `blocked`, `missing`, `error`, or `not_applicable` |
 
 ### Scenario Result
 
@@ -61,9 +61,24 @@ All records for one execution live under `evals/transfer-assessment/release/<run
 | `status` | yes | One of the result statuses |
 | `evidence` | yes | Immutable request/response or inspection references |
 
+### Release Gate Row
+
+| Field | Required | Meaning |
+|---|---:|---|
+| `gate_id` | yes | Stable release gate identifier |
+| `status` | yes | One of `pass`, `fail`, `blocked`, `missing`, `error`, or `not_applicable` |
+| `required_evidence` | yes | Evidence required to satisfy the gate |
+| `linked_runs` | yes | Immutable upstream or component run references; empty when evidence is absent |
+| `source_status` | when linked upstream status differs | Original upstream status, including `pending` or `partial`, retained as metadata |
+| `source_status_reason` | when source status is retained | Upstream explanation or a faithful summary with source reference |
+| `blocking_reason` | for non-pass required gates | Release-level reason the row does not pass |
+| `verified_at` | yes | Reconciliation time |
+
+Normalization is deterministic: a present linked upstream record with source status `pending` or `partial` maps to release-row `blocked`; an absent required upstream record or evidence link maps to `missing`. The upstream value is never promoted into the release `status` field and is never represented as `pass`.
+
 ### Release Verdict
 
-The verdict includes separate gate rows for upstream deterministic/database/authorization/evaluation evidence, dedicated browser behavior, privacy, attacks, activation, and rollback. Each row contains `gate_id`, `status`, `required_evidence`, `linked_runs`, `blocking_reason`, and `verified_at`. `pass` is valid only when every required gate row is `pass`; any `pending`, `partial`, `blocked`, `missing`, `error`, or `fail` keeps activation ineligible.
+The verdict includes separate gate rows for upstream deterministic/database/authorization/evaluation evidence, dedicated browser behavior, privacy, attacks, activation, and rollback. `pass` is valid only when every required gate row is `pass`; any required `fail`, `blocked`, `missing`, or `error` row keeps activation ineligible. `not_applicable` is allowed only with a recorded normative reason.
 
 ### Capability State
 
@@ -80,7 +95,7 @@ created -> running -> complete
                     -> blocked | error
 
 complete -> release-approved only when every applicable gate is pass
-complete -> release-blocked when any required gate is fail/missing/error/blocked/partial/pending
+complete -> release-blocked when any required gate is fail/missing/error/blocked
 
 release-approved -> activated only by an authorized backend decision
 activated -> rolled-back by disabling new generation/delivery

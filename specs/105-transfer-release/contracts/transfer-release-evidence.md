@@ -37,6 +37,8 @@ pass | fail | blocked | missing | error | not_applicable
 
 `not_applicable` requires a recorded reason and may be used only when the normative scenario truly does not apply. `blocked`, `missing`, `error`, and `fail` remain visible and prevent a release-approved verdict for any required check.
 
+Release gate rows use the same closed vocabulary. When a linked upstream record exists with source status `pending` or `partial`, the release row MUST use `blocked` and preserve the original value and explanation as `source_status` and `source_status_reason`. When the required upstream record or evidence link is absent, the release row MUST use `missing`. `pending` and `partial` MUST NOT appear in a release row's `status` field.
+
 ## Privacy Contract
 
 Learner-visible or learner-captured records MUST NOT contain:
@@ -64,6 +66,8 @@ The final release verdict is approved only when all of the following have `pass`
 6. non-destructive rollback rehearsal.
 
 The seven-room legacy browser result may be linked as regression evidence but cannot satisfy item 2, 3, 4, 5, or 6. A Promptfoo run may be linked as AI evidence but cannot satisfy product, privacy, attack, or rollback gates.
+
+Each upstream gate row retains its source status and reason metadata separately from the normalized release status so the final report preserves incomplete upstream evidence without expanding the public result vocabulary.
 
 ## Capability and Rollback Contract
 
