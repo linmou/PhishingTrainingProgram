@@ -7,7 +7,7 @@ Give the implementation owner a focused verification order for W7-W8. These comm
 ## Preconditions
 
 - Work from `tutor-system/` with the existing lockfile installed.
-- Use upstream 101 domain contracts and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and service methods. Do not edit `transferAssessmentService.ts` or its service tests from component 103.
+- Use component 101's shared assessment/progress exports and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and service methods. Keep React-only view-state types in `src/contexts/transferAssessmentUiAdapter.ts`; do not edit shared type files, `transferAssessmentService.ts`, or its service tests from component 103.
 - Keep `TRANSFER_ASSESSMENT_ENABLED` disabled unless the release owner has authorized a gate-complete environment.
 - Use isolated test data. Do not target a linked hosted project with reset, seed, migration push, or destructive commands.
 

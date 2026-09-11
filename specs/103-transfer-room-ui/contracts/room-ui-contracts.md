@@ -2,7 +2,7 @@
 
 ## Intent
 
-Specify how W7-W8 consumes component 102's allowlisted browser contract. Component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, all API DTO/envelope declarations, and operation mapping. Component 103 owns only React-specific narrowing and state adaptation in UI-owned files; components do not consume raw provider or database responses.
+Specify how W7-W8 consumes component 101's shared assessment/progress types and component 102's allowlisted browser contract. Component 101 owns shared domain type files and exports; component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, all API DTO/envelope declarations, and operation mapping. Component 103 owns only React-specific narrowing and adapter-local view-state types in UI-owned files; components do not consume raw provider or database responses.
 
 ## Teacher operations
 
@@ -56,7 +56,7 @@ The UI rejects missing instructions, `assessment` without `transfer_assess`, tut
 
 ## React state adaptation
 
-The component-103 adapter maps component 102's exported envelope variants into these React view states without exposing raw provider output:
+The component-103 adapter imports component 101/102 exports unchanged and defines its React-only draft, public-question, and lifecycle view-state types alongside their mappings in `src/contexts/transferAssessmentUiAdapter.ts`. It maps component 102's exported envelope variants into these states without exposing raw provider output:
 
 - `unavailable`: capability disabled or trusted operation unavailable;
 - `validation`: malformed or semantically invalid draft/public payload;
@@ -68,4 +68,4 @@ The component-103 adapter maps component 102's exported envelope variants into t
 
 ## Contract ownership
 
-Component 102 owns `transferAssessmentService.ts`, API DTO/envelope exports, `reject_draft`/`regenerate_draft` and all other operation mapping, authorization, atomicity, idempotency, private field enforcement, and service contract tests. Component 103 owns React-specific narrowing/state adaptation in UI-owned files, room state merge, rendering, and role-specific display tests. Component 105 owns release-browser evidence.
+Component 101 owns shared assessment/progress domain types and exports, including `src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`. Component 102 owns `transferAssessmentService.ts`, API DTO/envelope exports, `reject_draft`/`regenerate_draft` and all other operation mapping, authorization, atomicity, idempotency, private field enforcement, and service contract tests. Component 103 owns React-specific narrowing and adapter-local view-state types in UI-owned files, room state merge, rendering, and role-specific display tests. Component 105 owns release-browser evidence.

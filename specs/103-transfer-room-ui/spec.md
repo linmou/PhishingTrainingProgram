@@ -9,7 +9,7 @@
 
 This component connects the existing room experience to the transfer-assessment contracts from upstream components. It covers room ingress and catch-up, teacher review and delivery, learner question rendering and answer submission, participation-mode preservation, and role-scoped exports. It does not define database schema, row-level security, trusted identity, provider behavior, prompts, evaluation, or release-browser execution.
 
-Component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, its operation mapping, and its typed API DTO/envelope exports. This component consumes only those exported allowlisted contracts and may narrow them into React view state in UI-owned files. It never treats browser role, display name, local storage, or client-side progress state as authorization or as the source of truth for learning progress.
+Component 101 owns the shared assessment/progress domain type exports, including their exports through `tutor-system/src/types/index.ts`. Component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, its operation mapping, and its typed API DTO/envelope exports. This component consumes those 101/102 exports unchanged and may define only React view-state types in UI-owned files. It never treats browser role, display name, local storage, or client-side progress state as authorization or as the source of truth for learning progress.
 
 ## User Scenarios & Testing
 
@@ -91,7 +91,7 @@ As a room participant, I need progress and exports scoped to my role and learner
 ### Functional Requirements
 
 - **FR-001**: The room UI MUST identify the selected learner, focus learner message, checklist, target item, and parent message by stable persisted IDs throughout draft generation, review, send, answer submission, reload, and reconnect.
-- **FR-002**: The UI MUST consume component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, and typed API envelopes without redefining their service operation mapping; any React-specific adapter MUST fail closed when required view-state fields or role projections are invalid and MUST never pass unknown fields through to a component, export, realtime payload, or browser-facing state.
+- **FR-002**: The UI MUST consume component 101's shared assessment/progress type exports and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, and typed API envelopes without editing or redefining them; React-only view-state types MUST remain in a component-103-owned UI module, and the adapter MUST fail closed when required view-state fields or role projections are invalid and MUST never pass unknown fields through to a component, export, realtime payload, or browser-facing state.
 - **FR-003**: The teacher review surface MUST show a structured assessment draft with its current revision, target context, four ordered options, selection type, rendered learner preview, and confirmation state.
 - **FR-004**: The teacher MUST be able to edit the draft content and answer key only through the structured editor; any edit MUST clear prior confirmation and require reconfirmation before send.
 - **FR-005**: The reviewed-send path MUST include the expected draft revision and final content hash, and MUST surface stale-revision or validation failures without creating a learner-visible record.
@@ -134,7 +134,7 @@ As a room participant, I need progress and exports scoped to my role and learner
 ## Assumptions
 
 - Upstream component 102 owns `tutor-system/src/services/transferAssessmentService.ts` and supplies typed API envelopes, `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, explicit `reject_draft`/`regenerate_draft` operation mapping, trusted operations, revision/hash/idempotency outcomes, and owner-scoped data; this component does not edit or recreate that service contract.
-- Domain contracts from component 101 and the normative transfer plan define the progress pairs, assessment lifecycle, exact answer semantics, and room/turn mode split.
+- Domain contracts and shared assessment/progress type exports from component 101, together with the normative transfer plan, define the progress pairs, assessment lifecycle, exact answer semantics, and room/turn mode split; component 103 consumes them without editing shared type files.
 - Existing React, Supabase client, RoomContext, room pages, message components, and Jest/React Testing Library patterns remain the application surface.
 - `TRANSFER_ASSESSMENT_ENABLED` remains backend-controlled and disabled until release gates pass; the UI treats unavailable capability as a disabled/unavailable state.
 - Legacy checklist and tutoring/Guard paths must remain operational and are tested as regression behavior.

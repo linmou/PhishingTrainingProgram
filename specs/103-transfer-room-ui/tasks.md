@@ -8,7 +8,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 **Input**: Design documents from `specs/103-transfer-room-ui/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
 
-**Implementation boundary**: These tasks cover only browser/UI integration. Component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, its typed DTO/envelope exports, all operation mapping, and service contract tests. Do not edit those files or add SQL/RLS, trusted authentication, provider logic, prompt changes, Promptfoo, deployment, or release-browser evidence here.
+**Implementation boundary**: These tasks cover only browser/UI integration. Component 101 owns shared assessment/progress type exports in `tutor-system/src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`. Component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, its typed DTO/envelope exports, all operation mapping, and service contract tests. Do not edit those files or add SQL/RLS, trusted authentication, provider logic, prompt changes, Promptfoo, deployment, or release-browser evidence here.
 
 **Test policy**: Tests are required by the component request. For every story, write the focused tests first, confirm the missing behavior fails, then implement and refactor using the repository's required `fast-multi-agent-tdd` workflow during implementation.
 
@@ -18,7 +18,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 **Purpose**: Establish the upstream boundary and focused test fixtures without changing production behavior.
 
-- [ ] T001 Review `specs/103-transfer-room-ui/spec.md`, `plan.md`, `data-model.md`, `contracts/room-ui-contracts.md`, and `quickstart.md` against component 101 domain contracts and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and `reject_draft`/`regenerate_draft` methods; record any incompatible upstream shape in `specs/103-transfer-room-ui/research.md` without editing the upstream service.
+- [ ] T001 Review `specs/103-transfer-room-ui/spec.md`, `plan.md`, `data-model.md`, `contracts/room-ui-contracts.md`, and `quickstart.md` against component 101's shared assessment/progress exports and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and `reject_draft`/`regenerate_draft` methods; record any incompatible upstream shape in `specs/103-transfer-room-ui/research.md` without editing upstream shared type or service files.
 - [ ] T002 [P] Freeze the original-plan SHA-256 and W7/W8 ownership references in `specs/103-transfer-room-ui/research.md` without editing `plan/transfer_assessment_implementation_plan.md`.
 - [ ] T003 [P] Add shared room/message/draft/public-assessment fixtures with multiple learners and stable IDs in `tutor-system/src/__tests__/fixtures/transferRoomFixtures.ts`.
 - [ ] T004 [P] Add a test helper that asserts forbidden private fields are absent from learner React state, message projections, exports, and other browser-facing state in `tutor-system/src/__tests__/helpers/transferPrivacyAssertions.ts`.
@@ -29,9 +29,9 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 - [ ] T005 [P] Add React adapter contract tests that import component 102's exported DTO/envelope types and cover teacher-private versus learner-public view projection, required identity, and fail-closed state mapping in `tutor-system/src/contexts/__tests__/transferAssessmentUiAdapter.test.ts`.
 - [ ] T006 [P] Add UI adapter tests for assessment/room mode compatibility, missing instructions, unknown targets, and public rendering state in `tutor-system/src/contexts/__tests__/transferAssessmentUiAdapter.contract.test.ts`.
-- [ ] T007 [P] Add the typed draft/public-question/lifecycle view-state definitions used by the room context in `tutor-system/src/types/index.ts` without introducing a progress or mastery field.
+- [ ] T007 Add the React-only draft/public-question/lifecycle view-state definitions in `tutor-system/src/contexts/transferAssessmentUiAdapter.ts`, importing component 101/102 exports unchanged and introducing no progress or mastery field.
 - [ ] T008 Implement a single stable-identity merge helper for persisted messages, optimistic replacement, realtime inserts, and reconnect catch-up in `tutor-system/src/contexts/RoomContext.tsx`, preserving pre-populated legacy messages and chronological ordering.
-- [ ] T009 Create the React-specific envelope-to-view-state adapter, consuming component 102 exports without redeclaring DTOs or API operations, in `tutor-system/src/contexts/transferAssessmentUiAdapter.ts`.
+- [ ] T009 Implement the envelope-to-view-state mappings in `tutor-system/src/contexts/transferAssessmentUiAdapter.ts`, consuming component 101 domain exports and component 102 DTO/envelope exports without redeclaring shared types or API operations.
 
 **Checkpoint**: The browser boundary is typed, private/public projections are testable, and no component consumes a raw backend record.
 
@@ -152,7 +152,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 ### Parallel Opportunities
 
 - T003-T004 can run in parallel with T002.
-- T005-T007 can run in parallel; T009 follows the adapter tests and view-state definitions, while T008 is the separate stable-identity merge primitive.
+- T005-T006 can run in parallel; T007 follows those adapter contract tests, T009 follows T007's adapter-local view-state definitions, and T008 is the separate stable-identity merge primitive.
 - T010-T012 are independent red tests for US1.
 - T018-T021 are independent red tests for US2.
 - T026-T029 are independent red tests for US3.
@@ -164,7 +164,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 | Requirement group | Tasks |
 |---|---|
 | FR-001, FR-003, FR-004, FR-005, FR-006 | T010-T017 |
-| FR-002, FR-007, FR-008, FR-009 | T001, T005-T007, T018-T025 |
+| FR-002, FR-007, FR-008, FR-009 | T001, T005-T007, T009, T018-T025 |
 | FR-010, FR-011, FR-012, FR-016, FR-017 | T008, T026-T033 |
 | FR-013, FR-014, FR-015 | T025, T034-T039 |
 | FR-018 and SC-001 through SC-007 | T003-T004, T010-T012, T018-T021, T026-T029, T034-T044 |
@@ -186,6 +186,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 ### Required Handoff Notes
 
 - The backend capability remains disabled until the initiative release gates pass.
+- Component 101 owns shared assessment/progress type files and exports; component 103 consumes them without editing `src/types/assessment.ts`, `src/types/learningProgress.ts`, or `src/types/index.ts`.
 - Component 102 owns `transferAssessmentService.ts`, typed API DTO/envelope declarations, operation mapping including `reject_draft`/`regenerate_draft`, and service contract tests; component 103 consumes them without edits.
 - Missing trusted auth, hosted SQL/RLS evidence, provider/evaluation evidence, or browser release evidence is a named external blocker, not a UI fallback.
 - Root agent context update is deferred to the integration owner; do not run `update-agent-context.sh` from this component worktree.
