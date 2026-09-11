@@ -2,7 +2,7 @@
 
 ## Intent
 
-Define the UI-owned projections and identity relationships for W7-W8. Backend storage, authorization, progress transitions, and answer keys remain owned upstream.
+Define the React-owned view state and identity relationships for W7-W8. Component 102 owns the API DTO definitions and service operation mapping; backend storage, authorization, progress transitions, and answer keys also remain upstream.
 
 ## Identity graph
 
@@ -31,7 +31,7 @@ Every arrow is an explicit persisted relationship supplied or validated by upstr
 - `publicQuestion`: nullable `PublicAssessmentDTO` attached to a delivered message.
 - `catchUp`: loading/error cursor state for initial fetch, realtime reconnect, and retry; it does not replace persisted lifecycle status.
 
-### TeacherAssessmentDraftDTO
+### TeacherAssessmentDraftDTO (component 102 export)
 
 Private, teacher-only review projection. Required identity and lifecycle fields:
 
@@ -44,7 +44,7 @@ Private, teacher-only review projection. Required identity and lifecycle fields:
 
 Teacher edit state is a copy of the structured decision until review succeeds. It must never be sent as a learner projection.
 
-### PublicAssessmentDTO
+### PublicAssessmentDTO (component 102 export)
 
 Learner-visible allowlist:
 
@@ -63,7 +63,7 @@ Explicitly excluded: `correct_option_ids`, `transfer_basis`, private reason/rati
 - `assessment_id`: delivered question identity; null for ordinary messages.
 - `content`: original chat content; parser and grader remain server/domain-owned.
 
-The UI sends this projection through the trusted service facade and does not add a grade, progress pair, or answer key.
+The UI sends this projection through component 102's trusted service facade and does not redefine its request mapping or add a grade, progress pair, or answer key.
 
 ### ProgressView
 
