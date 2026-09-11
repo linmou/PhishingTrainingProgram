@@ -21,6 +21,8 @@
 - [x] Edge cases include missing, error, zero coverage, regression, pair, holdout, and applicability behavior.
 - [x] Scope and exclusions are explicit, including production prompt and release-gate ownership.
 - [x] Dependencies and assumptions identify canonical artifacts, configuration authority, component 102, and downstream gates.
+- [x] Shared-contract ownership is explicit: component 102 implements `ecologicalTutorCall.ts`, production prompt/provider handling, and product budget; component 104 consumes and tests it.
+- [x] Product/evaluation request parity, prompt and builder hashes, the 1,200-token budget, evaluator metadata isolation, and secret non-duplication have blocking acceptance paths.
 
 ## Feature Readiness
 

@@ -64,6 +64,22 @@ Fields:
 - `commands`, git revision, worktree status, start/end time, exit codes, and token usage when available.
 - `immutability`: manifest hash and write-once run directory path.
 
+## SharedRequestContractSnapshot
+
+One immutable record of the component-102-owned product contract used for target generation.
+
+Fields:
+
+- shared v3 contract version and source hash for `tutor-system/src/services/ecologicalTutorCall.ts`;
+- exported builder identity and normalized request/message hash;
+- backend-owned production prompt reference and content hash, without copied prompt text;
+- product and evaluation effective completion-token budgets, each exactly `1200`;
+- parity fixture/version and normalized product/evaluation request comparison result;
+- provider/transport configuration reference with credentials and secret values excluded;
+- evaluation adapter source hash proving which thin consumer produced the request.
+
+A missing identity, a hash mismatch, a budget other than `1200`, or unequal normalized product/evaluation messages makes the run `incomplete` before rubric scoring. Evaluator-only fields are not part of this snapshot or either target request.
+
 The manifest is frozen before candidate prompt evaluation and is never overwritten. A contract, case, rubric, setting, or gate change creates a new manifest version and requires a new comparable baseline.
 
 ## CaseEvidence
@@ -103,6 +119,7 @@ Fields:
 ```text
 RunManifest 1 -- * TransferCase
 RunManifest 1 -- * MetricContract
+RunManifest 1 -- 1 SharedRequestContractSnapshot
 RunManifest 1 -- * CaseEvidence
 TransferCase 1 -- * CaseEvidence
 MetricContract 1 -- * CaseEvidence

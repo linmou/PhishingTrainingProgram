@@ -9,7 +9,7 @@
 
 This component defines the evaluator-facing contract for W9-W10 transfer assessment behavior. It freezes what must be measured and what evidence is required before a transfer prompt candidate can pass its quality gate. The canonical T09 behavior specification, response contract, evaluation plan, evaluation contract, and preserved original-plan SHA-256 are normative inputs.
 
-This component does not implement production prompts, the provider path, database/auth behavior, React UI, or the release browser suite. It reports required prompt or adapter changes through the integration edge owned by component 102. Promptfoo evidence cannot satisfy database, authorization, or browser release gates.
+This component does not implement production prompts, the provider path, database/auth behavior, React UI, or the release browser suite. Component 102 owns the shared v3 production request/context contract implemented through `tutor-system/src/services/ecologicalTutorCall.ts`, including the production prompt reference/hash, provider-secret path, and effective 1,200 completion-token budget. Component 104 owns only evaluation-side consumption of that contract, parity tests, immutable evidence, and gates. Promptfoo evidence cannot satisfy database, authorization, or browser release gates.
 
 ## User Scenarios & Testing
 
@@ -26,6 +26,7 @@ As the transfer evaluation owner, I need one versioned case and assertion contra
 1. **Given** a transfer case with learner history, current message, prior state, target context, and expected judgments, **when** it is loaded, **then** its schema identifies a stable case/version, role, source, requirement mapping, inputs, expected assertions, partition, semantic-pair/transition metadata, and holdout eligibility without placing evaluator labels in target inputs.
 2. **Given** a generated v3 response, **when** the contract checks inspect it, **then** the five public rubric IDs and the deterministic supporting check use the shared response and declared field extraction rather than separate target generations.
 3. **Given** the preserved original implementation plan, **when** its source hash is checked, **then** SHA-256 `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2` remains the comparison baseline.
+4. **Given** one frozen transfer case, **when** product and evaluation requests are projected, **then** both use the component-102-owned v3 builder, production prompt reference/hash, and 1,200-token budget, while evaluator-only metadata is absent from both target requests.
 
 ### User Story 2 - Prove Deterministic Transfer Lifecycle Behavior (Priority: P1)
 
@@ -82,6 +83,8 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 - Calibration cases and development cases exposed to the prompt author cannot count as eligible independent holdouts.
 - A baseline applicability change cannot turn a baseline failure into a candidate pass; the change remains visible for disposition.
 - Live model, judge, provider, or configuration errors cannot be silently retried away, converted to learner failures, or removed from the denominator.
+- A missing shared v3 builder version/hash, production prompt reference/hash, effective 1,200-token budget, or product/evaluation request parity record is incomplete evidence and blocks the run.
+- The evaluation adapter must not reconstruct the system prompt, transfer context, provider request, credentials, endpoint, or secret lookup owned by component 102.
 - Evaluation evidence cannot be used to claim transfer release while the feature flag is disabled or any database, authorization, or browser gate is pending.
 
 ## Requirements
@@ -90,7 +93,7 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 
 - **FR-001**: The evaluation package MUST define a versioned transfer case schema with stable `case_id` and `case_version`, source and role metadata, complete target inputs including scenario/history/prior state, requirement and metric mappings, expected/prohibited outcomes, applicability, partition, pair/transition metadata, and holdout eligibility.
 - **FR-002**: The case schema MUST keep evaluator-only expected labels, annotations, pair labels, holdout labels, and rubric metadata outside target inputs while preserving the full evaluator input needed to reproduce the generation.
-- **FR-003**: The evaluation package MUST register exactly these T09 rubric IDs as public semantic contracts: `transfer_trigger_target`, `medium_transfer_quality`, `assessment_item_validity`, `assessment_followup`, and `verification_evidence`.
+- **FR-003**: The evaluation package MUST register exactly these public T09 rubric IDs: `transfer_trigger_target`, `medium_transfer_quality`, `assessment_item_validity`, `assessment_followup`, and `verification_evidence`. `assessment_followup` is deterministic; the other four use calibrated semantic judgment.
 - **FR-004**: Each rubric MUST declare its method, checked field or consumer, requirement mapping, allowed evaluator inputs, applicability, per-case pass rule, threshold, calibration status, and error/missing handling. Semantic rubrics MUST use calibrated judgments; deterministic checks MUST use reviewed expected values or exact allowed sets.
 - **FR-005**: The package MUST include `t09_contract_and_progress` as the deterministic supporting check for v3 structure, known IDs, option/key cardinality, exact-set grading, valid progress pairs, and the rule that assessment is a tutor turn rather than a room mode.
 - **FR-006**: The evaluation MUST cover positive, negative, boundary, recovery, regression, multi-target, Guard, clarification, assistance, contradiction, spontaneous-transfer, and controlled semantic-pair roles, with any unavailable role recorded as a named coverage gap.
@@ -106,6 +109,10 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 - **FR-016**: Evaluation reports MUST label the result as Promptfoo/evaluation evidence only and MUST explicitly state that database, authorization, provider-path, browser, feature-flag, and release gates remain separate.
 - **FR-017**: The planning package MUST identify required integration-edge changes to component 102 when the frozen contract or gate cannot be satisfied by the current production prompt/adapter, without editing component 102 files or asserting that those changes are already implemented.
 - **FR-018**: The evaluation package MUST preserve the original-plan SHA-256 `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2` and MUST NOT modify canonical T09 behavior or production prompt artifacts as part of this component.
+- **FR-019**: Every transfer target generation MUST consume the versioned v3 request/context builder exported through `tutor-system/src/services/ecologicalTutorCall.ts`; component 102 owns that shared production contract and component 104 owns only its evaluation consumption and tests.
+- **FR-020**: Product and evaluation target adapters MUST use the same backend-owned production prompt reference/hash and effective 1,200 completion-token v3 budget. The evaluation package MUST neither copy prompt text nor define an independent request/context or token-budget authority.
+- **FR-021**: The evaluation adapter MUST remain a thin projection from target-visible case fields into the shared v3 builder and MUST NOT read evaluator-only metadata or duplicate provider endpoint, credential, secret lookup, transport, or production prompt handling.
+- **FR-022**: The immutable manifest and blocking gate MUST record and verify shared builder contract version/hash, production prompt reference/hash, effective token budget, and product/evaluation request parity; any missing value or mismatch MUST produce a blocking `incomplete` verdict before semantic scoring.
 
 ### Key Entities
 
@@ -118,6 +125,7 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 - **Semantic Pair**: Two jointly evaluated cases differing in one meaning-bearing factor with different expected outcomes, used for a 100% pair gate.
 - **Stateful Sequence**: An ordered case with complete prior turns and asserted state/decision transitions, used to test recovery, assistance, clarification, contradiction, and follow-up behavior.
 - **Quality-Gate Verdict**: A blocking pass/fail/incomplete result with metric, partition, coverage, regression, pair, and execution evidence.
+- **Shared Request Contract Snapshot**: The immutable identity of the component-102-owned v3 builder, production prompt reference/hash, and effective 1,200-token setting consumed by both product and evaluation target adapters.
 
 ## Success Criteria
 
@@ -130,6 +138,7 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 - **SC-005**: Candidate acceptance requires at least 80% for each applicable semantic rubric in overall and every required partition, no decline against the unchanged comparable baseline, 100% for semantic pairs and declared hard constraints, and zero unresolved missing/error results.
 - **SC-006**: Quality-gate tests demonstrate blocking behavior for missing results, evaluator errors, zero-coverage partitions, above-threshold regression, and one-member semantic-pair failure; none of those reports can produce a pass verdict.
 - **SC-007**: The final planning/evaluation report distinguishes Promptfoo evidence from database/authentication, provider-path, browser, activation, and rollback gates with 100% of those non-substitution boundaries explicitly recorded.
+- **SC-008**: Contract tests demonstrate byte-for-byte equivalent normalized product/evaluation v3 messages and equal effective 1,200-token budgets for every frozen parity fixture, with matching shared-builder and production-prompt hashes and zero evaluator-only fields or provider secrets in target requests/evidence.
 
 ## Assumptions
 
@@ -137,7 +146,7 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 - The original-plan source is the parent-level `plan/transfer_assessment_implementation_plan.md` and its preserved SHA-256 is the supplied hash.
 - The existing Promptfoo harness and project model configuration are inspected before implementation; no API key, base URL, judge model, or provider parameter is invented when it is absent from the checked-in examples.
 - Live model evaluation, judge calibration against real outputs, independent holdout execution, and release acceptance are later execution stages; planning artifacts may record them as pending but may not claim them as passed.
-- The candidate prompt and production provider path remain owned by component 102; this component may specify required adapter fields and report integration blockers through the handoff.
+- The candidate prompt, shared v3 request/context builder in `ecologicalTutorCall.ts`, 1,200-token production setting, and production provider/secret path remain owned by component 102; component 104 consumes their exported contract identity and reports missing or incompatible exports as integration blockers.
 - Development fixtures and historical Promptfoo runs are not eligible independent holdouts unless their provenance and exposure rules satisfy the frozen evaluation contract.
 - Raw run evidence is immutable by run ID; re-runs or contract changes create a new manifest/run version rather than overwriting prior evidence.
 - Deterministic supporting checks may proceed when a semantic judge is unavailable, but missing semantic evidence blocks full T09 acceptance and cannot be replaced by keyword matching.

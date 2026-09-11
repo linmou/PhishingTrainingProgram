@@ -9,6 +9,7 @@
   "run_id": "2026-09-11-transfer-candidate-001",
   "manifest_version": "transfer-eval-v1",
   "artifact_hashes": {},
+  "shared_request_contract": {},
   "partitions": {},
   "settings": {},
   "comparison": {},
@@ -18,7 +19,8 @@
 ```
 
 - `run_id` and `manifest_version` identify a write-once run.
-- `artifact_hashes` includes the adopted constitution, canonical T09 specification, response contract, evaluation plan, case manifest, rubric registry, prompt/adapter, deterministic checker, gate source, and relevant fixture/provenance files.
+- `artifact_hashes` includes the adopted constitution, canonical T09 specification, response contract, evaluation plan, case manifest, rubric registry, evaluation adapter, shared `ecologicalTutorCall.ts` v3 builder, backend-owned production prompt reference/content hash, deterministic checker, gate source, and relevant fixture/provenance files. Prompt text is referenced and hashed, not duplicated in evaluation artifacts.
+- `shared_request_contract` records the shared v3 contract version/hash, builder export identity, production prompt reference/hash, product and evaluation effective completion-token budgets (both exactly `1200`), normalized parity-fixture request hashes/result, and provider configuration reference without endpoint credentials or secret values.
 - `partitions` names calibration, development, regression, unchanged production baseline, contract-compatible baseline, candidate, and eligible independent holdout sets, with case/version hashes and exposure status.
 - `settings` records target/judge model identities, endpoint names without credentials, temperatures, token limits, thinking/provider options, timeout, concurrency, retry/repair limits, repetitions, and seed policy.
 - `comparison` records baseline/candidate joins by case/version, metric/assertion version, partition, target-generation identity, repetition, and allowed changed experimental factors.
@@ -46,5 +48,6 @@ Statuses are exactly `pass`, `fail`, `not_applicable`, `missing`, and `error`. `
 - Freeze the manifest before candidate evaluation and holdout exposure.
 - Replays or rejudgments reference the source run and create a new record with changed evaluator/version metadata.
 - Any case, rubric, prompt/adapter, contract, setting, threshold, or gate change creates a new manifest version and comparable baseline.
+- Any shared-builder, production-prompt hash, effective-budget, or product/evaluation parity mismatch blocks the run as `incomplete`; the evaluation adapter cannot fall back to local prompt/request construction.
 - Redact credentials and personal identifiers without altering tested meaning; record unavailable metadata explicitly.
 - Preserve interrupted runs as partial/incomplete evidence, never as accepted results.

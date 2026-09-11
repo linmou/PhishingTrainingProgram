@@ -10,6 +10,7 @@ Run from the allocated worktree root:
 rtk git status --short --branch
 rtk .specify/scripts/bash/check-prerequisites.sh --json --paths-only
 rtk grep -n "transfer_trigger_target\\|medium_transfer_quality\\|assessment_item_validity\\|assessment_followup\\|verification_evidence\\|t09_contract_and_progress" specs/104-transfer-evaluation
+rtk grep -n "ecologicalTutorCall.ts\\|1,200\\|shared.*builder\\|production prompt.*hash" specs/104-transfer-evaluation/{spec.md,plan.md,research.md,data-model.md,tasks.md,contracts/*.md}
 rtk shasum -a 256 /Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/plan/transfer_assessment_implementation_plan.md
 ```
 
@@ -29,7 +30,7 @@ The exact future paths are part of the tasks and may be adjusted only by a versi
 
 ## Later authorized baseline/candidate execution
 
-Do not run these during the planning turn. When component 102 exposes the frozen contract and the project has authorized model/judge configuration, run the existing v1 runner through a new immutable transfer manifest/output directory. The command shape must include explicit variant, contract version, manifest, repetition, and output directory:
+Do not run these during the planning turn. When component 102 exposes the versioned v3 builder/identity through `ecologicalTutorCall.ts`, the backend production prompt reference/hash, and the effective 1,200-token setting, and the project has authorized model/judge configuration, run the existing v1 runner through a new immutable transfer manifest/output directory. The runner must consume that shared builder; no command option may inject a copied prompt or alternate token budget. The command shape must include explicit variant, contract version, manifest, repetition, and output directory:
 
 ```sh
 rtk proxy node evals/promptfoo/v1/runner.js --cases evals/promptfoo/v1/transfer/cases.json --variant baseline --contract_version v3 --manifest evals/promptfoo/v1/transfer/manifest.json --out evals/promptfoo/results/<model>/<run-id>-baseline
@@ -37,7 +38,7 @@ rtk proxy node evals/promptfoo/v1/runner.js --cases evals/promptfoo/v1/transfer/
 rtk proxy node evals/promptfoo/v1/gate.js evals/promptfoo/results/<model>/<run-id>-candidate evals/promptfoo/results/<model>/<run-id>-baseline
 ```
 
-Before running, verify the effective model, base URL, judge, token limits, temperatures, retries, concurrency, timeout, repetition, seed policy, and credential redaction. The checked-in `.env.example` exposes names and an example endpoint but no usable credentials; missing configuration is a blocking unrun stage, not a fallback.
+Before running, verify the shared-builder and production-prompt references/hashes, normalized product/evaluation request parity, effective model, base URL, judge, the exact 1,200 completion-token budget in both target adapters, temperatures, retries, concurrency, timeout, repetition, seed policy, evaluator-label isolation, and credential redaction. The checked-in `.env.example` exposes names and an example endpoint but no usable credentials; missing configuration is a blocking unrun stage, not a fallback.
 
 ## Later holdout execution
 

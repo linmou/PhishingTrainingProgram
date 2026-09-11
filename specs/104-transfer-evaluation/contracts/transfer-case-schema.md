@@ -32,14 +32,16 @@
 
 ### Target-visible `input`
 
-`input` MUST contain the full reproducible target request projection:
+`input` MUST contain the full reproducible target-visible data projection accepted by the component-102-owned versioned v3 builder in `tutor-system/src/services/ecologicalTutorCall.ts`:
 
 - scenario/context and configured learning inventory;
 - ordered conversation history and latest learner contribution;
 - prior participation mode, progress pair, unresolved assessment/feedback state, and relevant stable item/message IDs;
 - source and repair evidence needed by the target to make the decision;
 - role/configuration and any turn/repetition inputs;
-- adapter contract version and target generation identity inputs, without evaluator labels.
+- shared request contract version and target generation identity inputs, without evaluator labels.
+
+The evaluation adapter passes this projection to the shared builder. It MUST NOT independently serialize transfer context, construct system/user messages, copy production prompt text, choose a provider endpoint/secret, or override the builder's effective 1,200 completion-token budget. The resulting target request records the shared builder hash/version and backend-owned production prompt reference/hash.
 
 The target projection MUST NOT contain expected mode/instruction, expected metric labels, rubric text, pair membership, holdout eligibility, judge annotations, gate thresholds, or candidate/baseline verdicts.
 
@@ -71,6 +73,7 @@ Expected labels are outside the target projection but are passed to the evaluato
 
 - Reject missing identity, provenance, target input, expected mapping, partition, or holdout fields.
 - Reject evaluator labels in target input.
+- Reject target inputs not accepted by the pinned shared v3 builder, any adapter-authored prompt/context field, and any product/evaluation effective token budget other than `1200`.
 - Reject a pair without exactly two members or without one declared meaning-bearing change.
 - Reject an eligible holdout with prompt/development exposure.
 - Reject a changed contract/case version from a baseline/candidate comparison unless a new manifest and comparable baseline are created.

@@ -4,7 +4,7 @@
 
 ## Decision 1: Extend the existing versioned evaluator boundary
 
-**Decision**: Use `evals/promptfoo/v1/runner.js`, `evaluator.js`, `gate.js`, and their `node:test` suites as the shared execution boundary. Add transfer-scoped cases, rubrics, manifests, adapters, and gate fixtures through that boundary.
+**Decision**: Use `evals/promptfoo/v1/runner.js`, `evaluator.js`, `gate.js`, and their `node:test` suites as the evaluation execution boundary. Use the component-102-owned v3 request/context contract implemented through `tutor-system/src/services/ecologicalTutorCall.ts` as the single target-request construction boundary. Transfer code may add a thin projection/invocation shim, but not a second message builder.
 
 **Rationale**: The existing v1 evaluator already preserves typed `pass`, `fail`, `not_applicable`, `missing`, and `error` results, complete generation denominators, judge evidence, pair/transition checks, and baseline comparison. A second legacy gate would create competing status authorities and could lose existing regression evidence.
 
@@ -12,6 +12,15 @@
 
 - A standalone legacy Promptfoo configuration was rejected because it would duplicate the typed evidence and gate behavior already required by the evaluation contract.
 - Reusing only the root legacy `promptfooconfig.yaml` was rejected because its gate is not transfer-aware and has no T09 partitions, immutable manifest contract, or holdout lifecycle.
+- Constructing transfer messages in `evals/promptfoo/v1/transfer/adapter.js` was rejected because it would allow product and evaluation context, prompt identity, and token budget to drift.
+
+## Decision 1A: Share the v3 product contract and freeze parity evidence
+
+**Decision**: Component 102 extends `ecologicalTutorCall.ts` with the versioned transfer v3 request/context export and owns the production prompt reference/hash, provider transport/secret path, and effective 1,200 completion-token setting. Component 104 consumes those exports, projects target-visible case data into them, and tests normalized product/evaluation message and budget equivalence. Evaluation never embeds production prompt text or resolves provider secrets.
+
+**Rationale**: The original plan explicitly requires product and Promptfoo to share `ecologicalTutorCall.ts` and requires the 1,200-token v3 budget in both target adapters. Pinning builder and prompt hashes in each immutable manifest proves what was evaluated while retaining one production authority. Evaluator labels remain in the evaluation projection and are never accepted by the shared target builder.
+
+**Blocking dependency**: Until component 102 exports the v3 builder, stable contract version/hash input, backend prompt reference/hash, and effective 1,200-token configuration needed by the adapter, component 104 may complete fixtures and gate tests but cannot claim a comparable target run. The gate records this as `incomplete`; it does not add a fallback builder.
 
 ## Decision 2: Use one shared case manifest for target generation and judging
 
@@ -21,9 +30,9 @@
 
 **Source evidence**: `tutor-behavior-evaluation-plan.md`, `ai-behavior-design-eval/references/evaluation-contract.md`, and the Promptfoo integration reference.
 
-## Decision 3: Keep five semantic rubrics and one deterministic supporting check
+## Decision 3: Keep five public rubrics and one deterministic supporting check
 
-**Decision**: Register exactly `transfer_trigger_target`, `medium_transfer_quality`, `assessment_item_validity`, `assessment_followup`, and `verification_evidence` as public T09 semantic rubric IDs. Register `t09_contract_and_progress` as the deterministic supporting check.
+**Decision**: Register exactly `transfer_trigger_target`, `medium_transfer_quality`, `assessment_item_validity`, `assessment_followup`, and `verification_evidence` as public T09 rubric IDs. `assessment_followup` is deterministic; the other four use calibrated semantic judgment. Register `t09_contract_and_progress` as the separate deterministic supporting check.
 
 **Rationale**: These identifiers and methods are already defined by the canonical T09 evaluation plan. The supporting check keeps schema, exact grading, valid progress pairs, IDs, rendering, and tutor-turn/room-mode separation visible without pretending that structure proves semantic quality.
 
@@ -62,5 +71,5 @@
 
 - A live target/judge model, base URL, credentials, and provider options must come from the checked-in configuration or authorized environment before execution. No value is invented here.
 - Independent holdout authorship and exposure status must be recorded when cases are created.
-- Component 102 must provide a production/provider adapter that can emit the frozen v3 response fields; missing fields are an integration blocker, not a reason to weaken the manifest.
+- Component 102 must provide the shared `ecologicalTutorCall.ts` v3 builder/identity, backend-owned production prompt reference/hash, effective 1,200-token setting, and a production/provider adapter that emits the frozen v3 response fields; missing exports are integration blockers, not reasons to weaken the manifest or create evaluation copies.
 - The downstream product gates must be run separately; this package cannot resolve their infrastructure or authorization prerequisites.

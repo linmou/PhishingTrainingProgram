@@ -6,7 +6,7 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 
 **Input**: Design documents from `/specs/104-transfer-evaluation/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, and `contracts/`
-**Scope**: Planning package for component `104-transfer-evaluation`; production prompts, provider path, database/auth, React UI, and release browser work remain excluded.
+**Scope**: Planning package for component `104-transfer-evaluation`; component 102 owns the shared v3 request/context implementation in `tutor-system/src/services/ecologicalTutorCall.ts`, backend production prompt reference/hash, provider/secret path, and production 1,200-token setting. Component 104 owns evaluation consumption, parity tests, immutable evidence, and gates. Production implementation, database/auth, React UI, and release browser work remain excluded.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
@@ -14,7 +14,7 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 
 - [ ] T001 Record the canonical source-plan path and SHA-256, T09/response-contract/evaluation-plan references, and component ownership in `specs/104-transfer-evaluation/research.md`.
 - [ ] T002 [P] Document the existing v1 runner/evaluator/gate entry points, legacy regression boundary, and immutable result-directory convention in `specs/104-transfer-evaluation/plan.md`.
-- [ ] T003 [P] Create the transfer artifact index and ownership map, including the component 102 integration edge and the separate 101/105 release gates, in `specs/104-transfer-evaluation/integration-edge.md`.
+- [ ] T003 [P] Create the transfer artifact index and ownership map in `specs/104-transfer-evaluation/integration-edge.md`, declaring component 102 ownership of the shared `ecologicalTutorCall.ts` v3 builder, production prompt reference/hash, provider-secret path, and product token setting; declare component 104 ownership of evaluation consumption/tests and the separate 101/105 release gates.
 - [ ] T004 Validate the planning package paths, template completion, source hash, and absence of unresolved placeholders using `specs/104-transfer-evaluation/checklists/requirements.md` and `specs/104-transfer-evaluation/quickstart.md`.
 
 ## Phase 2: Foundational (Blocking Prerequisites)
@@ -25,9 +25,9 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 
 - [ ] T005 [P] Define the machine-readable transfer case schema and target/evaluator projection rules in `evals/promptfoo/v1/transfer/case-schema.json`, preserving evaluator-label isolation.
 - [ ] T006 [P] Define the versioned metric registry for the five public T09 rubric IDs and `t09_contract_and_progress` in `evals/promptfoo/v1/transfer/metric-registry.json`.
-- [ ] T007 [P] Define the immutable run manifest shape, partition registry, hash list, settings record, and per-case evidence envelope in `evals/promptfoo/v1/transfer/manifest-schema.json`.
-- [ ] T008 [P] Define the transfer-specific gate thresholds, hard partitions, pair rule, non-regression rule, and missing/error verdicts in `evals/promptfoo/v1/transfer/gate-policy.json`.
-- [ ] T009 Write schema and manifest validation tests first in `evals/promptfoo/v1/transfer/case-schema.test.js`; begin the test with the file-purpose comment required by `AGENTS.md` and cover missing fields, target-label leakage, pair cardinality, holdout exposure, and version drift.
+- [ ] T007 [P] Define the immutable run manifest shape, partition registry, shared-builder/prompt/adapter hash list, product/evaluation effective-token settings, parity record, and per-case evidence envelope in `evals/promptfoo/v1/transfer/manifest-schema.json`.
+- [ ] T008 [P] Define the transfer-specific gate thresholds, hard partitions, pair rule, non-regression rule, missing/error verdicts, and pre-scoring shared-contract/hash/1,200-token/parity blockers in `evals/promptfoo/v1/transfer/gate-policy.json`.
+- [ ] T009 Write schema and manifest validation tests first in `evals/promptfoo/v1/transfer/case-schema.test.js`; begin the test with the file-purpose comment required by `AGENTS.md` and cover missing fields, target-label leakage, pair cardinality, holdout exposure, version drift, missing shared contract/prompt hashes, non-1,200 budgets, and forbidden secret metadata.
 - [ ] T010 Implement the schema/manifest validators in `evals/promptfoo/v1/transfer/case-schema.js`; begin the executable file with a shebang and concise purpose comment, and keep it independent of model/provider calls.
 
 ## Phase 3: User Story 1 - Freeze the Transfer Evaluation Contract (Priority: P1)
@@ -38,16 +38,16 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 
 ### Tests for User Story 1
 
-- [ ] T011 [P] [US1] Write manifest completeness and metric-registration tests first in `evals/promptfoo/v1/transfer/manifest.test.js`, with the required file-purpose comment and failures for missing rubric IDs, missing partitions, duplicate case versions, and incomplete T09 mappings.
+- [ ] T011 [P] [US1] Write manifest completeness, metric-registration, and shared-request parity tests first in `evals/promptfoo/v1/transfer/manifest.test.js` and `shared-request-contract.test.js`, with required file-purpose comments and failures for missing rubric IDs/partitions, duplicate case versions, incomplete T09 mappings, changed shared-builder or production-prompt hashes, unequal normalized product/evaluation messages, non-1,200 effective budgets, evaluator-label leakage, copied prompt text, and provider-secret leakage.
 - [ ] T012 [P] [US1] Write case role and partition coverage tests first in `evals/promptfoo/v1/transfer/coverage.test.js`, with the required file-purpose comment and assertions for positive, negative, boundary, recovery, regression, multi-target, Guard, clarification, assistance, contradiction, spontaneous-transfer, and semantic-pair roles.
 
 ### Implementation and Fixtures for User Story 1
 
 - [ ] T013 [US1] Author versioned transfer case inputs, evaluator-only expected labels, applicability, source provenance, pair/transition metadata, and holdout eligibility in `evals/promptfoo/v1/transfer/cases.json`.
-- [ ] T014 [US1] Register case versions, required partitions, metric mappings, repetitions, seed policy, thresholds, and artifact hashes in `evals/promptfoo/v1/transfer/manifest.json`.
-- [ ] T015 [P] [US1] Author the five calibrated-rubric instruction files with allowed input fields, positive/negative/boundary examples, strict result format, and missing/error behavior in `evals/promptfoo/rubrics/v1/transfer_trigger_target.md`, `medium_transfer_quality.md`, `assessment_item_validity.md`, `assessment_followup.md`, and `verification_evidence.md`.
+- [ ] T014 [US1] Register case versions, required partitions, metric mappings, repetitions, seed policy, thresholds, shared v3 builder and backend prompt references/hashes, both effective 1,200-token settings, adapter hash, and parity fixture/result hashes in `evals/promptfoo/v1/transfer/manifest.json`.
+- [ ] T015 [P] [US1] Author calibrated instruction files for the four semantic rubrics with allowed input fields, positive/negative/boundary examples, strict result format, and missing/error behavior in `evals/promptfoo/rubrics/v1/transfer_trigger_target.md`, `medium_transfer_quality.md`, `assessment_item_validity.md`, and `verification_evidence.md`; author the deterministic `assessment_followup` declaration separately in `evals/promptfoo/rubrics/v1/assessment_followup.md`.
 - [ ] T016 [P] [US1] Register transfer rubric versions, methods, thresholds, hard partitions, and applicability in `evals/promptfoo/rubrics/v1/manifest.json` without altering historical v0/v1 meanings.
-- [ ] T017 [US1] Add the target-input projection and evaluator-only metadata separation to the shared v1 adapter in `evals/promptfoo/v1/transfer/adapter.js`; begin the new executable file with a shebang and purpose comment.
+- [ ] T017 [US1] Implement `evals/promptfoo/v1/transfer/adapter.js` as a thin evaluation projection/invocation shim that consumes the component-102-owned versioned v3 builder and contract identity exported through `tutor-system/src/services/ecologicalTutorCall.ts`; begin the new executable file with a shebang and purpose comment, pass only target-visible case fields, preserve the shared backend prompt reference/hash and 1,200-token budget, and do not construct messages, copy prompt text, or resolve provider endpoints/secrets.
 
 ## Phase 4: User Story 2 - Prove Deterministic Transfer Lifecycle Behavior (Priority: P1)
 
@@ -70,21 +70,21 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 
 ## Phase 5: User Story 3 - Measure Frozen Transfer Semantics (Priority: P1)
 
-**Goal**: Calibrate judges, run comparable baseline/candidate evidence, and validate independent holdouts for the five semantic T09 metrics.
+**Goal**: Calibrate judges for the four semantic T09 rubrics, run all five rubric IDs against comparable baseline/candidate evidence, and validate independent holdouts.
 
 **Independent Test**: Execute calibration and unchanged baseline/candidate comparisons on the same frozen development/regression manifest, then run baseline and candidate on eligible sealed holdouts after candidate freeze; preserve all raw and typed evidence.
 
 ### Tests and Calibration for User Story 3
 
-- [ ] T025 [P] [US3] Write calibration contract tests first in `evals/promptfoo/v1/transfer/calibration.test.js`, with the required file-purpose comment and positive, negative, boundary, contradictory, disagreement, judge-error, and unresolved-calibration cases for all five rubric IDs.
-- [ ] T026 [P] [US3] Write baseline/candidate comparability tests first in `evals/promptfoo/v1/transfer/comparison.test.js`, with the required file-purpose comment and failures for changed case versions, metric versions, settings, repetitions, target identities, or partition membership.
+- [ ] T025 [P] [US3] Write calibration contract tests first in `evals/promptfoo/v1/transfer/calibration.test.js`, with the required file-purpose comment and positive, negative, boundary, contradictory, disagreement, judge-error, and unresolved-calibration cases for the four semantic rubric IDs; assert that deterministic `assessment_followup` is excluded from judge calibration and covered by T019 lifecycle fixtures.
+- [ ] T026 [P] [US3] Write baseline/candidate comparability tests first in `evals/promptfoo/v1/transfer/comparison.test.js`, with the required file-purpose comment and failures for changed case versions, metric versions, settings, repetitions, target identities, partition membership, shared-builder hash, production-prompt reference/hash, effective 1,200-token budget, or normalized product/evaluation request identity.
 
 ### Implementation and Evidence for User Story 3
 
 - [ ] T027 [US3] Implement transfer judge calibration and immutable calibration records in `evals/promptfoo/v1/transfer/calibrate.js`; begin the executable file with a shebang and purpose comment, and preserve raw judge requests/responses and adjudication metadata.
-- [ ] T028 [US3] Register transfer cases, rubric IDs, contract version, and target projection with the existing v1 runner in `evals/promptfoo/v1/runner.js` through `evals/promptfoo/v1/transfer/runner-config.js`; begin any new executable file with a shebang and purpose comment.
+- [ ] T028 [US3] Register transfer cases, rubric IDs, shared v3 contract version/hash, backend production prompt reference/hash, and the T017 thin consumer with the existing v1 runner in `evals/promptfoo/v1/runner.js` through `evals/promptfoo/v1/transfer/runner-config.js`; begin any new executable file with a shebang and purpose comment, obtain the 1,200-token setting from the component-102-owned shared contract, and reject any local prompt/request/provider-secret override.
 - [ ] T029 [US3] Create the unchanged production and contract-compatible baseline run records with declared changed-factor metadata in `evals/promptfoo/results/<model>/<run-id>-baseline/` and `evals/promptfoo/results/<model>/<run-id>-aligned-baseline/`, without overwriting historical results.
-- [ ] T030 [US3] Create the candidate run record and freeze candidate prompt/adapter references before holdout exposure in `evals/promptfoo/results/<model>/<run-id>-candidate/`; include the unchanged existing regression metrics, record component 102 integration blockers, and do not change its prompt files.
+- [ ] T030 [US3] Create the candidate run record and freeze the component-102-owned shared builder and backend prompt references/hashes plus the component-104 adapter hash before holdout exposure in `evals/promptfoo/results/<model>/<run-id>-candidate/`; include both effective 1,200-token values, parity evidence, unchanged regression metrics, and component 102 integration blockers without copying or changing its prompt/provider files.
 - [ ] T031 [US3] Author independent transfer holdouts with distinct entities, wording, boundaries, authorship, and exposure records in `evals/promptfoo/holdouts/transfer-sealed/`; keep target prompt/development dialogues unavailable until candidate freeze.
 - [ ] T032 [US3] Record raw target inputs, raw/parsed/displayed outputs, per-case judgments, deterministic expected/actual results, settings, versions, retries, errors, and metadata in `evals/promptfoo/results/<model>/<run-id>/` using write-once run directories.
 
@@ -96,8 +96,8 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 
 ### Tests for User Story 4
 
-- [ ] T033 [P] [US4] Write the blocking gate tests first in `evals/promptfoo/v1/transfer/quality-gate.test.js`, with the required file-purpose comment and explicit missing, error, zero-coverage, regression, pair, incomplete-manifest, and exact-denominator assertions.
-- [ ] T034 [P] [US4] Write raw-evidence completeness and immutability tests first in `evals/promptfoo/v1/transfer/evidence-record.test.js`, with the required file-purpose comment and checks for input/output/judgment/metadata preservation, write-once runs, redaction, and partial-run blocking.
+- [ ] T033 [P] [US4] Write the blocking gate tests first in `evals/promptfoo/v1/transfer/quality-gate.test.js`, with the required file-purpose comment and explicit missing, error, zero-coverage, regression, pair, incomplete-manifest, exact-denominator, shared-builder/prompt hash mismatch, product/evaluation request mismatch, and non-1,200 budget assertions.
+- [ ] T034 [P] [US4] Write raw-evidence completeness and immutability tests first in `evals/promptfoo/v1/transfer/evidence-record.test.js`, with the required file-purpose comment and checks for input/output/judgment/metadata preservation, write-once runs, evaluator-only metadata separation, prompt-reference-without-prompt-copying, credential/secret redaction, and partial-run blocking.
 - [ ] T035 [P] [US4] Write non-substitution report tests first in `evals/promptfoo/v1/transfer/release-boundary.test.js`, with the required file-purpose comment and assertions that Promptfoo evidence cannot claim database/auth/browser/activation/rollback acceptance.
 
 ### Implementation for User Story 4
@@ -106,7 +106,7 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 - [ ] T037 [US4] Register the transfer gate with the existing v1 gate entry point in `evals/promptfoo/v1/gate.js`, preserving legacy metrics and making transfer rows fail closed on missing/error/zero coverage.
 - [ ] T038 [US4] Implement immutable run snapshot and evidence-record writing in `evals/promptfoo/v1/transfer/evidence-record.js`; begin the executable file with a shebang and purpose comment and never overwrite an existing run ID.
 - [ ] T039 [US4] Produce a transfer evaluation report with final verdict, exact fractions, applicability, raw-evidence links, regression/pair failures, calibration status, and non-substitution statement in `evals/promptfoo/v1/transfer/report.js`; begin the executable file with a shebang and purpose comment.
-- [ ] T040 [US4] Document required prompt/adapter changes and unresolved handoff blockers for component 102 in `specs/104-transfer-evaluation/integration-edge.md`, without modifying `tutor-system/src/services/prompts/` or production provider files.
+- [ ] T040 [US4] Document unresolved component 102 dependencies in `specs/104-transfer-evaluation/integration-edge.md`: shared `ecologicalTutorCall.ts` v3 builder/identity, backend prompt reference/hash, production 1,200-token setting, and provider-path integration; keep component 104 limited to adapter consumption/tests and do not modify or duplicate production prompt/provider files.
 
 ## Phase 7: Polish and Cross-Cutting Concerns
 
@@ -159,6 +159,10 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 | FR-016 | T003, T035, T039, T044 |
 | FR-017 | T003, T028, T030, T040 |
 | FR-018 | T001, T041, T044 |
+| FR-019 | T003, T011, T017, T028, T040 |
+| FR-020 | T007, T009, T011, T014, T026, T028, T030, T033 |
+| FR-021 | T005, T009, T011, T017, T028, T034 |
+| FR-022 | T007, T008, T011, T014, T026, T030, T033, T038 |
 | SC-001 | T011, T014, T016 |
 | SC-002 | T018, T021, T024 |
 | SC-003 | T032, T034 |
@@ -166,6 +170,7 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 | SC-005 | T026, T030, T036, T037 |
 | SC-006 | T033 |
 | SC-007 | T035, T039, T044 |
+| SC-008 | T011, T017, T026, T028, T033, T034 |
 
 ## Implementation Strategy
 
@@ -189,3 +194,4 @@ description: "Dependency-ordered W9-W10 transfer evaluation and Promptfoo eviden
 - Every new executable script must begin with a shebang and a concise purpose comment.
 - TDD execution belongs to the later implementation turn; this branch currently contains planning artifacts only.
 - The root `AGENTS.md` and integration/orchestration records are not modified; context update remains deferred to integration.
+- Component 104 must stop at a blocking integration dependency if component 102 has not exported the shared v3 builder/identity, backend prompt reference/hash, and effective 1,200-token contract; no evaluation-local fallback is permitted.
