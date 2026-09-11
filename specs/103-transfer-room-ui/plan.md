@@ -44,9 +44,9 @@ The current branch already contains partial transfer artifacts: `types/assessmen
 
 Ownership boundaries for this plan:
 
-- **Component 101**: domain contract and progress-pair semantics.
+- **Component 101**: domain contracts, progress-pair semantics, and shared assessment/progress type exports in `tutor-system/src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`.
 - **Component 102**: `tutor-system/src/services/transferAssessmentService.ts`, typed API DTO/envelope exports, all operation mapping including `reject_draft` and `regenerate_draft`, service contract tests, trusted operations, authorization, atomicity, idempotency, answer keys, and backend lifecycle outcomes.
-- **Component 103**: React-specific narrowing/state adapters in UI-owned files, room state convergence, teacher/learner rendering, review lifecycle controls, public/private view projections, and React integration tests. It does not edit the component 102 service or its tests.
+- **Component 103**: React-specific narrowing and adapter-local view-state types in UI-owned files, room state convergence, teacher/learner rendering, review lifecycle controls, public/private view projections, and React integration tests. It does not edit component 101's shared type files or component 102's service and tests.
 - **Component 105**: release-browser evidence and promotion decisions.
 
 Root `AGENTS.md` and agent context are integration-owned. Running `.specify/scripts/bash/update-agent-context.sh` and changing agent instructions are explicitly deferred.
@@ -55,7 +55,7 @@ Root `AGENTS.md` and agent context are integration-owned. Running `.specify/scri
 
 ### 1. Typed consumer boundary
 
-Consume component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, and typed operation envelopes for capabilities, preparation, review, send, `reject_draft`, `regenerate_draft`, persisted messages, and lifecycle results. A small React adapter in `src/contexts/transferAssessmentUiAdapter.ts` maps those typed variants into UI state before they enter `RoomContext`; it does not redeclare DTOs or map API operation names. Components receive `TeacherAssessmentDraftDTO` only on the teacher review path and `PublicAssessmentDTO` only on learner/public message paths.
+Consume component 101's shared assessment/progress domain exports and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, and typed operation envelopes for capabilities, preparation, review, send, `reject_draft`, `regenerate_draft`, persisted messages, and lifecycle results. The React-only draft, public-question, and lifecycle view-state types are defined with their mappings in `src/contexts/transferAssessmentUiAdapter.ts` before entering `RoomContext`; the adapter imports 101/102 types unchanged and does not redeclare DTOs, edit shared type barrels, or map API operation names. Components receive `TeacherAssessmentDraftDTO` only on the teacher review path and `PublicAssessmentDTO` only on learner/public message paths.
 
 The learner projection contains assessment ID, selection type, stem/rendered text, and ordered A-D options. It excludes key IDs, transfer basis, private reason/rationale, raw model output, revision/hash, and teacher action. Unknown fields are not spread into public component props or exports.
 
@@ -140,6 +140,7 @@ The focused test file set is declared in `quickstart.md` and tasks. Hosted SQL/R
 ## Integration Risks
 
 - **DTO drift from component 102**: React adapter tests must compile against and consume component 102's exported envelope variants. Incompatible upstream changes block integration; component 103 must not patch or duplicate the service contract or silently fall back to text-only rendering.
+- **Shared type drift from component 101**: Adapter and room tests must compile against component 101's assessment/progress exports. Incompatible changes block integration; component 103 must not patch `src/types/assessment.ts`, `src/types/learningProgress.ts`, or `src/types/index.ts`.
 - **Existing simplified auth**: this component cannot elevate local role/name values into authorization. If the backend capability is unavailable, render unavailable and keep legacy behavior.
 - **Realtime visibility and private fields**: public assessment projections must be built before React state, export, or broadcast handling; never pass raw private response objects through context.
 - **Legacy mode enum consumers**: assessment must not be cast into room mode. Run legacy room and Guard tests after mode/type changes.

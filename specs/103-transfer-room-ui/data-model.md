@@ -2,7 +2,7 @@
 
 ## Intent
 
-Define the React-owned view state and identity relationships for W7-W8. Component 102 owns the API DTO definitions and service operation mapping; backend storage, authorization, progress transitions, and answer keys also remain upstream.
+Define the React-owned view state and identity relationships for W7-W8. Component 101 owns shared assessment/progress domain type exports, while component 102 owns API DTO definitions and service operation mapping; backend storage, authorization, progress transitions, and answer keys also remain upstream. Component 103 defines only adapter-local UI view-state types in `src/contexts/transferAssessmentUiAdapter.ts` and consumes 101/102 exports unchanged.
 
 ## Identity graph
 
@@ -20,6 +20,8 @@ Room
 Every arrow is an explicit persisted relationship supplied or validated by upstream operations. UI code must not infer an ID from display text, array position, latest message, or local role selection.
 
 ## UI projections
+
+The React-only draft, public-question, and lifecycle state wrappers described below are colocated with their mappings in `src/contexts/transferAssessmentUiAdapter.ts`; they are not added to component 101's shared type files or barrels.
 
 ### RoomViewState
 
