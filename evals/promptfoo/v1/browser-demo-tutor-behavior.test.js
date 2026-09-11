@@ -8,7 +8,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { loadLocalEnvironment } = require('../../../tutor-system/scripts/browser-demo-tutor-behavior.js');
+const {
+  loadLocalEnvironment,
+  readSeededRoom
+} = require('../../../tutor-system/scripts/browser-demo-tutor-behavior.js');
 
 const URL_KEY = 'REACT_APP_SUPABASE_URL';
 const ANON_KEY = 'REACT_APP_SUPABASE_ANON_KEY';
@@ -83,4 +86,41 @@ test('rejects a missing URL or anon key after environment overrides', () => {
     () => withEnvironment({ [URL_KEY]: 'https://remote-test-project.supabase.co', [ANON_KEY]: '' }, loadLocalEnvironment),
     /Missing local Supabase configuration/
   );
+});
+
+// Test responsible for preventing the browser runner from sampling the room before React finishes joining it.
+test('waits for the rendered room before evaluating seeded visibility', async () => {
+  const calls = [];
+  const page = {
+    locator(selector) {
+      calls.push(`locator:${selector}`);
+      if (selector === 'body') {
+        return {
+          innerText: async () => {
+            calls.push('body:innerText');
+            return 'Demo title\nDemo description\nLatest learner message';
+          }
+        };
+      }
+      return {
+        waitFor: async (options) => calls.push(`wait:${selector}:${options.state}`)
+      };
+    }
+  };
+
+  const result = await readSeededRoom(page, {
+    title_template: 'Demo title',
+    description_template: 'Demo description',
+    pre_populated_dialogue: [{ message: 'Latest learner message' }]
+  });
+
+  assert.equal(result.visible, true);
+  assert.deepEqual(calls, [
+    'locator:.room-post',
+    'wait:.room-post:visible',
+    'locator:.comments-list',
+    'wait:.comments-list:visible',
+    'locator:body',
+    'body:innerText'
+  ]);
 });

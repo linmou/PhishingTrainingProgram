@@ -278,11 +278,25 @@ function persistenceMatches(audit, parsed) {
     && audit.tutor_final_response === parsed.response);
 }
 
+async function readSeededRoom(page, seed) {
+  const requiredStrings = [
+    seed.title_template,
+    seed.description_template,
+    ...seed.pre_populated_dialogue.map((message) => message.message)
+  ];
+  await page.locator('.room-post').waitFor({ state: 'visible', timeout: TIMEOUT });
+  await page.locator('.comments-list').waitFor({ state: 'visible', timeout: TIMEOUT });
+  const body = await page.locator('body').innerText();
+  return {
+    body,
+    visible: roomContentVisible(body, requiredStrings)
+  };
+}
+
 async function runCase({ page, seed, caseDefinition, settings, supabase, screenshotDir, secrets }) {
   const { templateId, roomId } = await createRoomFromTemplate(page, seed.template_name);
   const derivedInput = buildEcologicalCaseFromSeed(seed);
-  const body = await page.locator('body').innerText();
-  const roomVisible = roomContentVisible(body, [seed.title_template, seed.description_template, ...seed.pre_populated_dialogue.map((message) => message.message)]);
+  const { visible: roomVisible } = await readSeededRoom(page, seed);
   const roomScreenshot = path.join(screenshotDir, `${caseDefinition.id}-room.png`);
   await page.screenshot({ path: roomScreenshot, fullPage: true });
 
@@ -496,7 +510,8 @@ module.exports = {
   containsEvaluatorLabels,
   persistenceMatches,
   closeBrowserPreservingFatal,
-  captureFailureScreenshot
+  captureFailureScreenshot,
+  readSeededRoom
 };
 
 if (require.main === module) {

@@ -483,7 +483,10 @@ test('browser orchestration preserves production-parser order, cleanup, complete
   assert.match(source, /sequence \+= 1[\s\S]*?sequence,[\s\S]*?try \{[\s\S]*?parseTutorDecision\(rawOutput\)[\s\S]*?parser_status: 'accepted'[\s\S]*?catch[\s\S]*?parser_status: 'rejected'/);
   assert.match(source, /try \{[\s\S]*?generateSuggestion\(page\)[\s\S]*?\} finally \{[\s\S]*?stopCapture\(\)/);
   assert.match(source, /request_equivalent: exactRequestMatches\(attempts, seed, derivedInput\)/);
-  assert.match(source, /roomContentVisible\(body, \[seed\.title_template, seed\.description_template, \.\.\.seed\.pre_populated_dialogue\.map\(\(message\) => message\.message\)\]\)/);
+  assert.match(source, /async function readSeededRoom\(page, seed\)/);
+  assert.match(source, /await page\.locator\('\.room-post'\)\.waitFor\(\{ state: 'visible', timeout: TIMEOUT \}\)/);
+  assert.match(source, /await page\.locator\('\.comments-list'\)\.waitFor\(\{ state: 'visible', timeout: TIMEOUT \}\)/);
+  assert.match(source, /const \{ visible: roomVisible \} = await readSeededRoom\(page, seed\)/);
   assert.match(source, /if \(generationError\) \{\s*const failureScreenshot = await captureFailureScreenshot\(page, screenshotDir, caseDefinition\.id\);[\s\S]*?appendProductFailure\([\s\S]*?generationError,\s*failureScreenshot \? \{ failure: failureScreenshot \} : \{\},\s*secrets\)/);
   assert.match(source, /appendProductFailure\(evaluated,/);
   assert.match(source, /behaviorComplete = records\.every\([^;]+behaviorChecksComplete\(record\.behavior_checks, byId\.get\(ids\[index\]\)\)/);
