@@ -4,7 +4,7 @@ Intent: record the documentation change for the T09 boundary that prevents
 grading an assessment answer before the question is delivered.
 
 Date: 2026-09-11
-Implementation commit ID: pending; changes are currently in the working tree.
+Implementation commit ID: `ff21a7e`
 
 ## Changed documents
 

@@ -3,7 +3,7 @@ Document the current tutor-system architecture and highlight behavior that affec
 
 ## Metadata
 - Updated: 2026-09-11
-- Implementation commit ID: pending; W0 documentation is currently in the working tree
+- Implementation commit ID: `ff21a7e`
 
 # Tutor-System Documentation Hub
 

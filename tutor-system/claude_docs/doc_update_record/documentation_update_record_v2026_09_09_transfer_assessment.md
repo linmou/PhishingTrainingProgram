@@ -3,7 +3,7 @@
 Intent: record the documentation changes that align the tutor behavior, response contract, evaluation readiness, and documentation index with the transfer assessment implementation.
 
 Date: 2026-09-09
-Implementation commit ID: pending; changes are currently in the working tree.
+Implementation commit ID: `ff21a7e`
 
 ## Changed documents
 

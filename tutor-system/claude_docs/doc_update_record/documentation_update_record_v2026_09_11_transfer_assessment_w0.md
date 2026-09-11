@@ -4,7 +4,7 @@ Intent: record the W0 specification, evaluation-preparation, traceability, and
 applicability artifacts without claiming transfer model or release acceptance.
 
 Date: 2026-09-11
-Implementation commit ID: pending; changes are currently in the working tree.
+Implementation commit ID: `ff21a7e`
 
 ## Changed documents and artifacts
 
