@@ -36,7 +36,7 @@ Intent: preserve the chronological decisions, planning results, verification evi
 | `102-transfer-backend` | pending | pending | pending | pending | pending | pending |
 | `103-transfer-room-ui` | pending | pending | pending | pending | pending | pending |
 | `104-transfer-evaluation` | pending | pending | pending | pending | pending | pending |
-| `105-transfer-release` | pending | pending | pending | pending | pending | pending |
+| `105-transfer-release` | complete | no material questions | complete | complete, 33 tasks | pass after two remediations; 0 CRITICAL/HIGH | `d79c35f` |
 
 ## Failures and Corrective Work
 
