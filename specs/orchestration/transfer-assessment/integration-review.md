@@ -25,13 +25,14 @@ Intent: preserve the chronological decisions, planning results, verification evi
   - `102-transfer-backend`: Dirac (`01a09282-77d6-7ba2-9450-e9ce6925b4db`)
   - `103-transfer-room-ui`: Hypatia (`01a09282-7962-7f82-8728-f02998238c8e`)
   - `105-transfer-release`: Aristotle (`01a09282-762c-7193-b898-7aad8ec15483`)
-- `104-transfer-evaluation` remains unassigned until an active planning slot is released. No second owner has entered any worktree.
+- `104-transfer-evaluation`: Franklin (`01a0928f-1970-7533-8ddc-f6f6fd734648`), admitted after the domain planning slot was released.
+- Kant remains the stable `101-transfer-domain` owner and may be resumed for implementation or component-local remediation. No second owner entered that worktree.
 
 ## Planning Status
 
 | Component | Specification | Clarification | Plan | Tasks | Analyze | Planning commit |
 |---|---|---|---|---|---|---|
-| `101-transfer-domain` | pending | pending | pending | pending | pending | pending |
+| `101-transfer-domain` | complete | no material questions | complete | complete, 36 tasks | pass after HIGH remediation; 0 CRITICAL/HIGH | `fff227286601e97ea5b8648892bc92d487627668` |
 | `102-transfer-backend` | pending | pending | pending | pending | pending | pending |
 | `103-transfer-room-ui` | pending | pending | pending | pending | pending | pending |
 | `104-transfer-evaluation` | pending | pending | pending | pending | pending | pending |
