@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/102-transfer-backend/`
 **Prerequisites**: [plan.md](plan.md), [spec.md](spec.md), [research.md](research.md), [data-model.md](data-model.md), [contracts/](contracts/)
 
-**Scope**: W3 storage/RLS/RPCs, W4 trusted authorization, W5 evidence application/lifecycle, and W6 production v3 provider boundary. React room UI, Promptfoo cases/rubrics, and browser release evidence are downstream exclusions.
+**Scope**: W3 storage/RLS/RPCs, W4 trusted authorization, W5 evidence application/lifecycle, and W6 production v3 provider boundary plus the shared versioned context contract in `ecologicalTutorCall.ts`. React room UI, Promptfoo cases/rubrics, and browser release evidence are downstream exclusions; component 104 consumes the shared contract.
 
 **Test rule**: New backend tests begin with a short file-purpose comment and cover negative, race, stale, rollback, privacy, and legacy cases. Hosted database tests are required for database claims; static migration checks and client mocks are diagnostic only.
 
@@ -13,7 +13,7 @@
 
 - [ ] T001 Record the starting commit, clean/dirty status, and preserved source-plan SHA in `specs/102-transfer-backend/quickstart.md` evidence notes.
 - [ ] T002 [P] Reconcile the current migration order, hosted migration status, enum values, function overloads, grants, RLS policies, private schema exposure, and realtime publication using `tutor-system/supabase/migrations/025_transfer_assessment_storage.sql` and `tutor-system/supabase/migrations/026_fix_simplified_auth_compatibility.sql` as authored inputs.
-- [ ] T003 [P] Freeze the operation/envelope/DTO and RPC/provider contracts in `specs/102-transfer-backend/contracts/assessment-api.md`, `specs/102-transfer-backend/contracts/rpc-contract.md`, and `specs/102-transfer-backend/contracts/provider-contract.md` before production code changes.
+- [ ] T003 [P] Freeze the operation/envelope/`TeacherAssessmentDraftDTO`, draft disposition RPC, verifier, and shared v3 context/provider contracts in `specs/102-transfer-backend/contracts/assessment-api.md`, `specs/102-transfer-backend/contracts/rpc-contract.md`, and `specs/102-transfer-backend/contracts/provider-contract.md` before production code changes.
 - [ ] T004 [P] Confirm the existing server-only provider configuration names in `tutor-system/.env.example` and record missing hosted verifier/provider prerequisites without adding secrets or fallback identity behavior.
 
 ## Phase 2: Foundational (Blocking Prerequisites)
@@ -23,9 +23,9 @@
 **Checkpoint**: No story implementation is accepted until the supported hosted schema and generated types are reconciled.
 
 - [ ] T005 [P] Add `tutor-system/src/services/__tests__/transferAssessmentApiContract.test.ts` with a shebang and beginning purpose comment; test the `{ok,data}`/`{ok,error}` envelope, operation allowlist, stable error codes, and public DTO denylist.
-- [ ] T006 [P] Add `tutor-system/supabase/functions/assessment-api/index.test.ts` with a shebang and beginning purpose comment; test operation dispatch, bearer verification, public projection, and safe error responses.
+- [ ] T006 [P] Add `tutor-system/supabase/functions/assessment-api/index.test.ts` with a shebang and beginning purpose comment; test operation dispatch with an injected `AssessmentPrincipalVerifier`, absent-adapter disabled capability/`AUTHORIZATION_NOT_CONFIGURED`, rejected proof, public projection, and safe errors without assuming Supabase Auth, bearer tokens, or `auth.uid()`.
 - [ ] T007 Regenerate `tutor-system/src/types/database.ts` from the supported hosted schema, including all transfer tables, enums, function arguments, and function results; document every generator or deployment difference in `specs/102-transfer-backend/quickstart.md`.
-- [ ] T008 Update the shared TypeScript contract usage in `tutor-system/src/services/transferAssessmentService.ts` to match the regenerated database/API contracts without adding private-row fallback reads.
+- [ ] T008 Update `tutor-system/src/services/ecologicalTutorCall.ts` with `TransferTutorRequestV3`, `TransferTutorRequestContextV3`, and canonical pure builders, then update `tutor-system/src/services/transferAssessmentService.ts` to use the regenerated API contracts and canonical `TeacherAssessmentDraftDTO` without private-row fallback reads.
 - [ ] T009 Add `tutor-system/supabase/tests/transfer_assessment_backend.sql` with a beginning purpose comment for disposable W3/W4/W5 schema and RLS checks.
 
 ## Phase 3: User Story 1 - Deliver A Reviewed Assessment Safely (Priority: P1)
@@ -36,15 +36,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T010 [P] [US1] Add `tutor-system/src/services/__tests__/transferAssessmentPersistence.integration.test.ts` with a shebang and beginning purpose comment; test prepare/review/send success, draft revision conflict, dirty reconfirmation, one-unresolved-question conflict, and atomic delivery rollback.
-- [ ] T011 [P] [US1] Add service cases with a beginning purpose comment for public assessment projection, envelope failures, request IDs, and rejection of private key/transfer-basis fields in `tutor-system/src/services/__tests__/transferAssessmentService.test.ts`.
+- [ ] T010 [P] [US1] Add `tutor-system/src/services/__tests__/transferAssessmentPersistence.integration.test.ts` with a shebang and beginning purpose comment; test prepare/review/reject/regenerate/send success, same-trigger suppression, explicit regeneration bypass, stale source/revision, duplicate/racing disposition requests, dirty reconfirmation, one-unresolved-question conflict, provider-failure source preservation, and atomic rollback.
+- [ ] T011 [P] [US1] Add service cases with a beginning purpose comment for `TeacherAssessmentDraftDTO`, reject/regenerate/public assessment projections, envelope failures, request IDs, and rejection of storage DTO names/private learner fields in `tutor-system/src/services/__tests__/transferAssessmentService.test.ts`.
 
 ### Implementation for User Story 1
 
-- [ ] T012 Update `tutor-system/supabase/migrations/025_transfer_assessment_storage.sql` to make `send_reviewed_tutor_response_v3` validate actor/room/checklist/item scope, expected revision/hash, content confirmation, current snapshot, and the unique unresolved-question constraint in one transaction.
-- [ ] T013 Update `tutor-system/supabase/functions/assessment-api/index.ts` to return an authorized teacher draft result only to the verified reviewer and to route `review_draft`/`send_reviewed` through the versioned RPCs with stable envelope errors.
-- [ ] T014 Update `tutor-system/src/services/transferAssessmentService.ts` to expose typed capabilities, draft, review, send, and public-question results while projecting no `correct_option_ids`, transfer basis, raw model output, or private rationale.
-- [ ] T015 Verify `tutor-system/src/types/database.ts` contains the exact `send_reviewed_tutor_response_v3` inputs/results and the public/private table types used by `tutor-system/src/services/transferAssessmentService.ts`.
+- [ ] T012 Update `tutor-system/supabase/migrations/025_transfer_assessment_storage.sql` with generation-trigger/supersession storage, `reject_assessment_draft_v1`, and `regenerate_assessment_draft_v1`; enforce expected revision/status/snapshot, same-trigger suppression, one replacement per source, service-role grants, request idempotency, and atomic rollback, then make `send_reviewed_tutor_response_v3` validate scope, review/hash/confirmation, snapshot, and one unresolved question atomically.
+- [ ] T013 Update `tutor-system/supabase/functions/assessment-api/index.ts` to return only `TeacherAssessmentDraftDTO` to the verified reviewer; route `review_draft`, `reject_draft`, `regenerate_draft`, and `send_reviewed` through versioned RPCs; keep regeneration provider work outside transactions and preserve source state on provider failure.
+- [ ] T014 Update `tutor-system/src/services/transferAssessmentService.ts` to expose typed capabilities, `TeacherAssessmentDraftDTO`, review/reject/regenerate/send, and public-question results while projecting no storage rows, `correct_option_ids`, transfer basis, raw model output, or private rationale to learners.
+- [ ] T015 Verify `tutor-system/src/types/database.ts` contains exact reject/regenerate/send RPC inputs/results plus public/private table types used by `tutor-system/src/services/transferAssessmentService.ts`.
 
 **Checkpoint**: Delivery is atomic, teacher-reviewed, public-safe, and remains `tutoring` at room participation level.
 
@@ -75,15 +75,15 @@
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Add `tutor-system/src/services/__tests__/assessmentAuthorization.integration.test.ts` with a shebang and beginning purpose comment; test missing/invalid bearer, forged body IDs, cross-room/cross-learner access, learner-versus-teacher operations, private-column reads, and safe error envelopes.
+- [ ] T021 [P] [US3] Add `tutor-system/src/services/__tests__/assessmentAuthorization.integration.test.ts` with a shebang and beginning purpose comment; test absent deployment adapter, injected verifier, invalid trusted proof, forged body IDs, cross-room/cross-learner access, learner-versus-teacher operations, private-column reads, disabled capability, zero mutation, and safe error envelopes.
 - [ ] T022 [P] [US3] Extend `tutor-system/supabase/tests/transfer_assessment_backend.sql` with direct table writes, transfer-policy RLS reads, private schema access, old public `SECURITY DEFINER` RPC bypasses, and legacy-policy compatibility assertions.
 - [ ] T023 [P] [US3] Add a source/privacy scan with a beginning purpose comment for public DTOs, Edge Function responses, browser bundle inputs, logs, exports, and error text in `tutor-system/src/services/__tests__/assessmentAuthorization.integration.test.ts`.
 
 ### Implementation for User Story 3
 
-- [ ] T024 Update `tutor-system/supabase/functions/assessment-api/index.ts` so `verifyAssessmentPrincipal` derives application identity from a trusted bearer verifier, resolves room/session authorization server-side, and returns `AUTHORIZATION_NOT_CONFIGURED` when required verifier configuration is absent.
+- [ ] T024 Refactor `tutor-system/supabase/functions/assessment-api/index.ts` so the handler requires an injected `AssessmentPrincipalVerifier`, deployment wiring supplies a configured trusted-session/capability adapter, tests inject a deterministic verifier, and missing wiring reports disabled capability plus `AUTHORIZATION_NOT_CONFIGURED` before data access or mutation; do not create a Supabase Auth/`auth.uid()` contract or sign-in product.
 - [ ] T025 Update `tutor-system/supabase/migrations/025_transfer_assessment_storage.sql` and `tutor-system/supabase/migrations/026_fix_simplified_auth_compatibility.sql` so legacy compatibility does not grant direct transfer-policy writes, key reads, or transfer RPC execution.
-- [ ] T026 Verify `tutor-system/src/services/transferAssessmentService.ts` and `tutor-system/supabase/functions/assessment-api/index.ts` never accept a caller-supplied principal, role, student ID, room authorization, provider credential, or private DTO as authoritative.
+- [ ] T026 Verify `tutor-system/src/services/transferAssessmentService.ts` and `tutor-system/supabase/functions/assessment-api/index.ts` never accept a caller-supplied principal, role, student ID, room authorization, provider credential, storage draft row, or private DTO as authoritative and expose only `TeacherAssessmentDraftDTO` after teacher authorization.
 
 **Checkpoint**: W4 passes only with a real trusted verifier or an explicit recorded deployment blocker; no new sign-in product is introduced.
 
@@ -96,7 +96,7 @@
 ### Tests for User Story 4
 
 - [ ] T027 [P] [US4] Add hosted integration cases with a beginning purpose comment for all progress-pair/event cells, actual before/after history, source-message scope, missing evidence, invalid transitions, duplicate events, stale snapshots, and rollback in `tutor-system/src/services/__tests__/transferAssessmentPersistence.integration.test.ts`.
-- [ ] T028 [P] [US4] Add hosted concurrency cases with a beginning purpose comment for two teacher sends, two learner answers, request retries, duplicate realtime ingestion, Guard deferral/replay, and first-answer-wins behavior in `tutor-system/src/services/__tests__/transferAssessmentPersistence.integration.test.ts`.
+- [ ] T028 [P] [US4] Add hosted concurrency cases with a beginning purpose comment for two reject/regenerate requests, two teacher sends, two learner answers, request retries, duplicate realtime ingestion, Guard deferral/replay, and first-answer-wins behavior in `tutor-system/src/services/__tests__/transferAssessmentPersistence.integration.test.ts`.
 - [ ] T029 [P] [US4] Add invalidation cases with a beginning purpose comment for immutable-key invalidation, latest-grade compensation, later-independent verification, and no old-model reclassification in `tutor-system/src/services/__tests__/transferAssessmentPersistence.integration.test.ts`.
 
 ### Implementation for User Story 4
@@ -115,15 +115,15 @@
 
 ### Tests for User Story 5
 
-- [ ] T033 [P] [US5] Add provider request tests to `tutor-system/src/services/__tests__/assessmentProviderBoundary.test.ts` with a shebang and beginning purpose comment; assert endpoint/model selection, `max_tokens=1200`, stable evidence IDs, absence of answer labels/keys, JSON mode, and effective settings.
+- [ ] T033 [P] [US5] Add shared-contract and provider request tests to `tutor-system/src/services/__tests__/assessmentProviderBoundary.test.ts` and `tutor-system/src/services/__tests__/ecologicalTutorCall.test.ts` with beginning purpose comments; prove production and a component-104-style Promptfoo consumer serialize the same `TransferTutorRequestV3`/`TransferTutorRequestContextV3`, then assert endpoint/model selection, `max_tokens=1200`, stable evidence IDs, absence of answer labels/keys, JSON mode, and effective settings.
 - [ ] T034 [P] [US5] Add provider failure tests to `tutor-system/src/services/__tests__/assessmentProviderBoundary.test.ts` with a shebang and beginning purpose comment; cover one format-repair retry, second invalid output, truncation, HTTP/network failure, missing configuration, retryability, and zero progress mutation.
 - [ ] T035 [P] [US5] Extend `tutor-system/supabase/functions/assessment-api/index.test.ts` with a beginning purpose comment for `TRANSFER_V3_SYSTEM_PROMPT`, evidence-classifier output restrictions, private attempt storage, and safe error projection.
 
 ### Implementation for User Story 5
 
-- [ ] T036 Update `tutor-system/supabase/functions/assessment-api/index.ts` to keep the production v3 prompt and provider credential access server-side, send the approved v3 budget, inspect finish/truncation metadata, and preserve request/error attempts privately.
+- [ ] T036 Update `tutor-system/src/services/ecologicalTutorCall.ts` with the versioned transfer context/user-message builders and update `tutor-system/supabase/functions/assessment-api/index.ts` to consume them while keeping the production v3 prompt, provider credential access, and provider call server-only; send the approved budget, inspect finish/truncation metadata, and preserve attempts privately.
 - [ ] T037 Update `tutor-system/supabase/functions/assessment-api/index.ts` to implement at most one format-only repair retry and to distinguish provider/network errors from invalid output without auto-pass, auto-fail, dummy questions, or progress writes.
-- [ ] T038 Update `tutor-system/src/services/transferAssessmentService.ts` and `tutor-system/src/types/database.ts` to expose only provider-safe retry/error envelopes and no credential/private generation fields.
+- [ ] T038 Update `tutor-system/src/services/transferAssessmentService.ts` and `tutor-system/src/types/database.ts` to expose only provider-safe retry/error envelopes and no credential/private generation fields; verify the shared context module exports no production prompt or provider credential/call.
 - [ ] T039 Review `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md` and `tutor-system/claude_docs/ai-behaviors/tutor-behavior-specification.md` against the frozen provider/API contracts; update only if the shared public contract has drifted, with a dated documentation record.
 
 **Checkpoint**: W6 is evidenced by captured requests/responses and secret scans, not by reading the prompt source.
@@ -163,7 +163,7 @@
 
 - T002-T004 can run in parallel because they inspect independent inputs.
 - T005-T006 and T009 can run in parallel before story implementation.
-- US1 contract/static tests (T010-T011), US3 authorization test design (T021-T023), and US5 provider request test design (T033-T035) can proceed in parallel after the shared contracts are frozen.
+- US1 draft lifecycle tests (T010-T011), US3 verifier test design (T021-T023), and US5 shared-context/provider test design (T033-T035) can proceed in parallel after the contracts are frozen.
 - US4 race/invalidation test design (T027-T029) can proceed in parallel with US1/US3 implementation, but hosted execution waits for the RPC surfaces.
 
 ## Implementation Strategy
