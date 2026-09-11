@@ -16,7 +16,7 @@ Complete the deterministic transfer domain boundary already partially present in
 **Target Platform**: Existing `tutor-system` web application service/type modules  
 **Project Type**: React + TypeScript application with pure service modules  
 **Performance Goals**: Deterministic helper execution should remain local and synchronous; no provider or database latency is in scope  
-**Constraints**: Four fixed options; exact-set grading; two stem sentences; 80 word-like segments; no key/basis/rationale in public projection; no new progress field; no provider/database/UI dependencies in pure logic  
+**Constraints**: Four fixed options; exact-set grading; two stem sentences; 80 word-like segments; tutoring uses one real teaching instruction; Guard uses `guard` or one real teaching instruction; tutoring/Guard require null target/assessment; no key/basis/rationale/API fields in 101 public output contracts; no edits to the 102-owned service facade/projection; no new progress field; no provider/database/UI dependencies in pure logic  
 **Scale/Scope**: One assessment per focused learner/context; one first-valid resolution per question; 28 reducer matrix cells plus the named fixture sequences  
 
 ## Constitution Check
@@ -26,9 +26,9 @@ Complete the deterministic transfer domain boundary already partially present in
 | Principle | Status | Evidence |
 |---|---|---|
 | Preserve requirements and evidence | PASS | The spec maps T09/D01-D15 behavior to explicit FR/SC items; source SHA and initiative package are retained in `research.md`. |
-| Keep authority server-side | PASS | W2 only defines pure validation/projection/sequencing contracts; persistence, authorization, keys, and idempotency remain downstream. |
+| Keep authority server-side | PASS | W2 only defines pure types, validation, and sequencing contracts; API projection, persistence, authorization, keys, and idempotency remain downstream. |
 | Test first and verify the real boundary | PASS WITH IMPLEMENTATION CONDITION | Tasks put fixture/test work before production edits; implementation must use the repository-required `fast-multi-agent-tdd` workflow. W2 evidence is labeled deterministic and cannot substitute for hosted gates. |
-| Use stable, explicit contracts | PASS | `TutorDecisionV3`, `TransferTurnContext`, public projection, stable parser outcomes, reducer pairs, and fixture IDs are explicit in `contracts/`. |
+| Use stable, explicit contracts | PASS | `TutorDecisionV3`, `TransferTurnContext`, pure public outputs, stable parser outcomes, reducer pairs, and fixture IDs are explicit in `contracts/`; component 102 owns transport projection. |
 | Prefer the smallest coherent design | PASS | Existing modules and service tests are extended; no new package, mastery field, or compatibility layer is proposed. |
 | Feature remains disabled until release gates | PASS | W2 does not enable `TRANSFER_ASSESSMENT_ENABLED`; downstream release gates remain required. |
 | Root/integration ownership | PASS WITH DEFERRED ACTION | The normal agent-context update is deferred; this component will not modify root `AGENTS.md` or run `update-agent-context.sh`. |
@@ -37,7 +37,7 @@ No constitutional violation requires a complexity justification.
 
 ## Repository Evidence and Design
 
-The current worktree already contains the narrowed assessment/progress types, parser, grader, renderer, validator, reducer, v3 parser, transfer facade, and initial focused tests. The current answer resolver only covers the undelivered branch, and the existing focused tests do not yet provide the complete 28-cell matrix, exhaustive subset coverage including empty/full cases, full sequence coverage, or a complete fixture manifest. W2 closes those evidence gaps without asserting that downstream persistence or authorization is complete.
+The current worktree already contains the narrowed assessment/progress types, parser, grader, renderer, validator, reducer, v3 parser, and initial focused tests. The 102-owned transfer facade was inspected only to identify the integration boundary and is not modified by this component. A standalone pure orchestrator and its complete lifecycle tests are not yet present, and the existing focused tests do not yet provide the complete 28-cell matrix, exhaustive subset coverage including empty/full cases, full sequence coverage, or a complete fixture manifest. W2 closes those pure-domain evidence gaps without asserting that downstream projection, persistence, or authorization is complete.
 
 Ownership remains:
 
@@ -48,8 +48,8 @@ Ownership remains:
 - `assessmentRendering.ts`: canonical learner rendering and limits.
 - `learningProgressTransitions.ts`: the only pure progress transition authority.
 - `transferAssessmentOrchestrator.ts`: pure delivery/answer/feedback/no-chain sequencing; no storage writes.
-- `transferAssessmentService.ts`: transport facade that injects the API boundary and delegates deterministic lifecycle decisions to the orchestrator.
 - Golden fixtures/tests: executable evidence for all above boundaries and named sequences.
+- Component 102: owns `transferAssessmentService.ts`, its tests, API operations, transport adaptation, and private-to-public projection; it consumes 101's pure contracts/orchestrator outputs.
 
 ## Implementation Phases
 
@@ -57,12 +57,12 @@ Ownership remains:
 
 1. Read the component spec, data model, contracts, existing source, and normative T09 sections.
 2. Define fixture record types and stable suite/scenario identifiers.
-3. Add failing tests for public/private projection and v3 mode compatibility before changing implementation.
+3. Add failing tests for the pure public/private output contract and the complete v3 mode compatibility matrix, including Guard with `guard` and Guard with each real teaching instruction, before changing implementation.
 4. Preserve unknown downstream results as pending; do not fabricate database, provider, or browser evidence.
 
 ### Phase 1: Deterministic domain behavior
 
-1. Complete the v3 and turn-context type/validation boundary, including public projection privacy.
+1. Complete the v3 and turn-context type/validation boundary, including pure public output privacy and the canonical tutoring/Guard/assessment instruction combinations for component 102 to consume.
 2. Extend parser coverage for explicit labels, exact option text, Unicode/format boundaries, ambiguity, content questions, and malformed selections.
 3. Extend exact-set grading to exhaustive subsets, duplicate/order normalization, single/multiple cardinality, and empty selection.
 4. Extend rendering/validation for option order, instruction text, sentence and segment boundaries, and exact option count.
@@ -93,7 +93,6 @@ Ownership remains:
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/assessmentValidation.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/learningProgressTransitions.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/tutorDecisionContract.ts`
-- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/transferAssessmentService.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/transferAssessmentOrchestrator.ts` (new pure module)
 
 ### Test and fixture files to add or extend during implementation
@@ -104,7 +103,7 @@ Ownership remains:
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/__tests__/assessmentRendering.test.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/__tests__/learningProgressTransitions.test.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/__tests__/tutorDecisionContract.transfer.test.ts`
-- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/__tests__/transferAssessmentService.test.ts`
+- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`
 
 ### Documentation review during implementation
@@ -117,8 +116,8 @@ Ownership remains:
 - The reducer/parser/grader/renderer/validator tests can be developed in parallel after the fixture shape is frozen because they have separate ownership boundaries.
 - `transferAssessmentOrchestrator.ts` implementation depends on stable parser, grader, reducer, contract, and fixture outputs.
 - W2 does not depend on a database or provider, but downstream 102 depends on these exact public/progression contracts.
-- The service facade may call an injected API double in tests; no mock result may be described as proof of SQL/RLS or authorization.
-- The `TransferAssessmentService.toPublicAssessment` projection is a privacy boundary and must be tested even if its transport is not.
+- Component 101 must not edit `tutor-system/src/services/transferAssessmentService.ts` or `tutor-system/src/services/__tests__/transferAssessmentService.test.ts`; component 102 integrates and tests the pure orchestrator and public output contracts at the API/projection boundary.
+- No pure fixture or mock result may be described as proof of transport projection, SQL/RLS, or authorization.
 
 ## Post-Design Constitution Re-check
 

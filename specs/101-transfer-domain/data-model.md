@@ -11,10 +11,12 @@
 |---|---|---|
 | `reason` | non-empty string | Serialized first; supervisor-facing and grounded in observable evidence. |
 | `decision.mode` | `tutoring` / `guard` / `assessment` | Assessment is a turn mode, not a room participation mode. |
-| `decision.instruction` | tutoring instruction, `guard`, or `transfer_assess` | `assessment` requires `transfer_assess`; Guard uses `guard`; tutoring cannot carry assessment. |
+| `decision.instruction` | real teaching instruction, `guard`, or `transfer_assess` | Tutoring requires one real teaching instruction; Guard permits `guard` or one real teaching instruction; assessment requires `transfer_assess`. |
 | `decision.target_item_id` | known item ID or null | Required for assessment; null for tutoring and Guard. |
 | `response` | non-empty string | Assessment stem source; bounded by rendering rules. |
 | `assessment` | private assessment or null | Required only for assessment; never exposed in full to the learner. |
+
+Real teaching instructions are `protective_instruction`, `correction`, `scaffolding`, `explanation`, and `consolidation`. Tutoring and Guard both require a null target and null assessment. Guard does not make `guard` mandatory when the first substantive move is one of these teaching instructions.
 
 ### `TransferTurnContext`
 
@@ -32,7 +34,7 @@ The context must not contain a learner-visible answer key or private transfer ba
 ### Assessment records
 
 - `PrivateAssessment`: exactly four unique options in A-D order, selection type, stem, rendered text, one key for `single` or two/three keys for `multiple`, and a non-empty transfer basis with known source evidence IDs. Its changed context tests the same concept in a relevant new situation, not a cosmetic brand/name substitution or an unstated prerequisite.
-- `PublicAssessment`: assessment ID plus stem, rendered text, selection type, and options. The public projection excludes `correct_option_ids`, transfer basis, rationale, and raw model output.
+- `PublicAssessment`: the component 101 public contract consumed by component 102, containing assessment ID, stem, rendered text, selection type, and options. It excludes `correct_option_ids`, transfer basis, rationale, raw model output, API operations, and transport fields. Component 102 owns projection into its service/API DTO.
 - `ParsedSelection`: `{ kind: 'selection', option_ids }`, `{ kind: 'clarification_required', code }`, or `{ kind: 'not_selection' }`.
 
 ## Progress State Model

@@ -47,19 +47,20 @@ A trusted tutor decision produces one reviewable transfer assessment with a know
 
 **Why this priority**: Stable versioned contracts and bounded rendering let downstream backend, UI, and evaluation components consume the same behavior without relying on copied text or hidden assumptions.
 
-**Independent Test**: Validate golden valid/invalid `TutorDecisionV3` and `TransferTurnContext` payloads, inspect public projection output, and exercise rendering at every stated boundary.
+**Independent Test**: Validate golden valid/invalid `TutorDecisionV3` and `TransferTurnContext` payloads, verify the pure public output contract excludes private fields, and exercise rendering at every stated boundary. Component 102 separately verifies API projection and transport.
 
 **Acceptance Scenarios**:
 
 1. **Given** an assessment decision, **When** it contains `assessment` mode, `transfer_assess`, one known target, and a valid item, **Then** the v3 contract accepts it and preserves reason-first serialization.
 2. **Given** an item, **When** it is rendered, **Then** it has exactly A-D options, the correct single/multiple instruction, at most two stem sentences, and at most 80 learner-visible word-like segments.
 3. **Given** an item with 81 word-like segments, three stem sentences, duplicate option text, an invalid key cardinality, or an unknown evidence ID, **When** it is validated, **Then** validation rejects it with a stable error category.
-4. **Given** a valid private decision, **When** it is projected for the learner, **Then** only the assessment ID, stem, selection instruction, rendered text, and options are exposed; answer keys, transfer basis, and tutor rationale are absent.
-5. **Given** tutoring or Guard mode, **When** the decision is validated, **Then** it cannot carry a transfer assessment payload or create a room-level assessment mode.
+4. **Given** a valid private decision, **When** component 101 exposes the public assessment/output contract for component 102, **Then** that contract contains only the assessment ID, stem, selection instruction, rendered text, options, and pure lifecycle result; answer keys, transfer basis, tutor rationale, raw model output, API operations, and transport fields are absent.
+5. **Given** tutoring mode, **When** the decision is validated, **Then** it requires one real teaching instruction with a null target and null assessment.
+6. **Given** Guard mode, **When** the decision is validated, **Then** it accepts `guard` or one real teaching instruction with a null target and null assessment, and it cannot create a room-level assessment mode.
 
 ### User Story 4 - Sequence feedback and later transfer without chains (Priority: P2)
 
-The transfer assessment service/orchestrator coordinates draft delivery, learner answer handling, feedback-first follow-up, repair, contradiction, spontaneous transfer, duplicate/stale messages, and no-chain behavior while leaving teacher review and persistence boundaries explicit for downstream components.
+The pure transfer assessment orchestrator coordinates delivery state, learner answer handling, feedback-first follow-up, repair, contradiction, spontaneous transfer, duplicate/stale messages, and no-chain behavior while leaving API transport, public projection, teacher review, and persistence boundaries explicit for downstream components.
 
 **Why this priority**: Correct individual functions are insufficient if the lifecycle schedules an assessment at the wrong time or treats an unsent, stale, or already-resolved event as current.
 
@@ -90,10 +91,10 @@ The transfer assessment service/orchestrator coordinates draft delivery, learner
 
 ### Functional Requirements
 
-- **FR-001**: The component MUST expose a versioned `TutorDecisionV3` contract with explicit `tutoring`, `guard`, and `assessment` mode compatibility, reason-first serialization, known target validation, and a single `transfer_assess` instruction for assessment turns.
+- **FR-001**: The component MUST expose a versioned `TutorDecisionV3` contract with reason-first serialization and explicit mode compatibility: tutoring requires one real teaching instruction with null target/assessment; Guard accepts `guard` or one real teaching instruction with null target/assessment; assessment requires `transfer_assess`, one known target, and one valid assessment payload.
 - **FR-002**: The component MUST expose a `TransferTurnContext` that carries the selected learner/message/checklist context, progress-policy version, checklist item snapshots, unresolved public assessment, eligible item IDs, feedback boundary, and progress snapshot hash without becoming a second progression authority.
 - **FR-003**: A valid transfer item MUST use exactly four canonical A-D options, a `single` key of one option or a `multiple` key of two or three options, and a changed context that tests the same concept through a relevant new situation rather than a cosmetic brand/name substitution or an unstated prerequisite; source evidence IDs MUST be known to the current context.
-- **FR-004**: Learner-visible assessment projection MUST omit answer keys, transfer basis, tutor rationale, and raw model output while retaining only the public assessment content required to answer.
+- **FR-004**: The component MUST define pure public assessment and lifecycle-result contracts for component 102 that omit answer keys, transfer basis, tutor rationale, raw model output, API operations, and transport fields. Component 102 owns implementation and verification of the API/public projection boundary.
 - **FR-005**: The answer parser MUST recognize only explicit labels or exact option text, normalize case/Unicode/punctuation/order/deduplication as specified, and classify ambiguous alternatives, content questions, and unrecognized prose without guessing.
 - **FR-006**: The grader MUST return pass only for exact set equality after deduplication and order normalization; it MUST return fail for every other selection and MUST require no explanation or confidence value.
 - **FR-007**: Rendering and validation MUST enforce exactly four options, the correct selection instruction, a maximum of two stem sentences, and a maximum of 80 word-like segments, with deterministic boundary errors.
@@ -105,7 +106,7 @@ The transfer assessment service/orchestrator coordinates draft delivery, learner
 
 ### Key Entities
 
-- **TutorDecisionV3**: A reason-first structured tutor decision whose assessment mode carries one private transfer item and whose tutoring/Guard modes cannot carry an assessment payload.
+- **TutorDecisionV3**: A reason-first structured tutor decision whose assessment mode carries one private transfer item; tutoring requires a real teaching instruction, while Guard accepts `guard` or a real teaching instruction, and both non-assessment modes require null target/assessment.
 - **TransferTurnContext**: The turn-scoped input snapshot used to validate target, evidence, current progress, unresolved question, feedback boundary, and stale-state identity.
 - **PublicAssessment**: Learner-visible assessment identity/content with no answer key, transfer basis, rationale, or raw model output.
 - **PrivateAssessment**: Review/server-side assessment content plus exact correct option IDs and transfer basis.
@@ -121,7 +122,7 @@ The transfer assessment service/orchestrator coordinates draft delivery, learner
 - **SC-001**: The reducer test suite exercises all 28 cells in the 4-state by 7-event matrix, with no undocumented transition result.
 - **SC-002**: The grader fixture suite evaluates every subset of A-D, including empty and full sets, against representative single and multiple keys and proves that only exact sets pass.
 - **SC-003**: Parser and rendering suites pass all documented boundaries, including Unicode/format normalization, ambiguity handling, exact option text, 80 versus 81 word-like segments, and two versus three stem sentences.
-- **SC-004**: Contract and public-projection fixtures prove every accepted v3 decision has a valid mode/instruction/payload combination and that no learner-visible payload contains a key, transfer basis, rationale, or raw model output.
+- **SC-004**: Contract fixtures prove every accepted v3 decision has a valid mode/instruction/payload combination and that component 101's pure public output types/results contain no key, transfer basis, rationale, raw model output, API operation, or transport field; API projection remains a component 102 integration check.
 - **SC-005**: Orchestrator fixtures cover undelivered, first-valid answer, clarification, assistance, repair, contradiction, spontaneous transfer, duplicate, stale, and no-chain sequences with one stable outcome per question.
 - **SC-006**: The complete deterministic W2 command set passes without provider credentials, database access, browser automation, or feature activation, and reports any deferred downstream verification separately.
 
@@ -129,14 +130,14 @@ The transfer assessment service/orchestrator coordinates draft delivery, learner
 
 - The normative transfer-assessment package and the existing tutor behavior/response-contract documents define product behavior; no new product decision is introduced by this component.
 - Existing TypeScript, Jest, and CRA test conventions remain the execution environment for deterministic tests.
-- W2 consumes selected targets and evidence classifications from upstream behavior but does not implement evidence detection, persistence transactions, authorization, provider calls, UI, or release activation.
+- W2 consumes selected targets and evidence classifications from upstream behavior but does not implement evidence detection, persistence transactions, authorization, provider calls, API transport/public projection, UI, or release activation.
 - `transfer_v1` is the only new-policy interpretation for this component; legacy checklist records retain their existing meaning.
 - The feature flag remains disabled until downstream database, authorization, provider, evaluation, and browser gates pass.
 - Tests may use explicit fixture IDs and local values, but they must not imply that mock-only tests prove hosted SQL/RLS or provider behavior.
 
 ## Out of Scope
 
-- Supabase migrations, database transactions, RLS, authorization, private key storage, and Edge Function implementation.
+- Supabase migrations, database transactions, RLS, authorization, private key storage, Edge Function implementation, `transferAssessmentService.ts`, and its API/public projection tests.
 - React room integration, teacher editor UI, browser acceptance, Promptfoo evaluation, provider prompts/calls, and feature activation.
 - New authentication or sign-in behavior.
 - Reinterpreting legacy checklist progress or adding a parallel mastery field.

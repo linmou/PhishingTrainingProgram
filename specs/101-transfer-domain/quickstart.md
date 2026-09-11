@@ -14,7 +14,7 @@ CI=true npm test -- --watchAll=false --runInBand --runTestsByPath \
   src/services/__tests__/assessmentGrading.test.ts \
   src/services/__tests__/assessmentRendering.test.ts \
   src/services/__tests__/tutorDecisionContract.transfer.test.ts \
-  src/services/__tests__/transferAssessmentService.test.ts \
+  src/services/__tests__/transferAssessmentOrchestrator.test.ts \
   src/services/__tests__/transferAssessmentGoldenFixtures.test.ts
 ```
 
