@@ -1,6 +1,6 @@
 # Transfer Rubric Registry Contract
 
-**Intent**: pin the five public T09 semantic rubric IDs and the deterministic supporting check without merging independent evidence.
+**Intent**: pin the five public T09 rubric IDs and the deterministic supporting check without merging independent evidence.
 
 ## Public metric registry
 
@@ -12,7 +12,7 @@
 | `assessment_followup` | `deterministic` | delivered-question lifecycle and ordered tutor turns | Delivery precedes grading; first valid answer resolves once; clarification remains open; assistance cancels without failure; feedback precedes another assessment; wrong answer alone does not trigger Guard. | 100%. |
 | `verification_evidence` | `llm_rubric` | reason, transfer basis, source evidence references, original/changed contexts | The decision basis cites observable learner evidence and distinguishes original and changed contexts without invented facts. | 80%; H1/H4 violations are 100% hard failures. |
 
-These five IDs are the only public T09 semantic rubric IDs in this component. Supporting contract validity, response length, exact grading, state-pair, ID, rendering, and privacy checks remain typed supporting evidence and must not be averaged into semantic scores.
+These five IDs are the only public T09 rubric IDs in this component. Four are semantic and `assessment_followup` is deterministic. Supporting contract validity, response length, exact grading, state-pair, ID, rendering, and privacy checks remain typed supporting evidence and must not be averaged into semantic scores.
 
 ## Deterministic supporting check
 
@@ -32,11 +32,11 @@ It returns typed per-case results with `pass`, `fail`, `missing`, or `error`. It
 
 Each rubric declaration includes `metric_id`, version, requirement mappings, allowed input fields, prohibited fields, applicability, pass/fail examples, judge settings/version, and error/missing handling. The judge receives the same preserved generation used by deterministic checks. It must return machine-readable `pass`, `score`, and concise observable `reason`; raw and parsed judge outputs are retained.
 
-The target never receives expected labels, pair/holdout status, rubric instructions, or evaluator annotations. A missing semantic judge leaves that check `missing` or `error` and blocks full acceptance; deterministic checks may still run for diagnosis.
+Every check scores the same preserved generation built through the pinned component-102-owned v3 request/context contract in `ecologicalTutorCall.ts`, with the backend production prompt reference/hash and effective 1,200-token budget recorded in the run manifest. The evaluation layer does not rebuild that request or prompt. The target never receives expected labels, pair/holdout status, rubric instructions, or evaluator annotations. A missing semantic judge leaves that check `missing` or `error` and blocks full acceptance; deterministic checks may still run for diagnosis.
 
 ## Calibration contract
 
-Before baseline acceptance, each semantic rubric is calibrated with annotated positive, negative, boundary, and contradictory outputs. Calibration records judge model/settings, rubric version, examples, human labels, judge labels, disagreements, adjudication, and unresolved errors. Calibration examples are not eligible holdouts.
+Before baseline acceptance, each of the four semantic rubrics is calibrated with annotated positive, negative, boundary, and contradictory outputs. Calibration records judge model/settings, rubric version, examples, human labels, judge labels, disagreements, adjudication, and unresolved errors. `assessment_followup` is covered by deterministic lifecycle fixtures rather than judge calibration. Calibration examples are not eligible holdouts.
 
 ## Joint and pair rules
 

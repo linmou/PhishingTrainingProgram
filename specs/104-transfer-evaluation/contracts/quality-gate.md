@@ -18,6 +18,8 @@ Return `accepted` only when all of the following hold:
 6. Candidate does not decline against the unchanged comparable baseline on the same case/version, metric version, partition, target generation, settings, and repetition policy. A 95% to 81% decline fails non-regression even though 81% exceeds 80%.
 7. Every pair member passes its applicable required checks in every repetition.
 8. Calibration and grounding prerequisites are recorded as complete for the relevant run; calibration is not silently replaced by an uncalibrated judge.
+9. The manifest pins the component-102-owned shared v3 builder version/hash and backend production prompt reference/hash, both target adapters report an effective 1,200 completion-token budget, and normalized product/evaluation requests match for every parity fixture.
+10. Target requests/evidence contain no evaluator-only metadata, copied production prompt artifact, provider credential, or secret value.
 
 Return `failed` for an observed behavior/threshold/pair/regression failure with complete evidence. Return `incomplete` for missing or errored execution/judge/manifest evidence. Both outcomes block acceptance.
 
@@ -51,6 +53,10 @@ The later implementation must include explicit tests for at least:
 | One semantic-pair member fails | failed | pair gate blocks despite aggregate pass |
 | Incomparable baseline/changed case version | incomplete | comparison is rejected before acceptance |
 | Conditional `not_applicable` with valid rule | evaluated | null pass/score and evidence reason only |
+| Missing shared builder or production prompt hash | incomplete | contract identity is required before scoring |
+| Product/evaluation normalized request mismatch | incomplete | parity failure blocks before semantic scoring |
+| Either v3 adapter budget differs from 1,200 | incomplete | effective-budget mismatch is identified |
+| Evaluator metadata or provider secret leaks into target evidence | incomplete | offending field/path is identified and acceptance blocks |
 
 ## Non-substitution boundary
 
