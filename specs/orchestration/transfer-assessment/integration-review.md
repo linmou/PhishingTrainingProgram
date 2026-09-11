@@ -84,3 +84,12 @@ Planning, reconciliation, authoritative DAG, and integration-design gates have p
 - Preconditions: no incoming DAG edges; 36 tasks, 16/16 checklist, zero CRITICAL/HIGH findings.
 - Required workflow: local `speckit-implement` plus repository-mandated `$fast-multi-agent-tdd`; preserve Red/Green/refactor evidence and mark completed tasks incrementally.
 - Downstream components `102`-`105` remain closed. A local W2 pass is not promotion; integration must merge 101 serially and pass E01/E02 handoffs, affected regression, build, and smoke gates first.
+
+## 2026-09-11: Component 101 Pre-Red Gate Publication
+
+- Status: passed and closed. The earlier "no pre-Red snapshot" note from the origin session was a verification artefact of `git show-ref 'refs/tdd/*'`, whose quoted glob exits 1 even when the ref exists; the snapshot had already been published.
+- Snapshot ref: `refs/tdd/transfer_domain/pre_red` = `3da5a68ed8144e845e29a216a492bb85664c978a`, authored 2026-09-11 19:30:44 -0400, message `TDD snapshot transfer_domain/pre_red`.
+- Baseline over: `d64b4bed13f57c3fb03442b9d6c757f868d17129` (component 101 planning commit).
+- Machine verification: `git show-ref refs/tdd/transfer_domain/pre_red` resolved to the SHA above; `git diff --name-status d64b4be refs/tdd/transfer_domain/pre_red` returned exactly `A audits/transfer_domain_red_scope.json`, `A audits/transfer_domain_request_map.md`, `A audits/transfer_domain_role_receipt.json`, `M specs/101-transfer-domain/tasks.md`; the transfer-domain worktree matched that state with no test or production file touched. No snapshot was re-created.
+- Monitor provenance: the pre-Red gate pass was authored by the clean retry monitor Cicero (`01a092cb-ce06-73e1-88aa-6741129bd59d`), an exact identity match with `audits/transfer_domain_role_receipt.json` (`monitor_source: codex-native-spawn-agent`). The earlier Dalton (`01a092c5`) `PRE_RED_GATE_FAIL` on monitor provenance is superseded by that identity-matching pass.
+- Consequence: Red is unlocked for the stable `101-transfer-domain` owner. No integration gate or downstream promotion is implied by this record.
