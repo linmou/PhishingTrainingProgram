@@ -32,27 +32,46 @@ Intent: preserve the chronological decisions, planning results, verification evi
 
 | Component | Specification | Clarification | Plan | Tasks | Analyze | Planning commit |
 |---|---|---|---|---|---|---|
-| `101-transfer-domain` | complete | no material questions | complete | complete, 36 tasks | pass after HIGH remediation; 0 CRITICAL/HIGH | `fff227286601e97ea5b8648892bc92d487627668` |
-| `102-transfer-backend` | complete | no material questions | complete | complete, 44 tasks | pass after LOW cleanup; 0 CRITICAL/HIGH | `c30c67ee7248294e875bc7eb2416916158b7b8d1` |
-| `103-transfer-room-ui` | complete | no material questions | complete | complete, 44 tasks | pass after contract remediations; 0 CRITICAL/HIGH | `485d142b07689f076694590e1fa2c14034e8744b` |
-| `104-transfer-evaluation` | complete | no material questions | complete | complete, 44 tasks | pass after source-type and task-hygiene remediation; 0 CRITICAL/HIGH | `4d0d7cca6532cd85412c686626df6b1ed0def3bc` |
-| `105-transfer-release` | complete | no material questions | complete | complete, 33 tasks | pass after two remediations; 0 CRITICAL/HIGH | `d79c35f` |
+| `101-transfer-domain` | complete | no material questions | complete | complete, 36 tasks | pass after reconciliation remediation; 0 CRITICAL/HIGH | `d64b4bed13f57c3fb03442b9d6c757f868d17129` |
+| `102-transfer-backend` | complete | no material questions | complete | complete, 44 tasks | pass after reconciliation remediation; no findings | `40f10775b9d6e1d1454b7c703ce5b1613cb7e13a` |
+| `103-transfer-room-ui` | complete | no material questions | complete | complete, 44 tasks | pass after reconciliation remediation; 0 CRITICAL/HIGH | `d8628cc30fd8005c00cfde2caec986155aa5bc55` |
+| `104-transfer-evaluation` | complete | no material questions | complete | complete, 44 tasks | pass after reconciliation remediation; 0 CRITICAL/HIGH | `faf46fe4f4fa69210d62db3f0a48a0fe3f64b09a` |
+| `105-transfer-release` | complete | no material questions | complete | complete, 33 tasks | pass after reconciliation remediation; 0 CRITICAL/HIGH | `04ccdad` |
 
 ## Global Planning Artifact Gate
 
 - Result: passed on 2026-09-11; implementation remains closed pending reconciliation, authoritative DAG, and integration design.
 - All five component worktrees were clean at their reported planning commits.
-- Requirement checklists: `101` 16/16, `102` 15/15, `103` 16/16, `104` 16/16, `105` 16/16.
+- Requirement checklists after reconciliation: `101` 16/16, `102` 19/19, `103` 16/16, `104` 18/18, `105` 16/16.
 - Task counts: `101` 36, `102` 44, `103` 44, `104` 44, `105` 33.
 - Every component reported zero final CRITICAL/HIGH analysis findings and no unresolved material decisions.
 - Integration verification: `rtk git diff --check` exited 0; the checklist scan found no unchecked requirement items; the unresolved-marker scan found only checklist assertions and the intentional `ANSWER_FORMAT_UNRESOLVED` API outcome.
 - Original-plan verification: `rtk sha256sum plan/transfer_assessment_implementation_plan.md` returned `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2`.
 - Planning merge commits, in serial order: domain `57a84cd`, backend `4d98948`, room/UI `3b2353f`, release `3af3749`, evaluation `3d68f03`.
 
+## 2026-09-11: Cross-Component Reconciliation
+
+- Initial result: failed; implementation remained closed and component-local defects returned to their stable owners.
+- Canonical evidence used: original plan SHA `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2`, `tutor-behavior-specification.md`, `tutor-response-contract.md`, and all five merged Spec Kit packages.
+- `101` correction `d64b4bed13f57c3fb03442b9d6c757f868d17129`: fixed Guard compatibility and removed backend-facade ownership; initial reopened analysis found 2 CRITICAL/3 HIGH, final found zero CRITICAL/HIGH.
+- `102` correction `40f10775b9d6e1d1454b7c703ce5b1613cb7e13a`: replaced the Supabase Auth assumption with an injected trusted-verifier contract, restored the shared ecological v3 request boundary, added reject/regenerate contracts, and canonicalized `TeacherAssessmentDraftDTO`; four HIGH findings remediated, final analysis had no findings.
+- `103` corrections `4003510ef446d2fc3cd0eacdb87246126087743e` and `d8628cc30fd8005c00cfde2caec986155aa5bc55`: removed service-facade and shared-type ownership, aligned UI tests/quickstart, and kept React state local; final analysis found zero CRITICAL/HIGH.
+- `104` correction `faf46fe4f4fa69210d62db3f0a48a0fe3f64b09a`: made evaluation consume the 102-owned ecological v3 builders, prompt identity/hash, and 1,200-token setting without copying production prompt/provider logic; final analysis found zero CRITICAL/HIGH.
+- `105` correction `04ccdad`: normalized upstream pending/partial states into the closed release vocabulary while preserving source metadata; initial analysis found one HIGH and one MEDIUM, final found zero CRITICAL/HIGH.
+- Final result: passed. No unresolved product, scientific, security, scope, architecture, or ownership question remains. The deployment-specific trusted verifier adapter and live provider credentials remain execution prerequisites, not silently selected product designs.
+
+## 2026-09-11: Authoritative DAG and Integration Design
+
+- The completed plans confirm the seven approved dependency edges and four implementation waves without additions, removals, cycles, or boundary changes.
+- Shared-file ownership is disjoint after remediation; dependencies flow only from recorded integration promotion SHAs.
+- `dependency-graph.md` contains one integration-owned packet for every edge, including producer output, consumer input, invariants, glue, a same-run real-artifact handoff test, E2E/smoke coverage, and promotion condition.
+- Integration test paths are reserved under `tests/integration/`; the dedicated aggregate path is `tests/e2e/transfer-assessment.test.js`.
+- Transition validation: `cross_component_review_passed`, `dag_passed`, and `integration_design_passed` were each accepted by the orchestration state validator; implementation becomes ready when this audit update is committed.
+
 ## Failures and Corrective Work
 
-None recorded.
+- Planning reconciliation failure: the eight conflicts above were routed to original owners and corrected at the listed commits. No behavior was silently weakened.
 
 ## Integration and Promotion
 
-Implementation is closed until the global planning artifact gate, cross-component reconciliation, authoritative DAG, and integration design gates pass.
+Planning, reconciliation, authoritative DAG, and integration-design gates have passed. Only dependency-ready wave 1 (`101-transfer-domain`) may start; all downstream components remain closed until recorded green promotion SHAs satisfy their incoming edges.
