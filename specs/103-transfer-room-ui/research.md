@@ -12,11 +12,11 @@ Record the repository and normative-plan evidence used to choose the smallest W7
 - **Rationale**: `tutor-system/src/contexts/RoomContext.tsx` already owns join, message state, realtime subscription, polling, send, AI suggestion, and export flows. `RoomPagePost.tsx` already mounts `AssessmentDraftEditor` for a partial transfer path.
 - **Alternatives considered**: A separate assessment application or a second room state provider. Both would duplicate message identity and mode state, conflicting with the original plan's single-authority rule.
 
-### Decision: Use typed allowlisted adapters at the browser boundary
+### Decision: Consume component 102's typed service contract through a React adapter
 
-- **Decision**: Replace untyped `Record<string, unknown>` consumption at the UI boundary with named DTO projections. Use the existing `TutorDecisionV3` only in the authorized teacher draft path and `PublicAssessmentDTO` for learner rendering.
-- **Rationale**: `transferAssessmentService.ts` currently exposes several generic records, while `assessment.ts` distinguishes private and public assessment shapes. The constitution requires stable explicit contracts and the normative plan prohibits private key/rationale leakage.
-- **Alternatives considered**: Passing raw Edge/API objects through React and destructuring fields in components. This permits accidental private-field exposure and makes stale/lifecycle handling untestable.
+- **Decision**: Component 102 defines and exports `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and operation mapping from `transferAssessmentService.ts`. Component 103 consumes those exports through a React-specific adapter in `src/contexts/transferAssessmentUiAdapter.ts`; it does not edit or redeclare the service contract.
+- **Rationale**: Shared service ownership belongs to component 102. The React layer still needs a small view-state adapter to map typed success/error/lifecycle results into teacher and learner UI states without spreading private fields through context.
+- **Alternatives considered**: Editing the shared service from component 103, duplicating DTOs in UI code, or passing raw API objects directly through React. Each option creates split ownership or weakens the public/private boundary.
 
 ### Decision: Treat assessment as a turn, not a room mode
 
@@ -48,7 +48,7 @@ Record the repository and normative-plan evidence used to choose the smallest W7
 - Normative package: `plan/transfer_assessment_implementation_plan/final_plan.md`, `traceability_graph.md`, `verification_gates.md`, `milestone_ledger.md`, and `work_packages/03_transfer_runtime.md`.
 - Existing UI path: `tutor-system/src/contexts/RoomContext.tsx`, `src/pages/RoomPagePost.tsx`, `src/components/AssessmentDraftEditor.tsx`, `src/components/PostComment.tsx`, and `src/components/ChatMessage.tsx`.
 - Existing public/private types: `tutor-system/src/types/assessment.ts`, `src/types/learningProgress.ts`, `src/types/index.ts`.
-- Existing browser facade: `tutor-system/src/services/transferAssessmentService.ts`.
+- Component 102-owned browser facade: `tutor-system/src/services/transferAssessmentService.ts`; component 103 consumes its exported types and methods without modifying it.
 - Existing tests: `src/services/__tests__/transferAssessmentService.test.ts`, `src/services/__tests__/transferAssessmentMigration.test.ts`, and the room/component test suites.
 
 ## Clarification result
