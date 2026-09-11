@@ -75,3 +75,12 @@ Intent: preserve the chronological decisions, planning results, verification evi
 ## Integration and Promotion
 
 Planning, reconciliation, authoritative DAG, and integration-design gates have passed. Only dependency-ready wave 1 (`101-transfer-domain`) may start; all downstream components remain closed until recorded green promotion SHAs satisfy their incoming edges.
+
+## 2026-09-11: Implementation Wave 1 Activation
+
+- Activated component: `101-transfer-domain` only.
+- Stable owner: Kant (`01a09282-73c4-7323-b6ea-020a96c88368`).
+- Planning commit: `d64b4bed13f57c3fb03442b9d6c757f868d17129`.
+- Preconditions: no incoming DAG edges; 36 tasks, 16/16 checklist, zero CRITICAL/HIGH findings.
+- Required workflow: local `speckit-implement` plus repository-mandated `$fast-multi-agent-tdd`; preserve Red/Green/refactor evidence and mark completed tasks incrementally.
+- Downstream components `102`-`105` remain closed. A local W2 pass is not promotion; integration must merge 101 serially and pass E01/E02 handoffs, affected regression, build, and smoke gates first.
