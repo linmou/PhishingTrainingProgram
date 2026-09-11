@@ -37,7 +37,7 @@ The database validates the pair. React, model output, and direct clients cannot 
 
 | Entity | Fields | Lifecycle rules |
 |---|---|---|
-| `private.assessment_drafts` | Raw model output, reviewed payload, scope/focus IDs, revision, raw/final hashes, reviewer, confirmation, status | Drafts can be rejected/ignored/superseded; changes increment revision and clear confirmation. |
+| `private.assessment_drafts` | Raw model output, reviewed payload, scope/focus IDs, progress snapshot hash, stable generation-trigger key, optional `supersedes_draft_id`, revision, raw/final hashes, reviewer, controlled disposition reason, confirmation, status | Status is `draft`, `rejected`, `ignored`, `sent`, or `superseded`. Material edits increment revision and clear confirmation. A unique supersession relation and request idempotency permit one explicit replacement under races. |
 | `private.assessment_question_keys` | Question ID, immutable correct labels, private payload/hash, transfer basis, reviewer confirmation, draft revision, source item timestamp | Insert once for delivery; update/delete raises `ASSESSMENT_KEY_IMMUTABLE`. |
 | `private.learning_event_inbox` | Stable event/dedupe key, scope/source IDs, kind/payload, classifier, processing state, linked evidence/update, timestamps | Records applied, no-change, deferred, rejected, and error outcomes for replay/audit. |
 | `private.assessment_request_results` | Operation, request ID, actor, stable response | Repeated identical request returns the original result; payload mismatch is a conflict. |
@@ -68,6 +68,8 @@ Assessment resolution is separate from this table: delivery is required; first v
 6. A public DTO never includes `correct_option_ids`, `transfer_basis`, `raw_model_output`, private hashes/payloads, or provider credentials.
 7. Old legacy RPCs and public table writes cannot mutate transfer-policy progress/evidence.
 8. Legacy checklist values, `excellent` metadata, and simplified-auth reviewed sends retain their legacy interpretation.
+9. Rejecting the current expected unsent revision sets status `rejected` and leaves an auditable same-trigger suppression; automatic preparation for the same room/student/checklist/item/focus-message/snapshot trigger returns `DRAFT_TRIGGER_SUPPRESSED`.
+10. Explicit regeneration may bypass that suppression only for an authorized teacher. Provider generation runs outside a transaction; the persistence RPC then rechecks the source revision/status/snapshot, sets it `superseded`, inserts exactly one replacement `draft` linked by `supersedes_draft_id`, and records the request result atomically. It never delivers a question or mutates learning progress.
 
 ## Lock and dedupe order
 
@@ -75,6 +77,8 @@ For state-changing transactions, lock room, checklist, item, and question in tha
 
 - observation: `policy + student + item + source_message + event_kind`;
 - grading: `question_id + first_valid_answer_message_id`;
+- draft trigger: canonical hash of room + student + checklist + focus student message + progress snapshot; selected item is generated output, not trigger identity;
+- draft disposition: source draft ID + expected revision + request ID, with one replacement per superseded source;
 - delivery: reviewed draft ID + revision + request ID plus the unique unresolved-question index.
 
 Transport retries do not increment learning attempts. Attempts increment only for scored assessment or valid spontaneous-transfer evidence.

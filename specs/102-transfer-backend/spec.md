@@ -50,11 +50,12 @@ The backend derives an application principal from a trusted verifier, authorizes
 
 **Acceptance Scenarios**:
 
-1. **Given** no trusted verifier configuration or no valid bearer session, **When** a transfer operation is requested, **Then** the API fails closed with a stable authorization error and does not create or return transfer data.
-2. **Given** a valid principal without room access or teacher review permission, **When** it requests another room, another learner's checklist, a draft, or a reviewed send, **Then** the operation is rejected without mutation.
-3. **Given** a learner can view their public question, **When** it requests private draft, key, transfer-basis, raw-model, or rationale fields, **Then** those fields are unavailable through DTOs, RLS, realtime, exports, logs, and error envelopes.
-4. **Given** an untrusted client calls a transfer table or an old public `SECURITY DEFINER` RPC directly, **When** it tries to write transfer progress or evidence, **Then** the operation is denied.
-5. **Given** a legacy checklist or legacy reviewed-send caller, **When** it uses the existing path, **Then** historical rows and legacy behavior remain usable without being interpreted as transfer verification.
+1. **Given** no deployment-configured trusted verifier adapter, **When** capability or transfer operations are requested, **Then** capability reports disabled with reason `AUTHORIZATION_NOT_CONFIGURED`, every transfer mutation fails with that stable error, and no transfer data is created or returned.
+2. **Given** an injected test verifier or configured production verifier rejects the request proof, **When** a transfer operation is requested, **Then** the API returns `UNAUTHORIZED` without assuming a bearer token, Supabase Auth session, or `auth.uid()` identity.
+3. **Given** a valid principal without room access or teacher review permission, **When** it requests another room, another learner's checklist, a draft, or a reviewed send, **Then** the operation is rejected without mutation.
+4. **Given** a learner can view their public question, **When** it requests private draft, key, transfer-basis, raw-model, or rationale fields, **Then** those fields are unavailable through DTOs, RLS, realtime, exports, logs, and error envelopes.
+5. **Given** an untrusted client calls a transfer table or an old public `SECURITY DEFINER` RPC directly, **When** it tries to write transfer progress or evidence, **Then** the operation is denied.
+6. **Given** a legacy checklist or legacy reviewed-send caller, **When** it uses the existing path, **Then** historical rows and legacy behavior remain usable without being interpreted as transfer verification.
 
 ### User Story 4 - Apply evidence and lifecycle changes atomically (Priority: P2)
 
@@ -92,6 +93,8 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 - Multiple active learners are present in a room; automatic transfer assessment is unavailable rather than silently sharing a checklist or choosing an owner.
 - A learner reconnects or two teacher tabs race; stored question, revision, request result, and public message IDs remain authoritative.
 - A draft is delivered after its checklist, item, focus message, or progress snapshot changes; send is rejected as stale and creates no question.
+- A teacher rejects a draft; the same room/learner/checklist/focus-message/progress-snapshot generation trigger is suppressed from automatic re-proposal, while an explicit `regenerate_draft` request may create one superseding draft.
+- Rejection or regeneration is retried or raced from two teacher tabs; the request result is idempotent, only one replacement can win, and neither operation delivers a question or changes progress.
 - The first answer is ambiguous, content-assisted, or format-only; clarification stays open, assistance cancels without failure, and neutral format help does not leak the key.
 - A question is answered after cancellation, invalidation, replacement, or another question's delivery; the old question is not redirected to the new one.
 - A later learner message contradicts a covered item; only the later independent event may reopen it; the original assessment answer is not reinterpreted.
@@ -105,10 +108,10 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 
 - **FR-001**: The system MUST preserve the legacy checklist policy and values while marking every new transfer checklist with an explicit learner owner and `transfer_v1` policy version.
 - **FR-002**: The system MUST preserve `status` and `understanding_level` as the only progress fields and enforce these transfer pairs: `pending/none`, `partially_covered/basic`, `needs_review/basic`, and `covered/good`.
-- **FR-003**: The system MUST expose the versioned assessment API operations `capabilities`, `initialize_checklist`, `post_message`, `analyze_message`, `prepare_turn`, `review_draft`, `send_reviewed`, `process_message`, `cancel_question`, `invalidate_question`, and `confirm_external_transfer` through one `{ok,data}` or `{ok,error}` envelope.
-- **FR-004**: The system MUST derive the caller's verified principal and room authorization on the server; body-supplied application IDs, roles, room IDs, or learner IDs MUST NOT establish identity or authorization.
+- **FR-003**: The system MUST expose the versioned assessment API operations `capabilities`, `initialize_checklist`, `post_message`, `analyze_message`, `prepare_turn`, `review_draft`, `reject_draft`, `regenerate_draft`, `send_reviewed`, `process_message`, `cancel_question`, `invalidate_question`, and `confirm_external_transfer` through one `{ok,data}` or `{ok,error}` envelope.
+- **FR-004**: The system MUST derive the caller's verified principal and room authorization through an injected `AssessmentPrincipalVerifier`; the production adapter is deployment-configured and backed by a real trusted session or capability, while body-supplied application IDs, roles, room IDs, learner IDs, local display names, room passwords, browser state, Supabase Auth assumptions, and `auth.uid()` MUST NOT establish the transfer identity contract.
 - **FR-005**: The system MUST keep raw drafts, answer keys, transfer basis, private rationale, snapshot data, and provider credentials server-side and MUST return only explicit public or authorized-teacher DTO allowlists.
-- **FR-006**: The system MUST require teacher review, current revision/hash, content confirmation, target eligibility, and one unresolved-question constraint before delivery.
+- **FR-006**: The system MUST require teacher review, current revision/hash, content confirmation, target eligibility, and one unresolved-question constraint before delivery; rejection MUST atomically set `rejected` and suppress the same generation trigger, while explicit regeneration MUST atomically set the source `superseded` and create one replacement `draft` without delivery or progress mutation.
 - **FR-007**: The system MUST commit a delivered tutor message, public question, immutable private key, audit record, room participation mapping, and request idempotency result atomically.
 - **FR-008**: The system MUST grade only a stored learner message linked to its delivered question and MUST use deterministic exact-set equality after normalization, deduplication, and order normalization.
 - **FR-009**: The system MUST resolve the first valid answer once; retries, duplicate realtime delivery, later guesses, and transport retries MUST NOT create additional grade or progress effects.
@@ -117,9 +120,9 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 - **FR-012**: The system MUST make delivered keys immutable; defects MUST be handled through invalidation and compensating/replayed history, never in-place key replacement.
 - **FR-013**: The system MUST preserve the room's two-value participation state and map a reviewed assessment turn to room participation `tutoring`; assessment MUST remain a tutor-turn mode, not a room mode.
 - **FR-014**: The system MUST require tutoring feedback or independently required Guard/protective handling after a resolved assessment before scheduling another assessment, and MUST suppress routine reassessment of `covered/good` items.
-- **FR-015**: The trusted provider boundary MUST send the v3 tutor request with an effective 1,200 completion-token budget, configured model/provider settings, explicit JSON contract instructions, and no learner-selected answer labels for exact grading.
+- **FR-015**: Production and Promptfoo MUST consume the same versioned v3 request/context types and builders exported through `tutor-system/src/services/ecologicalTutorCall.ts`; the trusted provider boundary MUST add the backend-owned production system prompt, send an effective 1,200 completion-token budget and configured model/provider settings, and include no learner-selected answer labels for exact grading.
 - **FR-016**: The provider boundary MUST allow at most one format-repair retry, distinguish network/HTTP failures from invalid output, inspect truncation/finish status, and surface all final errors without changing learner progress.
-- **FR-017**: The system MUST fail closed when verified authorization or provider configuration is absent, returning stable error codes and leaving `TRANSFER_ASSESSMENT_ENABLED` disabled.
+- **FR-017**: The system MUST report capability disabled with `AUTHORIZATION_NOT_CONFIGURED` and fail transfer operations with that code when no deployment verifier adapter exists; missing provider configuration MUST fail separately, and `TRANSFER_ASSESSMENT_ENABLED` remains disabled.
 - **FR-018**: The system MUST verify migrations and generated TypeScript database types against the actual supported hosted schema, including enums, function signatures, grants, policies, and realtime exposure.
 - **FR-019**: The system MUST support direct SQL/RLS tests for forged principals, cross-room and cross-learner access, private-column access, direct transfer writes, old-RPC bypasses, and legacy preservation.
 - **FR-020**: The system MUST keep all backend acceptance evidence separate from React room UI, Promptfoo cases/rubrics, and browser release evidence; those downstream gates cannot be claimed by this component.
@@ -129,19 +132,19 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 - **Transfer checklist**: A learner-owned checklist with `progress_policy_version='transfer_v1'`; legacy rows remain room-scoped and legacy.
 - **Checklist item**: An objective whose transfer progress is represented only by the existing status/understanding pair.
 - **Assessment question**: Public learner-safe question lifecycle record with ordered A-D options, scope IDs, delivery/answer state, selected labels, result, and public linkage fields.
-- **Assessment draft**: Private raw and reviewed v3 decision with revision, hashes, focus message, and review status.
+- **Assessment draft**: Private raw and reviewed v3 decision with revision, hashes, focus message, generation-trigger key, optional superseded-draft link, and status `draft`, `rejected`, `ignored`, `sent`, or `superseded`; its authorized browser projection is `TeacherAssessmentDraftDTO`.
 - **Assessment key**: Private immutable key and transfer basis linked to one delivered question and reviewed draft revision.
 - **Learning event**: Causal, deduplicated observation or assessment outcome tied to stored learner evidence and processed through the transition authority.
 - **Assessment request result**: Private idempotency record mapping a verified operation/request to its stable result.
-- **Verified application principal**: Server-derived principal with application user identity, allowed rooms, and review capability; it is not a local display name, body-supplied UUID, or browser role value.
+- **Verified application principal**: Result of the configured `AssessmentPrincipalVerifier`, containing application user identity, allowed rooms, and review capability; the verifier's request proof format is deployment-specific and is not defined as Supabase Auth or `auth.uid()`.
 
 ## Success Criteria
 
 ### Measurable Outcomes
 
 - **SC-001**: Hosted schema verification finds every required table, enum, constraint, policy, grant, function signature, and realtime exposure in the supported environment, and regenerated TypeScript types match the inspected schema with zero unexplained differences.
-- **SC-002**: The authorization matrix rejects 100% of missing/forged/cross-room/cross-learner/private-column/direct-write/legacy-RPC bypass attempts and returns no transfer mutation or private field for any rejected case.
-- **SC-003**: The lifecycle matrix passes 100% of required delivery, pre-delivery, pass, fail, clarification, assistance, stale, duplicate, race, Guard, invalidation, and rollback cases with one effective question resolution and causal history.
+- **SC-002**: The authorization matrix proves missing-adapter disablement, injected-verifier behavior, and rejection of 100% of invalid-proof/forged/cross-room/cross-learner/private-column/direct-write/legacy-RPC bypass attempts, with no transfer mutation or private field for any rejected case.
+- **SC-003**: The lifecycle matrix passes 100% of required reject, same-trigger suppression, explicit regenerate, delivery, pre-delivery, pass, fail, clarification, assistance, stale, duplicate, race, Guard, invalidation, and rollback cases with one effective draft/question transition and causal history.
 - **SC-004**: Every applied state-changing event has exactly one linked evidence record and history row containing the actual before/after pair; failed operations leave zero partial progress mutations in the transaction checks.
 - **SC-005**: Captured v3 provider requests show `max_tokens=1200`, no learner-selected labels or answer key in exact-grading input, at most two total format-validation attempts, and explicit error handling for provider failure/truncation/invalid output.
 - **SC-006**: Secret and privacy scans find zero provider credentials, private keys, transfer basis, raw private model output, or private rationale in public DTOs, learner queries, realtime payloads, browser assets, logs, exports, or error envelopes.
@@ -151,7 +154,7 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 ## Assumptions
 
 - The existing React/TypeScript application, Supabase schema, simplified local identity, and legacy RPCs remain in use for legacy behavior.
-- A trusted verifier backed by the deployed Supabase Auth session is available for production transfer operations; if it is absent, the feature remains disabled and the missing deployment prerequisite is recorded.
+- Production supplies an `AssessmentPrincipalVerifier` adapter backed by a real deployment-trusted session or capability. No proof format is assumed; when the adapter is absent, capability is disabled and transfer operations return `AUTHORIZATION_NOT_CONFIGURED`. Tests use an injected verifier.
 - Hosted Supabase execution is the database acceptance boundary because Docker/local Postgres is unavailable; static SQL inspection is diagnostic only.
 - Provider configuration is server-side and uses the existing OpenAI-compatible API shape documented in `tutor-system/.env.example`; no new provider or sign-in product is introduced.
 - The first-release automatic assessment scope is one learner-owned checklist per room; multi-learner automatic sharing is out of scope.
@@ -160,4 +163,4 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 ## Scope Boundaries
 
 - In scope: W3 storage/RLS/RPCs, W4 trusted principal and room authorization, W5 evidence application and atomic lifecycle, W6 production v3 provider boundary, public contracts, legacy compatibility, and backend verification evidence.
-- Out of scope: React room UI implementation, Promptfoo cases/rubrics and semantic evaluation, dedicated browser release evidence, a new sign-in product, a new mastery field, room-level Assessment Mode, and feature activation.
+- Out of scope: React room UI implementation, Promptfoo cases/rubrics and semantic evaluation (component 104 consumes the shared contract), dedicated browser release evidence, a new sign-in product, a new mastery field, room-level Assessment Mode, and feature activation.

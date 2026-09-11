@@ -6,11 +6,15 @@
 
 ## Analysis Result
 
-The final rerun found no CRITICAL, HIGH, MEDIUM, or LOW findings. A pre-analysis hygiene scan found one LOW issue: the copied plan template retained an instructional placeholder comment and `[###-feature]` example path. The comment and example were removed before this final rerun.
+The reopened analysis identified four source-contract defects at HIGH severity. All four were remediated across specification, design, contracts, tasks, checklist, and verification guidance. A subsequent precision pass constrained the reject reason and removed an ambiguous suppression field from the replacement DTO. The final read-only rerun found no remaining CRITICAL, HIGH, MEDIUM, or LOW findings.
 
 | ID | Category | Severity | Location(s) | Summary | Remediation |
 |---|---|---|---|---|---|
-| None | - | - | - | No remaining cross-artifact inconsistency, coverage gap, unresolved placeholder, or constitution violation | No further remediation required |
+| A1 | Constitution/security | HIGH | `spec.md`, `plan.md`, `research.md`, API contract, tasks, quickstart | Planning prescribed Supabase Auth/bearer behavior despite the normative generic trusted-verifier rule | Replaced with injected `AssessmentPrincipalVerifier`, deployment-configured adapter, injected test verifier, missing-adapter disabled capability, and `AUTHORIZATION_NOT_CONFIGURED`; explicitly rejected an `auth.uid()` or sign-in contract |
+| A2 | Cross-component contract | HIGH | `spec.md`, `plan.md`, provider contract, tasks | Production context was constructed independently instead of sharing the existing ecological request boundary with Promptfoo | Assigned versioned `TransferTutorRequestV3`/`TransferTutorRequestContextV3` and pure builders to `ecologicalTutorCall.ts`; production and component 104 consume them while prompt, credentials, and calls remain server-only |
+| A3 | Incompleteness/lifecycle | HIGH | `spec.md`, `data-model.md`, API/RPC contracts, tasks, quickstart | Reject/regenerate behavior had no callable operations or atomic persistence contract | Added `reject_draft`/`regenerate_draft`, two versioned service-role RPCs, existing draft statuses, trigger key, suppression, supersession, idempotency, stale/race, provider-failure, and rollback behavior |
+| A4 | Terminology/privacy | HIGH | API contract and task projections | Private browser DTO used a noncanonical abbreviated name | Canonicalized all browser-facing references to `TeacherAssessmentDraftDTO` and kept `private.assessment_drafts` as an internal storage mapping |
+| None | Final rerun | - | All planning artifacts | No remaining cross-artifact inconsistency, coverage gap, unresolved placeholder, or constitution violation | No further remediation required |
 
 ## Requirements Coverage
 
@@ -18,10 +22,10 @@ The final rerun found no CRITICAL, HIGH, MEDIUM, or LOW findings. A pre-analysis
 |---|---|---|
 | FR-001 | T002, T007, T025, T041 | Legacy/transfer policy and hosted schema |
 | FR-002 | T027, T030, T032 | Four progress pairs and one authority |
-| FR-003 | T003, T005, T013, T019 | API operations and envelope |
-| FR-004 | T021, T024, T026 | Verified principal and body identity rejection |
+| FR-003 | T003, T005, T010, T013, T019 | API operations, draft dispositions, and envelope |
+| FR-004 | T006, T021, T024, T026 | Injected verifier, missing adapter, and body identity rejection |
 | FR-005 | T011, T014, T023, T026, T036 | Public/private and secret boundary |
-| FR-006 | T010, T012, T014 | Review, revision, hash, confirmation |
+| FR-006 | T010, T012, T013, T014 | Review, reject/suppress, regenerate/supersede, revision, hash, confirmation |
 | FR-007 | T010, T012, T030 | Atomic reviewed delivery |
 | FR-008 | T016, T018, T020 | Stored-message exact grading |
 | FR-009 | T016, T028, T018 | First answer and retry idempotency |
@@ -30,9 +34,9 @@ The final rerun found no CRITICAL, HIGH, MEDIUM, or LOW findings. A pre-analysis
 | FR-012 | T029, T031 | Immutable key and compensation |
 | FR-013 | T012, T015 | Turn mode versus room mode |
 | FR-014 | T016, T017, T020 | Feedback-first and no routine retest |
-| FR-015 | T033, T036 | v3 provider request and 1,200 budget |
+| FR-015 | T008, T033, T036 | Shared v3 request/context and 1,200-token production request |
 | FR-016 | T034, T035, T037 | Bounded retry and error/truncation behavior |
-| FR-017 | T024, T034, T042 | Fail-closed capability and flag |
+| FR-017 | T006, T021, T024, T034, T042 | Missing-adapter/provider fail-closed capability and flag |
 | FR-018 | T002, T007, T015, T041 | Hosted schema and generated types |
 | FR-019 | T021, T022, T023 | Direct-write and authorization attack matrix |
 | FR-020 | T043, T044 | Component/downstream evidence boundary |
@@ -42,10 +46,10 @@ The final rerun found no CRITICAL, HIGH, MEDIUM, or LOW findings. A pre-analysis
 | Criterion | Covered by | Evidence lane |
 |---|---|---|
 | SC-001 | T002, T007, T041 | Hosted schema and generated types |
-| SC-002 | T021, T022, T023, T024, T025 | Authorization/RLS |
-| SC-003 | T010, T016, T027, T028, T029, T040 | Lifecycle integration |
+| SC-002 | T006, T021, T022, T023, T024, T025 | Verifier configuration and authorization/RLS |
+| SC-003 | T010, T012, T013, T016, T027, T028, T029, T040 | Draft/question lifecycle integration |
 | SC-004 | T027, T030, T031 | Atomic causal history |
-| SC-005 | T033, T034, T035, T036, T037 | Provider request inspection |
+| SC-005 | T008, T033, T034, T035, T036, T037 | Shared contract and provider request inspection |
 | SC-006 | T011, T023, T026, T035, T038 | Privacy and secret scans |
 | SC-007 | T002, T022, T025, T041 | Legacy preservation |
 | SC-008 | T040, T042, T043 | Disabled capability and downstream separation |
@@ -54,15 +58,15 @@ The final rerun found no CRITICAL, HIGH, MEDIUM, or LOW findings. A pre-analysis
 
 | Story | Test tasks | Implementation tasks | Independent test signal |
 |---|---|---|---|
-| US1 | T010-T011 | T012-T015 | Reviewed delivery, public/private projection, rollback |
+| US1 | T010-T011 | T012-T015 | Review, reject/suppress, explicit regenerate, delivery, projection, rollback |
 | US2 | T016-T017 | T018-T020 | Exact first-answer lifecycle |
-| US3 | T021-T023 | T024-T026 | Trusted principal and attack matrix |
+| US3 | T021-T023 | T024-T026 | Configured/injected verifier and attack matrix |
 | US4 | T027-T029 | T030-T032 | Hosted transaction/race/invalidation evidence |
-| US5 | T033-T035 | T036-T039 | Captured provider request and bounded failures |
+| US5 | T033-T035 | T036-T039 | Shared versioned context, captured provider request, and bounded failures |
 
 ## Constitution Alignment
 
-No violations found. The package preserves the approved source hash, keeps authority server-side, requires real boundary tests, uses explicit versioned contracts, and does not introduce a sign-in product, `auth.uid()` application identity contract, parallel mastery field, or feature activation.
+No violations remain. The package preserves the approved source hash, keeps identity/provider/persistence authority server-side, requires real boundary tests, uses explicit versioned contracts, and does not introduce a sign-in product, `auth.uid()` application identity contract, parallel mastery field, or feature activation. Root agent-context regeneration remains deferred to the integration owner.
 
 ## Unmapped Tasks
 
@@ -74,13 +78,15 @@ None. Setup, foundational, story, and polish tasks each map to a requirement, su
 - Buildable success criteria: 8
 - User stories: 5
 - Tasks: 44
+- Completed specification checklist items: 19/19
 - Requirement coverage: 20/20 (100%)
 - Success-criteria coverage: 8/8 (100%)
 - Ambiguity findings: 0
 - Duplication findings: 0
 - Constitution findings: 0
 - CRITICAL findings: 0
-- HIGH findings: 0
+- Reopened HIGH findings remediated: 4/4
+- Remaining HIGH findings: 0
 - MEDIUM findings: 0
 - LOW findings after remediation: 0
 

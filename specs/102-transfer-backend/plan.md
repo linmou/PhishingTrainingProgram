@@ -13,7 +13,7 @@ Complete the backend authority for transfer assessment across W3-W6: forward Sup
 **Primary Dependencies**: `@supabase/supabase-js` 2.39.x, Supabase Edge Functions, PostgreSQL `pgcrypto`, Jest/React Scripts for client-side backend-contract tests, supported hosted Supabase SQL execution  
 **Storage**: Hosted Supabase PostgreSQL; `public` learner-safe tables, `private` server-only schema, RLS, SECURITY DEFINER RPCs restricted to the trusted service role  
 **Testing**: Jest unit/contract tests; supported hosted Supabase integration/RLS/RPC tests; provider-boundary request inspection with a fake provider; TypeScript build/type checks; static secret scans  
-**Target Platform**: Supabase Edge Function plus the existing browser client; transfer path is disabled unless a verified session principal and server provider configuration are available  
+**Target Platform**: Supabase Edge Function plus the existing browser client; transfer path is disabled unless a deployment-configured `AssessmentPrincipalVerifier` and server provider configuration are available  
 **Project Type**: React web application with a Supabase backend boundary  
 **Performance Goals**: One short database transaction for each delivery or state-changing event; transport retries must be idempotent; v3 tutor requests use `max_tokens=1200`; no open database transaction while waiting on the provider  
 **Constraints**: No Docker/local Postgres acceptance; no new sign-in product; no `auth.uid()` as the application identity contract for simplified legacy behavior; no private key/rationale in public DTOs, realtime, logs, exports, or browser assets; no feature activation from this component  
@@ -40,7 +40,8 @@ The current branch already contains authored implementation artifacts from `ff21
 |---|---|---|
 | `tutor-system/supabase/migrations/025_transfer_assessment_storage.sql` | Forward storage, private tables, RLS, immutable-key trigger, event/question RPCs, v3 send RPC authored | Reconcile against hosted schema and execute SQL/RLS/race/rollback checks |
 | `tutor-system/supabase/migrations/026_fix_simplified_auth_compatibility.sql` | Legacy reviewed-send and legacy checklist access compatibility authored | Prove legacy preservation without weakening transfer-policy boundaries |
-| `tutor-system/supabase/functions/assessment-api/index.ts` | API operation dispatch, bearer verification, public allowlisting, provider requests, v3 validation authored | Verify principal claims, all operation contracts, retry/error/truncation behavior, and provider request contents |
+| `tutor-system/supabase/functions/assessment-api/index.ts` | API dispatch, a Supabase Auth-specific verifier, public allowlisting, provider requests, and v3 validation are currently authored | Replace the identity assumption with an injected verifier boundary; verify all operations, retry/error/truncation behavior, and provider request contents |
+| `tutor-system/src/services/ecologicalTutorCall.ts` | Existing pure ecological packaging shared by product and Promptfoo | Extend it with the versioned transfer request/context contract consumed by production and component 104 without moving prompt or provider authority client-side |
 | `tutor-system/src/services/transferAssessmentService.ts` | Browser facade and public assessment projection authored | Keep facade typed to public DTOs and stable envelopes; never add private fallback reads |
 | `tutor-system/src/types/database.ts` | Transfer tables/enums and only part of the function surface represented | Regenerate from the supported hosted schema and document every difference |
 | `tutor-system/src/services/__tests__/transferAssessmentMigration.test.ts` and `transferAssessmentService.test.ts` | Static migration checks and pre-delivery unit check exist | Add real hosted and API/provider evidence; static checks cannot close W3/W4/W6 |
@@ -52,12 +53,13 @@ The component does not edit React room UI, Promptfoo cases/rubrics, browser rele
 ### Authority flow
 
 ```text
-verified bearer session
+deployment-configured trusted session/capability
         |
         v
-assessment-api -> principal + room/learner authorization
+AssessmentPrincipalVerifier -> VerifiedPrincipal -> room/learner authorization
         |
         +--> prepare/review provider draft -> private draft/key material
+        +--> reject/suppress or explicitly regenerate/supersede draft
         |
         +--> send RPC v3 -> public tutor message + public question + immutable key
         |
@@ -66,7 +68,7 @@ assessment-api -> principal + room/learner authorization
                                       +--> evidence + pair + actual history + idempotency
 ```
 
-The Edge Function is the only boundary that combines a verified principal with service-role access. RPCs accept versioned inputs and actor/request IDs, but direct public execution is revoked. Public question/message DTOs are explicit projections. Legacy operations remain separate and continue to use their existing simplified identity path.
+The Edge Function is the only boundary that combines a verified principal with service-role access. Its handler receives an `AssessmentPrincipalVerifier`; deployment wiring supplies a real trusted adapter and tests supply an injected verifier. No adapter means disabled capability and `AUTHORIZATION_NOT_CONFIGURED`, not an inferred Supabase Auth/`auth.uid()` contract. RPCs accept versioned inputs and actor/request IDs, but direct public execution is revoked. Public question/message DTOs are explicit projections. Legacy operations remain separate and continue to use their existing simplified identity path.
 
 ### Phase 0: Research decisions
 
@@ -74,32 +76,33 @@ The Edge Function is the only boundary that combines a verified principal with s
 
 ### Phase 1: Data model and contracts
 
-`data-model.md` defines legacy versus transfer policy, public/private tables, causal links, lifecycle states, locks, dedupe keys, and invariants. `contracts/assessment-api.md`, `contracts/rpc-contract.md`, and `contracts/provider-contract.md` freeze the public envelope/DTO, versioned RPC inputs/results, verified-principal boundary, and production v3 provider request before implementation changes.
+`data-model.md` defines legacy versus transfer policy, public/private tables, causal links, draft suppression/supersession, lifecycle states, locks, dedupe keys, and invariants. `contracts/assessment-api.md`, `contracts/rpc-contract.md`, and `contracts/provider-contract.md` freeze the public envelope/DTO, versioned RPC inputs/results, verifier boundary, and production v3 provider request before implementation changes.
 
 ### W3: Storage, RLS, RPCs, and generated types
 
 1. Inspect the supported hosted schema, migration history, enum values, overloads, grants, enabled policies, private schema exposure, and realtime publication before making forward changes.
 2. Reconcile migrations 025/026 with the actual schema without rewriting 015/023/024 or dropping all policies/functions as a shortcut.
 3. Verify owner-scoped transfer reads, no direct transfer writes, valid progress pairs, one active checklist, one unresolved question, private key immutability, and public/private separation.
-4. Verify `apply_learning_event_v1`, reviewed send, message processing, invalidation, and external evidence operations for atomicity, actual before/after history, stale snapshots, idempotency, race locking, Guard deferral, and rollback.
+4. Verify `reject_assessment_draft_v1`, `regenerate_assessment_draft_v1`, `apply_learning_event_v1`, reviewed send, message processing, invalidation, and external evidence operations for atomicity, same-trigger suppression, actual before/after history, stale snapshots, idempotency, race locking, Guard deferral, and rollback.
 5. Regenerate `tutor-system/src/types/database.ts` from the supported schema, including every table, enum, RPC signature, and result shape; retain legacy types and record any unsupported generator gap.
 
 ### W4: Verified principal and authorization
 
-1. Treat a trusted Supabase Auth bearer session as the verifier input only when it resolves to an existing application user and room/session scope. A local display name, body UUID, browser role, room password, or `auth.uid()` assumption cannot authorize the transfer path.
+1. Define `AssessmentPrincipalVerifier.verify(request): Promise<VerifiedPrincipal>` and inject it into the API handler. The deployment adapter may use any real trusted session/capability that resolves application user and stored room/session scope; tests inject a deterministic verifier. The contract does not require Supabase Auth, a bearer token, or `auth.uid()`.
 2. Require teacher authority for checklist initialization, preparation, review, send, cancellation, invalidation, and external confirmation; require own-learner scope for learner messages and answer processing.
 3. Test missing/forged/cross-room/cross-learner principals, private-column access, realtime/export/log/error leakage, direct table writes, and legacy-RPC bypasses at the hosted boundary.
-4. Return `AUTHORIZATION_NOT_CONFIGURED` and keep the capability disabled when the verifier cannot be established. Do not add a sign-in product.
+4. When no deployment adapter is configured, return capability `{ enabled: false, reason: 'AUTHORIZATION_NOT_CONFIGURED' }`, return the 503 error for transfer operations, perform no mutation, and do not add a sign-in product.
 
 ### W5: Evidence application and lifecycle
 
 1. Make the stored message/question link, immutable key, event dedupe key, current snapshot, source-message scope, and transition pair preconditions explicit.
 2. Apply one trusted event transaction that writes evidence, status and understanding together, history with actual old/new values, attempts only for scored/spontaneous events, and idempotency result.
 3. Record Guard deferral, stale/rejected/error outcomes, first-answer-wins races, feedback linkage, and post-grade invalidation compensation without rerunning old model calls.
+4. Derive a stable generation-trigger key from room, learner, checklist, focus learner message, and progress snapshot; the model-selected item is an output and is not part of the trigger identity. Rejection records `rejected` and suppresses automatic preparation for that key; explicit regeneration alone may bypass it, atomically superseding the source and inserting one replacement draft after provider generation outside the transaction.
 
 ### W6: Provider boundary and production prompt
 
-1. Keep `TRANSFER_V3_SYSTEM_PROMPT` and the evidence-classifier prompt in the trusted Edge Function; pass stable IDs and observable evidence only.
+1. Add versioned `TransferTutorRequestV3`/`TransferTutorRequestContextV3` types and pure request/context/user-message builders to existing `tutor-system/src/services/ecologicalTutorCall.ts`; both the Edge Function production path and component 104 Promptfoo adapter consume them. Keep `TRANSFER_V3_SYSTEM_PROMPT`, the evidence-classifier prompt, provider credentials, and provider calls in the trusted Edge Function.
 2. Send the v3 tutor request with configured provider/model settings and `max_tokens=1200`; use the source plan's 4,096-token classifier budget where that path is implemented, and keep the existing 80-word learner rendering bound separate from completion tokens.
 3. Allow one format-only repair retry (two attempts total), preserve both attempts and finish/error metadata privately, and never turn provider failure, truncation, or invalid JSON into a learner grade or dummy assessment.
 4. Inspect requests and run secret scans over public DTOs, bundled client code, logs, exports, and errors.
@@ -109,7 +112,7 @@ The Edge Function is the only boundary that combines a verified principal with s
 | Gate | Component completion evidence | Cannot be substituted by |
 |---|---|---|
 | W3 | Hosted schema/RLS/RPC execution, legacy preservation, generated-type comparison, direct-write/race/rollback results | Static migration regex checks or local mocks |
-| W4 | Authorization integration matrix with trusted verifier or explicit deployment blocker; privacy scans | UI hiding, local role values, `auth.uid()` assumptions, or injected verifier alone |
+| W4 | Authorization integration matrix with configured production verifier, plus injected-verifier tests and explicit missing-adapter blocker; privacy scans | UI hiding, local role values, Supabase Auth/`auth.uid()` assumptions, or injected verifier alone |
 | W5 | Atomic lifecycle and causal-history integration results across stale/race/idempotency/Guard/invalidation paths | Unit reducer tests alone |
 | W6 | Provider request/response inspection, 1,200-token assertion, bounded retry/error evidence, secret scan | A prompt string review or Promptfoo result |
 
@@ -150,6 +153,7 @@ tutor-system/
 │   ├── migrations/026_fix_simplified_auth_compatibility.sql
 │   └── functions/assessment-api/index.ts
 ├── src/services/transferAssessmentService.ts
+├── src/services/ecologicalTutorCall.ts
 ├── src/types/database.ts
 └── src/services/__tests__/
     ├── transferAssessmentMigration.test.ts
@@ -159,7 +163,7 @@ tutor-system/
     └── assessmentProviderBoundary.test.ts
 ```
 
-**Structure Decision**: Keep the existing Supabase/TypeScript layout. Planning artifacts are isolated under the exact branch directory. SQL owns storage and transaction invariants; the Edge Function owns verified principal and provider access; the browser service owns only typed invocation and public DTO projection; tests are split between pure client contracts and supported hosted integration evidence.
+**Structure Decision**: Keep the existing Supabase/TypeScript layout. Planning artifacts are isolated under the exact branch directory. SQL owns storage and transaction invariants; the Edge Function owns verifier injection, authorization, the production prompt, and provider access; `ecologicalTutorCall.ts` owns pure versioned request/context packaging shared with Promptfoo; the browser service owns only typed invocation and DTO projection; tests are split between pure contracts and supported hosted integration evidence.
 
 ## Complexity Tracking
 
