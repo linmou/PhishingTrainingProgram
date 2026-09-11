@@ -32,7 +32,7 @@
 
 **Decision**: Scenario and gate results use explicit `pass`, `fail`, `blocked`, `missing`, `error`, and `not_applicable` states; only `pass` or an explicitly justified `not_applicable` can satisfy an applicable check.
 
-**Rationale**: The constitution and verification gates require partial or errored results to remain visible and prohibit denominator manipulation or fabricated fallbacks. A release report must distinguish an implementation failure from unavailable credentials or infrastructure.
+**Rationale**: The constitution and verification gates require incomplete or errored upstream evidence to remain visible and prohibit denominator manipulation or fabricated fallbacks. A present upstream `pending` or `partial` value is preserved as source metadata while the release gate row is `blocked`; an absent required record or evidence link makes the release gate row `missing`. A release report must distinguish an implementation failure from unavailable credentials or infrastructure without expanding the closed result vocabulary.
 
 **Alternatives considered**:
 

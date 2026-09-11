@@ -96,13 +96,14 @@ evals/transfer-assessment/release/
 3. Create a fresh run directory with exclusive file creation. Preserve every scenario result, including `blocked`, `missing`, `error`, and `fail`.
 4. Drive the teacher and learner browser contexts through the W11 scenario matrix, capturing screenshots, console events, network requests, realtime payload observations, exports, and storage snapshots with redaction checks.
 5. Execute the attack matrix through the supported client/direct-request boundary, recording request context, expected denial, observed status, and protected-state before/after hashes. Do not target a linked production project.
-6. Reconcile local scenario results with linked upstream gate evidence and produce a release verdict. A Promptfoo or legacy seven-room pass cannot change a browser, privacy, attack, or activation result.
+6. Reconcile local scenario results with linked upstream gate evidence and produce a release verdict. Normalize a present upstream `pending` or `partial` source status to a `blocked` release row, use `missing` when required upstream evidence is absent, and retain the source status/reason as metadata. A Promptfoo or legacy seven-room pass cannot change a browser, privacy, attack, or activation result.
 7. Record activation eligibility and rollback rehearsal as separate artifacts. The runner must not enable the backend flag as an incidental test action; activation is a separately authorized release operation.
 
 ### Invariants
 
 - One run ID names all records and evidence for a single environment/configuration/commit snapshot.
 - A missing or errored result is visible and blocks the final pass; it is never dropped from a denominator.
+- Release gate rows use only `pass`, `fail`, `blocked`, `missing`, `error`, or `not_applicable`; upstream `pending` and `partial` values remain source metadata and never become release-row statuses.
 - Learner-visible captures contain no answer key, transfer basis, raw model output, private rationale, credential, or unresolved private draft field.
 - A rejected attack leaves protected state unchanged; a pass cannot be inferred from a client-side identity label.
 - A stale, duplicate, retried, or reconnecting operation produces at most one valid delivery, resolution, and history effect according to the existing contract.
