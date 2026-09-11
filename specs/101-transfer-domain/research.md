@@ -25,15 +25,15 @@
 - Add a new mastery state or answer-quality score: rejected by U04/U05 and the constitution's single-authority rule.
 - Treat a successful legacy status as transfer verification: rejected by U05/U10 and the explicit legacy boundary.
 
-## Decision 3: Separate private validation from public projection
+## Decision 3: Expose pure public contracts to the component 102 projection owner
 
-**Decision**: Validate private `TutorDecisionV3` assessment fields, then expose a learner projection that contains only the assessment ID, stem, selection instruction/rendered text, and A-D options.
+**Decision**: Validate private `TutorDecisionV3` assessment fields and define pure public assessment/lifecycle-result contracts containing only the assessment ID, stem, selection instruction/rendered text, A-D options, and deterministic outcome fields. Component 102 owns the API/private-to-public projection implementation and tests.
 
-**Rationale**: The response contract and T09.3 require the answer key, transfer basis, rationale, and raw model output to remain private. The existing `TransferAssessmentService.toPublicAssessment` is the facade seam to test; the public type must not make private fields available to downstream learner consumers.
+**Rationale**: The response contract and T09.3 require the answer key, transfer basis, rationale, and raw model output to remain private. Component 101 owns the pure types and domain outputs that make the boundary explicit; the declared component 102 owner must integrate and verify those contracts in `TransferAssessmentService` without 101 becoming a second facade writer.
 
 **Alternatives considered**:
 
-- Reuse the full private object in room state: rejected because copied payloads could leak keys or basis and would blur the teacher/server boundary.
+- Reuse the full private object in the 101 public result: rejected because copied payloads could leak keys or basis and would blur the domain/transport boundary.
 - Use a second public mastery field: rejected by the existing progress-pair contract.
 
 ## Decision 4: Use fixture-driven deterministic coverage, not live model output
@@ -49,7 +49,7 @@
 
 ## Decision 5: Preserve the existing phase ownership boundary
 
-**Decision**: Plan W2 as pure domain behavior plus a provider/database-independent service/orchestrator seam. Do not implement migrations, RLS, authorization, provider prompts/calls, React UI, Promptfoo, or browser release checks.
+**Decision**: Plan W2 as pure domain behavior plus a provider/database-independent orchestrator seam. Do not implement or edit the component 102 service/API projection, migrations, RLS, authorization, provider prompts/calls, React UI, Promptfoo, or browser release checks.
 
 **Rationale**: The user explicitly excludes those areas and the initiative package assigns them to W3-W11. W2 can define input/output contracts and test doubles without claiming those downstream gates passed.
 

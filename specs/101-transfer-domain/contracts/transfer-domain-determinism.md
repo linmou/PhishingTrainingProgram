@@ -11,12 +11,12 @@
 | `gradeSelection` | selected IDs and private key IDs | `pass` or `fail` | partial credit, explanation analysis, or LLM calls |
 | `renderAssessment` / validation | assessment stem, type, options | canonical text and deterministic errors | leak the key/basis or vary option order |
 | `applyLearningEvent` | valid progress pair and event kind | apply, no-change, or reject with next pair/error | write storage or invent a new state |
-| v3 parser/validator | JSON content and known IDs | normalized validated `TutorDecisionV3` | accept unknown IDs or incompatible modes |
-| answer resolver/orchestrator | delivery, current context, learner message, assessment state | one stable lifecycle disposition and next-action boundary | grade undelivered/stale/duplicate answers or chain assessments |
+| v3 parser/validator | JSON content and known IDs | normalized validated `TutorDecisionV3` | accept unknown IDs or incompatible modes; reject Guard merely for using a real teaching instruction |
+| answer resolver/orchestrator | delivery, current context, learner message, assessment state | one stable pure lifecycle disposition and next-action boundary for component 102 | grade undelivered/stale/duplicate answers, chain assessments, call APIs, or project transport DTOs |
 
 ## Required Fixture Suites
 
-1. `contract`: valid v3 decision, every invalid mode/instruction/ID/cardinality/privacy case.
+1. `contract`: valid v3 decisions for tutoring with a real teaching instruction, Guard with `guard`, Guard with each real teaching instruction, and assessment with `transfer_assess`; every invalid mode/instruction/target/payload/cardinality/privacy case.
 2. `parser`: explicit label normalization, exact option text, Unicode/full-width forms, ambiguity, content help, and malformed input.
 3. `grader`: all 16 A-D subsets, duplicate/order normalization, single and multiple keys, and empty selection.
 4. `rendering`: option order, instruction selection, 80/81 segment boundary, two/three sentence boundary, exactly four options.
@@ -39,4 +39,4 @@
 
 ## Fixture Stability
 
-Fixture IDs and expected disposition names are public planning artifacts for downstream 102/104. Error messages may be more specific in implementation, but each invalid class must retain a stable category so tests do not depend on incidental wording.
+Fixture IDs, public result types, and expected disposition names are public planning artifacts for downstream 102/104. Component 102 owns facade/API projection and must consume these outputs rather than duplicate their rules. Error messages may be more specific in implementation, but each invalid class must retain a stable category so tests do not depend on incidental wording.

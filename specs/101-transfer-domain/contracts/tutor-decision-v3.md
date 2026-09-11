@@ -24,15 +24,17 @@ Compatibility rules:
 
 | Mode | Instruction | Target | Assessment |
 |---|---|---|---|
-| `tutoring` | teaching instruction only | null | null |
-| `guard` | `guard` | null | null |
+| `tutoring` | one real teaching instruction | null | null |
+| `guard` | `guard` or one real teaching instruction | null | null |
 | `assessment` | `transfer_assess` | known item ID | valid private assessment |
+
+Real teaching instructions are `protective_instruction`, `correction`, `scaffolding`, `explanation`, and `consolidation`. Guard rejects `transfer_assess`, a non-null target, or a non-null assessment payload; it does not reject a real teaching instruction merely because the participation mode is Guard.
 
 An assessment object requires `selection_type`, canonical A-D options, valid key cardinality, and non-empty transfer basis with known source evidence IDs. The parser rejects missing/blank fields, non-first `reason`, unknown IDs, duplicate option text, invalid modes, incompatible fields, overlong rendering, and invalid key cardinality.
 
-## Public Projection Contract
+## Public Output Contract for Component 102
 
-The learner projection is a separate DTO:
+Component 101 defines the pure learner-visible shape that component 102 must project through its service/API boundary:
 
 ```json
 {
@@ -49,7 +51,7 @@ The learner projection is a separate DTO:
 }
 ```
 
-The projection must not contain `correct_option_ids`, `transfer_basis`, private rationale, or raw model output. Public assessment delivery is still an ordinary tutor turn with `mode: assessment`; it is not a room participation mode.
+The component 101 contract must not contain `correct_option_ids`, `transfer_basis`, private rationale, raw model output, API operations, or transport fields. Component 102 owns private-to-public projection, API adaptation, and their tests. Public assessment delivery is still an ordinary tutor turn with `mode: assessment`; it is not a room participation mode.
 
 ## Turn Context Contract
 
@@ -61,5 +63,6 @@ The projection must not contain `correct_option_ids`, `transfer_basis`, private 
 - The parser owns explicit selection syntax and clarification codes.
 - The grader owns exact-set equality.
 - The reducer owns progress transitions.
-- The service/orchestrator owns deterministic sequencing and no-chain behavior.
+- The component 101 pure orchestrator owns deterministic sequencing and no-chain behavior.
+- Component 101 owns only the pure orchestrator; component 102 owns `transferAssessmentService.ts`, API operations, and public projection.
 - Server persistence, authentication, authorization, key storage, and atomic idempotency remain downstream W3/W4 responsibilities.
