@@ -2,8 +2,8 @@
 
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
-Updated: 2026-09-09
-Status: candidate 11's prompt contract is implemented; `decision.instruction` is retained in tutor audit persistence and exports. Hosted browser verification completed the seven-room generation and behavior checks; persistence remains incomplete until the hosted project receives migration `024_raw_instruction.sql`.
+Updated: 2026-09-11
+Status: candidate 11's legacy v2 prompt contract remains implemented; transfer assessment v3 is implemented behind a disabled trusted API capability. Hosted browser and database acceptance for transfer v3 remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -89,3 +89,53 @@ The implemented model boundary uses the designed v2 shape. The reviewed-response
 Migration `024_raw_instruction.sql` adds the nullable, constrained audit column and replaces the old reviewed-send RPC signature. Existing rows stay null; no historical decision is reconstructed. The parser requires `reason` serialized first, rejects legacy decision/rationale fields, and permits one format-repair retry. This contract grants no automatic sending, enforcement, or room-mode authority. See [the suggestion workflow](../ai-suggestion-tracking.md) for human review and persistence.
 
 Preserve frozen runs under their original contract snapshots. Contract changes require a new contract/evaluation version and fresh comparable baseline before acceptance; updating this template does not migrate production or reinterpret historical evidence.
+
+## Transfer assessment v3 contract
+
+Intent: define the structured teacher-review payload used by the T09 transfer-assessment lifecycle while preserving the legacy v2 contract above.
+
+T09 contract boundary: learner evidence may make a concept eligible without strong prior proof, but a transfer assessment is valid only when its scenario changes the meaningful situation. Assessment is a tutor turn, not a room mode; the reviewed send maps its participation state back to tutoring and does not bypass Guard. A spontaneous medium-transfer observation may verify the concept without an assessment.
+
+The v3 model output is reason-first JSON with this shape:
+
+```json
+{
+  "reason": "The learner applied the rule in a meaningfully changed context.",
+  "decision": {
+    "mode": "assessment",
+    "instruction": "transfer_assess",
+    "target_item_id": "checklist-item-id"
+  },
+  "response": "A teammate sends a prize link from a familiar account. What should you check first?",
+  "assessment": {
+    "selection_type": "single",
+    "options": [
+      {"id": "A", "text": "Trust the displayed account"},
+      {"id": "B", "text": "Verify through an independent channel"},
+      {"id": "C", "text": "Open the link to inspect it"},
+      {"id": "D", "text": "Forward it to everyone"}
+    ],
+    "correct_option_ids": ["B"],
+    "transfer_basis": {
+      "concept_rule": "Displayed identity is not independent authentication.",
+      "source_context": "The original account-alert example.",
+      "changed_context": "A prize link from a known teammate account.",
+      "source_evidence_message_ids": ["message-id"]
+    }
+  }
+}
+```
+
+Allowed v3 combinations under T09 are:
+
+- `tutoring` with one teaching instruction and `assessment: null`;
+- `assessment` with `transfer_assess`, one known target item, and a complete four-option payload;
+- `guard` with `guard`, a null target, and `assessment: null`; or `guard` with a real teaching instruction and no assessment payload.
+
+The parser rejects missing or blank fields, non-first `reason`, unknown item/message IDs, noncanonical or duplicate option IDs/text, invalid key cardinality, overlong assessment rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments. The teacher editor validates the same contract before review submission.
+
+The server owns the raw draft, immutable answer key, progress snapshot hash, revision, idempotency record, and exact answer grading. The public question record contains no answer key or transfer basis. A learner's valid answer is processed deterministically; an optional explanation cannot overturn an otherwise valid exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade. The first valid answer is the only answer that can resolve a question. A resolved question must receive its tutoring or independently required Guard feedback before another assessment is eligible, and already verified concepts are not routinely reassessed unless later learner evidence contradicts them.
+
+Answers received before delivery are not graded, do not create feedback, and preserve the existing transfer progress pair. Delivery is a prerequisite for entering the parsing and grading path.
+
+The v3 provider budget is 1,200 completion tokens and is applied only in the trusted Edge Function. The legacy client path keeps its existing behavior and remains a separate contract. `TRANSFER_ASSESSMENT_ENABLED=false` is the release default; enabling it requires verified Supabase Auth principals, migration application, SQL/RLS tests, provider configuration, and browser acceptance.

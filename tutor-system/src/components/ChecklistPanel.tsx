@@ -37,6 +37,7 @@ interface ChecklistItemComponentProps {
   onViewEvidence: (itemId: string) => void;
   onEditItem: (itemId: string, newText: string) => void;
   progressLocked?: boolean;
+  transferPolicy?: boolean;
 }
 
 const serializeChecklistItem = (item: ChecklistItem) => ({
@@ -67,7 +68,8 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   onAddNote,
   onViewEvidence,
   onEditItem,
-  progressLocked = false
+  progressLocked = false,
+  transferPolicy = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editingNote, setEditingNote] = useState(false);
@@ -168,17 +170,26 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
           <div className="checklist-item-controls-expanded">
             <div className="control-group">
               <label>Status:</label>
-              <select
-                value={item.status}
-                onChange={(e) => onStatusChange(item.id, e.target.value as ChecklistItem['status'])}
-                className="status-select"
-                disabled={progressLocked}
-              >
-                <option value="pending">Pending</option>
-                <option value="partially_covered">Partially Covered</option>
-                <option value="covered">Covered</option>
-                <option value="needs_review">Needs Review</option>
-              </select>
+              {transferPolicy ? (
+                <span className="status-policy-value">
+                  {item.status === 'pending' && 'Not yet demonstrated'}
+                  {item.status === 'partially_covered' && 'Ready for transfer check'}
+                  {item.status === 'needs_review' && 'Needs review'}
+                  {item.status === 'covered' && 'Transfer verified'}
+                </span>
+              ) : (
+                <select
+                  value={item.status}
+                  onChange={(e) => onStatusChange(item.id, e.target.value as ChecklistItem['status'])}
+                  className="status-select"
+                  disabled={progressLocked}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="partially_covered">Partially Covered</option>
+                  <option value="covered">Covered</option>
+                  <option value="needs_review">Needs Review</option>
+                </select>
+              )}
             </div>
 
             <div className="control-group">
@@ -198,7 +209,7 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
           <div className="checklist-item-text-edit">
             <div className="text-edit-header">
               <label>Item Text:</label>
-              {!editingText && (
+              {!editingText && !transferPolicy && (
                 <button
                   className="edit-text-button"
                   onClick={() => setEditingText(true)}
@@ -316,9 +327,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   } = useChecklist(roomId);
 
   const [showAddCustomArea, setShowAddCustomArea] = useState(false);
+  const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
+  const progressControlsLocked = progressLocked || transferPolicy;
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
-    if (progressLocked) return;
+    if (progressControlsLocked) return;
     try {
       await updateItem(itemId, { status: newStatus });
     } catch (err) {
@@ -509,7 +522,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               <button 
                 onClick={() => startSmartGeneration('General Scam Indicators')} 
                 className="generate-checklist-button primary"
-                disabled={loading || progressLocked}
+                disabled={loading || progressControlsLocked}
               >
                 <Zap size={16} />
                 {loading ? 'Generating...' : 'Smart Generate'}
@@ -517,7 +530,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               <button 
                 onClick={openManualInput} 
                 className="manual-checklist-button secondary"
-                disabled={loading || progressLocked}
+                disabled={loading || progressControlsLocked}
               >
                 <Edit size={16} />
                 Manual Input
@@ -556,6 +569,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         {progressLocked && (
           <div role="status" className="checklist-guard-notice">
             Learning progression is locked while Guard Mode is active. Corrective messages remain enabled.
+          </div>
+        )}
+        {transferPolicy && (
+          <div role="status" className="checklist-transfer-notice">
+            Transfer policy is active. Progress is derived from recorded learner evidence or an explicit teacher confirmation.
           </div>
         )}
         <div className="checklist-title">
@@ -603,7 +621,8 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
                       onEditItem={handleEditItem}
-                      progressLocked={progressLocked}
+                      progressLocked={progressControlsLocked}
+                      transferPolicy={transferPolicy}
                     />
                   ))}
                 </div>
@@ -622,7 +641,8 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
                       onEditItem={handleEditItem}
-                      progressLocked={progressLocked}
+                      progressLocked={progressControlsLocked}
+                      transferPolicy={transferPolicy}
                     />
                   ))}
                 </div>
@@ -641,7 +661,8 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
                       onEditItem={handleEditItem}
-                      progressLocked={progressLocked}
+                      progressLocked={progressControlsLocked}
+                      transferPolicy={transferPolicy}
                     />
                   ))}
                 </div>
@@ -654,7 +675,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
           <button 
             className="action-button primary"
             onClick={() => setShowAddCustomArea(true)}
-            disabled={progressLocked}
+            disabled={progressControlsLocked}
           >
             <Plus size={16} />
             Add Custom Area

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, TutorActionDecision, TutorResponseMode } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, TutorActionDecision, TutorResponseMode, TutorDecisionV3 } from '../types';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -19,6 +19,8 @@ import {
     clearChatHistory as clearChatHistoryService
 } from '../services/supabase';
 import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guardModeService';
+import { ChecklistService } from '../services/checklistService';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 
@@ -42,6 +44,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
+    const [transferDraft, setTransferDraft] = useState<{
+        draftId: string;
+        revision: number;
+        decision: TutorDecisionV3;
+        progressSnapshotHash: string;
+    } | null>(null);
     const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
     const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
     const [currentSuggestionContext, setCurrentSuggestionContext] = useState<{ 
@@ -517,13 +525,61 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAiConfig(null);
     }, []);
 
-    const sendMessage = async (content: string): Promise<void> => {
+    const sendMessage = async (
+        content: string,
+        options?: { replyToMessageId?: string; assessmentId?: string }
+    ): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
         }
 
         if (user.current_role === 'observer') {
             throw new Error('Observers cannot send messages');
+        }
+
+        // Transfer-policy messages use the trusted API boundary. If this room
+        // has no owner-scoped transfer checklist, retain the legacy path.
+        let transferChecklist = null;
+        try {
+            const checklistService = ChecklistService as typeof ChecklistService & {
+                getChecklistForStudent?: typeof ChecklistService.getChecklistForStudent;
+                getActiveTransferChecklistForRoom?: typeof ChecklistService.getActiveTransferChecklistForRoom;
+            };
+            transferChecklist = user.current_role === 'student'
+                ? await checklistService.getChecklistForStudent?.(currentRoom.id, user.id) || null
+                : await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
+        } catch (transferError) {
+            console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
+        }
+        if (!currentSuggestionContext && transferChecklist?.progress_policy_version === 'transfer_v1') {
+            const result = await transferAssessmentService.postMessage({
+                roomId: currentRoom.id,
+                content,
+                replyToMessageId: options?.replyToMessageId,
+                assessmentId: options?.assessmentId,
+            });
+            const storedMessage = result.message as Message | undefined;
+            if (!storedMessage) {
+                throw new Error('Transfer message operation did not return a stored message');
+            }
+            setMessages(prev => prev.some(message => message.id === storedMessage.id)
+                ? prev
+                : [...prev, addDisplayNameToMessage(storedMessage, participants)]);
+            if (user.current_role === 'student') {
+                try {
+                    await transferAssessmentService.processMessage(storedMessage.id);
+                } catch (assessmentError) {
+                    if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
+                        throw assessmentError;
+                    }
+                    try {
+                        await transferAssessmentService.analyzeMessage(storedMessage.id, currentRoom.id);
+                    } catch (analysisError) {
+                        console.warn('Transfer evidence analysis unavailable; message was stored:', analysisError);
+                    }
+                }
+            }
+            return;
         }
 
         console.log('Sending message:', { roomId: currentRoom.id, userId: user.id, content });
@@ -571,6 +627,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const responseMode = user.current_role === 'tutor'
             ? currentRoom.active_response_mode || 'tutoring'
             : null;
+        const parentMessageId = options?.replyToMessageId || (
+            currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')
+                ? currentSuggestionContext.parentMessageId
+                : null
+        );
 
         // Create optimistic message
         const optimisticMessage: Message = {
@@ -582,9 +643,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
-            parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')) 
-                ? currentSuggestionContext.parentMessageId
-                : null,
+            parent_message_id: parentMessageId,
             created_at: new Date().toISOString(),
             display_name: user.display_name || 'User',
             avatar_url: user.avatar_url,
@@ -601,9 +660,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user_id: user.id,
                 content,
                 user_role: user.current_role as UserRole,
-                parent_message_id: (currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-'))
-                ? currentSuggestionContext.parentMessageId
-                : null,
+                parent_message_id: parentMessageId,
                 response_mode: responseMode
             })
             .select()
@@ -666,6 +723,38 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (!parentMessageId) {
                 throw new Error('No student message found to respond to');
+            }
+
+            let transferChecklist = null;
+            try {
+                const checklistService = ChecklistService as typeof ChecklistService & {
+                    getActiveTransferChecklistForRoom?: typeof ChecklistService.getActiveTransferChecklistForRoom;
+                };
+                transferChecklist = await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
+            } catch (transferError) {
+                console.warn('Transfer preparation unavailable; keeping legacy AI generation:', transferError);
+            }
+            if (transferChecklist?.progress_policy_version === 'transfer_v1') {
+                const prepared = await transferAssessmentService.prepareTurn({
+                    roomId: currentRoom.id,
+                    focusStudentMessageId: parentMessageId,
+                    checklistId: transferChecklist.id,
+                });
+                const preparedDecision = prepared.decision as TutorDecisionV3 | undefined;
+                if (!preparedDecision) {
+                    throw new Error('Transfer preparation did not return a structured tutor decision');
+                }
+                setTransferDraft({
+                    draftId: String(prepared.draft_id),
+                    revision: Number(prepared.revision),
+                    decision: preparedDecision,
+                    progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
+                });
+                setAiSuggestion(preparedDecision.assessment?.rendered_text || preparedDecision.response);
+                setAiDecision(null);
+                setFinalMode('tutoring');
+                setCurrentSuggestionContext(null);
+                return;
             }
 
             const result = await generateTutorSuggestion(
@@ -1050,8 +1139,32 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const clearAISuggestion = () => {
         setAiSuggestion(null);
         setAiDecision(null);
+        setTransferDraft(null);
         setFinalMode('tutoring');
         setCurrentSuggestionContext(null);
+    };
+
+    const confirmTransferDraft = async (decision: TutorDecisionV3): Promise<void> => {
+        if (!transferDraft) throw new Error('No transfer assessment draft is available');
+        const reviewed = await transferAssessmentService.reviewDraft({
+            draftId: transferDraft.draftId,
+            expectedRevision: transferDraft.revision,
+            finalPayload: decision,
+            contentConfirmed: true,
+        });
+        const sent = await transferAssessmentService.sendReviewed({
+            draftId: transferDraft.draftId,
+            expectedRevision: Number(reviewed.revision),
+            expectedHash: String(reviewed.final_hash),
+        });
+        const sentMessage = sent.message as Message | undefined;
+        if (sentMessage) {
+            setMessages(prev => prev.some(message => message.id === sentMessage.id)
+                ? prev
+                : [...prev, addDisplayNameToMessage(sentMessage, participants)]);
+        }
+        if (sent.room) setCurrentRoom(normalizeRoom(sent.room as Room));
+        clearAISuggestion();
     };
 
     const updateFinalResponse = (response: string) => {
@@ -1189,6 +1302,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearChatHistory,
         aiSuggestion,
         aiDecision,
+        transferDraft,
+        confirmTransferDraft,
         finalMode,
         updateFinalResponse,
         updateFinalMode,

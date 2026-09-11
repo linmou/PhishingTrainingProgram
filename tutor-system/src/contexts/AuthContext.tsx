@@ -12,6 +12,9 @@ export const useAuth = () => {
     return context;
 };
 
+/** Read auth when available without making service-only hooks require the provider. */
+export const useOptionalAuth = () => useContext(AuthContext);
+
 // Generate a consistent user ID based on display name and role
 const generateUserId = (displayName: string, role: UserRole) => {
     // Normalize the display name: lowercase, trim, remove extra spaces

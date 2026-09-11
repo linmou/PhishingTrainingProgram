@@ -57,6 +57,9 @@ export interface Database {
                     op_display_name: string | null
                     op_avatar_url: string | null
                     password: string | null
+                    active_response_mode: 'tutoring' | 'guard'
+                    mode_changed_at: string | null
+                    mode_change_source: 'reviewed_response' | 'manual_override' | null
                     created_at: string
                     updated_at: string
                 }
@@ -75,6 +78,9 @@ export interface Database {
                     op_display_name?: string | null
                     op_avatar_url?: string | null
                     password?: string | null
+                    active_response_mode?: 'tutoring' | 'guard'
+                    mode_changed_at?: string | null
+                    mode_change_source?: 'reviewed_response' | 'manual_override' | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -93,6 +99,9 @@ export interface Database {
                     op_display_name?: string | null
                     op_avatar_url?: string | null
                     password?: string | null
+                    active_response_mode?: 'tutoring' | 'guard'
+                    mode_changed_at?: string | null
+                    mode_change_source?: 'reviewed_response' | 'manual_override' | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -108,6 +117,8 @@ export interface Database {
                     ai_model_used: string | null
                     ai_response_time_ms: number | null
                     parent_message_id: string | null
+                    response_mode: 'tutoring' | 'guard' | 'assessment' | null
+                    assessment_id: string | null
                     created_at: string
                 }
                 Insert: {
@@ -120,6 +131,8 @@ export interface Database {
                     ai_model_used?: string | null
                     ai_response_time_ms?: number | null
                     parent_message_id?: string | null
+                    response_mode?: 'tutoring' | 'guard' | 'assessment' | null
+                    assessment_id?: string | null
                     created_at?: string
                 }
                 Update: {
@@ -132,7 +145,80 @@ export interface Database {
                     ai_model_used?: string | null
                     ai_response_time_ms?: number | null
                     parent_message_id?: string | null
+                    response_mode?: 'tutoring' | 'guard' | 'assessment' | null
+                    assessment_id?: string | null
                     created_at?: string
+                }
+            }
+            assessment_questions: {
+                Row: {
+                    id: string
+                    room_id: string
+                    student_id: string
+                    checklist_id: string
+                    item_id: string
+                    tutor_message_id: string
+                    source_student_message_id: string
+                    selection_type: 'single' | 'multiple'
+                    stem: string
+                    rendered_text: string
+                    options: Json
+                    public_payload_hash: string
+                    lifecycle: 'delivered' | 'answered' | 'cancelled' | 'invalidated'
+                    answer_message_id: string | null
+                    selected_option_ids: string[] | null
+                    result: 'pass' | 'fail' | null
+                    closed_reason: string | null
+                    feedback_message_id: string | null
+                    created_at: string
+                    answered_at: string | null
+                    closed_at: string | null
+                }
+                Insert: {
+                    id?: string
+                    room_id: string
+                    student_id: string
+                    checklist_id: string
+                    item_id: string
+                    tutor_message_id: string
+                    source_student_message_id: string
+                    selection_type: 'single' | 'multiple'
+                    stem: string
+                    rendered_text: string
+                    options: Json
+                    public_payload_hash: string
+                    lifecycle?: 'delivered' | 'answered' | 'cancelled' | 'invalidated'
+                    answer_message_id?: string | null
+                    selected_option_ids?: string[] | null
+                    result?: 'pass' | 'fail' | null
+                    closed_reason?: string | null
+                    feedback_message_id?: string | null
+                    created_at?: string
+                    answered_at?: string | null
+                    closed_at?: string | null
+                }
+                Update: {
+                    id?: string
+                    room_id?: string
+                    student_id?: string
+                    checklist_id?: string
+                    item_id?: string
+                    tutor_message_id?: string
+                    source_student_message_id?: string
+                    selection_type?: 'single' | 'multiple'
+                    stem?: string
+                    rendered_text?: string
+                    options?: Json
+                    public_payload_hash?: string
+                    lifecycle?: 'delivered' | 'answered' | 'cancelled' | 'invalidated'
+                    answer_message_id?: string | null
+                    selected_option_ids?: string[] | null
+                    result?: 'pass' | 'fail' | null
+                    closed_reason?: string | null
+                    feedback_message_id?: string | null
+                    created_at?: string
+                    answered_at?: string | null
+                    closed_at?: string | null
                 }
             }
             sessions: {
@@ -239,6 +325,8 @@ export interface Database {
                     id: string
                     room_id: string
                     template_name: string
+                    student_id: string | null
+                    progress_policy_version: 'legacy_v1' | 'transfer_v1'
                     session_start: string
                     total_items: number
                     completed_items: number
@@ -251,6 +339,8 @@ export interface Database {
                     id?: string
                     room_id: string
                     template_name: string
+                    student_id?: string | null
+                    progress_policy_version?: 'legacy_v1' | 'transfer_v1'
                     session_start?: string
                     total_items?: number
                     completed_items?: number
@@ -263,6 +353,8 @@ export interface Database {
                     id?: string
                     room_id?: string
                     template_name?: string
+                    student_id?: string | null
+                    progress_policy_version?: 'legacy_v1' | 'transfer_v1'
                     session_start?: string
                     total_items?: number
                     completed_items?: number
@@ -361,6 +453,8 @@ export interface Database {
                     previous_understanding: string
                     new_understanding: string
                     evidence_id: string | null
+                    event_id: string | null
+                    assessment_id: string | null
                     updated_by: 'ai' | 'tutor' | 'student'
                     created_at: string
                 }
@@ -373,6 +467,8 @@ export interface Database {
                     previous_understanding: string
                     new_understanding: string
                     evidence_id?: string | null
+                    event_id?: string | null
+                    assessment_id?: string | null
                     updated_by: 'ai' | 'tutor' | 'student'
                     created_at?: string
                 }
@@ -385,6 +481,8 @@ export interface Database {
                     previous_understanding?: string
                     new_understanding?: string
                     evidence_id?: string | null
+                    event_id?: string | null
+                    assessment_id?: string | null
                     updated_by?: 'ai' | 'tutor' | 'student'
                     created_at?: string
                 }
@@ -509,6 +607,20 @@ export interface Database {
                 }
                 Returns: string
             }
+            initialize_transfer_checklist_v1: {
+                Args: {
+                    p_room_id: string
+                    p_student_id: string
+                    p_template_name: string
+                }
+                Returns: string
+            }
+            apply_learning_event_v1: {
+                Args: {
+                    p_event: Json
+                }
+                Returns: Json
+            }
             update_checklist_progress: {
                 Args: {
                     p_checklist_id: string
@@ -520,6 +632,8 @@ export interface Database {
             user_role: 'student' | 'tutor' | 'observer'
             user_status: 'active' | 'inactive'
             session_status: 'active' | 'completed' | 'cancelled'
+            tutor_response_mode: 'tutoring' | 'guard'
+            tutor_turn_mode: 'tutoring' | 'guard' | 'assessment'
         }
         CompositeTypes: {
             [_ in never]: never

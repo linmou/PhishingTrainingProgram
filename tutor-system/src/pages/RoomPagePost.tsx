@@ -8,6 +8,7 @@ import CommentInput from '../components/CommentInput';
 import AIAssistantSettings from '../components/AIAssistantSettings';
 import StudentAIToneControl from '../components/StudentAIToneControl';
 import AISuggestionBox from '../components/AISuggestionBox';
+import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
@@ -53,6 +54,8 @@ const RoomPagePost: React.FC = () => {
         downloadChatHistory,
         clearChatHistory,
         aiSuggestion,
+        transferDraft,
+        confirmTransferDraft,
         finalMode,
         updateFinalMode,
         setResponseMode,
@@ -253,7 +256,9 @@ const RoomPagePost: React.FC = () => {
         stopTyping(); // Stop typing when message is sent
         
         try {
-            await sendMessage(messageText.trim());
+            await sendMessage(messageText.trim(), {
+                replyToMessageId: replyingTo?.id,
+            });
             setMessageText('');
             setReplyingTo(null); // Clear reply state
         } catch (error) {
@@ -705,8 +710,16 @@ const RoomPagePost: React.FC = () => {
                     )}
                 </div>
 
-                {/* AI Suggestion Box for Tutors */}
-                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && (
+                {/* Structured transfer-assessment review for tutors */}
+                {user?.current_role === 'tutor' && canUseAI && transferDraft && (
+                    <AssessmentDraftEditor
+                        decision={transferDraft.decision}
+                        onSubmit={confirmTransferDraft}
+                    />
+                )}
+
+                {/* Legacy AI Suggestion Box for tutors */}
+                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && (
                         <AISuggestionBox
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}

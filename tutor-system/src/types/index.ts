@@ -1,6 +1,7 @@
 // Supabase uses ISO string dates instead of Firestore Timestamps
 
 import { SystemPromptConfig } from '../services/prompts/types';
+import type { TutorDecisionV3 } from './assessment';
 
 // User types
 export type UserRole = 'student' | 'tutor' | 'observer';
@@ -45,7 +46,7 @@ export interface Room {
     op_display_name: string | null;
     op_avatar_url: string | null;
     password: string | null; // Added for password protection
-    active_response_mode?: TutorResponseMode;
+    active_response_mode?: RoomParticipationMode;
     mode_changed_at?: string | null;
     mode_change_source?: 'reviewed_response' | 'manual_override' | null;
     created_at: string;
@@ -84,7 +85,7 @@ export interface Message {
     created_at: string;
     display_name?: string; // Added for UI display
     avatar_url?: string | null; // Added for avatar display
-    response_mode?: TutorResponseMode | null;
+    response_mode?: TutorTurnMode | null;
 }
 
 // Session interface
@@ -154,9 +155,12 @@ export interface AIResponse {
     error?: string;
 }
 
-export type TutorResponseMode = 'tutoring' | 'guard';
+export type RoomParticipationMode = 'tutoring' | 'guard';
+export type TutorTurnMode = RoomParticipationMode | 'assessment';
+/** Legacy alias for APIs that exclusively control room participation. */
+export type TutorResponseMode = RoomParticipationMode;
 
-export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation';
+export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation' | 'transfer_assess' | 'guard';
 
 export interface TutorActionDecision {
     mode: TutorResponseMode;
@@ -171,6 +175,9 @@ export interface TutorBehaviorDecision {
     decision: { mode: TutorResponseMode; instruction: TutorInstruction | null };
     response: string;
 }
+
+export type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, PrivateAssessment, PublicAssessment, RoomParticipationMode as AssessmentRoomParticipationMode, TeachingInstruction, TutorDecisionV3, TutorTurnMode as AssessmentTutorTurnMode, TransferBasis, TransferChecklistItemSnapshot, TransferTurnContext } from './assessment';
+export type { ProgressPolicyVersion, TransferProgress, TransferStatus, TransferUnderstandingLevel } from './learningProgress';
 
 // Context types
 export interface AuthContextType {
@@ -201,7 +208,7 @@ export interface RoomContextType {
     createRoom: (title: string, description?: string, imageFile?: File) => Promise<void>;
     joinRoom: (roomId: string, password?: string) => Promise<void>;
     leaveRoom: () => Promise<void>;
-    sendMessage: (content: string) => Promise<void>;
+    sendMessage: (content: string, options?: { replyToMessageId?: string; assessmentId?: string }) => Promise<void>;
     setResponseMode: (mode: TutorResponseMode) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
@@ -215,6 +222,13 @@ export interface RoomContextType {
     downloadChatHistory: (format?: 'txt' | 'json') => void;
     aiSuggestion: string | null;
     aiDecision: TutorActionDecision | null;
+    transferDraft: {
+        draftId: string;
+        revision: number;
+        decision: TutorDecisionV3;
+        progressSnapshotHash: string;
+    } | null;
+    confirmTransferDraft: (decision: TutorDecisionV3) => Promise<void>;
     finalMode: TutorResponseMode;
     updateFinalResponse: (response: string) => void;
     updateFinalMode: (mode: TutorResponseMode) => void;

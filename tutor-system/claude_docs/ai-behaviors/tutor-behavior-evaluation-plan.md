@@ -3,13 +3,38 @@
 Intent: define specification-derived checks, frozen experiments and comparable acceptance evidence without redefining behavior or claiming unmeasured performance.
 
 Plan ID: `tutor_behavior_v1`
-Status: canonical v2 evaluator extracted and shared by offline and browser adapters; hosted seven-room browser verification completed generation and behavior checks, while persistence remains pending hosted migration `024_raw_instruction.sql`.
+Status: canonical v2 evaluator remains the legacy evaluator; transfer assessment v3 deterministic implementation checks are present, while semantic, database, and browser acceptance remain pending.
 Prepared: 2026-09-07
-Updated: 2026-09-09
+Updated: 2026-09-11
 Current behavior specification: [tutor-behavior-specification.md](tutor-behavior-specification.md). Prior frozen snapshot SHA-256 `013c2e27b2c5897a0ab906893515e6d56d49c8ce3cbf6ee740fdfa0218df74c0`
 Current response contract: [tutor-response-contract.md](tutor-response-contract.md). Prior frozen snapshot SHA-256 `b4669fbde41f856b40114d762b227f058a625b30538e20542e4d465925654ad6`
-Constitution: human-adopted `phishing_tutor_constitution 1.0`, SHA-256 `8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e`; grounding applies to the eleven remaining requirements; supervision remains a response-contract responsibility.
+Constitution: human-adopted `phishing_tutor_constitution 1.0`, SHA-256 `8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e`; the existing T01–T08 and G01–G03 grounding review is reused for T09, which introduces no constitutional priority or exception; supervision remains a response-contract responsibility.
 Shared rules: [evaluation contract](../../../.agents/skills/ai-behavior-design-eval/references/evaluation-contract.md).
+
+## Transfer assessment v3 readiness boundary
+
+The transfer implementation adds deterministic checks for the progress reducer, normalized answer parsing, exact-set grading, bounded rendering, and reason-first v3 decision validation. These checks are executable contract evidence, not model-quality results. They cover valid transition pairs, invalid transitions, ambiguous selections, duplicate labels, four-option/key cardinality boundaries, known target/evidence IDs, and mode/instruction compatibility.
+
+The intended v3 semantic evaluation remains separate: transfer trigger/target selection, medium-transfer quality, assessment validity, feedback-first follow-up, and evidence-grounded verification require calibrated model/human judgments on frozen cases. No live model evaluation or independent holdout run was performed in this implementation turn. The development fixtures in `tutor-system/src/services/__tests__/` are not holdouts and must not be reported as release performance.
+
+Database and authorization acceptance are also pending. Migration `025_transfer_assessment_storage.sql` is authored but has not been applied to an isolated or hosted database in this environment; `supabase db lint --local` could not connect because no local Postgres instance was listening. Browser scenarios requiring verified Supabase principals, public/private payload inspection, retries, races, and rollback remain unrun. The backend capability therefore stays disabled by default.
+
+## T09 preparation contract
+
+This section is the W0 preparation boundary for the numbered transfer requirement. It defines what will be measured; it does not claim that the semantic judge, Promptfoo run, database checks, or browser release checks have run.
+
+| Requirement | Metric or supporting check | Method | Checked field/state | Expected evidence | Applicability and threshold |
+| --- | --- | --- | --- | --- | --- |
+| T09 | `transfer_trigger_target` | `llm_rubric` | learner evidence, selected target, and decision | Eligibility follows learner-owned evidence without requiring strong prior proof; at most one current relevant target is selected. | Transfer-eligible cases with positive, corrective, acknowledgment, spontaneous-transfer, and contradiction evidence; 80% in each required partition. |
+| T09 | `medium_transfer_quality` | `llm_rubric` | changed context and assessment scenario | The context changes the meaningful situation, not only the brand/name; the concept remains the same. | Assessment and spontaneous-transfer cases with semantic pairs; 80% and 100% for every declared pair. |
+| T09 | `assessment_item_validity` | `llm_rubric` | assessment stem, options, and transfer basis | The item is accurate, self-contained, relevant to the target, and does not invent organization facts. | Generated assessment items that reach the review contract; 80%, with safety-critical factual checks at 100%. |
+| T09 | `assessment_followup` | `deterministic` | question lifecycle and ordered tutor turns | Delivery precedes grading; the first valid answer resolves once; clarification remains open; assistance cancels without failure; feedback precedes another assessment. | Stateful lifecycle cases and exact transition fixtures; 100%. |
+| T09 | `verification_evidence` | `llm_rubric` | transfer basis and source evidence references | The decision basis cites observable learner evidence and distinguishes the original and changed contexts without invented facts. | Assessment and spontaneous-transfer cases with evidence references; 80%, with H1/H4 violations at 100%. |
+| T09 | `t09_contract_and_progress` | `deterministic` supporting check | structured v3 payload and `status`/`understanding_level` pair | Four A-D options, valid key cardinality, known IDs, exact-set grading, valid progress pairs, no parallel mastery state, and no assessment room mode. | Every applicable v3 generation and persistence transition; 100%, zero unresolved errors. |
+
+The legacy case inventory has no transfer-assessment lifecycle state, delivered question, answer submission, or transfer basis. Therefore all 43 legacy cases and all 173 legacy assertions receive a T09 disposition of `not_applicable`; this removes only the new T09 metric from their denominator and preserves each legacy assertion and historical disposition. The machine-readable audit is [transfer-assessment-w0 applicability audit](../../../evals/promptfoo/audits/transfer-assessment-w0-20260911/applicability-audit.json), generated from the unchanged [legacy case audit](../../../evals/promptfoo/audits/tutor-v1-preparation-20260907/case-audit.json). The dedicated lifecycle specification is [transfer_assessment.feature](../../features/transfer_assessment.feature).
+
+Calibration, live baseline/candidate runs, independent holdouts, and acceptance remain pending. The existing legacy `promptfooconfig.yaml` is not switched by W0; its historical cases do not establish T09 conformance. No experimental T09 behavior-spec version is registered until the frozen contract, cases, rubrics, manifest, and comparable run evidence exist.
 
 ## Version and decision record
 

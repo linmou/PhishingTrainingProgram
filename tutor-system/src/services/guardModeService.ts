@@ -2,6 +2,8 @@
 
 import { Message, Room, TutorActionDecision, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
+import { TutorDecisionV3 } from '../types/assessment';
+import { transferAssessmentService } from './transferAssessmentService';
 
 export interface ReviewedTutorResponseInput {
   roomId: string;
@@ -18,6 +20,24 @@ export interface ReviewedTutorResponseInput {
 export interface ReviewedTutorResponseResult {
   message: Message;
   room: Room;
+}
+
+export interface ReviewedTransferResponseInput {
+  draftId: string;
+  expectedRevision: number;
+  expectedHash: string;
+}
+
+/** Send a reviewed v3 tutoring, Guard, or assessment turn through the trusted API. */
+export async function sendReviewedTutorResponseV3(
+  input: ReviewedTransferResponseInput
+): Promise<Record<string, unknown>> {
+  return transferAssessmentService.sendReviewed(input);
+}
+
+/** Validate the editor payload before it reaches the server-side review operation. */
+export function isAssessmentDecision(decision: TutorDecisionV3): boolean {
+  return decision.decision.mode === 'assessment' && decision.decision.instruction === 'transfer_assess' && decision.assessment !== null;
 }
 
 export async function sendReviewedTutorResponse(

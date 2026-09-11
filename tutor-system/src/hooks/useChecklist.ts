@@ -8,6 +8,7 @@ import { RoomFeaturesService } from '../services/roomFeaturesService';
 import { SessionChecklist, ChecklistItem, ChecklistProgress } from '../types/checklist';
 import { getAIConfig } from '../services/aiService';
 import { assessChecklistGenerationContext, ChecklistGenerationContext } from '../services/checklistGenerationContext';
+import { useOptionalAuth } from '../contexts/AuthContext';
 
 export interface GenerationModalState {
   mode: 'no_ai_config' | 'empty_system_prompt';
@@ -50,6 +51,8 @@ export interface UseChecklistReturn {
  * @returns Checklist state and actions
  */
 export function useChecklist(roomId: string): UseChecklistReturn {
+  const auth = useOptionalAuth();
+  const user = auth?.user || null;
   const [checklist, setChecklist] = useState<SessionChecklist | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -406,7 +409,14 @@ export function useChecklist(roomId: string): UseChecklistReturn {
     setError(null);
 
     try {
-      const updatedChecklist = await RoomFeaturesService.checklist.read(roomId);
+      const checklistApi = RoomFeaturesService.checklist as typeof RoomFeaturesService.checklist & {
+        getChecklistForStudent?: (id: string, studentId: string) => Promise<SessionChecklist | null>;
+        getActiveTransferChecklistForRoom?: (id: string) => Promise<SessionChecklist | null>;
+      };
+      const transferChecklist = await (user?.current_role === 'student'
+        ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
+        : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
+      const updatedChecklist = transferChecklist || await RoomFeaturesService.checklist.read(roomId);
       
       console.log('📊 Checklist refresh result:', {
         found: !!updatedChecklist,
@@ -453,7 +463,7 @@ export function useChecklist(roomId: string): UseChecklistReturn {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, user]);
 
   // Delete checklist
   const deleteChecklist = useCallback(async () => {

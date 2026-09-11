@@ -3,6 +3,8 @@
  * Based on the behaviors described in BDD feature files
  */
 
+import { ProgressPolicyVersion } from './learningProgress';
+
 // Core checklist item interface
 export interface ChecklistItem {
   id: string;                          // Unique identifier
@@ -40,6 +42,9 @@ export interface CoverageEvidence {
 export interface SessionChecklist {
   id: string;
   room_id: string;
+  /** New transfer-policy checklists are explicitly owned by one learner. */
+  student_id?: string | null;
+  progress_policy_version?: ProgressPolicyVersion;
   template_name: string;
   session_start: Date;
   

@@ -2,8 +2,8 @@
 Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-09-08
-- Implementation commit ID: `dce8611c1d196b4baed505b05f3ed3c97adacd05`
+- Updated: 2026-09-11
+- Implementation commit ID: pending; W0 documentation is currently in the working tree
 
 # Tutor-System Documentation Hub
 
@@ -28,7 +28,11 @@ This directory contains comprehensive architectural and implementation documenta
 ### AI Assistant System
 - **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-adopted tutoring principles, P3 subprinciples and conditional priorities; each behavior requirement records its downstream interpretation
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
-- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Deployed reason/decision/response object, decision order and category grounding, retry policy, and production persistence adapter
+- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy v2 and transfer v3 reason/decision/response contracts, teacher review boundary, exact assessment payload, and private-key rules
+- **[Transfer assessment evaluation readiness](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - Deterministic transfer checks and explicit pending semantic/database/browser gates
+- **[Transfer assessment BDD lifecycle](../features/transfer_assessment.feature)** - T09 room-level lifecycle scenarios; executable acceptance remains pending
+- **[Transfer assessment W0 applicability audit](../../evals/promptfoo/audits/transfer-assessment-w0-20260911/applicability-audit.json)** - All 43 legacy cases and 173 assertions explicitly not applicable to T09 while preserved
+- **[Transfer assessment implementation plan](../../plan/transfer_assessment_implementation_plan/final_plan.md)** - Decomposed execution index and W0-W11 evidence gates
 - **[Response-contract documentation update](./doc_update_record/documentation_update_record_v2026_09_07_response_contract_grounding.md)** - Template alignment, specification references, and validation evidence
 - **[Tutor behavior evaluation plan](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - v0/v1 mappings, independent deterministic and semantic checks, and remaining readiness gates; no current performance claim
 - **[Versioned tutor evaluators](../../evals/promptfoo/rubrics/README.md)** - Exact legacy v0 snapshots, clean LLM-facing v1 rubrics, metadata manifests, and locally validated decision checks
@@ -39,6 +43,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Tutor refinement run record](./ai-behaviors/tutor-behavior-refinement-record.md)** - Candidate 11 evaluation, human selection, simulated multi-turn evidence, remaining formal-gate exceptions, and production verification
 - **[Candidate 11 documentation update](./doc_update_record/documentation_update_record_v2026_09_08_candidate_11_production.md)** - Production prompt/contract integration, local verification, and release-evidence boundary
 - **[Web test-room E2E update](./doc_update_record/documentation_update_record_v2026_09_08_web_test_rooms_e2e.md)** - Real-browser room creation, provider-backed suggestions, and legacy heuristic boundary
+- **[Transfer assessment W0 documentation update](./doc_update_record/documentation_update_record_v2026_09_11_transfer_assessment_w0.md)** - Canonical T09, aligned contract/evaluation plan, applicability audit, and BDD lifecycle
 - **[ai-assistant-module.md](./ai-assistant-module.md)** - Comprehensive guide to the AI assistant functionality including configuration, integration, and testing
 - **[ai-suggestion-tracking.md](./ai-suggestion-tracking.md)** - AI suggestion tracking implementation with tutor feedback collection
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login

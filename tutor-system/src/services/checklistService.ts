@@ -16,6 +16,7 @@ import { SystemPromptConfig } from './prompts/types';
 import { SCENARIO_TEMPLATES } from './detectionTemplates';
 import { ConversationMessage } from '../types';
 import { generateChecklistFromSystemPrompt } from './checklistIntegration';
+import { transferAssessmentService } from './transferAssessmentService';
 
 export class ChecklistService {
   private static async assertProgressUnlocked(roomId: string): Promise<void> {
@@ -46,11 +47,12 @@ export class ChecklistService {
       console.log('🚀 Initializing checklist for room:', roomId, 'with template:', templateName);
 
       // First, deactivate any existing active checklists for this room
-      const { error: deactivateError } = await supabase
-        .from('session_checklists')
-        .update({ is_active: false })
-        .eq('room_id', roomId)
-        .eq('is_active', true);
+    const { error: deactivateError } = await supabase
+      .from('session_checklists')
+      .update({ is_active: false })
+      .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1')
+      .eq('is_active', true);
       
       if (deactivateError) {
         console.warn('Failed to deactivate old checklists:', deactivateError);
@@ -93,6 +95,34 @@ export class ChecklistService {
   }
 
   /**
+   * Initialize an owner-scoped transfer-policy checklist.
+   *
+   * The database operation owns creation of the checklist and items so the
+   * browser cannot bypass the transfer-policy state guard with direct writes.
+   */
+  static async initializeTransferChecklistForStudent(
+    roomId: string,
+    studentId: string,
+    templateName: string
+  ): Promise<SessionChecklist> {
+    if (!roomId || !studentId || !templateName.trim()) {
+      throw new Error('Room, student, and template are required for a transfer checklist');
+    }
+
+    const result = await transferAssessmentService.initializeChecklist({
+      roomId,
+      studentId,
+      templateName: templateName.trim(),
+    });
+
+    const checklist = await this.getChecklistForStudent(roomId, studentId);
+    if (!checklist || checklist.id !== result.checklist_id) {
+      throw new Error('Transfer checklist was created but could not be read for its owner');
+    }
+    return checklist;
+  }
+
+  /**
    * Fallback method for checklist initialization
    */
   private static async initializeChecklistFallback(
@@ -105,6 +135,7 @@ export class ChecklistService {
       .from('session_checklists')
       .update({ is_active: false })
       .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1')
       .eq('is_active', true);
     
     if (deactivateError) {
@@ -216,36 +247,13 @@ export class ChecklistService {
   static async getChecklistByRoom(roomId: string): Promise<SessionChecklist | null> {
     console.log('🔍 Reading checklist for room:', roomId);
     
-    // First, let's see ALL checklists for this room without any filters
-    const { data: allChecklists } = await supabase
-      .from('session_checklists')
-      .select('*')
-      .eq('room_id', roomId);
-    
-    console.log('🔍 ALL checklists for room:', {
-      count: allChecklists?.length || 0,
-      checklists: allChecklists?.map(c => ({
-        id: c.id,
-        room_id: c.room_id,
-        is_active: c.is_active,
-        is_active_type: typeof c.is_active
-      }))
-    });
-    
     const { data: checklist, error: checklistError } = await supabase
       .from('session_checklists')
       .select('*')
       .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1')
       .eq('is_active', true)
       .single();
-
-    console.log('📊 Checklist query result:', { 
-      found: !!checklist, 
-      error: checklistError?.code, 
-      message: checklistError?.message,
-      checklistId: checklist?.id,
-      isActive: checklist?.is_active
-    });
 
     if (checklistError) {
       // If no checklist found, return null instead of throwing error
@@ -293,6 +301,118 @@ export class ChecklistService {
       created_at: new Date(checklist.created_at),
       updated_at: new Date(checklist.updated_at),
       is_active: checklist.is_active
+    };
+  }
+
+  /**
+   * Read the active transfer checklist for exactly one learner.
+   * This is intentionally separate from getChecklistByRoom, which is the
+   * legacy room-shared reader.
+   */
+  static async getChecklistForStudent(
+    roomId: string,
+    studentId: string
+  ): Promise<SessionChecklist | null> {
+    if (!roomId || !studentId) return null;
+
+    const { data: checklist, error: checklistError } = await (supabase as any)
+      .from('session_checklists')
+      .select('*')
+      .eq('room_id', roomId)
+      .eq('student_id', studentId)
+      .eq('progress_policy_version', 'transfer_v1')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (checklistError) {
+      throw new Error(`Failed to read transfer checklist: ${checklistError.message}`);
+    }
+    if (!checklist) return null;
+
+    const { data: items, error: itemsError } = await (supabase as any)
+      .from('checklist_items')
+      .select(`
+        *,
+        coverage_evidence (*)
+      `)
+      .eq('checklist_id', checklist.id)
+      .order('created_at', { ascending: true });
+
+    if (itemsError) {
+      throw new Error(`Failed to fetch transfer checklist items: ${itemsError.message}`);
+    }
+
+    return {
+      id: checklist.id,
+      room_id: checklist.room_id,
+      student_id: checklist.student_id,
+      progress_policy_version: 'transfer_v1',
+      template_name: checklist.template_name,
+      session_start: new Date(checklist.session_start),
+      detection_areas: (items || [])
+        .filter((item: any) => item.item_type === 'detection_area')
+        .map(this.transformDatabaseItem),
+      verification_steps: (items || [])
+        .filter((item: any) => item.item_type === 'verification_step')
+        .map(this.transformDatabaseItem),
+      total_items: checklist.total_items,
+      completed_items: checklist.completed_items,
+      completion_percentage: checklist.completion_percentage,
+      created_at: new Date(checklist.created_at),
+      updated_at: new Date(checklist.updated_at),
+      is_active: checklist.is_active
+    };
+  }
+
+  /**
+   * Read the sole active transfer checklist in a 1:1 room for an authorized
+   * tutor. Multiple owners are rejected instead of sharing one learner's
+   * progress with another participant.
+   */
+  static async getActiveTransferChecklistForRoom(
+    roomId: string
+  ): Promise<SessionChecklist | null> {
+    const { data, error } = await (supabase as any)
+      .from('session_checklists')
+      .select('student_id')
+      .eq('room_id', roomId)
+      .eq('progress_policy_version', 'transfer_v1')
+      .eq('is_active', true)
+      .limit(2);
+
+    if (error) {
+      throw new Error(`Failed to read room transfer checklist: ${error.message}`);
+    }
+    if (!data || data.length === 0) return null;
+    if (data.length > 1 || !data[0].student_id) {
+      throw new Error('UNSUPPORTED_ROOM_SCOPE: transfer assessment requires one identified learner');
+    }
+    return this.getChecklistForStudent(roomId, data[0].student_id);
+  }
+
+  /** Read progress for one transfer-policy learner. */
+  static async getChecklistProgressForStudent(
+    roomId: string,
+    studentId: string
+  ): Promise<ChecklistProgress | null> {
+    const checklist = await this.getChecklistForStudent(roomId, studentId);
+    if (!checklist) return null;
+
+    const items = [...checklist.detection_areas, ...checklist.verification_steps];
+    return {
+      total_areas: items.length,
+      covered_areas: items.filter((item) => item.status === 'covered').length,
+      partially_covered_areas: items.filter((item) => item.status === 'partially_covered').length,
+      pending_areas: items.filter((item) => item.status === 'pending').length,
+      completion_percentage: items.length === 0
+        ? 0
+        : Math.round((items.filter((item) => item.status === 'covered').length / items.length) * 100),
+      critical_pending: items.filter((item) => item.priority === 'critical' && item.status !== 'covered').length,
+      critical_covered: items.filter((item) => item.priority === 'critical' && item.status === 'covered').length,
+      important_pending: items.filter((item) => item.priority === 'important' && item.status !== 'covered').length,
+      important_covered: items.filter((item) => item.priority === 'important' && item.status === 'covered').length,
+      optional_pending: items.filter((item) => item.priority === 'optional' && item.status !== 'covered').length,
+      optional_covered: items.filter((item) => item.priority === 'optional' && item.status === 'covered').length
     };
   }
 
@@ -607,6 +727,7 @@ export class ChecklistService {
       .from('session_checklists')
       .select('id')
       .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1')
       .eq('is_active', true)
       .single();
 
@@ -660,6 +781,7 @@ export class ChecklistService {
         )
       `)
       .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1')
       .eq('is_active', true)
       .single();
 
@@ -817,6 +939,18 @@ export class ChecklistService {
 
     // Handle area_text updates
     if (updates.area_text !== undefined) {
+      const { data: owningChecklist, error: owningChecklistError } = await supabase
+        .from('checklist_items')
+        .select('checklist_id, session_checklists(progress_policy_version)')
+        .eq('id', itemId)
+        .single();
+      if (owningChecklistError) {
+        throw new Error(`Failed to verify checklist policy: ${owningChecklistError.message}`);
+      }
+      const policy = (owningChecklist as any)?.session_checklists?.progress_policy_version;
+      if (policy === 'transfer_v1') {
+        throw new Error('Transfer checklist objectives cannot be edited in place; create a replacement objective instead');
+      }
       const { data: updatedItem, error } = await supabase
         .from('checklist_items')
         .update({
@@ -873,6 +1007,7 @@ export class ChecklistService {
       .from('session_checklists')
       .update({ is_active: false })
       .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1')
       .eq('is_active', true);
     
     if (deactivateError) {
@@ -991,7 +1126,8 @@ export class ChecklistService {
     const { error } = await supabase
       .from('session_checklists')
       .delete()
-      .eq('room_id', roomId);
+      .eq('room_id', roomId)
+      .eq('progress_policy_version', 'legacy_v1');
 
     if (error) {
       throw new Error(`Failed to delete checklist: ${error.message}`);
