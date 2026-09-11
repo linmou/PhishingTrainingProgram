@@ -33,7 +33,7 @@ Intent: preserve the chronological decisions, planning results, verification evi
 | Component | Specification | Clarification | Plan | Tasks | Analyze | Planning commit |
 |---|---|---|---|---|---|---|
 | `101-transfer-domain` | complete | no material questions | complete | complete, 36 tasks | pass after HIGH remediation; 0 CRITICAL/HIGH | `fff227286601e97ea5b8648892bc92d487627668` |
-| `102-transfer-backend` | pending | pending | pending | pending | pending | pending |
+| `102-transfer-backend` | complete | no material questions | complete | complete, 44 tasks | pass after LOW cleanup; 0 CRITICAL/HIGH | `c30c67ee7248294e875bc7eb2416916158b7b8d1` |
 | `103-transfer-room-ui` | complete | no material questions | complete | complete, 44 tasks | pass after contract remediations; 0 CRITICAL/HIGH | `485d142b07689f076694590e1fa2c14034e8744b` |
 | `104-transfer-evaluation` | pending | pending | pending | pending | pending | pending |
 | `105-transfer-release` | complete | no material questions | complete | complete, 33 tasks | pass after two remediations; 0 CRITICAL/HIGH | `d79c35f` |
