@@ -20,7 +20,12 @@ Intent: preserve the chronological decisions, planning results, verification evi
 - Integration worktree: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/integration`
 - Component worktree root: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment`
 - All six branches were created from the immutable baseline.
-- Stable component owners: pending assignment.
+- Stable component owners admitted in planning wave 1:
+  - `101-transfer-domain`: Kant (`01a09282-73c4-7323-b6ea-020a96c88368`)
+  - `102-transfer-backend`: Dirac (`01a09282-77d6-7ba2-9450-e9ce6925b4db`)
+  - `103-transfer-room-ui`: Hypatia (`01a09282-7962-7f82-8728-f02998238c8e`)
+  - `105-transfer-release`: Aristotle (`01a09282-762c-7193-b898-7aad8ec15483`)
+- `104-transfer-evaluation` remains unassigned until an active planning slot is released. No second owner has entered any worktree.
 
 ## Planning Status
 
