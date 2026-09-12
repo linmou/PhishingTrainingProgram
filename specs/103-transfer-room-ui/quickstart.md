@@ -20,9 +20,9 @@ Give the implementation owner a focused verification order for W7-W8. These comm
 
 ## Focused commands
 
-The list below is the suite that actually exists on this branch. Files planned but not written are
-recorded in `verification-notes.md` as deferred with their reason; a command naming a file that does
-not exist fails the whole run, so the command and the repository must agree.
+This list is the component's verification gate. It is a requirement, not a description of what has
+been built: every file named here must exist and pass, and the component does not get to redefine the
+gate by editing this command.
 
 ```bash
 cd tutor-system
@@ -30,14 +30,19 @@ CI=true npx react-scripts test --watchAll=false --runInBand --runTestsByPath \
   src/components/__tests__/AssessmentDraftEditor.test.tsx \
   src/components/__tests__/ChatMessage.transfer.test.tsx \
   src/components/__tests__/PostComment.transfer.test.tsx \
-  src/components/__tests__/PublicAssessmentQuestion.test.tsx \
+  src/components/__tests__/ChecklistPanel.transfer.test.tsx \
   src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx \
   src/contexts/__tests__/RoomContext.transferAnswer.test.tsx \
-  src/contexts/__tests__/RoomContext.transferIngress.test.tsx \
   src/contexts/__tests__/transferAssessmentUiAdapter.test.ts \
   src/contexts/__tests__/transferAssessmentUiAdapter.contract.test.ts \
+  src/contexts/__tests__/transferAssessmentUiAdapter.lifecycle.test.ts \
+  src/contexts/__tests__/RoomContext.transferIngress.test.tsx \
+  src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx \
+  src/contexts/__tests__/RoomContext.transferModes.test.tsx \
   src/contexts/__tests__/roomExportBuilder.transfer.test.ts \
-  src/pages/__tests__/RoomPagePost.transferDraft.test.tsx
+  src/pages/__tests__/RoomPagePost.transferDraft.test.tsx \
+  src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx \
+  src/pages/__tests__/RoomPagePost.transferDecision.test.tsx
 CI=true npm run test:regression -- --runInBand
 npx tsc --noEmit
 npm run build
