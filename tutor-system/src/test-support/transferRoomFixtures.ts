@@ -91,12 +91,12 @@ export const learnerAMessageRow = {
   user_id: LEARNER_A_ID,
   content: 'Someone asked me to pay with a gift card.',
   user_role: 'student',
+  is_ai_generated: false,
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: null,
   response_mode: null,
-  // Later than learner B's message: the room's latest student message is learner A's.
-  created_at: '2026-09-12T09:06:00Z',
+  created_at: '2026-09-12T09:00:00Z',
 };
 
 export const learnerBMessageRow = {
@@ -114,6 +114,7 @@ export const deliveredQuestionRow = {
   user_id: TUTOR_ID,
   content: 'A stranger asks you to pay a fee to release a prize. What is the safest first step?',
   user_role: 'tutor',
+  is_ai_generated: true,
   ai_model_used: 'qwen3.5-flash',
   ai_response_time_ms: 1200,
   parent_message_id: LEARNER_A_MESSAGE_ID,
@@ -129,14 +130,6 @@ export const deliveredQuestionRow = {
   assessment_lifecycle: 'delivered',
   assessment_checklist_id: CHECKLIST_ID,
   assessment_item_id: CHECKLIST_ITEM_ID,
-  // Persisted by migration 045. Null on rows delivered before it ran.
-  assessment_selection_type: 'single',
-};
-
-/** The same delivered row as a pre-045 assessment: the selection type column is null. */
-export const deliveredQuestionRowWithoutSelectionType = {
-  ...deliveredQuestionRow,
-  assessment_selection_type: null,
 };
 
 export const deliveredPublicAssessment: PublicAssessmentDTO = {
@@ -160,6 +153,7 @@ export const deliveredPublicMessage: PublicMessageDTO = {
   user_id: TUTOR_ID,
   content: deliveredQuestionRow.content,
   user_role: 'tutor',
+  is_ai_generated: true,
   parent_message_id: LEARNER_A_MESSAGE_ID,
   response_mode: 'assessment',
   created_at: deliveredQuestionRow.created_at,
@@ -185,7 +179,6 @@ export const preparedCandidate: TutorDecisionV3 = {
     selection_type: 'single',
     options: deliveredQuestionRow.assessment_options as NonNullable<TutorDecisionV3['assessment']>['options'],
     correct_option_ids: ['B'],
-    learner_safe_explanation: 'Verify an unexpected payment request through an official channel before paying.',
     transfer_basis: {
       concept_rule: 'Verify unexpected payment requests through an official channel.',
       source_context: 'Gift-card payment request',
@@ -247,6 +240,7 @@ export const deliveredAnswerRow: Message = {
   user_id: LEARNER_A_ID,
   content: 'B',
   user_role: 'student',
+  is_ai_generated: false,
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: DELIVERED_QUESTION_ID,

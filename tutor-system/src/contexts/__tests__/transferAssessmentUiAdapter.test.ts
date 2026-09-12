@@ -22,7 +22,6 @@ import {
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
   deliveredQuestionRow,
-  deliveredQuestionRowWithoutSelectionType,
   learnerAMessageRow,
   learnerBMessageRow,
   preparedCandidate,
@@ -66,28 +65,22 @@ describe('transferAssessmentUiAdapter projections', () => {
     expect(readPublicQuestion(view as unknown as Message)).toBeNull();
   });
 
-  it('takes the canonical selection type from the persisted row after a reload', () => {
-    const view = projectRoomMessage(deliveredQuestionRow);
-
-    expect(view.publicQuestion!.selectionType).toBe('single');
-  });
-
-  it('does not invent a selection type for a row delivered before the column existed', () => {
-    const view = projectRoomMessage(deliveredQuestionRowWithoutSelectionType);
-
-    expect(view.publicQuestion!.selectionType).toBeNull();
-  });
-
-  it('prefers the explicit public projection on the delivery path over the persisted column', () => {
+  it('builds the learner view from an explicit public assessment projection when one is supplied', () => {
     const view = projectRoomMessage(deliveredQuestionRow, {
       id: DELIVERED_QUESTION_ID,
-      selection_type: 'multiple',
+      selection_type: 'single',
       stem: deliveredQuestionRow.content,
       rendered_text: 'rendered',
       options: deliveredQuestionRow.assessment_options as never,
     });
 
-    expect(view.publicQuestion!.selectionType).toBe('multiple');
+    expect(view.publicQuestion!.selectionType).toBe('single');
+  });
+
+  it('does not invent a selection type the persisted row does not carry', () => {
+    const view = projectRoomMessage(deliveredQuestionRow);
+
+    expect(view.publicQuestion!.selectionType).toBeNull();
   });
 
   it('fails closed instead of returning a partial question for a malformed option set', () => {
@@ -144,7 +137,7 @@ describe('transferAssessmentUiAdapter projections', () => {
     });
 
     const merged = mergeRoomMessages([first], [second]);
-    expect(merged.map((message) => message.id)).toEqual([learnerBMessageRow.id, LEARNER_A_MESSAGE_ID]);
+    expect(merged.map((message) => message.id)).toEqual([LEARNER_A_MESSAGE_ID, learnerBMessageRow.id]);
 
     const deduped = mergeRoomMessages([first], [late]);
     expect(deduped).toHaveLength(1);
@@ -169,8 +162,8 @@ describe('transferAssessmentUiAdapter projections', () => {
 
     expect(merged.map((message) => message.id)).toEqual([
       'prepop-room-0',
-      learnerBMessageRow.id,
       LEARNER_A_MESSAGE_ID,
+      learnerBMessageRow.id,
     ]);
   });
 });

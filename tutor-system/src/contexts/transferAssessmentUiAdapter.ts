@@ -38,20 +38,6 @@ export interface PublicQuestionView {
  */
 export interface RoomMessageView extends Message {
   publicQuestion: PublicQuestionView | null;
-  /** The server's own lifecycle result for a learner answer, when this message is one. */
-  answerLifecycle: AnswerLifecycleView | null;
-}
-
-/**
- * What the trusted processing path said about one learner answer. It is a projection of the
- * server result, never a local grade: the browser does not decide pass, fail, or format.
- */
-export interface AnswerLifecycleView {
-  state: 'graded' | 'clarification' | 'already_processed' | 'unresolved';
-  /** The delivered question this answer belongs to, as the server reports it. */
-  messageId: string | null;
-  code: string | null;
-  feedbackRequired: boolean;
 }
 
 /** The prepared scope identity from `prepareTurn`. */
@@ -133,10 +119,9 @@ function isCompletePublicAssessment(value: unknown): value is PublicAssessmentDT
 }
 
 /**
- * Build the learner question from a stored message row. Only `content`, `assessment_options`, and
- * `assessment_selection_type` are read, and only when the row records a delivered assessment
- * lifecycle. Rows delivered before migration 045 have no selection type; it stays null then and
- * is never inferred from the private answer key.
+ * Build the learner question from a stored message row. Only `content` and `assessment_options`
+ * are read, and only when the row records a delivered assessment lifecycle. The selection type is
+ * not persisted, so it stays null unless an explicit public projection supplies it.
  */
 export function publicQuestionFromStoredRow(
   row: Record<string, unknown>,
@@ -148,16 +133,12 @@ export function publicQuestionFromStoredRow(
   const id = asNonEmptyString(source.id);
   const stem = asNonEmptyString(source.content);
   if (!options || !id || !stem) return null;
-
-  const persistedSelectionType = source.assessment_selection_type;
-  const selectionType: AssessmentSelectionType | null =
-    explicit && isCompletePublicAssessment(explicit)
-      ? explicit.selection_type
-      : persistedSelectionType === 'single' || persistedSelectionType === 'multiple'
-        ? persistedSelectionType
-        : null;
-
-  return { id, stem, options, selectionType };
+  return {
+    id,
+    stem,
+    options,
+    selectionType: explicit && isCompletePublicAssessment(explicit) ? explicit.selection_type : null,
+  };
 }
 
 /** Project one stored message row into React state, keeping only allowlisted public fields. */
@@ -180,6 +161,7 @@ export function projectRoomMessage(
     user_id: String(projected.user_id ?? ''),
     content: typeof projected.content === 'string' ? projected.content : '',
     user_role: (projected.user_role ?? 'student') as Message['user_role'],
+    is_ai_generated: projected.is_ai_generated === true,
     ai_model_used: typeof projected.ai_model_used === 'string' ? projected.ai_model_used : null,
     ai_response_time_ms:
       typeof projected.ai_response_time_ms === 'number' ? projected.ai_response_time_ms : null,
@@ -189,47 +171,7 @@ export function projectRoomMessage(
     display_name: asNonEmptyString(projected.display_name) || undefined,
     avatar_url: asNonEmptyString(projected.avatar_url),
     publicQuestion: publicQuestionFromStoredRow(source, explicit),
-    answerLifecycle: null,
   };
-}
-
-/**
- * Read the trusted processing result for a learner answer. Component 102 returns `message_id` for
- * the delivered question plus `code`, `clarification_required`, and `already_processed`; the older
- * `question_id` key is still accepted so a not-yet-promoted facade cannot break the learner view.
- */
-export function answerLifecycleFromProcessed(processed: unknown): AnswerLifecycleView {
-  const result = asRecord(processed);
-  const messageId =
-    asNonEmptyString(result.message_id) ?? asNonEmptyString(result.question_id) ?? null;
-  const code = asNonEmptyString(result.code) ?? null;
-  const feedbackRequired = result.feedback_required === true;
-
-  if (result.clarification_required === true || code === 'ANSWER_FORMAT_UNRESOLVED') {
-    return { state: 'clarification', messageId, code, feedbackRequired };
-  }
-  if (result.already_processed === true) {
-    return { state: 'already_processed', messageId, code, feedbackRequired };
-  }
-  if (result.result != null) {
-    return { state: 'graded', messageId, code, feedbackRequired };
-  }
-  return { state: 'unresolved', messageId, code, feedbackRequired };
-}
-
-/** Attach a lifecycle result to a projected message without touching any other field. */
-export function withAnswerLifecycle(
-  view: RoomMessageView,
-  lifecycle: AnswerLifecycleView | null
-): RoomMessageView {
-  return { ...view, answerLifecycle: lifecycle };
-}
-
-/** Read the answer lifecycle a projected message carries, if any. */
-export function readAnswerLifecycle(message: Message | null | undefined): AnswerLifecycleView | null {
-  if (!message) return null;
-  const candidate = (message as Partial<RoomMessageView>).answerLifecycle;
-  return candidate && typeof candidate === 'object' ? candidate : null;
 }
 
 /** Read the public question a projected message carries, if any. */
