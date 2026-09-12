@@ -3,10 +3,13 @@
 Intent: record the gate results that justify promoting the merged component 102 state, so
 `integration_passed` rests on named evidence rather than on a narrative claim.
 
-Tested integration SHA: `c6bc632`. The commit chain is `37b9cf2` (merge of `102-transfer-backend`
+Tested integration SHA: `9bab1e1`. The commit chain is `37b9cf2` (merge of `102-transfer-backend`
 into `integration/transfer-assessment`), `2578ea5` (the author-role and dead-code fix), and
-`c6bc632` (the spec and record reconciliation). The gates were run twice with identical results:
-once on `2578ea5`, and once on the clean tree at `c6bc632`.
+`c6bc632` (the spec and record reconciliation). The gates were run three times with identical
+results: once on `2578ea5`, once on the clean tree at `c6bc632`, and once on `9bab1e1` after
+`c933b4e` corrected migration 044's stored body, which moved the code SHA past the `c6bc632`
+measurement. `9bab1e1` is the SHA propagated to components 103 and 104; it supersedes the
+`c6bc632` record in this file and in `coverage-manifest.json`.
 
 ## Gates run on the tested SHA
 
