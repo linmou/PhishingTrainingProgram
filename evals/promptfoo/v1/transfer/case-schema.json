@@ -1,0 +1,134 @@
+{
+  "schema_version": "transfer-case-v1",
+  "contract_version": "transfer_tutor_context_v3",
+  "intent": "Machine-readable contract for one frozen W9-W10 transfer evaluation case. The target projection must be accepted by the component-102-owned v3 builder; the evaluator projection never reaches the target.",
+  "case_roles": [
+    "positive",
+    "negative",
+    "boundary",
+    "recovery",
+    "regression",
+    "multi_target",
+    "guard",
+    "clarification",
+    "assistance",
+    "contradiction",
+    "spontaneous_transfer",
+    "semantic_pair_member"
+  ],
+  "required_case_roles": [
+    "positive",
+    "negative",
+    "boundary",
+    "recovery",
+    "regression",
+    "multi_target",
+    "guard",
+    "clarification",
+    "assistance",
+    "contradiction",
+    "spontaneous_transfer",
+    "semantic_pair_member"
+  ],
+  "source_types": ["product_template", "synthetic_holdout"],
+  "partitions": ["calibration", "development", "regression"],
+  "statuses": ["pass", "fail", "not_applicable", "missing", "error"],
+  "required_fields": [
+    "case_id",
+    "case_version",
+    "source_type",
+    "case_role",
+    "partition",
+    "source_provenance",
+    "input",
+    "evaluator",
+    "pair",
+    "transition",
+    "holdout_eligibility"
+  ],
+  "input": {
+    "intent": "Exactly the target-visible fields projected into TransferTutorRequestContextInputV3. No evaluator key may appear here.",
+    "required_fields": [
+      "room_id",
+      "checklist_id",
+      "focus_student_id",
+      "focus_student_message",
+      "prior_participation_mode",
+      "checklist_items",
+      "eligible_assessment_item_ids",
+      "unresolved_assessment",
+      "feedback_required",
+      "progress_snapshot_hash"
+    ],
+    "focus_student_message_required_fields": ["id", "room_id", "user_id", "user_role", "content"],
+    "prior_participation_modes": ["tutoring", "guard", "unknown"],
+    "forbidden_keys": [
+      "evaluator",
+      "expected",
+      "prohibited",
+      "rubric",
+      "rubrics",
+      "rubric_annotations",
+      "metrics",
+      "metric_ids",
+      "pair",
+      "pair_id",
+      "member",
+      "holdout",
+      "holdout_eligibility",
+      "eligible",
+      "exposure",
+      "thresholds",
+      "gate",
+      "gate_policy",
+      "verdict",
+      "baseline",
+      "candidate",
+      "label_rationale",
+      "review_status"
+    ]
+  },
+  "evaluator": {
+    "intent": "Evaluator-only projection. Never serialized into a target request.",
+    "required_fields": [
+      "metric_ids",
+      "requirements",
+      "expected",
+      "pass_rule",
+      "applicability",
+      "label_author",
+      "label_version",
+      "review_status"
+    ]
+  },
+  "pair": {
+    "required_fields": ["pair_id", "member", "changed_factor", "expected_contrast"],
+    "member_values": ["a", "b"],
+    "members_per_pair": 2
+  },
+  "transition": {
+    "required_fields": ["sequence_id", "steps", "causal_evidence_ref"],
+    "step_required_fields": ["turn", "learner_message", "expected_decision", "expected_state"]
+  },
+  "holdout_eligibility": {
+    "required_fields": [
+      "author",
+      "author_independent",
+      "creation_version",
+      "prompt_exposure",
+      "development_exposure",
+      "exposure_date",
+      "eligible",
+      "replacement_ref"
+    ]
+  },
+  "validation_rules": [
+    "case_id plus case_version is unique within a manifest",
+    "input contains none of input.forbidden_keys at any depth",
+    "a pair has exactly two members sharing one pair_id and one declared meaning-bearing change",
+    "a transition preserves every turn and asserts state after each step",
+    "an eligible holdout has prompt_exposure and development_exposure both false",
+    "source_type and case_role and partition come from the declared enumerations"
+  ],
+  "budget_note": "The effective completion-token budget is a production literal at the transfer call site of tutor-system/supabase/functions/assessment-api/index.ts, not a shared export (integration control-plane record R13). Parity is asserted against that source."
+}

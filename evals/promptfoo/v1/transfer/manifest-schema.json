@@ -1,0 +1,140 @@
+{
+  "schema_version": "transfer-run-manifest-v1",
+  "manifest_version": "transfer-eval-v1",
+  "intent": "Immutable declaration of one transfer evaluation run: artifact hashes, the component-102-owned shared request contract snapshot, partitions, settings, comparison joins, thresholds, and execution metadata.",
+  "required_fields": [
+    "run_id",
+    "manifest_version",
+    "artifact_hashes",
+    "shared_request_contract",
+    "partitions",
+    "settings",
+    "comparison",
+    "thresholds",
+    "execution"
+  ],
+  "artifact_hashes_required_keys": [
+    "original_plan",
+    "t09_specification",
+    "response_contract",
+    "evaluation_plan",
+    "case_schema",
+    "cases",
+    "metric_registry",
+    "rubric_registry",
+    "adapter",
+    "shared_request_contract_source",
+    "production_prompt_source",
+    "deterministic_checker",
+    "gate_policy",
+    "gate_source"
+  ],
+  "shared_request_contract": {
+    "intent": "Freeze the production request identity both target adapters consume. Production prompt text is referenced and hashed, never copied into evaluation artifacts.",
+    "required_fields": [
+      "contract_version",
+      "builder_export_identities",
+      "builder_source_path",
+      "builder_source_sha256",
+      "production_prompt_reference",
+      "production_prompt_source_path",
+      "production_prompt_source_sha256",
+      "product_effective_completion_token_budget",
+      "evaluation_effective_completion_token_budget",
+      "product_enable_thinking",
+      "evaluation_enable_thinking",
+      "budget_source",
+      "parity_fixtures",
+      "parity_result",
+      "provider_configuration_reference"
+    ],
+    "contract_version": "transfer_tutor_context_v3",
+    "request_contract_version": "transfer_tutor_request_v3",
+    "required_builder_exports": [
+      "buildTransferTutorRequestContextV3",
+      "buildTransferTutorRequestV3",
+      "buildTransferTutorUserMessageV3"
+    ],
+    "effective_completion_token_budget": 1200,
+    "effective_enable_thinking": false,
+    "budget_source_note": "Source-based parity (integration control-plane record R13 and directive R14): the effective budget is the literal max_tokens: 1200 and the thinking flag is enable_thinking: false at the transfer call site in the production Edge Function, not a shared export. A 102-owned exported constant is the documented alternative.",
+    "forbidden_keys": [
+      "api_key",
+      "authorization",
+      "bearer",
+      "password",
+      "prompt_text",
+      "secret",
+      "system_prompt_text",
+      "token"
+    ]
+  },
+  "partitions": {
+    "intent": "Declared partitions with case versions, exposure status, and denominator rules.",
+    "names": ["calibration", "development", "regression", "baseline", "aligned_baseline", "candidate", "holdout"],
+    "hard_partitions_requiring_coverage": ["development", "regression"],
+    "partition_required_fields": ["case_ids", "case_versions", "exposure_status", "denominator_rule"]
+  },
+  "settings": {
+    "intent": "Frozen execution settings. The transfer target path declares its own budget and thinking flag instead of inheriting the legacy v1 values.",
+    "required_fields": [
+      "target_model",
+      "judge_model",
+      "target_temperature",
+      "target_max_tokens",
+      "target_enable_thinking",
+      "judge_temperature",
+      "judge_max_tokens",
+      "judge_enable_thinking",
+      "repetitions",
+      "timeout_ms",
+      "request_concurrency",
+      "transport_attempts",
+      "seed_policy",
+      "legacy_v1_settings_note"
+    ],
+    "legacy_v1_path": {
+      "note": "The legacy v1 evaluation path continues to use evals/promptfoo/v1/settings.json unchanged (target_max_tokens 8000, target_enable_thinking true). That path evaluates a different production call and is not the transfer parity claim.",
+      "inherited_by_transfer": false
+    }
+  },
+  "comparison": {
+    "intent": "Baseline and candidate joins and the permitted changed experimental factors.",
+    "join_keys": ["case_id", "case_version", "metric_id", "partition", "target_generation_id", "repetition", "turn"],
+    "required_fields": ["join_keys", "baseline_run_id", "candidate_run_id", "permitted_changed_factors", "comparability_checks"]
+  },
+  "thresholds": {
+    "intent": "Frozen thresholds and blocking behaviour copied from gate-policy.json at manifest freeze time.",
+    "required_fields": [
+      "semantic_default",
+      "hard",
+      "pair_rule",
+      "non_regression_rule",
+      "missing_error_rule",
+      "zero_coverage_rule"
+    ]
+  },
+  "execution": {
+    "intent": "Commands, revision, worktree state, and timing for one immutable run.",
+    "required_fields": ["commands", "git_revision", "worktree_status", "started_at", "completed_at", "exit_codes"]
+  },
+  "immutability": {
+    "run_directory": "evals/promptfoo/results/<model>/<run-id>/",
+    "write_once": true,
+    "rules": [
+      "Freeze the manifest before candidate evaluation and holdout exposure.",
+      "A case, rubric, adapter, contract, setting, threshold, or gate change creates a new manifest version and a new comparable baseline.",
+      "A shared-builder hash, production-prompt hash, budget, thinking-flag, or parity mismatch makes the run incomplete before semantic scoring.",
+      "Interrupted runs are preserved as partial evidence and never reported as accepted."
+    ]
+  },
+  "pre_scoring_blockers": [
+    "missing shared_request_contract or any of its required fields",
+    "builder_source_sha256 not equal to the hash of the production source file on disk",
+    "production_prompt_source_sha256 not equal to the hash of the production Edge Function on disk",
+    "either effective completion-token budget other than 1200",
+    "either effective enable_thinking value not equal to the frozen value",
+    "parity_result not equal to match",
+    "any evaluator-only metadata, copied production prompt text, or credential in target evidence"
+  ]
+}

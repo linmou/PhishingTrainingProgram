@@ -1,0 +1,57 @@
+{
+  "policy_version": "transfer-gate-v1",
+  "intent": "Frozen blocking thresholds and verdict rules for transfer evaluation evidence. The gate reads this policy, not a later working manifest.",
+  "verdicts": ["accepted", "failed", "incomplete"],
+  "semantic_default_threshold": 0.8,
+  "hard_threshold": 1,
+  "hard_metrics": ["t09_contract_and_progress", "assessment_followup"],
+  "hard_partitions": ["overall", "declared_semantic_pairs", "declared_validity_constraints"],
+  "pair_rule": "every declared semantic pair evaluates both members jointly; one failing member or one missing member fails the pair gate",
+  "non_regression_rule": "the candidate must not decline against the unchanged comparable baseline on the same case version, metric version, partition, target generation, settings, and repetition policy; a decline fails even when the candidate still exceeds the threshold",
+  "missing_error_rule": "missing and error rows stay in the denominator and produce incomplete",
+  "zero_coverage_rule": "a partition with zero applicable rows is zero coverage and produces incomplete, never a pass",
+  "applicability_rule": "not_applicable requires a predeclared conditional rule with applicable=false and null pass and score",
+  "pre_scoring_blockers": [
+    "missing shared builder hash",
+    "missing production prompt reference or hash",
+    "either effective completion-token budget other than 1200",
+    "either effective enable_thinking value other than the frozen value",
+    "normalized product and evaluation request mismatch for any parity fixture",
+    "evaluator-only metadata or a provider credential inside target evidence"
+  ],
+  "non_substitution_boundaries": [
+    "database and row-level security",
+    "verification and answer-key privacy",
+    "production provider path",
+    "browser downstream consumption",
+    "feature-flag activation",
+    "rollback"
+  ],
+  "evidence_label": "Promptfoo transfer evaluation evidence only",
+  "weighted_average_forbidden": true,
+  "required_diagnostics": [
+    "metric, partition, passed, applicable, expected, exact fraction, threshold, and method",
+    "zero-coverage and conditional applicability counts with reasons",
+    "every missing and error row with its cause",
+    "every candidate pass-to-fail case and applicability change",
+    "pair id, member, and repetition failures",
+    "stateful transition and deterministic expected-versus-actual failures",
+    "manifest, hash, budget, thinking-flag, and baseline-comparability failures",
+    "links to raw evidence and the non-substitution statement"
+  ],
+  "gate_test_matrix": [
+    {"fixture": "all declared rows pass at threshold", "expected_verdict": "accepted"},
+    {"fixture": "missing case, check, metric, or partition result", "expected_verdict": "incomplete"},
+    {"fixture": "evaluator, provider, or judge error", "expected_verdict": "incomplete"},
+    {"fixture": "zero-applicable partition", "expected_verdict": "incomplete"},
+    {"fixture": "candidate below threshold", "expected_verdict": "failed"},
+    {"fixture": "candidate above threshold but below comparable baseline", "expected_verdict": "failed"},
+    {"fixture": "one semantic-pair member fails", "expected_verdict": "failed"},
+    {"fixture": "incomparable baseline or changed case version", "expected_verdict": "incomplete"},
+    {"fixture": "conditional not_applicable with a valid rule", "expected_verdict": "evaluated"},
+    {"fixture": "missing shared builder or production prompt hash", "expected_verdict": "incomplete"},
+    {"fixture": "product and evaluation normalized request mismatch", "expected_verdict": "incomplete"},
+    {"fixture": "either v3 adapter budget differs from 1200", "expected_verdict": "incomplete"},
+    {"fixture": "evaluator metadata or provider secret leaks into target evidence", "expected_verdict": "incomplete"}
+  ]
+}
