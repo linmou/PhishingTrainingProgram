@@ -12,6 +12,7 @@ import { Database } from '../types/database';
 import AvatarDisplay from '../components/AvatarDisplay';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { RoomTemplate } from '../types';
+import { getDemoRoomTemplateSeeds, toRoomTemplateInsertRow } from '../services/demoRoomTemplates';
 import {
   isBehaviorDemoTemplateName,
   isBehaviorTestRoom,
@@ -20,6 +21,23 @@ import {
 import '../components/TutorView.css';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
+
+/**
+ * The global template rows are owned by the system user, so a browser client with no Supabase
+ * session (auth.uid() is NULL) cannot read them under the table's RLS policy. These rows are the
+ * shipped seeds that produced those records, used only when the database returns none.
+ */
+const shippedDemoTemplateRows = (): RoomTemplate[] =>
+  getDemoRoomTemplateSeeds().map((seed, index) => {
+    const row = toRoomTemplateInsertRow(seed);
+    return {
+      ...row,
+      id: `shipped-seed-${index}`,
+      usage_count: 0,
+      created_at: new Date(0).toISOString(),
+      updated_at: new Date(0).toISOString()
+    } as RoomTemplate;
+  });
 
 const TestRoomsView: React.FC = () => {
   const { user } = useAuth();
@@ -56,9 +74,15 @@ const TestRoomsView: React.FC = () => {
     if (!user?.id) return;
     try {
       const all = await getRoomTemplatesByTutor(user.id);
-      setTemplates(all);
+      if (all.length > 0) {
+        setTemplates(all);
+        return;
+      }
+      console.warn('⚠️ No room templates readable; using the shipped demo template seeds');
+      setTemplates(shippedDemoTemplateRows());
     } catch (err) {
       console.error('Error loading templates:', err);
+      setTemplates(shippedDemoTemplateRows());
     }
   }, [user?.id]);
 
