@@ -362,27 +362,26 @@ export class TransferAssessmentService {
     });
   }
 
-  async reviewDraft(input: {
-    draftId: string;
-    expectedRevision: number;
-    finalPayload: TutorDecisionV3;
-    contentConfirmed: boolean;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('review_draft', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
-      final_payload: input.finalPayload,
-      content_confirmed: input.contentConfirmed,
-    });
-  }
-
+  /**
+   * Deliver a reviewed assessment or tutoring turn. There is no draft table, so the reviewed
+   * payload and the scope it applies to travel on this one call; the tutor message is created
+   * and the assessment is stamped onto it atomically.
+   */
   async sendReviewed(input: {
-    draftId: string;
-    expectedRevision: number;
+    reviewedPayload: TutorDecisionV3;
+    roomId: string;
+    studentId: string;
+    checklistId: string;
+    itemId: string;
+    focusStudentMessageId: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request<Record<string, unknown>>('send_reviewed', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
+      reviewed_payload: input.reviewedPayload,
+      room_id: input.roomId,
+      student_id: input.studentId,
+      checklist_id: input.checklistId,
+      item_id: input.itemId,
+      focus_student_message_id: input.focusStudentMessageId,
     });
     return projectReviewedDelivery(result);
   }

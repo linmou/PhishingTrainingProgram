@@ -81,21 +81,20 @@ describe('operation allowlist', () => {
       'post_message',
       'prepare_turn',
       'process_message',
-      'review_draft',
       'send_reviewed',
     ]);
   });
 
   it('no longer advertises the removed operations', () => {
     ['capabilities', 'reject_draft', 'regenerate_draft', 'cancel_question',
-     'invalidate_question', 'confirm_external_transfer'].forEach((operation) => {
+     'invalidate_question', 'confirm_external_transfer', 'review_draft'].forEach((operation) => {
       expect(isAssessmentApiOperation(operation)).toBe(false);
     });
   });
 
   it('declares every allowlisted operation with no duplicates', () => {
     expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(ASSESSMENT_API_OPERATIONS.length);
-    expect(ASSESSMENT_API_OPERATIONS.length).toBe(7);
+    expect(ASSESSMENT_API_OPERATIONS.length).toBe(6);
   });
 });
 

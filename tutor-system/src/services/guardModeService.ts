@@ -24,8 +24,12 @@ export interface ReviewedTutorResponseResult {
 }
 
 export interface ReviewedTransferResponseInput {
-  draftId: string;
-  expectedRevision: number;
+  reviewedPayload: TutorDecisionV3;
+  roomId: string;
+  studentId: string;
+  checklistId: string;
+  itemId: string;
+  focusStudentMessageId: string;
 }
 
 /** Send a reviewed v3 tutoring, Guard, or assessment turn through the trusted API. */
