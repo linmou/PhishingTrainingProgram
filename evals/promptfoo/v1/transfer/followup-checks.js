@@ -44,7 +44,6 @@ function stepState(step, context) {
     context.cancellations.push({ turn: step.turn, reason: 'assistance_request', item_id: step.item_id });
     context.assessment_open = false;
     context.cancelled = true;
-    if (step.assistance_unresolved) failures.push(stepFailure('assistance_treated_as_failure', step.turn, step.kind));
   } else if (step.kind === 'feedback') {
     context.feedback_since_resolution = true;
     context.resolved = false;
@@ -97,6 +96,7 @@ function checkAssessmentFollowup(sequence) {
       else if (!before.assessment_open) failures.push(stepFailure('graded_before_delivery', turn, step.kind));
       if (before.cancelled && step.assistance_unresolved) failures.push(stepFailure('assistance_treated_as_failure', turn, step.kind));
     }
+    if (step.kind === 'assistance_request' && step.assistance_unresolved) failures.push(stepFailure('assistance_treated_as_failure', turn, step.kind));
     if (step.kind === 'assessment_delivered') {
       if (before.assessment_open) failures.push(stepFailure('consecutive_assessments', turn, step.kind, { previous_turn: before.delivered_turn }));
       if (before.resolved && !before.feedback_since_resolution) failures.push(stepFailure('feedback_precedes_assessment', turn, step.kind));
