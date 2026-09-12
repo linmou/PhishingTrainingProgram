@@ -10,6 +10,8 @@ type Operation =
   | 'analyze_message'
   | 'prepare_turn'
   | 'review_draft'
+  | 'reject_draft'
+  | 'regenerate_draft'
   | 'send_reviewed'
   | 'process_message'
   | 'cancel_question'
@@ -434,6 +436,8 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
     analyze_message: 'apply_learning_event_v1',
     prepare_turn: 'prepare_transfer_turn_v1',
     review_draft: 'review_assessment_draft_v1',
+    reject_draft: 'reject_assessment_draft_v1',
+    regenerate_draft: 'regenerate_assessment_draft_v1',
     send_reviewed: 'send_reviewed_tutor_response_v3',
     process_message: 'process_assessment_message_v1',
     cancel_question: 'cancel_assessment_question_v1',
@@ -464,6 +468,18 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
       rpcArgs.p_expected_revision = body.expected_revision;
       rpcArgs.p_final_payload = body.final_payload;
       rpcArgs.p_content_confirmed = body.content_confirmed;
+      break;
+    case 'reject_draft':
+      rpcArgs.p_draft_id = body.draft_id;
+      rpcArgs.p_expected_revision = body.expected_revision;
+      rpcArgs.p_reason = body.reason;
+      break;
+    case 'regenerate_draft':
+      rpcArgs.p_source_draft_id = body.source_draft_id;
+      rpcArgs.p_expected_revision = body.expected_revision;
+      rpcArgs.p_expected_snapshot_hash = body.expected_snapshot_hash;
+      rpcArgs.p_provider_payload = body.provider_payload;
+      rpcArgs.p_raw_hash = body.raw_hash;
       break;
     case 'send_reviewed':
       rpcArgs.p_draft_id = body.draft_id;
@@ -514,7 +530,7 @@ export async function handleAssessmentRequest(request: Request): Promise<Respons
   if (typeof operation !== 'string') return errorResponse('INVALID_REQUEST', 'operation is required', 400);
   const knownOperations: Operation[] = [
     'capabilities', 'initialize_checklist', 'post_message', 'analyze_message', 'prepare_turn',
-    'review_draft', 'send_reviewed', 'process_message', 'cancel_question',
+    'review_draft', 'reject_draft', 'regenerate_draft', 'send_reviewed', 'process_message', 'cancel_question',
     'invalidate_question', 'confirm_external_transfer'
   ];
   if (!knownOperations.includes(operation as Operation)) return errorResponse('INVALID_REQUEST', 'unsupported operation', 400);
