@@ -19,6 +19,152 @@ export interface EcologicalChatMessage {
   content: string;
 }
 
+/**
+ * Canonical v3 transfer request contract shared by production (component 102) and
+ * evaluation (component 104). Both consumers build their request through these
+ * exports so a Promptfoo case cannot drift into a parallel request shape.
+ */
+export interface TransferTutorChecklistItemV3 {
+  id: string;
+  area_text: string;
+  priority: 'critical' | 'important' | 'optional';
+  status: 'pending' | 'partially_covered' | 'needs_review' | 'covered';
+  understanding_level: 'none' | 'basic' | 'good';
+  relevant_evidence_message_ids: string[];
+  repair_message_id: string | null;
+}
+
+export interface TransferTutorPublicAssessmentDTO {
+  id: string;
+  selection_type: 'single' | 'multiple';
+  stem: string;
+  rendered_text: string;
+  options: Array<{ id: 'A' | 'B' | 'C' | 'D'; text: string }>;
+}
+
+export interface TransferTutorRequestContextV3 {
+  contract_version: 'transfer_tutor_context_v3';
+  room_id: string;
+  checklist_id: string;
+  focus_student_id: string;
+  focus_student_message: {
+    id: string;
+    room_id: string;
+    user_id: string;
+    user_role: 'student';
+    content: string;
+  };
+  progress_policy_version: 'transfer_v1';
+  prior_participation_mode: 'tutoring' | 'guard' | 'unknown';
+  checklist_items: TransferTutorChecklistItemV3[];
+  eligible_assessment_item_ids: string[];
+  unresolved_assessment: TransferTutorPublicAssessmentDTO | null;
+  feedback_required: boolean;
+  progress_snapshot_hash: string;
+}
+
+export interface TransferTutorRequestV3 {
+  contract_version: 'transfer_tutor_request_v3';
+  context: TransferTutorRequestContextV3;
+}
+
+export interface TransferTutorRequestContextInputV3 {
+  room_id: string;
+  checklist_id: string;
+  focus_student_id: string;
+  focus_student_message: {
+    id: string;
+    room_id: string;
+    user_id: string;
+    user_role: 'student';
+    content: string;
+  };
+  prior_participation_mode: 'tutoring' | 'guard' | 'unknown';
+  checklist_items: TransferTutorChecklistItemV3[];
+  eligible_assessment_item_ids: string[];
+  unresolved_assessment: TransferTutorPublicAssessmentDTO | null;
+  feedback_required: boolean;
+  progress_snapshot_hash: string;
+}
+
+function sortedUnique(values: ReadonlyArray<string>): string[] {
+  return Array.from(new Set(values)).sort((left, right) => left.localeCompare(right));
+}
+
+function canonicalChecklistItem(item: TransferTutorChecklistItemV3): TransferTutorChecklistItemV3 {
+  return {
+    id: item.id,
+    area_text: item.area_text.trim(),
+    priority: item.priority,
+    status: item.status,
+    understanding_level: item.understanding_level,
+    relevant_evidence_message_ids: sortedUnique(item.relevant_evidence_message_ids),
+    repair_message_id: item.repair_message_id ?? null,
+  };
+}
+
+function canonicalAssessment(
+  assessment: TransferTutorPublicAssessmentDTO | null
+): TransferTutorPublicAssessmentDTO | null {
+  if (!assessment) return null;
+  const optionOrder = ['A', 'B', 'C', 'D'];
+  return {
+    id: assessment.id,
+    selection_type: assessment.selection_type,
+    stem: assessment.stem.trim(),
+    rendered_text: assessment.rendered_text,
+    options: [...assessment.options]
+      .sort((left, right) => optionOrder.indexOf(left.id) - optionOrder.indexOf(right.id))
+      .map((option) => ({ id: option.id, text: option.text.trim() })),
+  };
+}
+
+/**
+ * Canonical packaging of the v3 turn context. Array order and duplication in the
+ * caller's input never change the output, so two consumers given equivalent input
+ * produce byte-equivalent requests.
+ */
+export function buildTransferTutorRequestContextV3(
+  input: TransferTutorRequestContextInputV3
+): TransferTutorRequestContextV3 {
+  return {
+    contract_version: 'transfer_tutor_context_v3',
+    room_id: input.room_id,
+    checklist_id: input.checklist_id,
+    focus_student_id: input.focus_student_id,
+    focus_student_message: {
+      id: input.focus_student_message.id,
+      room_id: input.focus_student_message.room_id,
+      user_id: input.focus_student_message.user_id,
+      user_role: 'student',
+      content: input.focus_student_message.content.trim(),
+    },
+    progress_policy_version: 'transfer_v1',
+    prior_participation_mode: input.prior_participation_mode,
+    checklist_items: input.checklist_items
+      .map(canonicalChecklistItem)
+      .sort((left, right) => left.id.localeCompare(right.id)),
+    eligible_assessment_item_ids: sortedUnique(input.eligible_assessment_item_ids),
+    unresolved_assessment: canonicalAssessment(input.unresolved_assessment),
+    feedback_required: input.feedback_required,
+    progress_snapshot_hash: input.progress_snapshot_hash,
+  };
+}
+
+export function buildTransferTutorRequestV3(
+  context: TransferTutorRequestContextV3
+): TransferTutorRequestV3 {
+  return { contract_version: 'transfer_tutor_request_v3', context };
+}
+
+/**
+ * Canonical provider user turn. The serialization is deterministic for equal
+ * contexts, which is the property the 102/104 contract comparison relies on.
+ */
+export function buildTransferTutorUserMessageV3(request: TransferTutorRequestV3): string {
+  return JSON.stringify(request);
+}
+
 export const GUARD_MODE_POLICY = [
   'Return exactly one JSON object with these required string fields: mode, mode_reason, suggested_response.',
   'mode must be exactly "tutoring" or "guard" and must be decided independently on every turn.',

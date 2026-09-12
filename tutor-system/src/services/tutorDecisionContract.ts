@@ -1,7 +1,7 @@
 // #!/usr/bin/env node
 // Purpose: validate reason-first tutor decisions for both the legacy v2 and explicit transfer v3 contracts.
-import { TutorBehaviorDecision, TutorInstruction } from '../types';
-import { TutorDecisionV3, TutorInstruction as TutorInstructionV3 } from '../types/assessment';
+import type { TutorBehaviorDecision, TutorInstruction } from '../types';
+import type { TutorDecisionV3, TutorInstruction as TutorInstructionV3 } from '../types/assessment';
 import { countAssessmentSegments, validateAssessmentRendering } from './assessmentRendering';
 
 const instructions: Array<TutorInstruction | null> = ['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation', null];
@@ -58,6 +58,36 @@ function requireReasonFirst(content: string): void {
   if (!first || JSON.parse(first[1]) !== 'reason') throw new Error('AI tutor decision reason must be serialized first');
 }
 
+const GENERIC_CONTEXT_WORDS = new Set([
+  'a', 'an', 'the', 'this', 'that', 'these', 'those', 'some', 'any',
+  'using', 'with', 'from', 'into', 'in', 'on', 'at', 'of', 'for', 'to', 'by',
+  'and', 'or', 'but', 'not', 'no', 'is', 'are', 'was', 'were', 'be', 'been',
+  'it', 'its', 'same', 'new', 'context', 'situation', 'example', 'scenario', 'case',
+]);
+
+function contextTokens(value: string): Set<string> {
+  return new Set(
+    value
+      .normalize('NFKC')
+      .toLocaleLowerCase()
+      .match(/[a-z0-9]+/g)
+      ?.filter((token) => !GENERIC_CONTEXT_WORDS.has(token)) ?? []
+  );
+}
+
+/**
+ * Reject a "changed" context that merely restates the source context, which is the
+ * cosmetic brand/name substitution and unstated-prerequisite failure class from FR-003.
+ * Any substantive situation, actor, channel, or artefact word that the source context
+ * does not contain makes the changed context a new situation.
+ */
+function hasNewSituation(sourceContext: string, changedContext: string): boolean {
+  const source = contextTokens(sourceContext);
+  const changed = contextTokens(changedContext);
+  if (changed.size === 0) return false;
+  return Array.from(changed).some((token) => !source.has(token));
+}
+
 function validateV3Assessment(candidate: any, context: V3ValidationContext): any {
   if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('assessment payload is required');
   if (candidate.selection_type !== 'single' && candidate.selection_type !== 'multiple') throw new Error('assessment selection_type is invalid');
@@ -77,6 +107,9 @@ function validateV3Assessment(candidate: any, context: V3ValidationContext): any
   requireNonEmptyString(candidate.transfer_basis.concept_rule, 'transfer concept_rule');
   requireNonEmptyString(candidate.transfer_basis.source_context, 'transfer source_context');
   requireNonEmptyString(candidate.transfer_basis.changed_context, 'transfer changed_context');
+  if (!hasNewSituation(candidate.transfer_basis.source_context, candidate.transfer_basis.changed_context)) {
+    throw new Error('assessment transfer changed_context must describe a situation the source context does not already state');
+  }
   if (!Array.isArray(candidate.transfer_basis.source_evidence_message_ids) || candidate.transfer_basis.source_evidence_message_ids.length === 0) throw new Error('assessment source evidence IDs are required');
   if (candidate.transfer_basis.source_evidence_message_ids.some((id: unknown) => !context.knownMessageIds.includes(id as string))) throw new Error('assessment source evidence message ID is unknown');
   const rendered = validateAssessmentRendering({

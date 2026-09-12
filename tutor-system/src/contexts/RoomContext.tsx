@@ -45,10 +45,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
     const [transferDraft, setTransferDraft] = useState<{
-        draftId: string;
-        revision: number;
         decision: TutorDecisionV3;
         progressSnapshotHash: string;
+        roomId: string;
+        studentId: string;
+        checklistId: string;
+        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
+        itemId: string | null;
+        focusStudentMessageId: string;
     } | null>(null);
     const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
     const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
@@ -745,10 +749,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     throw new Error('Transfer preparation did not return a structured tutor decision');
                 }
                 setTransferDraft({
-                    draftId: String(prepared.draft_id),
-                    revision: Number(prepared.revision),
                     decision: preparedDecision,
                     progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
+                    roomId: String(prepared.room_id),
+                    studentId: String(prepared.student_id),
+                    checklistId: String(prepared.checklist_id),
+                    // Keep null as null. String(null) is the text "null", which the RPC would
+                    // reject as an invalid UUID on every tutoring and Guard turn.
+                    itemId: prepared.item_id == null ? null : String(prepared.item_id),
+                    focusStudentMessageId: String(prepared.focus_student_message_id),
                 });
                 setAiSuggestion(preparedDecision.assessment?.rendered_text || preparedDecision.response);
                 setAiDecision(null);
@@ -1146,16 +1155,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const confirmTransferDraft = async (decision: TutorDecisionV3): Promise<void> => {
         if (!transferDraft) throw new Error('No transfer assessment draft is available');
-        const reviewed = await transferAssessmentService.reviewDraft({
-            draftId: transferDraft.draftId,
-            expectedRevision: transferDraft.revision,
-            finalPayload: decision,
-            contentConfirmed: true,
-        });
+        // No draft row exists, so the reviewed payload and its scope are delivered in one call.
         const sent = await transferAssessmentService.sendReviewed({
-            draftId: transferDraft.draftId,
-            expectedRevision: Number(reviewed.revision),
-            expectedHash: String(reviewed.final_hash),
+            reviewedPayload: decision,
+            roomId: transferDraft.roomId,
+            studentId: transferDraft.studentId,
+            checklistId: transferDraft.checklistId,
+            itemId: transferDraft.itemId,
+            focusStudentMessageId: transferDraft.focusStudentMessageId,
         });
         const sentMessage = sent.message as Message | undefined;
         if (sentMessage) {

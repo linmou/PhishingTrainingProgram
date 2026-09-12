@@ -1,0 +1,7 @@
+{
+  "schema": 2,
+  "feature": "transfer_assessment_lean_closeout",
+  "route": "compact",
+  "monitor_agent_id": "50e45b9c-28b6-4d8d-8e22-4511b77e2f9a",
+  "monitor_source": "dsh-subagent"
+}

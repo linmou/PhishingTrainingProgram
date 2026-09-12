@@ -1,6 +1,6 @@
 // Purpose: normalize explicit assessment selections without guessing from arbitrary learner prose.
 
-import { AssessmentOption, AssessmentOptionId, AssessmentSelectionType } from '../types/assessment';
+import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType } from '../types/assessment';
 
 export type ParsedSelection =
   | { kind: 'selection'; option_ids: AssessmentOptionId[] }
