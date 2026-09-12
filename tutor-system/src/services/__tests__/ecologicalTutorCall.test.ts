@@ -13,6 +13,7 @@ import {
 } from '../ecologicalTutorCall';
 import { getDemoRoomTemplateSeeds } from '../demoRoomTemplates';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
+import { MULTI_AGENT_TUTOR_PROMPT } from '../prompts/multiAgentTutorPrompt';
 import fs from 'fs';
 import path from 'path';
 
@@ -103,14 +104,53 @@ describe('ecologicalTutorCall', () => {
     expect(messages[1].content).toContain('student line');
   });
 
-  it('keeps the frozen candidate 11 text as the active agent prompt and appends the multi-agent extension', () => {
+  it('keeps the frozen candidate 11 text as the whole active agent prompt', () => {
     const evaluatedPrompt = fs.readFileSync(
       path.resolve(__dirname, '../../../../evals/promptfoo/v1/candidate-policy-11-contract-v2.md'),
       'utf8'
     ).trim();
-    // The evaluated candidate 11 policy stays verbatim; the Multi-agent decision section is additive.
-    expect(ACTIVE_TUTOR_AGENT_PROMPT.startsWith(evaluatedPrompt)).toBe(true);
-    expect(ACTIVE_TUTOR_AGENT_PROMPT.slice(evaluatedPrompt.length)).toContain('MULTI-AGENT EXTENSION');
+    // Multi-agent lives in its own prompt, so the evaluated policy is sent unchanged.
+    expect(ACTIVE_TUTOR_AGENT_PROMPT).toBe(evaluatedPrompt);
+    expect(ACTIVE_TUTOR_AGENT_PROMPT).not.toContain('MULTI-AGENT');
+  });
+
+  it('adds the multi-agent prompt only for multi_agent turns', () => {
+    const base = {
+      scenario_context: 'room',
+      conversation_history: 'history',
+      student_message: 'student line',
+      prior_mode: 'tutoring' as const
+    };
+
+    const singleAgent = buildEcologicalChatCompletionMessages('SYSTEM', {
+      ...base,
+      interaction_mode: 'single_agent'
+    });
+    expect(singleAgent[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
+    expect(singleAgent[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
+    expect(singleAgent[1].content).toContain('"interaction_mode":"single_agent"');
+
+    const multiAgent = buildEcologicalChatCompletionMessages('SYSTEM', {
+      ...base,
+      interaction_mode: 'multi_agent'
+    });
+    expect(multiAgent[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
+    expect(multiAgent[0].content).toContain(MULTI_AGENT_TUTOR_PROMPT);
+    expect(multiAgent[0].content.indexOf(ACTIVE_TUTOR_AGENT_PROMPT))
+      .toBeLessThan(multiAgent[0].content.indexOf(MULTI_AGENT_TUTOR_PROMPT));
+    expect(multiAgent[1].content).toContain('"interaction_mode":"multi_agent"');
+
+    // Old callers that omit the field keep the single-agent request.
+    const legacy = buildEcologicalChatCompletionMessages('SYSTEM', base);
+    expect(legacy[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
+  });
+
+  it('describes the pair contract, Riley limits and the single-Tutor fallback', () => {
+    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/mode "multiagent"/);
+    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/\[agent:riley\]/);
+    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/\[agent:tutor\]/);
+    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/protective_instruction/);
+    expect(MULTI_AGENT_TUTOR_PROMPT).not.toMatch(/SERVICE_ROLE|api[_-]?key/i);
   });
 
   it('converts pre-populated arrays into context messages for AI history', () => {

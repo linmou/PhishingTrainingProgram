@@ -104,6 +104,7 @@ const callModel = async (messages: Array<{ role: string; content: string }>): Pr
 /** Same one-shot format-repair retry the production service applies. */
 const runCase = async (testCase: BehaviorCase, interactionMode: 'single_agent' | 'multi_agent') => {
   const messages = buildCaseMessages(testCase, interactionMode);
+  const dedicatedPromptUsed = messages[0].content.includes('MULTI-AGENT MODE (interaction_mode = multi_agent)');
   const rawOutputs: Array<{ attempt: number; content: string; error?: string }> = [];
   let repairUsed = false;
   let requestMessages = messages;
@@ -142,6 +143,7 @@ const runCase = async (testCase: BehaviorCase, interactionMode: 'single_agent' |
     label: testCase.label,
     requirements: testCase.requirements,
     interaction_mode: interactionMode,
+    dedicatedMultiAgentPrompt: dedicatedPromptUsed,
     model: DEFAULT_AI_MODEL,
     temperature: TEMPERATURE,
     max_tokens: MAX_TOKENS,

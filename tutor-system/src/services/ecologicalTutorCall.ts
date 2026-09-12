@@ -6,6 +6,7 @@
 
 import { ConversationMessage, InteractionMode, PrePopulatedMessage, TutorResponseMode } from '../types';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from './prompts/activeTutorAgentPrompt';
+import { MULTI_AGENT_TUTOR_PROMPT } from './prompts/multiAgentTutorPrompt';
 
 export interface EcologicalCaseVars {
   scenario_context: string;
@@ -123,15 +124,21 @@ export function buildEcologicalTutorUserTurn({
 /**
  * Build Qwen-compatible chat messages for the ecological product path:
  * system = room system prompt; user = ecological turn with latest student line.
+ * The multi-agent instruction block is appended only for multi_agent turns, so the
+ * evaluated single-Tutor policy is sent unchanged in every other case.
  */
 export function buildEcologicalChatCompletionMessages(
   systemPrompt: string,
   vars: EcologicalCaseVars
 ): EcologicalChatMessage[] {
   const roomPrompt = systemPrompt || 'You are a helpful AI assistant in an educational tutoring session.';
-  const activeSystemPrompt = roomPrompt.includes(ACTIVE_TUTOR_AGENT_PROMPT)
+  const withBasePolicy = roomPrompt.includes(ACTIVE_TUTOR_AGENT_PROMPT)
     ? roomPrompt
     : `${roomPrompt}\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`;
+  const activeSystemPrompt = vars.interaction_mode === 'multi_agent'
+    && !withBasePolicy.includes(MULTI_AGENT_TUTOR_PROMPT)
+    ? `${withBasePolicy}\n\n${MULTI_AGENT_TUTOR_PROMPT}`
+    : withBasePolicy;
   return [
     {
       role: 'system',

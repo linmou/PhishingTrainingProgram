@@ -10,9 +10,9 @@ Implementation commit ID: uncommitted worktree `multi-character-demo` at baselin
 
 - `ai-behaviors/tutor-response-contract.md`: adds the Multi-agent extension section
   (`mode=multiagent`, `instruction=multiagent`, the two-tag response grammar, the
-  `interaction_mode` request field, the two-card human review, the T / T+2s persistence
-  and staged playback, the Tutor rating target, and the missing
-  `ai_suggestion_feedback` audit record for the pair).
+  `interaction_mode` request field, the dedicated `multiAgentTutorPrompt.ts` selection
+  block, the two-card human review, the T / T+2s persistence and staged playback, the
+  Tutor rating target, and the missing `ai_suggestion_feedback` audit record for the pair).
 
 No other tracked document changes: the feature adds no database schema, no room
 participation mode, and no new evaluation framework. `npm run eval:prompts` regenerates
@@ -24,8 +24,10 @@ this feature.
 
 ## Verification boundary
 
-- The frozen candidate 11 policy text is unchanged and remains a prefix of the active
-  prompt; the Multi-agent section is appended after the v2 contract check.
+- The frozen candidate 11 policy text is unchanged and is now the whole active prompt again;
+  the Multi-agent instructions live in `src/services/prompts/multiAgentTutorPrompt.ts` and are
+  appended only for `interaction_mode = multi_agent` turns. The targeted eval records
+  `dedicatedMultiAgentPrompt: true` for the multi-agent arm and `false` for the control arm.
 - Full Jest run equals baseline when both worktrees run with the same provider
   credentials: identical failing suites and failing tests, plus the new Multi-agent
   suites (`tutorDecisionContract.test.ts`, `RoomContext.multiAgentDraft.test.tsx`,
@@ -38,11 +40,13 @@ this feature.
 - Production build passes (`react-scripts build`, exit 0, pre-existing lint warnings).
 - Live behavior cases (`plan/multi-character_initial/behavior-cases.json`) ran against
   `qwen3.5-flash` in both interaction modes, with per-case records under
-  `evals/promptfoo/results/multi-agent-behavior-cases-*.json`. The Multi-agent arm matched
-  the case's allowed decision in 10/12 cases; the single-agent control matched 9/12. The
-  only Multi-agent-specific miss is B05 (a wrong inference after a focused scaffold chose
-  `multiagent` instead of `tutoring/correction`); B11 fails identically in both arms and is
-  therefore inherited from the candidate 11 policy, not from this extension.
+  `evals/promptfoo/results/multi-agent-behavior-cases-*.json`. With the dedicated prompt the
+  Multi-agent arm matched the case's allowed decision in 10/12 cases and the single-agent
+  control in 9/12 (two of the control misses are cases that require the pair, so they are
+  expected there). The only Multi-agent-specific miss is B05 (a wrong inference after a
+  focused scaffold chose `multiagent` instead of `tutoring/correction`); B11 fails identically
+  in both arms and is therefore inherited from the candidate 11 policy, not from this
+  extension.
 - The Promptfoo gate fails both with and without the extension in this environment
   (`structured_output` and `mode_selection` score 0/15 at baseline). A matched in-worktree
   A/B run shows no metric collapse: `turn_rhythm` 18→19, `direct_correction` 7→6,
