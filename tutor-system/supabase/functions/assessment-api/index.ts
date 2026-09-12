@@ -290,7 +290,6 @@ async function prepareTransferTurn(
   assertV3DraftShape(candidate, itemIds, messageIds);
   if (candidate.decision.mode === 'assessment' && !eligibleItemIds.includes(candidate.decision.target_item_id)) throw new Error('AI_OUTPUT_INVALID');
 
-  const rawHash = await hashText(String(rawContent));
   const { data: draft, error: draftError } = await admin.schema('private').from('assessment_drafts').insert({
     room_id: checklist.room_id,
     student_id: checklist.student_id,
@@ -299,7 +298,6 @@ async function prepareTransferTurn(
     focus_student_message_id: focusMessage.id,
     raw_model_output: candidate,
     revision: 1,
-    raw_hash: rawHash,
     status: 'draft',
   }).select('id,room_id,student_id,checklist_id,item_id,focus_student_message_id,revision,status,created_at').single();
   if (draftError || !draft) throw new Error('PERSISTENCE_FAILED');

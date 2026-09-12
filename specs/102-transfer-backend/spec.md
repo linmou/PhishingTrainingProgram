@@ -91,12 +91,10 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 
 - A legacy checklist has no explicit learner owner; it remains legacy and cannot enter the transfer path.
 - Multiple active learners are present in a room; automatic transfer assessment is unavailable rather than silently sharing a checklist or choosing an owner.
-- A learner reconnects or two teacher tabs race; stored question, revision, request result, and public message IDs remain authoritative.
+- A learner reconnects or two teacher tabs race; stored question, revision, and public message IDs remain authoritative.
 - A draft is delivered after its checklist, item, focus message, or progress snapshot changes; send is rejected as stale and creates no question.
-- A teacher rejects a draft; the same room/learner/checklist/focus-message/progress-snapshot generation trigger is suppressed from automatic re-proposal, while an explicit `regenerate_draft` request may create one superseding draft.
-- Rejection or regeneration is retried or raced from two teacher tabs; the request result is idempotent, only one replacement can win, and neither operation delivers a question or changes progress.
 - The first answer is ambiguous, content-assisted, or format-only; clarification stays open, assistance cancels without failure, and neutral format help does not leak the key.
-- A question is answered after cancellation, invalidation, replacement, or another question's delivery; the old question is not redirected to the new one.
+- A question is answered after another question's delivery; the old question is not redirected to the new one.
 - A later learner message contradicts a covered item; only the later independent event may reopen it; the original assessment answer is not reinterpreted.
 - A provider returns valid JSON with an incorrect semantic key; structural validity and teacher review do not claim independent semantic validity, and the release evidence must record the defect path.
 - A migration is rerun or encounters an existing overload, policy, enum, publication, or constraint; reconciliation must preserve legacy rows and must not drop all policies or functions as a shortcut.
@@ -116,7 +114,7 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 - **FR-008**: The system MUST grade only a stored learner message linked to its delivered question and MUST use deterministic exact-set equality after normalization, deduplication, and order normalization.
 - **FR-009**: The system MUST resolve the first valid answer once; retries, duplicate realtime delivery, later guesses, and transport retries MUST NOT create additional grade or progress effects.
 - **FR-010**: The system MUST apply evidence through a versioned trusted operation that validates scope, causal message IDs, event kind, current snapshot, and transition guards before writing evidence, progress, actual before/after history, and idempotency state.
-- **FR-011**: The system MUST record Guard-blocked evidence for later causal replay without mutating protected transfer progress, and MUST preserve stale, rejected, invalidated, and errored outcomes rather than treating them as success.
+- **FR-011**: The system MUST record Guard-blocked evidence for later causal replay without mutating protected transfer progress, and MUST preserve stale and errored outcomes rather than treating them as success.
 - **FR-012**: The system MUST make delivered keys immutable; a changed answer requires a new delivered question rather than an in-place key update.
 - **FR-013**: The system MUST preserve the room's two-value participation state and map a reviewed assessment turn to room participation `tutoring`; assessment MUST remain a tutor-turn mode, not a room mode.
 - **FR-014**: The system MUST require tutoring feedback or independently required Guard/protective handling after a resolved assessment before scheduling another assessment, and MUST suppress routine reassessment of `covered/good` items.
