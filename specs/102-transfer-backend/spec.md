@@ -11,18 +11,18 @@ This component owns the backend boundary for transfer assessment. It preserves l
 
 ### User Story 1 - Deliver a reviewed assessment safely (Priority: P1)
 
-An authorized teacher prepares a transfer assessment for one learner-owned checklist, reviews the structured draft, and sends it. The learner receives only the public question and options; the answer key, transfer basis, raw model output, and supervision rationale remain private.
+An authorized teacher prepares a transfer assessment for one learner-owned checklist, reviews the generated candidate decision, and sends it. The learner receives only the public question and options; the answer key, transfer basis, raw model output, and supervision rationale remain private.
 
-**Why this priority**: Delivery is the boundary that makes an assessment real. A draft must never become gradable or expose private material before explicit review and atomic send.
+**Why this priority**: Delivery is the boundary that makes an assessment real. A candidate must never become gradable or expose private material before explicit review and atomic send.
 
 **Independent Test**: With a verified teacher principal and a transfer-policy checklist, prepare, review, and send one assessment; inspect the returned DTO, public rows, private rows, and the learner-visible response.
 
 **Acceptance Scenarios**:
 
-1. **Given** a verified teacher authorized for a room and an eligible learner-owned transfer checklist, **When** the teacher prepares a turn, **Then** the response contains a draft reference and reviewable decision data without returning an answer key to learner-facing data.
-2. **Given** a draft whose revision and content confirmation are current, **When** the teacher sends it, **Then** one tutor message and one public question are committed with `mode=assessment` and `instruction=transfer_assess`, while room participation remains `tutoring`.
-3. **Given** an unsent, rejected, stale, or superseded draft, **When** a learner submits labels resembling an answer, **Then** no grade, progress mutation, or feedback obligation is created.
-4. **Given** a teacher changes the target, stem, options, selection type, or key after confirmation, **When** the draft is reviewed again, **Then** the revision advances and confirmation is required again.
+1. **Given** a verified teacher authorized for a room and an eligible learner-owned transfer checklist, **When** the teacher prepares a turn, **Then** the response contains the generated candidate decision and the scope it applies to, nothing is persisted, and no answer key reaches learner-facing data.
+2. **Given** a reviewed candidate decision, **When** the teacher sends it, **Then** one tutor message is committed with the assessment options, key, and `delivered` lifecycle stamped onto it, with `mode=assessment` and `instruction=transfer_assess`, while room participation remains `tutoring`.
+3. **Given** a candidate that was never sent, **When** a learner submits labels resembling an answer, **Then** no grade, progress mutation, or feedback obligation is created.
+4. **Given** a learner already has a delivered assessment, **When** the teacher sends a second one, **Then** it is rejected as `ASSESSMENT_ALREADY_OPEN` and no second message is written. **SUPERSEDED 2026-09-12:** the earlier revision/confirmation scenario (stem, options, selection type, or key changed after confirmation, so the revision advances and confirmation is required again) was removed with the draft table by the lean refactor; there is no revision and no confirmation step in the shipped design.
 
 ### User Story 2 - Resolve a learner answer exactly once (Priority: P1)
 
@@ -52,14 +52,14 @@ The backend derives an application principal from a trusted verifier, authorizes
 
 1. **Given** no deployment-configured trusted verifier adapter, **When** capability or transfer operations are requested, **Then** capability reports disabled with reason `AUTHORIZATION_NOT_CONFIGURED`, every transfer mutation fails with that stable error, and no transfer data is created or returned.
 2. **Given** an injected test verifier or configured production verifier rejects the request proof, **When** a transfer operation is requested, **Then** the API returns `UNAUTHORIZED` without assuming a bearer token, Supabase Auth session, or `auth.uid()` identity.
-3. **Given** a valid principal without room access or teacher review permission, **When** it requests another room, another learner's checklist, a draft, or a reviewed send, **Then** the operation is rejected without mutation.
-4. **Given** a learner can view their public question, **When** it requests private draft, key, transfer-basis, raw-model, or rationale fields, **Then** those fields are unavailable through DTOs, RLS, realtime, exports, logs, and error envelopes.
+3. **Given** a valid principal without room access or teacher review permission, **When** it requests another room, another learner's checklist, a prepared candidate, or a reviewed send, **Then** the operation is rejected without mutation.
+4. **Given** a learner can view their delivered assessment, **When** it requests key, transfer-basis, raw-model, or rationale fields through a public DTO, **Then** those fields are unavailable. **RECORDED TRADEOFF 2026-09-12:** the key and transfer basis live on `public.messages`, which every room participant may read, so a crafted REST request can reach them; this was accepted by the owner because the first priority is function. The DTO boundary, not RLS, is what keeps them off the normal UI path.
 5. **Given** an untrusted client calls a transfer table or an old public `SECURITY DEFINER` RPC directly, **When** it tries to write transfer progress or evidence, **Then** the operation is denied.
 6. **Given** a legacy checklist or legacy reviewed-send caller, **When** it uses the existing path, **Then** historical rows and legacy behavior remain usable without being interpreted as transfer verification.
 
 ### User Story 4 - Apply evidence and lifecycle changes atomically (Priority: P2)
 
-The trusted backend records causal evidence, valid progress-pair transitions, actual before/after history, idempotency records, Guard deferrals, invalidation compensation, and rollback outcomes in one authoritative lifecycle.
+The trusted backend records causal evidence, valid progress-pair transitions, actual before/after history, idempotency records, Guard deferrals, and rollback outcomes in one authoritative lifecycle. **SUPERSEDED IN PART 2026-09-12:** the invalidation-compensation path was removed with the question table, so it is no longer part of this lifecycle.
 
 **Why this priority**: Separate writes can create false progress, missing evidence, or misleading history. The component must preserve a reconstructable causal record under retries, stale snapshots, races, and failures.
 
@@ -70,7 +70,7 @@ The trusted backend records causal evidence, valid progress-pair transitions, ac
 1. **Given** a transfer event with valid scope, learner evidence, and a current snapshot, **When** the trusted operation applies it, **Then** evidence, the status/understanding pair, actual history, and event outcome commit together.
 2. **Given** an invalid transition, missing evidence, stale snapshot, foreign message, or mismatched learner, **When** the event is applied, **Then** no partial progress or history write is committed and the error remains observable.
 3. **Given** the room is in Guard, **When** valid learner evidence arrives, **Then** the observation is recorded as deferred and protected progress is unchanged until authorized recovery replays only still-valid causal events.
-4. **Given** a delivered question's key or item is found defective, **When** a teacher invalidates it, **Then** the original key/result remain immutable, the invalidation is recorded, and the latest causal progress effect is compensated or replayed without rerunning old model calls.
+4. **Given** a delivered assessment's key or item is found defective, **When** a teacher needs to correct it, **Then** the original key cannot be changed in place. **SUPERSEDED 2026-09-12:** the invalidation and compensation path (`invalidate_assessment_question_v1` and the client `invalidateQuestion` operation) was removed by migrations 032 and 038 and has no replacement, so there is no supported way to retire a defective delivered assessment other than delivering a new one once the open one is answered or cancelled. Recorded as a known gap.
 
 ### User Story 5 - Use the production v3 provider boundary (Priority: P2)
 
@@ -91,8 +91,8 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 
 - A legacy checklist has no explicit learner owner; it remains legacy and cannot enter the transfer path.
 - Multiple active learners are present in a room; automatic transfer assessment is unavailable rather than silently sharing a checklist or choosing an owner.
-- A learner reconnects or two teacher tabs race; stored question, revision, and public message IDs remain authoritative.
-- A draft is delivered after its checklist, item, focus message, or progress snapshot changes; send is rejected as stale and creates no question.
+- A learner reconnects or two teacher tabs race; the stored assessment message and the room row lock remain authoritative. **SUPERSEDED 2026-09-12:** the earlier wording also named a draft revision as authoritative; there is no revision.
+- **SUPERSEDED 2026-09-12:** "A draft is delivered after its checklist, item, focus message, or progress snapshot changes; send is rejected as stale and creates no question" described a staleness check that the collapsed `send_reviewed_tutor_response_v3` does not perform. It validates that the checklist, learner, and focus message exist and belong together, and it refuses a second open assessment, but it does not compare the candidate against the snapshot hash that `prepare_turn` computed. A candidate reviewed against a since-changed snapshot is still delivered. This is recorded as a known gap rather than a guarantee.
 - The first answer is ambiguous, content-assisted, or format-only; clarification stays open, assistance cancels without failure, and neutral format help does not leak the key.
 - A question is answered after another question's delivery; the old question is not redirected to the new one.
 - A later learner message contradicts a covered item; only the later independent event may reopen it; the original assessment answer is not reinterpreted.
@@ -108,14 +108,14 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 - **FR-002**: The system MUST preserve `status` and `understanding_level` as the only progress fields and enforce these transfer pairs: `pending/none`, `partially_covered/basic`, `needs_review/basic`, and `covered/good`.
 - **FR-003**: The system MUST expose exactly the versioned assessment API operations `initialize_checklist`, `post_message`, `analyze_message`, `prepare_turn`, `send_reviewed`, and `process_message` through one `{ok,data}` or `{ok,error}` envelope.
 - **FR-004**: The system MUST derive the caller's verified principal and room authorization through an injected `AssessmentPrincipalVerifier`; the production adapter is deployment-configured and backed by a real trusted session or capability, while body-supplied application IDs, roles, room IDs, learner IDs, local display names, room passwords, browser state, Supabase Auth assumptions, and `auth.uid()` MUST NOT establish the transfer identity contract.
-- **FR-005**: The system MUST keep raw drafts, answer keys, transfer basis, private rationale, snapshot data, and provider credentials server-side and MUST return only explicit public or authorized-teacher DTO allowlists.
-- **FR-006**: The system MUST require teacher review, current revision, content confirmation, target eligibility, and one unresolved-question constraint before delivery. A draft that is not sent is simply never delivered; there is no reject or regenerate operation.
-- **FR-007**: The system MUST commit a delivered tutor message, public question, immutable private key, and room participation mapping atomically.
-- **FR-008**: The system MUST grade only a stored learner message linked to its delivered question and MUST use deterministic exact-set equality after normalization, deduplication, and order normalization.
+- **FR-005**: The system MUST keep candidate decisions, answer keys, transfer basis, private rationale, snapshot data, and provider credentials server-side and MUST return only explicit public or authorized-teacher DTO allowlists.
+- **FR-006**: The system MUST require teacher review, target eligibility, and one delivered assessment per learner before delivery. A candidate that is not sent is simply never delivered; there is no reject or regenerate operation, and no revision or content-confirmation step, because nothing is persisted before the send.
+- **FR-007**: The system MUST commit one tutor message carrying the assessment options, key, lifecycle, checklist, and item, together with the room participation mapping, atomically.
+- **FR-008**: The system MUST grade only a stored learner message linked to its delivered assessment message and MUST use deterministic exact-set equality after normalization, deduplication, and order normalization.
 - **FR-009**: The system MUST resolve the first valid answer once; retries, duplicate realtime delivery, later guesses, and transport retries MUST NOT create additional grade or progress effects.
 - **FR-010**: The system MUST apply evidence through a versioned trusted operation that validates scope, causal message IDs, event kind, current snapshot, and transition guards before writing evidence, progress, actual before/after history, and idempotency state.
 - **FR-011**: The system MUST record Guard-blocked evidence for later causal replay without mutating protected transfer progress, and MUST preserve stale and errored outcomes rather than treating them as success.
-- **FR-012**: The system MUST make delivered keys immutable; a changed answer requires a new delivered question rather than an in-place key update.
+- **FR-012**: The system MUST leave a delivered assessment's key unchanged; a different key requires a new delivered assessment message rather than an in-place key update.
 - **FR-013**: The system MUST preserve the room's two-value participation state and map a reviewed assessment turn to room participation `tutoring`; assessment MUST remain a tutor-turn mode, not a room mode.
 - **FR-014**: The system MUST require tutoring feedback or independently required Guard/protective handling after a resolved assessment before scheduling another assessment, and MUST suppress routine reassessment of `covered/good` items.
 - **FR-015**: Production and Promptfoo MUST consume the same versioned v3 request/context types and builders exported through `tutor-system/src/services/ecologicalTutorCall.ts`; the trusted provider boundary MUST add the backend-owned production system prompt, send an effective 1,200 completion-token budget and configured model/provider settings, and include no learner-selected answer labels for exact grading.
@@ -129,9 +129,8 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 
 - **Transfer checklist**: A learner-owned checklist with `progress_policy_version='transfer_v1'`; legacy rows remain room-scoped and legacy.
 - **Checklist item**: An objective whose transfer progress is represented only by the existing status/understanding pair.
-- **Assessment question**: Public learner-safe question lifecycle record with ordered A-D options, scope IDs, delivery/answer state, selected labels, result, and public linkage fields.
 - **Assessment on a message**: The reviewed decision is stamped onto the tutor message together with its options, key, lifecycle, selected labels, and result. There is no separate draft or question entity, and no private draft DTO: `prepare_turn` returns the generated candidate to the authorized teacher, who reviews it before `send_reviewed` persists it.
-- **Assessment key**: Private immutable key and transfer basis linked to one delivered question and reviewed draft revision.
+- **Assessment key**: The answer key for one delivered assessment, stored as `messages.assessment_key` and written only at insert. It is never updated afterwards, and it sits on a participant-readable row, which is the recorded confidentiality tradeoff.
 - **Learning event**: Causal, deduplicated observation or assessment outcome tied to stored learner evidence and processed through the transition authority.
 - **Verified application principal**: Result of the configured `AssessmentPrincipalVerifier`, containing application user identity, allowed rooms, and review capability; the verifier's request proof format is deployment-specific and is not defined as Supabase Auth or `auth.uid()`.
 
@@ -141,7 +140,7 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 
 - **SC-001**: Hosted schema verification finds every required table, enum, constraint, policy, grant, function signature, and realtime exposure in the supported environment, and regenerated TypeScript types match the inspected schema with zero unexplained differences.
 - **SC-002**: The authorization matrix proves missing-adapter disablement, injected-verifier behavior, and rejection of 100% of invalid-proof/forged/cross-room/cross-learner/private-column/direct-write/legacy-RPC bypass attempts, with no transfer mutation or private field for any rejected case.
-- **SC-003**: The lifecycle matrix passes 100% of required reject, same-trigger suppression, explicit regenerate, delivery, pre-delivery, pass, fail, clarification, assistance, stale, duplicate, race, Guard, invalidation, and rollback cases with one effective draft/question transition and causal history.
+- **SC-003**: The lifecycle matrix passes 100% of the required pre-delivery, delivery, second-delivery refusal, pass, fail, clarification, assisted, duplicate, race, Guard, and rollback cases, with one effective assessment transition per learner and causal history. **SUPERSEDED IN PART 2026-09-12:** the reject, same-trigger-suppression, explicit-regenerate, stale, and invalidation cases left the matrix with the capability and the question table they tested.
 - **SC-004**: Every applied state-changing event has exactly one linked evidence record and history row containing the actual before/after pair; failed operations leave zero partial progress mutations in the transaction checks.
 - **SC-005**: Captured v3 provider requests show `max_tokens=1200`, no learner-selected labels or answer key in exact-grading input, at most two total format-validation attempts, and explicit error handling for provider failure/truncation/invalid output.
 - **SC-006**: Secret and privacy scans find zero provider credentials, private keys, transfer basis, raw private model output, or private rationale in public DTOs, learner queries, realtime payloads, browser assets, logs, exports, or error envelopes.

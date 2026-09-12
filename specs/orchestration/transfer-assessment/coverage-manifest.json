@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "status": "passed",
-  "tested_integration_sha": "bceffe7",
+  "tested_integration_sha": "2578ea5",
   "integration": {
     "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs",
     "exit_code": 0,
@@ -43,11 +43,12 @@
     }
   ],
   "notes": [
-    "Both commands were run on tested_integration_sha and exited 0.",
-    "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, both public projection functions, and the shared private-field guard are the production implementations.",
-    "The e2e aggregate previously carried a reject/regenerate case. That operation set was removed in the lean refactor, so the case was deleted rather than kept green against an operation that no longer exists.",
-    "Component suites on this head: 11 suites / 197 tests pass via CI=true npx react-scripts test --watchAll=false --testPathPattern=(transferAssessment|transferTutor|transferMigration|tutorDecisionContract.transfer|assessmentApi).",
-    "Migrations 032-036 are applied on the hosted project and verified there: zero removed functions remain, no kept function body references a dropped object, and the seven live RPC signatures match the Edge Function.",
-    "W3/W4 hosted behavioural evidence (T009 PART 2, transfer_assessment_rpc_behaviour.sql) is not part of this manifest and has never been executed; it requires a service_role connection."
+    "Both commands were run on tested_integration_sha and exited 0. The merge of 102-transfer-backend into integration/transfer-assessment is 37b9cf2; 2578ea5 is the author-role and dead-code fix on top of it.",
+    "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, the public message projection, and the shared private-field guard are the production implementations.",
+    "The e2e aggregate was rewritten for the collapsed one-table model. Its former review_draft step and teacher-draft-DTO case tested a draft table that no longer exists, so they were replaced by a prepare_turn -> send_reviewed case and a projection case that feeds the facade a response still carrying assessment_key.",
+    "Component suites on this head: 10 suites / 186 tests pass via CI=true npx react-scripts test --watchAll=false --testPathPattern=(transferAssessment|transferTutor|transferMigration|tutorDecisionContract.transfer|assessmentApi). The suite count dropped from 11 because transferAssessmentDraftDto.test.ts covered the removed teacher draft DTO, and the test count dropped correspondingly.",
+    "Migrations 038-043 are applied on the hosted project and verified there through a read-only connection: the four dropped tables absent, learning_event_inbox the only transfer-private table, the nine assessment columns present, the mis-scoped one_open_assessment_per_student index absent with the per-learner guard present in send_reviewed, the six live RPC signatures matching the Edge Function, the removed draft/question functions absent, no kept function body referencing a dropped object, and FOR UPDATE positioned before the ASSESSMENT_ALREADY_OPEN pre-check.",
+    "Migration 044 is authored and NOT applied. It repairs post_assessment_message_v1, which migration 038 left storing every message with user_role='tutor' - including a learner's own, which then cannot be graded. Until it is applied, hosted behaviour differs from the repository, and T009 PART 1 check 16 is red by design.",
+    "W3/W4 hosted behavioural evidence (T009 PART 2, transfer_assessment_rpc_behaviour.sql) is not part of this manifest. A1-A10 last passed in an earlier session; A11 and the tightened A4 are pending a re-run that requires a service_role connection."
   ]
 }

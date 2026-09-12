@@ -25,7 +25,7 @@
 ## Security And Reliability
 
 - [x] CHK011 Verified principal and room authorization are server-derived and body identity is explicitly untrusted.
-- [x] CHK012 Private draft/key/rationale/provider data is separated from public learner DTOs and direct access attacks are in scope.
+- [x] CHK012 Private draft/key/rationale/provider data is separated from public learner DTOs and direct access attacks are in scope. **SUPERSEDED IN PART 2026-09-12:** the draft is gone, and the key now lives on `public.messages`, which participants can read, so key *confidentiality* is a recorded owner tradeoff rather than a guarantee. The DTO allowlist still keeps it off the normal UI path, and lane case A3 asserts the exposure.
 - [x] CHK013 Atomicity, idempotency, immutable keys, causal evidence, actual before/after history, stale handling, and rollback are testable.
 - [x] CHK014 Provider token budget, bounded retry, truncation/error behavior, and secret leakage checks are explicit.
 - [x] CHK015 The feature flag remains disabled until the stated component and downstream release gates pass.

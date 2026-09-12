@@ -63,12 +63,12 @@ The operation set is versioned by the RPCs below. Adding an operation or changin
 
 ## Public DTOs
 
-`PublicAssessmentDTO` contains only `id`, `selection_type`, `stem`, `rendered_text`, and ordered option objects with `id` and `text`. Public question lifecycle DTOs may add scope/link/timestamp/result fields needed by the UI, but never add `correct_option_ids` or `transfer_basis`.
+There is no separate public question DTO. Since the assessment lives on the tutor message, `PublicMessageDTO` is the whole browser-facing message shape: stored message identity, room/user scope, content, role, parent, turn mode, and timestamp. It never carries `assessment_key`, `correct_option_ids`, `transfer_basis`, `raw_model_output`, or `reviewed_payload`; the projection is an allowlist, so a newly added private message column cannot leak by default.
 
-`PublicMessageDTO` contains stored message identity, room/user scope, content, role, parent, turn mode, assessment link, and timestamp. It does not expose private draft or feedback rows.
+`PublicAssessmentDTO` remains the learner-visible assessment shape (`id`, `selection_type`, `stem`, `rendered_text`, ordered `id`/`text` options). It is what a private assessment is projected onto before it reaches a learner, and it never includes `correct_option_ids` or `transfer_basis`.
 
 There is no private browser draft DTO. With no draft table, `prepare_turn` returns the generated candidate decision directly to the authorized teacher, and the teacher's review happens on that candidate before `send_reviewed` persists it. The candidate must not be returned to a learner operation or included in a public or realtime message payload.
 
 ## Stable error classes
 
-`AUTHORIZATION_NOT_CONFIGURED` (503), `UNAUTHORIZED` (401), `FORBIDDEN` (403), `ASSESSMENT_FEATURE_DISABLED` (503), `LEGACY_CHECKLIST` (409), `UNSUPPORTED_ROOM_SCOPE` (409), `DRAFT_REVISION_CONFLICT` (409), `DRAFT_ALREADY_SENT` (409), `CONTENT_CONFIRMATION_REQUIRED` (409), `WRONG_LEARNER` (403/409), `ANSWER_FORMAT_UNRESOLVED` (successful clarification outcome), `ITEM_VALIDATION_FAILED` (422), `AI_PROVIDER_NOT_CONFIGURED` (503), `AI_PROVIDER_ERROR` (502, retryable), `AI_OUTPUT_INVALID` (502, retryable only for bounded format repair), `PROGRESSION_LOCKED` (deferred outcome), and `PERSISTENCE_FAILED` (500, retryable with the same request ID).
+`AUTHORIZATION_NOT_CONFIGURED` (503), `UNAUTHORIZED` (401), `FORBIDDEN` (403), `ASSESSMENT_FEATURE_DISABLED` (503), `LEGACY_CHECKLIST` (409), `UNSUPPORTED_ROOM_SCOPE` (409), `ASSESSMENT_ALREADY_OPEN` (409), `INVALID_SCOPE` (409), `WRONG_LEARNER` (403/409), `ANSWER_FORMAT_UNRESOLVED` (successful clarification outcome), `ITEM_VALIDATION_FAILED` (409), `AI_PROVIDER_NOT_CONFIGURED` (503), `AI_PROVIDER_ERROR` (502, retryable), `AI_OUTPUT_INVALID` (502, retryable only for bounded format repair), `PROGRESSION_LOCKED` (deferred outcome), and `PERSISTENCE_FAILED` (500, retryable with the same request ID).

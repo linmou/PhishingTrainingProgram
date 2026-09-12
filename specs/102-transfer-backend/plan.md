@@ -58,16 +58,16 @@ deployment-configured trusted session/capability
         v
 AssessmentPrincipalVerifier -> VerifiedPrincipal -> room/learner authorization
         |
-        +--> prepare/review provider draft -> private draft/key material
+        +--> prepare provider candidate -> returned to the authorized teacher, nothing persisted
         |
-        +--> send RPC v3 -> public tutor message + public question + immutable key
+        +--> send RPC v3 -> one tutor message with options, key, and lifecycle stamped on it
         |
         +--> process learner message -> deterministic grade -> apply_learning_event_v1
                                       |
                                       +--> evidence + pair + actual history + idempotency
 ```
 
-The Edge Function is the only boundary that combines a verified principal with service-role access. Its handler receives an `AssessmentPrincipalVerifier`; deployment wiring supplies a real trusted adapter and tests supply an injected verifier. No adapter means disabled capability and `AUTHORIZATION_NOT_CONFIGURED`, not an inferred Supabase Auth/`auth.uid()` contract. RPCs accept versioned inputs and actor/request IDs, but direct public execution is revoked. Public question/message DTOs are explicit projections. Legacy operations remain separate and continue to use their existing simplified identity path.
+The Edge Function is the only boundary that combines a verified principal with service-role access. Its handler receives an `AssessmentPrincipalVerifier`; deployment wiring supplies a real trusted adapter and tests supply an injected verifier. No adapter means disabled capability and `AUTHORIZATION_NOT_CONFIGURED`, not an inferred Supabase Auth/`auth.uid()` contract. RPCs accept versioned inputs and actor/request IDs, but direct public execution is revoked. The public message DTO is an explicit allowlist projection; there is no separate public question DTO, because the assessment is the message. Legacy operations remain separate and continue to use their existing simplified identity path.
 
 ### Phase 0: Research decisions
 

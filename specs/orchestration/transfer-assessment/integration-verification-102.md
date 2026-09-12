@@ -3,7 +3,9 @@
 Intent: record the gate results that justify promoting the merged component 102 state, so
 `integration_passed` rests on named evidence rather than on a narrative claim.
 
-Tested integration SHA: `bceffe7`
+Tested integration SHA: `2578ea5` (merge of `102-transfer-backend` into
+`integration/transfer-assessment` is `37b9cf2`; `2578ea5` is the dead-code and author-role fix on
+top of it)
 
 ## Gates run on the tested SHA
 
@@ -11,9 +13,13 @@ Tested integration SHA: `bceffe7`
 |---|---|---|
 | E01 edge handoff (`101 -> 102`) | `node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs` | exit `0`, `tests 7 / pass 7 / fail 0` |
 | End-to-end aggregate | `node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs` | exit `0`, `tests 3 / pass 3 / fail 0` |
-| Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer\|assessmentApi)"` | `11 suites / 197 tests` pass for the combined 101+102 set |
-| Hosted schema conformance | T009 checks run against the hosted project | 10 of 10 verified: lean tables present, ledger present and keyed, the five draft columns gone, both payload hashes gone, `effective_order` gone, status vocabulary `draft/ignored/sent`, seven live RPC signatures matched, all four removed functions absent, no kept function body referencing a dropped object, review/send still `SECURITY DEFINER` with the restrictive `search_path` |
-| Type check | `npx tsc --noEmit` | clean for every touched file; pre-existing unrelated errors unchanged |
+| Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer\|assessmentApi)"` | `10 suites / 186 tests` pass for the combined 101+102 set |
+| Hosted schema conformance | All 16 T009 PART 1 checks run against the hosted project | 15 pass, and check 16 fails by design: it is the red state for migration 044, which is authored and not yet applied |
+| Type check | `npx tsc --noEmit` | zero errors in every touched file; the repo's 508 pre-existing errors are unchanged and live in unrelated legacy test files |
+
+Three `RoomContext.*` suites fail on this head. They are pre-existing and unrelated: with the
+`RoomContext.tsx` and `types/index.ts` edits stashed, the same three suites fail with the identical
+`13 failed / 14 passed`. They fail on room creation, image upload, and AI-config loading.
 
 ## What the edge handoff proves
 
@@ -25,27 +31,30 @@ producer.
 
 ## What the end-to-end aggregate proves
 
-`tests/e2e/transfer-assessment.test.mjs` runs one teacher session across both components:
-component 101's resolver grades a delivered answer on the real private assessment, and component
-102's facade drives `prepare_turn`, `review_draft`, and `send_reviewed` in order through the
-shared API contract, then asserts the published learner payload contains no
-`correct_option_ids`, no transfer basis, no raw model output, and no reviewed payload — checked
-by key name and by value. A second case proves the teacher-private DTO carries the basis the
-reviewer needs while the same storage row projected for a learner loses exactly those fields. A
-third proves a rejected draft is suppressed on its trigger and superseded only by explicit
-regeneration.
+`tests/e2e/transfer-assessment.test.mjs` runs one teacher session across both components.
+Component 101's resolver grades a delivered answer on the real private assessment; component 102's
+facade drives `prepare_turn` and `send_reviewed` in the only order the collapsed model allows and
+asserts the transport saw exactly those two operations, with the reviewed payload on the second
+call. There is no review round trip, because there is no draft row.
+
+Two further cases cover the projection. One feeds the facade a response that still carries
+`assessment_key` and asserts the allowlist drops it regardless, so the browser-side projection is a
+second line of defence rather than a copy of the server's behaviour. The other asserts the public
+message DTO keeps identity, content, and turn mode while dropping raw model output.
 
 Only the network transport (the Edge Function call) is replaced. Every projection, the shared
 private-field guard, and component 101's decision logic are production code.
 
 ## Deliberately not claimed
 
-- **W3/W4 hosted behavioural evidence.** T009 PART 2 (P1-P19) has not run and requires a
-  `service_role` connection this session does not have. Migration 029 is authored and
-  unapplied. This verification covers the pure-TypeScript and integration surface, not deployed
-  RPC behaviour.
-- **The Edge Function deployment.** It routes to the two functions whose `digest` call migration
-  029 repairs, so deploying before 029 is applied would produce runtime failures.
+- **W3/W4 hosted behavioural evidence.** T009 PART 2 needs a `service_role` connection this session
+  does not have, so A1-A10 were last executed and passing in an earlier session, and A11 (the new
+  author-role case) plus the tightened A4 have not been run. Migration 044 is authored and
+  unapplied, so `post_assessment_message_v1` still stores a learner message as a tutor message on
+  the hosted project and the answer path is still broken there.
+- **Answer-key confidentiality.** The key lives on `public.messages`, which participants can read,
+  so a crafted REST request reaches it. This is a recorded owner decision, not a guarantee, and
+  lane case A3 asserts the exposure rather than hiding it.
 - **Smoke and browser release gates.** Those belong to component 105 and to the release edge,
   which is not active.
 

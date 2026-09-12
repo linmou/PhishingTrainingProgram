@@ -23,7 +23,7 @@ The database validates the pair. React, model output, and direct clients cannot 
 |---|---|---|
 | `session_checklists` | `id`, `room_id`, `student_id`, `progress_policy_version`, `is_active`, template metadata | One active transfer checklist per `(room_id, student_id)`; legacy rows remain separately queryable. |
 | `checklist_items` | Existing objective/status/understanding/attempt fields | Parent policy selects validation rules; no new mastery field. |
-| `messages` | Existing author/room/content/parent fields plus `response_mode` turn mode and optional `assessment_id` | Learner answer must be a stored message authored by the verified learner and linked to its delivered question. |
+| `messages` | Existing author/room/content/parent fields plus `response_mode` turn mode, `assessment_id`, and the nine nullable `assessment_*` columns below | A learner answer is a stored message authored by the verified learner and linked to its delivered assessment message through `assessment_id` or `parent_message_id`. The assessment itself is a tutor message, so one row is both the tutor turn and the question. |
 | `coverage_evidence` | Existing evidence plus `event_id` and optional `assessment_id` | Transfer evidence is inserted in the same trusted transaction as progress. |
 | `checklist_updates` | Existing history plus event/assessment links and actual previous/new fields | A state-changing event has one causal history row with actual before/after pairs. |
 
@@ -42,7 +42,7 @@ The assessment is stored on the tutor message itself. There is no separate quest
 | `assessment_closed_at` | when it closed |
 | `assessment_checklist_id`, `assessment_item_id` | the scope the verdict applies to |
 
-`assessment_id` is a pre-existing column whose foreign key was dropped with the question table; it is retained but unused.
+`assessment_id` is a pre-existing column that survived the collapse; its foreign key went with the question table. It is **not** unused. `post_assessment_message_v1` writes it on the answer message, and `process_assessment_message_v1` uses it, alongside `parent_message_id`, to find the delivered assessment that the answer belongs to. An earlier revision of this line claimed it was unused, which was wrong.
 
 Key confidentiality is an accepted tradeoff, not an oversight. `public.messages` is readable by every room participant, so a learner can read `assessment_key` with a crafted REST request. The owner accepted this because the product is a training app rather than a strict exam, and a working function outranks key secrecy. The normal API response still excludes the key, so the UI path never receives it.
 
@@ -69,7 +69,7 @@ The pure reducer and `apply_learning_event_v1` must agree:
 | `assessment_fail` | reject | needs_review/basic | reject | reject |
 | `no_change` | no change | no change | no change | no change |
 
-Assessment resolution is separate from this table: delivery is required; first valid answer sets question result once; duplicate processing returns the recorded result; stale/closed/assisted questions do not grade.
+Assessment resolution is separate from this table: delivery is required; the first valid answer sets the assessment result on the tutor message once; duplicate processing returns the recorded result; closed or assisted answers do not grade.
 
 ## Causal and authorization invariants
 
@@ -77,18 +77,18 @@ Assessment resolution is separate from this table: delivery is required; first v
 2. Every non-null source evidence message exists in the same room and is authored by the learner unless the event is explicitly tutor-attested external evidence.
 3. A state-changing event writes evidence, status/understanding, actual history, and applied event state atomically.
 4. Guarded rooms may record a deferred event but cannot mutate protected progress.
-5. A delivered assessment has one immutable key and one reviewed draft revision.
-6. A public DTO never includes `correct_option_ids`, `transfer_basis`, `raw_model_output`, private payloads, or provider credentials.
+5. A delivered assessment is one tutor message with one key, stamped at insert and never updated afterwards.
+6. A public DTO never includes `assessment_key`, `correct_option_ids`, `transfer_basis`, `raw_model_output`, private payloads, or provider credentials. Key confidentiality itself is a recorded tradeoff rather than a guarantee: the key lives on `public.messages`, which participants can read, so a crafted REST request reaches it.
 7. Old legacy RPCs and public table writes cannot mutate transfer-policy progress/evidence.
 8. Legacy checklist values, `excellent` metadata, and simplified-auth reviewed sends retain their legacy interpretation.
-9. A draft that is never sent is simply never delivered. There is no rejection, no generation-trigger suppression, and no regeneration: the absence of a send is already the correct outcome, and the product has no requirement to stop a tutor receiving a draft again.
+9. A candidate that is never sent is simply never delivered. There is no rejection, no generation-trigger suppression, and no regeneration: the absence of a send is already the correct outcome, and the product has no requirement to stop a tutor receiving a candidate again.
 
 ## Lock and dedupe order
 
-For state-changing transactions, lock room, checklist, item, and question in that order where present. Use stable keys:
+For state-changing transactions, lock the room row before any open-assessment pre-check and the checklist/item rows where present. Use stable keys:
 
 - observation: `policy + student + item + source_message + event_kind`;
-- grading: `question_id + first_valid_answer_message_id`;
-- delivery: reviewed draft ID + revision plus the unique unresolved-question index.
+- grading: `assessment message id + first_valid_answer_message_id`;
+- delivery: one delivered assessment per learner, enforced inside `send_reviewed` through `messages.assessment_checklist_id -> session_checklists.student_id` and serialized by the room row lock.
 
 Transport retries do not increment learning attempts. Attempts increment only for scored assessment or valid spontaneous-transfer evidence.
