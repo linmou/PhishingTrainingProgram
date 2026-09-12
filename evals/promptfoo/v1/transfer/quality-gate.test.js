@@ -30,7 +30,9 @@ test('a complete passing report is accepted with exact counts and every partitio
 
 test('a missing or errored required row is incomplete and stays in the denominator', () => {
   const missing = makeReport();
-  missing.evidence[0].results = missing.evidence[0].results.filter(result => result.metric !== 'medium_transfer_quality');
+  const targetCase = cases.find(item => item.evaluator.metric_ids.includes('medium_transfer_quality'));
+  const targetRecord = missing.evidence.find(item => item.case_id === targetCase.case_id && item.repetition === 0);
+  targetRecord.results = targetRecord.results.filter(result => result.metric !== 'medium_transfer_quality');
   const missingVerdict = assess(missing, { cases, manifest, policy });
   assert.equal(missingVerdict.verdict, 'incomplete');
   assert.ok(issueTypes(missingVerdict).includes('missing_result'));
@@ -47,9 +49,10 @@ test('a missing or errored required row is incomplete and stays in the denominat
 
 test('a zero-applicable partition is zero coverage and never a pass', () => {
   const report = makeReport();
+  // Every applicable case declares the conditional rule, so the metric has no applicable rows at all.
   for (const record of report.evidence) {
     for (const result of record.results) {
-      if (result.metric === 'transfer_trigger_target') Object.assign(result, { status: 'not_applicable', applicable: false, pass: null, score: null, reason: 'declared conditional' });
+      if (result.metric === 'transfer_trigger_target') Object.assign(result, { status: 'not_applicable', applicable: false, pass: null, score: null });
     }
   }
   const verdict = assess(report, { cases, manifest, policy });
@@ -70,15 +73,22 @@ test('an undeclared not_applicable result is invalid and blocks', () => {
 
 test('a candidate below the frozen threshold fails and identifies the metric and partition', () => {
   const report = makeReport();
-  const targetCase = cases.find(item => item.evaluator.metric_ids.includes('medium_transfer_quality'));
-  const record = report.evidence.find(item => item.case_id === targetCase.case_id && item.repetition === 0);
-  const metricIndex = record.results.findIndex(result => result.metric === 'medium_transfer_quality');
-  record.results[metricIndex] = { ...record.results[metricIndex], status: 'fail', pass: false, score: 0, reason: 'transfers only a brand name' };
+  for (const record of report.evidence) {
+    for (const result of record.results) {
+      if (result.metric === 'medium_transfer_quality') Object.assign(result, { status: 'fail', pass: false, score: 0, reason: 'transfers only a brand name' });
+    }
+  }
   const verdict = assess(report, { cases, manifest, policy });
   assert.equal(verdict.verdict, 'failed');
   const issue = verdict.issues.find(item => item.type === 'below_threshold');
   assert.equal(issue.metric, 'medium_transfer_quality');
   assert.equal(issue.threshold, policy.semantic_default_threshold);
+  assert.equal(issue.passed, 0);
+  assert.ok(issue.applicable > 0);
+  // Two further cases pass every metric; the failing metric must still be visible rather than
+  // averaged away by the additional evidence.
+  const otherRows = verdict.metrics.filter(row => row.metric !== 'medium_transfer_quality');
+  assert.ok(otherRows.every(row => row.verdict === 'pass'));
 });
 
 test('the gate uses the frozen policy threshold rather than a later working manifest value', () => {

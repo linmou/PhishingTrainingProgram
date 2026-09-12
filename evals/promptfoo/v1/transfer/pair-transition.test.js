@@ -6,14 +6,17 @@ const assert = require('node:assert/strict');
 const { evaluatePairs, joinGenerations } = require('./pair-transition');
 const fixtures = require('./fixtures/contract-fixtures.json');
 
-const resultsFor = definitions => definitions.map((definition, index) => ({
+const resultsFor = definitions => definitions.map(definition => ({
   case_id: definition.case_id,
   case_version: definition.case_version,
   pair_id: definition.pair.pair_id,
   member: definition.pair.member,
   repetition: 0,
-  target_generation_id: `gen-pair-${index === 0 ? 0 : 0}`,
-  status: definition.pair.member === 'a' ? 'pass' : 'pass'
+  target_generation_id: `gen-${definition.case_id}`,
+  results: [
+    { metric: 'medium_transfer_quality', method: 'llm_rubric', status: 'pass' },
+    { metric: 'verification_evidence', method: 'llm_rubric', status: 'pass' }
+  ]
 }));
 
 test('a valid pair with both members passing passes jointly', () => {
@@ -35,7 +38,7 @@ test('a pair with one member missing fails instead of being averaged', () => {
 test('a pair with one failing member fails even when the aggregate would pass', () => {
   const definitions = fixtures.semantic_pairs.valid;
   const results = resultsFor(definitions);
-  results[1].status = 'fail';
+  results[1].results = results[1].results.map(item => ({ ...item, status: 'fail' }));
   const result = evaluatePairs(definitions, results);
   assert.equal(result.status, 'fail');
   assert.equal(result.aggregate_pass_rate, 0.5);
@@ -73,7 +76,7 @@ test('an errored pair member is not a pass and blocks the pair gate', () => {
   const definitions = fixtures.semantic_pairs.valid;
   for (const status of ['error', 'missing', 'fail']) {
     const results = resultsFor(definitions);
-    results[0].status = status;
+    results[0].results = results[0].results.map(item => ({ ...item, status }));
     const result = evaluatePairs(definitions, results);
     assert.equal(result.status, 'fail', `status ${status} must block the pair`);
   }

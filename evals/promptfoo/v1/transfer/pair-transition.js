@@ -66,23 +66,24 @@ function evaluatePairs(definitions, results) {
       if (record.repetition === undefined || record.repetition === null) failures.push(failure('missing_repetition_identity', { pair_id: pairId, case_id: member.case_id, actual: { pair_id: pairId, case_id: member.case_id } }));
       if (record.pair_id && record.pair_id !== pairId) failures.push(failure('pair_identity_mismatch', { pair_id: pairId, actual: record.pair_id }));
       pair.repetitions.add(record.repetition);
-      pair.members.push({ case_id: member.case_id, member: member.pair.member, repetition: record.repetition, status: record.status, target_generation_id: record.target_generation_id });
-      if (!PASSING.includes(record.status)) {
+      pair.members.push({ case_id: member.case_id, member: member.pair.member, repetition: record.repetition, metric_results: (record.results || []).map(result => ({ metric: result.metric, status: result.status })), target_generation_id: record.target_generation_id });
+      const blocking = (record.results || []).filter(result => !PASSING.includes(result.status));
+      const memberPassed = record.status === undefined ? blocking.length === 0 : PASSING.includes(record.status) && blocking.length === 0;
+      if (!memberPassed) {
         pair.status = 'fail';
-        failures.push(failure('pair_member_failed', { pair_id: pairId, case_id: member.case_id, actual: { case_id: member.case_id, status: record.status } }));
+        failures.push(failure('pair_member_failed', { pair_id: pairId, case_id: member.case_id, actual: { case_id: member.case_id, status: record.status, blocking_metrics: blocking.map(result => `${result.metric}:${result.status}`) } }));
       }
     }
-    const memberIdentities = new Set(pair.members.map(member => member.target_generation_id));
-    if (pair.members.length === 2 && memberIdentities.size > 1) {
-      pair.status = 'fail';
-      failures.push(failure('generation_identity_mismatch', { pair_id: pairId, actual: { pair_id: pairId, identities: [...memberIdentities] } }));
-    }
+    // Each member is its own target request, so generation ids differ by design; what must match is
+    // the repetition identity both members were joined at. joinGenerations owns the stricter
+    // one-identity check used by the frozen fixtures.
+    pair.generation_ids = pair.members.map(member => member.target_generation_id);
     pair.repetitions = [...pair.repetitions];
     pairs.push(pair);
   }
   const passed = pairs.filter(pair => pair.status === 'pass').length;
   const total = pairs.reduce((count, pair) => count + pair.members.length, 0);
-  const passing = pairs.reduce((count, pair) => count + pair.members.filter(member => PASSING.includes(member.status)).length, 0);
+  const passing = pairs.reduce((count, pair) => count + pair.members.filter(member => member.metric_results.every(result => PASSING.includes(result.status))).length, 0);
   return {
     status: failures.length ? 'fail' : 'pass',
     failures,

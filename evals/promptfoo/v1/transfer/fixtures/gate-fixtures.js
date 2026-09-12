@@ -4,9 +4,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { assess } = require('../quality-gate');
-const policy = require('./gate-policy.json');
+const policy = require('../gate-policy.json');
 
-const read = name => JSON.parse(fs.readFileSync(path.join(__dirname, name), 'utf8'));
+const read = name => JSON.parse(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'));
 const clone = value => JSON.parse(JSON.stringify(value));
 
 function frozen() {
@@ -29,6 +29,7 @@ function makeReport(options = {}) {
         case_version: definition.case_version,
         partition: definition.partition,
         case_role: definition.case_role,
+        applicability_rules: { medium_transfer_quality: 'declared conditional: the case declares an unmet configured target', transfer_trigger_target: 'declared conditional: the case declares an unmet configured target' },
         repetition,
         target_generation_id: `gen-${definition.case_id}-${repetition}`,
         target_input: clone(definition.input),
@@ -75,9 +76,13 @@ const MUTATIONS = {
   },
   below_threshold: () => {
     const report = makeReport();
-    const target = report.evidence.find(record => record.metric_ids.includes('medium_transfer_quality'));
-    const index = target.results.findIndex(result => result.metric === 'medium_transfer_quality');
-    target.results[index] = { ...target.results[index], status: 'fail', pass: false, score: 0, reason: 'brand-only substitution' };
+    // Every applicable row of one metric fails. The other metrics pass in full, so a composite
+    // score would look healthy; the per-metric gate must still fail and name the metric.
+    for (const record of report.evidence) {
+      for (const result of record.results) {
+        if (result.metric === 'medium_transfer_quality') Object.assign(result, { status: 'fail', pass: false, score: 0, reason: 'brand-only substitution' });
+      }
+    }
     return report;
   },
   pair_member_failed: () => {

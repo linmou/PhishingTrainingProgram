@@ -107,8 +107,9 @@ function assess(report, context = {}) {
     if (result.status === 'not_applicable') {
       const declaredRule = record.applicability_rules && record.applicability_rules[item.metric];
       if (result.applicable !== false || result.pass !== null || result.score !== null || !declaredRule) {
+        // Undeclared inapplicability is invalid evidence for a required row, not zero coverage.
         verdict.issues.push(issue('invalid_inapplicability', { case_id: item.case_id, metric: item.metric, repetition: item.repetition }));
-        tally(rows, item, 'error', policy);
+        tally(rows, item, 'invalid', policy);
         continue;
       }
     } else if (result.applicable === false) {
@@ -121,10 +122,20 @@ function assess(report, context = {}) {
   }
 
   for (const row of rows.values()) {
-    row.verdict = row.applicable === 0 ? 'unmeasured' : row.passed / row.applicable >= row.threshold ? 'pass' : 'fail';
     row.fraction = `${row.passed}/${row.applicable}`;
-    if (row.applicable === 0) verdict.issues.push(issue('zero_coverage', { metric: row.metric, partition: row.partition }));
-    else if (row.verdict !== 'pass') verdict.issues.push(issue('below_threshold', { metric: row.metric, partition: row.partition, passed: row.passed, applicable: row.applicable, threshold: row.threshold, fraction: row.fraction }));
+    // Missing and errored results never shrink the required denominator; a rate computed only from
+    // returned results would misreport the gate, so those rows stay unmeasured instead.
+    const required = row.applicable + row.missing + row.error_rows;
+    const rate = row.passed / required;
+    row.verdict = row.applicable === 0 && required === 0 ? 'unmeasured' : rate >= row.threshold ? 'pass' : 'fail';
+    if (row.applicable === 0) {
+      verdict.issues.push(issue('zero_coverage', { metric: row.metric, partition: row.partition, applicable: 0, expected: row.expected }));
+    } else if (row.missing || row.error_rows) {
+      row.verdict = 'unmeasured';
+      verdict.issues.push(issue('unmeasured_row', { metric: row.metric, partition: row.partition, missing: row.missing, error: row.error_rows, expected: row.expected }));
+    } else if (row.verdict !== 'pass') {
+      verdict.issues.push(issue('below_threshold', { metric: row.metric, partition: row.partition, passed: row.passed, applicable: row.applicable, threshold: row.threshold, fraction: row.fraction }));
+    }
   }
   verdict.metrics = [...rows.values()];
 
@@ -194,6 +205,7 @@ function tally(rows, item, status, policy, result = {}) {
   if (status === 'not_applicable') row.inapplicable += 1;
   else if (status === 'missing') row.missing += 1;
   else if (status === 'error') { row.error_rows += 1; row.applicable += 1; }
+  else if (status === 'invalid') row.error_rows += 1;
   else { row.applicable += 1; if (status === 'pass' && result.pass !== false) row.passed += 1; }
   return row;
 }
