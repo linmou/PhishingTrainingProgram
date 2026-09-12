@@ -5,7 +5,7 @@ the observed release verdict, without claiming activation, live browser acceptan
 evaluation run.
 
 Date: 2026-09-12
-Implementation commit ID: `2a6a531` (the run bundle records the pre-change commit
+Implementation commit ID: `238a51a` (the run bundle records the pre-change commit
 `a5ff4fa6904e46e3433c45b2ff2fc5d8a38e8c38` as its `start_commit`)
 
 ## Changed documents and artifacts
