@@ -1,9 +1,9 @@
 {
   "schema_version": 2,
   "status": "passed",
-  "tested_integration_sha": "9bab1e1",
+  "tested_integration_sha": "f1cb1ea",
   "integration": {
-    "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs",
+    "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs tests/integration/transfer-backend-evaluation.test.mjs tests/integration/transfer-backend-room-ui.test.mjs",
     "exit_code": 0,
     "tests": [
       {
@@ -12,6 +12,22 @@
         "passed": true,
         "tests_total": 7,
         "tests_passed": 7,
+        "tests_failed": 0
+      },
+      {
+        "path": "tests/integration/transfer-backend-evaluation.test.mjs",
+        "added": true,
+        "passed": true,
+        "tests_total": 7,
+        "tests_passed": 7,
+        "tests_failed": 0
+      },
+      {
+        "path": "tests/integration/transfer-backend-room-ui.test.mjs",
+        "added": true,
+        "passed": true,
+        "tests_total": 4,
+        "tests_passed": 4,
         "tests_failed": 0
       }
     ]
@@ -40,15 +56,23 @@
       "upstream_output_consumed": true,
       "synthetic_boundary_replacement": false,
       "note": "The test imports component 101's real resolveTransferAnswer, executes it, and passes the produced object into component 102's real TransferAssessmentService.toPublicAssessment, so the consumer receives the actual upstream artifact rather than a hand-authored fixture."
+    },
+    {
+      "edge_id": "102-transfer-backend -> 104-transfer-evaluation",
+      "producer": "102-transfer-backend",
+      "consumer": "104-transfer-evaluation",
+      "test_path": "tests/integration/transfer-backend-evaluation.test.mjs",
+      "passed": true,
+      "upstream_output_consumed": true,
+      "synthetic_boundary_replacement": false,
+      "note": "The test loads component 104's real adapter and one frozen case from its committed cases.json, then calls buildTransferTargetRequest, which calls loadSharedRequestContract() and therefore requires the actual tutor-system/src/services/ecologicalTutorCall.ts and invokes the real buildTransferTutorRequestContextV3 and buildTransferTutorRequestV3. The assertions consume that produced request: its contract identity must equal the identity the frozen manifest pins, reordered and duplicated input must yield a byte-identical user message, no evaluator-only key may appear, and a manifest whose budget or thinking flag diverges from the production source must be refused. Nothing on either side is hand-authored."
     }
   ],
   "notes": [
-    "Both commands were run on tested_integration_sha and exited 0. The gates were run three times with identical results: once on 2578ea5, once on the clean tree at c6bc632, and once on 9bab1e1 after c933b4e corrected migration 044's stored body and thereby moved the code SHA past the c6bc632 measurement. 9bab1e1 supersedes c6bc632 as the recorded tested SHA and is the state propagated to components 103 and 104.",
-    "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, the public message projection, and the shared private-field guard are the production implementations.",
-    "The e2e aggregate was rewritten for the collapsed one-table model. Its former review_draft step and teacher-draft-DTO case tested a draft table that no longer exists, so they were replaced by a prepare_turn -> send_reviewed case and a projection case that feeds the facade a response still carrying assessment_key.",
-    "Component suites on this head: 10 suites / 186 tests pass via CI=true npx react-scripts test --watchAll=false --testPathPattern=(transferAssessment|transferTutor|transferMigration|tutorDecisionContract.transfer|assessmentApi). The suite count dropped from 11 because transferAssessmentDraftDto.test.ts covered the removed teacher draft DTO, and the test count dropped correspondingly.",
-    "Migrations 038-043 are applied on the hosted project and verified there through a read-only connection: the four dropped tables absent, learning_event_inbox the only transfer-private table, the nine assessment columns present, the mis-scoped one_open_assessment_per_student index absent with the per-learner guard present in send_reviewed, the six live RPC signatures matching the Edge Function, the removed draft/question functions absent, no kept function body referencing a dropped object, and FOR UPDATE positioned before the ASSESSMENT_ALREADY_OPEN pre-check. T009 PART 1 check 8 also caught a real defect in the first version of 044: the executable code referenced nothing dropped, but an in-body comment named the dropped question table, and the check scans the stored body text comments included.",
-    "Migration 044 is applied on hosted and re-applied after a comment-only fix at c933b4e. It repairs post_assessment_message_v1, which migration 038 left storing every message with user_role='tutor' - including a learner's own, which then cannot be graded. T009 PART 1 check 16 is green and all 16 checks pass.",
-    "W3/W4 hosted behavioural evidence (T009 PART 2, transfer_assessment_rpc_behaviour.sql) is not part of this manifest. A1-A10 last passed in an earlier session; A11 and the tightened A4 are pending a re-run that requires a service_role connection."
+    "tested_integration_sha f1cb1ea is the commit that completed the E04 handoff by driving 104's adapter over 102's real builder. The commands above were run on that exact SHA with a clean tree and exited 0.",
+    "E03 (102 -> 103) is deliberately NOT declared. tests/integration/transfer-backend-room-ui.test.mjs currently covers only the production side of that edge, and upstream_output_consumed is a field the author writes which the validator cannot verify against test code. Declaring it now would pass validation while being false. It is declared only once component 103 is merged and the test drives real facade output through 103's adapter in the same run.",
+    "Component 104 was merged at 69e8274 and its suite initially failed in integration with 94 pass / 17 fail against 111/111 in its own worktree. The single root cause was that shared-request-contract.js resolved `typescript` bare from the worktree root, which only worked because of an undeclared `npm install --no-save` in that checkout. It now resolves from tutor-system/node_modules/typescript, which is a declared dependency ('typescript': '^4.9.5'), so any worktree with the application dependencies installed can run it. Fixed at 8ce2f7b.",
+    "Component 102's ProcessedMessageDTO was corrected at 191348d after component 103 found that it read `question_id`, a key process_assessment_message_v1 never returns in any of its three RETURN clauses, and that it dropped the operation's `code`, `clarification_required`, and `already_processed` variants. Verified against the live function definition, written test-first, and covered by tests/integration/... plus tutor-system/src/services/__tests__/transferAssessmentProcessMessage.test.ts.",
+    "Hosted work is NOT part of this manifest and is not claimed. Migration 045 is authored and unapplied, T009 PART 1 now carries 17 checks and has not been run since 045 was authored, and T009 PART 2 remains unexecuted. The automated credential available to the agent reaches the Management API as supabase_read_only_user, which has INSERT=false on public.users and public.messages, so the behavioural lane can only be run from the Dashboard SQL editor."
   ]
 }
