@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "status": "passed",
+  "tested_integration_sha": "9bab1e1",
+  "integration": {
+    "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs",
+    "exit_code": 0,
+    "tests": [
+      {
+        "path": "tests/integration/transfer-domain-backend.test.mjs",
+        "added": true,
+        "passed": true,
+        "tests_total": 7,
+        "tests_passed": 7,
+        "tests_failed": 0
+      }
+    ]
+  },
+  "e2e": {
+    "command": "node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs",
+    "exit_code": 0,
+    "tests": [
+      {
+        "path": "tests/e2e/transfer-assessment.test.mjs",
+        "added": true,
+        "passed": true,
+        "tests_total": 3,
+        "tests_passed": 3,
+        "tests_failed": 0
+      }
+    ]
+  },
+  "edge_handoffs": [
+    {
+      "edge_id": "101-transfer-domain -> 102-transfer-backend",
+      "producer": "101-transfer-domain",
+      "consumer": "102-transfer-backend",
+      "test_path": "tests/integration/transfer-domain-backend.test.mjs",
+      "passed": true,
+      "upstream_output_consumed": true,
+      "synthetic_boundary_replacement": false,
+      "note": "The test imports component 101's real resolveTransferAnswer, executes it, and passes the produced object into component 102's real TransferAssessmentService.toPublicAssessment, so the consumer receives the actual upstream artifact rather than a hand-authored fixture."
+    }
+  ],
+  "notes": [
+    "Both commands were run on tested_integration_sha and exited 0. The gates were run three times with identical results: once on 2578ea5, once on the clean tree at c6bc632, and once on 9bab1e1 after c933b4e corrected migration 044's stored body and thereby moved the code SHA past the c6bc632 measurement. 9bab1e1 supersedes c6bc632 as the recorded tested SHA and is the state propagated to components 103 and 104.",
+    "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, the public message projection, and the shared private-field guard are the production implementations.",
+    "The e2e aggregate was rewritten for the collapsed one-table model. Its former review_draft step and teacher-draft-DTO case tested a draft table that no longer exists, so they were replaced by a prepare_turn -> send_reviewed case and a projection case that feeds the facade a response still carrying assessment_key.",
+    "Component suites on this head: 10 suites / 186 tests pass via CI=true npx react-scripts test --watchAll=false --testPathPattern=(transferAssessment|transferTutor|transferMigration|tutorDecisionContract.transfer|assessmentApi). The suite count dropped from 11 because transferAssessmentDraftDto.test.ts covered the removed teacher draft DTO, and the test count dropped correspondingly.",
+    "Migrations 038-043 are applied on the hosted project and verified there through a read-only connection: the four dropped tables absent, learning_event_inbox the only transfer-private table, the nine assessment columns present, the mis-scoped one_open_assessment_per_student index absent with the per-learner guard present in send_reviewed, the six live RPC signatures matching the Edge Function, the removed draft/question functions absent, no kept function body referencing a dropped object, and FOR UPDATE positioned before the ASSESSMENT_ALREADY_OPEN pre-check. T009 PART 1 check 8 also caught a real defect in the first version of 044: the executable code referenced nothing dropped, but an in-body comment named the dropped question table, and the check scans the stored body text comments included.",
+    "Migration 044 is applied on hosted and re-applied after a comment-only fix at c933b4e. It repairs post_assessment_message_v1, which migration 038 left storing every message with user_role='tutor' - including a learner's own, which then cannot be graded. T009 PART 1 check 16 is green and all 16 checks pass.",
+    "W3/W4 hosted behavioural evidence (T009 PART 2, transfer_assessment_rpc_behaviour.sql) is not part of this manifest. A1-A10 last passed in an earlier session; A11 and the tightened A4 are pending a re-run that requires a service_role connection."
+  ]
+}

@@ -223,10 +223,14 @@ export interface RoomContextType {
     aiSuggestion: string | null;
     aiDecision: TutorActionDecision | null;
     transferDraft: {
-        draftId: string;
-        revision: number;
         decision: TutorDecisionV3;
         progressSnapshotHash: string;
+        roomId: string;
+        studentId: string;
+        checklistId: string;
+        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
+        itemId: string | null;
+        focusStudentMessageId: string;
     } | null;
     confirmTransferDraft: (decision: TutorDecisionV3) => Promise<void>;
     finalMode: TutorResponseMode;

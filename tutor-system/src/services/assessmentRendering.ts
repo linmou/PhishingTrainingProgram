@@ -1,6 +1,6 @@
 // Purpose: render one canonical learner-visible assessment and enforce its explicit length bounds.
 
-import { AssessmentOption, AssessmentSelectionType } from '../types/assessment';
+import type { AssessmentOption, AssessmentSelectionType } from '../types/assessment';
 
 export interface AssessmentToRender {
   stem: string;

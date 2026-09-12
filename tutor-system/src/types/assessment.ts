@@ -1,6 +1,6 @@
 // Purpose: define the public assessment payload and private v3 tutor-decision data contracts.
 
-import { ProgressPolicyVersion, TransferProgress } from './learningProgress';
+import type { ProgressPolicyVersion, TransferProgress } from './learningProgress';
 
 export type AssessmentOptionId = 'A' | 'B' | 'C' | 'D';
 export type AssessmentSelectionType = 'single' | 'multiple';

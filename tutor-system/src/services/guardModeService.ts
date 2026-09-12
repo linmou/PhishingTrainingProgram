@@ -4,6 +4,7 @@ import { Message, Room, TutorActionDecision, TutorResponseMode } from '../types'
 import { supabase } from './supabase';
 import { TutorDecisionV3 } from '../types/assessment';
 import { transferAssessmentService } from './transferAssessmentService';
+import type { ReviewedDeliveryDTO } from './transferAssessmentService';
 
 export interface ReviewedTutorResponseInput {
   roomId: string;
@@ -23,15 +24,19 @@ export interface ReviewedTutorResponseResult {
 }
 
 export interface ReviewedTransferResponseInput {
-  draftId: string;
-  expectedRevision: number;
-  expectedHash: string;
+  reviewedPayload: TutorDecisionV3;
+  roomId: string;
+  studentId: string;
+  checklistId: string;
+  /** Null for a tutoring or Guard turn; an assessment must name its item. */
+  itemId: string | null;
+  focusStudentMessageId: string;
 }
 
 /** Send a reviewed v3 tutoring, Guard, or assessment turn through the trusted API. */
 export async function sendReviewedTutorResponseV3(
   input: ReviewedTransferResponseInput
-): Promise<Record<string, unknown>> {
+): Promise<ReviewedDeliveryDTO> {
   return transferAssessmentService.sendReviewed(input);
 }
 

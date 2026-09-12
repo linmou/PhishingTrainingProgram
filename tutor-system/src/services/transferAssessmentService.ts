@@ -1,14 +1,15 @@
 // Purpose: provide the browser facade for authenticated transfer-assessment operations without exposing private keys.
 
 import { supabase } from './supabase';
-import {
+import type {
   AssessmentOption,
   AssessmentOptionId,
   AssessmentSelectionType,
   PublicAssessment,
   TutorDecisionV3,
 } from '../types/assessment';
-import { TransferProgress } from '../types/learningProgress';
+import type { TransferProgress } from '../types/learningProgress';
+import type { Room } from '../types';
 
 export interface AssessmentApiError {
   code: string;
@@ -28,15 +29,105 @@ export interface PublicAssessmentDTO {
   options: AssessmentOption[];
 }
 
-export interface TransferAssessmentApi {
-  invoke: (body: Record<string, unknown>) => Promise<{ data: AssessmentApiEnvelope<unknown> | null; error: { message: string } | null }>;
+/** Public stored-message DTO. Contains no private draft or feedback row. */
+export interface PublicMessageDTO {
+  id: string;
+  room_id: string;
+  user_id: string;
+  content: string;
+  user_role: string;
+  is_ai_generated: boolean;
+  parent_message_id: string | null;
+  response_mode: string | null;
+  created_at: string;
 }
 
-export interface TransferAssessmentCapabilities {
-  enabled: boolean;
-  policy_available: boolean;
-  can_review_assessment: boolean;
-  reason?: string;
+/** The exact key set of `PublicMessageDTO`, mirroring the Edge Function allowlist. */
+export const PUBLIC_MESSAGE_DTO_KEYS: ReadonlyArray<keyof PublicMessageDTO> = [
+  'id',
+  'room_id',
+  'user_id',
+  'content',
+  'user_role',
+  'is_ai_generated',
+  'parent_message_id',
+  'response_mode',
+  'created_at',
+];
+
+/** Assessment material that must never appear on a public question or message. */
+export const PUBLIC_ASSESSMENT_FORBIDDEN_KEYS: ReadonlyArray<string> = [
+  'correct_option_ids',
+  'transfer_basis',
+  'private_payload',
+  'private_payload_hash',
+  'public_payload_hash',
+  'raw_model_output',
+  'reviewed_payload',
+  'source_transfer_basis',
+  'teacher_confirmation_id',
+];
+
+function projectAllowlisted<T>(row: Record<string, unknown>, keys: ReadonlyArray<keyof T>): T {
+  const projected: Record<string, unknown> = {};
+  keys.forEach((key) => {
+    projected[key as string] = row[key as string] ?? null;
+  });
+  return projected as unknown as T;
+}
+
+/** Project a stored message row onto the public DTO. */
+export function toPublicMessageDTO(row: Record<string, unknown>): PublicMessageDTO {
+  return projectAllowlisted<PublicMessageDTO>(row, PUBLIC_MESSAGE_DTO_KEYS);
+}
+
+/**
+ * Result of `send_reviewed`. Mirrors `send_reviewed_tutor_response_v3`'s return, which is the
+ * stored tutor message plus the updated room. There is no question table any more, so the
+ * assessment travels on the message itself and no separate question DTO exists.
+ */
+export interface ReviewedDeliveryDTO {
+  message: PublicMessageDTO;
+  room: Room;
+}
+
+/**
+ * Result of `process_message`. Mirrors `process_assessment_message_v1`'s return. The grading
+ * outcome and the learner's own selections are public; the assessment key and transfer basis
+ * are not part of this shape and cannot be reached through it.
+ */
+export interface ProcessedMessageDTO {
+  question_id: string;
+  result: Record<string, unknown> | null;
+  selected_option_ids: string[] | null;
+  transition: Record<string, unknown> | null;
+  feedback_required: boolean;
+}
+
+function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliveryDTO {
+  const asRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  return {
+    message: toPublicMessageDTO(asRecord(result.message)),
+    // The room row is already the public room shape the room API returns; it carries no
+    // assessment material, so it is passed through rather than re-allowlisted here.
+    room: asRecord(result.room) as unknown as Room,
+  };
+}
+
+function projectProcessedMessage(result: Record<string, unknown>): ProcessedMessageDTO {
+  return {
+    question_id: String(result.question_id ?? ''),
+    result: (result.result ?? null) as Record<string, unknown> | null,
+    selected_option_ids: (result.selected_option_ids ?? null) as string[] | null,
+    transition: (result.transition ?? null) as Record<string, unknown> | null,
+    feedback_required: result.feedback_required === true,
+  };
+}
+
+
+export interface TransferAssessmentApi {
+  invoke: (body: Record<string, unknown>) => Promise<{ data: AssessmentApiEnvelope<unknown> | null; error: { message: string } | null }>;
 }
 
 export interface TransferAssessmentServiceOptions {
@@ -121,10 +212,6 @@ export class TransferAssessmentService {
     return data.data as T;
   }
 
-  async capabilities(roomId: string): Promise<TransferAssessmentCapabilities> {
-    return this.request<TransferAssessmentCapabilities>('capabilities', { room_id: roomId });
-  }
-
   async initializeChecklist(input: {
     roomId: string;
     studentId: string;
@@ -163,68 +250,40 @@ export class TransferAssessmentService {
     });
   }
 
-  async reviewDraft(input: {
-    draftId: string;
-    expectedRevision: number;
-    finalPayload: TutorDecisionV3;
-    contentConfirmed: boolean;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('review_draft', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
-      final_payload: input.finalPayload,
-      content_confirmed: input.contentConfirmed,
-    });
-  }
-
+  /**
+   * Deliver a reviewed assessment or tutoring turn. There is no draft table, so the reviewed
+   * payload and the scope it applies to travel on this one call; the tutor message is created
+   * and the assessment is stamped onto it atomically.
+   */
   async sendReviewed(input: {
-    draftId: string;
-    expectedRevision: number;
-    expectedHash: string;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('send_reviewed', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
-      expected_hash: input.expectedHash,
+    reviewedPayload: TutorDecisionV3;
+    roomId: string;
+    studentId: string;
+    checklistId: string;
+    /** Null for a tutoring or Guard turn; an assessment must name its item. */
+    itemId: string | null;
+    focusStudentMessageId: string;
+  }): Promise<ReviewedDeliveryDTO> {
+    const result = await this.request<Record<string, unknown>>('send_reviewed', {
+      reviewed_payload: input.reviewedPayload,
+      room_id: input.roomId,
+      student_id: input.studentId,
+      checklist_id: input.checklistId,
+      item_id: input.itemId,
+      focus_student_message_id: input.focusStudentMessageId,
     });
+    return projectReviewedDelivery(result);
   }
 
-  async processMessage(messageId: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('process_message', { message_id: messageId });
+  async processMessage(messageId: string): Promise<ProcessedMessageDTO> {
+    const result = await this.request<Record<string, unknown>>('process_message', { message_id: messageId });
+    return projectProcessedMessage(result);
   }
 
   async analyzeMessage(messageId: string, roomId: string): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>('analyze_message', {
       message_id: messageId,
       room_id: roomId,
-    });
-  }
-
-  async cancelQuestion(questionId: string, reason: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('cancel_question', { question_id: questionId, reason });
-  }
-
-  async invalidateQuestion(questionId: string, reason: string, expectedSnapshot: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('invalidate_question', {
-      question_id: questionId,
-      reason,
-      expected_snapshot: expectedSnapshot,
-    });
-  }
-
-  async confirmExternalTransfer(input: {
-    itemId: string;
-    sourceEvidenceMessageIds: string[];
-    transferEvidence: string;
-    note: string;
-    expectedSnapshot: string;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('confirm_external_transfer', {
-      item_id: input.itemId,
-      source_evidence_message_ids: input.sourceEvidenceMessageIds,
-      transfer_evidence: input.transferEvidence,
-      note: input.note,
-      expected_snapshot: input.expectedSnapshot,
     });
   }
 
