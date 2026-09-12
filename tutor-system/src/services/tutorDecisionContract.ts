@@ -1,7 +1,7 @@
 // #!/usr/bin/env node
 // Purpose: validate reason-first tutor decisions for both the legacy v2 and explicit transfer v3 contracts.
-import { TutorBehaviorDecision, TutorInstruction } from '../types';
-import { TutorDecisionV3, TutorInstruction as TutorInstructionV3 } from '../types/assessment';
+import type { TutorBehaviorDecision, TutorInstruction } from '../types';
+import type { TutorDecisionV3, TutorInstruction as TutorInstructionV3 } from '../types/assessment';
 import { countAssessmentSegments, validateAssessmentRendering } from './assessmentRendering';
 
 const instructions: Array<TutorInstruction | null> = ['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation', null];
