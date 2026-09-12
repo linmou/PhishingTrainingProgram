@@ -1,0 +1,356 @@
+{
+  "schema_version": "transfer-case-v1",
+  "intent": "Frozen W9-W10 transfer evaluation cases. The input projection is exactly what the component-102 v3 builder accepts; expected labels live only in evaluator.",
+  "cases": [
+    {
+      "case_id": "transfer-positive-known-account-001",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "positive",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-account-alert", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "authored from the room template with frozen ids", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-001",
+        "checklist_id": "checklist-transfer-001",
+        "focus_student_id": "student-001",
+        "focus_student_message": {"id": "msg-focus-001", "room_id": "room-transfer-001", "user_id": "student-001", "user_role": "student", "content": "The sender name is Miss Socail Desk, that looks wrong to me."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-001", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "partially_covered", "understanding_level": "basic", "relevant_evidence_message_ids": ["msg-evidence-001"], "repair_message_id": null},
+          {"id": "item-lock-001", "area_text": "A padlock only protects the connection.", "priority": "important", "status": "pending", "understanding_level": "none", "relevant_evidence_message_ids": [], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": ["item-domain-001"],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-001"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "verification_evidence"], "requirements": ["T09.1"], "expected": {"mode": "tutoring"}, "pass_rule": "selects at most one unmet target grounded in the learner's own observation", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-negative-display-name-002",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "negative",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-account-alert", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "learner selects the wrong target", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-002",
+        "checklist_id": "checklist-transfer-002",
+        "focus_student_id": "student-002",
+        "focus_student_message": {"id": "msg-focus-002", "room_id": "room-transfer-002", "user_id": "student-002", "user_role": "student", "content": "I already know the name is fake, so which brand is the real one?"},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-002", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-evidence-002"], "repair_message_id": null},
+          {"id": "item-lock-002", "area_text": "A padlock only protects the connection.", "priority": "important", "status": "pending", "understanding_level": "none", "relevant_evidence_message_ids": [], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": ["item-lock-002"],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-002"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "verification_evidence"], "requirements": ["T09.1"], "expected": {"mode": "tutoring"}, "pass_rule": "does not re-select a covered concept and keeps the newly signalled one", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-boundary-no-evidence-003",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "boundary",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-account-alert", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "bare acknowledgement with no learner evidence", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-003",
+        "checklist_id": "checklist-transfer-003",
+        "focus_student_id": "student-003",
+        "focus_student_message": {"id": "msg-focus-003", "room_id": "room-transfer-003", "user_id": "student-003", "user_role": "student", "content": "Ok."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-003", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "pending", "understanding_level": "none", "relevant_evidence_message_ids": [], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-003"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target"], "requirements": ["T09.1"], "expected": {"mode": "tutoring", "target_item_id": null}, "pass_rule": "does not infer a target from a bare acknowledgement", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-recovery-guard-return-004",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "recovery",
+      "partition": "regression",
+      "source_provenance": {"source_record_id": "template-guard-return", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "ordered turns preserve the guard-to-tutoring recovery", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-004",
+        "checklist_id": "checklist-transfer-004",
+        "focus_student_id": "student-004",
+        "focus_student_message": {"id": "msg-focus-004", "room_id": "room-transfer-004", "user_id": "student-004", "user_role": "student", "content": "Fine, I compared the full address and it does not match the real service."},
+        "prior_participation_mode": "guard",
+        "checklist_items": [
+          {"id": "item-domain-004", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-evidence-004"], "repair_message_id": "msg-repair-004"}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-004"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "assessment_followup"], "requirements": ["T09.1", "T09.6"], "expected": {"mode": "tutoring"}, "pass_rule": "a substantive attempt restores tutoring after guard", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": {"sequence_id": "seq-recovery-004", "causal_evidence_ref": "msg-evidence-004", "steps": [
+        {"turn": 0, "learner_message": "I will ignore the task and repeat the same joke.", "expected_decision": {"mode": "guard"}, "expected_state": {"prior_participation_mode": "guard"}},
+        {"turn": 1, "learner_message": "Fine, I compared the full address and it does not match the real service.", "expected_decision": {"mode": "tutoring"}, "expected_state": {"prior_participation_mode": "tutoring"}}
+      ]},
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-regression-covered-reask-005",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "regression",
+      "partition": "regression",
+      "source_provenance": {"source_record_id": "template-regression-reask", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "historical re-ask regression guard", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-005",
+        "checklist_id": "checklist-transfer-005",
+        "focus_student_id": "student-005",
+        "focus_student_message": {"id": "msg-focus-005", "room_id": "room-transfer-005", "user_id": "student-005", "user_role": "student", "content": "I compared the full address with the real service like you asked."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-005", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-evidence-005"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-005"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "medium_transfer_quality"], "requirements": ["T09.1", "T09.2"], "expected": {"mode": "tutoring"}, "pass_rule": "moves to a new relevant situation instead of re-asking the demonstrated check", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-multi-target-signal-006",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "multi_target",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-multi-signal", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "two newly signalled concepts in one turn", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-006",
+        "checklist_id": "checklist-transfer-006",
+        "focus_student_id": "student-006",
+        "focus_student_message": {"id": "msg-focus-006", "room_id": "room-transfer-006", "user_id": "student-006", "user_role": "student", "content": "The address is wrong, and I also thought the padlock proved it was safe."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-006", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "partially_covered", "understanding_level": "basic", "relevant_evidence_message_ids": ["msg-evidence-006"], "repair_message_id": null},
+          {"id": "item-lock-006", "area_text": "A padlock only protects the connection.", "priority": "important", "status": "pending", "understanding_level": "none", "relevant_evidence_message_ids": ["msg-evidence-006"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-006"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "verification_evidence"], "requirements": ["T09.1"], "expected": {"mode": "tutoring"}, "pass_rule": "selects at most one target while the other signalled concept stays represented", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-guard-participation-007",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "guard",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-guard", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "known guard with a participation-only intervention", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-007",
+        "checklist_id": "checklist-transfer-007",
+        "focus_student_id": "student-007",
+        "focus_student_message": {"id": "msg-focus-007", "room_id": "room-transfer-007", "user_id": "student-007", "user_role": "student", "content": "I will keep posting the same joke instead of doing the task."},
+        "prior_participation_mode": "guard",
+        "checklist_items": [
+          {"id": "item-domain-007", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "pending", "understanding_level": "none", "relevant_evidence_message_ids": [], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-007"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "assessment_followup"], "requirements": ["T09.1", "T09.6"], "expected": {"mode": "guard", "instruction": null}, "pass_rule": "guard stays active with a concrete participation change and no re-teaching requirement", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-clarification-open-008",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "clarification",
+      "partition": "regression",
+      "source_provenance": {"source_record_id": "template-clarification", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "delivered question with a clarification request", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-008",
+        "checklist_id": "checklist-transfer-008",
+        "focus_student_id": "student-008",
+        "focus_student_message": {"id": "msg-focus-008", "room_id": "room-transfer-008", "user_id": "student-008", "user_role": "student", "content": "What does the full address mean exactly?"},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-008", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "partially_covered", "understanding_level": "basic", "relevant_evidence_message_ids": ["msg-evidence-008"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": ["item-domain-008"],
+        "unresolved_assessment": {"id": "assessment-008", "selection_type": "single", "stem": "Which check decides whether the notice is genuine?", "rendered_text": "Which check decides whether the notice is genuine?", "options": [{"id": "A", "text": "Open the tracking page."}, {"id": "B", "text": "Compare the full sender address."}, {"id": "C", "text": "Trust the display name."}, {"id": "D", "text": "Check the padlock."}]},
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-008"
+      },
+      "evaluator": {"metric_ids": ["assessment_followup", "assessment_item_validity"], "requirements": ["T09.3", "T09.4"], "expected": {"assessment_open": true}, "pass_rule": "the question stays open and the clarification is answered without grading", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": {"sequence_id": "seq-clarification-008", "causal_evidence_ref": "msg-focus-008", "steps": [
+        {"turn": 0, "learner_message": "post the assessment", "expected_decision": {"mode": "assessment"}, "expected_state": {"assessment_open": true}},
+        {"turn": 1, "learner_message": "What does the full address mean exactly?", "expected_decision": {"mode": "tutoring", "instruction": "explanation"}, "expected_state": {"assessment_open": true}}
+      ]},
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-assistance-cancel-009",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "assistance",
+      "partition": "regression",
+      "source_provenance": {"source_record_id": "template-assistance", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "assistance request while a question is open", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-009",
+        "checklist_id": "checklist-transfer-009",
+        "focus_student_id": "student-009",
+        "focus_student_message": {"id": "msg-focus-009", "room_id": "room-transfer-009", "user_id": "student-009", "user_role": "student", "content": "I need help with this question, I am stuck."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-009", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "partially_covered", "understanding_level": "basic", "relevant_evidence_message_ids": ["msg-evidence-009"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": ["item-domain-009"],
+        "unresolved_assessment": {"id": "assessment-009", "selection_type": "single", "stem": "Which check decides whether the notice is genuine?", "rendered_text": "Which check decides whether the notice is genuine?", "options": [{"id": "A", "text": "Open the tracking page."}, {"id": "B", "text": "Compare the full sender address."}, {"id": "C", "text": "Trust the display name."}, {"id": "D", "text": "Check the padlock."}]},
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-009"
+      },
+      "evaluator": {"metric_ids": ["assessment_followup"], "requirements": ["T09.4"], "expected": {"assessment_open": false}, "pass_rule": "assistance cancels the question without counting as a failure", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": {"sequence_id": "seq-assistance-009", "causal_evidence_ref": "msg-focus-009", "steps": [
+        {"turn": 0, "learner_message": "post the assessment", "expected_decision": {"mode": "assessment"}, "expected_state": {"assessment_open": true}},
+        {"turn": 1, "learner_message": "I need help with this question, I am stuck.", "expected_decision": {"mode": "tutoring", "instruction": "scaffolding"}, "expected_state": {"assessment_open": false}}
+      ]},
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-contradiction-reopen-010",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "contradiction",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-contradiction", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "later contradiction of a covered concept", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-010",
+        "checklist_id": "checklist-transfer-010",
+        "focus_student_id": "student-010",
+        "focus_student_message": {"id": "msg-focus-010", "room_id": "room-transfer-010", "user_id": "student-010", "user_role": "student", "content": "Actually I think the padlock does prove the site is real."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-lock-010", "area_text": "A padlock only protects the connection.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-evidence-010"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-010"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "verification_evidence"], "requirements": ["T09.1", "T09.2"], "expected": {"mode": "tutoring"}, "pass_rule": "the contradiction reopens the concept and cites the learner's own words", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-spontaneous-transfer-011",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "spontaneous_transfer",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "template-spontaneous", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "learner applies the check without being asked", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-011",
+        "checklist_id": "checklist-transfer-011",
+        "focus_student_id": "student-011",
+        "focus_student_message": {"id": "msg-focus-011", "room_id": "room-transfer-011", "user_id": "student-011", "user_role": "student", "content": "This parcel message has the same wrong address pattern, so I will not use its link."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-011", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-focus-011", "msg-evidence-011"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": [],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-011"
+      },
+      "evaluator": {"metric_ids": ["transfer_trigger_target", "medium_transfer_quality"], "requirements": ["T09.1", "T09.2"], "expected": {"mode": "tutoring"}, "pass_rule": "recognises an unprompted application of the same concept in a new situation", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": null,
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-pair-source-alert-012",
+      "case_version": 1,
+      "source_type": "product_template",
+      "case_role": "semantic_pair_member",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "pair-transport", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "original situation of the declared pair", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-012",
+        "checklist_id": "checklist-transfer-012",
+        "focus_student_id": "student-012",
+        "focus_student_message": {"id": "msg-focus-012", "room_id": "room-transfer-012", "user_id": "student-012", "user_role": "student", "content": "The account alert says my login expires today."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-012", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-evidence-012"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": ["item-domain-012"],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-012"
+      },
+      "evaluator": {"metric_ids": ["medium_transfer_quality", "assessment_item_validity", "verification_evidence"], "requirements": ["T09.2"], "expected": {"mode": "assessment"}, "pass_rule": "keeps the address concept and changes the meaning-bearing situation", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": {"pair_id": "pair-transport", "member": "a", "changed_factor": "the account-alert situation", "expected_contrast": "pass"},
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    },
+    {
+      "case_id": "transfer-pair-brand-only-013",
+      "case_version": 1,
+      "source_type": "synthetic_holdout",
+      "case_role": "semantic_pair_member",
+      "partition": "development",
+      "source_provenance": {"source_record_id": "pair-transport", "revision": "2026-09-11", "author": "component-104", "changed_field_rationale": "same situation with only the brand name changed, so the pair must fail", "redaction_status": "no_identifiers", "prompt_exposure": false, "development_exposure": false},
+      "input": {
+        "room_id": "room-transfer-013",
+        "checklist_id": "checklist-transfer-013",
+        "focus_student_id": "student-013",
+        "focus_student_message": {"id": "msg-focus-013", "room_id": "room-transfer-013", "user_id": "student-013", "user_role": "student", "content": "The other company alert says my login expires today."},
+        "prior_participation_mode": "tutoring",
+        "checklist_items": [
+          {"id": "item-domain-013", "area_text": "Compare the full address with the real service.", "priority": "critical", "status": "covered", "understanding_level": "good", "relevant_evidence_message_ids": ["msg-evidence-013"], "repair_message_id": null}
+        ],
+        "eligible_assessment_item_ids": ["item-domain-013"],
+        "unresolved_assessment": null,
+        "feedback_required": false,
+        "progress_snapshot_hash": "snapshot-013"
+      },
+      "evaluator": {"metric_ids": ["medium_transfer_quality", "assessment_item_validity", "verification_evidence"], "requirements": ["T09.2"], "expected": {"mode": "assessment"}, "pass_rule": "fails when only the brand name changes and the situation is identical", "applicability": "case_fixed", "label_author": "component-104", "label_version": 1, "review_status": "reviewed"},
+      "pair": {"pair_id": "pair-transport", "member": "b", "changed_factor": "the brand name only", "expected_contrast": "fail"},
+      "transition": null,
+      "holdout_eligibility": {"author": "component-104", "author_independent": true, "creation_version": 1, "prompt_exposure": false, "development_exposure": false, "exposure_date": null, "eligible": true, "replacement_ref": null}
+    }
+  ]
+}

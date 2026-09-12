@@ -21,7 +21,7 @@ test('the frozen manifest carries every required top-level section', () => {
   for (const field of schema.required_fields) {
     assert.ok(manifest[field] !== undefined, `manifest is missing ${field}`);
   }
-  assert.deepEqual(validateManifest(manifest), []);
+  assert.deepEqual(validateManifest(manifest, { cases: read('cases.json').cases }), []);
 });
 
 test('the metric registry registers exactly the five public rubric IDs plus the deterministic supporting check', () => {
@@ -104,15 +104,16 @@ test('a non-1200 budget, a thinking mismatch, or a parity failure is a pre-scori
 
 test('declared partitions cover every case, and a case referencing an undeclared partition is rejected', () => {
   const manifest = validManifest();
+  const { cases } = read('cases.json');
   const caseIds = manifest.partitions.development.case_ids;
   assert.ok(caseIds.length > 0);
   const orphan = validManifest();
   orphan.partitions.development = { ...orphan.partitions.development, case_ids: [...caseIds, 'case-that-does-not-exist'] };
-  assert.ok(validateManifest(orphan).some(error => error.error === 'unknown_case_in_partition' && error.path.includes('case-that-does-not-exist')));
+  assert.ok(validateManifest(orphan, { cases }).some(error => error.error === 'unknown_case_in_partition' && error.path.includes('case-that-does-not-exist')));
 
   const uncovered = validManifest();
-  uncovered.partitions.development = { ...uncovered.partitions.development, case_ids: caseIds.filter(id => id !== caseIds[0]) };
-  assert.ok(validateManifest(uncovered).some(error => error.error === 'uncovered_case' && error.path.includes(caseIds[0])));
+  uncovered.partitions.development = { ...uncovered.partitions.development, case_ids: caseIds.filter(id => id !== caseIds[0]), case_versions: uncovered.partitions.development.case_versions.filter((_, index) => index !== 0) };
+  assert.ok(validateManifest(uncovered, { cases }).some(error => error.error === 'uncovered_case' && error.path.includes(caseIds[0])));
 });
 
 test('a credential or copied prompt text in the manifest is rejected and names the offending path', () => {

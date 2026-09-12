@@ -22,7 +22,18 @@ function validCase() {
       prompt_exposure: false,
       development_exposure: false
     },
-    input: { room_id: 'r1' },
+    input: {
+      room_id: 'r1',
+      checklist_id: 'c1',
+      focus_student_id: 's1',
+      focus_student_message: { id: 'm1', room_id: 'r1', user_id: 's1', user_role: 'student', content: 'the sender name looks wrong' },
+      prior_participation_mode: 'tutoring',
+      checklist_items: [{ id: 'item-1', area_text: 'Compare the full address.', priority: 'critical', status: 'pending', understanding_level: 'none', relevant_evidence_message_ids: [], repair_message_id: null }],
+      eligible_assessment_item_ids: [],
+      unresolved_assessment: null,
+      feedback_required: false,
+      progress_snapshot_hash: 'hash-1'
+    },
     evaluator: { metric_ids: ['transfer_trigger_target'], requirements: ['T09.1'], expected: { mode: 'tutoring' }, pass_rule: 'exact', applicability: 'case_fixed', label_author: 'component-104', label_version: 1, review_status: 'reviewed' },
     pair: null,
     transition: null,
@@ -84,7 +95,7 @@ test('every declared forbidden evaluator key is rejected inside the target input
 test('a pair without exactly two members or without one declared meaning-bearing change is rejected', () => {
   const oneMember = validCase();
   oneMember.pair = { pair_id: 'pair-transport', member: 'a', changed_factor: 'the brand name', expected_contrast: 'pass' };
-  assert.ok(validateCase(oneMember).some(error => error.path.includes('pair')));
+  assert.ok(validateCase(oneMember).some(error => error.path === 'pair.member'));
 
   const noFactor = validCase();
   noFactor.pair = { pair_id: 'pair-transport', member: 'a', changed_factor: '', expected_contrast: 'pass' };
@@ -100,8 +111,8 @@ test('a declared pair is rejected when the manifest holds only one member or thr
   first.pair = { pair_id: 'pair-transport', member: 'a', changed_factor: 'the brand name', expected_contrast: 'pass' };
   const second = { ...validCase(), case_id: 'transfer-case-2', pair: { pair_id: 'pair-transport', member: 'b', changed_factor: 'the situation', expected_contrast: 'fail' } };
   assert.deepEqual(validateCases([first, second]).filter(error => error.path.includes('pair')), []);
-  assert.ok(validateCases([first]).some(error => error.path === 'pair[pair-transport].members'));
-  assert.ok(validateCases([first, second, { ...first, case_id: 'transfer-case-3', pair: { ...first.pair, member: 'c' } }]).some(error => error.path === 'pair[pair-transport].members'));
+  assert.ok(validateCases([first]).some(error => error.path === 'pair[pair-transport].members' && error.actual === 1));
+  assert.ok(validateCases([first, second, { ...first, case_id: 'transfer-case-3', pair: { ...first.pair, member: 'c' } }]).some(error => error.path === 'pair[pair-transport].members' && error.actual === 3));
 });
 
 test('an eligible holdout with prompt or development exposure is rejected and names the exposure field', () => {

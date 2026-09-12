@@ -1,0 +1,347 @@
+{
+  "run_id": "transfer-eval-frozen-development-v1",
+  "manifest_version": "transfer-eval-v1",
+  "created_at": "2026-09-11T00:00:00Z",
+  "artifact_hashes": {
+    "original_plan": {
+      "path": "plan/transfer_assessment_implementation_plan.md",
+      "sha256": "33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2"
+    },
+    "t09_specification": {
+      "path": "tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
+      "sha256": null,
+      "note": "canonical behaviour document; not modified by this component"
+    },
+    "response_contract": {
+      "path": "specs/104-transfer-evaluation/contracts/rubric-registry.md",
+      "sha256": "6f1a81b631bedff01fba8b88d87088fe23851ba9153e880613ce40dd149723ff"
+    },
+    "evaluation_plan": {
+      "path": "specs/104-transfer-evaluation/contracts/quality-gate.md",
+      "sha256": "4d503a24cf73f859a79d7e04c4f31857149d00af68b6b8ad51ed38935f5142b7"
+    },
+    "case_schema": {
+      "path": "evals/promptfoo/v1/transfer/case-schema.json",
+      "sha256": "d79e08fc32080374ab8921d7efcf0ad712a6c73e29ebeafcfd6b8bc0296d7d3e"
+    },
+    "cases": {
+      "path": "evals/promptfoo/v1/transfer/cases.json",
+      "sha256": "38e542b387881f5c10717ac7cc1532a0d340fd8c1e295eb8f74113510aabf4e7"
+    },
+    "metric_registry": {
+      "path": "evals/promptfoo/v1/transfer/metric-registry.json",
+      "sha256": "6c6ff0d4f0ccedaa6a95581b350c6ac378b303a700d1ffe3f6b53a0d41537cab"
+    },
+    "rubric_registry": {
+      "path": "evals/promptfoo/rubrics/v1/manifest.json",
+      "sha256": "e7a7c2d517acc23973c7b7bc31a155e8f51d713d571cf98e78e4f40b749cae7f"
+    },
+    "adapter": {
+      "path": "evals/promptfoo/v1/transfer/adapter.js",
+      "sha256": null,
+      "note": "filled by the adapter freeze step"
+    },
+    "shared_request_contract_source": {
+      "path": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "sha256": "b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a"
+    },
+    "production_prompt_source": {
+      "path": "tutor-system/supabase/functions/assessment-api/index.ts",
+      "sha256": "5ee3a9ec99967634181e4eb66f9fdad4f8496c37930e1497db326b32183dcb7f"
+    },
+    "deterministic_checker": {
+      "path": "evals/promptfoo/v1/transfer/contract-checks.js",
+      "sha256": null,
+      "note": "filled after the checker lands"
+    },
+    "gate_policy": {
+      "path": "evals/promptfoo/v1/transfer/gate-policy.json",
+      "sha256": "1b5a92554c46afa278b3333030782ad8c5b18cd0457f2239618648e91ca0328a"
+    },
+    "gate_source": {
+      "path": "evals/promptfoo/v1/transfer/quality-gate.js",
+      "sha256": null,
+      "note": "filled after the gate lands"
+    }
+  },
+  "shared_request_contract": {
+    "contract_version": "transfer_tutor_context_v3",
+    "request_contract_version": "transfer_tutor_request_v3",
+    "builder_export_identities": [
+      "buildTransferTutorRequestContextV3",
+      "buildTransferTutorRequestV3",
+      "buildTransferTutorUserMessageV3"
+    ],
+    "builder_source_path": "tutor-system/src/services/ecologicalTutorCall.ts",
+    "builder_source_sha256": "b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a",
+    "production_prompt_reference": "tutor-system/supabase/functions/assessment-api/index.ts#TRANSFER_V3_SYSTEM_PROMPT",
+    "production_prompt_source_path": "tutor-system/supabase/functions/assessment-api/index.ts",
+    "production_prompt_source_sha256": "5ee3a9ec99967634181e4eb66f9fdad4f8496c37930e1497db326b32183dcb7f",
+    "product_effective_completion_token_budget": 1200,
+    "evaluation_effective_completion_token_budget": 1200,
+    "product_enable_thinking": false,
+    "evaluation_enable_thinking": false,
+    "budget_source": {
+      "kind": "production_source_literal",
+      "callsite_marker": "TRANSFER_V3_SYSTEM_PROMPT",
+      "record": "R13"
+    },
+    "parity_fixtures": [
+      "buildTransferTutorRequestContextV3:canonical-order"
+    ],
+    "parity_result": "match",
+    "provider_configuration_reference": {
+      "endpoint_env": "REACT_APP_OAI_BASE_URL",
+      "model_env": "REACT_APP_OAI_MODEL",
+      "credentials": "excluded"
+    }
+  },
+  "metric_registry": {
+    "public_metric_ids": [
+      "transfer_trigger_target",
+      "medium_transfer_quality",
+      "assessment_item_validity",
+      "assessment_followup",
+      "verification_evidence"
+    ],
+    "deterministic_supporting_check_id": "t09_contract_and_progress",
+    "methods": {
+      "transfer_trigger_target": "llm_rubric",
+      "medium_transfer_quality": "llm_rubric",
+      "assessment_item_validity": "llm_rubric",
+      "verification_evidence": "llm_rubric"
+    }
+  },
+  "rubric_declarations": {
+    "transfer_trigger_target": {
+      "metric_id": "transfer_trigger_target",
+      "method": "llm_rubric",
+      "file": "transfer_trigger_target.md",
+      "checked_field_or_consumer": "parsed v3 decision and response",
+      "requirements": [
+        "T09.x"
+      ],
+      "allowed_inputs": [
+        "input",
+        "parsed_output"
+      ],
+      "applicability": "case_fixed or declared conditional",
+      "pass_rule": "declared per rubric in rubrics/v1/manifest.json",
+      "threshold": 0.8,
+      "calibration": "required",
+      "error_handling": "missing or errored judgment stays in the denominator and blocks"
+    },
+    "medium_transfer_quality": {
+      "metric_id": "medium_transfer_quality",
+      "method": "llm_rubric",
+      "file": "medium_transfer_quality.md",
+      "checked_field_or_consumer": "parsed v3 decision and response",
+      "requirements": [
+        "T09.x"
+      ],
+      "allowed_inputs": [
+        "input",
+        "parsed_output"
+      ],
+      "applicability": "case_fixed or declared conditional",
+      "pass_rule": "declared per rubric in rubrics/v1/manifest.json",
+      "threshold": 0.8,
+      "calibration": "required",
+      "error_handling": "missing or errored judgment stays in the denominator and blocks"
+    },
+    "assessment_item_validity": {
+      "metric_id": "assessment_item_validity",
+      "method": "llm_rubric",
+      "file": "assessment_item_validity.md",
+      "checked_field_or_consumer": "parsed v3 decision and response",
+      "requirements": [
+        "T09.x"
+      ],
+      "allowed_inputs": [
+        "input",
+        "parsed_output"
+      ],
+      "applicability": "case_fixed or declared conditional",
+      "pass_rule": "declared per rubric in rubrics/v1/manifest.json",
+      "threshold": 0.8,
+      "calibration": "required",
+      "error_handling": "missing or errored judgment stays in the denominator and blocks"
+    },
+    "assessment_followup": {
+      "metric_id": "assessment_followup",
+      "method": "deterministic",
+      "file": "assessment_followup.md",
+      "checked_field_or_consumer": "parsed v3 decision and response",
+      "requirements": [
+        "T09.x"
+      ],
+      "allowed_inputs": [
+        "input",
+        "parsed_output"
+      ],
+      "applicability": "case_fixed or declared conditional",
+      "pass_rule": "declared per rubric in rubrics/v1/manifest.json",
+      "threshold": 1,
+      "calibration": "not_applicable",
+      "error_handling": "missing or errored judgment stays in the denominator and blocks"
+    },
+    "verification_evidence": {
+      "metric_id": "verification_evidence",
+      "method": "llm_rubric",
+      "file": "verification_evidence.md",
+      "checked_field_or_consumer": "parsed v3 decision and response",
+      "requirements": [
+        "T09.x"
+      ],
+      "allowed_inputs": [
+        "input",
+        "parsed_output"
+      ],
+      "applicability": "case_fixed or declared conditional",
+      "pass_rule": "declared per rubric in rubrics/v1/manifest.json",
+      "threshold": 0.8,
+      "calibration": "required",
+      "error_handling": "missing or errored judgment stays in the denominator and blocks"
+    }
+  },
+  "coverage_gaps": [],
+  "partitions": {
+    "calibration": {
+      "case_ids": [],
+      "case_versions": [],
+      "exposure_status": "not_exposed",
+      "denominator_rule": "calibration examples are not eligible holdouts"
+    },
+    "development": {
+      "case_ids": [
+        "transfer-positive-known-account-001",
+        "transfer-negative-display-name-002",
+        "transfer-boundary-no-evidence-003",
+        "transfer-multi-target-signal-006",
+        "transfer-guard-participation-007",
+        "transfer-contradiction-reopen-010",
+        "transfer-spontaneous-transfer-011",
+        "transfer-pair-source-alert-012",
+        "transfer-pair-brand-only-013"
+      ],
+      "case_versions": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "exposure_status": "exposed_to_author",
+      "denominator_rule": "every expected case/check/repetition row stays in the denominator"
+    },
+    "regression": {
+      "case_ids": [
+        "transfer-recovery-guard-return-004",
+        "transfer-regression-covered-reask-005",
+        "transfer-clarification-open-008",
+        "transfer-assistance-cancel-009"
+      ],
+      "case_versions": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "exposure_status": "exposed_to_author",
+      "denominator_rule": "every expected case/check/repetition row stays in the denominator"
+    },
+    "baseline": {
+      "case_ids": [],
+      "case_versions": [],
+      "exposure_status": "pending_live_run",
+      "denominator_rule": "same cases and versions as the candidate"
+    },
+    "aligned_baseline": {
+      "case_ids": [],
+      "case_versions": [],
+      "exposure_status": "pending_live_run",
+      "denominator_rule": "same cases and versions as the candidate"
+    },
+    "candidate": {
+      "case_ids": [],
+      "case_versions": [],
+      "exposure_status": "pending_live_run",
+      "denominator_rule": "same cases and versions as the baseline"
+    },
+    "holdout": {
+      "case_ids": [],
+      "case_versions": [],
+      "exposure_status": "sealed_until_candidate_freeze",
+      "denominator_rule": "independent authored cases only"
+    }
+  },
+  "settings": {
+    "target_model": "qwen3.5-flash",
+    "judge_model": "qwen3.5-flash",
+    "target_temperature": 0.3,
+    "target_max_tokens": 1200,
+    "target_enable_thinking": false,
+    "judge_temperature": 0,
+    "judge_max_tokens": 8000,
+    "judge_enable_thinking": true,
+    "repetitions": 2,
+    "timeout_ms": 180000,
+    "request_concurrency": 6,
+    "transport_attempts": 3,
+    "seed_policy": "provider seed not configured; preserve both repetitions without selection",
+    "legacy_v1_settings_note": "evals/promptfoo/v1/settings.json stays unchanged for the legacy v1 path, which evaluates a different production call; the transfer target path declares its own 1200/false values"
+  },
+  "comparison": {
+    "join_keys": [
+      "case_id",
+      "case_version",
+      "metric_id",
+      "partition",
+      "target_generation_id",
+      "repetition",
+      "turn"
+    ],
+    "baseline_run_id": null,
+    "candidate_run_id": null,
+    "permitted_changed_factors": [
+      "contract_version"
+    ],
+    "comparability_checks": [
+      "partition_names",
+      "case_versions",
+      "metric_versions",
+      "settings",
+      "repetitions",
+      "generation_identity",
+      "builder_hash",
+      "prompt_hash",
+      "budget",
+      "thinking_flag",
+      "parity"
+    ]
+  },
+  "thresholds": {
+    "semantic_default": 0.8,
+    "hard": 1,
+    "pair_rule": "one failing member fails the pair",
+    "non_regression_rule": "no decline against the unchanged comparable baseline",
+    "missing_error_rule": "missing and error stay in the denominator",
+    "zero_coverage_rule": "zero applicable rows block as incomplete"
+  },
+  "execution": {
+    "commands": [],
+    "git_revision": "72888cd",
+    "worktree_status": "clean_at_freeze",
+    "started_at": null,
+    "completed_at": null,
+    "exit_codes": []
+  },
+  "immutability": {
+    "run_directory": "evals/promptfoo/results/<model>/<run-id>/",
+    "write_once": true
+  }
+}
