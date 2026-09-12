@@ -38,13 +38,26 @@ The documented alternative is a component-102-owned exported budget constant; 10
 
 ## 4. Blocking unrun stages
 
-**Status: RUNNABLE-BUT-UNRUN.** The live stages are not impossible — the configuration is present — but they have not been executed, and no result from them is claimed anywhere in this component.
+**Status: LIVE PROVIDER REACHABLE; CALIBRATION AND BASELINE PARTIALLY RUN; CANDIDATE, HOLDOUTS, AND GATE STILL UNRUN.**
+
+Observed live evidence so far:
+
+| Stage | Command | Observed result |
+| --- | --- | --- |
+| Transfer-path provider probe | `node evals/promptfoo/v1/transfer/probe-transfer-provider.js /tmp/transfer-live-probe` | SUCCESS. HTTP 200 from host `dashscope-intl.aliyuncs.com`; request sent with the frozen transfer settings (`max_tokens` 1200, `enable_thinking` false, temperature 0.3); token usage `prompt_tokens` 445, `completion_tokens` 286, `total_tokens` 731, so the completion stayed inside the 1,200 budget; parsed keys came back in the frozen order `reason, decision, response, assessment`. Raw record: `/tmp/transfer-live-probe/probe.json`. |
+| Live baseline over the frozen 13 cases | `node evals/promptfoo/v1/runner.js --cases /tmp/transfer-live-cases.json --variant baseline --out evals/promptfoo/results/qwen3.5-flash/transfer-live-baseline-v1 --workers 4` | PARTIAL at the time of this record: the run is still executing and had written 7 of the 26 declared case/repetition generations. No completed verdict, and the run directory is a partial run. |
+| Deterministic transfer evaluation of a preserved run | `node evals/promptfoo/v1/transfer/evaluate-generated-run.js <runner-dir> evals/promptfoo/results/qwen3.5-flash/transfer-live-baseline-v1-evaluated` | UNRUN, because it requires the completed baseline report. |
+
+Two implementation facts discovered while running the live stage, both worth recording:
+
+1. The v1 runner's `baseline` variant is the correct live path for transfer, because it sends a case's own `baseline_messages` unchanged. `create-transfer-live-cases.js` materializes those messages from the production transfer prompt plus the projected v3 context, so the live target request is the production request.
+2. `assessment_followup` is deliberately not evaluated in the live pass. Its deterministic lifecycle sequences are authored test assets in `fixtures/contract-fixtures.json`, not data recoverable from the frozen case fields, so `evaluate-generated-run.js` reports the metric as absent rather than deriving a sequence. The gate therefore returns `incomplete` for `assessment_followup` on such a run, which is the honest verdict.
 
 | Stage | Exact command | Prerequisites now met | Why unrun |
 | --- | --- | --- | --- |
-| Semantic judge calibration | `rtk proxy node evals/promptfoo/v1/calibrate.js <new-evidence-directory>` | `.env` copied; `node_modules` installed | Not yet executed in this worktree. `transfer/calibrate.js` reports `verdict: unrun` and `blocked_reason: MISSING_LIVE_CONFIGURATION` when called without a judge, and lists `judge model`, `judge endpoint`, `provider credentials`, and `judge token limit` as the required configuration. |
+| Semantic judge calibration | `rtk proxy node evals/promptfoo/v1/calibrate.js <new-evidence-directory>` | `.env` copied; `node_modules` installed; provider reachable | UNRUN. No calibration record exists, so `transfer/calibrate.js` reports `verdict: unrun` and `blocked_reason: MISSING_LIVE_CONFIGURATION` when invoked without a judge. Semantic calibration is therefore absent, and the four semantic rubrics have no judged evidence. |
 | Unchanged baseline run | `rtk proxy node evals/promptfoo/v1/runner.js --cases evals/promptfoo/v1/transfer/cases.json --variant baseline --contract_version v3 --manifest evals/promptfoo/v1/transfer/manifest.json --out evals/promptfoo/results/<model>/<run-id>-baseline` | `.env` copied; `node_modules` installed | Not yet executed. |
-| Candidate run | the same command with `--variant candidate` and a `-candidate` output directory | as above | Not yet executed, and therefore no candidate freeze exists. |
+| Candidate run | the same command with `--variant candidate` and a `-candidate` output directory | requires a completed baseline first | UNRUN, so no candidate freeze exists. |
 | Sealed holdout runs | baseline and candidate against `evals/promptfoo/holdouts/transfer-sealed/` | requires a frozen candidate first | Blocked by the candidate freeze, which is this component's own rule. |
 | Gate over live evidence | `rtk proxy node evals/promptfoo/v1/gate.js <candidate-dir> <baseline-dir>` | requires the runs above | Not executed. |
 
