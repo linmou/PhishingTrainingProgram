@@ -7,7 +7,7 @@ Give the implementation owner a focused verification order for W7-W8. These comm
 ## Preconditions
 
 - Work from `tutor-system/` with the existing lockfile installed.
-- Use component 101's shared assessment/progress exports and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and service methods. Keep React-only view-state types in `src/contexts/transferAssessmentUiAdapter.ts`; do not edit shared type files, `transferAssessmentService.ts`, or its service tests from component 103.
+- Use component 101's shared assessment/progress exports and component 102's exported six-operation facade (`initializeChecklist`, `postMessage`, `prepareTurn`, `sendReviewed`, `processMessage`, `analyzeMessage`), `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed envelopes. Keep React-only view-state types in `src/contexts/transferAssessmentUiAdapter.ts`; do not edit shared type files, `transferAssessmentService.ts`, or its service tests from component 103. There is no draft DTO, no `review_draft`, no `reject_draft`, and no `regenerate_draft`.
 - Keep `TRANSFER_ASSESSMENT_ENABLED` disabled unless the release owner has authorized a gate-complete environment.
 - Use isolated test data. Do not target a linked hosted project with reset, seed, migration push, or destructive commands.
 
@@ -48,9 +48,9 @@ npm run build
 
 The focused tests must cover:
 
-- correct focus student/message/checklist/item identity and parent IDs;
-- public learner fields versus private teacher draft fields;
-- explicit consumption of component 102's `reject_draft` and `regenerate_draft` results, plus dirty edit, reconfirm, stale revision, stale hash, and mode mismatch;
+- correct focus student/message/checklist/item identity and parent IDs, including `itemId` kept `string | null`;
+- public learner fields versus private teacher review-candidate fields, with `assessment_key` asserted absent from UI state, props, and exports;
+- dirty edit, reconfirm, an already-open delivery refused as superseded, and mode mismatch;
 - tutoring/Guard room participation with assessment turn delivery;
 - deterministic answer submission through chat without a local progress write;
 - initial fetch, realtime duplicate, reconnect catch-up, reload, timeout retry, and duplicate-tab convergence;
