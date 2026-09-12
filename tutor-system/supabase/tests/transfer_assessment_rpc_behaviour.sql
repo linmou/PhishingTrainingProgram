@@ -69,8 +69,11 @@ begin
   insert into session_checklists(id, room_id, student_id, template_name, progress_policy_version)
   values (v_check, v_room, v_student, 'T009 template', 'transfer_v1');
 
+  -- item_type must be one of the values checklist_items_item_type_check allows:
+  -- understanding, behavior, detection_area, verification_step. 'verification_step' is the
+  -- closest fit for a lure-recognition item.
   insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
-  values (v_item, v_check, 'Recognise a familiar-sender lure', 'concept', 'partially_covered', 'basic');
+  values (v_item, v_check, 'Recognise a familiar-sender lure', 'verification_step', 'partially_covered', 'basic');
 
   insert into messages(id, room_id, user_id, content, user_role, is_ai_generated)
   values (v_focus, v_room, v_student, 'My bank emailed a link so it must be safe.', 'student', false);
