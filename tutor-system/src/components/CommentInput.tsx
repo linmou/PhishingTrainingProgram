@@ -17,6 +17,8 @@ interface CommentInputProps {
     onStopTyping?: () => void;
     placeholder?: string;
     disabled?: boolean;
+    /** Learner may still type, but the message cannot be submitted yet (staged playback). */
+    submitBlocked?: boolean;
     isLoading?: boolean;
     maxLength?: number;
     replyingTo?: {
@@ -36,6 +38,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
     onStopTyping,
     placeholder = "Write a comment...",
     disabled = false,
+    submitBlocked = false,
     isLoading = false,
     maxLength = 1000,
     replyingTo = null,
@@ -78,7 +81,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
         // Submit on Enter (but not Shift+Enter)
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            if (value.trim() && !disabled && !isLoading) {
+            if (value.trim() && !disabled && !isLoading && !submitBlocked) {
                 onSubmit(e);
             }
         }
@@ -93,7 +96,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
         onStopTyping?.();
     };
 
-    const canSubmit = value.trim().length > 0 && !disabled && !isLoading;
+    const canSubmit = value.trim().length > 0 && !disabled && !isLoading && !submitBlocked;
     const displayName = composerIdentity?.displayName || user?.display_name || 'User';
     const avatarUrl = composerIdentity ? composerIdentity.avatarUrl : user?.avatar_url;
 
@@ -179,7 +182,9 @@ const CommentInput: React.FC<CommentInputProps> = ({
                             type="submit"
                             disabled={!canSubmit}
                             className={`comment-submit-btn ${canSubmit ? 'comment-submit-active' : ''}`}
-                            title={canSubmit ? 'Send comment' : 'Type a message to send'}
+                            title={submitBlocked
+                                ? 'Wait for the second AI message'
+                                : canSubmit ? 'Send comment' : 'Type a message to send'}
                         >
                             {isLoading ? (
                                 <div className="comment-loading-spinner"></div>

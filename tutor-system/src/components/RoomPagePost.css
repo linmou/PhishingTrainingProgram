@@ -828,3 +828,72 @@
         max-height: 400px;
     }
 }
+
+/* Multi-agent review editor (two-character draft) */
+.multi-agent-suggestion {
+    margin: 16px 0;
+    padding: 18px 20px;
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+}
+
+.multi-agent-suggestion-header h3 {
+    margin: 0 0 4px;
+    color: #1f2937;
+}
+
+.multi-agent-suggestion-hint,
+.multi-agent-suggestion-parent {
+    margin: 0 0 8px;
+    color: #65676b;
+    font-size: 13px;
+}
+
+.multi-agent-suggestion-parent {
+    padding-left: 12px;
+    border-left: 3px solid rgba(124, 58, 237, 0.35);
+    font-style: italic;
+}
+
+.multi-agent-card {
+    margin-top: 12px;
+}
+
+.multi-agent-card-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.multi-agent-card--riley .multi-agent-card-label {
+    color: #b45309;
+}
+
+.multi-agent-card--tutor .multi-agent-card-label {
+    color: #7c3aed;
+}
+
+.multi-agent-card-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font: inherit;
+    resize: vertical;
+}
+
+.multi-agent-suggestion-error {
+    margin: 12px 0 0;
+    color: #dc3545;
+    font-size: 13px;
+}
+
+.multi-agent-suggestion-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}

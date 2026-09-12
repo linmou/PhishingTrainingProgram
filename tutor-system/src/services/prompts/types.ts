@@ -2,10 +2,14 @@
  * TypeScript type definitions for system prompt configuration
  */
 
+import type { InteractionMode, StudentAIChoice } from '../../types';
+
 export interface StudentToneLock {
   locked: true;
   chosen_by_user_id: string;
   chosen_role: 'low' | 'high';
+  /** Present when the learner chose Multi-agent; chosen_role then only records the retained Tutor tone. */
+  chosen_choice?: StudentAIChoice;
 }
 
 export type PromptComparisonVersion = 'phase0' | 'refined';
@@ -41,7 +45,9 @@ export interface SystemPromptConfig {
   };
   detection_areas: string[];
   verification_steps: string[];
-  /** Present when a student claimed peer/adult tone (1:1 rooms). Ignored by prompt text generation. */
+  /** Learner-selected AI interaction mode. Absent means single_agent. */
+  interaction_mode?: InteractionMode;
+  /** Present when a student claimed an AI choice (single-student rooms). Ignored by prompt text generation. */
   student_tone_lock?: StudentToneLock | null;
   /** Present only on controlled Phase 0/refined evidence rooms. */
   prompt_comparison?: PromptComparisonMetadata | null;

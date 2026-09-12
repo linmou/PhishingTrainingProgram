@@ -4,14 +4,17 @@
  * "write the tutor response" instruction the room should use.
  */
 
-import { ConversationMessage, PrePopulatedMessage, TutorResponseMode } from '../types';
+import { ConversationMessage, InteractionMode, PrePopulatedMessage, TutorResponseMode } from '../types';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from './prompts/activeTutorAgentPrompt';
+import { MULTI_AGENT_TUTOR_PROMPT } from './prompts/multiAgentTutorPrompt';
 
 export interface EcologicalCaseVars {
   scenario_context: string;
   conversation_history: string;
   student_message: string;
   prior_mode?: TutorResponseMode | 'unknown';
+  /** Learner-selected AI interaction mode. Old callers default to single_agent. */
+  interaction_mode?: InteractionMode;
 }
 
 export interface EcologicalChatMessage {
@@ -102,7 +105,8 @@ export function buildEcologicalTutorUserTurn({
   scenario_context,
   conversation_history,
   student_message,
-  prior_mode
+  prior_mode,
+  interaction_mode
 }: EcologicalCaseVars): string {
   return [
     'Draft the next tutor decision using this room context.',
@@ -111,7 +115,8 @@ export function buildEcologicalTutorUserTurn({
       scenario_context,
       conversation_history: conversation_history || '(no prior turns)',
       student_message,
-      prior_mode: prior_mode || 'unknown'
+      prior_mode: prior_mode || 'unknown',
+      interaction_mode: interaction_mode || 'single_agent'
     })
   ].join('\n');
 }
@@ -119,15 +124,21 @@ export function buildEcologicalTutorUserTurn({
 /**
  * Build Qwen-compatible chat messages for the ecological product path:
  * system = room system prompt; user = ecological turn with latest student line.
+ * The multi-agent instruction block is appended only for multi_agent turns, so the
+ * evaluated single-Tutor policy is sent unchanged in every other case.
  */
 export function buildEcologicalChatCompletionMessages(
   systemPrompt: string,
   vars: EcologicalCaseVars
 ): EcologicalChatMessage[] {
   const roomPrompt = systemPrompt || 'You are a helpful AI assistant in an educational tutoring session.';
-  const activeSystemPrompt = roomPrompt.includes(ACTIVE_TUTOR_AGENT_PROMPT)
+  const withBasePolicy = roomPrompt.includes(ACTIVE_TUTOR_AGENT_PROMPT)
     ? roomPrompt
     : `${roomPrompt}\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`;
+  const activeSystemPrompt = vars.interaction_mode === 'multi_agent'
+    && !withBasePolicy.includes(MULTI_AGENT_TUTOR_PROMPT)
+    ? `${withBasePolicy}\n\n${MULTI_AGENT_TUTOR_PROMPT}`
+    : withBasePolicy;
   return [
     {
       role: 'system',

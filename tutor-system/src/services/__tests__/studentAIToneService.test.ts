@@ -118,12 +118,14 @@ describe('setStudentAITone (features/student_ai_tone.feature)', () => {
         system_prompt: 'PROMPT:low',
         prompt_config: expect.objectContaining({
           role: { role: 'low' },
+          interaction_mode: 'single_agent',
           communication_style: expect.objectContaining({ teen_slang: 'high' }),
           detection_areas: ['Urgent language'],
           student_tone_lock: {
             locked: true,
             chosen_by_user_id: 's1',
             chosen_role: 'low',
+            chosen_choice: 'peer',
           },
         }),
       }),
