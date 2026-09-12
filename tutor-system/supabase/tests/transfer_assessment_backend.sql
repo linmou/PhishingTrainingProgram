@@ -117,6 +117,10 @@ WITH checks(check_name, pass, detail) AS (
     --    dependency-tracked, so DROP TABLE succeeds against a body that still reads it and the
     --    failure only appears at call time. This is what caught review_assessment_draft_v1 when
     --    migration 038 dropped assessment_drafts without dropping it.
+    --    It scans the whole stored body, comments included, so a comment that names a dropped table
+    --    trips it too. That is deliberate: keeping the check a plain text scan is what makes it
+    --    robust, and the cost is that migration comments must not name removed objects. It caught
+    --    exactly that in the first version of migration 044.
     SELECT 'no kept function references a dropped object',
            NOT EXISTS (
                SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace

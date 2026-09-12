@@ -57,7 +57,9 @@ BEGIN
     v_role := v_user.current_role;
 
     -- The assessment is a message now. An answer may only link to a delivered assessment whose
-    -- checklist belongs to the author, which is what the old assessment_questions lookup enforced.
+    -- checklist belongs to the author, which is the rule the dropped question-table lookup enforced.
+    -- Do not name a dropped table in a comment in this body: T009 check 8 scans the stored function
+    -- text, comments included, so naming one there trips the dangling-reference guard.
     IF p_assessment_id IS NOT NULL AND NOT EXISTS (
         SELECT 1
         FROM messages q
