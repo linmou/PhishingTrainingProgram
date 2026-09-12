@@ -67,3 +67,19 @@ One delegated monitor and roughly thirty minutes of wall clock, producing no cod
 useful output is this record plus three confirmations: the route was right, the path
 classification was clean, and the two baseline commits are correctly not in-phase. Had the
 applicability gate been applied honestly at step 0, the run would not have started.
+
+## Correction to notes that stand
+
+The earlier "Path classification was clean" note is true and irrelevant: classification was never
+the defect. An audit of the request map shows the opposite - every mapped `executable` row named
+only a test file, and the definition of done named no production artifact, so no legal Green
+existed. Red's target and the fix were the same file.
+
+## Skill follow-up applied
+
+The gate in `/Users/admin/.agents/skills/fast-multi-agent-tdd` now rejects this class of slice at
+step 0, before any monitor is delegated: a slice is admitted only when Red has a test-like artifact
+and Green has a production-side artifact distinct from every planned Red test path. Test-only
+deltas are named `test maintenance` and routed outside the skill, so this failure costs nothing
+next time instead of one monitor cycle.
+
