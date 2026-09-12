@@ -22,11 +22,13 @@ import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guar
 import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import {
+    answerLifecycleFromProcessed,
     assertDeliverableReview,
     mergeRoomMessages,
     participationModeFromRoom,
     projectRoomMessage,
     publicAssessmentForDecision,
+    withAnswerLifecycle,
 } from './transferAssessmentUiAdapter';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
@@ -580,11 +582,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
             // Project the stored row before it enters React state: the row is a raw messages
             // record and can carry the private assessment key.
-            const storedMessage = addDisplayNameToMessage(projectRoomMessage(storedRow), participants);
-            setMessages(prev => mergeRoomMessages(prev, [storedMessage]));
+            const storedMessage = projectRoomMessage(storedRow);
+            setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(storedMessage, participants)]));
             if (user.current_role === 'student') {
                 try {
-                    await transferAssessmentService.processMessage(storedMessage.id);
+                    const processed = await transferAssessmentService.processMessage(storedMessage.id);
+                    // Consume the trusted lifecycle result: the server, not the browser, decides
+                    // whether the answer was graded or needs a clarifying label.
+                    setMessages(prev => mergeRoomMessages(prev, [
+                        addDisplayNameToMessage(
+                            withAnswerLifecycle(storedMessage, answerLifecycleFromProcessed(processed)),
+                            participants
+                        ),
+                    ]));
                 } catch (assessmentError) {
                     if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
                         throw assessmentError;
