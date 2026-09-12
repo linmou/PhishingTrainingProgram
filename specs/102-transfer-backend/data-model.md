@@ -52,7 +52,7 @@ Key confidentiality is an accepted tradeoff, not an oversight. `public.messages`
 |---|---|---|
 | `private.learning_event_inbox` | Stable event/dedupe key, scope/source IDs, kind/payload, classifier, processing state, linked evidence/update, timestamps | Records applied, no-change, deferred, rejected, and error outcomes for replay/audit. This is the only table the component keeps: it is what applies `assessment_pass` and `assessment_fail` to `checklist_items`. |
 
-`one_open_assessment_per_student` is a partial unique index on `messages(room_id, user_id) WHERE assessment_lifecycle = 'delivered'`, replacing the index that lived on the dropped question table.
+One open assessment per learner is enforced inside `send_reviewed_tutor_response_v3`, which reaches the learner through `messages.assessment_checklist_id -> session_checklists.student_id`. It is deliberately **not** a partial unique index. The index that once sat here constrained `messages(room_id, user_id) WHERE assessment_lifecycle = 'delivered'`, but a message's `user_id` is its author, and an assessment message is authored by the tutor. That scoped the rule per tutor, which both made the function's own check unreachable and blocked a second learner in the same room. A partial index cannot follow the checklist link, because an index may only reference columns on its own row. The race guard is the room row lock taken `FOR UPDATE` before the check, not an index.
 
 
 ## State transitions

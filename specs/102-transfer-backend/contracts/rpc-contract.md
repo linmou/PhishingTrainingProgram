@@ -25,7 +25,7 @@
 
 `send_reviewed_tutor_response_v3` must commit, in one transaction, the tutor message with the assessment stamped onto it and the room participation mapping. For an assessment the message turn mode is `assessment`, the instruction is `transfer_assess`, the lifecycle is set to `delivered`, and room participation remains `tutoring`. Any failure rolls back all of these writes.
 
-A second delivery for a learner who already has a `delivered` assessment is rejected as `ASSESSMENT_ALREADY_OPEN`, and the partial unique index `one_open_assessment_per_student` enforces the same rule.
+A second delivery for a learner who already has a `delivered` assessment is rejected as `ASSESSMENT_ALREADY_OPEN`. The rule is enforced inside the function, which reaches the learner through `messages.assessment_checklist_id -> session_checklists.student_id`; it is not a partial unique index, because the only identity column on a message row is its author and an assessment message is authored by the tutor. The function takes the room row lock `FOR UPDATE` before the check, so two concurrent deliveries serialize there.
 
 ## Evidence result
 
