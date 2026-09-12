@@ -27,6 +27,16 @@ const env = {
 };
 const supabase = createClient(env.REACT_APP_SUPABASE_URL, env.REACT_APP_SUPABASE_ANON_KEY);
 
+/**
+ * The checklist policies are keyed on auth.uid(), which is NULL for this app's session-less client,
+ * so seeding needs a privileged writer. No schema change is required: prefer a service-role key when
+ * one is available, otherwise fall back to the anon client and report the SQL to run instead.
+ */
+const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY || env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || null;
+const writer = serviceRoleKey
+  ? createClient(env.REACT_APP_SUPABASE_URL, serviceRoleKey, { auth: { persistSession: false } })
+  : supabase;
+
 /** Reproduce AuthContext.generateUserId so seeded rows match the browser's identity. */
 function generateUserId(displayName, role) {
   const normalized = displayName.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -75,7 +85,7 @@ async function seed() {
     { role: 'student', content: 'A name that looks familiar is not proof the message is real. I should check the real app instead of the link.' },
   ];
 
-  const { error: roomError } = await supabase.from('rooms').insert({
+  const { error: roomError } = await writer.from('rooms').insert({
     id: roomId,
     title: 'Transfer assessment demo',
     description: 'Seeded demo room for the transfer assessment.',
@@ -85,7 +95,7 @@ async function seed() {
   });
   if (roomError) throw new Error(`room insert failed: ${roomError.message}`);
 
-  const { error: checklistError } = await supabase.from('session_checklists').insert({
+  const { error: checklistError } = await writer.from('session_checklists').insert({
     id: checklistId,
     room_id: roomId,
     student_id: learnerId,
@@ -106,15 +116,16 @@ async function seed() {
     id: crypto.randomUUID(),
     checklist_id: checklistId,
     area_text: areaText,
+    item_type: 'detection_area',
     priority: 'critical',
     status: 'partially_covered',
     understanding_level: 'basic',
   }));
-  const { error: itemError } = await supabase.from('checklist_items').insert(items);
+  const { error: itemError } = await writer.from('checklist_items').insert(items);
   if (itemError) throw new Error(`checklist item insert failed: ${itemError.message}`);
 
   for (const message of history) {
-    const { error: messageError } = await supabase.from('messages').insert({
+    const { error: messageError } = await writer.from('messages').insert({
       room_id: roomId,
       user_id: message.role === 'tutor' ? tutorId : learnerId,
       content: message.content,
@@ -184,6 +195,8 @@ async function verify(room) {
       assessment_options: optionCount,
       assessment_stem: decision?.assessment?.stem || null,
       transfer_basis_present: Boolean(decision?.assessment?.transfer_basis),
+      decision_keys: decision ? Object.keys(decision) : [],
+      raw_decision: decision ? JSON.stringify(decision).slice(0, 600) : null,
       draft_editor_option_inputs: optionInputs,
       page_shows_assessment_editor: /assessment|correct|option/i.test(body),
       is_transfer_assessment: mode === 'assessment' && optionCount === 4,

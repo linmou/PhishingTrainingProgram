@@ -47,7 +47,9 @@
     },
     "production_prompt_source": {
       "path": "tutor-system/src/services/transferAssessmentService.ts",
-      "sha256": "e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf"
+      "sha256": "e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf",
+      "prompt_text_path": "tutor-system/src/services/prompts/transferV3Prompt.ts",
+      "prompt_text_sha256": "7d6fd68dc2592eefa58ba9792437ce51fafb3cbff9ee7065c82464d51ca5efc4"
     },
     "deterministic_checker": {
       "path": "evals/promptfoo/v1/transfer/contract-checks.js",
