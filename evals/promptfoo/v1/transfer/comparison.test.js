@@ -64,7 +64,7 @@ test('a changed shared builder hash, production prompt hash, budget, thinking fl
 
 test('changed experimental factors must be declared separately from prompt changes', () => {
   const declared = clone();
-  declared.comparison = { ...declared.comparison, permitted_changed_factors: ['contract_version'] };
+  declared.comparison = { ...declared.comparison, permitted_changed_factors: ['contract_version', 'request_concurrency'] };
   declared.settings = { ...declared.settings, request_concurrency: 4 };
   assert.equal(compareManifests(clone(), declared).status, 'comparable');
   const undeclared = clone();

@@ -300,6 +300,7 @@
       "case_id",
       "case_version",
       "metric_id",
+      "metric_version",
       "partition",
       "target_generation_id",
       "repetition",
