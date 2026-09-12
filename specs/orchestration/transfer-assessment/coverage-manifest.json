@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "status": "passed",
+  "tested_integration_sha": "97848c2",
+  "integration": {
+    "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs",
+    "exit_code": 0,
+    "tests": [
+      {
+        "path": "tests/integration/transfer-domain-backend.test.mjs",
+        "added": true,
+        "passed": true,
+        "tests_total": 7,
+        "tests_passed": 7,
+        "tests_failed": 0
+      }
+    ]
+  },
+  "e2e": {
+    "command": "node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs",
+    "exit_code": 0,
+    "tests": [
+      {
+        "path": "tests/e2e/transfer-assessment.test.mjs",
+        "added": true,
+        "passed": true,
+        "tests_total": 4,
+        "tests_passed": 4,
+        "tests_failed": 0
+      }
+    ]
+  },
+  "edge_handoffs": [
+    {
+      "edge_id": "101-transfer-domain -> 102-transfer-backend",
+      "producer": "101-transfer-domain",
+      "consumer": "102-transfer-backend",
+      "test_path": "tests/integration/transfer-domain-backend.test.mjs",
+      "passed": true,
+      "upstream_output_consumed": true,
+      "synthetic_boundary_replacement": false,
+      "note": "The test imports component 101's real resolveTransferAnswer, executes it, and passes the produced object into component 102's real TransferAssessmentService.toPublicAssessment, so the consumer receives the actual upstream artifact rather than a hand-authored fixture."
+    }
+  ],
+  "notes": [
+    "Both commands were run on tested_integration_sha and exited 0.",
+    "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, both public projection functions, and the shared private-field guard are the production implementations.",
+    "W3/W4 hosted behavioural evidence (T009 PART 2) is not part of this manifest and remains unexecuted; it requires a service_role connection."
+  ]
+}
