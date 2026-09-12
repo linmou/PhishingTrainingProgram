@@ -257,33 +257,50 @@ begin
   end;
 
   -- =======================================================================================
-  -- A10: the guard-mode lock still rejects a protected progress write
+  -- A10: the guard-mode lock still rejects a protected progress write.
+  --
+  -- Order matters and is the point of this case. The room, checklist, and item are all created
+  -- while the room is still in `tutoring`, because the guard deliberately blocks creation in a
+  -- guarded room too -- setting the room to `guard` first makes the item insert itself raise, which
+  -- is what an earlier version of this case got wrong. Only then does the room enter `guard`, and
+  -- the update below is what must be refused. The trusted-operation flag is turned off for that
+  -- attempt, so the guard function is what raises rather than private_transfer_item_guard.
+  --
+  -- This is the regression guard for migration 041: it drives the guard through its UPDATE path on
+  -- checklist_items, then through the cascade from checklist_items to session_checklists. Those are
+  -- the two branches that were broken.
   -- =======================================================================================
   declare
-    v_guard_room uuid := gen_random_uuid();
+    v_guard_room  uuid := gen_random_uuid();
+    v_guard_check uuid := gen_random_uuid();
+    v_guard_item  uuid := gen_random_uuid();
   begin
-    insert into rooms(id, tutor_id, title, active_response_mode)
-    values (v_guard_room, v_tutor, 'P2 guard room', 'guard');
+    -- Created in tutoring: active_response_mode is omitted so it takes its 'tutoring' default.
+    insert into rooms(id, tutor_id, title) values (v_guard_room, v_tutor, 'P2 guard room');
 
     perform set_config('app.transfer_operation', 'on', true);
     insert into session_checklists(id, room_id, student_id, template_name, progress_policy_version)
-    values (gen_random_uuid(), v_guard_room, v_student, 'P2 guard template', 'transfer_v1');
+    values (v_guard_check, v_guard_room, v_student, 'P2 guard template', 'transfer_v1');
 
     insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
-    values (gen_random_uuid(), (select id from session_checklists where room_id = v_guard_room),
-            'Guarded objective', 'verification_step', 'pending', 'none');
+    values (v_guard_item, v_guard_check, 'Guarded objective', 'verification_step', 'pending', 'none');
 
-    -- A guarded state change must raise. The trigger that enforces this is the function that
-    -- migration 040 repaired, so this case is the regression guard for that fix.
+    -- Now arm guard mode, and withdraw the trusted-operation flag for the attempt below.
+    update rooms set active_response_mode = 'guard' where id = v_guard_room;
+    perform set_config('app.transfer_operation', 'off', false);
+
     begin
       update checklist_items set status = 'partially_covered', understanding_level = 'basic'
-      where checklist_id = (select id from session_checklists where room_id = v_guard_room);
+      where id = v_guard_item;
       insert into p2_results values ('A10','guard-mode blocks a progress write', false,
         'the update succeeded although the room is in guard mode');
     exception when others then
       insert into p2_results values ('A10','guard-mode blocks a progress write',
         sqlerrm like '%Guard Mode is active%', sqlstate || ': ' || sqlerrm);
     end;
+
+    -- The set_config above was not local, so restore the flag for the rest of the connection.
+    perform set_config('app.transfer_operation', 'on', false);
   end;
 end
 $p2$;
