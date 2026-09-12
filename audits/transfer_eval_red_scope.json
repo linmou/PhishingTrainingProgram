@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "feature": "transfer_eval",
+  "phase": "red",
+  "baseline_ref": "refs/tdd/transfer_eval/pre_red",
+  "protected": [
+    "tutor-system/**",
+    "evals/promptfoo/v1/analyze.js",
+    "evals/promptfoo/v1/calibrate.js",
+    "evals/promptfoo/v1/harness.test.js",
+    "evals/promptfoo/v1/settings.json",
+    "evals/promptfoo/rubrics/v0/**",
+    "evals/promptfoo/rubrics/v1/manifest.json",
+    "audits/**"
+  ],
+  "editable": [
+    "evals/promptfoo/v1/transfer/case-schema.test.js",
+    "evals/promptfoo/v1/transfer/manifest.test.js",
+    "evals/promptfoo/v1/transfer/shared-request-contract.test.js",
+    "evals/promptfoo/v1/transfer/coverage.test.js",
+    "evals/promptfoo/v1/transfer/adapter.test.js",
+    "evals/promptfoo/v1/transfer/contract-checks.test.js",
+    "evals/promptfoo/v1/transfer/followup.test.js",
+    "evals/promptfoo/v1/transfer/pair-transition.test.js",
+    "evals/promptfoo/v1/transfer/calibration.test.js",
+    "evals/promptfoo/v1/transfer/comparison.test.js",
+    "evals/promptfoo/v1/transfer/quality-gate.test.js",
+    "evals/promptfoo/v1/transfer/evidence-record.test.js",
+    "evals/promptfoo/v1/transfer/release-boundary.test.js",
+    "evals/promptfoo/v1/transfer/runner-config.test.js",
+    "evals/promptfoo/v1/transfer/fixtures/contract-fixtures.json"
+  ],
+  "semantic_overrides": {
+    "evals/promptfoo/v1/transfer/fixtures/**": "test"
+  }
+}
