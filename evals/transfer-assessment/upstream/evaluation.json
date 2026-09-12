@@ -1,0 +1,11 @@
+{
+  "gate_id": "evaluation",
+  "status": "pending",
+  "reason": "The frozen transfer evaluation manifest records no live execution: execution.commands is empty and started_at / completed_at are null, so baseline, candidate, holdout, pair, and quality-gate results do not exist yet. The deterministic evaluation checks pass, but a Promptfoo pass alone would not satisfy product, privacy, attack, or rollback gates either.",
+  "run_id": "transfer-eval-frozen-development-v1",
+  "source_artifact": {
+    "path": "evals/promptfoo/v1/transfer/manifest.json",
+    "sha256": "3c742e6772d88f30daed180cb0bae698dd700f23f71297d16e7ce6e913666423"
+  },
+  "authored_by": "component 105 release owner, from the frozen manifest named above; not a fresh verification"
+}

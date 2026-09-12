@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "comment": "Non-secret release configuration for component 105. Copy to transfer-assessment-release.config.json and edit the origins, principal ids, and evidence paths for the isolated target. Never put a token, password, or key in this file: credential material is referenced by environment variable name only and the runner records presence, never the value.",
+  "output_root": "../evals/transfer-assessment/release",
+  "environment": {
+    "app_origin": "http://127.0.0.1:3001",
+    "supabase_origin": "http://127.0.0.1:54321",
+    "isolated": true
+  },
+  "principals": {
+    "teacher": {
+      "application_user_id": "00000000-0000-4000-8000-000000000001",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL"
+    },
+    "learner": {
+      "application_user_id": "00000000-0000-4000-8000-000000000002",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL"
+    }
+  },
+  "capability": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "expected_state": "disabled"
+  },
+  "upstream_evidence": [
+    {
+      "gate_id": "backend_boundary",
+      "required": true,
+      "path": "../evals/transfer-assessment/upstream/backend-boundary.json"
+    },
+    {
+      "gate_id": "room_ui",
+      "required": true,
+      "path": "../evals/transfer-assessment/upstream/room-ui.json"
+    },
+    {
+      "gate_id": "evaluation",
+      "required": true,
+      "path": "../evals/transfer-assessment/upstream/evaluation.json"
+    }
+  ],
+  "scenarios": {
+    "manifest": "transfer-assessment-release-attack-matrix.json",
+    "required": true
+  }
+}

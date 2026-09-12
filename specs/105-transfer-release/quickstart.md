@@ -32,6 +32,8 @@ rtk git status --short
 
 The implementation must register `eval:transfer:release` and its `--verify` mode before these commands are advertised as executable. The final report must record the exact command actually used.
 
+Implementation state after this component's slice: `eval:transfer:release` is registered, the runtime evidence input is a config plus a directory of upstream link records, and `--verify` accepts either a bundle path or a run id under `--output`. The bundle holds `snapshot.json`, `run-record.json`, `report.json`, and `verdict.json`; the lane results live inside those records until the lane drivers exist, and every lane is recorded `blocked` with a reason in the meantime. Step 2's `scenario-<id>.json` files and steps 3-4's `privacy.json`/`attacks.json` are produced with those drivers.
+
 ## Required Run Review
 
 1. Open `snapshot.json` and verify commit, exact non-secret configuration, verified-principal source, origins, flag state, and linked AI run IDs.

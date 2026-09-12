@@ -1,0 +1,11 @@
+{
+  "gate_id": "backend_boundary",
+  "status": "pass",
+  "reason": "Integration owner recorded E05 as satisfied: migration 045 applied, T009 PART 1 re-run at 17/17 with FAILING_CHECKS=0, and PART 2 run by the owner from the SQL editor with A1-A11 ok=true. Source caveat retained verbatim: the W3/W4 hosted behavioural lane is owner-reported rather than machine-verified by component 105, and answer-key confidentiality is a recorded owner decision (public.messages stays participant-readable) rather than a guarantee.",
+  "run_id": "transfer-assessment-promotion-9bab1e1",
+  "source_artifact": {
+    "path": "specs/orchestration/transfer-assessment/integration-verification-102.md",
+    "sha256": "d4430196ca5e4545fd3cdf6ca26e8018f2f3e85c008528e126244e4f4ff9adf1"
+  },
+  "authored_by": "component 105 release owner, from the integration record named above; not a fresh verification"
+}
