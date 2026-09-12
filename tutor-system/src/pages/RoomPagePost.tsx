@@ -715,6 +715,8 @@ const RoomPagePost: React.FC = () => {
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
                         onSubmit={confirmTransferDraft}
+                        // Discarding is UI-local: there is no draft row, so nothing is persisted.
+                        onCancel={clearAISuggestion}
                     />
                 )}
 
