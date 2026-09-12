@@ -1,0 +1,186 @@
+{
+  "intent": "Shared Red fixtures for the deterministic transfer checks. These are test inputs and expected oracle values; the canonical cases live in ../cases.json.",
+  "base_input": {
+    "room_id": "room-fixture-1",
+    "checklist_id": "checklist-fixture-1",
+    "focus_student_id": "student-fixture-1",
+    "focus_student_message": {
+      "id": "msg-fixture-focus",
+      "room_id": "room-fixture-1",
+      "user_id": "student-fixture-1",
+      "user_role": "student",
+      "content": "  The sender shows a display name I do not recognise.  "
+    },
+    "prior_participation_mode": "tutoring",
+    "checklist_items": [
+      {
+        "id": "item-2",
+        "area_text": "Compare the full sender address, not the display name.",
+        "priority": "critical",
+        "status": "partially_covered",
+        "understanding_level": "basic",
+        "relevant_evidence_message_ids": ["msg-evidence-2", "msg-evidence-1", "msg-evidence-2"],
+        "repair_message_id": null
+      },
+      {
+        "id": "item-1",
+        "area_text": "Check the destination of a link before using it.",
+        "priority": "important",
+        "status": "covered",
+        "understanding_level": "good",
+        "relevant_evidence_message_ids": [],
+        "repair_message_id": "msg-repair-1"
+      }
+    ],
+    "eligible_assessment_item_ids": ["item-2"],
+    "unresolved_assessment": null,
+    "feedback_required": false,
+    "progress_snapshot_hash": "hash-fixture-1"
+  },
+  "valid_tutoring_output": {
+    "reason": "The learner read the display name and not the full sender address.",
+    "decision": {
+      "mode": "tutoring",
+      "instruction": "scaffolding",
+      "target_item_id": "item-2"
+    },
+    "response": "Which part of the address tells you who sent it?"
+  },
+  "valid_assessment_output": {
+    "reason": "The learner can compare the sender address, so the same check moves to a new situation.",
+    "decision": {
+      "mode": "assessment",
+      "instruction": "transfer_assess",
+      "target_item_id": "item-2"
+    },
+    "response": "A delivery notice links to a tracking page you have not seen before.",
+    "assessment": {
+      "item_id": "item-2",
+      "selection_type": "single",
+      "stem": "Which check decides whether the delivery notice is genuine?",
+      "correct_option_ids": ["B"],
+      "transfer_basis": {
+        "concept": "compare the full sender address with the real service",
+        "source_context": "The alert used a display name instead of the real sender address.",
+        "changed_context": "A delivery notice links to an unfamiliar tracking page.",
+        "source_evidence_message_ids": ["msg-evidence-1"]
+      },
+      "options": [
+        {"id": "B", "text": "Compare the full sender address with the real service."},
+        {"id": "A", "text": "Trust the notice because it uses a tracking page."},
+        {"id": "D", "text": "Open the tracking page to check the parcel."},
+        {"id": "C", "text": "Trust it because the display name looks official."}
+      ]
+    }
+  },
+  "valid_guard_output": {
+    "reason": "The learner repeats the act after a correction.",
+    "decision": {"mode": "guard", "instruction": "guard", "target_item_id": null},
+    "response": "Stop opening the link and attempt the address check instead."
+  },
+  "progress_pair_from": {
+    "target_item_id": "item-2",
+    "status": "partially_covered",
+    "understanding_level": "basic"
+  },
+  "progress_pair_valid_tos": [
+    {
+      "target_item_id": "item-2",
+      "status": "partially_covered",
+      "understanding_level": "basic"
+    },
+    {
+      "target_item_id": "item-2",
+      "status": "covered",
+      "understanding_level": "good"
+    },
+    {
+      "target_item_id": "item-2",
+      "status": "covered",
+      "understanding_level": "basic"
+    }
+  ],
+  "progress_pair_invalid_tos": [
+    {
+      "target_item_id": "item-2",
+      "status": "partially_covered",
+      "understanding_level": "good"
+    },
+    {
+      "target_item_id": "item-2",
+      "status": "partially_covered",
+      "understanding_level": "none"
+    },
+    {
+      "target_item_id": "item-2",
+      "status": "needs_review",
+      "understanding_level": "good"
+    }
+  ],
+  "lifecycle_sequences": {
+    "valid_full": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"},
+      {"turn": 1, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["B"], "outcome": "correct"},
+      {"turn": 2, "kind": "feedback", "item_id": "item-2", "feedback_required": true},
+      {"turn": 3, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-2"}
+    ],
+    "graded_before_delivery": [
+      {"turn": 0, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["B"], "outcome": "correct"},
+      {"turn": 1, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"}
+    ],
+    "resolved_twice": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"},
+      {"turn": 1, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["B"], "outcome": "correct"},
+      {"turn": 2, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["A"], "outcome": "wrong"}
+    ],
+    "clarification_then_answer": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"},
+      {"turn": 1, "kind": "clarification_request", "item_id": "item-2"},
+      {"turn": 2, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["B"], "outcome": "correct"}
+    ],
+    "assistance_cancels": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"},
+      {"turn": 1, "kind": "assistance_request", "item_id": "item-2", "assistance_message_id": "msg-assist-1"}
+    ],
+    "assessment_chain": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"},
+      {"turn": 1, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["B"], "outcome": "correct"},
+      {"turn": 2, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-2"}
+    ],
+    "wrong_answer_guard": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1"},
+      {"turn": 1, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["A"], "outcome": "wrong"},
+      {"turn": 2, "kind": "tutor_turn", "item_id": "item-2", "mode": "guard"}
+    ],
+    "failed_transfer_reused": [
+      {"turn": 0, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-1", "context_key": "context-delivery"},
+      {"turn": 1, "kind": "learner_answer", "item_id": "item-2", "answer_option_ids": ["A"], "outcome": "wrong"},
+      {"turn": 2, "kind": "feedback", "item_id": "item-2", "feedback_required": true},
+      {"turn": 3, "kind": "assessment_delivered", "item_id": "item-2", "assessment_id": "assessment-2", "context_key": "context-delivery"}
+    ]
+  },
+  "semantic_pairs": {
+    "valid": [
+      {"case_id": "pair-a", "case_version": 1, "pair": {"pair_id": "pair-transport", "member": "a", "changed_factor": "the brand name in the message", "expected_contrast": "pass"}},
+      {"case_id": "pair-b", "case_version": 1, "pair": {"pair_id": "pair-transport", "member": "b", "changed_factor": "the meaning-bearing situation", "expected_contrast": "fail"}}
+    ],
+    "single_member": [
+      {"case_id": "pair-a", "case_version": 1, "pair": {"pair_id": "pair-transport", "member": "a", "changed_factor": "the brand name", "expected_contrast": "pass"}}
+    ],
+    "three_members": [
+      {"case_id": "pair-a", "case_version": 1, "pair": {"pair_id": "pair-transport", "member": "a", "changed_factor": "factor a", "expected_contrast": "pass"}},
+      {"case_id": "pair-b", "case_version": 1, "pair": {"pair_id": "pair-transport", "member": "b", "changed_factor": "factor b", "expected_contrast": "fail"}},
+      {"case_id": "pair-c", "case_version": 1, "pair": {"pair_id": "pair-transport", "member": "c", "changed_factor": "factor c", "expected_contrast": "fail"}}
+    ]
+  },
+  "generation_ids": {
+    "matching_pair": [
+      {"case_id": "pair-a", "repetition": 0, "target_generation_id": "gen-pair-0"},
+      {"case_id": "pair-b", "repetition": 0, "target_generation_id": "gen-pair-0"}
+    ],
+    "mismatched_pair": [
+      {"case_id": "pair-a", "repetition": 0, "target_generation_id": "gen-pair-0"},
+      {"case_id": "pair-b", "repetition": 0, "target_generation_id": "gen-pair-1"}
+    ]
+  }
+}
