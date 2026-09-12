@@ -6,7 +6,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { loadTutorSystemEnv } from '../../tools/load-env.mjs';
+
+// Component 102's service constructs a Supabase client at module load, so the
+// environment must exist before the service is imported.
+const env = loadTutorSystemEnv();
+
+const { TransferAssessmentService } = await import(
+  '../../tutor-system/src/services/transferAssessmentService.ts'
+);
+
 import { resolveTransferAnswer } from '../../tutor-system/src/services/transferAssessmentOrchestrator.ts';
+
 
 const OPTIONS = [
   { id: 'A', text: 'A familiar account proves the link is safe' },
@@ -181,4 +192,40 @@ test('E01: a repair-pending answer without new evidence writes nothing', () => {
   assert.equal(produced.disposition, 'unresolved');
   assert.equal(produced.next_action, 'await_learner_evidence');
   assert.equal(produced.applied_transition, null);
+});
+
+test('E01: component 102 projects the real assessment without the private key or basis', () => {
+  // The private assessment component 101 hands over still carries the answer key
+  // and transfer basis, so the edge must prove that 102 strips them.
+  const privateAssessment = {
+    id: 'assessment-1',
+    selection_type: 'single',
+    stem: 'A familiar teammate sends a prize link.',
+    rendered_text: 'A familiar teammate sends a prize link.\nChoose one.',
+    options: OPTIONS,
+    correct_option_ids: ['B'],
+    transfer_basis: {
+      concept_rule: 'Displayed identity is not independent authentication.',
+      source_context: 'The original account-alert example.',
+      changed_context: 'A prize link from a known teammate account.',
+      source_evidence_message_ids: ['22222222-2222-4222-8222-222222222222'],
+    },
+  };
+
+  const projected = TransferAssessmentService.toPublicAssessment(privateAssessment);
+  const serialized = JSON.stringify(projected);
+
+  assert.equal(projected.id, 'assessment-1');
+  assert.equal(projected.selection_type, 'single');
+  assert.equal(projected.options.length, 4);
+  assert.deepEqual(Object.keys(projected).sort(), [
+    'id',
+    'options',
+    'rendered_text',
+    'selection_type',
+    'stem',
+  ]);
+  for (const field of ['correct_option_ids', 'transfer_basis', 'concept_rule', 'changed_context']) {
+    assert.equal(serialized.includes(field), false, `${field} leaked through 102's projection`);
+  }
 });

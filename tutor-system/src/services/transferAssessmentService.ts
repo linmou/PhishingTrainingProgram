@@ -1,14 +1,14 @@
 // Purpose: provide the browser facade for authenticated transfer-assessment operations without exposing private keys.
 
 import { supabase } from './supabase';
-import {
+import type {
   AssessmentOption,
   AssessmentOptionId,
   AssessmentSelectionType,
   PublicAssessment,
   TutorDecisionV3,
 } from '../types/assessment';
-import { TransferProgress } from '../types/learningProgress';
+import type { TransferProgress } from '../types/learningProgress';
 
 export interface AssessmentApiError {
   code: string;
