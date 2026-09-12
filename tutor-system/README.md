@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-09-01
-Commit: eaac5d8 (Guard Mode implementation)
+Updated: 2026-09-12
+Commit: 19d729e (working tree change: rating gate ignores pre-populated transcript lines)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -25,7 +25,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
 - **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
-- **Required Response Ratings**: Students must rate the latest AI/Tutor response before sending their next reply
+- **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
 

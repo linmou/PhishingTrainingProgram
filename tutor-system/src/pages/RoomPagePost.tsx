@@ -262,7 +262,8 @@ const RoomPagePost: React.FC = () => {
 
         const latest = [...visibleMessages]
             .reverse()
-            .find(message => message.is_ai_generated || message.user_role === 'tutor');
+            .find(message => (message.is_ai_generated || message.user_role === 'tutor')
+                && !message.id.startsWith('prepop-'));
 
         if (!latest) return null;
 

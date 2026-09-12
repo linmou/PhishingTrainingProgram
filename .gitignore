@@ -1,3 +1,4 @@
+.playwright-cli/
 # Logs
 logs
 *.log
@@ -16,6 +17,12 @@ coverage/
 # Prompt evaluation outputs
 .promptfoo/
 evals/promptfoo/results/
+
+# Generated evaluation and local test outputs
+evals/public-dist/
+tmp/browser_demo_runs/
+tutor-system/.codex/
+evals/promptfoo/evalLastWritten
 
 # Environment variables
 .env
@@ -37,3 +44,6 @@ evals/promptfoo/results/
 # Task files
 # tasks.json
 # tasks/ 
+
+# Local BMAD skills
+.agents/skills/bmad-*/
