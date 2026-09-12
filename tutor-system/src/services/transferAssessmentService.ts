@@ -179,64 +179,6 @@ function projectProcessedMessage(result: Record<string, unknown>): ProcessedMess
   };
 }
 
-/**
- * The only private browser DTO name for an assessment draft (reconciliation R05).
- *
- * Returned solely to a verified reviewing teacher and only by draft-review operations. It
- * deliberately carries the private basis a teacher must inspect, which is exactly why it must
- * never be returned by a learner operation or embedded in a public/realtime message payload.
- *
- * Field names are browser names and are not storage names; see
- * `specs/102-transfer-backend/contracts/assessment-api.md`, which owns this allowlist.
- */
-export interface TeacherAssessmentDraftDTO {
-  draft_id: string;
-  revision: number;
-  status: 'draft' | 'ignored' | 'sent';
-  decision: Record<string, unknown>;
-  reason: string | null;
-  assessment_basis: Record<string, unknown> | null;
-}
-
-/** The exact key set of `TeacherAssessmentDraftDTO`, for boundary and drift assertions. */
-export const TEACHER_ASSESSMENT_DRAFT_DTO_KEYS: ReadonlyArray<keyof TeacherAssessmentDraftDTO> = [
-  'draft_id',
-  'revision',
-  'status',
-  'decision',
-  'reason',
-  'assessment_basis',
-];
-
-/**
- * The only field names a teacher draft DTO may carry. Anything outside this list is a storage
- * name that leaked through, so this doubles as the deny-by-default boundary for the private row.
- */
-export const TEACHER_ASSESSMENT_DRAFT_DTO_FORBIDDEN_STORAGE_NAMES: ReadonlyArray<string> = [
-  'id',
-  'room_id',
-  'student_id',
-  'checklist_id',
-  'item_id',
-  'focus_student_message_id',
-  'raw_model_output',
-  'reviewed_payload',
-  'reviewed_by',
-  'created_at',
-  'updated_at',
-];
-
-/**
- * Project a private draft row onto the browser DTO. Unknown keys are dropped rather than
- * forwarded, so a new private column cannot reach the browser by being added to storage.
- */
-export function toTeacherAssessmentDraftDTO(row: Record<string, unknown>): TeacherAssessmentDraftDTO {
-  const dto: Record<string, unknown> = {};
-  TEACHER_ASSESSMENT_DRAFT_DTO_KEYS.forEach((key) => {
-    dto[key] = row[key] ?? null;
-  });
-  return dto as unknown as TeacherAssessmentDraftDTO;
-}
 
 export interface TransferAssessmentApi {
   invoke: (body: Record<string, unknown>) => Promise<{ data: AssessmentApiEnvelope<unknown> | null; error: { message: string } | null }>;

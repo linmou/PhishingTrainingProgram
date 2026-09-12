@@ -50,12 +50,13 @@ Messages are safe summaries. They never contain keys, private payloads, provider
 | `initialize_checklist` | `room_id`, requested `student_id`, `template_name` | authorized teacher | transfer checklist ID after server scope validation |
 | `post_message` | `room_id`, content, optional parent/question IDs | verified application principal | public stored message and processing indicator |
 | `analyze_message` | `room_id`, stored learner `message_id` | trusted backend path for the authorized learner | allowlisted applied/deferred event outcomes |
-| `prepare_turn` | `room_id`, focus student message ID, checklist ID | authorized teacher | private authorized-teacher draft reference and reviewable decision; no learner key DTO |
-| `review_draft` | draft ID, expected revision, final structured payload, content confirmation | authorized teacher | new revision and review status |
-| `send_reviewed` | draft ID, expected revision | authorized teacher | public tutor message and public question DTO, or legacy tutoring result |
-| `process_message` | stored learner message ID | verified owner learner/authorized backend | public question result/transition outcome without key |
+| `prepare_turn` | `room_id`, focus student message ID, checklist ID | authorized teacher | the generated candidate decision and the scope it applies to; nothing is persisted |
+| `send_reviewed` | reviewed payload, `room_id`, `student_id`, `checklist_id`, `item_id`, focus student message ID | authorized teacher | the tutor message with the assessment stamped onto it |
+| `process_message` | stored learner message ID | verified owner learner/authorized backend | assessment result and transition outcome, with the key stripped from the response |
 
-A draft that is never sent is simply never delivered. There is no reject or regenerate operation, and no generation-trigger suppression: the absence of a send is already the correct outcome, and the product has no requirement to prevent a tutor from receiving a draft again.
+There is no separate review step and no draft row: `prepare_turn` returns the candidate, the caller reviews it, and `send_reviewed` persists the result in one call. A candidate that is never sent is simply never delivered.
+
+Key confidentiality is an accepted tradeoff rather than a guarantee. The assessment columns live on the tutor message, which is readable by every room participant, so the key can be read with a crafted REST request. `send_reviewed` and `process_message` still strip it from their responses, so the normal UI path never receives it.
 
 
 The operation set is versioned by the RPCs below. Adding an operation or changing a field requires a new contract version and generated client types; body aliases are not compatibility behavior.
@@ -66,7 +67,7 @@ The operation set is versioned by the RPCs below. Adding an operation or changin
 
 `PublicMessageDTO` contains stored message identity, room/user scope, content, role, parent, turn mode, assessment link, and timestamp. It does not expose private draft or feedback rows.
 
-`TeacherAssessmentDraftDTO` is the only private browser DTO name. It is returned only after verified teacher authorization and may contain `draft_id`, `revision`, `status`, structured decision, observable reason, and the private assessment basis needed for review. The service maps internal `private.assessment_drafts` rows to this allowlist; storage names never become browser DTO names. It must not be returned by learner operations or included in public/realtime message payloads.
+There is no private browser draft DTO. With no draft table, `prepare_turn` returns the generated candidate decision directly to the authorized teacher, and the teacher's review happens on that candidate before `send_reviewed` persists it. The candidate must not be returned to a learner operation or included in a public or realtime message payload.
 
 ## Stable error classes
 
