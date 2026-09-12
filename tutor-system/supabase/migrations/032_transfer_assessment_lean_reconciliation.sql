@@ -1,6 +1,6 @@
 -- Purpose: bring the live project to the lean transfer-assessment schema. Migrations 025 and 027 authored a second assessment pipeline that no product requirement asked for and no caller reaches: a draft reject/regenerate flow with a generation-trigger suppression mechanism, plus columns that are written and never read. This migration removes that surface and leaves exactly the tables, columns, and functions the seven live operations use.
 --
--- SAFETY: every transfer table holds zero rows on the hosted project (verified), so no data is at risk. Every statement is idempotent, so a partial application can be re-run.
+-- SAFETY: every transfer table holds zero rows on the hosted project (verified), so no data is at risk. The ALTER TABLE and DROP TABLE statements are idempotent through IF EXISTS. The DROP FUNCTION statements are NOT reliably idempotent: a signature mismatch reads as "does not exist" and silently does nothing, which is how the regenerate_assessment_draft_v1 drop was missed on first application. Migration 033 corrects that specific orphan. Re-running this file is safe for the table changes but must not be relied on to drop functions.
 --
 -- ORDERING: plpgsql bodies are stored as text and are not dependency-tracked, so DROP COLUMN does not fail on them. The dependent functions are still dropped first so that no window exists in which a stored body references a column that is gone, and the kept functions are re-created at the end with the dropped references removed.
 --
