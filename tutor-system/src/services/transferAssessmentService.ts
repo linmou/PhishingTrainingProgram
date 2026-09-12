@@ -54,6 +54,32 @@ export interface TransferAssessmentAnswerInput {
   current_progress: TransferProgress;
 }
 
+/**
+ * Result of `reject_draft`. `same_trigger_suppressed` is always true on success: the
+ * backend records the trigger key so a later generation for the same scope is suppressed
+ * instead of producing a second draft.
+ */
+export interface RejectedAssessmentDraftDTO {
+  draft_id: string;
+  revision: number;
+  status: 'rejected';
+  same_trigger_suppressed: true;
+  request_id: string;
+}
+
+/**
+ * Result of `regenerate_draft`. The source is superseded and the replacement starts a new
+ * draft lifecycle at revision 1, so callers must use `replacement_draft_id` from here on.
+ */
+export interface RegeneratedAssessmentDraftDTO {
+  source_draft_id: string;
+  source_status: 'superseded';
+  replacement_draft_id: string;
+  replacement_revision: number;
+  replacement_status: 'draft';
+  request_id: string;
+}
+
 export interface UndeliveredAssessmentResult {
   disposition: 'not_delivered';
   progress: TransferProgress;
@@ -174,6 +200,41 @@ export class TransferAssessmentService {
       expected_revision: input.expectedRevision,
       final_payload: input.finalPayload,
       content_confirmed: input.contentConfirmed,
+    });
+  }
+
+  async rejectDraft(input: {
+    draftId: string;
+    expectedRevision: number;
+    reason: string;
+  }): Promise<RejectedAssessmentDraftDTO> {
+    return this.request<RejectedAssessmentDraftDTO>('reject_draft', {
+      draft_id: input.draftId,
+      expected_revision: input.expectedRevision,
+      reason: input.reason,
+    });
+  }
+
+  /**
+   * Replace a rejected or stale draft with a freshly generated one.
+   *
+   * `providerPayload` must already have been produced by the caller. The provider call
+   * deliberately stays outside this request so a provider failure cannot leave the source
+   * draft mutated: when generation fails, nothing is sent and the source keeps its status.
+   */
+  async regenerateDraft(input: {
+    sourceDraftId: string;
+    expectedRevision: number;
+    expectedSnapshotHash: string;
+    providerPayload: Record<string, unknown>;
+    rawHash: string;
+  }): Promise<RegeneratedAssessmentDraftDTO> {
+    return this.request<RegeneratedAssessmentDraftDTO>('regenerate_draft', {
+      source_draft_id: input.sourceDraftId,
+      expected_revision: input.expectedRevision,
+      expected_snapshot_hash: input.expectedSnapshotHash,
+      provider_payload: input.providerPayload,
+      raw_hash: input.rawHash,
     });
   }
 

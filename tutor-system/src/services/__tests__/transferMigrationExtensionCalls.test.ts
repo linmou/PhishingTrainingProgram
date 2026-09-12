@@ -78,17 +78,39 @@ describe('transfer migration extension calls', () => {
     expect(fix!.text).toMatch(/CREATE OR REPLACE FUNCTION\s+private\.transfer_draft_trigger_key_v1/);
   });
 
-  it('reports only the two inherited 025 callers as still unqualified', () => {
-    // These two are a pre-existing defect inherited from migration 025 and are NOT
-    // repaired by any later migration yet. When a migration qualifies them, this
-    // expectation must be updated deliberately rather than silently relaxed.
-    expect(liveOffenders()).toEqual([
-      '025_transfer_assessment_storage.sql:review_assessment_draft_v1',
-      '025_transfer_assessment_storage.sql:send_reviewed_tutor_response_v3',
-    ]);
+  it('leaves no unqualified narrow-search-path digest caller in the latest migration history', () => {
+    // Migration 028 repaired transfer_draft_trigger_key_v1 and migration 029 repaired the
+    // two callers inherited from 025, so the offender list must now be empty. This is the
+    // deliberate update the previous expectation's comment called for; a non-empty result
+    // means a new unqualified call was introduced.
+    expect(liveOffenders()).toEqual([]);
+  });
+
+  it('qualifies both inherited 025 callers in migration 029', () => {
+    const fix = sources.find(({ name }) => name.startsWith('029_'));
+    expect(fix).toBeDefined();
+    const repaired = functionBlocks(fix!.text)
+      .filter(({ body }) => /extensions\.digest\s*\(/.test(body))
+      .map(({ name }) => name.split('.').pop());
+    expect(repaired.sort()).toEqual(['review_assessment_draft_v1', 'send_reviewed_tutor_response_v3']);
+  });
+
+  it('re-creates the 029 callers with their security posture intact', () => {
+    const fix = sources.find(({ name }) => name.startsWith('029_'));
+    const blocks = functionBlocks(fix!.text);
+    const qualified = blocks.filter(({ body }) => /extensions\.digest\s*\(/.test(body));
+    expect(qualified).toHaveLength(2);
+    qualified.forEach(({ body }) => {
+      expect(body).toMatch(/SECURITY DEFINER/i);
+      expect(body).toMatch(/SET search_path = public, private/i);
+      // An unqualified call must not survive alongside the qualified one.
+      expect(body).not.toMatch(/(^|[^.\w])digest\s*\(/m);
+    });
   });
 
   it('does not count a function as an offender once a later migration repairs it', () => {
     expect(repairedPairs()).toContain('transfer_draft_trigger_key_v1');
+    expect(repairedPairs()).toContain('review_assessment_draft_v1');
+    expect(repairedPairs()).toContain('send_reviewed_tutor_response_v3');
   });
 });
