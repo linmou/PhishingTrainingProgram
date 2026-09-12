@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Purpose: resolve one transfer-assessment answer purely, with deterministic delivery, staleness, duplication, repair-evidence, and protective-deferral boundaries.
 
 import type {

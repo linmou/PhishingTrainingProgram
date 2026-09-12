@@ -8,7 +8,7 @@ const { execFileSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '../../../..');
 const PRODUCTION_SOURCE = 'tutor-system/src/services/ecologicalTutorCall.ts';
-const PRODUCTION_PROMPT_SOURCE = 'tutor-system/supabase/functions/assessment-api/index.ts';
+const PRODUCTION_PROMPT_SOURCE = 'tutor-system/src/services/transferAssessmentService.ts';
 /**
  * The normative plan lives outside every worktree: `plan/` is git-excluded and exists only in the
  * main checkout (specs/104-transfer-evaluation/research.md Decision 7). Resolve the main working

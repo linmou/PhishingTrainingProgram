@@ -17,12 +17,12 @@ The regression command (4) includes the historical v0/v1 suites, so the additive
 
 ## 2. The 1,200-token budget and the thinking flag (R13, R14)
 
-The effective transfer completion budget is **not** a shared export. It is the literal `max_tokens: 1200` at the transfer call site in `tutor-system/supabase/functions/assessment-api/index.ts`, and the same call site sets `enable_thinking: false` and `temperature: 0.3`. A second, unrelated `max_tokens: 600` call exists in the same file and is excluded.
+The effective transfer completion budget is **not** a shared export. It is the literal `max_tokens: 1200` at the transfer call site in `tutor-system/src/services/transferAssessmentService.ts`, and the same call site sets `enable_thinking: false` and `temperature: 0.3`.
 
 Two source locations were checked, and the check is recorded as source-based:
 
 - `tutor-system/src/services/ecologicalTutorCall.ts` — the shared v3 builder. Frozen hash `b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a` at promotion SHA `7f5e979`.
-- `tutor-system/supabase/functions/assessment-api/index.ts` — the transfer call site. Frozen hash `5ee3a9ec99967634181e4eb66f9fdad4f8496c37930e1497db326b32183dcb7f`.
+- `tutor-system/src/services/transferAssessmentService.ts` — the transfer call site after the server boundary was removed for the research build. Frozen hash `e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf`.
 
 Resolved values: both effective budgets are `1200`, both thinking flags are `false`. `shared-request-contract.js` locates the call site by the `TRANSFER_V3_SYSTEM_PROMPT` marker, extracts the three settings, and asserts `1200` / `false` / `0.3`, while explicitly asserting the unrelated `600` literal is still present and excluded. `manifest.json` declares `product_effective_completion_token_budget` and `evaluation_effective_completion_token_budget` both `1200`, and `product_enable_thinking` / `evaluation_enable_thinking` both `false`. The gate treats any budget, thinking-flag, builder-hash, or prompt-hash mismatch as a pre-scoring `incomplete` with **zero** metric rows, so a drifted configuration can never reach scoring.
 

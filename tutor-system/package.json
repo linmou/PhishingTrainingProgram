@@ -51,7 +51,6 @@
         "eval:prompts:ci": "npm run eval:prompts",
         "seed:behavior-templates": "node scripts/seed-behavior-demo-templates.js",
         "eval:behavior:web": "node scripts/browser-demo-tutor-behavior.js",
-        "eval:transfer:release": "node scripts/transfer-assessment-release.js",
         "eject": "react-scripts eject",
         "deploy": "npm run build"
     },

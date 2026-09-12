@@ -60,7 +60,9 @@ test('the production transfer call site declares the frozen 1200 budget and disa
   assert.equal(extracted.enable_thinking, false);
   assert.equal(extracted.temperature, 0.3);
   assert.ok(extracted.callsite.includes('TRANSFER_V3_SYSTEM_PROMPT'));
-  assert.equal(extracted.other_max_tokens.includes(600), true, 'the unrelated 600-token call must still be present and excluded');
+  // The call site moved into the browser service for the research build, where it is the only
+  // provider call, so there is no unrelated budget call left to exclude.
+  assert.deepEqual(extracted.other_max_tokens, [], 'the browser transfer call site is the only provider call');
 });
 
 test('the transfer target settings declare their own budget and thinking flag and never inherit the legacy v1 values', () => {
@@ -90,8 +92,9 @@ test('the evaluation side resolves the production prompt without copying its tex
   assert.equal(shared.production_prompt.reference, `${PRODUCTION_PROMPT_SOURCE}#TRANSFER_V3_SYSTEM_PROMPT`);
   assert.equal(shared.production_prompt.sha256, sha256(fs.readFileSync(path.join(root, PRODUCTION_PROMPT_SOURCE))));
   assert.equal(shared.production_prompt.text, undefined);
-  const edge = fs.readFileSync(path.join(root, PRODUCTION_PROMPT_SOURCE), 'utf8');
-  const promptBody = edge.slice(edge.indexOf('const TRANSFER_V3_SYSTEM_PROMPT'), edge.indexOf('const TRANSFER_EVIDENCE_SYSTEM_PROMPT'));
+  const promptSource = 'tutor-system/src/services/prompts/transferV3Prompt.ts';
+  const promptFile = fs.readFileSync(path.join(root, promptSource), 'utf8');
+  const promptBody = promptFile.slice(promptFile.indexOf('export const TRANSFER_V3_SYSTEM_PROMPT'), promptFile.indexOf('].join'));
   const promptLines = promptBody.split('\n').map(line => line.trim().replace(/^'|',?$|^\+ |^\]$/g, '').trim()).filter(line => line.length > 40);
   assert.ok(promptLines.length > 0);
   for (const name of fs.readdirSync(__dirname).filter(item => item.endsWith('.js'))) {

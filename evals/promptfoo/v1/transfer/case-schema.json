@@ -171,5 +171,5 @@
     "an eligible holdout has prompt_exposure and development_exposure both false",
     "source_type and case_role and partition come from the declared enumerations"
   ],
-  "budget_note": "The effective completion-token budget is a production literal at the transfer call site of tutor-system/supabase/functions/assessment-api/index.ts, not a shared export (integration control-plane record R13). Parity is asserted against that source."
+  "budget_note": "The effective completion-token budget is a production literal at the transfer call site of tutor-system/src/services/transferAssessmentService.ts, not a shared export (integration control-plane record R13). Parity is asserted against that source."
 }

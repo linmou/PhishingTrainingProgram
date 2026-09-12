@@ -46,8 +46,8 @@
       "sha256": "b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a"
     },
     "production_prompt_source": {
-      "path": "tutor-system/supabase/functions/assessment-api/index.ts",
-      "sha256": "5ee3a9ec99967634181e4eb66f9fdad4f8496c37930e1497db326b32183dcb7f"
+      "path": "tutor-system/src/services/transferAssessmentService.ts",
+      "sha256": "e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf"
     },
     "deterministic_checker": {
       "path": "evals/promptfoo/v1/transfer/contract-checks.js",
@@ -74,9 +74,9 @@
     ],
     "builder_source_path": "tutor-system/src/services/ecologicalTutorCall.ts",
     "builder_source_sha256": "b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a",
-    "production_prompt_reference": "tutor-system/supabase/functions/assessment-api/index.ts#TRANSFER_V3_SYSTEM_PROMPT",
-    "production_prompt_source_path": "tutor-system/supabase/functions/assessment-api/index.ts",
-    "production_prompt_source_sha256": "5ee3a9ec99967634181e4eb66f9fdad4f8496c37930e1497db326b32183dcb7f",
+    "production_prompt_reference": "tutor-system/src/services/transferAssessmentService.ts#TRANSFER_V3_SYSTEM_PROMPT",
+    "production_prompt_source_path": "tutor-system/src/services/transferAssessmentService.ts",
+    "production_prompt_source_sha256": "e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf",
     "product_effective_completion_token_budget": 1200,
     "evaluation_effective_completion_token_budget": 1200,
     "product_enable_thinking": false,

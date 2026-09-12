@@ -17,12 +17,6 @@ coverage/
 .promptfoo/
 evals/promptfoo/results/
 
-# Release evidence run bundles (generated, not source)
-evals/transfer-assessment/release/
-
-# Local secret-bearing release configuration (the example file stays tracked)
-tutor-system/scripts/transfer-assessment-release.config.json
-
 # Environment variables
 .env
 

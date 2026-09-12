@@ -120,6 +120,6 @@ These examples show how the existing specs work together; they do not add requir
 
 Intent: identify implementation ownership and release state without duplicating T09.1–T09.6 or claiming unmeasured model conformance.
 
-The [response contract](tutor-response-contract.md) owns the v3 JSON shape and field validation. The browser's `transferAssessmentService` is a facade; the pure reducer/parser/grader own deterministic logic, while authorization, idempotency, draft revision, private key storage, exact grading, and atomic persistence belong to the `assessment-api` Edge Function and migration `025_transfer_assessment_storage.sql`.
+The [response contract](tutor-response-contract.md) owns the v3 JSON shape and field validation. The browser's `transferAssessmentService` is a facade; the pure reducer/parser/grader own deterministic logic, The browser service is now the whole path: the research build runs the transfer flow locally rather than through a server boundary.
 
 `TRANSFER_ASSESSMENT_ENABLED` remains disabled by default. Enabling transfer generation or delivery still requires the separately recorded database, authorization, provider, evaluation, and browser release gates.
