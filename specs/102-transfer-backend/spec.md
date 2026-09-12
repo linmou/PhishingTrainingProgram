@@ -22,7 +22,7 @@ An authorized teacher prepares a transfer assessment for one learner-owned check
 1. **Given** a verified teacher authorized for a room and an eligible learner-owned transfer checklist, **When** the teacher prepares a turn, **Then** the response contains a draft reference and reviewable decision data without returning an answer key to learner-facing data.
 2. **Given** a draft whose revision and content confirmation are current, **When** the teacher sends it, **Then** one tutor message and one public question are committed with `mode=assessment` and `instruction=transfer_assess`, while room participation remains `tutoring`.
 3. **Given** an unsent, rejected, stale, or superseded draft, **When** a learner submits labels resembling an answer, **Then** no grade, progress mutation, or feedback obligation is created.
-4. **Given** a teacher changes the target, stem, options, selection type, or key after confirmation, **When** the draft is reviewed again, **Then** the revision and hashes change and confirmation is required again.
+4. **Given** a teacher changes the target, stem, options, selection type, or key after confirmation, **When** the draft is reviewed again, **Then** the revision advances and confirmation is required again.
 
 ### User Story 2 - Resolve a learner answer exactly once (Priority: P1)
 
@@ -132,10 +132,9 @@ The trusted Edge Function sends the versioned v3 request to the configured OpenA
 - **Transfer checklist**: A learner-owned checklist with `progress_policy_version='transfer_v1'`; legacy rows remain room-scoped and legacy.
 - **Checklist item**: An objective whose transfer progress is represented only by the existing status/understanding pair.
 - **Assessment question**: Public learner-safe question lifecycle record with ordered A-D options, scope IDs, delivery/answer state, selected labels, result, and public linkage fields.
-- **Assessment draft**: Private raw and reviewed v3 decision with revision, hashes, focus message, generation-trigger key, optional superseded-draft link, and status `draft`, `rejected`, `ignored`, `sent`, or `superseded`; its authorized browser projection is `TeacherAssessmentDraftDTO`.
+- **Assessment draft**: Private raw and reviewed v3 decision with revision, focus message, and status `draft`, `ignored`, or `sent`; its authorized browser projection is `TeacherAssessmentDraftDTO`.
 - **Assessment key**: Private immutable key and transfer basis linked to one delivered question and reviewed draft revision.
 - **Learning event**: Causal, deduplicated observation or assessment outcome tied to stored learner evidence and processed through the transition authority.
-- **Assessment request result**: Private idempotency record mapping a verified operation/request to its stable result.
 - **Verified application principal**: Result of the configured `AssessmentPrincipalVerifier`, containing application user identity, allowed rooms, and review capability; the verifier's request proof format is deployment-specific and is not defined as Supabase Auth or `auth.uid()`.
 
 ## Success Criteria
