@@ -3,9 +3,10 @@
 Intent: record the gate results that justify promoting the merged component 102 state, so
 `integration_passed` rests on named evidence rather than on a narrative claim.
 
-Tested integration SHA: `2578ea5` (merge of `102-transfer-backend` into
-`integration/transfer-assessment` is `37b9cf2`; `2578ea5` is the dead-code and author-role fix on
-top of it)
+Tested integration SHA: `c6bc632`. The commit chain is `37b9cf2` (merge of `102-transfer-backend`
+into `integration/transfer-assessment`), `2578ea5` (the author-role and dead-code fix), and
+`c6bc632` (the spec and record reconciliation). The gates were run twice with identical results:
+once on `2578ea5`, and once on the clean tree at `c6bc632`.
 
 ## Gates run on the tested SHA
 

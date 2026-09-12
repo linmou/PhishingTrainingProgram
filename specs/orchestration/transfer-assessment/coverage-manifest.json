@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "status": "passed",
-  "tested_integration_sha": "2578ea5",
+  "tested_integration_sha": "c6bc632",
   "integration": {
     "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs",
     "exit_code": 0,
@@ -43,7 +43,7 @@
     }
   ],
   "notes": [
-    "Both commands were run on tested_integration_sha and exited 0. The merge of 102-transfer-backend into integration/transfer-assessment is 37b9cf2; 2578ea5 is the author-role and dead-code fix on top of it.",
+    "Both commands were run on tested_integration_sha and exited 0. The commit chain is 37b9cf2 (merge of 102-transfer-backend into integration/transfer-assessment), 2578ea5 (the author-role and dead-code fix), and c6bc632 (the spec and record reconciliation). The gates were run twice with identical results: once on 2578ea5, before the docs commit, and once on the clean tree at c6bc632.",
     "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, the public message projection, and the shared private-field guard are the production implementations.",
     "The e2e aggregate was rewritten for the collapsed one-table model. Its former review_draft step and teacher-draft-DTO case tested a draft table that no longer exists, so they were replaced by a prepare_turn -> send_reviewed case and a projection case that feeds the facade a response still carrying assessment_key.",
     "Component suites on this head: 10 suites / 186 tests pass via CI=true npx react-scripts test --watchAll=false --testPathPattern=(transferAssessment|transferTutor|transferMigration|tutorDecisionContract.transfer|assessmentApi). The suite count dropped from 11 because transferAssessmentDraftDto.test.ts covered the removed teacher draft DTO, and the test count dropped correspondingly.",
