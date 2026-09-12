@@ -408,3 +408,13 @@ Planning, reconciliation, authoritative DAG, and integration-design gates have p
 - One 104 assumption was corrected before it became a false claim: the effective 1,200-token budget is **not** exported by the shared contract, it is the literal `max_tokens: 1200` in `supabase/functions/assessment-api/index.ts`. Recorded as R13; 104 asserts parity against the production source at the promotion SHA rather than importing a constant, and a 102-owned export is the documented alternative. No 102 change is made in this wave.
 - Component 104's live evaluation stages (baseline, candidate, and sealed holdout runs) cannot execute in this environment: `.env.example` carries provider key placeholders only, with no usable credentials, no target base URL, and no judge configuration. Those stages are a blocking unrun gate to be recorded, not a fallback, and 104's offline contract, deterministic-check, and gate work proceeds independently of them.
 - Scope of what this claims, stated narrowly. It claims wave 3 is activated, that the recorded 102 promotion SHA is measured on `9bab1e1` with the same results as `c6bc632`, and that 103's stale contract references are identified with a canonical resolution. It does **not** claim 103 or 104 is implemented, and it does not close W3/W4: T009 PART 2 is still unexecuted for want of a `service_role` connection.
+
+### Promotion Receipt: Component 102 At `7f5e979`
+
+- Tested integration SHA: `9bab1e1`. Audit commit carrying that record: **`7f5e979`**, which is the candidate promotion SHA.
+- Smoke on the candidate, run with a clean tree at `7f5e979`: `node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs` exited 0 with `tests 7 / pass 7 / fail 0`. The candidate is unchanged since that measurement, so **`7f5e979` is the immutable promotion SHA** for component 102.
+- Downstream receipts, merging that exact SHA and never the integration `HEAD`:
+  - `103-transfer-room-ui`: merge commit **`2fcd0b4`** (`merge: promote integration 7f5e979 into 103-transfer-room-ui`).
+  - `104-transfer-evaluation`: merge commit **`72888cd`** (`merge: promote integration 7f5e979 into 104-transfer-evaluation`).
+  - Both merges were `--no-ff`, both were made from a clean worktree, and no sibling component branch was merged into another.
+- Migration 044 remains unapplied-stage evidence only in the sense that T009 PART 2 has not run; it **is** applied on the hosted project, and T009 PART 1 is 16/16 there. Nothing in this receipt changes W3/W4, which stay open on that single missing lane.
