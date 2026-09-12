@@ -36,10 +36,13 @@ const TRANSFER_CALL_MARKER = `${PROMPT_CONSTANT}`;
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 
 // The repository's established TypeScript boundary hook (see evals/promptfoo/v1/prepare.js).
-// It resolves `typescript` from this worktree root rather than tutor-system/node_modules,
-// which is not installed in this worktree.
+// `typescript` is resolved from tutor-system/node_modules, where it is a DECLARED dependency
+// (`tutor-system/package.json` -> "typescript": "^4.9.5"), so any worktree that has installed the
+// application dependencies can run this. Resolving it bare from the worktree root worked only
+// because of an undeclared `npm install --no-save` in one developer's checkout, which meant the
+// suite passed there and failed in integration with `Cannot find module 'typescript'`.
 require.extensions['.ts'] = (module, file) => {
-  const ts = require('typescript');
+  const ts = require(path.join(root, 'tutor-system', 'node_modules', 'typescript'));
   module._compile(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019, esModuleInterop: true },
     fileName: file
