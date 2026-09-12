@@ -15,7 +15,7 @@ once on `2578ea5`, and once on the clean tree at `c6bc632`.
 | E01 edge handoff (`101 -> 102`) | `node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs` | exit `0`, `tests 7 / pass 7 / fail 0` |
 | End-to-end aggregate | `node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs` | exit `0`, `tests 3 / pass 3 / fail 0` |
 | Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer\|assessmentApi)"` | `10 suites / 186 tests` pass for the combined 101+102 set |
-| Hosted schema conformance | All 16 T009 PART 1 checks run against the hosted project | 15 pass, and check 16 fails by design: it is the red state for migration 044, which is authored and not yet applied |
+| Hosted schema conformance | All 16 T009 PART 1 checks run against the hosted project | **16/16 pass**, measured twice: once with check 16 red before migration 044 was applied, and again with every check green after. Migration 044 is applied on hosted, so `post_assessment_message_v1` now stores the author's own role |
 | Type check | `npx tsc --noEmit` | zero errors in every touched file; the repo's 508 pre-existing errors are unchanged and live in unrelated legacy test files |
 
 Three `RoomContext.*` suites fail on this head. They are pre-existing and unrelated: with the
@@ -50,9 +50,7 @@ private-field guard, and component 101's decision logic are production code.
 
 - **W3/W4 hosted behavioural evidence.** T009 PART 2 needs a `service_role` connection this session
   does not have, so A1-A10 were last executed and passing in an earlier session, and A11 (the new
-  author-role case) plus the tightened A4 have not been run. Migration 044 is authored and
-  unapplied, so `post_assessment_message_v1` still stores a learner message as a tutor message on
-  the hosted project and the answer path is still broken there.
+  author-role case) plus the tightened A4 have not been run since migration 044 was applied.
 - **Answer-key confidentiality.** The key lives on `public.messages`, which participants can read,
   so a crafted REST request reaches it. This is a recorded owner decision, not a guarantee, and
   lane case A3 asserts the exposure rather than hiding it.
