@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "status": "passed",
-  "tested_integration_sha": "64ae8aa",
+  "tested_integration_sha": "bceffe7",
   "integration": {
     "command": "node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs",
     "exit_code": 0,
@@ -46,6 +46,8 @@
     "Both commands were run on tested_integration_sha and exited 0.",
     "The e2e aggregate replaces only the network transport (the Edge Function call). Component 101's resolver, component 102's service facade, both public projection functions, and the shared private-field guard are the production implementations.",
     "The e2e aggregate previously carried a reject/regenerate case. That operation set was removed in the lean refactor, so the case was deleted rather than kept green against an operation that no longer exists.",
-    "W3/W4 hosted behavioural evidence (T009 PART 2) is not part of this manifest and remains unexecuted; it requires a service_role connection."
+    "Component suites on this head: 11 suites / 197 tests pass via CI=true npx react-scripts test --watchAll=false --testPathPattern=(transferAssessment|transferTutor|transferMigration|tutorDecisionContract.transfer|assessmentApi).",
+    "Migrations 032-036 are applied on the hosted project and verified there: zero removed functions remain, no kept function body references a dropped object, and the seven live RPC signatures match the Edge Function.",
+    "W3/W4 hosted behavioural evidence (T009 PART 2, transfer_assessment_rpc_behaviour.sql) is not part of this manifest and has never been executed; it requires a service_role connection."
   ]
 }

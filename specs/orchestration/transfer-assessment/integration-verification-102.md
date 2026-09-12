@@ -3,7 +3,7 @@
 Intent: record the gate results that justify promoting the merged component 102 state, so
 `integration_passed` rests on named evidence rather than on a narrative claim.
 
-Tested integration SHA: `64ae8aa`
+Tested integration SHA: `bceffe7`
 
 ## Gates run on the tested SHA
 
@@ -11,7 +11,8 @@ Tested integration SHA: `64ae8aa`
 |---|---|---|
 | E01 edge handoff (`101 -> 102`) | `node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs` | exit `0`, `tests 7 / pass 7 / fail 0` |
 | End-to-end aggregate | `node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs` | exit `0`, `tests 3 / pass 3 / fail 0` |
-| Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer)"` | `9 suites / 72 tests` pass before the projection merge; `11 suites / 196 tests` for the combined 101+102 set |
+| Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer\|assessmentApi)"` | `11 suites / 197 tests` pass for the combined 101+102 set |
+| Hosted schema conformance | T009 checks run against the hosted project | 10 of 10 verified: lean tables present, ledger present and keyed, the five draft columns gone, both payload hashes gone, `effective_order` gone, status vocabulary `draft/ignored/sent`, seven live RPC signatures matched, all four removed functions absent, no kept function body referencing a dropped object, review/send still `SECURITY DEFINER` with the restrictive `search_path` |
 | Type check | `npx tsc --noEmit` | clean for every touched file; pre-existing unrelated errors unchanged |
 
 ## What the edge handoff proves
