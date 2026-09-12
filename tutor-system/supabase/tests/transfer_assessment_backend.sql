@@ -58,15 +58,20 @@ WITH checks(check_name, pass, detail) AS (
            'lifecycle in delivered/answered/cancelled/invalidated; result in pass/fail'
 
     UNION ALL
-    -- 5. One unresolved assessment per learner, folded onto the surviving column.
-    SELECT 'one open assessment per learner is enforced',
-           EXISTS (SELECT 1 FROM pg_indexes
-                    WHERE schemaname='public' AND tablename='messages'
-                      AND indexname='one_open_assessment_per_student'
-                      AND indexdef LIKE '%assessment_lifecycle%'),
-           (SELECT indexdef FROM pg_indexes
-             WHERE schemaname='public' AND tablename='messages'
-               AND indexname='one_open_assessment_per_student')
+    -- 5. One open assessment per learner is enforced in the function, not by an index. The
+    --    index that used to sit here keyed on the message author, which for an assessment is the
+    --    tutor, so it scoped the rule per tutor and blocked a second learner in the same room.
+    --    This check asserts the index is gone AND that the function carries the guard, because
+    --    dropping the index without the guard would silently remove the rule.
+    SELECT 'one open assessment per learner is enforced in the function',
+           NOT EXISTS (SELECT 1 FROM pg_indexes
+                        WHERE schemaname='public' AND tablename='messages'
+                          AND indexname='one_open_assessment_per_student')
+           AND EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                        WHERE n.nspname='public' AND p.proname='send_reviewed_tutor_response_v3'
+                          AND pg_get_functiondef(p.oid) ~ 'ASSESSMENT_ALREADY_OPEN'
+                          AND pg_get_functiondef(p.oid) ~ 'assessment_checklist_id'),
+           'the mis-scoped index is dropped and the per-learner guard lives in send_reviewed'
 
     UNION ALL
     -- 6. The six operations the Edge Function calls exist with the exact parameter type lists.
