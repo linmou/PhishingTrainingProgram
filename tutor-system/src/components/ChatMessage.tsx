@@ -2,7 +2,7 @@ import React from 'react';
 import { Message } from '../types';
 import AvatarDisplay from './AvatarDisplay';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
-import { readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 interface ChatMessageProps {
     message: Message;
@@ -24,6 +24,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     // A delivered assessment message renders its public question; every other message renders
     // its plain content.
     const publicQuestion = readPublicQuestion(message);
+    // The server asks for a clarifying label when an answer cannot be resolved to an option. The
+    // browser shows that request; it never invents a selection, a grade, or a failure.
+    const answerLifecycle = readAnswerLifecycle(message);
 
     const formatTime = (timestamp: string) => {
         return new Date(timestamp).toLocaleTimeString([], {
@@ -93,6 +96,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 {publicQuestion
                     ? <PublicAssessmentQuestion question={publicQuestion} />
                     : message.content}
+                {answerLifecycle?.state === 'clarification' && (
+                    <p className="answer-clarification" role="status">
+                        Tell me which option you mean, for example B or B, D.
+                    </p>
+                )}
             </div>
 
             {/* AI Generation Button for Student Messages */}

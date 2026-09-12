@@ -38,6 +38,20 @@ export interface PublicQuestionView {
  */
 export interface RoomMessageView extends Message {
   publicQuestion: PublicQuestionView | null;
+  /** The server's own lifecycle result for a learner answer, when this message is one. */
+  answerLifecycle: AnswerLifecycleView | null;
+}
+
+/**
+ * What the trusted processing path said about one learner answer. It is a projection of the
+ * server result, never a local grade: the browser does not decide pass, fail, or format.
+ */
+export interface AnswerLifecycleView {
+  state: 'graded' | 'clarification' | 'already_processed' | 'unresolved';
+  /** The delivered question this answer belongs to, as the server reports it. */
+  messageId: string | null;
+  code: string | null;
+  feedbackRequired: boolean;
 }
 
 /** The prepared scope identity from `prepareTurn`. */
@@ -176,7 +190,47 @@ export function projectRoomMessage(
     display_name: asNonEmptyString(projected.display_name) || undefined,
     avatar_url: asNonEmptyString(projected.avatar_url),
     publicQuestion: publicQuestionFromStoredRow(source, explicit),
+    answerLifecycle: null,
   };
+}
+
+/**
+ * Read the trusted processing result for a learner answer. Component 102 returns `message_id` for
+ * the delivered question plus `code`, `clarification_required`, and `already_processed`; the older
+ * `question_id` key is still accepted so a not-yet-promoted facade cannot break the learner view.
+ */
+export function answerLifecycleFromProcessed(processed: unknown): AnswerLifecycleView {
+  const result = asRecord(processed);
+  const messageId =
+    asNonEmptyString(result.message_id) ?? asNonEmptyString(result.question_id) ?? null;
+  const code = asNonEmptyString(result.code) ?? null;
+  const feedbackRequired = result.feedback_required === true;
+
+  if (result.clarification_required === true || code === 'ANSWER_FORMAT_UNRESOLVED') {
+    return { state: 'clarification', messageId, code, feedbackRequired };
+  }
+  if (result.already_processed === true) {
+    return { state: 'already_processed', messageId, code, feedbackRequired };
+  }
+  if (result.result != null) {
+    return { state: 'graded', messageId, code, feedbackRequired };
+  }
+  return { state: 'unresolved', messageId, code, feedbackRequired };
+}
+
+/** Attach a lifecycle result to a projected message without touching any other field. */
+export function withAnswerLifecycle(
+  view: RoomMessageView,
+  lifecycle: AnswerLifecycleView | null
+): RoomMessageView {
+  return { ...view, answerLifecycle: lifecycle };
+}
+
+/** Read the answer lifecycle a projected message carries, if any. */
+export function readAnswerLifecycle(message: Message | null | undefined): AnswerLifecycleView | null {
+  if (!message) return null;
+  const candidate = (message as Partial<RoomMessageView>).answerLifecycle;
+  return candidate && typeof candidate === 'object' ? candidate : null;
 }
 
 /** Read the public question a projected message carries, if any. */

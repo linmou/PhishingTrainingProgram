@@ -4,7 +4,7 @@ import { Message, MessageFeedbackStats } from '../types';
 import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
-import { readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 import './PostComment.css';
 
 interface PostCommentProps {
@@ -48,6 +48,8 @@ const PostComment: React.FC<PostCommentProps> = ({
     // A delivered assessment message renders its public question; every other message renders
     // its plain content.
     const publicQuestion = readPublicQuestion(message);
+    // The server asks for a clarifying label when an answer cannot be resolved to an option.
+    const answerLifecycle = readAnswerLifecycle(message);
     // State for two-step feedback system
     const [showRating, setShowRating] = useState<'like' | 'dislike' | null>(null);
     const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
@@ -195,6 +197,11 @@ const PostComment: React.FC<PostCommentProps> = ({
                         {publicQuestion
                             ? <PublicAssessmentQuestion question={publicQuestion} />
                             : message.content}
+                        {answerLifecycle?.state === 'clarification' && (
+                            <p className="answer-clarification" role="status">
+                                Tell me which option you mean, for example B or B, D.
+                            </p>
+                        )}
                     </div>
 
                     {/* Comment Actions */}

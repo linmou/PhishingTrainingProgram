@@ -257,6 +257,33 @@ describe('RoomContext learner answer path', () => {
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
   });
 
+  it('surfaces the server clarification request instead of inventing a selection or a failure', async () => {
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_QUESTION_ID,
+      result: null,
+      selected_option_ids: null,
+      transition: null,
+      feedback_required: false,
+      code: 'ANSWER_FORMAT_UNRESOLVED',
+      clarification_required: true,
+      already_processed: false,
+    });
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B or D', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
+    });
+
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
+      answerLifecycle?: { state?: string; code?: string | null };
+    };
+    expect(answer.answerLifecycle?.state).toBe('clarification');
+    expect(answer.answerLifecycle?.code).toBe('ANSWER_FORMAT_UNRESOLVED');
+  });
+
   it('keeps an ordinary learner message on the legacy path when the room has no transfer checklist', async () => {
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue({
       ...transferChecklist,
