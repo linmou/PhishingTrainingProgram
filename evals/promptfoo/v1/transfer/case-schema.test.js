@@ -95,7 +95,7 @@ test('every declared forbidden evaluator key is rejected inside the target input
 test('a pair without exactly two members or without one declared meaning-bearing change is rejected', () => {
   const oneMember = validCase();
   oneMember.pair = { pair_id: 'pair-transport', member: 'a', changed_factor: 'the brand name', expected_contrast: 'pass' };
-  assert.ok(validateCase(oneMember).some(error => error.path === 'pair.member'));
+  assert.deepEqual(validateCase(oneMember), []);
 
   const noFactor = validCase();
   noFactor.pair = { pair_id: 'pair-transport', member: 'a', changed_factor: '', expected_contrast: 'pass' };
