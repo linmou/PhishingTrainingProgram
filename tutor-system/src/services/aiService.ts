@@ -8,7 +8,7 @@
  * 4. Public API - clean interface for external usage
  */
 
-import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, TutorActionDecision, TutorInstruction, TutorResponseMode } from '../types';
+import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, InteractionMode, TutorActionDecision, TutorDecisionMode, TutorInstruction, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
@@ -25,8 +25,11 @@ import { parseTutorDecision } from './tutorDecisionContract';
 export { AI_MODELS, DEFAULT_AI_MODEL };
 export type { AIModelName };
 
-export const parseTutorActionDecision = (content: unknown): TutorActionDecision => {
-    const candidate = parseTutorDecision(content);
+export const parseTutorActionDecision = (
+    content: unknown,
+    options?: { allowMultiagent?: boolean }
+): TutorActionDecision => {
+    const candidate = parseTutorDecision(content, options);
     return {
         mode: candidate.decision.mode,
         instruction: candidate.decision.instruction,
@@ -40,7 +43,8 @@ const isTutorDecisionFormatError = (error: unknown): boolean =>
     (error.message.startsWith('AI response ') || error.message.startsWith('AI tutor decision '));
 
 const appendTutorDecisionRepairInstruction = (
-    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+    instruction: string = TUTOR_DECISION_REPAIR_INSTRUCTION
 ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> => {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) {
@@ -51,7 +55,7 @@ const appendTutorDecisionRepairInstruction = (
         ...messages.slice(0, -1),
         {
             ...lastMessage,
-            content: `${lastMessage.content}\n\n${TUTOR_DECISION_REPAIR_INSTRUCTION}`
+            content: `${lastMessage.content}\n\n${instruction}`
         }
     ];
 };
@@ -65,8 +69,14 @@ const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://dashscope-in
 const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
-const TUTOR_DECISION_REPAIR_INSTRUCTION =
+/** Appended to the last user turn when the model returns an unparsable tutor decision. */
+export const TUTOR_DECISION_REPAIR_INSTRUCTION =
     'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"tutoring","instruction":"scaffolding"},"response":"learner-facing message"}. Do not emit legacy fields, markdown, code fences, or text outside the object.';
+/** A multiagent reply carries reason plus two tagged messages, so it needs a larger completion budget. */
+const MULTI_AGENT_MAX_TOKENS = 240;
+/** Repair instruction for a multiagent-enabled turn: keep the two-message shape instead of falling back. */
+export const MULTI_AGENT_REPAIR_INSTRUCTION =
+    'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"multiagent","instruction":"multiagent"},"response":"[agent:riley] one short wrong recommendation\\n[agent:tutor] one short accurate correction"}. Use exactly those two tags once each, keep every message under 35 words, and do not emit markdown, code fences, or text outside the object.';
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
@@ -642,6 +652,13 @@ export class TutorSuggestionService {
             const phase0HistoryText = historyWithoutLastStudent
                 .map((message) => `${message.role}: ${message.content}`)
                 .join('\n');
+            // Phase 0 comparison rooms keep the historical single-agent contract.
+            const interactionMode: InteractionMode =
+                comparison?.version !== 'phase0' && config.prompt_config?.interaction_mode === 'multi_agent'
+                    ? 'multi_agent'
+                    : 'single_agent';
+            const allowMultiagent =
+                interactionMode === 'multi_agent' && (options?.priorMode || 'unknown') !== 'guard';
             const messages = comparison?.version === 'phase0'
                 ? buildPhase0ChatCompletionMessages(
                     systemPrompt,
@@ -651,13 +668,17 @@ export class TutorSuggestionService {
                     scenario_context: comparisonScenario,
                     conversation_history: historyText,
                     student_message: studentMessage,
-                    prior_mode: options?.priorMode || 'unknown'
+                    prior_mode: options?.priorMode || 'unknown',
+                    interaction_mode: interactionMode
                 });
 
             const temperature =
                 typeof config.temperature === 'number' ? config.temperature : 0.3;
-            const maxTokens =
-                typeof config.max_tokens === 'number' ? Math.min(config.max_tokens, 120) : 100;
+            // A multiagent envelope carries reason plus two tagged messages, so it gets its own budget;
+            // the room's single-response max_tokens cannot fit it (a 100-token room truncates the JSON).
+            const maxTokens = interactionMode === 'multi_agent'
+                ? MULTI_AGENT_MAX_TOKENS
+                : typeof config.max_tokens === 'number' ? Math.min(config.max_tokens, 120) : 100;
 
             let requestMessages = messages;
             let lastError: unknown;
@@ -686,7 +707,15 @@ export class TutorSuggestionService {
                     }
 
                     const data = await response.json();
-                    const decision = parseTutorActionDecision(data.choices[0]?.message?.content || '');
+                    const choice = data.choices?.[0];
+                    if (choice?.finish_reason === 'length') {
+                        // A truncated decision is unparsable; retry rather than presenting a partial envelope.
+                        throw new Error('AI response was truncated before the tutor decision JSON was complete');
+                    }
+                    const decision = parseTutorActionDecision(
+                        choice?.message?.content || '',
+                        { allowMultiagent }
+                    );
 
                     return {
                         suggestion: decision.suggested_response,
@@ -700,7 +729,10 @@ export class TutorSuggestionService {
                         throw error;
                     }
 
-                    requestMessages = appendTutorDecisionRepairInstruction(requestMessages);
+                    requestMessages = appendTutorDecisionRepairInstruction(
+                        requestMessages,
+                        allowMultiagent ? MULTI_AGENT_REPAIR_INSTRUCTION : TUTOR_DECISION_REPAIR_INSTRUCTION
+                    );
                 }
             }
 
@@ -1291,7 +1323,7 @@ export const recordAISuggestionFeedback = async (
     tutorMessageId: string | undefined,
     responseTimeMs: number | undefined,
     contextMessages: string[] | undefined,
-    rawMode: TutorResponseMode,
+    rawMode: TutorDecisionMode,
     rawInstruction: TutorInstruction | null,
     modeReason: string,
     finalMode: TutorResponseMode

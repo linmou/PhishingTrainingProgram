@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
 import { Message, MessageFeedbackStats } from '../types';
+import { decodeAgentMessage } from '../services/tutorDecisionContract';
 import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import './PostComment.css';
@@ -132,16 +133,24 @@ const PostComment: React.FC<PostCommentProps> = ({
     const hasUserDisliked = userFeedback?.feedback_type === 'dislike';
 
     const isGuardMessage = message.response_mode === 'guard';
-    const displayName = isGuardMessage ? 'Security Supervisor' : (message.display_name || message.user_role);
+    const agentMessage = isGuardMessage ? null : decodeAgentMessage(message);
+    // The avatar keeps the posting identity; only the visible name carries the character.
+    const avatarName = isGuardMessage ? 'Security Supervisor' : (message.display_name || message.user_role);
+    // Riley posts under her own name; the Tutor message keeps the tutor account name like any tutor row.
+    const agentLabel = agentMessage
+        ? agentMessage.character === 'riley' ? 'Riley' : avatarName
+        : null;
+    const displayName = isGuardMessage ? 'Security Supervisor' : agentLabel || avatarName;
+    const bodyText = agentMessage ? agentMessage.content : message.content;
 
     return (
-        <div className={`post-comment ${message.is_ai_generated ? 'post-comment-ai' : ''} ${isGuardMessage ? 'post-comment-guard' : ''} ${className}`}>
+        <div className={`post-comment ${message.is_ai_generated && !agentMessage ? 'post-comment-ai' : ''} ${isGuardMessage ? 'post-comment-guard' : ''} ${agentMessage ? 'post-comment-character' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
                     <AvatarDisplay
                         avatarUrl={isGuardMessage ? null : message.avatar_url || null}
-                        displayName={displayName}
+                        displayName={avatarName}
                         size="small"
                         className="comment-avatar"
                     />
@@ -154,19 +163,20 @@ const PostComment: React.FC<PostCommentProps> = ({
                         <div className="comment-author-info">
                             <span 
                                 className="comment-author-name"
-                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated) }}
+                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated && !agentMessage) }}
                             >
-                                {!isGuardMessage && message.is_ai_generated && getRoleIcon(message.user_role, message.is_ai_generated)}
-                                {isGuardMessage ? displayName : message.is_ai_generated ? 'AI Assistant' : displayName}
+                                {!isGuardMessage && message.is_ai_generated && !agentMessage && getRoleIcon(message.user_role, message.is_ai_generated)}
+                                {agentMessage ? displayName : isGuardMessage ? displayName : message.is_ai_generated ? 'AI Assistant' : displayName}
                             </span>
                             
-                            {!message.is_ai_generated && currentUserRole !== 'student' && (
+                            {/* Character rows use the ordinary role badge; the model chip stays on plain assistant rows. */}
+                            {(!message.is_ai_generated || agentMessage) && !isGuardMessage && currentUserRole !== 'student' && (
                                 <span className={`comment-role-badge ${message.user_role === 'tutor' ? 'comment-role-badge--tutor' : ''}`}>
                                     {getRoleIcon(message.user_role, false)} {getRoleLabel(message.user_role)}
                                 </span>
                             )}
                             
-                            {message.is_ai_generated && (
+                            {message.is_ai_generated && !agentMessage && (
                                 <span className="comment-ai-badge">
                                     AI · {message.ai_model_used}
                                 </span>
@@ -177,7 +187,8 @@ const PostComment: React.FC<PostCommentProps> = ({
                             <span className="comment-timestamp">
                                 {formatTime(message.created_at)}
                             </span>
-                            {message.is_ai_generated && message.ai_response_time_ms && (
+                            {/* Character rows show the ordinary timestamp only; the stored timing stays in the row. */}
+                            {message.is_ai_generated && !agentMessage && message.ai_response_time_ms && (
                                 <span className="comment-response-time">
                                     · {message.ai_response_time_ms}ms
                                 </span>
@@ -187,7 +198,7 @@ const PostComment: React.FC<PostCommentProps> = ({
 
                     {/* Comment Text */}
                     <div className="comment-text">
-                        {message.content}
+                        {bodyText}
                     </div>
 
                     {/* Comment Actions */}

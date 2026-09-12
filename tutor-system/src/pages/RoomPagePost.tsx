@@ -9,10 +9,12 @@ import AIAssistantSettings from '../components/AIAssistantSettings';
 import StudentAIToneControl from '../components/StudentAIToneControl';
 import AISuggestionBox from '../components/AISuggestionBox';
 import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
+import MultiAgentSuggestionEditor from '../components/MultiAgentSuggestionEditor';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { isTutorRoleLocked } from '../utils/studentAITone';
+import { decodeAgentMessage } from '../services/tutorDecisionContract';
 import '../components/RoomPagePost.css';
 
 const getAIResponseErrorMessage = (error: unknown): string => {
@@ -32,6 +34,10 @@ const COMPARISON_PAIR_LABELS = {
     click_impulse: 'Click Impulse',
     personal_story: 'Personal Story'
 } as const;
+
+/** Scheduled reveal time of a stored character message, or null for ordinary messages. */
+const agentMessageTime = (message: { content: string; is_ai_generated?: boolean | null; user_role?: string | null; created_at: string }): number | null =>
+    decodeAgentMessage(message) ? new Date(message.created_at).getTime() : null;
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -62,6 +68,10 @@ const RoomPagePost: React.FC = () => {
         clearAISuggestion,
         recordAIFeedback,
         currentSuggestionContext,
+        multiAgentDraft,
+        approveMultiAgentDraft,
+        regenerateMultiAgentDraft,
+        rejectMultiAgentDraft,
         submitMessageFeedback,
         messageFeedbackStats
     } = useRoom();
@@ -83,6 +93,8 @@ const RoomPagePost: React.FC = () => {
     const [ratingValue, setRatingValue] = useState(0);
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
+    const [multiAgentError, setMultiAgentError] = useState<string | null>(null);
+    const [now, setNow] = useState(() => Date.now());
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -113,6 +125,26 @@ const RoomPagePost: React.FC = () => {
         userLiked: boolean;
         userDisliked: boolean;
     }>>({});
+
+    // Staged Multi-agent playback: only character-tagged rows are hidden until their timestamp.
+    useEffect(() => {
+        const dueTimes = messages
+            .map(agentMessageTime)
+            .filter((time): time is number => time !== null && time > Date.now());
+        if (dueTimes.length === 0) return;
+
+        const timer = setTimeout(() => setNow(Date.now()), Math.min(...dueTimes) - Date.now() + 50);
+        return () => clearTimeout(timer);
+    }, [messages, now]);
+
+    const visibleMessages = messages.filter(message => {
+        const revealAt = agentMessageTime(message);
+        return revealAt === null || revealAt <= now;
+    });
+    const pendingPlayback = messages.some(message => {
+        const revealAt = agentMessageTime(message);
+        return revealAt !== null && revealAt > now;
+    });
 
 
     // Join room on component mount
@@ -164,7 +196,7 @@ const RoomPagePost: React.FC = () => {
 
     // Handle automatic scrolling and new message notifications
     useEffect(() => {
-        const currentMessageCount = messages.length;
+        const currentMessageCount = visibleMessages.length;
         const previousMessageCount = previousMessageCountRef.current;
         
         // Update ref with current count
@@ -188,7 +220,7 @@ const RoomPagePost: React.FC = () => {
         if (currentMessageCount > 0 && previousMessageCount === 0) {
             setTimeout(() => scrollToBottom(false), 100);
         }
-    }, [messages.length, userHasScrolledUp, scrollToBottom]);
+    }, [visibleMessages.length, userHasScrolledUp, scrollToBottom]);
 
     const attemptJoinRoom = async (password?: string) => {
         try {
@@ -228,21 +260,32 @@ const RoomPagePost: React.FC = () => {
     const getUnratedResponse = () => {
         if (user?.current_role !== 'student') return null;
 
-        const response = [...messages]
+        const latest = [...visibleMessages]
             .reverse()
             .find(message => message.is_ai_generated || message.user_role === 'tutor');
 
-        if (!response) return null;
+        if (!latest) return null;
+
+        // A completed pair is rated on its Tutor message, whichever character came last.
+        const response = decodeAgentMessage(latest)?.character === 'riley'
+            ? [...visibleMessages].reverse().find(message => decodeAgentMessage(message)?.character === 'tutor') || latest
+            : latest;
+
         if (completedRatingMessageId === response.id) return null;
         if (messageFeedbackStats[response.id]?.user_feedback) return null;
 
-        return response;
+        // The rating reminder shows learner-facing text, not the stored character tag.
+        const agentBody = decodeAgentMessage(response)?.content;
+        return agentBody ? { ...response, content: agentBody } : response;
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!messageText.trim() || sendingMessage) return;
+
+        // Staged playback blocks submission before any rating reminder can expose a hidden message.
+        if (pendingPlayback) return;
 
         const unratedResponse = getUnratedResponse();
         if (unratedResponse) {
@@ -396,6 +439,33 @@ const RoomPagePost: React.FC = () => {
     const handleRejectAISuggestion = async () => {
         await recordAIFeedback('rejected');
         clearAISuggestion();
+    };
+
+    const handleApproveMultiAgent = async (editedMessages: [string, string]) => {
+        setMultiAgentError(null);
+        try {
+            await approveMultiAgentDraft(editedMessages);
+        } catch (error) {
+            setMultiAgentError(
+                error instanceof Error ? error.message : 'Failed to approve the Multi-agent response.'
+            );
+        }
+    };
+
+    const handleRegenerateMultiAgent = async () => {
+        setMultiAgentError(null);
+        try {
+            await regenerateMultiAgentDraft();
+        } catch (error) {
+            setMultiAgentError(
+                error instanceof Error ? error.message : 'Failed to regenerate the Multi-agent response.'
+            );
+        }
+    };
+
+    const handleRejectMultiAgent = () => {
+        setMultiAgentError(null);
+        void rejectMultiAgentDraft();
     };
 
     const handleClearChatHistory = async () => {
@@ -644,7 +714,7 @@ const RoomPagePost: React.FC = () => {
                 {/* Comments Section */}
                 <div className="comments-section">
                     <div className="comments-header">
-                        💬 Discussion ({messages.length} message{messages.length !== 1 ? 's' : ''})
+                        💬 Discussion ({visibleMessages.length} message{visibleMessages.length !== 1 ? 's' : ''})
                     </div>
                     
                     <div 
@@ -652,12 +722,12 @@ const RoomPagePost: React.FC = () => {
                         ref={messagesContainerRef}
                         onScroll={handleScroll}
                     >
-                        {messages.length === 0 ? (
+                        {visibleMessages.length === 0 ? (
                             <div style={{ padding: '40px 20px', textAlign: 'center', color: '#65676b' }}>
                                 <p>No messages yet. Start the conversation!</p>
                             </div>
                         ) : (
-                            messages.map((message) => {
+                            visibleMessages.map((message) => {
                                 const engagement = messageEngagements[message.id] || {
                                     likeCount: 0,
                                     dislikeCount: 0,
@@ -718,8 +788,21 @@ const RoomPagePost: React.FC = () => {
                     />
                 )}
 
+                {/* Multi-agent two-character review for tutors */}
+                {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
+                    <MultiAgentSuggestionEditor
+                        messages={multiAgentDraft.generatedMessages}
+                        parentMessage={multiAgentDraft.parentMessageContent}
+                        isRegenerating={loadingAI}
+                        errorMessage={multiAgentError}
+                        onApprove={handleApproveMultiAgent}
+                        onReject={handleRejectMultiAgent}
+                        onRegenerate={handleRegenerateMultiAgent}
+                    />
+                )}
+
                 {/* Legacy AI Suggestion Box for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && (
+                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && !multiAgentDraft && (
                         <AISuggestionBox
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}
@@ -755,6 +838,7 @@ const RoomPagePost: React.FC = () => {
                                 onStopTyping={stopTyping}
                                 placeholder="Write a comment..."
                                 disabled={sendingMessage}
+                                submitBlocked={pendingPlayback}
                                 isLoading={sendingMessage}
                                 replyingTo={replyingTo}
                                 onCancelReply={() => setReplyingTo(null)}
@@ -762,9 +846,11 @@ const RoomPagePost: React.FC = () => {
                             {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
                                 <button
                                     onClick={() => handleGenerateAIResponse()}
-                                    disabled={loadingAI || messages.length === 0}
+                                    disabled={loadingAI || messages.length === 0 || pendingPlayback}
                                     className="ai-generate-btn"
-                                    title={loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
+                                    title={pendingPlayback
+                                        ? 'Waiting for the second AI message'
+                                        : loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
                                 >
                                     {loadingAI ? (
                                         <>

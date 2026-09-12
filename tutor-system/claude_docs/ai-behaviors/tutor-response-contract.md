@@ -2,8 +2,8 @@
 
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
-Updated: 2026-09-11
-Status: candidate 11's legacy v2 prompt contract remains implemented; transfer assessment v3 is implemented behind a disabled trusted API capability. Hosted browser and database acceptance for transfer v3 remain pending.
+Updated: 2026-09-12
+Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the optional Multi-agent decision; transfer assessment v3 is implemented behind a disabled trusted API capability. Hosted browser and database acceptance for transfer v3 and for Multi-agent remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -89,6 +89,26 @@ The implemented model boundary uses the designed v2 shape. The reviewed-response
 Migration `024_raw_instruction.sql` adds the nullable, constrained audit column and replaces the old reviewed-send RPC signature. Existing rows stay null; no historical decision is reconstructed. The parser requires `reason` serialized first, rejects legacy decision/rationale fields, and permits one format-repair retry. This contract grants no automatic sending, enforcement, or room-mode authority. See [the suggestion workflow](../ai-suggestion-tracking.md) for human review and persistence.
 
 Preserve frozen runs under their original contract snapshots. Contract changes require a new contract/evaluation version and fresh comparable baseline before acceptance; updating this template does not migrate production or reinterpret historical evidence.
+
+## Multi-agent extension (v2)
+
+Intent: define the optional two-character decision enabled by the Multi-agent Student AI choice while keeping the v2 envelope above unchanged.
+
+The learner's Student AI choice is persisted in `prompt_config` and sent as the request's `interaction_mode` (`single_agent` by default; old callers keep the old behavior). Under `multi_agent` the model may additionally return:
+
+| Field | Value | Boundary |
+| --- | --- | --- |
+| `decision.mode` | `multiagent` | Presentation decision only. It never enters `rooms.active_response_mode`, and the approved rows persist as ordinary `tutoring` messages. |
+| `decision.instruction` | `multiagent` | Required with `mode=multiagent`; invalid in every other mode. |
+| `response` | exactly two tagged messages | `[agent:riley] …` and `[agent:tutor] …`, each tag exactly once, either order, no untagged text before the first tag, no empty body, no third or unknown tag. Agent tags are invalid outside `multiagent`. |
+
+Riley is a simulated AI participant who voices one plausible but incorrect recommendation from supplied facts only; the AI Tutor stays accurate and may name the flaw in Riley's reasoning. Guard turns (active or recovering) and transfer-assessment turns never use `multiagent`, and enabling it never forces it. `decodeMultiAgentResponse` is the single decoder; `decodeAgentMessage` recovers character identity only from AI-generated tutor-side rows, so a learner writing the same literal tag text stays a learner.
+
+Human review shows the two decoded messages in a fixed two-card editor (no speaker selection). Approval requires the draft's parent learner message to still be the latest learner message, then inserts both rows in one ordinary `messages` write: `user_role=tutor`, `is_ai_generated=true`, shared `parent_message_id`, `response_mode=tutoring`, `created_at` at T and T+2s. The second row is hidden from the learner feed until its timestamp, and submission is blocked during that window before any rating reminder appears. A completed pair is rated on its tagged Tutor message regardless of order.
+
+A multiagent turn uses its own completion budget (`MULTI_AGENT_MAX_TOKENS`) because the envelope carries a reason plus two tagged messages: the room's single-response `max_tokens` is too small and truncates the JSON mid-string, which the format-repair retry then answers with a single-Tutor fallback. A response that stops on the length limit is reported as a truncated decision instead of being parsed as a partial envelope, and the repair retry keeps the two-message shape when the turn is multiagent-enabled.
+
+Known limitation: the pair is stored through the ordinary messages path, so the reviewed-send audit record (`ai_suggestion_feedback`) is not written for it. Multi-agent human-edit provenance would be a separate requirement.
 
 ## Transfer assessment v3 contract
 

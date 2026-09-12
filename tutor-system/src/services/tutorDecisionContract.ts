@@ -1,12 +1,108 @@
 // #!/usr/bin/env node
-// Purpose: validate reason-first tutor decisions for both the legacy v2 and explicit transfer v3 contracts.
-import { TutorBehaviorDecision, TutorInstruction } from '../types';
+// Purpose: validate reason-first tutor decisions for both the legacy v2 and explicit transfer v3 contracts,
+// and own the multi-agent response grammar (two tagged character messages, either order).
+import { DecodedAgentMessage, RoomParticipationMode, TutorBehaviorDecision, TutorDecisionMode, TutorInstruction } from '../types';
 import { TutorDecisionV3, TutorInstruction as TutorInstructionV3 } from '../types/assessment';
 import { countAssessmentSegments, validateAssessmentRendering } from './assessmentRendering';
 
-const instructions: Array<TutorInstruction | null> = ['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation', null];
+const instructions: Array<TutorInstruction | null> = ['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation', 'multiagent', null];
 
-export function parseTutorDecision(content: unknown): TutorBehaviorDecision {
+/** Tag written at the start of each message of a multiagent response. */
+const AGENT_TAG_PATTERN = '\\[agent:([a-z_-]+)\\]';
+const ANY_AGENT_TAG = new RegExp(AGENT_TAG_PATTERN, 'i');
+const ALL_AGENT_TAGS = new RegExp(AGENT_TAG_PATTERN, 'gi');
+
+export interface TutorDecisionParseOptions {
+  /** Multi-agent decisions are rejected unless the turn is multi-agent enabled. */
+  allowMultiagent?: boolean;
+}
+
+/** Delay between the first and second approved character message. */
+export const MULTI_AGENT_PLAYBACK_DELAY_MS = 2000;
+
+/** Multi-agent is a presentation decision; room participation stays tutoring/Guard. */
+export function toRoomParticipationMode(mode: TutorDecisionMode): RoomParticipationMode {
+  return mode === 'guard' ? 'guard' : 'tutoring';
+}
+
+function readAgentTag(content: string): { character: string; index: number; end: number } | null {
+  const match = /^\s*\[agent:([a-z_-]+)\]/i.exec(content);
+  if (!match) return null;
+  const character = match[1].toLowerCase();
+  if (character !== 'riley' && character !== 'tutor') return null;
+  return { character, index: match.index, end: match[0].length };
+}
+
+/**
+ * Decode one stored or generated message. Only AI-generated tutor-side rows carry a character tag;
+ * a learner typing the same literal text stays a learner message.
+ */
+export function decodeAgentMessage(message: {
+  content: string;
+  is_ai_generated?: boolean | null;
+  user_role?: string | null;
+}): DecodedAgentMessage | null {
+  if (message.is_ai_generated !== true || message.user_role !== 'tutor') return null;
+  const tag = readAgentTag(message.content);
+  if (!tag) return null;
+  const body = message.content.slice(tag.end).trim();
+  if (!body) return null;
+  return { character: tag.character as 'riley' | 'tutor', content: body };
+}
+
+/** Serialize one character message for storage in the existing messages table. */
+export function formatAgentTaggedContent(character: 'riley' | 'tutor', content: string): string {
+  return `[agent:${character}] ${content.trim()}`;
+}
+
+export function containsAgentTag(response: string): boolean {
+  return ANY_AGENT_TAG.test(response);
+}
+
+/**
+ * Decode the two tagged character messages of a multiagent response, in model-generated order.
+ * Rejects missing/duplicate/unknown tags, empty bodies and untagged text before the first tag.
+ */
+export function decodeMultiAgentResponse(
+  response: string
+): [DecodedAgentMessage, DecodedAgentMessage] {
+  if (typeof response !== 'string' || !response.trim()) {
+    throw new Error('AI tutor decision multiagent response must be a non-empty string');
+  }
+
+  const matches = Array.from(response.matchAll(ALL_AGENT_TAGS));
+  if (matches.length !== 2) {
+    throw new Error('AI tutor decision multiagent response must contain exactly two agent tags');
+  }
+  if (response.slice(0, matches[0].index).trim()) {
+    throw new Error('AI tutor decision multiagent response must not contain untagged text before the first agent tag');
+  }
+
+  const decoded = matches.map((match, index) => {
+    const character = match[1].toLowerCase();
+    if (character !== 'riley' && character !== 'tutor') {
+      throw new Error('AI tutor decision multiagent response contains an unknown agent tag');
+    }
+    const end = (match.index ?? 0) + match[0].length;
+    const nextStart = index + 1 < matches.length ? matches[index + 1].index ?? response.length : response.length;
+    const content = response.slice(end, nextStart).trim();
+    if (!content) {
+      throw new Error('AI tutor decision multiagent response must not contain an empty message');
+    }
+    return { character: character as 'riley' | 'tutor', content };
+  });
+
+  if (decoded[0].character === decoded[1].character) {
+    throw new Error('AI tutor decision multiagent response must contain exactly one Riley tag and one Tutor tag');
+  }
+
+  return [decoded[0], decoded[1]];
+}
+
+export function parseTutorDecision(
+  content: unknown,
+  options?: TutorDecisionParseOptions
+): TutorBehaviorDecision {
   if (typeof content !== 'string' || !content.trim()) throw new Error('AI response did not contain a structured tutor decision');
   let candidate: any;
   try { candidate = JSON.parse(content); } catch { throw new Error('AI response was not valid JSON for a tutor decision'); }
@@ -20,13 +116,27 @@ export function parseTutorDecision(content: unknown): TutorBehaviorDecision {
     if (typeof candidate[field] !== 'string' || !candidate[field].trim()) throw new Error(`AI tutor decision ${field} must be a non-empty string`);
   }
   if (!candidate.decision || typeof candidate.decision !== 'object' || Array.isArray(candidate.decision)) throw new Error('AI tutor decision is missing or invalid');
-  if (candidate.decision.mode !== 'tutoring' && candidate.decision.mode !== 'guard') throw new Error('AI tutor decision mode must be tutoring or guard');
-  if (!instructions.includes(candidate.decision.instruction)) throw new Error('AI tutor decision instruction is missing or invalid');
-  if (candidate.decision.instruction === null && candidate.decision.mode !== 'guard') throw new Error('AI tutor decision null instruction is allowed only in Guard');
+
+  const { mode, instruction } = candidate.decision;
+  const response: string = candidate.response.trim();
+  const reason: string = candidate.reason.trim();
+
+  if (mode === 'multiagent') {
+    if (options?.allowMultiagent !== true) throw new Error('AI tutor decision multiagent mode is not allowed for this turn');
+    if (instruction !== 'multiagent') throw new Error('AI tutor decision multiagent mode requires the multiagent instruction');
+    decodeMultiAgentResponse(response);
+    return { reason, decision: { mode: 'multiagent', instruction: 'multiagent' }, response };
+  }
+
+  if (mode !== 'tutoring' && mode !== 'guard') throw new Error('AI tutor decision mode must be tutoring or guard');
+  if (instruction === 'multiagent') throw new Error('AI tutor decision multiagent instruction is invalid outside multiagent mode');
+  if (!instructions.includes(instruction)) throw new Error('AI tutor decision instruction is missing or invalid');
+  if (instruction === null && mode !== 'guard') throw new Error('AI tutor decision null instruction is allowed only in Guard');
+  if (containsAgentTag(response)) throw new Error('AI tutor decision response must not contain agent tags outside multiagent mode');
   return {
-    reason: candidate.reason.trim(),
-    decision: { mode: candidate.decision.mode, instruction: candidate.decision.instruction },
-    response: candidate.response.trim()
+    reason,
+    decision: { mode, instruction },
+    response
   };
 }
 

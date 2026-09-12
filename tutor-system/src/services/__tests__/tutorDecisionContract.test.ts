@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-// Purpose: test tutorDecisionContract.ts at v2 schema boundaries, preserving independent mode/action and supervisor reason.
-import { parseTutorDecision } from '../tutorDecisionContract';
+// Purpose: test tutorDecisionContract.ts at v2 schema boundaries, preserving independent mode/action and supervisor reason,
+// and at the multiagent grammar boundary (two tagged character messages, either order, only when allowed).
+import { decodeAgentMessage, decodeMultiAgentResponse, parseTutorDecision } from '../tutorDecisionContract';
 
 const valid = () => ({ reason: 'The learner intends to click; protection comes first.', decision: { mode: 'tutoring', instruction: 'protective_instruction' }, response: 'Do not open that link. Use the real app.' });
+const multiAgent = (response: string) => JSON.stringify({ reason: 'Familiar branding is the live assumption.', decision: { mode: 'multiagent', instruction: 'multiagent' }, response });
+const ALLOW = { allowMultiagent: true };
 
 test('preserves all structured fields and trims text', () => {
   expect(parseTutorDecision(JSON.stringify({ ...valid(), reason: ' Evidence. ' })).reason).toBe('Evidence.');
@@ -37,4 +40,50 @@ test('rejects invalid independent decision shapes', () => {
 
 test.each(['reasoning', 'mode_reason', 'suggested_response'])('rejects legacy field %s', field => {
   expect(() => parseTutorDecision(JSON.stringify({ ...valid(), [field]: 'legacy' }))).toThrow();
+});
+
+test('accepts a multiagent decision only when the turn allows it', () => {
+  const response = '[agent:riley] The logo looks official, so I would trust it.\n[agent:tutor] A logo does not prove the sender. What could you verify yourself?';
+  const decision = parseTutorDecision(multiAgent(response), ALLOW).decision;
+  expect(decision).toEqual({ mode: 'multiagent', instruction: 'multiagent' });
+  expect(() => parseTutorDecision(multiAgent(response))).toThrow('not allowed for this turn');
+});
+
+test('accepts either character order and trims each decoded message', () => {
+  const rileyFirst = decodeMultiAgentResponse('[agent:riley]  Trust the logo. \n[agent:tutor] Check the sender.');
+  expect(rileyFirst).toEqual([
+    { character: 'riley', content: 'Trust the logo.' },
+    { character: 'tutor', content: 'Check the sender.' }
+  ]);
+  const tutorFirst = decodeMultiAgentResponse('[agent:tutor] Check the sender.\n[agent:riley] Trust the logo.');
+  expect(tutorFirst.map(message => message.character)).toEqual(['tutor', 'riley']);
+});
+
+test.each([
+  ['missing Tutor tag', '[agent:riley] Trust the logo.'],
+  ['duplicate Riley tag', '[agent:riley] Trust the logo.\n[agent:riley] Still trust it.'],
+  ['unknown third tag', '[agent:riley] Trust it.\n[agent:sam] Same here.\n[agent:tutor] Check the sender.'],
+  ['untagged prefix', 'Here is a contrast:\n[agent:riley] Trust it.\n[agent:tutor] Check the sender.'],
+  ['empty tagged body', '[agent:riley]   \n[agent:tutor] Check the sender.'],
+  ['no tags at all', 'Trust the logo, but check the sender.']
+])('rejects a malformed multiagent response: %s', (_label, response) => {
+  expect(() => parseTutorDecision(multiAgent(response), ALLOW)).toThrow();
+});
+
+test('rejects multiagent mode with a wrong instruction and the instruction outside multiagent mode', () => {
+  expect(() => parseTutorDecision(JSON.stringify({ ...valid(), decision: { mode: 'multiagent', instruction: 'scaffolding' } }), ALLOW)).toThrow();
+  expect(() => parseTutorDecision(JSON.stringify({ ...valid(), decision: { mode: 'tutoring', instruction: 'multiagent' } }))).toThrow();
+});
+
+test('rejects agent tags in a non-multiagent response', () => {
+  const tagged = { ...valid(), response: '[agent:tutor] Check the sender.' };
+  expect(() => parseTutorDecision(JSON.stringify(tagged))).toThrow('must not contain agent tags');
+});
+
+test('reads character identity only from AI-generated tutor-side rows', () => {
+  const row = { content: '[agent:riley] Trust the logo.', is_ai_generated: true, user_role: 'tutor' };
+  expect(decodeAgentMessage(row)).toEqual({ character: 'riley', content: 'Trust the logo.' });
+  expect(decodeAgentMessage({ ...row, is_ai_generated: false })).toBeNull();
+  expect(decodeAgentMessage({ ...row, user_role: 'student' })).toBeNull();
+  expect(decodeAgentMessage({ content: 'Trust the logo.', is_ai_generated: true, user_role: 'tutor' })).toBeNull();
 });

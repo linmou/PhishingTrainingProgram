@@ -9,6 +9,7 @@ import {
     formatRoomScenarioContext,
     prePopulatedToContextMessages
 } from './ecologicalTutorCall';
+import { decodeAgentMessage } from './tutorDecisionContract';
 import { DEFAULT_AI_MODEL } from './aiModels';
 
 /**
@@ -59,6 +60,17 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
         // Add recent chat messages
         if (messages && messages.length > 0) {
             messages.forEach(msg => {
+                // Character-tagged AI rows keep their identity; Riley is never learner evidence.
+                const agent = decodeAgentMessage(msg);
+                if (agent) {
+                    context.push({
+                        role: 'assistant',
+                        content: `${agent.character === 'riley' ? 'Simulated AI participant Riley' : 'AI Tutor'}: ${agent.content}`,
+                        timestamp: new Date(msg.created_at).getTime() / 1000
+                    });
+                    return;
+                }
+
                 const role = msg.is_ai_generated ? 'assistant' : 'user';
                 const prefix = msg.is_ai_generated ? 'AI suggested: ' : 
                               msg.user_role === 'student' ? 'Student: ' :

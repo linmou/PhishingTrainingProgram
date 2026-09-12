@@ -4,7 +4,7 @@
  * "write the tutor response" instruction the room should use.
  */
 
-import { ConversationMessage, PrePopulatedMessage, TutorResponseMode } from '../types';
+import { ConversationMessage, InteractionMode, PrePopulatedMessage, TutorResponseMode } from '../types';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from './prompts/activeTutorAgentPrompt';
 
 export interface EcologicalCaseVars {
@@ -12,6 +12,8 @@ export interface EcologicalCaseVars {
   conversation_history: string;
   student_message: string;
   prior_mode?: TutorResponseMode | 'unknown';
+  /** Learner-selected AI interaction mode. Old callers default to single_agent. */
+  interaction_mode?: InteractionMode;
 }
 
 export interface EcologicalChatMessage {
@@ -102,7 +104,8 @@ export function buildEcologicalTutorUserTurn({
   scenario_context,
   conversation_history,
   student_message,
-  prior_mode
+  prior_mode,
+  interaction_mode
 }: EcologicalCaseVars): string {
   return [
     'Draft the next tutor decision using this room context.',
@@ -111,7 +114,8 @@ export function buildEcologicalTutorUserTurn({
       scenario_context,
       conversation_history: conversation_history || '(no prior turns)',
       student_message,
-      prior_mode: prior_mode || 'unknown'
+      prior_mode: prior_mode || 'unknown',
+      interaction_mode: interaction_mode || 'single_agent'
     })
   ].join('\n');
 }

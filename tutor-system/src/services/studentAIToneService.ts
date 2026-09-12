@@ -1,22 +1,21 @@
 /**
- * Persist student-chosen AI tone (peer/adult) for single-student rooms.
+ * Persist the student-chosen AI interaction (peer/adult/multi-agent) for single-student rooms.
  * Purpose: write path for features/student_ai_tone.feature — multi-student blocked.
  */
 
-import type { AIAssistantConfig, User } from '../types';
+import type { AIAssistantConfig, StudentAIChoice, User } from '../types';
 import { getAIConfig, updateAIConfig } from './aiService';
 import { generateSystemPrompt } from './systemPrompts';
 import {
-  applyStudentToneToPromptConfig,
+  applyStudentAIChoiceToPromptConfig,
   countStudentParticipants,
   isStudentToneFeatureAvailable,
-  type StudentToneValue,
 } from '../utils/studentAITone';
 
 export async function setStudentAITone(args: {
   roomId: string;
   userId: string;
-  tone: StudentToneValue;
+  tone: StudentAIChoice;
   participants: Array<Pick<User, 'current_role'> | null | undefined>;
   aiEnabled: boolean;
 }): Promise<AIAssistantConfig> {
@@ -33,7 +32,7 @@ export async function setStudentAITone(args: {
   }
 
   const existing = await getAIConfig(args.roomId);
-  const nextPromptConfig = applyStudentToneToPromptConfig(
+  const nextPromptConfig = applyStudentAIChoiceToPromptConfig(
     existing?.prompt_config ?? null,
     args.tone,
     args.userId

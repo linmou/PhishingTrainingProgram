@@ -103,12 +103,14 @@ describe('ecologicalTutorCall', () => {
     expect(messages[1].content).toContain('student line');
   });
 
-  it('uses the frozen candidate 11 text as the active agent prompt', () => {
+  it('keeps the frozen candidate 11 text as the active agent prompt and appends the multi-agent extension', () => {
     const evaluatedPrompt = fs.readFileSync(
       path.resolve(__dirname, '../../../../evals/promptfoo/v1/candidate-policy-11-contract-v2.md'),
       'utf8'
     ).trim();
-    expect(ACTIVE_TUTOR_AGENT_PROMPT).toBe(evaluatedPrompt);
+    // The evaluated candidate 11 policy stays verbatim; the Multi-agent decision section is additive.
+    expect(ACTIVE_TUTOR_AGENT_PROMPT.startsWith(evaluatedPrompt)).toBe(true);
+    expect(ACTIVE_TUTOR_AGENT_PROMPT.slice(evaluatedPrompt.length)).toContain('MULTI-AGENT EXTENSION');
   });
 
   it('converts pre-populated arrays into context messages for AI history', () => {

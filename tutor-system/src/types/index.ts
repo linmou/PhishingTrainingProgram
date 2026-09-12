@@ -160,10 +160,13 @@ export type TutorTurnMode = RoomParticipationMode | 'assessment';
 /** Legacy alias for APIs that exclusively control room participation. */
 export type TutorResponseMode = RoomParticipationMode;
 
-export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation' | 'transfer_assess' | 'guard';
+/** Model decision mode. `multiagent` is a presentation decision, never persisted room participation. */
+export type TutorDecisionMode = RoomParticipationMode | 'multiagent';
+
+export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation' | 'transfer_assess' | 'guard' | 'multiagent';
 
 export interface TutorActionDecision {
-    mode: TutorResponseMode;
+    mode: TutorDecisionMode;
     instruction: TutorInstruction | null;
     mode_reason: string;
     suggested_response: string;
@@ -172,8 +175,31 @@ export interface TutorActionDecision {
 // Raw v2 model contract; the reviewed-response workflow maps this to TutorActionDecision.
 export interface TutorBehaviorDecision {
     reason: string;
-    decision: { mode: TutorResponseMode; instruction: TutorInstruction | null };
+    decision: { mode: TutorDecisionMode; instruction: TutorInstruction | null };
     response: string;
+}
+
+/** One decoded character message from a multi-agent response or stored tagged row. */
+export interface DecodedAgentMessage {
+    character: 'riley' | 'tutor';
+    content: string;
+}
+
+/** Learner-visible Student AI choice. Peer/Adult are single-agent; Multi-agent enables the two-character decision. */
+export type StudentAIChoice = 'peer' | 'adult' | 'multi_agent';
+
+/** Model-facing interaction mode carried by the request and the room AI prompt config. */
+export type InteractionMode = 'single_agent' | 'multi_agent';
+
+/** Human-review draft for one approved-pending two-character exchange. */
+export interface MultiAgentDraft {
+    rawDecision: TutorActionDecision;
+    parentMessageId: string;
+    parentMessageContent: string;
+    generatedMessages: [DecodedAgentMessage, DecodedAgentMessage];
+    startTime: number;
+    contextMessages: string[];
+    aiConfigSnapshot?: AIAssistantConfigSnapshot;
 }
 
 export type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, PrivateAssessment, PublicAssessment, RoomParticipationMode as AssessmentRoomParticipationMode, TeachingInstruction, TutorDecisionV3, TutorTurnMode as AssessmentTutorTurnMode, TransferBasis, TransferChecklistItemSnapshot, TransferTurnContext } from './assessment';
@@ -213,8 +239,8 @@ export interface RoomContextType {
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
-    /** Student claims peer/adult tone (1:1 rooms only). */
-    setStudentAITone: (tone: 'peer' | 'adult') => Promise<void>;
+    /** Student claims an AI interaction choice (peer/adult/multi-agent; single-student rooms only). */
+    setStudentAITone: (choice: StudentAIChoice) => Promise<void>;
     startTyping: () => void;
     stopTyping: () => void;
     aiConfig: AIAssistantConfig | null;
@@ -233,6 +259,11 @@ export interface RoomContextType {
     updateFinalResponse: (response: string) => void;
     updateFinalMode: (mode: TutorResponseMode) => void;
     clearAISuggestion: () => void;
+    /** Human-review draft for a model decision of mode `multiagent`. */
+    multiAgentDraft: MultiAgentDraft | null;
+    approveMultiAgentDraft: (editedMessages: [string, string]) => Promise<void>;
+    regenerateMultiAgentDraft: () => Promise<void>;
+    rejectMultiAgentDraft: () => Promise<void>;
     aiInteractions: AIInteraction[];
     currentSuggestionContext: { 
         rawDecision: TutorActionDecision;
@@ -395,7 +426,7 @@ export interface AISuggestionFeedback {
     response_time_ms: number | null;
     context_messages: string[] | null;
     created_at: string;
-    raw_mode: TutorResponseMode | null;
+    raw_mode: TutorDecisionMode | null;
     raw_instruction: TutorInstruction | null;
     mode_reason: string | null;
     final_mode: TutorResponseMode | null;
@@ -411,7 +442,7 @@ export interface AIInteraction {
     tutor_final_response?: string;
     response_time_ms?: number;
     ai_config_snapshot?: AIAssistantConfigSnapshot;
-    raw_mode?: TutorResponseMode;
+    raw_mode?: TutorDecisionMode;
     raw_instruction: TutorInstruction | null;
     mode_reason?: string;
     final_mode?: TutorResponseMode;
