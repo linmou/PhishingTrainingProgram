@@ -896,7 +896,6 @@ const RoomPagePost: React.FC = () => {
                         {transferTurnStatus.message}
                     </p>
                 )}
-                )}
 
                 {/* Legacy AI Suggestion Box for tutors */}
                 {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && !multiAgentDraft && (
