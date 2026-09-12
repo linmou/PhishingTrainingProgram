@@ -47,11 +47,11 @@ The authoritative graph is identical to allocation packet version 1. It is acycl
 | Wave | Component | Status | Evidence |
 |---|---|---|---|
 | 1 | `101-transfer-domain` | integration-green for its own scope; merged at `c2224c7`/`7ecfce5`/`3d39bd6` | E01 `6/6` pass on integration; regression `29 failed / 128 failed tests` identical to `pre_red` baseline with passing tests `578 -> 719`; promotion restricted as recorded in `integration-review.md` |
-| 2 | `102-transfer-backend` | ready to open; not yet started | edge `101 -> 102` satisfied by E01 and the integration regression |
+| 2 | `102-transfer-backend` | open; hosted schema/privilege lane evidenced, behavioural lane pending; branch not yet merged | Migrations 025/027/028 applied on hosted by the owner; RLS fix applied. T009 PART 1 `13/15` pass on hosted with the two failures naming exactly the functions migration 029 fixes (`integration-review.md`, 2026-09-12). RPC signatures `8 of 8` matched; all private transfer tables `rls=true` with no API-role access; all eight transfer RPCs service_role-only. Migration 029 authored at `e690d55` and unapplied; T009 PART 2 (P1-P19) and the Edge Function deploy require service_role. |
 | 3 | `103-transfer-room-ui`, `104-transfer-evaluation` | closed | incoming edges `102 -> 103` and `102 -> 104` unsatisfied |
 | 4 | `105-transfer-release` | closed | incoming edges from 102, 103, and 104 unsatisfied |
 
-`integration_coverage_passed` and `integration_passed` remain unsubmitted: the coverage manifest needs both a new passed `tests/integration/` test and the new passed `tests/e2e/transfer-assessment.test.js` aggregate, and the aggregate belongs to the release edge that component 105 owns. Component 101 has no downstream branch to receive a promotion SHA because neither 102 nor 104 exists yet.
+`integration_coverage_passed` and `integration_passed` remain unsubmitted: the coverage manifest needs both a new passed `tests/integration/` test and the new passed `tests/e2e/transfer-assessment.test.js` aggregate, and the aggregate belongs to the release edge that component 105 owns. Component 101's downstream consumers now exist as branches (`102-transfer-backend` at `488de3e`, `104-transfer-evaluation`), so the earlier statement that neither exists is superseded; 102 is not yet merged, so no promotion SHA has been written to it.
 
 ## Integration Ownership
 
