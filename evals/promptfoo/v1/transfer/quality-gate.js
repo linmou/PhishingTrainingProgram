@@ -122,19 +122,21 @@ function assess(report, context = {}) {
   }
 
   for (const row of rows.values()) {
+    // Every expected row is counted exactly once, so `required` is the same number as `expected`
+    // and the rate is the pass rate over required evidence rather than over returned evidence.
+    const required = row.applicable + row.inapplicable + row.missing + row.error_rows;
     row.fraction = `${row.passed}/${row.applicable}`;
-    // Missing and errored results never shrink the required denominator; a rate computed only from
-    // returned results would misreport the gate, so those rows stay unmeasured instead.
-    const required = row.applicable + row.missing + row.error_rows;
-    const rate = row.passed / required;
-    row.verdict = row.applicable === 0 && required === 0 ? 'unmeasured' : rate >= row.threshold ? 'pass' : 'fail';
+    row.rate_denominator = required;
+    row.rate = required === 0 ? null : row.passed / required;
+    row.threshold_rate = row.rate;
+    row.verdict = required === 0 || row.applicable === 0 ? 'unmeasured' : row.rate >= row.threshold ? 'pass' : 'fail';
     if (row.applicable === 0) {
       verdict.issues.push(issue('zero_coverage', { metric: row.metric, partition: row.partition, applicable: 0, expected: row.expected }));
     } else if (row.missing || row.error_rows) {
       row.verdict = 'unmeasured';
       verdict.issues.push(issue('unmeasured_row', { metric: row.metric, partition: row.partition, missing: row.missing, error: row.error_rows, expected: row.expected }));
     } else if (row.verdict !== 'pass') {
-      verdict.issues.push(issue('below_threshold', { metric: row.metric, partition: row.partition, passed: row.passed, applicable: row.applicable, threshold: row.threshold, fraction: row.fraction }));
+      verdict.issues.push(issue('below_threshold', { metric: row.metric, partition: row.partition, passed: row.passed, applicable: row.applicable, threshold: row.threshold, fraction: row.fraction, rate: row.rate }));
     }
   }
   verdict.metrics = [...rows.values()];
@@ -202,10 +204,11 @@ function tally(rows, item, status, policy, result = {}) {
   }
   const row = rows.get(key);
   row.expected += 1;
+  // Each expected row increments exactly one bucket. An errored row is not also applicable:
+  // double counting it would make the reported fraction and the threshold rate disagree.
   if (status === 'not_applicable') row.inapplicable += 1;
   else if (status === 'missing') row.missing += 1;
-  else if (status === 'error') { row.error_rows += 1; row.applicable += 1; }
-  else if (status === 'invalid') row.error_rows += 1;
+  else if (status === 'error' || status === 'invalid') row.error_rows += 1;
   else { row.applicable += 1; if (status === 'pass' && result.pass !== false) row.passed += 1; }
   return row;
 }

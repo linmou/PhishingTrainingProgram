@@ -136,3 +136,41 @@ test('every case referenced by the manifest exists in cases.json with a matching
     }
   }
 });
+
+test('every registered rubric instruction file exists and declares its method, inputs, and result format', () => {
+  const rubricsDir = path.join(__dirname, '..', '..', 'rubrics', 'v1');
+  for (const id of REQUIRED_RUBRIC_IDS) {
+    const file = path.join(rubricsDir, `${id}.md`);
+    assert.ok(fs.existsSync(file), `missing rubric instruction file for ${id}`);
+    const body = fs.readFileSync(file, 'utf8');
+    assert.match(body, /^# /, `${id} rubric needs a title`);
+    assert.match(body, /Intent:/, `${id} rubric needs a one-line intent`);
+    assert.match(body, /Allowed inputs:/, `${id} rubric must name its allowed inputs`);
+    assert.match(body, /pass/, `${id} rubric must state its pass property`);
+    assert.match(body, /missing|error/i, `${id} rubric must state error and missing handling`);
+  }
+  const deterministic = fs.readFileSync(path.join(rubricsDir, 'assessment_followup.md'), 'utf8');
+  assert.match(deterministic, /deterministic/i);
+  assert.match(deterministic, /delivery/i);
+  for (const id of REQUIRED_RUBRIC_IDS) {
+    const declaration = validManifest().rubric_declarations[id];
+    assert.ok(fs.existsSync(path.join(rubricsDir, declaration.file)), `${id} declaration points at a missing file ${declaration.file}`);
+  }
+});
+
+test('registering the transfer rubrics in the shared registry leaves historical v0/v1 meanings intact', () => {
+  const registryPath = path.join(__dirname, '..', '..', 'rubrics', 'v1', 'manifest.json');
+  const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+  const transfer = registry.transfer_registry;
+  assert.ok(transfer, 'the rubric registry must carry a transfer_registry section');
+  assert.deepEqual(transfer.public_metric_ids.slice().sort(), REQUIRED_RUBRIC_IDS.slice().sort());
+  assert.equal(transfer.deterministic_supporting_check_id, 't09_contract_and_progress');
+  assert.equal(transfer.legacy_meanings_changed, false);
+  for (const id of REQUIRED_RUBRIC_IDS) assert.equal(transfer.files[id], `${id}.md`);
+  const historical = registry.checks.filter(check => check.id !== 't09_contract_and_progress');
+  for (const check of historical) {
+    assert.ok(check.version.startsWith('v'), `${check.id} must keep its historical version`);
+    assert.ok(check.method, `${check.id} must keep its declared method`);
+  }
+  assert.ok(!registry.checks.some(check => REQUIRED_RUBRIC_IDS.includes(check.id)), 'transfer rubrics register under transfer_registry, not in the legacy check list');
+});

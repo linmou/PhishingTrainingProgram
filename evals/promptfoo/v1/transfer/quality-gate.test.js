@@ -171,3 +171,41 @@ test('the verdict states the non-substitution boundary and never claims a releas
   assert.deepEqual(verdict.separate_gates.slice().sort(), policy.non_substitution_boundaries.slice().sort());
   assert.equal(verdict.claims_release_acceptance, false);
 });
+
+test('an errored row is counted exactly once, so fraction and rate share one denominator', () => {
+  const report = makeReport();
+  const errored = report.evidence.find(item => item.case_id === 'transfer-regression-covered-reask-005' && item.repetition === 0);
+  const erroredIndex = errored.results.findIndex(result => result.metric === 'medium_transfer_quality');
+  errored.results[erroredIndex] = { ...errored.results[erroredIndex], status: 'error', pass: false, score: 0, reason: 'judge transport failed' };
+  const failed = report.evidence.find(item => item.case_id === 'transfer-regression-covered-reask-005' && item.repetition === 1);
+  const failedIndex = failed.results.findIndex(result => result.metric === 'medium_transfer_quality');
+  failed.results[failedIndex] = { ...failed.results[failedIndex], status: 'fail', pass: false, score: 0, reason: 'brand-only substitution' };
+  const verdict = assess(report, { cases, manifest, policy });
+  const row = verdict.metrics.find(item => item.metric === 'medium_transfer_quality');
+  // Eight expected rows for this metric: six pass, one fail, one error. Each expected row must be
+  // counted exactly once, so the errored row may not also count as applicable.
+  assert.equal(row.expected, 8);
+  assert.equal(row.passed, 6);
+  assert.equal(row.applicable, 7);
+  assert.equal(row.error_rows, 1);
+  assert.equal(row.missing, 0);
+  assert.equal(row.expected, row.applicable + row.inapplicable + row.missing + row.error_rows);
+  assert.equal(row.fraction, '6/7');
+  assert.equal(row.rate_denominator, row.expected);
+  assert.equal(row.rate, 6 / 8);
+  assert.equal(verdict.verdict, 'incomplete');
+  assert.ok(verdict.issues.some(item => item.type === 'unmeasured_row' && item.missing === 0 && item.error === 1));
+});
+
+test('a missing row is counted exactly once in the denominator as well', () => {
+  const report = makeReport();
+  const target = report.evidence.find(item => item.case_id === 'transfer-regression-covered-reask-005' && item.repetition === 0);
+  target.results = target.results.filter(result => result.metric !== 'medium_transfer_quality');
+  const verdict = assess(report, { cases, manifest, policy });
+  const row = verdict.metrics.find(item => item.metric === 'medium_transfer_quality');
+  assert.equal(row.expected, 8);
+  assert.equal(row.missing, 1);
+  assert.equal(row.applicable + row.missing + row.error_rows, row.expected);
+  assert.equal(row.rate_denominator, row.expected);
+  assert.equal(row.rate, row.passed / row.expected);
+});
