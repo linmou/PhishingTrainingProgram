@@ -8,18 +8,18 @@
 
 **Purpose**: Freeze the component evidence vocabulary and fixture layout before implementation.
 
-- [ ] T001 Review `spec.md`, `plan.md`, `data-model.md`, `contracts/tutor-decision-v3.md`, and `contracts/transfer-domain-determinism.md` against the normative transfer runtime package and record the source SHA in the implementation handoff.
-- [ ] T002 [P] Define typed golden-fixture records and stable suite/scenario identifiers in `tutor-system/src/services/__tests__/fixtures/transferAssessmentGoldenFixtures.ts`, including contract version, policy version, expected disposition, progress pair, and evidence reference fields.
-- [ ] T003 Add a fixture manifest index in `tutor-system/src/services/__tests__/fixtures/transferAssessmentGoldenFixtures.ts` for parser boundaries, grader subsets, rendering boundaries, reducer cells, and named lifecycle sequences; include the required beginning-purpose comment.
+- [X] T001 Review `spec.md`, `plan.md`, `data-model.md`, `contracts/tutor-decision-v3.md`, and `contracts/transfer-domain-determinism.md` against the normative transfer runtime package and record the source SHA in the implementation handoff.
+- [X] T002 [P] Define typed golden-fixture records and stable suite/scenario identifiers in `tutor-system/src/services/__tests__/fixtures/transferAssessmentGoldenFixtures.ts`, including contract version, policy version, expected disposition, progress pair, and evidence reference fields.
+- [X] T003 Add a fixture manifest index in `tutor-system/src/services/__tests__/fixtures/transferAssessmentGoldenFixtures.ts` for parser boundaries, grader subsets, rendering boundaries, reducer cells, and named lifecycle sequences; include the required beginning-purpose comment.
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
 **Purpose**: Establish the shared type and privacy boundaries required by every user story.
 
-- [ ] T004 [P] Add contract-fixture tests for component 101's pure public assessment/result shapes and private-field exclusion in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`, leaving API projection tests to component 102.
-- [ ] T005 [P] Add v3 mode/instruction/target/payload matrix tests in `tutor-system/src/services/__tests__/tutorDecisionContract.transfer.test.ts` for tutoring with each real teaching instruction, Guard with `guard`, Guard with each real teaching instruction, assessment with `transfer_assess`, and invalid combinations including Guard with `transfer_assess` or non-null target/assessment before changing validation code.
-- [ ] T006 Reconcile exports and type invariants in `tutor-system/src/types/assessment.ts`, `tutor-system/src/types/learningProgress.ts`, and `tutor-system/src/types/index.ts` so `TutorDecisionV3`, `TransferTurnContext`, public/private assessment data, and valid progress pairs have one owner each.
-- [ ] T007 Add a deterministic fixture schema validation test in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`, beginning with the required file-purpose comment, proving every fixture has a unique ID, supported contract/policy version, and an expected observable result.
+- [X] T004 [P] Add contract-fixture tests for component 101's pure public assessment/result shapes and private-field exclusion in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`, leaving API projection tests to component 102.
+- [X] T005 [P] Add v3 mode/instruction/target/payload matrix tests in `tutor-system/src/services/__tests__/tutorDecisionContract.transfer.test.ts` for tutoring with each real teaching instruction, Guard with `guard`, Guard with each real teaching instruction, assessment with `transfer_assess`, and invalid combinations including Guard with `transfer_assess` or non-null target/assessment before changing validation code.
+- [X] T006 Reconcile exports and type invariants in `tutor-system/src/types/assessment.ts`, `tutor-system/src/types/learningProgress.ts`, and `tutor-system/src/types/index.ts` so `TutorDecisionV3`, `TransferTurnContext`, public/private assessment data, and valid progress pairs have one owner each.
+- [X] T007 Add a deterministic fixture schema validation test in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`, beginning with the required file-purpose comment, proving every fixture has a unique ID, supported contract/policy version, and an expected observable result.
 
 ## Phase 3: User Story 1 - Resolve a Delivered Assessment Answer Once (Priority: P1)
 
@@ -29,15 +29,15 @@
 
 ### Tests for User Story 1
 
-- [ ] T008 [P] [US1] Extend parser boundary tests in `tutor-system/src/services/__tests__/assessmentAnswerParser.test.ts` for exact option text, case/Unicode/full-width normalization, trailing question marks, prefix forms, malformed combinations, ambiguous alternatives, content questions, and semantic near-misses.
-- [ ] T009 [P] [US1] Extend exhaustive grader tests in `tutor-system/src/services/__tests__/assessmentGrading.test.ts` to evaluate all 16 A-D subsets, duplicate/order normalization, representative single/multiple keys, empty selections, incomplete selections, and over-inclusive selections.
-- [ ] T010 [US1] Add first-valid answer-resolution and lifecycle sequence tests in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`, beginning with the required file-purpose comment, for undelivered, correct-with-reason, clarification, assistance, duplicate, stale, and no-chain outcomes.
+- [X] T008 [P] [US1] Extend parser boundary tests in `tutor-system/src/services/__tests__/assessmentAnswerParser.test.ts` for exact option text, case/Unicode/full-width normalization, trailing question marks, prefix forms, malformed combinations, ambiguous alternatives, content questions, and semantic near-misses.
+- [X] T009 [P] [US1] Extend exhaustive grader tests in `tutor-system/src/services/__tests__/assessmentGrading.test.ts` to evaluate all 16 A-D subsets, duplicate/order normalization, representative single/multiple keys, empty selections, incomplete selections, and over-inclusive selections.
+- [X] T010 [US1] Add first-valid answer-resolution and lifecycle sequence tests in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`, beginning with the required file-purpose comment, for undelivered, correct-with-reason, clarification, assistance, duplicate, stale, and no-chain outcomes.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement the parser behavior specified in `contracts/transfer-domain-determinism.md` in `tutor-system/src/services/assessmentAnswerParser.ts`, preserving explicit-label-only selection and stable clarification/not-selection categories.
-- [ ] T012 [US1] Implement exact-set grading and input normalization constraints in `tutor-system/src/services/assessmentGrading.ts`, keeping explanation text outside the grading decision.
-- [ ] T013 [US1] Extend the pure resolver boundary in `tutor-system/src/services/transferAssessmentOrchestrator.ts` to return stable undelivered, unresolved, passed, failed, assisted, duplicate, and stale dispositions without persistence writes.
+- [X] T011 [US1] Implement the parser behavior specified in `contracts/transfer-domain-determinism.md` in `tutor-system/src/services/assessmentAnswerParser.ts`, preserving explicit-label-only selection and stable clarification/not-selection categories.
+- [X] T012 [US1] Implement exact-set grading and input normalization constraints in `tutor-system/src/services/assessmentGrading.ts`, keeping explanation text outside the grading decision.
+- [X] T013 [US1] Extend the pure resolver boundary in `tutor-system/src/services/transferAssessmentOrchestrator.ts` to return stable undelivered, unresolved, passed, failed, assisted, duplicate, and stale dispositions without persistence writes.
 
 **Checkpoint**: US1 is complete when all explicit parser boundaries and all A-D subsets pass, undelivered/first-valid/clarification/assistance behavior is stable, and later answers cannot create a second effect.
 
@@ -49,14 +49,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T014 [P] [US2] Add the complete 28-cell state/event matrix to `tutor-system/src/services/__tests__/learningProgressTransitions.test.ts`, including invalid progress pairs and rejected pass/fail transitions.
-- [ ] T015 [P] [US2] Add stateful progress sequence fixtures and assertions in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for fail/recover, no repair, contradiction reopening, spontaneous transfer, and multi-target preservation.
+- [X] T014 [P] [US2] Add the complete 28-cell state/event matrix to `tutor-system/src/services/__tests__/learningProgressTransitions.test.ts`, including invalid progress pairs and rejected pass/fail transitions.
+- [X] T015 [P] [US2] Add stateful progress sequence fixtures and assertions in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for fail/recover, no repair, contradiction reopening, spontaneous transfer, and multi-target preservation.
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Align the valid progress pair types and guards in `tutor-system/src/types/learningProgress.ts` with the four-row model in `data-model.md` without adding a mastery field or default dataclass-like values.
-- [ ] T017 [US2] Complete the transition table in `tutor-system/src/services/learningProgressTransitions.ts`, including repair gating, spontaneous transfer, contradiction reopening, no-change preservation, and deterministic invalid-transition errors.
-- [ ] T018 [US2] Wire reducer outcomes into the pure answer-resolution/orchestrator result model in `tutor-system/src/services/transferAssessmentOrchestrator.ts` without allowing React effects, prompts, or the model to become a second progression authority.
+- [X] T016 [US2] Align the valid progress pair types and guards in `tutor-system/src/types/learningProgress.ts` with the four-row model in `data-model.md` without adding a mastery field or default dataclass-like values.
+- [X] T017 [US2] Complete the transition table in `tutor-system/src/services/learningProgressTransitions.ts`, including repair gating, spontaneous transfer, contradiction reopening, no-change preservation, and deterministic invalid-transition errors.
+- [X] T018 [US2] Wire reducer outcomes into the pure answer-resolution/orchestrator result model in `tutor-system/src/services/transferAssessmentOrchestrator.ts` without allowing React effects, prompts, or the model to become a second progression authority.
 
 **Checkpoint**: US2 is complete when every matrix cell and named progress sequence has an explicit fixture result and the implementation never produces an invalid status/understanding pair.
 
@@ -68,16 +68,16 @@
 
 ### Tests for User Story 3
 
-- [ ] T019 [P] [US3] Extend v3 contract tests in `tutor-system/src/services/__tests__/tutorDecisionContract.transfer.test.ts` for reason-first serialization; tutoring with a real teaching instruction; Guard with `guard` or a real teaching instruction and null target/assessment; assessment with `transfer_assess`, known target, and payload; plus invalid IDs, option text uniqueness, key cardinality, source evidence, and private-field handling.
-- [ ] T020 [P] [US3] Extend rendering tests in `tutor-system/src/services/__tests__/assessmentRendering.test.ts` for canonical A-D order, single/multiple instructions, exactly four options, 80/81 word-like segments, and two/three stem sentences.
-- [ ] T021 [P] [US3] Add assessment validation tests in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for unknown message IDs, malformed public/private payloads, stale snapshot data, and every invalid rendering boundary.
+- [X] T019 [P] [US3] Extend v3 contract tests in `tutor-system/src/services/__tests__/tutorDecisionContract.transfer.test.ts` for reason-first serialization; tutoring with a real teaching instruction; Guard with `guard` or a real teaching instruction and null target/assessment; assessment with `transfer_assess`, known target, and payload; plus invalid IDs, option text uniqueness, key cardinality, source evidence, and private-field handling.
+- [X] T020 [P] [US3] Extend rendering tests in `tutor-system/src/services/__tests__/assessmentRendering.test.ts` for canonical A-D order, single/multiple instructions, exactly four options, 80/81 word-like segments, and two/three stem sentences.
+- [X] T021 [P] [US3] Add assessment validation tests in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for unknown message IDs, malformed public/private payloads, stale snapshot data, and every invalid rendering boundary.
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Align `TutorDecisionV3`, `TransferTurnContext`, and public/private assessment types in `tutor-system/src/types/assessment.ts` with `contracts/tutor-decision-v3.md`, ensuring component 101 public contracts contain no answer key, transfer basis, API operation, or transport field.
-- [ ] T023 [US3] Complete structural v3 and assessment-draft validation in `tutor-system/src/services/tutorDecisionContract.ts` and `tutor-system/src/services/assessmentValidation.ts`, accepting Guard with `guard` or a real teaching instruction only when target/assessment are null while preserving tutoring/assessment rules, known target/message checks, and stable invalid-category errors.
-- [ ] T024 [US3] Complete canonical rendering and boundary validation in `tutor-system/src/services/assessmentRendering.ts`, including inclusive/exclusive segment and sentence limits and exact option count.
-- [ ] T025 [US3] Define and test component 101's pure public assessment and lifecycle-result output types in `tutor-system/src/types/assessment.ts` and `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for component 102 consumption, without implementing API projection.
+- [X] T022 [US3] Align `TutorDecisionV3`, `TransferTurnContext`, and public/private assessment types in `tutor-system/src/types/assessment.ts` with `contracts/tutor-decision-v3.md`, ensuring component 101 public contracts contain no answer key, transfer basis, API operation, or transport field.
+- [X] T023 [US3] Complete structural v3 and assessment-draft validation in `tutor-system/src/services/tutorDecisionContract.ts` and `tutor-system/src/services/assessmentValidation.ts`, accepting Guard with `guard` or a real teaching instruction only when target/assessment are null while preserving tutoring/assessment rules, known target/message checks, and stable invalid-category errors.
+- [X] T024 [US3] Complete canonical rendering and boundary validation in `tutor-system/src/services/assessmentRendering.ts`, including inclusive/exclusive segment and sentence limits and exact option count.
+- [X] T025 [US3] Define and test component 101's pure public assessment and lifecycle-result output types in `tutor-system/src/types/assessment.ts` and `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for component 102 consumption, without implementing API projection.
 
 **Checkpoint**: US3 is complete when valid v3 decisions normalize predictably, invalid contract cases reject, rendering boundaries are deterministic, and 101's pure public output contracts contain no private assessment or transport material.
 
@@ -89,15 +89,15 @@
 
 ### Tests for User Story 4
 
-- [ ] T026 [P] [US4] Add golden sequence tests in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for pass -> tutoring feedback -> no retest, fail -> repair -> new signal -> different context, no repair, clarification, assistance, correct-with-reason, contradiction, spontaneous transfer, and multi-target behavior.
-- [ ] T027 [P] [US4] Add duplicate/stale/no-chain tests in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts` for repeated delivery events, repeated answers, stale draft inputs, stale progress snapshots, and feedback-before-assessment enforcement.
-- [ ] T028 [US4] Add the Guard/protective-priority boundary tests in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`, proving a wrong answer alone does not enter Guard and an independently required Guard/protective response can defer transfer processing.
+- [X] T026 [P] [US4] Add golden sequence tests in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts` for pass -> tutoring feedback -> no retest, fail -> repair -> new signal -> different context, no repair, clarification, assistance, correct-with-reason, contradiction, spontaneous transfer, and multi-target behavior.
+- [X] T027 [P] [US4] Add duplicate/stale/no-chain tests in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts` for repeated delivery events, repeated answers, stale draft inputs, stale progress snapshots, and feedback-before-assessment enforcement.
+- [X] T028 [US4] Add the Guard/protective-priority boundary tests in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`, proving a wrong answer alone does not enter Guard and an independently required Guard/protective response can defer transfer processing.
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Implement the pure transfer assessment orchestrator in `tutor-system/src/services/transferAssessmentOrchestrator.ts`, beginning with the required shebang and file-purpose comment, with explicit delivery, resolution, feedback-required, repair, stale, duplicate, and no-chain state transitions.
-- [ ] T030 [US4] Compose `TransferTurnContext`, parser, grader, renderer/validator, and reducer outputs behind the pure entry point in `tutor-system/src/services/transferAssessmentOrchestrator.ts`, returning only the typed outputs component 102 needs for facade integration.
-- [ ] T031 [US4] Add deterministic public exports and consumer-facing result types in `tutor-system/src/types/index.ts` for downstream backend/UI/evaluation consumers without importing private answer material.
+- [X] T029 [US4] Implement the pure transfer assessment orchestrator in `tutor-system/src/services/transferAssessmentOrchestrator.ts`, beginning with the required shebang and file-purpose comment, with explicit delivery, resolution, feedback-required, repair, stale, duplicate, and no-chain state transitions.
+- [X] T030 [US4] Compose `TransferTurnContext`, parser, grader, renderer/validator, and reducer outputs behind the pure entry point in `tutor-system/src/services/transferAssessmentOrchestrator.ts`, returning only the typed outputs component 102 needs for facade integration.
+- [X] T031 [US4] Add deterministic public exports and consumer-facing result types in `tutor-system/src/types/index.ts` for downstream backend/UI/evaluation consumers without importing private answer material.
 
 **Checkpoint**: US4 is complete when every required lifecycle sequence produces one stable result and no sequence creates an automatic second assessment before feedback and new evidence.
 
@@ -105,11 +105,11 @@
 
 **Purpose**: Verify the component package and prepare an evidence-complete handoff without claiming downstream gates.
 
-- [ ] T032 [P] Run the exact focused W2 suite from `specs/101-transfer-domain/quickstart.md` and record exit status, test counts, and fixture manifest version.
-- [ ] T033 [P] Run `npx tsc --noEmit` from `tutor-system/` and record type-check results for all modified public contracts.
-- [ ] T034 Run `CI=true npm run test:regression -- --runInBand` and `npm run build` from `tutor-system/`; preserve failures and distinguish unrelated baseline failures from W2 failures.
-- [ ] T035 Review `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md` after implementation changes, update it only if the implemented public contract changes, and record the change in `tutor-system/claude_docs/doc_update_record/documentation_update_record_v20260911_transfer_domain.md`.
-- [ ] T036 Produce `specs/101-transfer-domain/implementation-handoff.md` with changed public contracts, fixture/test counts, exact commands, unrun downstream gates, disabled feature flag status, and integration risks for 102 backend and 104 evaluation.
+- [X] T032 [P] Run the exact focused W2 suite from `specs/101-transfer-domain/quickstart.md` and record exit status, test counts, and fixture manifest version.
+- [X] T033 [P] Run `npx tsc --noEmit` from `tutor-system/` and record type-check results for all modified public contracts.
+- [X] T034 Run `CI=true npm run test:regression -- --runInBand` and `npm run build` from `tutor-system/`; preserve failures and distinguish unrelated baseline failures from W2 failures.
+- [X] T035 Review `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md` after implementation changes, update it only if the implemented public contract changes, and record the change in `tutor-system/claude_docs/doc_update_record/documentation_update_record_v20260911_transfer_domain.md`.
+- [X] T036 Produce `specs/101-transfer-domain/implementation-handoff.md` with changed public contracts, fixture/test counts, exact commands, unrun downstream gates, disabled feature flag status, and integration risks for 102 backend and 104 evaluation.
 
 ## Dependencies and Execution Order
 
