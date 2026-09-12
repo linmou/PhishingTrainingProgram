@@ -6,42 +6,44 @@ Specify how W7-W8 consumes component 101's shared assessment/progress types and 
 
 ## Teacher operations
 
-Component 102's browser facade exports typed methods and envelopes for these operations. This table is a consumer dependency, not a component-103 service definition:
+Component 102's browser facade exports exactly these six typed methods. This table is a consumer dependency, not a component-103 service definition:
 
-| Operation | Request identity | Response consumed by UI |
+| Operation (facade method) | Request identity | Response consumed by UI |
 |---|---|---|
-| `capabilities` | `room_id` | `enabled`, `policy_available`, `can_review_assessment`, optional `reason` |
-| `prepare_turn` | `room_id`, `focus_student_message_id`, `checklist_id` | `TeacherAssessmentDraftDTO` or an explicit unavailable/error result |
-| `review_draft` | `draft_id`, `expected_revision`, structured final payload, `content_confirmed` | accepted revision/hash or explicit validation/stale result |
-| `send_reviewed` | `draft_id`, expected revision, expected final hash | delivered message public projection, room participation projection, and lifecycle identity |
-| `reject_draft` | current draft identity and expected revision | `rejected` or idempotent lifecycle result; no learner message |
-| `regenerate_draft` | current draft identity and stable focus identity | replacement `TeacherAssessmentDraftDTO` or explicit stale/unavailable result; no learner message |
-| `post_message` | `room_id`, content, optional `parent_message_id`, optional `assessment_id` | persisted message projection and lifecycle result |
-| `process_message` | persisted answer/message ID | structured server decision/lifecycle result, never a client grade or progress write instruction |
-| `analyze_message` | persisted message ID and room ID | explicit evidence/lifecycle result for the server-owned path |
+| `initialize_checklist` (`initializeChecklist`) | `roomId`, `studentId`, `templateName` | `{ checklist_id }` |
+| `prepare_turn` (`prepareTurn`) | `roomId`, `focusStudentMessageId`, `checklistId` | the generated candidate `TutorDecisionV3` decision plus the prepared scope identity (`room_id`, `student_id`, `checklist_id`, `item_id`, `focus_student_message_id`) and the server's informational `progress_snapshot_hash` echo |
+| `send_reviewed` (`sendReviewed`) | `reviewedPayload` (`TutorDecisionV3`), `roomId`, `studentId`, `checklistId`, `itemId` (`string \| null`), `focusStudentMessageId` | `ReviewedDeliveryDTO` = delivered `PublicMessageDTO` plus the updated `Room` |
+| `post_message` (`postMessage`) | `roomId`, content, optional `replyToMessageId`, optional `assessmentId` | persisted message row (`Record<string, unknown>`) that the UI must project before it enters React state |
+| `process_message` (`processMessage`) | persisted answer/message ID | `ProcessedMessageDTO` = the server's own grading lifecycle result, never a client grade or progress write instruction |
+| `analyze_message` (`analyzeMessage`) | persisted message ID and room ID | explicit evidence/lifecycle result for the server-owned path |
 
-Component 102 must type successful and failed envelopes and owns any API compatibility logic. Component 103's React adapter consumes only those exported typed envelopes and maps them into UI states; it must not accept `Record<string, unknown>` or recreate API operation mapping.
+There is no `capabilities`, no `review_draft`, no `reject_draft`, and no `regenerate_draft` operation. Teacher confirmation is UI-local review state; the only persistence call on the review path is `sendReviewed`. `sendReviewed` carries no expected draft revision and no expected content hash, because no draft row exists.
 
-## Private teacher draft allowlist
+Component 102 types the successful and failed envelopes (`AssessmentApiEnvelope<T>`, `AssessmentApiError`, `TransferAssessmentServiceOptions`) and owns API compatibility logic and the injectable transport used by tests. Component 103's React adapter consumes only those exported envelopes and maps them into UI states; it must not recreate API operation mapping or treat raw provider output as a DTO.
+
+## Private teacher review allowlist
 
 The teacher editor may receive:
 
-- draft identity, revision, expected snapshot hash;
-- selected learner/source message/checklist/item identity;
-- structured decision fields required for teacher review, including answer key and transfer basis;
-- validation/rejection/regeneration status needed to render the lifecycle.
+- selected learner/source message/checklist/item identity from `prepareTurn`;
+- the structured candidate decision required for teacher review, including answer key and transfer basis;
+- the local review status the teacher's own screen derives (`preparing`, `dirty`, `ready`, `sending`, `delivered`, `unavailable`, `validation`, `superseded`, `retryable`).
 
-This projection is never sent to learner components, learner exports, browser-wide broadcast events, or public message payloads.
+It may not receive or display a draft identity, a draft revision, or an expected snapshot hash, because none of those exist. This projection is never sent to learner components, learner exports, browser-wide broadcast events, or public message payloads.
 
 ## Public learner assessment allowlist
 
-Learner components import component 102's exported `PublicAssessmentDTO` directly and consume only its assessment identity, selection type, stem, rendered text, and ordered option fields. Component 103 does not redeclare this type. The message's assessment identity links the public projection to its delivered question.
+Learner components import component 102's exported `PublicAssessmentDTO` directly and consume only its assessment identity, selection type, stem, rendered text, and ordered option fields. Component 103 does not redeclare this type. The delivered tutor message is the question: its own `id` is the assessment identity and its `content` is the stem.
 
-The projection has no `correct_option_ids`, `transfer_basis`, private `reason`, draft revision, snapshot hash, provider output, or teacher action. The renderer derives no answer key and does not perform semantic grading.
+The projection has no `correct_option_ids`, `transfer_basis`, private `reason`, provider output, or teacher action. The renderer derives no answer key and does not perform semantic grading.
+
+Recorded upstream limitation: the promoted one-table design stores only the ordered options on the delivered message (`messages.assessment_options`). It does not persist `selection_type` or `rendered_text`, and the public message DTO allowlist does not carry them either, so a room reload cannot reconstruct a complete `PublicAssessmentDTO` from persisted state. The UI therefore renders the stem and the ordered options from the message, renders the canonical instruction only when a selection type is explicitly available, and otherwise shows an explicit unavailable-instruction state. It never infers the selection type from the assessment key and never reads `assessment_key` at all.
 
 ## Message relationship contract
 
-Every assessment answer message must preserve the persisted `assessment_id` and its actual `parent_message_id` when a question is being answered. An ordinary learner message has no assessment identity. A UI retry must reuse the upstream idempotency/request identity and must merge the returned persisted message by ID.
+Every assessment answer message must preserve the persisted assessment identity and its actual `parent_message_id` when a question is being answered. An ordinary learner message has no assessment identity. A UI retry must reuse the upstream request identity and must merge the returned persisted message by ID.
+
+`itemId` is `string | null`. A tutoring or Guard turn has no checklist item, and the browser must pass `null` rather than the string `"null"`, which the server rejects as an invalid UUID.
 
 ## Mode contract
 
@@ -56,16 +58,18 @@ The UI rejects missing instructions, `assessment` without `transfer_assess`, tut
 
 ## React state adaptation
 
-The component-103 adapter imports component 101/102 exports unchanged and defines its React-only draft, public-question, and lifecycle view-state types alongside their mappings in `src/contexts/transferAssessmentUiAdapter.ts`. It maps component 102's exported envelope variants into these states without exposing raw provider output:
+The component-103 adapter imports component 101/102 exports unchanged and defines its React-only review, public-question, and lifecycle view-state types alongside their mappings in `src/contexts/transferAssessmentUiAdapter.ts`. It maps component 102's thrown service errors and returned projections into these states without exposing raw provider output:
 
-- `unavailable`: capability disabled or trusted operation unavailable;
-- `validation`: malformed or semantically invalid draft/public payload;
-- `stale`: revision/hash/snapshot conflict;
-- `duplicate`: idempotent replay whose persisted result can be shown;
-- `unauthorized`: no data or action is rendered;
-- `retryable`: transient ingress/send failure with a safe retry action;
-- `lifecycle`: rejected, assisted, invalidated, or already-resolved question outcome.
+- `unavailable`: the capability is disabled or the trusted operation is not configured (`ASSESSMENT_FEATURE_DISABLED`, `AI_PROVIDER_NOT_CONFIGURED`, `AUTHORIZATION_NOT_CONFIGURED`);
+- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, local `parseTutorDecisionV3` rejection);
+- `superseded`: the server reports that persisted state already covers this delivery or the identity no longer matches (`ASSESSMENT_ALREADY_OPEN`, `WRONG_LEARNER`, `LEGACY_CHECKLIST`); nothing is rendered as delivered;
+- `duplicate`: an idempotent replay whose persisted result can be shown once;
+- `unauthorized`: no data or action is rendered (`FORBIDDEN`, `UNAUTHORIZED`);
+- `retryable`: transient transport or provider failure with a safe retry action;
+- `lifecycle`: the server's own answer outcome, including unresolved-format, already-processed, assisted, and invalidated results.
+
+These states are view state only. They are never progress state and never a substitute for a server result.
 
 ## Contract ownership
 
-Component 101 owns shared assessment/progress domain types and exports, including `src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`. Component 102 owns `transferAssessmentService.ts`, API DTO/envelope exports, `reject_draft`/`regenerate_draft` and all other operation mapping, authorization, atomicity, idempotency, private field enforcement, and service contract tests. Component 103 owns React-specific narrowing and adapter-local view-state types in UI-owned files, room state merge, rendering, and role-specific display tests. Component 105 owns release-browser evidence.
+Component 101 owns shared assessment/progress domain types and exports, including `src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`. Component 102 owns `transferAssessmentService.ts`, API DTO/envelope exports, the six-operation mapping, authorization, atomicity, idempotency, private field enforcement, and service contract tests. Component 103 owns React-specific narrowing and adapter-local view-state types in UI-owned files, room state merge, rendering, and role-specific display tests. Component 105 owns release-browser evidence.

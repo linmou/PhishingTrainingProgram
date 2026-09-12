@@ -18,10 +18,10 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 **Purpose**: Establish the upstream boundary and focused test fixtures without changing production behavior.
 
-- [ ] T001 Review `specs/103-transfer-room-ui/spec.md`, `plan.md`, `data-model.md`, `contracts/room-ui-contracts.md`, and `quickstart.md` against component 101's shared assessment/progress exports and component 102's exported `TeacherAssessmentDraftDTO`, `PublicAssessmentDTO`, typed envelopes, and `reject_draft`/`regenerate_draft` methods; record any incompatible upstream shape in `specs/103-transfer-room-ui/research.md` without editing upstream shared type or service files.
+- [ ] T001 Review `specs/103-transfer-room-ui/spec.md`, `plan.md`, `data-model.md`, `contracts/room-ui-contracts.md`, and `quickstart.md` against component 101's shared assessment/progress exports and component 102's promoted six-operation facade (`initializeChecklist`, `postMessage`, `prepareTurn`, `sendReviewed`, `processMessage`, `analyzeMessage`) with its `PublicAssessmentDTO`, `PublicMessageDTO`/`PUBLIC_MESSAGE_DTO_KEYS`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, `AssessmentApiEnvelope`/`AssessmentApiError`, and `PUBLIC_ASSESSMENT_FORBIDDEN_KEYS` exports; record the reconciliation and any incompatible upstream shape in `specs/103-transfer-room-ui/research.md` without editing upstream shared type or service files.
 - [ ] T002 [P] Freeze the original-plan SHA-256 and W7/W8 ownership references in `specs/103-transfer-room-ui/research.md` without editing `plan/transfer_assessment_implementation_plan.md`.
-- [ ] T003 [P] Add shared room/message/draft/public-assessment fixtures with multiple learners and stable IDs in `tutor-system/src/__tests__/fixtures/transferRoomFixtures.ts`.
-- [ ] T004 [P] Add a test helper that asserts forbidden private fields are absent from learner React state, message projections, exports, and other browser-facing state in `tutor-system/src/__tests__/helpers/transferPrivacyAssertions.ts`.
+- [ ] T003 [P] Add shared room/message/review-candidate/public-assessment fixtures with multiple learners and stable IDs in `tutor-system/src/test-support/transferRoomFixtures.ts`. Path corrected from `src/__tests__/fixtures/`: anything under `src/__tests__/` is collected by this repository's Jest `testMatch` and fails as an empty suite.
+- [ ] T004 [P] Add a test helper that asserts forbidden private fields (including `assessment_key`) are absent from learner React state, message projections, exports, and other browser-facing state in `tutor-system/src/test-support/transferPrivacyAssertions.ts`. Same path correction as T003; the helper throws plain `Error`s and uses no Jest global so it can also be imported outside Jest.
 
 ## Phase 2: Foundational (Typed Boundary and UI State Primitives)
 
@@ -29,7 +29,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 - [ ] T005 [P] Add React adapter contract tests that import component 102's exported DTO/envelope types and cover teacher-private versus learner-public view projection, required identity, and fail-closed state mapping in `tutor-system/src/contexts/__tests__/transferAssessmentUiAdapter.test.ts`.
 - [ ] T006 [P] Add UI adapter tests for assessment/room mode compatibility, missing instructions, unknown targets, and public rendering state in `tutor-system/src/contexts/__tests__/transferAssessmentUiAdapter.contract.test.ts`.
-- [ ] T007 Add the React-only draft/public-question/lifecycle view-state definitions in `tutor-system/src/contexts/transferAssessmentUiAdapter.ts`, importing component 101/102 exports unchanged and introducing no progress or mastery field.
+- [ ] T007 Add the React-only review-candidate/public-question/lifecycle view-state definitions in `tutor-system/src/contexts/transferAssessmentUiAdapter.ts`, importing component 101/102 exports unchanged and introducing no progress or mastery field.
 - [ ] T008 Implement a single stable-identity merge helper for persisted messages, optimistic replacement, realtime inserts, and reconnect catch-up in `tutor-system/src/contexts/RoomContext.tsx`, preserving pre-populated legacy messages and chronological ordering.
 - [ ] T009 Implement the envelope-to-view-state mappings in `tutor-system/src/contexts/transferAssessmentUiAdapter.ts`, consuming component 101 domain exports and component 102 DTO/envelope exports without redeclaring shared types or API operations.
 
@@ -39,23 +39,23 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 **Goal**: Deliver one reviewed, confirmed, non-stale structured assessment without phantom messages or progress writes.
 
-**Independent Test**: Prepare a draft for learner A and source message A, edit it, reconfirm it, send it, and verify the request identities, public delivered message, room tutoring mode, and stale/rejected behavior.
+**Independent Test**: Prepare a candidate for learner A and source message A, edit it, reconfirm it, send it, and verify the request identities, public delivered message, room tutoring mode, and superseded/refused behavior.
 
 ### Tests for User Story 1
 
 - [ ] T010 [P] [US1] Add `AssessmentDraftEditor` tests for rendering four ordered options, single/multiple key cardinality, validation failure, dirty-edit confirmation reset, explicit reconfirmation, and no direct progress controls in `tutor-system/src/components/__tests__/AssessmentDraftEditor.test.tsx`.
-- [ ] T011 [P] [US1] Add RoomContext integration tests for focus student/message/checklist/item identity, expected revision/hash, review-then-send ordering, and room tutoring mode in `tutor-system/src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx`.
-- [ ] T012 [P] [US1] Add page integration tests for reject, regenerate, dirty draft, stale revision, stale hash, retryable send failure, and no phantom learner message in `tutor-system/src/pages/__tests__/RoomPagePost.transferDraft.test.tsx`.
+- [ ] T011 [P] [US1] Add RoomContext integration tests for focus student/message/checklist/item identity, the confirmed-payload delivery identity sent to `sendReviewed`, review-then-send ordering, and room tutoring mode in `tutor-system/src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx`.
+- [ ] T012 [P] [US1] Add page integration tests for discarding an unconfirmed candidate, dirty candidate state, a superseded (already-open) delivery refused by the server, retryable send failure, and no phantom learner message in `tutor-system/src/pages/__tests__/RoomPagePost.transferDraft.test.tsx`.
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Update `tutor-system/src/components/AssessmentDraftEditor.tsx` to expose explicit dirty, validating, confirmed, stale, rejected, and saving states while preserving structured edits and server validation.
-- [ ] T014 [US1] Update `tutor-system/src/contexts/transferAssessmentUiAdapter.ts` to map component 102's typed prepare/review/send/`reject_draft`/`regenerate_draft` envelope variants into ready, rejected, replacement, stale, validation, unavailable, duplicate, and retryable React states without recreating operation mapping or exposing raw provider output.
-- [ ] T015 [US1] Update `tutor-system/src/contexts/RoomContext.tsx` to retain selected learner/message/checklist/item focus, clear confirmation after edits, pass expected revision/hash, merge persisted send results once, and keep progress untouched.
-- [ ] T016 [US1] Update `tutor-system/src/pages/RoomPagePost.tsx` to show the structured teacher editor only for an authorized transfer draft, route reject/regenerate/reconfirm/send actions, and preserve the legacy `AISuggestionBox` path for legacy rooms.
-- [ ] T017 [US1] Update `tutor-system/src/components/AISuggestionBox.tsx` only where needed to avoid treating a structured transfer draft as copy-only text or as a room-mode toggle; preserve existing non-transfer quick-adjust behavior.
+- [ ] T013 [US1] Update `tutor-system/src/components/AssessmentDraftEditor.tsx` to expose explicit dirty, validating, confirmed, saving, and server-failure states while preserving structured edits and production validation. Much of the existing behavior is already implemented and is tested rather than rewritten.
+- [ ] T014 [US1] Update `tutor-system/src/contexts/transferAssessmentUiAdapter.ts` to map component 102's `prepareTurn` projection and thrown `sendReviewed` failures into ready, dirty, superseded, validation, unavailable, unauthorized, duplicate, and retryable React states without recreating operation mapping or exposing raw provider output.
+- [ ] T015 [US1] Update `tutor-system/src/contexts/RoomContext.tsx` to retain selected learner/message/checklist/item focus (with `itemId` kept `string | null`), clear confirmation after edits, send the confirmed decision with its scope identity, merge persisted send results once, and keep progress untouched.
+- [ ] T016 [US1] Update `tutor-system/src/pages/RoomPagePost.tsx` to show the structured teacher editor only for an authorized transfer candidate, route reconfirm/send/discard actions, and preserve the legacy `AISuggestionBox` path for legacy rooms.
+- [ ] T017 [US1] Update `tutor-system/src/components/AISuggestionBox.tsx` only where needed to avoid treating a structured transfer candidate as copy-only text or as a room-mode toggle; preserve existing non-transfer quick-adjust behavior.
 
-**Checkpoint**: A teacher can review and send one current structured draft; edited, rejected, regenerated, or stale drafts remain unsent until explicitly valid and confirmed.
+**Checkpoint**: A teacher can review and send one confirmed structured candidate; edited, discarded, or server-refused candidates remain unsent.
 
 ## Phase 4: User Story 2 - Learner Sees and Answers a Public Question (Priority: P1)
 
@@ -72,7 +72,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 ### Implementation for User Story 2
 
-- [ ] T022 [US2] Update `tutor-system/src/components/ChatMessage.tsx` and `tutor-system/src/components/PostComment.tsx` to render a public assessment projection attached to a delivered message, using only `PublicAssessmentDTO` and never a private draft/key object.
+- [ ] T022 [US2] Update `tutor-system/src/components/ChatMessage.tsx` and `tutor-system/src/components/PostComment.tsx` to render a public assessment projection attached to a delivered message, using only `PublicAssessmentDTO` and never a private candidate/key object.
 - [ ] T023 [US2] Update `tutor-system/src/contexts/RoomContext.tsx` and `tutor-system/src/pages/RoomPagePost.tsx` to forward learner answer content, delivered assessment identity, and persisted question parent ID through the existing chat send path.
 - [ ] T024 [US2] Update `tutor-system/src/contexts/transferAssessmentUiAdapter.ts` and `tutor-system/src/contexts/RoomContext.tsx` to preserve component 102's structured first-valid-answer, duplicate, ambiguous, assisted, stale, and invalidated envelope variants without parsing, grading, or remapping API operations in React.
 - [ ] T025 [US2] Update `tutor-system/src/components/ChecklistPanel.tsx` and `tutor-system/src/hooks/useChecklist.ts` so transfer-policy progress is displayed owner-scoped and remains read-only, while legacy checklist controls retain their explicit legacy path.
@@ -88,13 +88,13 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 ### Tests for User Story 3
 
 - [ ] T026 [P] [US3] Add RoomContext ingress tests for realtime-before-fetch, duplicate realtime insert, polling/realtime overlap, reconnect catch-up, reload persistence, and stable chronological merge in `tutor-system/src/contexts/__tests__/RoomContext.transferIngress.test.tsx`.
-- [ ] T027 [P] [US3] Add retry/idempotency tests for timeout-then-retry, duplicate send result, duplicate answer, and stale draft from a second tab in `tutor-system/src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx`.
+- [ ] T027 [P] [US3] Add retry/idempotency tests for timeout-then-retry, duplicate send result, duplicate answer, and an already-open delivery refused from a second tab in `tutor-system/src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx`.
 - [ ] T028 [P] [US3] Add mode compatibility tests for tutoring, Guard, assessment turn delivery, manual Guard change, Guard recovery, invalid mode/instruction pairs, and no assessment room mode in `tutor-system/src/contexts/__tests__/RoomContext.transferModes.test.tsx`.
 - [ ] T029 [P] [US3] Add page tests for reload/catch-up UI states, unavailable capability, stale conflict messaging, and preserving the current selected learner in `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`.
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to route initial fetch, realtime, polling, optimistic replacement, and reconnect catch-up through the stable-ID merge helper and to retain focus/draft state across reload-safe responses.
+- [ ] T030 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to route initial fetch, realtime, polling, optimistic replacement, and reconnect catch-up through the stable-ID merge helper and to retain focus/review-candidate state across reload-safe responses.
 - [ ] T031 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to use upstream idempotency and stale outcomes for send/retry rather than appending a second local message or reprocessing a resolved answer.
 - [ ] T032 [US3] Update `tutor-system/src/pages/RoomPage.tsx` and `tutor-system/src/pages/RoomPagePost.tsx` to render explicit loading, unavailable, stale, retryable, and catch-up states without switching legacy rooms to transfer behavior.
 - [ ] T033 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` and `tutor-system/src/components/AISuggestionBox.tsx` so assessment turn decisions cannot be coerced into `RoomParticipationMode`, and Guard recovery remains a reviewed tutoring action.
@@ -138,7 +138,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - Phase 1 has no implementation dependency and freezes the upstream fixture boundary.
 - Phase 2 depends on Phase 1 and component 102's exported typed service contract; it blocks all user stories because every story consumes those DTO/envelope types through the React adapter and identity merge primitives.
 - User Story 1 and User Story 2 depend on Phase 2 and can proceed in parallel after the boundary is stable.
-- User Story 3 depends on the message/draft paths from User Stories 1 and 2, because it hardens their persisted/realtime convergence.
+- User Story 3 depends on the message/review paths from User Stories 1 and 2, because it hardens their persisted/realtime convergence.
 - User Story 4 depends on the typed public/private projections from Phase 2 and the delivered-message shape from User Stories 1 and 2.
 - Phase 7 depends on all desired stories and is the local handoff checkpoint; it does not close backend or release gates.
 
@@ -169,6 +169,8 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 | FR-013, FR-014, FR-015 | T025, T034-T039 |
 | FR-018 and SC-001 through SC-007 | T003-T004, T010-T012, T018-T021, T026-T029, T034-T044 |
 
+FR-005 and FR-006 are the restated forms recorded in `research.md` Decisions 2026-09-12b and 2026-09-12c; the withdrawn revisions/hashes and reject/regenerate paths map to no task by design.
+
 ## Implementation Strategy
 
 ### MVP First
@@ -187,6 +189,8 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 - The backend capability remains disabled until the initiative release gates pass.
 - Component 101 owns shared assessment/progress type files and exports; component 103 consumes them without editing `src/types/assessment.ts`, `src/types/learningProgress.ts`, or `src/types/index.ts`.
-- Component 102 owns `transferAssessmentService.ts`, typed API DTO/envelope declarations, operation mapping including `reject_draft`/`regenerate_draft`, and service contract tests; component 103 consumes them without edits.
+- Component 102 owns `transferAssessmentService.ts`, typed API DTO/envelope declarations, the six-operation mapping, and service contract tests; component 103 consumes them without edits.
+- The reviewed-send path has no expected revision and no expected hash, and the promotion contains no reject or regenerate operation; component 103 must not reintroduce either.
+- Recorded upstream gaps that component 103 does not work around: the delivered message does not persist the assessment selection type or rendered text, and `ProcessedMessageDTO.question_id` reads a key (`question_id`) that `process_assessment_message_v1` does not return (`message_id`).
 - Missing trusted auth, hosted SQL/RLS evidence, provider/evaluation evidence, or browser release evidence is a named external blocker, not a UI fallback.
 - Root agent context update is deferred to the integration owner; do not run `update-agent-context.sh` from this component worktree.
