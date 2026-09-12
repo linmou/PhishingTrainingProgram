@@ -179,64 +179,6 @@ function projectProcessedMessage(result: Record<string, unknown>): ProcessedMess
   };
 }
 
-/**
- * The only private browser DTO name for an assessment draft (reconciliation R05).
- *
- * Returned solely to a verified reviewing teacher and only by draft-review operations. It
- * deliberately carries the private basis a teacher must inspect, which is exactly why it must
- * never be returned by a learner operation or embedded in a public/realtime message payload.
- *
- * Field names are browser names and are not storage names; see
- * `specs/102-transfer-backend/contracts/assessment-api.md`, which owns this allowlist.
- */
-export interface TeacherAssessmentDraftDTO {
-  draft_id: string;
-  revision: number;
-  status: 'draft' | 'ignored' | 'sent';
-  decision: Record<string, unknown>;
-  reason: string | null;
-  assessment_basis: Record<string, unknown> | null;
-}
-
-/** The exact key set of `TeacherAssessmentDraftDTO`, for boundary and drift assertions. */
-export const TEACHER_ASSESSMENT_DRAFT_DTO_KEYS: ReadonlyArray<keyof TeacherAssessmentDraftDTO> = [
-  'draft_id',
-  'revision',
-  'status',
-  'decision',
-  'reason',
-  'assessment_basis',
-];
-
-/**
- * The only field names a teacher draft DTO may carry. Anything outside this list is a storage
- * name that leaked through, so this doubles as the deny-by-default boundary for the private row.
- */
-export const TEACHER_ASSESSMENT_DRAFT_DTO_FORBIDDEN_STORAGE_NAMES: ReadonlyArray<string> = [
-  'id',
-  'room_id',
-  'student_id',
-  'checklist_id',
-  'item_id',
-  'focus_student_message_id',
-  'raw_model_output',
-  'reviewed_payload',
-  'reviewed_by',
-  'created_at',
-  'updated_at',
-];
-
-/**
- * Project a private draft row onto the browser DTO. Unknown keys are dropped rather than
- * forwarded, so a new private column cannot reach the browser by being added to storage.
- */
-export function toTeacherAssessmentDraftDTO(row: Record<string, unknown>): TeacherAssessmentDraftDTO {
-  const dto: Record<string, unknown> = {};
-  TEACHER_ASSESSMENT_DRAFT_DTO_KEYS.forEach((key) => {
-    dto[key] = row[key] ?? null;
-  });
-  return dto as unknown as TeacherAssessmentDraftDTO;
-}
 
 export interface TransferAssessmentApi {
   invoke: (body: Record<string, unknown>) => Promise<{ data: AssessmentApiEnvelope<unknown> | null; error: { message: string } | null }>;
@@ -362,27 +304,26 @@ export class TransferAssessmentService {
     });
   }
 
-  async reviewDraft(input: {
-    draftId: string;
-    expectedRevision: number;
-    finalPayload: TutorDecisionV3;
-    contentConfirmed: boolean;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('review_draft', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
-      final_payload: input.finalPayload,
-      content_confirmed: input.contentConfirmed,
-    });
-  }
-
+  /**
+   * Deliver a reviewed assessment or tutoring turn. There is no draft table, so the reviewed
+   * payload and the scope it applies to travel on this one call; the tutor message is created
+   * and the assessment is stamped onto it atomically.
+   */
   async sendReviewed(input: {
-    draftId: string;
-    expectedRevision: number;
+    reviewedPayload: TutorDecisionV3;
+    roomId: string;
+    studentId: string;
+    checklistId: string;
+    itemId: string;
+    focusStudentMessageId: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request<Record<string, unknown>>('send_reviewed', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
+      reviewed_payload: input.reviewedPayload,
+      room_id: input.roomId,
+      student_id: input.studentId,
+      checklist_id: input.checklistId,
+      item_id: input.itemId,
+      focus_student_message_id: input.focusStudentMessageId,
     });
     return projectReviewedDelivery(result);
   }

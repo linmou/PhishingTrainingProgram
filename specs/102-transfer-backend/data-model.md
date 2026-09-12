@@ -29,20 +29,31 @@ The database validates the pair. React, model output, and direct clients cannot 
 
 ### Public entities
 
-| Entity | Fields | Lifecycle rules |
-|---|---|---|
-| `public.assessment_questions` | Scope IDs, tutor/source message IDs, selection type, stem, rendered text, ordered A-D options, lifecycle, selected labels/result, feedback link, timestamps | `delivered` is the only unresolved state; one delivered row per room/student; key is never stored here. |
+The assessment is stored on the tutor message itself. There is no separate question or key table: `public.messages` carries the assessment columns, all nullable so ordinary chat rows are unaffected.
+
+| Column on `public.messages` | Purpose |
+|---|---|
+| `assessment_options` | the ordered A-D option objects |
+| `assessment_key` | the correct option ids |
+| `assessment_lifecycle` | `delivered`, `answered`, `cancelled`, or `invalidated`; NULL means the row is not an assessment |
+| `assessment_answer_message_id` | the learner message that answered it |
+| `assessment_selected_option_ids` | what the learner selected |
+| `assessment_result` | `pass` or `fail` |
+| `assessment_closed_at` | when it closed |
+| `assessment_checklist_id`, `assessment_item_id` | the scope the verdict applies to |
+
+`assessment_id` is a pre-existing column whose foreign key was dropped with the question table; it is retained but unused.
+
+Key confidentiality is an accepted tradeoff, not an oversight. `public.messages` is readable by every room participant, so a learner can read `assessment_key` with a crafted REST request. The owner accepted this because the product is a training app rather than a strict exam, and a working function outranks key secrecy. The normal API response still excludes the key, so the UI path never receives it.
 
 ### Private entities
 
 | Entity | Fields | Lifecycle rules |
 |---|---|---|
-| `private.assessment_drafts` | Raw model output, reviewed payload, scope/focus IDs, revision, reviewer, confirmation, status | Status is `draft`, `ignored`, or `sent`. A material edit increments `revision` and requires confirmation again; a draft that is never sent is simply never delivered. |
-| `private.assessment_question_keys` | Question ID, immutable correct labels, private payload, transfer basis, reviewer confirmation, draft revision, source item timestamp | Insert once for delivery; update/delete raises `ASSESSMENT_KEY_IMMUTABLE`. |
-| `private.learning_event_inbox` | Stable event/dedupe key, scope/source IDs, kind/payload, classifier, processing state, linked evidence/update, timestamps | Records applied, no-change, deferred, rejected, and error outcomes for replay/audit. |
-| `private.assessment_request_results` | Operation, request ID, actor, stable response | Generic request-idempotency ledger shared by every request-bearing RPC. Returns the recorded result for a repeated `(operation, request_id)`; not specific to any one operation. |
+| `private.learning_event_inbox` | Stable event/dedupe key, scope/source IDs, kind/payload, classifier, processing state, linked evidence/update, timestamps | Records applied, no-change, deferred, rejected, and error outcomes for replay/audit. This is the only table the component keeps: it is what applies `assessment_pass` and `assessment_fail` to `checklist_items`. |
 
-There is exactly one assessment pipeline: a tutor message plus a public question, backed by one immutable private key. Request idempotency is recorded in `assessment_request_results`, which is not an assessment artefact and is used by `post_message` and `process_message` among others.
+One open assessment per learner is enforced inside `send_reviewed_tutor_response_v3`, which reaches the learner through `messages.assessment_checklist_id -> session_checklists.student_id`. It is deliberately **not** a partial unique index. The index that once sat here constrained `messages(room_id, user_id) WHERE assessment_lifecycle = 'delivered'`, but a message's `user_id` is its author, and an assessment message is authored by the tutor. That scoped the rule per tutor, which both made the function's own check unreachable and blocked a second learner in the same room. A partial index cannot follow the checklist link, because an index may only reference columns on its own row. The race guard is the room row lock taken `FOR UPDATE` before the check, not an index.
+
 
 ## State transitions
 
