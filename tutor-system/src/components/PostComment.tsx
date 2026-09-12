@@ -3,6 +3,8 @@ import { ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
 import { Message, MessageFeedbackStats } from '../types';
 import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
+import PublicAssessmentQuestion from './PublicAssessmentQuestion';
+import { readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 import './PostComment.css';
 
 interface PostCommentProps {
@@ -43,6 +45,9 @@ const PostComment: React.FC<PostCommentProps> = ({
     onSubmitFeedback,
     feedbackStats
 }) => {
+    // A delivered assessment message renders its public question; every other message renders
+    // its plain content.
+    const publicQuestion = readPublicQuestion(message);
     // State for two-step feedback system
     const [showRating, setShowRating] = useState<'like' | 'dislike' | null>(null);
     const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
@@ -187,7 +192,9 @@ const PostComment: React.FC<PostCommentProps> = ({
 
                     {/* Comment Text */}
                     <div className="comment-text">
-                        {message.content}
+                        {publicQuestion
+                            ? <PublicAssessmentQuestion question={publicQuestion} />
+                            : message.content}
                     </div>
 
                     {/* Comment Actions */}
