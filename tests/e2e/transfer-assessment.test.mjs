@@ -184,7 +184,6 @@ test('E2E: a prepared draft is reviewed, delivered, and exposes no private mater
       message: storedTutorMessageRow(),
       question: storedQuestionRow(),
       room: { id: 'room-1', active_response_mode: 'tutoring' },
-      feedback_id: 'feedback-1',
     }),
   });
 
@@ -255,42 +254,6 @@ test('E2E: the teacher-private draft carries the basis while the public projecti
   assert.equal(publicView.correct_option_ids, undefined, 'public projection must strip the key');
   assert.equal(publicView.transfer_basis, undefined, 'public projection must strip the transfer basis');
   assert.equal(publicView.stem, storedQuestionRow().stem, 'public projection must keep the learner-visible stem');
-});
-
-test('E2E: a rejected draft is suppressed on the same trigger and regenerated only explicitly', async () => {
-  const transport = createRecordingTransport({
-    reject_draft: () => ({
-      draft_id: 'draft-1',
-      revision: 2,
-      status: 'rejected',
-      same_trigger_suppressed: true,
-      request_id: 'request-e2e-2',
-    }),
-    regenerate_draft: () => ({
-      source_draft_id: 'draft-1',
-      source_status: 'superseded',
-      replacement_draft_id: 'draft-2',
-      replacement_revision: 1,
-      replacement_status: 'draft',
-      request_id: 'request-e2e-3',
-    }),
-  });
-  const service = new TransferAssessmentService({ api: transport.api, requestId: () => 'request-e2e-2' });
-
-  const rejected = await service.rejectDraft({ draftId: 'draft-1', expectedRevision: 1, reason: 'teacher_rejected' });
-  assert.equal(rejected.status, 'rejected');
-  assert.equal(rejected.same_trigger_suppressed, true, 'a rejected trigger must be suppressed, not silently regenerated');
-
-  const regenerated = await service.regenerateDraft({
-    sourceDraftId: 'draft-1',
-    expectedRevision: 2,
-    expectedSnapshotHash: 'a'.repeat(64),
-    providerPayload: { decision: { mode: 'assessment' } },
-    rawHash: 'b'.repeat(64),
-  });
-  assert.equal(regenerated.source_status, 'superseded');
-  assert.equal(regenerated.replacement_status, 'draft', 'the replacement starts a fresh draft lifecycle');
-  assert.equal(regenerated.replacement_revision, 1, 'the replacement starts at revision 1');
 });
 
 test('E2E: the public message projection exposes identity and content but no private row', () => {

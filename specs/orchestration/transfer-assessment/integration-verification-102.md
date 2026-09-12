@@ -3,15 +3,15 @@
 Intent: record the gate results that justify promoting the merged component 102 state, so
 `integration_passed` rests on named evidence rather than on a narrative claim.
 
-Tested integration SHA: `97848c2`
+Tested integration SHA: `64ae8aa`
 
 ## Gates run on the tested SHA
 
 | Gate | Command | Result |
 |---|---|---|
 | E01 edge handoff (`101 -> 102`) | `node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs` | exit `0`, `tests 7 / pass 7 / fail 0` |
-| End-to-end aggregate | `node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs` | exit `0`, `tests 4 / pass 4 / fail 0` |
-| Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer)"` | `9 suites / 72 tests` pass before the projection merge; `10 suites / 190 tests` for the combined 101+102 set |
+| End-to-end aggregate | `node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs` | exit `0`, `tests 3 / pass 3 / fail 0` |
+| Component suites in integration | `CI=true npx react-scripts test --watchAll=false --testPathPattern="(transferAssessment\|transferTutor\|transferMigration\|tutorDecisionContract\.transfer)"` | `9 suites / 72 tests` pass before the projection merge; `11 suites / 196 tests` for the combined 101+102 set |
 | Type check | `npx tsc --noEmit` | clean for every touched file; pre-existing unrelated errors unchanged |
 
 ## What the edge handoff proves
