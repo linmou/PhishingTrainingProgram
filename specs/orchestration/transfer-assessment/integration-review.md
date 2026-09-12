@@ -472,6 +472,12 @@ Planning, reconciliation, authoritative DAG, and integration-design gates have p
 - **Wave 3 is complete and wave 4 is opened.** 102 is promoted at `7f5e979` with two 102-owned fixes carried after promotion (`191348d` for the `message_id` projection, `8ce2f7b` for the undeclared `typescript` resolution); 104 at `818e612`; 103 at `4d92cdf`. All three edge handoffs are declared in `coverage-manifest.json` and each consumes real upstream output. Component 105's three incoming edges are now satisfied, so its release work is unblocked.
 - Scope of what this claims. It claims the hosted schema and the six live RPCs match the specs and that the behavioural lane passed on the owner's run. It does not claim the agent reproduced the behavioural lane, and it does not claim any live model evaluation: 104's calibration, candidate, freeze, holdout, and live gate stages remain unrun.
 
+### Promotion Receipt: Wave 3 Completion At `f881f38`
+
+- Tested integration SHA `32465a3` (the wave-3 records commit); audit commit **`f881f38`**, which carries the hosted-evidence closure and the wave-4 opening. Smoke on the candidate with a clean tree: E03 `8/8`, e2e `3/3`. **`f881f38` is the immutable promotion SHA for the wave-3 completion state.**
+- Downstream receipt, merging that exact SHA and never the integration `HEAD`: `105-transfer-release` at merge commit **`a5ff4fa`** (`merge: promote integration f881f38 into 105-transfer-release`), from a clean worktree with no sibling branch merged in. Component 105's three incoming edges E05, E06, and E07 are all satisfied by this single state, so no further propagation is pending.
+- Component 105 is the only remaining component. Its own work - the dedicated browser run, privacy and authorization attacks, retries and races, the release report, and rollback evidence - has not started, and no part of it is claimed here.
+
 ## Open Items At The End Of This Working Session
 Intent: state exactly what remains, so the work resumes without re-deriving any decision recorded above. Nothing in this section is a claim of completion.
 
