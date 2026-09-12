@@ -13,7 +13,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PublicAssessmentQuestion from '../PublicAssessmentQuestion';
 import { projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
-import { deliveredPublicAssessment, deliveredQuestionRow } from '../../test-support/transferRoomFixtures';
+import { deliveredPublicAssessment, deliveredQuestionRow, deliveredQuestionRowWithoutSelectionType } from '../../test-support/transferRoomFixtures';
 import { expectNoPrivateAssessmentFields } from '../../test-support/transferPrivacyAssertions';
 
 describe('PublicAssessmentQuestion', () => {
@@ -33,7 +33,7 @@ describe('PublicAssessmentQuestion', () => {
   });
 
   it('shows an explicit unavailable instruction instead of inventing a selection type', () => {
-    const view = projectRoomMessage(deliveredQuestionRow);
+    const view = projectRoomMessage(deliveredQuestionRowWithoutSelectionType);
 
     render(<PublicAssessmentQuestion question={view.publicQuestion!} />);
 

@@ -119,9 +119,10 @@ function isCompletePublicAssessment(value: unknown): value is PublicAssessmentDT
 }
 
 /**
- * Build the learner question from a stored message row. Only `content` and `assessment_options`
- * are read, and only when the row records a delivered assessment lifecycle. The selection type is
- * not persisted, so it stays null unless an explicit public projection supplies it.
+ * Build the learner question from a stored message row. Only `content`, `assessment_options`, and
+ * `assessment_selection_type` are read, and only when the row records a delivered assessment
+ * lifecycle. Rows delivered before migration 045 have no selection type; it stays null then and
+ * is never inferred from the private answer key.
  */
 export function publicQuestionFromStoredRow(
   row: Record<string, unknown>,
@@ -133,12 +134,16 @@ export function publicQuestionFromStoredRow(
   const id = asNonEmptyString(source.id);
   const stem = asNonEmptyString(source.content);
   if (!options || !id || !stem) return null;
-  return {
-    id,
-    stem,
-    options,
-    selectionType: explicit && isCompletePublicAssessment(explicit) ? explicit.selection_type : null,
-  };
+
+  const persistedSelectionType = source.assessment_selection_type;
+  const selectionType: AssessmentSelectionType | null =
+    explicit && isCompletePublicAssessment(explicit)
+      ? explicit.selection_type
+      : persistedSelectionType === 'single' || persistedSelectionType === 'multiple'
+        ? persistedSelectionType
+        : null;
+
+  return { id, stem, options, selectionType };
 }
 
 /** Project one stored message row into React state, keeping only allowlisted public fields. */

@@ -131,6 +131,14 @@ export const deliveredQuestionRow = {
   assessment_lifecycle: 'delivered',
   assessment_checklist_id: CHECKLIST_ID,
   assessment_item_id: CHECKLIST_ITEM_ID,
+  // Persisted by migration 045. Null on rows delivered before it ran.
+  assessment_selection_type: 'single',
+};
+
+/** The same delivered row as a pre-045 assessment: the selection type column is null. */
+export const deliveredQuestionRowWithoutSelectionType = {
+  ...deliveredQuestionRow,
+  assessment_selection_type: null,
 };
 
 export const deliveredPublicAssessment: PublicAssessmentDTO = {

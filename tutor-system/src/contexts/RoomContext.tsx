@@ -566,13 +566,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 replyToMessageId: options?.replyToMessageId,
                 assessmentId: options?.assessmentId,
             });
-            const storedMessage = result.message as Message | undefined;
-            if (!storedMessage) {
+            const storedRow = result.message as Record<string, unknown> | undefined;
+            if (!storedRow) {
                 throw new Error('Transfer message operation did not return a stored message');
             }
-            setMessages(prev => prev.some(message => message.id === storedMessage.id)
-                ? prev
-                : [...prev, addDisplayNameToMessage(storedMessage, participants)]);
+            // Project the stored row before it enters React state: the row is a raw messages
+            // record and can carry the private assessment key.
+            const storedMessage = addDisplayNameToMessage(projectRoomMessage(storedRow), participants);
+            setMessages(prev => mergeRoomMessages(prev, [storedMessage]));
             if (user.current_role === 'student') {
                 try {
                     await transferAssessmentService.processMessage(storedMessage.id);
