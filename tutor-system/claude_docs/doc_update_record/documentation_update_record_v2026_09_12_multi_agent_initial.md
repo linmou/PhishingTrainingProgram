@@ -33,9 +33,13 @@ this feature.
   `protective_instruction` (imminent unsafe action), `explanation` (teaching or stop request) and
   `guard` may answer instead. `aiService.ts` treats a `scaffolding`/`correction`/`consolidation`
   decision as repairable on the first attempt and asks once more for the pair. This supersedes the
-  plan's advisory reading ("enabling it never forces it") and therefore changes the expected
-  outcomes of the plan's behavior cases B05–B09 and B12, which were written for the advisory
-  semantics; the case file itself was left unchanged.
+  plan's advisory reading ("enabling it never forces it"), so the plan's advisory case set was
+  **archived unchanged** to `plan/multi-character_initial/archive/behavior-cases-advisory-2026-09-12.json`
+  (with its status/provenance fields updated) and the plan README and task 15 now point at that
+  archive; the live runner reads the archived path. Latest archived-case run: multi-agent arm 4/12
+  allowed-decision matches (it now produces pairs on nearly every ordinary turn, which is the
+  shipped contract) and single-agent control 9/12 (B01/B02 demand the pair by construction, and
+  B11 is the inherited candidate-11 Guard call).
 - Full Jest run equals baseline when both worktrees run with the same provider
   credentials: identical failing suites and failing tests, plus the new Multi-agent
   suites (`tutorDecisionContract.test.ts`, `RoomContext.multiAgentDraft.test.tsx`,

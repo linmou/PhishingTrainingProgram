@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Test responsible for running plan/multi-character_initial/behavior-cases.json through the real
+ * Test responsible for running the archived advisory-baseline cases
+ * (plan/multi-character_initial/archive/behavior-cases-advisory-2026-09-12.json) through the real
  * production ecological request path with interaction_mode=multi_agent, and recording per-case
  * metadata (mode, instruction, parser result, tag order, repair retry, contract outcome).
  *
@@ -17,7 +18,13 @@ import { generateSystemPrompt, PRESET_CONFIGS } from '../services/systemPrompts'
 const describeLiveQwen = process.env.RUN_LIVE_QWEN_TESTS === 'true' ? describe : describe.skip;
 
 const repoRoot = path.resolve(__dirname, '../../..');
-const casesPath = path.join(repoRoot, 'plan', 'multi-character_initial', 'behavior-cases.json');
+const casesPath = path.join(
+  repoRoot,
+  'plan',
+  'multi-character_initial',
+  'archive',
+  'behavior-cases-advisory-2026-09-12.json'
+);
 const resultsDir = path.join(repoRoot, 'evals', 'promptfoo', 'results');
 
 /** Production call parameters: aiService caps room max_tokens at 120 and uses a 0.3 temperature. */
@@ -187,9 +194,9 @@ describeLiveQwen('Multi-agent behavior cases (live Qwen)', () => {
     fs.writeFileSync(outputPath, JSON.stringify({
       ranAt: new Date().toISOString(),
       source: path.relative(repoRoot, casesPath),
-      interactions: 'plan/multi-character_initial/behavior-cases.json targetInputRule',
+      interactions: 'archived advisory-baseline cases (plan/multi-character_initial/archive); the single-agent control arm still matches their expectations, the multi-agent arm documents the superseded advisory semantics',
       contract: 'reason/decision/response through the production ecological request at both interaction modes',
-      note: 'single_agent is the matched control: it shows which case outcomes come from the candidate 11 policy alone.',
+      note: 'single_agent is the matched control: it shows which case outcomes come from the candidate 11 policy alone. Multi-agent expectations predate the required-pair contract.',
       results
     }, null, 2));
     console.log(`Recorded ${results.length} case results to ${path.relative(repoRoot, outputPath)}`);
