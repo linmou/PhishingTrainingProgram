@@ -1,18 +1,24 @@
--- Purpose: bring the live project to the lean transfer-assessment schema. Migrations 025 and 027 authored a second assessment pipeline that no product requirement asked for and no caller reaches: a draft reject/regenerate flow with a generation-trigger suppression mechanism, plus eight columns that are written and never read. This migration removes that surface and leaves exactly the tables, columns, and functions the seven live operations use.
+-- Purpose: bring the live project to the lean transfer-assessment schema. Migrations 025 and 027 authored a second assessment pipeline that no product requirement asked for and no caller reaches: a draft reject/regenerate flow with a generation-trigger suppression mechanism, plus columns that are written and never read. This migration removes that surface and leaves exactly the tables, columns, and functions the seven live operations use.
 --
--- SAFETY: every transfer table currently holds zero rows (verified on the hosted project), so no data is at risk. Every statement is idempotent, so a partial application can be re-run.
+-- SAFETY: every transfer table holds zero rows on the hosted project (verified), so no data is at risk. Every statement is idempotent, so a partial application can be re-run.
+--
+-- ORDERING: plpgsql bodies are stored as text and are not dependency-tracked, so DROP COLUMN does not fail on them. The dependent functions are still dropped first so that no window exists in which a stored body references a column that is gone, and the kept functions are re-created at the end with the dropped references removed.
 --
 -- Boundary: drops only objects introduced by 025-029 that the lean design does not keep. It does not touch messages, rooms, users, session_checklists, checklist_items, coverage_evidence, checklist_updates, or any legacy table. It does not modify the Guard-mode trigger fixes from 030/031, which are unrelated to transfer assessment.
 
 -- ---------------------------------------------------------------------------------------
--- 1. Functions whose only callers were the removed operations.
+-- 1. Removed operations. Their callers were the reject/regenerate flow, which the product
+--    never required: a draft that is not sent is simply never delivered.
 -- ---------------------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.reject_assessment_draft_v1(UUID, INTEGER, TEXT, UUID, UUID);
 DROP FUNCTION IF EXISTS public.regenerate_assessment_draft_v1(UUID, INTEGER, UUID, TEXT, JSONB, TEXT, UUID, UUID);
 DROP FUNCTION IF EXISTS private.transfer_draft_trigger_key_v1(UUID, UUID, UUID, UUID);
 
--- `review_assessment_draft_v1` and `send_reviewed_tutor_response_v3` keep their signatures
--- but must stop reading the columns dropped below, so they are re-created later in this file.
+-- Functions that keep their role but must be re-created without the dropped columns.
+DROP FUNCTION IF EXISTS public.review_assessment_draft_v1(UUID, INTEGER, JSONB, BOOLEAN, UUID, UUID);
+DROP FUNCTION IF EXISTS public.send_reviewed_tutor_response_v3(UUID, INTEGER, TEXT, UUID, UUID);
+DROP FUNCTION IF EXISTS public.cancel_assessment_question_v1(UUID, TEXT, UUID, UUID);
+DROP FUNCTION IF EXISTS public.invalidate_assessment_question_v1(UUID, TEXT, TEXT, UUID, UUID);
 
 -- ---------------------------------------------------------------------------------------
 -- 2. The retry ledger. It existed only so reject/regenerate could replay, and both are gone.
@@ -22,8 +28,8 @@ DROP FUNCTION IF EXISTS private.transfer_draft_trigger_key_v1(UUID, UUID, UUID, 
 DROP TABLE IF EXISTS private.assessment_request_results;
 
 -- ---------------------------------------------------------------------------------------
--- 3. Draft columns. `status` keeps only the values the lean lifecycle can reach; the
---    'rejected' and 'superseded' states were reachable only through the removed operations.
+-- 3. Draft columns. `status` keeps only the values the lean lifecycle can reach; 'rejected'
+--    and 'superseded' were reachable only through the removed operations.
 -- ---------------------------------------------------------------------------------------
 ALTER TABLE private.assessment_drafts DROP CONSTRAINT IF EXISTS assessment_drafts_status_check;
 DELETE FROM private.assessment_drafts WHERE status NOT IN ('draft', 'ignored', 'sent');
@@ -47,15 +53,13 @@ ALTER TABLE private.assessment_drafts
 --    public_payload_hash was only ever subtracted from returned payloads, never compared.
 --    private_payload_hash was never consulted at all.
 --    effective_order appears in no function or query in the schema.
---    closed_reason is set by the removed cancel/invalidate operations and read nowhere else.
 --
---    public.assessment_questions itself STAYS. It is load-bearing for the live grading
---    path: process_assessment_message_v1 reads the question, grades against the key, and
---    updates the question result. Dropping it would break process_message.
+--    public.assessment_questions itself STAYS. It is load-bearing for the live grading path:
+--    process_assessment_message_v1 reads the question, grades against the key, and updates
+--    the question result. closed_reason also stays, because cancel and invalidate write it.
 -- ---------------------------------------------------------------------------------------
 ALTER TABLE public.assessment_questions
-    DROP COLUMN IF EXISTS public_payload_hash,
-    DROP COLUMN IF EXISTS closed_reason;
+    DROP COLUMN IF EXISTS public_payload_hash;
 
 ALTER TABLE private.assessment_question_keys
     DROP COLUMN IF EXISTS private_payload_hash;
@@ -64,10 +68,12 @@ ALTER TABLE private.learning_event_inbox
     DROP COLUMN IF EXISTS effective_order;
 
 -- ---------------------------------------------------------------------------------------
--- 6. Re-create the two delivery functions without the dropped columns.
---    `review_assessment_draft_v1` no longer computes or stores final_hash.
---    `send_reviewed_tutor_response_v3` keeps writing the question row, because the grading
---    path reads it, but no longer writes a public or private payload hash.
+-- 5. Re-create the four kept functions without the dropped columns.
+--    review: no longer computes final_hash.
+--    send:   5-arg signature loses the expected-hash argument, and no longer writes either
+--            payload hash. It still writes the question row and the immutable private key,
+--            because grading reads them.
+--    cancel/invalidate: only change is that they no longer subtract the dropped column.
 -- ---------------------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION review_assessment_draft_v1(
     p_draft_id UUID,
@@ -215,8 +221,24 @@ BEGIN
         RAISE EXCEPTION 'ITEM_VALIDATION_FAILED' USING ERRCODE = 'P0001';
     END IF;
 
-    -- A second send of the same draft is a stable, distinguishable outcome rather than a
-    -- silent duplicate: the client learns the first send succeeded.
+    IF v_mode = 'assessment' THEN
+        IF v_draft.student_id IS NULL OR v_draft.checklist_id IS NULL OR v_draft.item_id IS NULL
+           OR v_draft.focus_student_message_id IS NULL
+           OR NOT EXISTS (
+               SELECT 1 FROM session_checklists
+               WHERE id = v_draft.checklist_id AND room_id = v_draft.room_id
+                 AND student_id = v_draft.student_id AND progress_policy_version = 'transfer_v1'
+           )
+           OR NOT EXISTS (
+               SELECT 1 FROM messages
+               WHERE id = v_draft.focus_student_message_id
+                 AND room_id = v_draft.room_id AND user_id = v_draft.student_id
+                 AND user_role = 'student'
+           ) THEN
+            RAISE EXCEPTION 'INVALID_SCOPE' USING ERRCODE = 'P0001';
+        END IF;
+    END IF;
+
     SELECT * INTO v_room FROM rooms WHERE id = v_draft.room_id FOR UPDATE;
     INSERT INTO messages (
         room_id, user_id, content, user_role, is_ai_generated,
@@ -229,13 +251,6 @@ BEGIN
 
     IF v_mode = 'assessment' THEN
         v_assessment := v_payload->'assessment';
-        IF NOT EXISTS (
-               SELECT 1 FROM session_checklists
-               WHERE id = v_draft.checklist_id AND room_id = v_draft.room_id
-                 AND student_id = v_draft.student_id AND progress_policy_version = 'transfer_v1'
-           ) THEN
-            RAISE EXCEPTION 'INVALID_SCOPE' USING ERRCODE = 'P0001';
-        END IF;
         INSERT INTO assessment_questions (
             room_id, student_id, checklist_id, item_id, tutor_message_id,
             source_student_message_id, selection_type, stem, rendered_text, options
@@ -278,3 +293,67 @@ $$;
 
 REVOKE ALL ON FUNCTION send_reviewed_tutor_response_v3(UUID, INTEGER, UUID, UUID) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION send_reviewed_tutor_response_v3(UUID, INTEGER, UUID, UUID) TO service_role;
+
+CREATE OR REPLACE FUNCTION cancel_assessment_question_v1(
+    p_question_id UUID,
+    p_reason TEXT,
+    p_actor_id UUID,
+    p_request_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, private
+AS $$
+DECLARE
+    v_question assessment_questions%ROWTYPE;
+BEGIN
+    IF current_user NOT IN ('service_role', 'postgres') THEN RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501'; END IF;
+    SELECT q.* INTO v_question
+    FROM assessment_questions q JOIN rooms r ON r.id = q.room_id
+    WHERE q.id = p_question_id AND r.tutor_id = p_actor_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501'; END IF;
+    IF v_question.lifecycle = 'delivered' THEN
+        UPDATE assessment_questions
+        SET lifecycle = 'cancelled', closed_reason = p_reason, closed_at = NOW()
+        WHERE id = p_question_id RETURNING * INTO v_question;
+    END IF;
+    RETURN jsonb_build_object('question', to_jsonb(v_question));
+END;
+$$;
+
+REVOKE ALL ON FUNCTION cancel_assessment_question_v1(UUID, TEXT, UUID, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION cancel_assessment_question_v1(UUID, TEXT, UUID, UUID) TO service_role;
+
+CREATE OR REPLACE FUNCTION invalidate_assessment_question_v1(
+    p_question_id UUID,
+    p_reason TEXT,
+    p_expected_snapshot TEXT,
+    p_actor_id UUID,
+    p_request_id UUID
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, private
+AS $$
+DECLARE
+    v_question assessment_questions%ROWTYPE;
+BEGIN
+    IF current_user NOT IN ('service_role', 'postgres') THEN RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501'; END IF;
+    SELECT q.* INTO v_question
+    FROM assessment_questions q JOIN rooms r ON r.id = q.room_id
+    WHERE q.id = p_question_id AND r.tutor_id = p_actor_id FOR UPDATE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501'; END IF;
+    IF p_expected_snapshot IS NULL OR p_expected_snapshot = '' THEN
+        RAISE EXCEPTION 'STALE_SNAPSHOT' USING ERRCODE = 'P0001';
+    END IF;
+    UPDATE assessment_questions
+    SET lifecycle = 'invalidated', closed_reason = p_reason, closed_at = NOW()
+    WHERE id = p_question_id RETURNING * INTO v_question;
+    RETURN jsonb_build_object('question', to_jsonb(v_question), 'reconciled', false);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION invalidate_assessment_question_v1(UUID, TEXT, TEXT, UUID, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION invalidate_assessment_question_v1(UUID, TEXT, TEXT, UUID, UUID) TO service_role;
