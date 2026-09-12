@@ -171,8 +171,8 @@ Shared-file ownership after reconciliation:
 
 ## Integration Test Plan
 
-- Integration command: `node --test tests/integration/*.test.js`; every edge test must create or invoke the producer output and pass that same object/file/reference to the consumer in the same run.
-- E2E command: `node --test tests/e2e/transfer-assessment.test.js`; it orchestrates the dedicated release runner against the integrated application and isolated hosted target.
+- Integration command: `node --import ./tools/ts-resolve.mjs --test <each tests/integration/*.test.mjs file>`; the glob is named per file because the repository's `node --test` invocation needs the TypeScript resolve hook, and the files are `.mjs` rather than `.js`. Every edge test must create or invoke the producer output and pass that same object/file/reference to the consumer in the same run. Current files: `transfer-domain-backend.test.mjs` (E01, `tests 7 / pass 7`), `transfer-backend-evaluation.test.mjs` (E04 production side, `tests 3 / pass 3`, mutation-verified).
+- E2E command: `node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs` (`tests 3 / pass 3`); it orchestrates the dedicated release runner against the integrated application and isolated hosted target.
 - Component commands remain those recorded in each `quickstart.md`; integration reruns the affected component suites after each serial merge.
 - `tests/integration/` and `tests/e2e/` are integration-owned paths. Wrappers may invoke repository-native Jest/Node/browser commands, but cannot replace a boundary artifact with a hand-authored fixture.
 - The coverage manifest will be written only after these new tests execute successfully on one recorded integration SHA and will list all seven edge IDs.
