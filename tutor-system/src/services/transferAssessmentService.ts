@@ -29,6 +29,156 @@ export interface PublicAssessmentDTO {
 }
 
 /**
+ * Public question lifecycle DTO. The contract permits scope, link, timestamp, and result fields
+ * needed by the UI, but never `correct_option_ids` or `transfer_basis`. The field list below is
+ * exactly the Edge Function's `publicQuestion` allowlist, so the browser sees what the server
+ * chose to send and nothing more.
+ */
+export interface PublicQuestionDTO extends PublicAssessmentDTO {
+  room_id: string;
+  student_id: string;
+  checklist_id: string | null;
+  item_id: string | null;
+  tutor_message_id: string | null;
+  source_student_message_id: string | null;
+  lifecycle: string;
+  answer_message_id: string | null;
+  selected_option_ids: string[] | null;
+  result: Record<string, unknown> | null;
+  closed_reason: string | null;
+  feedback_message_id: string | null;
+}
+
+/** Public stored-message DTO. Contains no private draft or feedback row. */
+export interface PublicMessageDTO {
+  id: string;
+  room_id: string;
+  user_id: string;
+  content: string;
+  user_role: string;
+  is_ai_generated: boolean;
+  parent_message_id: string | null;
+  response_mode: string | null;
+  created_at: string;
+}
+
+/** The exact key set of `PublicQuestionDTO`, mirroring the Edge Function allowlist. */
+export const PUBLIC_QUESTION_DTO_KEYS: ReadonlyArray<keyof PublicQuestionDTO> = [
+  'id',
+  'room_id',
+  'student_id',
+  'checklist_id',
+  'item_id',
+  'tutor_message_id',
+  'source_student_message_id',
+  'selection_type',
+  'stem',
+  'rendered_text',
+  'options',
+  'lifecycle',
+  'answer_message_id',
+  'selected_option_ids',
+  'result',
+  'closed_reason',
+  'feedback_message_id',
+];
+
+/** The exact key set of `PublicMessageDTO`, mirroring the Edge Function allowlist. */
+export const PUBLIC_MESSAGE_DTO_KEYS: ReadonlyArray<keyof PublicMessageDTO> = [
+  'id',
+  'room_id',
+  'user_id',
+  'content',
+  'user_role',
+  'is_ai_generated',
+  'parent_message_id',
+  'response_mode',
+  'created_at',
+];
+
+/** Assessment material that must never appear on a public question or message. */
+export const PUBLIC_ASSESSMENT_FORBIDDEN_KEYS: ReadonlyArray<string> = [
+  'correct_option_ids',
+  'transfer_basis',
+  'private_payload',
+  'private_payload_hash',
+  'public_payload_hash',
+  'raw_model_output',
+  'reviewed_payload',
+  'source_transfer_basis',
+  'teacher_confirmation_id',
+];
+
+function projectAllowlisted<T>(row: Record<string, unknown>, keys: ReadonlyArray<keyof T>): T {
+  const projected: Record<string, unknown> = {};
+  keys.forEach((key) => {
+    projected[key as string] = row[key as string] ?? null;
+  });
+  return projected as unknown as T;
+}
+
+/**
+ * Project a stored question row onto the public DTO. Allowlisted rather than denied, so a new
+ * private column cannot reach a learner merely by being added to storage.
+ */
+export function toPublicQuestionDTO(row: Record<string, unknown>): PublicQuestionDTO {
+  return projectAllowlisted<PublicQuestionDTO>(row, PUBLIC_QUESTION_DTO_KEYS);
+}
+
+/** Project a stored message row onto the public DTO. */
+export function toPublicMessageDTO(row: Record<string, unknown>): PublicMessageDTO {
+  return projectAllowlisted<PublicMessageDTO>(row, PUBLIC_MESSAGE_DTO_KEYS);
+}
+
+/**
+ * Result of `send_reviewed`. Mirrors `send_reviewed_tutor_response_v3`'s four-field return,
+ * with the message and question projected through the public allowlists. `feedback_id` is a
+ * server-side reference only; it carries no draft or private assessment material.
+ */
+export interface ReviewedDeliveryDTO {
+  message: PublicMessageDTO;
+  question: PublicQuestionDTO | null;
+  room: Record<string, unknown>;
+  feedback_id: string;
+}
+
+/**
+ * Result of `process_message`. Mirrors `process_assessment_message_v1`'s return. The grading
+ * outcome and the learner's own selections are public; the assessment key and transfer basis
+ * are not part of this shape and cannot be reached through it.
+ */
+export interface ProcessedMessageDTO {
+  question_id: string;
+  result: Record<string, unknown> | null;
+  selected_option_ids: string[] | null;
+  transition: Record<string, unknown> | null;
+  feedback_required: boolean;
+}
+
+function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliveryDTO {
+  const asRecord = (value: unknown): Record<string, unknown> =>
+    value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  return {
+    message: toPublicMessageDTO(asRecord(result.message)),
+    question: result.question ? toPublicQuestionDTO(asRecord(result.question)) : null,
+    // The room row is already the public room shape the room API returns; it carries no
+    // assessment material, so it is passed through rather than re-allowlisted here.
+    room: asRecord(result.room),
+    feedback_id: String(result.feedback_id ?? ''),
+  };
+}
+
+function projectProcessedMessage(result: Record<string, unknown>): ProcessedMessageDTO {
+  return {
+    question_id: String(result.question_id ?? ''),
+    result: (result.result ?? null) as Record<string, unknown> | null,
+    selected_option_ids: (result.selected_option_ids ?? null) as string[] | null,
+    transition: (result.transition ?? null) as Record<string, unknown> | null,
+    feedback_required: result.feedback_required === true,
+  };
+}
+
+/**
  * The only private browser DTO name for an assessment draft (reconciliation R05).
  *
  * Returned solely to a verified reviewing teacher and only by draft-review operations. It
@@ -309,16 +459,18 @@ export class TransferAssessmentService {
     draftId: string;
     expectedRevision: number;
     expectedHash: string;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('send_reviewed', {
+  }): Promise<ReviewedDeliveryDTO> {
+    const result = await this.request<Record<string, unknown>>('send_reviewed', {
       draft_id: input.draftId,
       expected_revision: input.expectedRevision,
       expected_hash: input.expectedHash,
     });
+    return projectReviewedDelivery(result);
   }
 
-  async processMessage(messageId: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('process_message', { message_id: messageId });
+  async processMessage(messageId: string): Promise<ProcessedMessageDTO> {
+    const result = await this.request<Record<string, unknown>>('process_message', { message_id: messageId });
+    return projectProcessedMessage(result);
   }
 
   async analyzeMessage(messageId: string, roomId: string): Promise<Record<string, unknown>> {
