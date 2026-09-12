@@ -35,9 +35,11 @@ function buildCalibration({ examples = [], judgments = [], judge_settings = null
   const disagreements = examples
     .filter(example => labelDisagrees(example) && !['error', 'missing'].includes(judged.get(example.example_id)?.status))
     .map(example => ({ metric_id: example.metric_id, example_id: example.example_id, kind: example.kind, human_label: example.human_label, judge_label: example.judge_label }));
+  // Agreement is measured on examples the judge actually returned a verdict for: an unjudged
+  // example is pending evidence, not agreement, and an errored or missing verdict never agrees.
   const agreed = examples.filter(example => {
     const judgment = judged.get(example.example_id);
-    if (judgment) return judgment.status === 'pass' && !labelDisagrees(example);
+    if (judgments.length) return Boolean(judgment) && judgment.status === 'pass' && !labelDisagrees(example);
     return !labelDisagrees(example);
   }).length;
   const unconfigured = !judge_settings;
