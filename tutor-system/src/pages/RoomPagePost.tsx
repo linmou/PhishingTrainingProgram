@@ -10,6 +10,7 @@ import StudentAIToneControl from '../components/StudentAIToneControl';
 import AISuggestionBox from '../components/AISuggestionBox';
 import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
 import MultiAgentSuggestionEditor from '../components/MultiAgentSuggestionEditor';
+import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/transferAssessmentUiAdapter';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
@@ -125,6 +126,8 @@ const RoomPagePost: React.FC = () => {
     
     // Scroll and notification state
     const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
+    // Local status for the transfer turn: preparing, or the named reason a preparation was refused.
+    const [transferTurnStatus, setTransferTurnStatus] = useState<{ status: string; message: string } | null>(null);
     const [newMessageCount, setNewMessageCount] = useState(0);
     const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -417,10 +420,15 @@ const RoomPagePost: React.FC = () => {
     };
 
     const handleGenerateAIResponse = async (parentMessageId?: string) => {
+        setTransferTurnStatus(null);
         try {
             await generateAIResponse();
         } catch (error) {
             console.error('Failed to generate AI response:', error);
+            // A refused preparation is a named state on the page, not only a transient alert:
+            // the capability can be unavailable, the payload invalid, or the learner superseded.
+            const classified = classifyReviewFailure(error);
+            setTransferTurnStatus(classified);
             alert(getAIResponseErrorMessage(error));
         }
     };
@@ -860,6 +868,8 @@ const RoomPagePost: React.FC = () => {
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
                         onSubmit={confirmTransferDraft}
+                        // Discarding is UI-local: there is no draft row, so nothing is persisted.
+                        onCancel={clearAISuggestion}
                     />
                 )}
 
@@ -874,6 +884,18 @@ const RoomPagePost: React.FC = () => {
                         onReject={handleRejectMultiAgent}
                         onRegenerate={handleRegenerateMultiAgent}
                     />
+                )}
+                {/* Preparing and refused-preparation states for the transfer turn. */}
+                {user?.current_role === 'tutor' && canUseAI && loadingAI && !transferDraft && (
+                    <p role="status" data-transfer-status="preparing" className="transfer-turn-status">
+                        Preparing the transfer turn…
+                    </p>
+                )}
+                {user?.current_role === 'tutor' && canUseAI && !transferDraft && transferTurnStatus && (
+                    <p role="status" data-transfer-status={transferTurnStatus.status} className="transfer-turn-status">
+                        {transferTurnStatus.message}
+                    </p>
+                )}
                 )}
 
                 {/* Legacy AI Suggestion Box for tutors */}

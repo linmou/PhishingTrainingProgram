@@ -1,0 +1,7 @@
+{
+  "schema": 2,
+  "feature": "transfer_eval",
+  "route": "compact",
+  "monitor_agent_id": "session-baef9f7d-1b03-47f5-9b13-ac9bc6acb5f5",
+  "monitor_source": "DSH subagent tool (independent context, read-only monitor)"
+}

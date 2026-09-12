@@ -73,4 +73,67 @@ describe('assessment answer parser', () => {
       option_ids: ['A', 'B'],
     });
   });
+
+  it('matches a unique option text after removing a trailing question mark and case differences', () => {
+    expect(parseAssessmentAnswer('THE ACCOUNT COULD HAVE BEEN COMPROMISED?', 'single', options)).toEqual({
+      kind: 'selection',
+      option_ids: ['B'],
+    });
+  });
+
+  it('accepts every supported prefix form for an explicit label', () => {
+    ['my answer is C', 'i select C', 'i think C', 'maybe C'].forEach((input) => {
+      expect(parseAssessmentAnswer(input, 'single', options)).toEqual({
+        kind: 'selection',
+        option_ids: ['C'],
+      });
+    });
+  });
+
+  it.each([
+    ['B and', 'SELECTION_NOT_RECOGNIZED'],
+    ['2', 'SELECTION_NOT_RECOGNIZED'],
+    ['bad idea', 'SELECTION_NOT_RECOGNIZED'],
+    ['not B', 'AMBIGUOUS_SELECTION'],
+    ['B/D', 'AMBIGUOUS_SELECTION'],
+    ['B or D', 'AMBIGUOUS_SELECTION'],
+  ])('returns the stable clarification category for malformed input %s', (input, expectedCode) => {
+    expect(parseAssessmentAnswer(input, 'multiple', options)).toEqual({
+      kind: 'clarification_required',
+      code: expectedCode,
+    });
+  });
+
+  it('uses the clarification category rather than failing on a multi-label single answer', () => {
+    expect(parseAssessmentAnswer('B, D', 'single', options)).toEqual({
+      kind: 'clarification_required',
+      code: 'SINGLE_SELECTION_CARDINALITY',
+    });
+  });
+
+  it.each(['How do I know the sender is real?', 'Would a password reset link be safer?'])(
+    'routes a content question to help rather than a wrong answer: %s',
+    (input) => {
+      expect(parseAssessmentAnswer(input, 'multiple', options)).toEqual({ kind: 'not_selection' });
+    }
+  );
+
+  it('treats empty and whitespace-only content as not a selection', () => {
+    expect(parseAssessmentAnswer('', 'single', options)).toEqual({ kind: 'not_selection' });
+    expect(parseAssessmentAnswer('   \n  ', 'single', options)).toEqual({ kind: 'not_selection' });
+  });
+
+  it('keeps an explanation from smuggling in extra option labels', () => {
+    expect(parseAssessmentAnswer('D because A and B are wrong', 'single', options)).toEqual({
+      kind: 'selection',
+      option_ids: ['D'],
+    });
+  });
+
+  it('normalizes option order and duplicates for a multi-label selection', () => {
+    expect(parseAssessmentAnswer('d, b, b', 'multiple', options)).toEqual({
+      kind: 'selection',
+      option_ids: ['B', 'D'],
+    });
+  });
 });

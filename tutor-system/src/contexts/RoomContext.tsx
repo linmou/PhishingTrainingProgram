@@ -27,6 +27,15 @@ import {
 import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guardModeService';
 import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
+import {
+    answerLifecycleFromProcessed,
+    assertDeliverableReview,
+    mergeRoomMessages,
+    participationModeFromRoom,
+    projectRoomMessage,
+    publicAssessmentForDecision,
+    withAnswerLifecycle,
+} from './transferAssessmentUiAdapter';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 
@@ -52,10 +61,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
     const [multiAgentDraft, setMultiAgentDraft] = useState<MultiAgentDraft | null>(null);
     const [transferDraft, setTransferDraft] = useState<{
-        draftId: string;
-        revision: number;
         decision: TutorDecisionV3;
         progressSnapshotHash: string;
+        roomId: string;
+        studentId: string;
+        checklistId: string;
+        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
+        itemId: string | null;
+        focusStudentMessageId: string;
     } | null>(null);
     const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
     const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
@@ -72,6 +85,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [messageFeedbackStats, setMessageFeedbackStats] = useState<Record<string, MessageFeedbackStats>>({});
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const channelRef = useRef<any>(null);
+    // True while a reviewed delivery is in flight, so one tab cannot deliver twice.
+    const deliveryInFlightRef = useRef(false);
     const { user } = useAuth();
 
     const normalizeRoom = useCallback((room: Room): Room => {
@@ -166,15 +181,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 (payload) => {
                     console.log('🟢 Real-time message received:', payload);
                     const newMessage = payload.new as any;
-                    const messageWithDisplayName = addDisplayNameToMessage(newMessage, participants);
-                    
-                    setMessages(prev => {
-                        console.log('📝 Adding message to state:', messageWithDisplayName);
-                        if (prev.some(message => message.id === messageWithDisplayName.id)) {
-                            return prev;
-                        }
-                        return [...prev, messageWithDisplayName];
-                    });
+                    // Project before the row enters React state: a stored row can carry the
+                    // private assessment key, and only allowlisted fields may be retained.
+                    const messageWithDisplayName = addDisplayNameToMessage(projectRoomMessage(newMessage), participants);
+                    setMessages(prev => mergeRoomMessages(prev, [messageWithDisplayName]));
                 }
             )
             .on(
@@ -186,7 +196,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     filter: `id=eq.${currentRoom.id}`
                 },
                 (payload) => {
-                    setCurrentRoom(normalizeRoom(payload.new as Room));
+                    const incoming = payload.new as Room;
+                    const mode = participationModeFromRoom(incoming);
+                    // Room participation stays binary: an unrecognized value is never adopted as
+                    // a mode, while the rest of the room row is still applied.
+                    setCurrentRoom(prev => normalizeRoom({
+                        ...incoming,
+                        active_response_mode: mode ?? prev?.active_response_mode ?? 'tutoring',
+                    }));
                 }
             )
             .on(
@@ -259,17 +276,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             if (messagesData) {
-                // Add display_name and avatar_url to messages using stable function
-                const messagesWithDisplayName = messagesData.map(msg => addDisplayNameToMessage(msg, participants));
-                
-                // Preserve pre-populated messages by combining them with database messages
-                setMessages(prevMessages => {
-                    // Separate pre-populated messages (those with IDs starting with 'prepop-')
-                    const prePopulatedMessages = prevMessages.filter(msg => msg.id.startsWith('prepop-'));
-                    
-                    // Combine pre-populated messages with fresh database messages
-                    return [...prePopulatedMessages, ...messagesWithDisplayName];
-                });
+                // Add display_name and avatar_url to messages using stable function. The
+                // projection runs first so the private assessment key never reaches state.
+                const messagesWithDisplayName = messagesData.map(msg =>
+                    addDisplayNameToMessage(projectRoomMessage(msg), participants));
+
+                // One merge path: pre-populated dialogue stays first, persisted records are
+                // keyed by id, and a message this client already holds is never dropped.
+                setMessages(prevMessages => mergeRoomMessages(prevMessages, messagesWithDisplayName));
             }
         } catch (error) {
             console.error('Error polling messages:', error);
@@ -511,14 +525,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (participantsError) throw participantsError;
 
-            // Add display_name and avatar_url to existing messages
-            const messagesWithDisplayName = (messagesData || []).map(msg => addDisplayNameToMessage(msg, participantsData || []));
+            // Add display_name and avatar_url to existing messages, projecting each stored row
+            // onto the allowlisted message view first.
+            const messagesWithDisplayName = (messagesData || []).map(msg =>
+                addDisplayNameToMessage(projectRoomMessage(msg), participantsData || []));
 
-            // Combine pre-populated messages with existing messages
+            // Combine pre-populated messages with existing messages.
             const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
 
             setCurrentRoom(normalizeRoom(roomData));
-            setMessages(allMessages);
+            // Merge rather than replace: a realtime insert that arrived before this fetch
+            // completed must survive it.
+            setMessages(prev => mergeRoomMessages(prev, allMessages));
             setParticipants(participantsData || []);
         } finally {
             setLoading(false);
@@ -565,16 +583,25 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 replyToMessageId: options?.replyToMessageId,
                 assessmentId: options?.assessmentId,
             });
-            const storedMessage = result.message as Message | undefined;
-            if (!storedMessage) {
+            const storedRow = result.message as Record<string, unknown> | undefined;
+            if (!storedRow) {
                 throw new Error('Transfer message operation did not return a stored message');
             }
-            setMessages(prev => prev.some(message => message.id === storedMessage.id)
-                ? prev
-                : [...prev, addDisplayNameToMessage(storedMessage, participants)]);
+            // Project the stored row before it enters React state: the row is a raw messages
+            // record and can carry the private assessment key.
+            const storedMessage = projectRoomMessage(storedRow);
+            setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(storedMessage, participants)]));
             if (user.current_role === 'student') {
                 try {
-                    await transferAssessmentService.processMessage(storedMessage.id);
+                    const processed = await transferAssessmentService.processMessage(storedMessage.id);
+                    // Consume the trusted lifecycle result: the server, not the browser, decides
+                    // whether the answer was graded or needs a clarifying label.
+                    setMessages(prev => mergeRoomMessages(prev, [
+                        addDisplayNameToMessage(
+                            withAnswerLifecycle(storedMessage, answerLifecycleFromProcessed(processed)),
+                            participants
+                        ),
+                    ]));
                 } catch (assessmentError) {
                     if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
                         throw assessmentError;
@@ -802,10 +829,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     throw new Error('Transfer preparation did not return a structured tutor decision');
                 }
                 setTransferDraft({
-                    draftId: String(prepared.draft_id),
-                    revision: Number(prepared.revision),
                     decision: preparedDecision,
                     progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
+                    roomId: String(prepared.room_id),
+                    studentId: String(prepared.student_id),
+                    checklistId: String(prepared.checklist_id),
+                    // Keep null as null. String(null) is the text "null", which the RPC would
+                    // reject as an invalid UUID on every tutoring and Guard turn.
+                    itemId: prepared.item_id == null ? null : String(prepared.item_id),
+                    focusStudentMessageId: String(prepared.focus_student_message_id),
                 });
                 setAiSuggestion(preparedDecision.assessment?.rendered_text || preparedDecision.response);
                 setAiDecision(null);
@@ -1327,25 +1359,50 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const confirmTransferDraft = async (decision: TutorDecisionV3): Promise<void> => {
         if (!transferDraft) throw new Error('No transfer assessment draft is available');
-        const reviewed = await transferAssessmentService.reviewDraft({
-            draftId: transferDraft.draftId,
-            expectedRevision: transferDraft.revision,
-            finalPayload: decision,
-            contentConfirmed: true,
-        });
-        const sent = await transferAssessmentService.sendReviewed({
-            draftId: transferDraft.draftId,
-            expectedRevision: Number(reviewed.revision),
-            expectedHash: String(reviewed.final_hash),
-        });
-        const sentMessage = sent.message as Message | undefined;
-        if (sentMessage) {
-            setMessages(prev => prev.some(message => message.id === sentMessage.id)
-                ? prev
-                : [...prev, addDisplayNameToMessage(sentMessage, participants)]);
+        if (deliveryInFlightRef.current) {
+            throw new Error('A delivery is already in flight for this candidate.');
         }
-        if (sent.room) setCurrentRoom(normalizeRoom(sent.room as Room));
-        clearAISuggestion();
+
+        const scope = {
+            roomId: transferDraft.roomId,
+            studentId: transferDraft.studentId,
+            checklistId: transferDraft.checklistId,
+            itemId: transferDraft.itemId,
+            focusStudentMessageId: transferDraft.focusStudentMessageId,
+        };
+        // Fail closed locally: the server would reject an incompatible payload anyway, and a
+        // wrong itemId must never leave the browser.
+        const deliverable = assertDeliverableReview(decision, scope);
+        if (!deliverable.ok) throw new Error(deliverable.message);
+
+        deliveryInFlightRef.current = true;
+        try {
+            // No draft row exists, so the reviewed payload and its scope are delivered in one call.
+            const sent = await transferAssessmentService.sendReviewed({
+                reviewedPayload: decision,
+                roomId: scope.roomId,
+                studentId: scope.studentId,
+                checklistId: scope.checklistId,
+                itemId: scope.itemId,
+                focusStudentMessageId: scope.focusStudentMessageId,
+            });
+            const sentMessage = sent.message as unknown;
+            if (sentMessage) {
+                const storedRow = sentMessage as Record<string, unknown>;
+                const deliveredView = addDisplayNameToMessage(
+                    projectRoomMessage(
+                        storedRow,
+                        publicAssessmentForDecision(decision, String(storedRow.id ?? ''))
+                    ),
+                    participants
+                );
+                setMessages(prev => mergeRoomMessages(prev, [deliveredView]));
+            }
+            if (sent.room) setCurrentRoom(normalizeRoom(sent.room as Room));
+            clearAISuggestion();
+        } finally {
+            deliveryInFlightRef.current = false;
+        }
     };
 
     const updateFinalResponse = (response: string) => {

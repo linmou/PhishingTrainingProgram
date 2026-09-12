@@ -1,6 +1,6 @@
 // Purpose: grade normalized assessment selections by exact set equality only.
 
-import { AssessmentOptionId } from '../types/assessment';
+import type { AssessmentOptionId } from '../types/assessment';
 
 export function gradeSelection(
   selected: ReadonlyArray<AssessmentOptionId>,

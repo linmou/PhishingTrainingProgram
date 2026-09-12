@@ -4,6 +4,11 @@
 const fs=require('node:fs'),path=require('node:path');
 const sha=require('./runner').sha;
 function expectedIds(c){return [...c.expected.checks,...(c.legacy||[]).map(a=>a.id)];}
+// Additive transfer gate registration: the transfer quality gate consumes this snapshot, while
+// assess() keeps reconciling exactly the legacy metrics and thresholds it reconciled before.
+const gateExtensions=new Map();
+function registerGateExtension(id,extension){if(!id||typeof id!=='string')throw new Error('A gate extension id is required.');if(gateExtensions.has(id))throw new Error(`Gate extension ${id} is already registered.`);gateExtensions.set(id,{...extension,id});return gateExtensions.get(id);}
+function gateExtension(id){return gateExtensions.get(id)||null;}
 function metricInfo(record,id,definition){
  const legacy=(record.input.legacy||[]).find(a=>a.id===id);
  if(legacy)return {id:'v0:'+legacy.metric,gate:['retained_regression','retained_supporting'].includes(legacy.disposition),threshold:legacy.metric==='response_length'?1:0.8,legacy:true};
@@ -80,4 +85,4 @@ if(require.main===module){
  const out=path.join(dir,base?'comparison.json':'gate.json');fs.writeFileSync(out,JSON.stringify(result,null,2)+'\n',{flag:'wx'});
  console.log(JSON.stringify({verdict:result.verdict,issues:result.issues.length,issue_types:[...new Set(result.issues.map(i=>i.type))],metric_rows:result.metrics.length}));if(result.verdict!=='accepted')process.exitCode=1;
 }
-module.exports={assess,expectedIds};
+module.exports={assess,expectedIds,registerGateExtension,gateExtension};
