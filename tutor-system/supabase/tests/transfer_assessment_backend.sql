@@ -205,6 +205,20 @@ WITH checks(check_name, pass, detail) AS (
                           (SELECT count(*) FROM private.learning_event_inbox),
                           (SELECT count(*) FROM public.messages WHERE assessment_lifecycle IS NOT NULL)))
 
+    UNION ALL
+    -- 16. The author's own role decides the stored message role. Migration 038 hardcoded 'tutor'
+    --     here, which made every learner message ungradeable: process_assessment_message_v1 refuses
+    --     any answer whose user_role is not 'student'. Both halves are asserted together, because
+    --     either one alone leaves the answer path broken or ungraded.
+    SELECT 'post_message stores the author role and the grader requires student',
+           EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                    WHERE n.nspname='public' AND p.proname='post_assessment_message_v1'
+                      AND pg_get_functiondef(p.oid) ~ 'current_role')
+           AND EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+                    WHERE n.nspname='public' AND p.proname='process_assessment_message_v1'
+                      AND pg_get_functiondef(p.oid) ~ 'user_role <> ''student'''),
+           'post_message derives user_role from users.current_role; the grader still requires student'
+
 )
 SELECT check_name, pass, detail, 0 AS is_rollup FROM checks
 UNION ALL

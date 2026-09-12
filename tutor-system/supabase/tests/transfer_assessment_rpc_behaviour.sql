@@ -139,16 +139,13 @@ begin
     insert into p2_results values ('A4','second delivery refused', false,
       'expected ASSESSMENT_ALREADY_OPEN or the one-open index, got ' || v_res::text);
   exception when others then
-    -- Either outcome is a refusal, and the refusal is what matters. The function raises
-    -- ASSESSMENT_ALREADY_OPEN from its own pre-check, but the partial unique index enforces the
-    -- same rule and can report first as 23505. Recorded rather than hidden: depending on which one
-    -- wins, a client sees either the designed 409 code or an index violation.
-    insert into p2_results values ('A4','second delivery refused',
-      sqlerrm = 'ASSESSMENT_ALREADY_OPEN' OR sqlstate = '23505',
-      sqlstate || ': ' || sqlerrm ||
-        case when sqlstate = '23505'
-             then ' (refused by one_open_assessment_per_student, not by the ASSESSMENT_ALREADY_OPEN pre-check)'
-             else '' end);
+    -- The refusal is what matters, and since migration 043 dropped the mis-scoped partial index
+    -- there is exactly one refuser left: the function's own pre-check. A 23505 here would now mean
+    -- an index 043 was supposed to drop is still present, so it is no longer accepted as an
+    -- equivalent outcome.
+    insert into p2_results values ('A4','second delivery refused as ASSESSMENT_ALREADY_OPEN',
+      sqlerrm = 'ASSESSMENT_ALREADY_OPEN',
+      sqlstate || ': ' || sqlerrm);
   end;
 
   -- =======================================================================================
@@ -316,6 +313,55 @@ begin
 
     -- The set_config above was not local, so restore the flag for the rest of the connection.
     perform set_config('app.transfer_operation', 'on', false);
+  end;
+
+  -- =======================================================================================
+  -- A11: the learner answer path as the browser actually drives it.
+  --
+  -- Every other case here inserts the learner message directly, which is why migration 038's
+  -- hardcoded user_role='tutor' in post_assessment_message_v1 went unnoticed: the grader refuses a
+  -- non-student author, so a learner message posted through the real RPC could never be graded.
+  -- This case posts through post_assessment_message_v1 and then grades the stored row, which is the
+  -- exact two-call sequence RoomContext sendMessage performs.
+  --
+  -- It answers the still-delivered assessment from A9, so the one-open-assessment rule is not
+  -- triggered, and it passes p_assessment_id as well as the parent link so the translated
+  -- ownership check is exercised too.
+  -- =======================================================================================
+  declare
+    v_open_assessment uuid;
+    v_posted          uuid;
+    v_posted_role     text;
+    v_posted_author   uuid;
+  begin
+    select id into v_open_assessment
+    from messages
+    where assessment_lifecycle = 'delivered'
+      and assessment_checklist_id = v_check
+    order by created_at desc
+    limit 1;
+
+    v_res := post_assessment_message_v1(
+      v_room, 'A', v_open_assessment, v_open_assessment, v_student, gen_random_uuid());
+    v_posted := (v_res->'message'->>'id')::uuid;
+    select user_role, user_id into v_posted_role, v_posted_author from messages where id = v_posted;
+
+    v_res := process_assessment_message_v1(v_posted, v_student, gen_random_uuid());
+
+    insert into p2_results
+    values ('A11','post_message stores the author role and the answer then grades',
+            v_open_assessment is not null
+            and v_posted_role = 'student'
+            and v_posted_author = v_student
+            and (v_res->>'result') = 'pass'
+            and (select assessment_lifecycle from messages where id = v_open_assessment) = 'answered',
+            format('posted=%s role=%s author_is_student=%s grade=%s lifecycle=%s',
+                   v_posted, coalesce(v_posted_role,'null'), v_posted_author = v_student,
+                   coalesce(v_res->>'result','null'),
+                   coalesce((select assessment_lifecycle from messages where id = v_open_assessment),'null')));
+  exception when others then
+    insert into p2_results values ('A11','post_message stores the author role and the answer then grades',
+      false, sqlstate || ': ' || sqlerrm);
   end;
 end
 $p2$;

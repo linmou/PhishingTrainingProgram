@@ -50,7 +50,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         roomId: string;
         studentId: string;
         checklistId: string;
-        itemId: string;
+        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
+        itemId: string | null;
         focusStudentMessageId: string;
     } | null>(null);
     const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
@@ -753,7 +754,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     roomId: String(prepared.room_id),
                     studentId: String(prepared.student_id),
                     checklistId: String(prepared.checklist_id),
-                    itemId: String(prepared.item_id),
+                    // Keep null as null. String(null) is the text "null", which the RPC would
+                    // reject as an invalid UUID on every tutoring and Guard turn.
+                    itemId: prepared.item_id == null ? null : String(prepared.item_id),
                     focusStudentMessageId: String(prepared.focus_student_message_id),
                 });
                 setAiSuggestion(preparedDecision.assessment?.rendered_text || preparedDecision.response);

@@ -228,7 +228,8 @@ export interface RoomContextType {
         roomId: string;
         studentId: string;
         checklistId: string;
-        itemId: string;
+        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
+        itemId: string | null;
         focusStudentMessageId: string;
     } | null;
     confirmTransferDraft: (decision: TutorDecisionV3) => Promise<void>;

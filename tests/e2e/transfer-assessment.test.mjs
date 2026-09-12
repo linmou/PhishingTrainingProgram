@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Purpose: integration-owned end-to-end aggregate for the transfer-assessment lifecycle. It runs
 // one teacher session across both components: component 101's real pure resolver decides the turn
-// and produces the private assessment, component 102's real service facade reviews and delivers it
+// and produces the private assessment, component 102's real service facade prepares and delivers it
 // through its typed operations, and the published result is checked to contain no private
 // assessment material. Only the network transport (the Edge Function call) is replaced; every
 // projection and every decision under test is the production implementation.
@@ -17,10 +17,10 @@ import { loadTutorSystemEnv } from '../../tools/load-env.mjs';
 // exist before the service module is imported.
 loadTutorSystemEnv();
 
-const { TransferAssessmentService, toPublicMessageDTO, toPublicQuestionDTO, toTeacherAssessmentDraftDTO } = await import(
+const { TransferAssessmentService, toPublicMessageDTO } = await import(
   '../../tutor-system/src/services/transferAssessmentService.ts'
 );
-const { projectPublicPayload, containsPrivateFieldName } = await import(
+const { containsPrivateFieldName } = await import(
   '../../tutor-system/src/types/assessmentApi.ts'
 );
 const { resolveTransferAnswer } = await import(
@@ -65,56 +65,13 @@ function createRecordingTransport(responses) {
   };
 }
 
-/** A stored question row as `assessment_questions` holds it, with private columns populated. */
-function storedQuestionRow() {
-  return {
-    id: 'question-1',
-    room_id: 'room-1',
-    student_id: 'student-1',
-    checklist_id: 'checklist-1',
-    item_id: 'item-1',
-    tutor_message_id: 'message-2',
-    source_student_message_id: 'message-1',
-    selection_type: 'single',
-    stem: 'Which statement best describes the risk to this account?',
-    rendered_text: 'Which statement best describes the risk to this account?',
-    options: OPTIONS,
-    lifecycle: 'open',
-    answer_message_id: null,
-    selected_option_ids: null,
-    result: null,
-    closed_reason: null,
-    feedback_message_id: null,
-    correct_option_ids: ['B'],
-    transfer_basis: { concept_rule: 'A familiar sender is not proof of safety.' },
-    public_payload_hash: 'd'.repeat(64),
-  };
-}
-
-/** A private draft row as `private.assessment_drafts` holds it. */
-function storedDraftRow() {
-  return {
-    draft_id: 'draft-1',
-    revision: 1,
-    status: 'draft',
-    supersedes_draft_id: null,
-    progress_snapshot_hash: 'e'.repeat(64),
-    decision: { mode: 'assessment', instruction: 'transfer_assess' },
-    reason: 'The learner has not yet transferred the rule to a new sender.',
-    assessment_basis: { concept_rule: 'A familiar sender is not proof of safety.' },
-    id: 'draft-1',
-    room_id: 'room-1',
-    student_id: 'student-1',
-    raw_model_output: { decision: { mode: 'assessment' } },
-    raw_hash: 'f'.repeat(64),
-    final_hash: null,
-    reviewed_payload: null,
-    trigger_key: 'trigger-key-abc',
-    created_at: '2026-09-12T00:00:00.000Z',
-  };
-}
-
-function storedTutorMessageRow() {
+/**
+ * A stored tutor message row as the collapsed model holds it. The assessment, its key, and the
+ * transfer basis live on the message; `send_reviewed_tutor_response_v3` returns this row with
+ * `assessment_key` removed, and `public.messages` stays participant-readable, which is the recorded
+ * tradeoff the SQL lane asserts directly.
+ */
+function deliveredMessageRow() {
   return {
     id: 'message-2',
     room_id: 'room-1',
@@ -125,7 +82,35 @@ function storedTutorMessageRow() {
     parent_message_id: 'message-1',
     response_mode: 'assessment',
     created_at: '2026-09-12T00:00:01.000Z',
+    assessment_options: clone(OPTIONS),
+    assessment_key: ['B'],
+    assessment_lifecycle: 'delivered',
+    assessment_checklist_id: 'checklist-1',
+    assessment_item_id: 'item-1',
+    assessment_transfer_basis: { concept_rule: 'A familiar sender is not proof of safety.' },
     raw_model_output: { decision: { mode: 'assessment' } },
+  };
+}
+
+/** The reviewed payload the tutor confirms, in the shape `send_reviewed` accepts. */
+function reviewedPayload() {
+  return {
+    reason: 'The learner has not yet transferred the rule to a new sender.',
+    decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: 'item-1' },
+    response: 'Which statement best describes the risk to this account?',
+    assessment: {
+      selection_type: 'single',
+      options: clone(OPTIONS),
+      stem: 'Which statement best describes the risk to this account?',
+      rendered_text: 'Which statement best describes the risk to this account?',
+      correct_option_ids: ['B'],
+      transfer_basis: {
+        concept_rule: 'A familiar sender is not proof of safety.',
+        source_context: 'The learner judged a link safe because the sender was familiar.',
+        changed_context: 'A bank alert asks the learner to confirm a password after a transfer.',
+        source_evidence_message_ids: ['message-1'],
+      },
+    },
   };
 }
 
@@ -176,19 +161,26 @@ function answerInput(content, overrides = {}) {
   };
 }
 
-test('E2E: a prepared draft is reviewed, delivered, and exposes no private material to the learner', async () => {
+test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it without the key', async () => {
+  // There is no draft table, so prepare_turn persists nothing and returns the candidate plus the
+  // scope it applies to. The reviewed payload then travels on the single send_reviewed call.
   const transport = createRecordingTransport({
-    prepare_turn: () => ({ draft: storedDraftRow(), status: 'draft' }),
-    review_draft: () => ({ draft_id: 'draft-1', revision: 2, final_hash: 'a'.repeat(64) }),
+    prepare_turn: () => ({
+      decision: reviewedPayload(),
+      progress_snapshot_hash: SNAPSHOT,
+      room_id: 'room-1',
+      student_id: 'student-1',
+      checklist_id: 'checklist-1',
+      item_id: 'item-1',
+      focus_student_message_id: 'message-1',
+    }),
     send_reviewed: () => ({
-      message: storedTutorMessageRow(),
-      question: storedQuestionRow(),
+      message: deliveredMessageRow(),
       room: { id: 'room-1', active_response_mode: 'tutoring' },
     }),
   });
 
   const service = new TransferAssessmentService({ api: transport.api, requestId: () => 'request-e2e-1' });
-  const assessment = producedAssessment();
 
   // Component 101 decides the turn on the real assessment; the grade and transition are real.
   const resolved = resolveTransferAnswer(lifecycleContext(), answerInput('B'));
@@ -202,29 +194,30 @@ test('E2E: a prepared draft is reviewed, delivered, and exposes no private mater
     focusStudentMessageId: 'message-1',
     checklistId: 'checklist-1',
   });
-  const reviewed = await service.reviewDraft({
-    draftId: 'draft-1',
-    expectedRevision: 1,
-    finalPayload: { decision: { mode: 'assessment', instruction: 'transfer_assess' }, response: assessment.stem ?? publicAssessment().stem },
-    contentConfirmed: true,
-  });
+  // Nothing is stored by prepare: the response carries the candidate and the scope, not a draft row.
+  assert.equal(prepared.draft_id, undefined, 'prepare must not return a persisted draft');
+  assert.equal(prepared.room_id, 'room-1', 'prepare returns the scope send_reviewed needs');
+  assert.equal(prepared.item_id, 'item-1', 'prepare names the item the assessment targets');
+
   const delivered = await service.sendReviewed({
-    draftId: 'draft-1',
-    expectedRevision: 2,
-    expectedHash: reviewed.final_hash,
+    reviewedPayload: reviewedPayload(),
+    roomId: String(prepared.room_id),
+    studentId: String(prepared.student_id),
+    checklistId: String(prepared.checklist_id),
+    itemId: prepared.item_id == null ? null : String(prepared.item_id),
+    focusStudentMessageId: String(prepared.focus_student_message_id),
   });
 
-  // The lifecycle ran in order through the shared API contract.
+  // The session drives prepare then send; the separate review step no longer exists.
   assert.deepEqual(
     transport.calls.map((call) => call.operation),
-    ['prepare_turn', 'review_draft', 'send_reviewed'],
-    'the session must drive prepare, review, and send in that order'
+    ['prepare_turn', 'send_reviewed'],
+    'the session must drive prepare and send, with no review round trip'
   );
-  assert.equal(prepared.status, 'draft', 'the prepared turn yields a draft');
-  assert.equal(delivered.question.lifecycle, 'open', 'the delivered question is open for the learner');
+  assert.equal(transport.calls[1].reviewed_payload.decision.mode, 'assessment');
 
   // The published learner payload carries no private assessment material, checked by key and value.
-  const learnerPayload = JSON.stringify({ question: delivered.question, message: delivered.message });
+  const learnerPayload = JSON.stringify(delivered.message);
   PRIVATE_KEYS.forEach((key) => {
     assert.equal(learnerPayload.includes(key), false, `public payload leaked private key ${key}`);
   });
@@ -233,33 +226,61 @@ test('E2E: a prepared draft is reviewed, delivered, and exposes no private mater
     false,
     'public payload leaked the transfer basis text'
   );
-  assert.equal(containsPrivateFieldName(delivered.question), false, 'shared guard must see no private field name');
-  assert.deepEqual(delivered.question.options, OPTIONS, 'the learner still receives all four ordered options');
+  assert.equal(containsPrivateFieldName(delivered.message), false, 'shared guard must see no private field name');
 });
 
-test('E2E: the teacher-private draft carries the basis while the public projection never does', () => {
-  const draft = storedDraftRow();
-  const teacherView = toTeacherAssessmentDraftDTO(draft);
-  const publicView = projectPublicPayload(storedQuestionRow());
+test('E2E: the facade projection drops the assessment key even when the response still carries it', async () => {
+  // The key lives on the tutor message row, and the RPC strips it. This asserts the browser-side
+  // allowlist independently: a response that still carried the key would not reach the learner
+  // through the facade, so the projection is a second line of defence rather than a copy of the
+  // server's behaviour.
+  const stored = deliveredMessageRow();
+  assert.deepEqual(stored.assessment_key, ['B'], 'the storage row holds the key');
+  assert.deepEqual(stored.assessment_options, OPTIONS, 'and the ordered options');
 
-  // The reviewing teacher needs the private basis; that is the whole reason this DTO exists.
-  assert.deepEqual(teacherView.assessment_basis, { concept_rule: 'A familiar sender is not proof of safety.' });
-  assert.equal(draft.trigger_key, 'trigger-key-abc', 'the storage row does hold the trigger key');
-  assert.equal(teacherView.trigger_key, undefined, 'but the browser DTO must not expose it');
-  assert.equal(teacherView.raw_model_output, undefined, 'raw model output must not reach the browser');
-  assert.equal(teacherView.raw_hash, undefined, 'the raw hash must not reach the browser');
-  assert.equal(teacherView.id, undefined, 'the storage id must not reach the browser');
+  const transport = createRecordingTransport({
+    send_reviewed: () => ({
+      message: stored,
+      room: { id: 'room-1', active_response_mode: 'tutoring' },
+    }),
+  });
+  const service = new TransferAssessmentService({ api: transport.api, requestId: () => 'request-e2e-2' });
 
-  // The same underlying question projected for a learner must lose exactly those fields.
-  assert.equal(publicView.correct_option_ids, undefined, 'public projection must strip the key');
-  assert.equal(publicView.transfer_basis, undefined, 'public projection must strip the transfer basis');
-  assert.equal(publicView.stem, storedQuestionRow().stem, 'public projection must keep the learner-visible stem');
+  const delivered = await service.sendReviewed({
+    reviewedPayload: reviewedPayload(),
+    roomId: 'room-1',
+    studentId: 'student-1',
+    checklistId: 'checklist-1',
+    itemId: 'item-1',
+    focusStudentMessageId: 'message-1',
+  });
+
+  // The response the facade returns does not carry the key the responder sent.
+  assert.equal(delivered.message.assessment_key, undefined, 'the response must not carry the key');
+  assert.equal(
+    JSON.stringify(delivered.message).includes('assessment_key'),
+    false,
+    'the key name must not appear anywhere in the delivered response'
+  );
+  assert.equal(
+    JSON.stringify(delivered.message).includes('correct_option_ids'),
+    false,
+    'the private key field must not appear under its model name either'
+  );
+  assert.equal(containsPrivateFieldName(delivered.message), false, 'shared guard must see no private field name');
+
+  // The same projection of the row alone drops the key and keeps the learner-visible identity.
+  const publicView = toPublicMessageDTO(stored);
+  assert.equal(publicView.id, 'message-2');
+  assert.equal(publicView.user_role, 'tutor');
+  assert.equal(publicView.assessment_key, undefined, 'public projection must strip the key');
 });
 
 test('E2E: the public message projection exposes identity and content but no private row', () => {
-  const message = toPublicMessageDTO(storedTutorMessageRow());
+  const message = toPublicMessageDTO(deliveredMessageRow());
   assert.equal(message.content, 'Which statement best describes the risk to this account?');
   assert.equal(message.user_role, 'tutor');
+  assert.equal(message.response_mode, 'assessment');
   assert.equal(message.raw_model_output, undefined, 'the public message must not carry raw model output');
   assert.equal(JSON.stringify(message).includes('raw_model_output'), false);
 });

@@ -29,27 +29,6 @@ export interface PublicAssessmentDTO {
   options: AssessmentOption[];
 }
 
-/**
- * Public question lifecycle DTO. The contract permits scope, link, timestamp, and result fields
- * needed by the UI, but never `correct_option_ids` or `transfer_basis`. The field list below is
- * exactly the Edge Function's `publicQuestion` allowlist, so the browser sees what the server
- * chose to send and nothing more.
- */
-export interface PublicQuestionDTO extends PublicAssessmentDTO {
-  room_id: string;
-  student_id: string;
-  checklist_id: string | null;
-  item_id: string | null;
-  tutor_message_id: string | null;
-  source_student_message_id: string | null;
-  lifecycle: string;
-  answer_message_id: string | null;
-  selected_option_ids: string[] | null;
-  result: Record<string, unknown> | null;
-  closed_reason: string | null;
-  feedback_message_id: string | null;
-}
-
 /** Public stored-message DTO. Contains no private draft or feedback row. */
 export interface PublicMessageDTO {
   id: string;
@@ -62,27 +41,6 @@ export interface PublicMessageDTO {
   response_mode: string | null;
   created_at: string;
 }
-
-/** The exact key set of `PublicQuestionDTO`, mirroring the Edge Function allowlist. */
-export const PUBLIC_QUESTION_DTO_KEYS: ReadonlyArray<keyof PublicQuestionDTO> = [
-  'id',
-  'room_id',
-  'student_id',
-  'checklist_id',
-  'item_id',
-  'tutor_message_id',
-  'source_student_message_id',
-  'selection_type',
-  'stem',
-  'rendered_text',
-  'options',
-  'lifecycle',
-  'answer_message_id',
-  'selected_option_ids',
-  'result',
-  'closed_reason',
-  'feedback_message_id',
-];
 
 /** The exact key set of `PublicMessageDTO`, mirroring the Edge Function allowlist. */
 export const PUBLIC_MESSAGE_DTO_KEYS: ReadonlyArray<keyof PublicMessageDTO> = [
@@ -118,29 +76,19 @@ function projectAllowlisted<T>(row: Record<string, unknown>, keys: ReadonlyArray
   return projected as unknown as T;
 }
 
-/**
- * Project a stored question row onto the public DTO. Allowlisted rather than denied, so a new
- * private column cannot reach a learner merely by being added to storage.
- */
-export function toPublicQuestionDTO(row: Record<string, unknown>): PublicQuestionDTO {
-  return projectAllowlisted<PublicQuestionDTO>(row, PUBLIC_QUESTION_DTO_KEYS);
-}
-
 /** Project a stored message row onto the public DTO. */
 export function toPublicMessageDTO(row: Record<string, unknown>): PublicMessageDTO {
   return projectAllowlisted<PublicMessageDTO>(row, PUBLIC_MESSAGE_DTO_KEYS);
 }
 
 /**
- * Result of `send_reviewed`. Mirrors `send_reviewed_tutor_response_v3`'s four-field return,
- * with the message and question projected through the public allowlists. `feedback_id` is a
- * server-side reference only; it carries no draft or private assessment material.
+ * Result of `send_reviewed`. Mirrors `send_reviewed_tutor_response_v3`'s return, which is the
+ * stored tutor message plus the updated room. There is no question table any more, so the
+ * assessment travels on the message itself and no separate question DTO exists.
  */
 export interface ReviewedDeliveryDTO {
   message: PublicMessageDTO;
-  question: PublicQuestionDTO | null;
   room: Room;
-  feedback_id: string;
 }
 
 /**
@@ -161,11 +109,9 @@ function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliv
     value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
   return {
     message: toPublicMessageDTO(asRecord(result.message)),
-    question: result.question ? toPublicQuestionDTO(asRecord(result.question)) : null,
     // The room row is already the public room shape the room API returns; it carries no
     // assessment material, so it is passed through rather than re-allowlisted here.
     room: asRecord(result.room) as unknown as Room,
-    feedback_id: String(result.feedback_id ?? ''),
   };
 }
 
@@ -314,7 +260,8 @@ export class TransferAssessmentService {
     roomId: string;
     studentId: string;
     checklistId: string;
-    itemId: string;
+    /** Null for a tutoring or Guard turn; an assessment must name its item. */
+    itemId: string | null;
     focusStudentMessageId: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request<Record<string, unknown>>('send_reviewed', {

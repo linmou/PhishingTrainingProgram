@@ -28,7 +28,8 @@ export interface ReviewedTransferResponseInput {
   roomId: string;
   studentId: string;
   checklistId: string;
-  itemId: string;
+  /** Null for a tutoring or Guard turn; an assessment must name its item. */
+  itemId: string | null;
   focusStudentMessageId: string;
 }
 

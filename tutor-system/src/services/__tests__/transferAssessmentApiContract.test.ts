@@ -32,11 +32,11 @@ describe('assessment API envelope', () => {
   });
 
   it('wraps failure as { ok: false, error } with a stable code, message, and retryable flag', () => {
-    const envelope = errorEnvelope('DRAFT_REVISION_CONFLICT', 'draft revision conflict');
+    const envelope = errorEnvelope('ITEM_VALIDATION_FAILED', 'item validation failed');
 
     expect(envelope).toEqual({
       ok: false,
-      error: { code: 'DRAFT_REVISION_CONFLICT', message: 'draft revision conflict', retryable: false },
+      error: { code: 'ITEM_VALIDATION_FAILED', message: 'item validation failed', retryable: false },
     });
     expect(Object.keys(envelope).sort()).toEqual(['error', 'ok']);
     expect('data' in envelope).toBe(false);
@@ -108,11 +108,17 @@ describe('stable error codes', () => {
     });
   });
 
-  it('treats authorization and revision failures as non-retryable client faults', () => {
+  it('treats authorization and validation failures as non-retryable client faults', () => {
     expect(ASSESSMENT_API_ERROR_STATUS.FORBIDDEN.status).toBe(403);
     expect(ASSESSMENT_API_ERROR_STATUS.FORBIDDEN.retryable).toBe(false);
-    expect(ASSESSMENT_API_ERROR_STATUS.DRAFT_REVISION_CONFLICT.status).toBe(409);
-    expect(ASSESSMENT_API_ERROR_STATUS.DRAFT_ALREADY_SENT.status).toBe(409);
+    expect(ASSESSMENT_API_ERROR_STATUS.ITEM_VALIDATION_FAILED.status).toBe(409);
+    expect(ASSESSMENT_API_ERROR_STATUS.WRONG_LEARNER.status).toBe(409);
+  });
+
+  it('no longer declares the removed draft-disposition codes', () => {
+    ['DRAFT_REVISION_CONFLICT', 'DRAFT_ALREADY_SENT', 'CONTENT_CONFIRMATION_REQUIRED'].forEach((code) => {
+      expect(ASSESSMENT_API_ERROR_STATUS[code]).toBeUndefined();
+    });
   });
 
   it('treats an unconfigured provider or verifier as unavailable', () => {

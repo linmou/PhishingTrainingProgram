@@ -1,16 +1,15 @@
 #!/usr/bin/env node
-// Test responsible for the public question/message result projection through the browser facade
-// (T014): `sendReviewed` and `processMessage` must expose typed public DTOs carrying no
-// `correct_option_ids`, no transfer basis, and no private draft or feedback material, and the
-// projection must be an allowlist so a newly added private column cannot leak by default.
+// Test responsible for the public message result projection through the browser facade (T014):
+// `sendReviewed` and `processMessage` must expose typed public DTOs carrying no assessment key, no
+// transfer basis, and no private draft or feedback material, and the projection must be an
+// allowlist so a newly added private column cannot leak by default. There is no question table any
+// more, so the assessment travels on the tutor message and this file asserts that boundary.
 
 import {
   PUBLIC_ASSESSMENT_FORBIDDEN_KEYS,
   PUBLIC_MESSAGE_DTO_KEYS,
-  PUBLIC_QUESTION_DTO_KEYS,
   TransferAssessmentService,
   toPublicMessageDTO,
-  toPublicQuestionDTO,
 } from '../transferAssessmentService';
 
 const OPTIONS = [
@@ -20,44 +19,30 @@ const OPTIONS = [
   { id: 'D' as const, text: 'Opening the link proves the sender identity' },
 ];
 
-/** A stored question row with every private column populated and marked. */
-function storedQuestionRow(): Record<string, unknown> {
-  const row: Record<string, unknown> = {
-    id: 'question-1',
-    room_id: 'room-1',
-    student_id: 'student-1',
-    checklist_id: 'checklist-1',
-    item_id: 'item-1',
-    tutor_message_id: 'message-2',
-    source_student_message_id: 'message-1',
-    selection_type: 'single',
-    stem: 'Which statement best describes the risk?',
-    rendered_text: 'Which statement best describes the risk?',
-    options: OPTIONS,
-    lifecycle: 'open',
-    answer_message_id: null,
-    selected_option_ids: null,
-    result: null,
-    closed_reason: null,
-    feedback_message_id: null,
-  };
-  PUBLIC_ASSESSMENT_FORBIDDEN_KEYS.forEach((name, index) => {
-    row[name] = `leaked-${index}`;
-  });
-  return row;
-}
-
+/**
+ * A stored tutor message row as the collapsed model holds it: the assessment, its key, and the
+ * transfer basis all live on the message, and every private column is marked so a leak is visible.
+ */
 function storedMessageRow(): Record<string, unknown> {
   const row: Record<string, unknown> = {
     id: 'message-2',
     room_id: 'room-1',
     user_id: 'tutor-1',
-    content: 'Let us look at how you checked the sender.',
+    content: 'Which statement best describes the risk?',
     user_role: 'tutor',
     is_ai_generated: true,
     parent_message_id: 'message-1',
-    response_mode: 'tutoring',
+    response_mode: 'assessment',
     created_at: '2026-09-12T00:00:00.000Z',
+    assessment_options: OPTIONS,
+    assessment_lifecycle: 'delivered',
+    assessment_checklist_id: 'checklist-1',
+    assessment_item_id: 'item-1',
+    assessment_key: ['B'],
+    assessment_answer_message_id: null,
+    assessment_selected_option_ids: null,
+    assessment_result: null,
+    assessment_closed_at: null,
   };
   PUBLIC_ASSESSMENT_FORBIDDEN_KEYS.forEach((name, index) => {
     row[name] = `leaked-${index}`;
@@ -73,78 +58,92 @@ function createService(response: unknown) {
   });
 }
 
-describe('public assessment result projection', () => {
-  it('projects a stored question onto exactly the public allowlist', () => {
-    const dto = toPublicQuestionDTO(storedQuestionRow());
-    expect(Object.keys(dto).sort()).toEqual([...PUBLIC_QUESTION_DTO_KEYS].sort());
+const REVIEWED_INPUT = {
+  reviewedPayload: {
+    reason: 'the learner has not transferred the rule yet',
+    decision: { mode: 'assessment' as const, instruction: 'transfer_assess' as const, target_item_id: 'item-1' },
+    response: 'Which statement best describes the risk?',
+    assessment: {
+      selection_type: 'single' as const,
+      options: OPTIONS,
+      stem: 'Which statement best describes the risk?',
+      rendered_text: 'Which statement best describes the risk?',
+      correct_option_ids: ['B' as const],
+      transfer_basis: {
+        concept_rule: 'identity is not authentication',
+        source_context: 'the learner trusted a familiar sender',
+        changed_context: 'a prize message from a familiar account',
+        source_evidence_message_ids: ['message-1'],
+      },
+    },
+  },
+  roomId: 'room-1',
+  studentId: 'student-1',
+  checklistId: 'checklist-1',
+  itemId: 'item-1',
+  focusStudentMessageId: 'message-1',
+};
+
+describe('public message result projection', () => {
+  it('projects a stored assessment message onto exactly the public allowlist', () => {
+    const dto = toPublicMessageDTO(storedMessageRow());
+    expect(Object.keys(dto).sort()).toEqual([...PUBLIC_MESSAGE_DTO_KEYS].sort());
   });
 
-  it('drops every forbidden private key from a question, by name and by value', () => {
-    const dto = toPublicQuestionDTO(storedQuestionRow());
+  it('drops the assessment key and every forbidden private key from a message, by name and by value', () => {
+    const dto = toPublicMessageDTO(storedMessageRow());
+
     expect(JSON.stringify(dto)).not.toContain('leaked-');
+    expect(dto).not.toHaveProperty('assessment_key');
+    expect(dto).not.toHaveProperty('raw_model_output');
     PUBLIC_ASSESSMENT_FORBIDDEN_KEYS.forEach((name) => {
       expect(dto).not.toHaveProperty(name);
     });
   });
 
-  it('projects a stored message onto exactly the public allowlist', () => {
+  it('keeps the learner-visible message fields and normalizes absent ones to null', () => {
     const dto = toPublicMessageDTO(storedMessageRow());
-    expect(Object.keys(dto).sort()).toEqual([...PUBLIC_MESSAGE_DTO_KEYS].sort());
-    expect(JSON.stringify(dto)).not.toContain('leaked-');
-    expect(dto).not.toHaveProperty('raw_model_output');
-  });
+    expect(dto.content).toBe('Which statement best describes the risk?');
+    expect(dto.user_role).toBe('tutor');
+    expect(dto.response_mode).toBe('assessment');
 
-  it('preserves learner-visible grading fields while withholding the key', () => {
-    const dto = toPublicQuestionDTO({
-      ...storedQuestionRow(),
-      lifecycle: 'closed',
-      selected_option_ids: ['B'],
-      result: { correct: true },
-      answer_message_id: 'message-3',
-    });
-
-    expect(dto.lifecycle).toBe('closed');
-    expect(dto.selected_option_ids).toEqual(['B']);
-    expect(dto.result).toEqual({ correct: true });
-    expect(dto.answer_message_id).toBe('message-3');
-    expect(dto).not.toHaveProperty('correct_option_ids');
-  });
-
-  it('normalizes absent question fields to null so the shape is stable', () => {
-    const dto = toPublicQuestionDTO({ id: 'question-1', selection_type: 'single', stem: 's', rendered_text: 's', options: OPTIONS });
-    PUBLIC_QUESTION_DTO_KEYS.forEach((key) => {
-      expect(dto[key]).not.toBeUndefined();
+    const sparse = toPublicMessageDTO({ id: 'message-9' });
+    PUBLIC_MESSAGE_DTO_KEYS.forEach((key) => {
+      expect(sparse[key]).not.toBeUndefined();
     });
   });
 
-  it('projects sendReviewed into a typed delivery with a public question and message', async () => {
+  it('projects sendReviewed into a typed delivery with only the public message and room', async () => {
     const service = createService({
       message: storedMessageRow(),
-      question: storedQuestionRow(),
       room: { id: 'room-1', name: 'Room' },
-      feedback_id: 'feedback-1',
     });
 
-    const delivery = await service.sendReviewed({ draftId: 'draft-1', expectedRevision: 2 });
+    const delivery = await service.sendReviewed(REVIEWED_INPUT);
 
-    expect(Object.keys(delivery).sort()).toEqual(['feedback_id', 'message', 'question', 'room']);
+    expect(Object.keys(delivery).sort()).toEqual(['message', 'room']);
     expect(Object.keys(delivery.message).sort()).toEqual([...PUBLIC_MESSAGE_DTO_KEYS].sort());
-    expect(Object.keys(delivery.question!).sort()).toEqual([...PUBLIC_QUESTION_DTO_KEYS].sort());
     expect(JSON.stringify(delivery)).not.toContain('leaked-');
-    expect(delivery.feedback_id).toBe('feedback-1');
+    expect(delivery.message).not.toHaveProperty('assessment_key');
+    expect((delivery.room as unknown as { id: string }).id).toBe('room-1');
   });
 
-  it('surfaces a tutoring delivery with no assessment question as a null question', async () => {
-    const service = createService({ message: storedMessageRow(), question: null, room: {}, feedback_id: 'feedback-2' });
-    const delivery = await service.sendReviewed({ draftId: 'draft-1', expectedRevision: 2 });
-    expect(delivery.question).toBeNull();
-    expect(delivery.message.content).toBe('Let us look at how you checked the sender.');
+  it('surfaces a tutoring delivery with no assessment key as plain content', async () => {
+    const service = createService({
+      message: { ...storedMessageRow(), response_mode: 'tutoring', assessment_key: null, assessment_lifecycle: null },
+      room: {},
+    });
+
+    const delivery = await service.sendReviewed(REVIEWED_INPUT);
+
+    expect(delivery.message).not.toHaveProperty('assessment_key');
+    expect(delivery.message.content).toBe('Which statement best describes the risk?');
   });
 
   it('projects processMessage into a typed grading outcome', async () => {
     const service = createService({
-      question_id: 'question-1',
-      result: { correct: false },
+      question_id: 'message-2',
+      result: 'fail',
       selected_option_ids: ['C'],
       transition: { status: 'needs_review' },
       feedback_required: true,
@@ -159,13 +158,13 @@ describe('public assessment result projection', () => {
       'selected_option_ids',
       'transition',
     ]);
-    expect(processed.result).toEqual({ correct: false });
+    expect(processed.result).toBe('fail');
     expect(processed.selected_option_ids).toEqual(['C']);
     expect(processed.feedback_required).toBe(true);
   });
 
   it('defaults a malformed processMessage result rather than forwarding unknown keys', async () => {
-    const service = createService({ question_id: 'question-1', correct_option_ids: ['B'], transfer_basis: { x: 1 } });
+    const service = createService({ question_id: 'message-2', correct_option_ids: ['B'], transfer_basis: { x: 1 } });
     const processed = await service.processMessage('message-3');
     expect(processed).not.toHaveProperty('correct_option_ids');
     expect(processed).not.toHaveProperty('transfer_basis');

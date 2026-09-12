@@ -104,31 +104,11 @@ function assertTutor(principal: VerifiedPrincipal): void {
   if (!principal.can_review_assessment) throw new Error('FORBIDDEN');
 }
 
-function publicQuestion(value: Record<string, unknown>): Record<string, unknown> {
-  return {
-    id: value.id,
-    room_id: value.room_id,
-    student_id: value.student_id,
-    checklist_id: value.checklist_id,
-    item_id: value.item_id,
-    tutor_message_id: value.tutor_message_id,
-    source_student_message_id: value.source_student_message_id,
-    selection_type: value.selection_type,
-    stem: value.stem,
-    rendered_text: value.rendered_text,
-    options: value.options,
-    lifecycle: value.lifecycle,
-    answer_message_id: value.answer_message_id,
-    selected_option_ids: value.selected_option_ids,
-    result: value.result,
-    closed_reason: value.closed_reason,
-    feedback_message_id: value.feedback_message_id,
-    created_at: value.created_at,
-    answered_at: value.answered_at,
-    closed_at: value.closed_at,
-  };
-}
-
+/**
+ * The one response projection. A stored message is the only row shape the RPCs hand back, so the
+ * allowlist below is the whole public surface; `assessment_key` and every other private column
+ * are simply not listed.
+ */
 function publicMessage(value: Record<string, unknown>): Record<string, unknown> {
   return {
     id: value.id,
@@ -143,14 +123,10 @@ function publicMessage(value: Record<string, unknown>): Record<string, unknown> 
   };
 }
 
-function safeOperationData(operation: Operation, value: unknown): unknown {
+function safeOperationData(value: unknown): unknown {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const record = value as Record<string, unknown>;
-  if (operation === 'send_reviewed' && record.question) {
-    return { message: publicMessage(record.message as Record<string, unknown>), question: publicQuestion(record.question as Record<string, unknown>), room: record.room };
-  }
-  if (record.message) return { ...record, message: publicMessage(record.message as Record<string, unknown>), question: record.question ? publicQuestion(record.question as Record<string, unknown>) : undefined };
-  if (record.question) return { ...record, question: publicQuestion(record.question as Record<string, unknown>) };
+  if (record.message) return { ...record, message: publicMessage(record.message as Record<string, unknown>) };
   return value;
 }
 
@@ -472,7 +448,7 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
     const status = error.code === '42501' ? 403 : error.code === 'P0001' ? 409 : 500;
     throw Object.assign(new Error(error.message), { status, code: error.code || 'PERSISTENCE_FAILED' });
   }
-  return safeOperationData(operation, data);
+  return safeOperationData(data);
 }
 
 export async function handleAssessmentRequest(request: Request): Promise<Response> {

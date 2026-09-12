@@ -90,37 +90,36 @@ describe('Edge Function versus shared contract', () => {
     expect(rpcFunctions).not.toContain('regenerate_assessment_draft_v1');
   });
 
-  it('maps every error code the draft RPCs can raise into the shared status table', () => {
-    ['DRAFT_REVISION_CONFLICT', 'DRAFT_ALREADY_SENT', 'CONTENT_CONFIRMATION_REQUIRED', 'ITEM_VALIDATION_FAILED'].forEach(
-      (code) => {
-        expect(ASSESSMENT_API_ERROR_STATUS[code]).toBeDefined();
-        expect(ASSESSMENT_API_ERROR_STATUS[code].status).toBe(409);
-      }
-    );
+  it('maps every error code the live RPCs can raise into the shared status table', () => {
+    ['WRONG_LEARNER', 'ITEM_VALIDATION_FAILED', 'FORBIDDEN', 'INVALID_REQUEST'].forEach((code) => {
+      expect(ASSESSMENT_API_ERROR_STATUS[code]).toBeDefined();
+    });
+    expect(ASSESSMENT_API_ERROR_STATUS.WRONG_LEARNER.status).toBe(409);
+    expect(ASSESSMENT_API_ERROR_STATUS.ITEM_VALIDATION_FAILED.status).toBe(409);
+    expect(ASSESSMENT_API_ERROR_STATUS.FORBIDDEN.status).toBe(403);
   });
 
-  it('projects every response through the public helpers instead of returning raw records', () => {
-    // The Edge Function legitimately reads inbound private fields to validate the
-    // model output, so the guarantee that matters is on the response path: every
-    // returned record must go through publicMessage/publicQuestion.
-    expect(source).toMatch(/function publicQuestion/);
+  it('projects every response through the public message helper instead of returning raw records', () => {
+    // The Edge Function legitimately reads inbound private fields to validate the model output, so
+    // the guarantee that matters is on the response path: any returned message row must go through
+    // publicMessage. There is no question row any more, so publicMessage is the whole surface.
     expect(source).toMatch(/function publicMessage/);
-    expect(source).toMatch(/function safeOperationData[\s\S]*publicQuestion\(/);
     expect(source).toMatch(/function safeOperationData[\s\S]*publicMessage\(/);
+    expect(source).not.toMatch(/function publicQuestion/);
 
-    // The response projection is an explicit field allowlist, so a private field
-    // cannot leak by being copied through from the stored row.
+    // The response projection is an explicit field allowlist, so a private column cannot leak by
+    // being copied through from the stored row.
     const projection = source.slice(
-      source.indexOf('function publicQuestion'),
+      source.indexOf('function publicMessage'),
       source.indexOf('function safeOperationData')
     );
-    ['correct_option_ids', 'private_payload', 'transfer_basis', 'raw_model_output', 'reviewed_payload'].forEach(
+    ['correct_option_ids', 'private_payload', 'transfer_basis', 'raw_model_output', 'reviewed_payload', 'assessment_key'].forEach(
       (field) => {
         expect(projection).not.toContain(field);
       }
     );
-    expect(projection).toContain('rendered_text');
-    expect(projection).toContain('selected_option_ids');
+    expect(projection).toContain('response_mode');
+    expect(projection).toContain('parent_message_id');
   });
 
   it('validates inbound private fields rather than trusting the model output', () => {
