@@ -31,16 +31,17 @@ The database validates the pair. React, model output, and direct clients cannot 
 
 | Entity | Fields | Lifecycle rules |
 |---|---|---|
-| `public.assessment_questions` | Scope IDs, tutor/source message IDs, selection type, stem, rendered text, ordered A-D options, public hash, lifecycle, selected labels/result, feedback link, timestamps | `delivered` is the only unresolved state; one delivered row per room/student; key is never stored here. |
+| `public.assessment_questions` | Scope IDs, tutor/source message IDs, selection type, stem, rendered text, ordered A-D options, lifecycle, selected labels/result, feedback link, timestamps | `delivered` is the only unresolved state; one delivered row per room/student; key is never stored here. |
 
 ### Private entities
 
 | Entity | Fields | Lifecycle rules |
 |---|---|---|
-| `private.assessment_drafts` | Raw model output, reviewed payload, scope/focus IDs, progress snapshot hash, stable generation-trigger key, optional `supersedes_draft_id`, revision, raw/final hashes, reviewer, controlled disposition reason, confirmation, status | Status is `draft`, `rejected`, `ignored`, `sent`, or `superseded`. Material edits increment revision and clear confirmation. A unique supersession relation and request idempotency permit one explicit replacement under races. |
-| `private.assessment_question_keys` | Question ID, immutable correct labels, private payload/hash, transfer basis, reviewer confirmation, draft revision, source item timestamp | Insert once for delivery; update/delete raises `ASSESSMENT_KEY_IMMUTABLE`. |
+| `private.assessment_drafts` | Raw model output, reviewed payload, scope/focus IDs, revision, reviewer, confirmation, status | Status is `draft`, `ignored`, or `sent`. A material edit increments `revision` and requires confirmation again; a draft that is never sent is simply never delivered. |
+| `private.assessment_question_keys` | Question ID, immutable correct labels, private payload, transfer basis, reviewer confirmation, draft revision, source item timestamp | Insert once for delivery; update/delete raises `ASSESSMENT_KEY_IMMUTABLE`. |
 | `private.learning_event_inbox` | Stable event/dedupe key, scope/source IDs, kind/payload, classifier, processing state, linked evidence/update, timestamps | Records applied, no-change, deferred, rejected, and error outcomes for replay/audit. |
-| `private.assessment_request_results` | Operation, request ID, actor, stable response | Repeated identical request returns the original result; payload mismatch is a conflict. |
+
+There is exactly one assessment pipeline: a tutor message plus a public question, backed by one immutable private key.
 
 ## State transitions
 

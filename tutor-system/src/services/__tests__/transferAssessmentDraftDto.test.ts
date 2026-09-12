@@ -62,8 +62,6 @@ function validDTO(): TeacherAssessmentDraftDTO {
     draft_id: 'draft-1',
     revision: 3,
     status: 'draft',
-    supersedes_draft_id: null,
-    progress_snapshot_hash: 'c'.repeat(64),
     decision: { mode: 'assessment' },
     reason: null,
     assessment_basis: { concept_rule: 'rule' },
@@ -99,8 +97,6 @@ describe('teacher assessment draft DTO boundary', () => {
       draft_id: 'draft-1',
       revision: 3,
       status: 'draft',
-      supersedes_draft_id: null,
-      progress_snapshot_hash: 'c'.repeat(64),
       decision: { mode: 'assessment' },
       reason: null,
       assessment_basis: { concept_rule: 'rule' },
@@ -137,11 +133,11 @@ describe('teacher assessment draft DTO boundary', () => {
     TEACHER_ASSESSMENT_DRAFT_DTO_KEYS.forEach((key) => {
       expect(dto[key]).not.toBeUndefined();
     });
-    expect(dto.supersedes_draft_id).toBeNull();
+    expect(dto.decision).toBeNull();
     expect(dto.assessment_basis).toBeNull();
   });
 
-  it.each(['draft', 'rejected', 'ignored', 'sent', 'superseded'])(
+  it.each(['draft', 'ignored', 'sent'])(
     'accepts %s as a draft status',
     (status) => {
       const dto = toTeacherAssessmentDraftDTO({ ...validDTO(), status });

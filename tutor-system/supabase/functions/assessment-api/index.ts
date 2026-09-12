@@ -4,19 +4,13 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 type Operation =
-  | 'capabilities'
   | 'initialize_checklist'
   | 'post_message'
   | 'analyze_message'
   | 'prepare_turn'
   | 'review_draft'
-  | 'reject_draft'
-  | 'regenerate_draft'
   | 'send_reviewed'
-  | 'process_message'
-  | 'cancel_question'
-  | 'invalidate_question'
-  | 'confirm_external_transfer';
+  | 'process_message';
 
 interface VerifiedPrincipal {
   principal_id: string;
@@ -403,17 +397,6 @@ async function analyzeTransferMessage(
 }
 
 async function dispatch(operation: Operation, body: Record<string, unknown>, principal: VerifiedPrincipal, admin: SupabaseClient): Promise<unknown> {
-  if (operation === 'capabilities') {
-    assertRoomAccess(principal, body.room_id);
-    const enabled = Deno.env.get('TRANSFER_ASSESSMENT_ENABLED') === 'true';
-    return {
-      enabled,
-      policy_available: enabled,
-      can_review_assessment: principal.can_review_assessment,
-      reason: enabled ? undefined : 'backend capability is disabled',
-    } satisfies Record<string, unknown>;
-  }
-
   if (Deno.env.get('TRANSFER_ASSESSMENT_ENABLED') !== 'true') throw new Error('ASSESSMENT_FEATURE_DISABLED');
 
   if (operation === 'prepare_turn') return prepareTransferTurn(body, principal, admin);
@@ -424,25 +407,20 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
 
   const roomId = body.room_id;
   if (roomId !== undefined) assertRoomAccess(principal, roomId);
-  if (['initialize_checklist', 'prepare_turn', 'review_draft', 'send_reviewed', 'cancel_question', 'invalidate_question', 'confirm_external_transfer'].includes(operation)) assertTutor(principal);
+  if (['initialize_checklist', 'prepare_turn', 'review_draft', 'send_reviewed'].includes(operation)) assertTutor(principal);
 
   const rpcArgs: Record<string, unknown> = {
     p_actor_id: principal.application_user_id,
     p_request_id: body.request_id,
   };
-  const rpcName: Record<Exclude<Operation, 'capabilities'>, string> = {
+  const rpcName: Record<Operation, string> = {
     initialize_checklist: 'initialize_transfer_checklist_v1',
     post_message: 'post_assessment_message_v1',
     analyze_message: 'apply_learning_event_v1',
     prepare_turn: 'prepare_transfer_turn_v1',
     review_draft: 'review_assessment_draft_v1',
-    reject_draft: 'reject_assessment_draft_v1',
-    regenerate_draft: 'regenerate_assessment_draft_v1',
     send_reviewed: 'send_reviewed_tutor_response_v3',
     process_message: 'process_assessment_message_v1',
-    cancel_question: 'cancel_assessment_question_v1',
-    invalidate_question: 'invalidate_assessment_question_v1',
-    confirm_external_transfer: 'confirm_external_transfer_v1',
   };
   switch (operation) {
     case 'initialize_checklist':
@@ -469,46 +447,17 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
       rpcArgs.p_final_payload = body.final_payload;
       rpcArgs.p_content_confirmed = body.content_confirmed;
       break;
-    case 'reject_draft':
-      rpcArgs.p_draft_id = body.draft_id;
-      rpcArgs.p_expected_revision = body.expected_revision;
-      rpcArgs.p_reason = body.reason;
-      break;
-    case 'regenerate_draft':
-      rpcArgs.p_source_draft_id = body.source_draft_id;
-      rpcArgs.p_expected_revision = body.expected_revision;
-      rpcArgs.p_expected_snapshot_hash = body.expected_snapshot_hash;
-      rpcArgs.p_provider_payload = body.provider_payload;
-      rpcArgs.p_raw_hash = body.raw_hash;
-      break;
     case 'send_reviewed':
       rpcArgs.p_draft_id = body.draft_id;
       rpcArgs.p_expected_revision = body.expected_revision;
-      rpcArgs.p_expected_hash = body.expected_hash;
       break;
     case 'process_message':
       rpcArgs.p_message_id = body.message_id;
       break;
-    case 'cancel_question':
-      rpcArgs.p_question_id = body.question_id;
-      rpcArgs.p_reason = body.reason;
-      break;
-    case 'invalidate_question':
-      rpcArgs.p_question_id = body.question_id;
-      rpcArgs.p_reason = body.reason;
-      rpcArgs.p_expected_snapshot = body.expected_snapshot;
-      break;
-    case 'confirm_external_transfer':
-      rpcArgs.p_item_id = body.item_id;
-      rpcArgs.p_source_evidence_message_ids = body.source_evidence_message_ids;
-      rpcArgs.p_transfer_evidence = body.transfer_evidence;
-      rpcArgs.p_note = body.note;
-      rpcArgs.p_expected_snapshot = body.expected_snapshot;
-      break;
     default:
       throw new Error('INVALID_REQUEST');
   }
-  const { data, error } = await admin.rpc(rpcName[operation as Exclude<Operation, 'capabilities'>], rpcArgs);
+  const { data, error } = await admin.rpc(rpcName[operation], rpcArgs);
   if (error) {
     const status = error.code === '42501' ? 403 : error.code === 'P0001' ? 409 : 500;
     throw Object.assign(new Error(error.message), { status, code: error.code || 'PERSISTENCE_FAILED' });
@@ -529,9 +478,8 @@ export async function handleAssessmentRequest(request: Request): Promise<Respons
   const operation = body.operation;
   if (typeof operation !== 'string') return errorResponse('INVALID_REQUEST', 'operation is required', 400);
   const knownOperations: Operation[] = [
-    'capabilities', 'initialize_checklist', 'post_message', 'analyze_message', 'prepare_turn',
-    'review_draft', 'reject_draft', 'regenerate_draft', 'send_reviewed', 'process_message', 'cancel_question',
-    'invalidate_question', 'confirm_external_transfer'
+    'initialize_checklist', 'post_message', 'analyze_message', 'prepare_turn',
+    'review_draft', 'send_reviewed', 'process_message'
   ];
   if (!knownOperations.includes(operation as Operation)) return errorResponse('INVALID_REQUEST', 'unsupported operation', 400);
   if (typeof body.request_id !== 'string' || !body.request_id.trim()) return errorResponse('INVALID_REQUEST', 'request_id is required', 400);

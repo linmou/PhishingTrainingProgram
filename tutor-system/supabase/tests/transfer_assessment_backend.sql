@@ -6,17 +6,13 @@
 --   call (the defect fixed by migrations 028 and 029).
 --
 -- Execution: every statement in PART 1 is a read-only catalog query and runs correctly under any
---   role, including the read-only diagnostic role. Run PART 1 with:
---       psql "$SUPABASE_DB_URL" -f supabase/tests/transfer_assessment_backend.sql
---   Each check returns one row: check_name, pass (bool), detail. A non-empty `failing` column set is
---   a hard failure.
+--   role, including the read-only diagnostic role. It is written for the Supabase Dashboard SQL
+--   editor (project zgbufaxooqxeabewktzd -> SQL Editor -> New query): paste the PART 1 statement
+--   and Run. It contains no psql meta-commands, so it also works through `psql -f` unchanged.
+--   Each check returns one row: check_name, pass (bool), detail. The roll-up row FAILING_CHECKS
+--   carries the failing count, so a non-zero `detail` there is a hard failure.
 --
--- PART 2 is deliberately NOT executed here: it exercises the RPCs behaviourally, and every transfer
---   RPC is SECURITY DEFINER behind an explicit `current_user IN ('service_role','postgres')` guard,
---   so it must run as service_role with a disposable fixture. See PART 2 for the run recipe.
-
-\set ON_ERROR_STOP on
-\pset format aligned
+-- PART 2 is a separate, separately runnable file: `transfer_assessment_rpc_behaviour.sql`.
 
 -- =====================================================================================
 -- PART 1 - schema, privilege, and source-hygiene checks (read-only; safe to run any time)
@@ -269,79 +265,15 @@ SELECT 'FAILING_CHECKS', (count(*) = 0), count(*)::text, 1 FROM checks WHERE NOT
 ORDER BY is_rollup DESC, check_name;
 
 -- =====================================================================================
--- PART 2 - behavioural RPC lane (REQUIRES service_role; not run by the command above)
+-- PART 2 - behavioural RPC lane
 -- =====================================================================================
+-- PART 2 was previously an unrunnable skeleton in this file. It is now a complete, runnable
+-- script in its own file:
 --
--- Why it is separated: each transfer RPC opens with
+--     supabase/tests/transfer_assessment_rpc_behaviour.sql
+--
+-- Why it is a separate file: each transfer RPC opens with
 --     IF current_user NOT IN ('service_role','postgres') THEN RAISE EXCEPTION 'FORBIDDEN'
--- so a read-only or authenticated connection can only observe FORBIDDEN, never the behaviour.
--- Running this part under the wrong role would produce a misleading green.
---
--- Run recipe (operator, with a DDL-capable connection):
---
---   1. Apply migrations 025, 027, 028, 029 to a disposable project or branch:
---        supabase db push            # or: psql "$ADMIN_DB_URL" -f each migration in order
---   2. Execute under service_role, e.g.:
---        psql "$SERVICE_ROLE_DB_URL" -f supabase/tests/transfer_assessment_backend.sql
---      The whole part is wrapped in BEGIN/ROLLBACK below, so it leaves the project unchanged.
---   3. Expected outcome: every `NOTICE` line reads `PASS <case>`; any `FAIL` or raised exception is
---      a hard failure and names the contract that broke.
---
--- The cases this lane must cover, mapped to the FRs in specs/102-transfer-backend/analysis.md:
---
---   FR-006 draft disposition
---     P1  review_assessment_draft_v1 rejects an assessment payload with 3 options
---         -> ITEM_VALIDATION_FAILED.
---     P2  review_assessment_draft_v1 rejects a single-select payload with 2 correct keys
---         -> ITEM_VALIDATION_FAILED.
---     P3  review_assessment_draft_v1 rejects duplicate option text -> ITEM_VALIDATION_FAILED.
---     P4  review_assessment_draft_v1 rejects empty changed_context -> ITEM_VALIDATION_FAILED.
---     P5  review_assessment_draft_v1 with p_content_confirmed = false
---         -> CONTENT_CONFIRMATION_REQUIRED.
---     P6  review with a stale p_expected_revision -> DRAFT_REVISION_CONFLICT.
---     P7  successful review advances revision by exactly 1 and stores a 64-char hex final_hash.
---     P8  reject_assessment_draft_v1 sets status='rejected', records reason, and stamps trigger_key.
---     P9  prepare_transfer_turn_v1 for a trigger that was just rejected
---         -> DRAFT_TRIGGER_SUPPRESSED, and derives the same trigger_key as the rejected draft
---            (this equality is exactly the bug migration 028 fixed).
---     P10 regenerate_assessment_draft_v1 after a rejection bypasses suppression and writes
---         supersedes_draft_id pointing at the source draft.
---     P11 a second replacement of the same source draft violates
---         idx_assessment_drafts_one_replacement_per_source.
---     P12 the same p_request_id replayed for the same operation returns the recorded result and
---         does not create a second draft.
---
---   FR-007 atomic reviewed delivery
---     P13 send_reviewed_tutor_response_v3 with a stale hash -> DRAFT_REVISION_CONFLICT.
---     P14 send on a draft whose status is already 'sent' -> DRAFT_ALREADY_SENT.
---     P15 a successful assessment send creates exactly one assessment_question plus exactly one
---         private.assessment_question_keys row, and the public question row retains no
---         correct_option_ids and no transfer_basis.
---     P16 the key row's private_payload_hash is
---         extensions.digest(convert_to(private_payload::text,'UTF8'),'sha256') -- i.e. the 029 call
---         resolves and produces the expected digest (this is the direct regression test for 029).
---     P17 send fails mid-transaction (inject an INVALID_SCOPE draft) and no message, question, key,
---         or ai_suggestion_feedback row survives -> atomic rollback.
---
---   FR-003 draft triggers
---     P18 prepare_transfer_turn_v1 called twice for the same (room, student, checklist, focus
---         message) returns the existing draft rather than creating a second.
---     P19 prepare_transfer_turn_v1 for a different focus message creates a distinct draft with a
---         distinct trigger_key.
---
--- Disposable fixture: create one tutor, one student, one room, one transfer_v1 session_checklist,
--- one student message, and one draft inside the transaction; assert; then ROLLBACK. The template to
--- extend:
---
---   BEGIN;
---   -- ... seed tutor/student/room/checklist/message/draft via direct INSERTs as service_role ...
---   DO $$ BEGIN
---       BEGIN
---           PERFORM review_assessment_draft_v1(<draft>, 1, '{"options":[]}'::jsonb, true, <tutor>, gen_random_uuid());
---           RAISE NOTICE 'FAIL P1 expected ITEM_VALIDATION_FAILED';
---       EXCEPTION WHEN OTHERS THEN
---           IF SQLERRM = 'ITEM_VALIDATION_FAILED' THEN RAISE NOTICE 'PASS P1'; ELSE RAISE; END IF;
---       END;
---       -- ... remaining cases ...
---   END $$;
---   ROLLBACK;
+-- so a read-only or authenticated connection can only ever observe FORBIDDEN, never the
+-- behaviour. Running it under the wrong role would produce a misleading green. The separate
+-- file states the run method and wraps the whole run in a transaction that ends in ROLLBACK.

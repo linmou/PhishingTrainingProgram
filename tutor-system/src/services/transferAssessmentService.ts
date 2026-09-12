@@ -9,6 +9,7 @@ import type {
   TutorDecisionV3,
 } from '../types/assessment';
 import type { TransferProgress } from '../types/learningProgress';
+import type { Room } from '../types';
 
 export interface AssessmentApiError {
   code: string;
@@ -138,7 +139,7 @@ export function toPublicMessageDTO(row: Record<string, unknown>): PublicMessageD
 export interface ReviewedDeliveryDTO {
   message: PublicMessageDTO;
   question: PublicQuestionDTO | null;
-  room: Record<string, unknown>;
+  room: Room;
   feedback_id: string;
 }
 
@@ -163,7 +164,7 @@ function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliv
     question: result.question ? toPublicQuestionDTO(asRecord(result.question)) : null,
     // The room row is already the public room shape the room API returns; it carries no
     // assessment material, so it is passed through rather than re-allowlisted here.
-    room: asRecord(result.room),
+    room: asRecord(result.room) as unknown as Room,
     feedback_id: String(result.feedback_id ?? ''),
   };
 }
@@ -191,9 +192,7 @@ function projectProcessedMessage(result: Record<string, unknown>): ProcessedMess
 export interface TeacherAssessmentDraftDTO {
   draft_id: string;
   revision: number;
-  status: 'draft' | 'rejected' | 'ignored' | 'sent' | 'superseded';
-  supersedes_draft_id: string | null;
-  progress_snapshot_hash: string | null;
+  status: 'draft' | 'ignored' | 'sent';
   decision: Record<string, unknown>;
   reason: string | null;
   assessment_basis: Record<string, unknown> | null;
@@ -204,8 +203,6 @@ export const TEACHER_ASSESSMENT_DRAFT_DTO_KEYS: ReadonlyArray<keyof TeacherAsses
   'draft_id',
   'revision',
   'status',
-  'supersedes_draft_id',
-  'progress_snapshot_hash',
   'decision',
   'reason',
   'assessment_basis',
@@ -223,12 +220,8 @@ export const TEACHER_ASSESSMENT_DRAFT_DTO_FORBIDDEN_STORAGE_NAMES: ReadonlyArray
   'item_id',
   'focus_student_message_id',
   'raw_model_output',
-  'raw_hash',
-  'final_hash',
   'reviewed_payload',
   'reviewed_by',
-  'trigger_key',
-  'rejected_reason',
   'created_at',
   'updated_at',
 ];
@@ -249,13 +242,6 @@ export interface TransferAssessmentApi {
   invoke: (body: Record<string, unknown>) => Promise<{ data: AssessmentApiEnvelope<unknown> | null; error: { message: string } | null }>;
 }
 
-export interface TransferAssessmentCapabilities {
-  enabled: boolean;
-  policy_available: boolean;
-  can_review_assessment: boolean;
-  reason?: string;
-}
-
 export interface TransferAssessmentServiceOptions {
   api?: TransferAssessmentApi;
   requestId?: () => string;
@@ -269,32 +255,6 @@ export interface TransferAssessmentAnswerInput {
   options: ReadonlyArray<AssessmentOption>;
   correct_option_ids: ReadonlyArray<AssessmentOptionId>;
   current_progress: TransferProgress;
-}
-
-/**
- * Result of `reject_draft`. `same_trigger_suppressed` is always true on success: the
- * backend records the trigger key so a later generation for the same scope is suppressed
- * instead of producing a second draft.
- */
-export interface RejectedAssessmentDraftDTO {
-  draft_id: string;
-  revision: number;
-  status: 'rejected';
-  same_trigger_suppressed: true;
-  request_id: string;
-}
-
-/**
- * Result of `regenerate_draft`. The source is superseded and the replacement starts a new
- * draft lifecycle at revision 1, so callers must use `replacement_draft_id` from here on.
- */
-export interface RegeneratedAssessmentDraftDTO {
-  source_draft_id: string;
-  source_status: 'superseded';
-  replacement_draft_id: string;
-  replacement_revision: number;
-  replacement_status: 'draft';
-  request_id: string;
 }
 
 export interface UndeliveredAssessmentResult {
@@ -364,10 +324,6 @@ export class TransferAssessmentService {
     return data.data as T;
   }
 
-  async capabilities(roomId: string): Promise<TransferAssessmentCapabilities> {
-    return this.request<TransferAssessmentCapabilities>('capabilities', { room_id: roomId });
-  }
-
   async initializeChecklist(input: {
     roomId: string;
     studentId: string;
@@ -420,50 +376,13 @@ export class TransferAssessmentService {
     });
   }
 
-  async rejectDraft(input: {
-    draftId: string;
-    expectedRevision: number;
-    reason: string;
-  }): Promise<RejectedAssessmentDraftDTO> {
-    return this.request<RejectedAssessmentDraftDTO>('reject_draft', {
-      draft_id: input.draftId,
-      expected_revision: input.expectedRevision,
-      reason: input.reason,
-    });
-  }
-
-  /**
-   * Replace a rejected or stale draft with a freshly generated one.
-   *
-   * `providerPayload` must already have been produced by the caller. The provider call
-   * deliberately stays outside this request so a provider failure cannot leave the source
-   * draft mutated: when generation fails, nothing is sent and the source keeps its status.
-   */
-  async regenerateDraft(input: {
-    sourceDraftId: string;
-    expectedRevision: number;
-    expectedSnapshotHash: string;
-    providerPayload: Record<string, unknown>;
-    rawHash: string;
-  }): Promise<RegeneratedAssessmentDraftDTO> {
-    return this.request<RegeneratedAssessmentDraftDTO>('regenerate_draft', {
-      source_draft_id: input.sourceDraftId,
-      expected_revision: input.expectedRevision,
-      expected_snapshot_hash: input.expectedSnapshotHash,
-      provider_payload: input.providerPayload,
-      raw_hash: input.rawHash,
-    });
-  }
-
   async sendReviewed(input: {
     draftId: string;
     expectedRevision: number;
-    expectedHash: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request<Record<string, unknown>>('send_reviewed', {
       draft_id: input.draftId,
       expected_revision: input.expectedRevision,
-      expected_hash: input.expectedHash,
     });
     return projectReviewedDelivery(result);
   }
@@ -477,34 +396,6 @@ export class TransferAssessmentService {
     return this.request<Record<string, unknown>>('analyze_message', {
       message_id: messageId,
       room_id: roomId,
-    });
-  }
-
-  async cancelQuestion(questionId: string, reason: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('cancel_question', { question_id: questionId, reason });
-  }
-
-  async invalidateQuestion(questionId: string, reason: string, expectedSnapshot: string): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('invalidate_question', {
-      question_id: questionId,
-      reason,
-      expected_snapshot: expectedSnapshot,
-    });
-  }
-
-  async confirmExternalTransfer(input: {
-    itemId: string;
-    sourceEvidenceMessageIds: string[];
-    transferEvidence: string;
-    note: string;
-    expectedSnapshot: string;
-  }): Promise<Record<string, unknown>> {
-    return this.request<Record<string, unknown>>('confirm_external_transfer', {
-      item_id: input.itemId,
-      source_evidence_message_ids: input.sourceEvidenceMessageIds,
-      transfer_evidence: input.transferEvidence,
-      note: input.note,
-      expected_snapshot: input.expectedSnapshot,
     });
   }
 
