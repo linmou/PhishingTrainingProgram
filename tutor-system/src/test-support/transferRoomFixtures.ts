@@ -96,7 +96,8 @@ export const learnerAMessageRow = {
   ai_response_time_ms: null,
   parent_message_id: null,
   response_mode: null,
-  created_at: '2026-09-12T09:00:00Z',
+  // Later than learner B's message: the room's latest student message is learner A's.
+  created_at: '2026-09-12T09:06:00Z',
 };
 
 export const learnerBMessageRow = {
