@@ -5,7 +5,6 @@ export const ASSESSMENT_API_OPERATIONS = [
   'post_message',
   'analyze_message',
   'prepare_turn',
-  'review_draft',
   'send_reviewed',
   'process_message',
 ] as const;

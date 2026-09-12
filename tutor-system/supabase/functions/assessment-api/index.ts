@@ -8,7 +8,6 @@ type Operation =
   | 'post_message'
   | 'analyze_message'
   | 'prepare_turn'
-  | 'review_draft'
   | 'send_reviewed'
   | 'process_message';
 
@@ -221,14 +220,23 @@ async function prepareTransferTurn(
     .single();
   if (checklistError || !checklist?.student_id) throw new Error('LEGACY_CHECKLIST');
 
-  const [{ data: focusMessage }, { data: items }, { data: openQuestion }, { data: room }] = await Promise.all([
+  const [{ data: focusMessage }, { data: items }, { data: room }] = await Promise.all([
     admin.from('messages').select('id,room_id,user_id,user_role,content').eq('id', body.focus_student_message_id).eq('room_id', body.room_id).single(),
     admin.from('checklist_items').select('id,area_text,priority,status,understanding_level,coverage_evidence(message_id)').eq('checklist_id', checklist.id),
-    admin.from('assessment_questions').select('id,selection_type,stem,rendered_text,options,lifecycle').eq('room_id', body.room_id).eq('student_id', checklist.student_id).eq('lifecycle', 'delivered').maybeSingle(),
     admin.from('rooms').select('active_response_mode').eq('id', body.room_id).single(),
   ]);
   if (!focusMessage || focusMessage.user_id !== checklist.student_id || focusMessage.user_role !== 'student') throw new Error('WRONG_LEARNER');
-  if (openQuestion) throw new Error('ASSESSMENT_ALREADY_OPEN');
+
+  // The open-assessment check moved onto public.messages.assessment_lifecycle when the
+  // assessment_questions table was dropped.
+  const { data: openAssessment } = await admin
+    .from('messages')
+    .select('id')
+    .eq('room_id', body.room_id)
+    .eq('user_id', checklist.student_id)
+    .eq('assessment_lifecycle', 'delivered')
+    .maybeSingle();
+  if (openAssessment) throw new Error('ASSESSMENT_ALREADY_OPEN');
 
   const itemRows = (items || []).map((item: any) => ({
     id: item.id,
@@ -290,18 +298,17 @@ async function prepareTransferTurn(
   assertV3DraftShape(candidate, itemIds, messageIds);
   if (candidate.decision.mode === 'assessment' && !eligibleItemIds.includes(candidate.decision.target_item_id)) throw new Error('AI_OUTPUT_INVALID');
 
-  const { data: draft, error: draftError } = await admin.schema('private').from('assessment_drafts').insert({
+  // No draft table exists. The generated candidate is returned to the caller, which reviews
+  // it and passes it back to send_reviewed. Nothing is persisted until delivery.
+  return {
+    decision: candidate,
+    progress_snapshot_hash: progressSnapshotHash,
     room_id: checklist.room_id,
     student_id: checklist.student_id,
     checklist_id: checklist.id,
     item_id: candidate.decision.target_item_id,
     focus_student_message_id: focusMessage.id,
-    raw_model_output: candidate,
-    revision: 1,
-    status: 'draft',
-  }).select('id,room_id,student_id,checklist_id,item_id,focus_student_message_id,revision,status,created_at').single();
-  if (draftError || !draft) throw new Error('PERSISTENCE_FAILED');
-  return { draft_id: draft.id, revision: draft.revision, draft, decision: candidate, progress_snapshot_hash: progressSnapshotHash };
+  };
 }
 
 async function analyzeTransferMessage(
@@ -319,8 +326,15 @@ async function analyzeTransferMessage(
   if (messageError || !message || message.user_id !== principal.application_user_id || message.user_role !== 'student') throw new Error('FORBIDDEN');
   if (checklistError || !checklist) return { skipped: 'no_transfer_checklist' };
 
-  const { data: openQuestion } = await admin.from('assessment_questions').select('id').eq('room_id', body.room_id).eq('student_id', principal.application_user_id).eq('lifecycle', 'delivered').maybeSingle();
-  if (openQuestion) return { skipped: 'assessment_open' };
+  // Open-assessment check moved onto public.messages.assessment_lifecycle.
+  const { data: openAssessment } = await admin
+    .from('messages')
+    .select('id')
+    .eq('room_id', body.room_id)
+    .eq('user_id', principal.application_user_id)
+    .eq('assessment_lifecycle', 'delivered')
+    .maybeSingle();
+  if (openAssessment) return { skipped: 'assessment_open' };
 
   const [{ data: items, error: itemsError }, { data: history, error: historyError }] = await Promise.all([
     admin.from('checklist_items').select('id,area_text,priority,status,understanding_level,coverage_evidence(message_id)').eq('checklist_id', checklist.id),
@@ -405,7 +419,7 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
 
   const roomId = body.room_id;
   if (roomId !== undefined) assertRoomAccess(principal, roomId);
-  if (['initialize_checklist', 'prepare_turn', 'review_draft', 'send_reviewed'].includes(operation)) assertTutor(principal);
+  if (['initialize_checklist', 'prepare_turn', 'send_reviewed'].includes(operation)) assertTutor(principal);
 
   const rpcArgs: Record<string, unknown> = {
     p_actor_id: principal.application_user_id,
@@ -416,7 +430,6 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
     post_message: 'post_assessment_message_v1',
     analyze_message: 'apply_learning_event_v1',
     prepare_turn: 'prepare_transfer_turn_v1',
-    review_draft: 'review_assessment_draft_v1',
     send_reviewed: 'send_reviewed_tutor_response_v3',
     process_message: 'process_assessment_message_v1',
   };
@@ -439,15 +452,14 @@ async function dispatch(operation: Operation, body: Record<string, unknown>, pri
       rpcArgs.p_focus_student_message_id = body.focus_student_message_id;
       rpcArgs.p_checklist_id = body.checklist_id;
       break;
-    case 'review_draft':
-      rpcArgs.p_draft_id = body.draft_id;
-      rpcArgs.p_expected_revision = body.expected_revision;
-      rpcArgs.p_final_payload = body.final_payload;
-      rpcArgs.p_content_confirmed = body.content_confirmed;
-      break;
     case 'send_reviewed':
-      rpcArgs.p_draft_id = body.draft_id;
-      rpcArgs.p_expected_revision = body.expected_revision;
+      // No draft table exists, so the reviewed payload and its scope arrive on the request.
+      rpcArgs.p_reviewed_payload = body.reviewed_payload;
+      rpcArgs.p_room_id = body.room_id;
+      rpcArgs.p_student_id = body.student_id;
+      rpcArgs.p_checklist_id = body.checklist_id;
+      rpcArgs.p_item_id = body.item_id;
+      rpcArgs.p_focus_student_message_id = body.focus_student_message_id;
       break;
     case 'process_message':
       rpcArgs.p_message_id = body.message_id;
@@ -477,7 +489,7 @@ export async function handleAssessmentRequest(request: Request): Promise<Respons
   if (typeof operation !== 'string') return errorResponse('INVALID_REQUEST', 'operation is required', 400);
   const knownOperations: Operation[] = [
     'initialize_checklist', 'post_message', 'analyze_message', 'prepare_turn',
-    'review_draft', 'send_reviewed', 'process_message'
+    'send_reviewed', 'process_message'
   ];
   if (!knownOperations.includes(operation as Operation)) return errorResponse('INVALID_REQUEST', 'unsupported operation', 400);
   if (typeof body.request_id !== 'string' || !body.request_id.trim()) return errorResponse('INVALID_REQUEST', 'request_id is required', 400);
