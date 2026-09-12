@@ -57,6 +57,15 @@ begin
 
   insert into rooms(id, tutor_id, title) values (v_room, v_tutor, 'T009 room');
 
+  -- A transfer_v1 checklist is write-protected. private_transfer_checklist_guard raises
+  -- TRANSFER_CHECKLIST_WRITE_REQUIRED on the checklist itself, and private_transfer_item_guard
+  -- raises TRANSFER_ITEM_WRITE_REQUIRED on any item insert or state change, both unless the
+  -- trusted-operation flag is set. The production code sets exactly this flag around its own
+  -- trusted writes, so the fixture reproduces that context rather than bypassing the guard.
+  -- set_config's third argument makes this transaction-local, so it disappears with the final
+  -- ROLLBACK. It must be set before the checklist insert, because that guard reads it too.
+  perform set_config('app.transfer_operation', 'on', true);
+
   insert into session_checklists(id, room_id, student_id, template_name, progress_policy_version)
   values (v_check, v_room, v_student, 'T009 template', 'transfer_v1');
 
