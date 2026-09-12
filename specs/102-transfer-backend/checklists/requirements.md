@@ -19,7 +19,7 @@
 - [x] CHK008 Success criteria are measurable and identify hosted schema, authorization, lifecycle, provider, privacy, and legacy evidence.
 - [x] CHK009 Public operation/envelope/DTO behavior and versioned lifecycle boundaries are explicitly required.
 - [x] CHK010 The specification does not add a parallel mastery field or reinterpret legacy progress as transfer verification.
-- [x] CHK016 `reject_draft` and `regenerate_draft` have explicit atomic RPC, status, idempotency, stale/race, and same-trigger suppression behavior.
+- [x] CHK016 `reject_draft` and `regenerate_draft` have explicit atomic RPC, status, idempotency, stale/race, and same-trigger suppression behavior.  **SUPERSEDED 2026-09-12:** the reject/regenerate capability was removed by the lean refactor, so this check no longer describes the shipped design.
 - [x] CHK017 `TeacherAssessmentDraftDTO` is the sole private browser DTO name and storage naming remains internal.
 
 ## Security And Reliability
