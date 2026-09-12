@@ -163,7 +163,6 @@ export interface Database {
                     stem: string
                     rendered_text: string
                     options: Json
-                    public_payload_hash: string
                     lifecycle: 'delivered' | 'answered' | 'cancelled' | 'invalidated'
                     answer_message_id: string | null
                     selected_option_ids: string[] | null
@@ -186,7 +185,6 @@ export interface Database {
                     stem: string
                     rendered_text: string
                     options: Json
-                    public_payload_hash: string
                     lifecycle?: 'delivered' | 'answered' | 'cancelled' | 'invalidated'
                     answer_message_id?: string | null
                     selected_option_ids?: string[] | null
@@ -209,7 +207,6 @@ export interface Database {
                     stem?: string
                     rendered_text?: string
                     options?: Json
-                    public_payload_hash?: string
                     lifecycle?: 'delivered' | 'answered' | 'cancelled' | 'invalidated'
                     answer_message_id?: string | null
                     selected_option_ids?: string[] | null
