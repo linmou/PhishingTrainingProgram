@@ -6,7 +6,6 @@
 
 import { supabase } from './supabase';
 import { parseAssessmentAnswer } from './assessmentAnswerParser';
-import { gradeSelection } from './assessmentGrading';
 import { resolveTransferAnswer } from './transferAssessmentOrchestrator';
 import { TRANSFER_V3_SYSTEM_PROMPT } from './prompts/transferV3Prompt';
 import type {
@@ -230,9 +229,6 @@ function assertV3DraftShape(value: unknown, itemIds: Set<string>, messageIds: Se
 }
 
 export class TransferAssessmentService {
-  /** Local, browser-side transfer assessment. No transport, no principal, no capability flag. */
-  constructor(_options: Record<string, unknown> = {}) {}
-
   private client(): any {
     return supabase as any;
   }
