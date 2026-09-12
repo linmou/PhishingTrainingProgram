@@ -33,16 +33,29 @@ WITH checks(check_name, pass, detail) AS (
            'dropped by migration 038'
 
     UNION ALL
-    -- 3. The assessment now lives on the tutor message.
+    -- 3. The assessment now lives on the tutor message. assessment_selection_type joined the set in
+    -- migration 045 (R15): without it a reloaded learner page cannot render the canonical
+    -- single-versus-multiple instruction, because the column was never persisted by 038.
     SELECT 'messages carries the assessment columns',
            (SELECT count(*) FROM information_schema.columns
              WHERE table_schema='public' AND table_name='messages'
                AND column_name IN ('assessment_options','assessment_key','assessment_lifecycle',
                                    'assessment_answer_message_id','assessment_selected_option_ids',
                                    'assessment_result','assessment_closed_at',
-                                   'assessment_checklist_id','assessment_item_id')) = 9,
+                                   'assessment_checklist_id','assessment_item_id',
+                                   'assessment_selection_type')) = 10,
            (SELECT string_agg(column_name, ',' ORDER BY column_name) FROM information_schema.columns
              WHERE table_schema='public' AND table_name='messages' AND column_name LIKE 'assessment_%')
+
+    UNION ALL
+    -- 3a. The selection type is constrained when present, and writable only as single/multiple.
+    -- Absence is legal: a tutoring or Guard turn carries no assessment.
+    SELECT 'assessment selection type is constrained',
+           EXISTS (SELECT 1 FROM pg_constraint con JOIN pg_class c ON c.oid=con.conrelid
+                    JOIN pg_namespace n ON n.oid=c.relnamespace
+                   WHERE n.nspname='public' AND c.relname='messages'
+                     AND con.conname='messages_assessment_selection_type_check'),
+           'null for non-assessment turns; single or multiple for an assessment'
 
     UNION ALL
     -- 4. The lifecycle and result vocabularies are constrained.
