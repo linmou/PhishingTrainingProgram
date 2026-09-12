@@ -92,16 +92,26 @@ export interface ReviewedDeliveryDTO {
 }
 
 /**
- * Result of `process_message`. Mirrors `process_assessment_message_v1`'s return. The grading
- * outcome and the learner's own selections are public; the assessment key and transfer basis
- * are not part of this shape and cannot be reached through it.
+ * Result of `process_message`. Mirrors `process_assessment_message_v1`'s return, which has THREE
+ * shapes and is reproduced faithfully rather than collapsed into one:
+ *   graded     - `message_id`, `result`, `selected_option_ids`, `transition`, `feedback_required`
+ *   unresolved - `message_id`, `code: 'ANSWER_FORMAT_UNRESOLVED'`, `clarification_required: true`
+ *   replayed   - `message_id`, `result`, `already_processed: true`
+ * The identity key is `message_id`. An earlier version of this shape read `question_id`, which the
+ * server never returns, so the assessment identity was the empty string on every learner answer and
+ * the clarification signal was unreachable from the UI. The grading outcome and the learner's own
+ * selections are public; the assessment key and transfer basis are not part of this shape.
  */
 export interface ProcessedMessageDTO {
-  question_id: string;
-  result: Record<string, unknown> | null;
+  message_id: string;
+  result: string | null;
   selected_option_ids: string[] | null;
   transition: Record<string, unknown> | null;
   feedback_required: boolean;
+  /** Present only when the exact-set parser could not resolve the answer to a selection. */
+  code: string | null;
+  clarification_required: boolean;
+  already_processed: boolean;
 }
 
 function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliveryDTO {
@@ -117,11 +127,14 @@ function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliv
 
 function projectProcessedMessage(result: Record<string, unknown>): ProcessedMessageDTO {
   return {
-    question_id: String(result.question_id ?? ''),
-    result: (result.result ?? null) as Record<string, unknown> | null,
+    message_id: String(result.message_id ?? ''),
+    result: typeof result.result === 'string' ? result.result : null,
     selected_option_ids: (result.selected_option_ids ?? null) as string[] | null,
     transition: (result.transition ?? null) as Record<string, unknown> | null,
     feedback_required: result.feedback_required === true,
+    code: typeof result.code === 'string' ? result.code : null,
+    clarification_required: result.clarification_required === true,
+    already_processed: result.already_processed === true,
   };
 }
 

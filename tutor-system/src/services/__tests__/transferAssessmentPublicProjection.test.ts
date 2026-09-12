@@ -142,7 +142,7 @@ describe('public message result projection', () => {
 
   it('projects processMessage into a typed grading outcome', async () => {
     const service = createService({
-      question_id: 'message-2',
+      message_id: 'message-2',
       result: 'fail',
       selected_option_ids: ['C'],
       transition: { status: 'needs_review' },
@@ -151,20 +151,27 @@ describe('public message result projection', () => {
 
     const processed = await service.processMessage('message-3');
 
+    // `message_id` is the key the RPC returns; an earlier shape read `question_id`, which the
+    // server never sends, so the identity was empty on every answer. The three extra flags carry
+    // the unresolved-answer and replay variants that the same operation can return.
     expect(Object.keys(processed).sort()).toEqual([
+      'already_processed',
+      'clarification_required',
+      'code',
       'feedback_required',
-      'question_id',
+      'message_id',
       'result',
       'selected_option_ids',
       'transition',
     ]);
+    expect(processed.message_id).toBe('message-2');
     expect(processed.result).toBe('fail');
     expect(processed.selected_option_ids).toEqual(['C']);
     expect(processed.feedback_required).toBe(true);
   });
 
   it('defaults a malformed processMessage result rather than forwarding unknown keys', async () => {
-    const service = createService({ question_id: 'message-2', correct_option_ids: ['B'], transfer_basis: { x: 1 } });
+    const service = createService({ message_id: 'message-2', correct_option_ids: ['B'], transfer_basis: { x: 1 } });
     const processed = await service.processMessage('message-3');
     expect(processed).not.toHaveProperty('correct_option_ids');
     expect(processed).not.toHaveProperty('transfer_basis');
