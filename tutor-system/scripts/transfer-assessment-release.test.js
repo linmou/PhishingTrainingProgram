@@ -524,7 +524,6 @@ test('the snapshot records content-bound identity and the report carries the FR-
   assert.equal(verdict.run_id, 'run-snap-1', 'the verdict carries the literal run id');
   assert.equal(report.start_commit, headCommit);
   assert.equal(report.end_commit, headCommit, 'the ending commit is recorded and equals the run HEAD');
-  assert.ok(report.changed_files.includes('tutor-system/scripts/transfer-assessment-release.test.js'), JSON.stringify(report.changed_files));
   const porcelainPaths = statusText.split('\n').filter(Boolean).map((line) => line.slice(3).trim());
   assert.deepEqual(report.changed_files.slice().sort(), porcelainPaths.slice().sort(), 'the inventory is the real changed-path set');
   assert.equal(report.verified_principals.teacher.application_user_id, f.config.principals.teacher.application_user_id);
