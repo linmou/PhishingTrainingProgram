@@ -29,7 +29,7 @@ The existing static migration and pre-delivery tests are diagnostic. The integra
 
 1. Apply or inspect the forward migration only in the disposable supported scope and capture migration status, enum values, table columns, function signatures, grants, enabled policies, private schema exposure, and realtime publication membership.
 2. Run the backend SQL matrix for legacy-row preservation, valid state pairs, one active checklist, one unresolved question, draft trigger/supersession constraints, immutable key updates/deletes, direct table writes, old-RPC bypasses, cross-room/learner reads, and public/private columns.
-3. Run transaction scenarios for reject/same-trigger suppression, explicit regenerate, stale/duplicate/racing disposition, successful apply, invalid transition, concurrent delivery/answer, Guard deferral/replay, provider/persistence rollback, and post-grade invalidation.
+3. Run transaction scenarios for stale and duplicate delivery, successful apply, invalid transition, concurrent delivery and answer, Guard deferral and replay, and provider or persistence rollback.
 4. Regenerate `tutor-system/src/types/database.ts` from the actual supported schema and compare tables, enums, functions, argument names, and return types to the runtime contract.
 
 ## Authorization and provider evidence

@@ -8,7 +8,7 @@
 - `service_role` is the only application grant for transfer RPCs. `anon` and `authenticated` direct execute grants are revoked.
 - Inputs that name a room, student, checklist, item, question, message, draft, or snapshot are checked against the verified principal and stored relationships.
 - Results are JSON objects with stable IDs/status/error codes; private rows are never returned wholesale.
-- A request ID is a transport correlation handle, not a replay cache. The idempotency the product needs is structural: one unresolved question per learner, and a draft whose `status` has already left `draft`.
+- A request ID is a transport correlation handle. `private.assessment_request_results` records `(operation, request_id) -> response` for the operations that persist it, so a retried request returns the recorded result. Idempotency that does not need the ledger stays structural: one unresolved question per learner, and a draft whose `status` has already left `draft`.
 
 ## RPCs
 

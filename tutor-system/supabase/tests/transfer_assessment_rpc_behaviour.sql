@@ -35,11 +35,11 @@ declare
   v_check   uuid := gen_random_uuid();
   v_item    uuid := gen_random_uuid();
   v_focus   uuid := gen_random_uuid();
+  v_focus2  uuid;
   v_draft   uuid;
   v_draft2  uuid;
   v_res     jsonb;
   v_rev     integer;
-  v_hash    text;
   v_key_count integer;
   v_public  jsonb;
   v_opt_ids  text;
@@ -81,10 +81,10 @@ begin
   -- A draft in `draft` status at revision 1, as prepare_transfer_turn_v1 would leave it.
   insert into private.assessment_drafts(
     room_id, student_id, checklist_id, item_id, focus_student_message_id,
-    raw_model_output, revision, raw_hash, status)
+    raw_model_output, revision, status)
   values (v_room, v_student, v_check, v_item, v_focus,
           '{"decision":{"mode":"assessment","instruction":"transfer_assess"},"response":"Which statement best describes the risk?"}'::jsonb,
-          1, repeat('a', 64), 'draft')
+          1, 'draft')
   returning id into v_draft;
 
   -- =======================================================================================
@@ -187,7 +187,8 @@ begin
     insert into t009_results values ('P5','stale revision rejected', sqlerrm = 'DRAFT_REVISION_CONFLICT', sqlstate || ': ' || sqlerrm);
   end;
 
-  -- P6: a valid review advances the revision by exactly one and stores a 64-char hex hash.
+  -- P6: a valid review advances the revision by exactly one and returns no hash, because the lean
+  --     schema dropped final_hash and the review response is now just draft_id and revision.
   v_res := review_assessment_draft_v1(v_draft, 1,
     jsonb_build_object(
       'decision', jsonb_build_object('mode','assessment','instruction','transfer_assess'),
@@ -206,35 +207,36 @@ begin
           'changed_context','A bank alert asks the learner to confirm a password after a transfer.',
           'source_evidence_message_ids', jsonb_build_array(v_focus::text)))),
     true, v_tutor, gen_random_uuid());
-  v_rev  := (v_res->>'revision')::integer;
-  v_hash := v_res->>'final_hash';
+  v_rev := (v_res->>'revision')::integer;
   insert into t009_results
-  values ('P6','valid review advances revision and stores a sha256 hash',
-          v_rev = 2 and v_hash ~ '^[0-9a-f]{64}$',
-          format('revision=%s hash_length=%s', v_rev, length(v_hash)));
+  values ('P6','valid review advances revision and returns no hash',
+          v_rev = 2 and (v_res->>'draft_id') = v_draft::text and not (v_res ? 'final_hash'),
+          format('revision=%s response_keys=%s', v_rev,
+                 (select string_agg(k, ',' order by k) from jsonb_object_keys(v_res) k)));
 
   -- =======================================================================================
   -- FR-007: atomic reviewed delivery
   -- =======================================================================================
 
-  -- P7: send with a wrong hash must be rejected and must write nothing.
+  -- P7: send with a stale expected revision must be rejected and must write nothing. The lean
+  --     schema removed the expected-hash argument, so revision is the remaining staleness guard.
   begin
-    v_res := send_reviewed_tutor_response_v3(v_draft, 2, repeat('0', 64), v_tutor, gen_random_uuid());
-    insert into t009_results values ('P7','stale hash send rejected', false, 'expected DRAFT_REVISION_CONFLICT, got ' || v_res::text);
+    v_res := send_reviewed_tutor_response_v3(v_draft, 99, v_tutor, gen_random_uuid());
+    insert into t009_results values ('P7','stale revision send rejected', false, 'expected DRAFT_REVISION_CONFLICT, got ' || v_res::text);
   exception when others then
-    insert into t009_results values ('P7','stale hash send rejected', sqlerrm = 'DRAFT_REVISION_CONFLICT', sqlstate || ': ' || sqlerrm);
+    insert into t009_results values ('P7','stale revision send rejected', sqlerrm = 'DRAFT_REVISION_CONFLICT', sqlstate || ': ' || sqlerrm);
   end;
 
   -- P8: the correct send creates exactly one question and one key row, and the PUBLIC question
   --     row must not carry correct_option_ids or transfer_basis.
   v_req := gen_random_uuid();
-  v_res := send_reviewed_tutor_response_v3(v_draft, 2, v_hash, v_tutor, v_req);
+  v_res := send_reviewed_tutor_response_v3(v_draft, 2, v_tutor, v_req);
 
   select count(*) into v_key_count
   from private.assessment_question_keys k
   where k.draft_id = v_draft;
 
-  select to_jsonb(q) - 'public_payload_hash' into v_public
+  select to_jsonb(q) into v_public
   from assessment_questions q
   where q.tutor_message_id = (v_res->'message'->>'id')::uuid;
 
@@ -255,77 +257,73 @@ begin
   values ('P10','private key row holds the reviewed key',
           v_opt_ids = 'B', format('correct_option_ids=%s', v_opt_ids));
 
-  -- P11: sending the same draft twice reports it was already sent.
+  -- P11: a second delivered question for the same learner must be refused. The request ledger was
+  --      removed by the lean refactor, so one-unresolved-question-per-learner is the structural
+  --      guard that makes grading idempotent. A second draft needs its own focus message, because
+  --      a draft is unique per trigger.
   begin
-    v_res := send_reviewed_tutor_response_v3(v_draft, 2, v_hash, v_tutor, gen_random_uuid());
-    insert into t009_results values ('P11','second send rejected as already sent', false, 'expected DRAFT_ALREADY_SENT, got ' || v_res::text);
-  exception when others then
-    insert into t009_results values ('P11','second send rejected as already sent', sqlerrm = 'DRAFT_ALREADY_SENT', sqlstate || ': ' || sqlerrm);
-  end;
+    insert into messages(id, room_id, user_id, content, user_role, is_ai_generated)
+    values (gen_random_uuid(), v_room, v_student, 'Second focus message.', 'student', false)
+    returning id into v_focus2;
 
-  -- =======================================================================================
-  -- FR-006: reject, same-trigger suppression, and explicit regeneration
-  -- =======================================================================================
-
-  insert into private.assessment_drafts(
-    room_id, student_id, checklist_id, item_id, focus_student_message_id,
-    raw_model_output, revision, raw_hash, status)
-  values (v_room, v_student, v_check, v_item, v_focus,
-          '{"decision":{"mode":"assessment"}}'::jsonb, 1, repeat('b', 64), 'draft')
-  returning id into v_draft2;
-
-  v_res := reject_assessment_draft_v1(v_draft2, 1, 'teacher_rejected', v_tutor, gen_random_uuid());
-  insert into t009_results
-  values ('P12','reject records rejected status and suppresses the trigger',
-          (v_res->>'status') = 'rejected' and (v_res->>'same_trigger_suppressed')::boolean,
-          v_res::text);
-
-  insert into t009_results
-  values ('P13','rejected draft stores a trigger key',
-          (select trigger_key is not null and status = 'rejected' from private.assessment_drafts where id = v_draft2),
-          (select format('status=%s trigger_key_set=%s', status, trigger_key is not null) from private.assessment_drafts where id = v_draft2));
-
-  -- P14: explicit regeneration supersedes the source and starts a fresh draft at revision 1.
-  v_res := regenerate_assessment_draft_v1(
-    v_draft2, 2, repeat('b', 64),
-    '{"decision":{"mode":"assessment"},"response":"regenerated"}'::jsonb,
-    repeat('c', 64), v_tutor, gen_random_uuid());
-
-  insert into t009_results
-  values ('P14','regeneration supersedes the source and links the replacement',
-          (v_res->>'source_status') = 'superseded'
-          and (v_res->>'replacement_revision')::integer = 1
-          and (select supersedes_draft_id from private.assessment_drafts where id = (v_res->>'replacement_draft_id')::uuid) = v_draft2,
-          v_res::text);
-
-  insert into t009_results
-  values ('P15','replacement trigger key matches the rejected source trigger key',
-          (select r.trigger_key = s.trigger_key
-             from private.assessment_drafts r
-             join private.assessment_drafts s on s.id = v_draft2
-            where r.id = (v_res->>'replacement_draft_id')::uuid),
-          'same-trigger suppression depends on this equality');
-
-  -- =======================================================================================
-  -- Request idempotency
-  -- =======================================================================================
-
-  v_req := gen_random_uuid();
-  begin
     insert into private.assessment_drafts(
       room_id, student_id, checklist_id, item_id, focus_student_message_id,
-      raw_model_output, revision, raw_hash, status)
-    values (v_room, v_student, v_check, v_item, v_focus,
-            '{"decision":{"mode":"assessment"}}'::jsonb, 1, repeat('d', 64), 'draft')
+      raw_model_output, reviewed_payload, revision, reviewed_by, reviewed_at,
+      content_confirmed_at, status)
+    values (v_room, v_student, v_check, v_item, v_focus2,
+            jsonb_build_object('decision', jsonb_build_object('mode','assessment','instruction','transfer_assess')),
+            jsonb_build_object(
+              'decision', jsonb_build_object('mode','assessment','instruction','transfer_assess'),
+              'response', 'Second question?',
+              'assessment', jsonb_build_object(
+                'selection_type','single',
+                'rendered_text','Second question?',
+                'stem','Second question?',
+                'options', jsonb_build_array(
+                  jsonb_build_object('id','A','text','one'), jsonb_build_object('id','B','text','two'),
+                  jsonb_build_object('id','C','text','three'), jsonb_build_object('id','D','text','four')),
+                'correct_option_ids', jsonb_build_array('A'),
+                'transfer_basis', jsonb_build_object(
+                  'concept_rule','r','source_context','s','changed_context','c',
+                  'source_evidence_message_ids', jsonb_build_array(v_focus2::text)))),
+            2, v_tutor, NOW(), NOW(), 'draft')
     returning id into v_draft2;
 
-    v_res := reject_assessment_draft_v1(v_draft2, 1, 'teacher_rejected', v_tutor, v_req);
-    v_res := reject_assessment_draft_v1(v_draft2, 1, 'teacher_rejected', v_tutor, v_req);
-    insert into t009_results values ('P16','replayed reject request returns the recorded result',
-      (v_res->>'draft_id') = v_draft2::text and (v_res->>'request_id') = v_req::text, v_res::text);
-  exception when others then
-    insert into t009_results values ('P16','replayed reject request returns the recorded result', false, sqlstate || ': ' || sqlerrm);
+    v_res := send_reviewed_tutor_response_v3(v_draft2, 2, v_tutor, gen_random_uuid());
+    insert into t009_results values ('P11','second unresolved question refused', false,
+      'expected a unique-violation, got ' || v_res::text);
+  exception when unique_violation then
+    insert into t009_results values ('P11','second unresolved question refused', true,
+      'one_unresolved_assessment_per_student rejected the second delivered question');
+  when others then
+    insert into t009_results values ('P11','second unresolved question refused', false, sqlstate || ': ' || sqlerrm);
   end;
+
+  -- =======================================================================================
+  -- Ledger absence, and POST_MESSAGE idempotency
+  -- =======================================================================================
+
+  -- P12: the lean refactor removed private.assessment_request_results on the premise that only
+  --      reject/regenerate used it. That premise was false and migration 034 restores the table,
+  --      because post_message and process_message read it as their first database access. This
+  --      case asserts the table is back, so the same mistake cannot recur silently.
+  insert into t009_results
+  values ('P12','request idempotency ledger exists for post/process',
+          to_regclass('private.assessment_request_results') is not null,
+          coalesce(to_regclass('private.assessment_request_results')::text, 'MISSING - apply migration 034'));
+
+  -- P13: a repeated post_message request must return the recorded result rather than writing a
+  --      second message. This is the behaviour the ledger exists for.
+  v_req := gen_random_uuid();
+  v_res := post_assessment_message_v1(v_room, 'Ledger replay probe.', NULL, NULL, v_tutor, v_req);
+  v_res := post_assessment_message_v1(v_room, 'Ledger replay probe.', NULL, NULL, v_tutor, v_req);
+  insert into t009_results
+  values ('P13','replayed post_message request returns the recorded result',
+          v_res->'message'->>'id' is not null
+          and (select count(*) from messages
+                where room_id = v_room and content = 'Ledger replay probe.') = 1,
+          format('message_id=%s rows_written=%s', v_res->'message'->>'id',
+                 (select count(*) from messages where room_id = v_room and content = 'Ledger replay probe.')));
 end
 $t009$;
 

@@ -59,7 +59,6 @@ deployment-configured trusted session/capability
 AssessmentPrincipalVerifier -> VerifiedPrincipal -> room/learner authorization
         |
         +--> prepare/review provider draft -> private draft/key material
-        +--> reject/suppress or explicitly regenerate/supersede draft
         |
         +--> send RPC v3 -> public tutor message + public question + immutable key
         |
@@ -83,22 +82,22 @@ The Edge Function is the only boundary that combines a verified principal with s
 1. Inspect the supported hosted schema, migration history, enum values, overloads, grants, enabled policies, private schema exposure, and realtime publication before making forward changes.
 2. Reconcile migrations 025/026 with the actual schema without rewriting 015/023/024 or dropping all policies/functions as a shortcut.
 3. Verify owner-scoped transfer reads, no direct transfer writes, valid progress pairs, one active checklist, one unresolved question, private key immutability, and public/private separation.
-4. Verify `reject_assessment_draft_v1`, `regenerate_assessment_draft_v1`, `apply_learning_event_v1`, reviewed send, message processing, invalidation, and external evidence operations for atomicity, same-trigger suppression, actual before/after history, stale snapshots, idempotency, race locking, Guard deferral, and rollback.
+4. Verify `apply_learning_event_v1`, reviewed send, and message processing for atomicity, actual before/after history, stale handling, race locking, Guard deferral, and rollback.
 5. Regenerate `tutor-system/src/types/database.ts` from the supported schema, including every table, enum, RPC signature, and result shape; retain legacy types and record any unsupported generator gap.
 
 ### W4: Verified principal and authorization
 
 1. Define `AssessmentPrincipalVerifier.verify(request): Promise<VerifiedPrincipal>` and inject it into the API handler. The deployment adapter may use any real trusted session/capability that resolves application user and stored room/session scope; tests inject a deterministic verifier. The contract does not require Supabase Auth, a bearer token, or `auth.uid()`.
-2. Require teacher authority for checklist initialization, preparation, review, send, cancellation, invalidation, and external confirmation; require own-learner scope for learner messages and answer processing.
+2. Require teacher authority for checklist initialization, preparation, review, and send; require own-learner scope for learner messages and answer processing.
 3. Test missing/forged/cross-room/cross-learner principals, private-column access, realtime/export/log/error leakage, direct table writes, and legacy-RPC bypasses at the hosted boundary.
-4. When no deployment adapter is configured, return capability `{ enabled: false, reason: 'AUTHORIZATION_NOT_CONFIGURED' }`, return the 503 error for transfer operations, perform no mutation, and do not add a sign-in product.
+4. When no deployment adapter is configured, return the 503 `AUTHORIZATION_NOT_CONFIGURED` error for every transfer operation, perform no mutation, and do not add a sign-in product. There is no `capabilities` operation.
 
 ### W5: Evidence application and lifecycle
 
 1. Make the stored message/question link, immutable key, event dedupe key, current snapshot, source-message scope, and transition pair preconditions explicit.
-2. Apply one trusted event transaction that writes evidence, status and understanding together, history with actual old/new values, attempts only for scored/spontaneous events, and idempotency result.
-3. Record Guard deferral, stale/rejected/error outcomes, first-answer-wins races, feedback linkage, and post-grade invalidation compensation without rerunning old model calls.
-4. Derive a stable generation-trigger key from room, learner, checklist, focus learner message, and progress snapshot; the model-selected item is an output and is not part of the trigger identity. Rejection records `rejected` and suppresses automatic preparation for that key; explicit regeneration alone may bypass it, atomically superseding the source and inserting one replacement draft after provider generation outside the transaction.
+2. Apply one trusted event transaction that writes evidence, status and understanding together, history with actual old/new values, and attempts only for scored or spontaneous events.
+3. Record Guard deferral, stale and error outcomes, first-answer-wins races, and feedback linkage without rerunning old model calls.
+4. Keep one unresolved question per learner as the structural guard, and treat a draft that is never sent as simply never delivered. No generation-trigger suppression exists: the product has no requirement to stop a tutor receiving a draft again.
 
 ### W6: Provider boundary and production prompt
 
@@ -113,7 +112,7 @@ The Edge Function is the only boundary that combines a verified principal with s
 |---|---|---|
 | W3 | Hosted schema/RLS/RPC execution, legacy preservation, generated-type comparison, direct-write/race/rollback results | Static migration regex checks or local mocks |
 | W4 | Authorization integration matrix with configured production verifier, plus injected-verifier tests and explicit missing-adapter blocker; privacy scans | UI hiding, local role values, Supabase Auth/`auth.uid()` assumptions, or injected verifier alone |
-| W5 | Atomic lifecycle and causal-history integration results across stale/race/idempotency/Guard/invalidation paths | Unit reducer tests alone |
+| W5 | Atomic lifecycle and causal-history integration results across stale, race, and Guard paths | Unit reducer tests alone |
 | W6 | Provider request/response inspection, 1,200-token assertion, bounded retry/error evidence, secret scan | A prompt string review or Promptfoo result |
 
 The feature flag remains disabled. Downstream evaluation and browser release gates remain pending and are not claimed by this component.

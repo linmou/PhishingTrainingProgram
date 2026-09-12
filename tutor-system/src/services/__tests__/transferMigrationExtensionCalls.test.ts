@@ -17,6 +17,18 @@ const NARROW_SEARCH_PATH_FUNCTIONS = [
   'transfer_draft_trigger_key_v1',
 ];
 
+/**
+ * Removed by the lean refactor in migration 032. They stay in the guard list because the guard
+ * scans migration HISTORY, where their pre-refactor bodies still legitimately appear and must
+ * still be qualified; but they must never be mistaken for live functions, and every name here
+ * must correspond to an actual DROP in the removal migration.
+ */
+const DROPPED_BY_LEAN_REFACTOR = [
+  'reject_assessment_draft_v1',
+  'regenerate_assessment_draft_v1',
+  'transfer_draft_trigger_key_v1',
+];
+
 function migrationFiles(): string[] {
   return readdirSync(MIGRATIONS_DIR)
     .filter((name) => /^\d{3}_.*\.sql$/.test(name))
@@ -76,6 +88,34 @@ describe('transfer migration extension calls', () => {
     expect(fix).toBeDefined();
     expect(fix!.text).toMatch(/extensions\.digest\s*\(/);
     expect(fix!.text).toMatch(/CREATE OR REPLACE FUNCTION\s+private\.transfer_draft_trigger_key_v1/);
+  });
+
+  it('names each guard-listed function as either live or dropped, with no stale entry', () => {
+    // The guard list must not accumulate names whose functions no longer exist anywhere in the
+    // final schema without that removal being recorded. Otherwise a reader (and this suite)
+    // treats a dropped function as live, which is how three stale names survived the refactor.
+    const droppedInRemovalMigration = sources
+      .filter(({ name }) => name.startsWith('032_'))
+      .flatMap(({ text }) => Array.from(text.matchAll(/DROP FUNCTION IF EXISTS\s+(?:public\.|private\.)?([a-z_0-9]+)/gi)))
+      .map((match) => match[1]);
+
+    DROPPED_BY_LEAN_REFACTOR.forEach((functionName) => {
+      expect(droppedInRemovalMigration).toContain(functionName);
+    });
+
+    // Every name in the guard list is accounted for: it is either a function that survives into
+    // the final schema, or one recorded as dropped. A name that is neither is stale.
+    const accountedFor = new Set([...DROPPED_BY_LEAN_REFACTOR]);
+    const live = NARROW_SEARCH_PATH_FUNCTIONS.filter((name) => !accountedFor.has(name));
+    expect(live.sort()).toEqual([
+      'post_assessment_message_v1',
+      'prepare_transfer_turn_v1',
+      'review_assessment_draft_v1',
+      'send_reviewed_tutor_response_v3',
+    ]);
+    expect([...NARROW_SEARCH_PATH_FUNCTIONS].sort()).toEqual(
+      [...live, ...DROPPED_BY_LEAN_REFACTOR].sort()
+    );
   });
 
   it('leaves no unqualified narrow-search-path digest caller in the latest migration history', () => {
