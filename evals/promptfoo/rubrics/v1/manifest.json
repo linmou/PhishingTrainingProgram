@@ -439,13 +439,65 @@
     "agreed": 30,
     "method": "isolated-check reasoning-enabled Qwen3.5 Flash; explicit JSON-schema repair only",
     "scope_clarification": "C01 evaluator reason word limit is not a target reasoning limit; 3/3 positive, negative and long-target boundary checks agree.",
-    "scope_evidence": ["evals/promptfoo/audits/tutor-v1-preparation-20260907/reasoning-scope-calibration.json", "evals/promptfoo/audits/tutor-v1-preparation-20260907/reasoning-scope-calibration-24.json", "evals/promptfoo/audits/tutor-v1-preparation-20260907/reasoning-scope-calibration-25.json"]
+    "scope_evidence": [
+      "evals/promptfoo/audits/tutor-v1-preparation-20260907/reasoning-scope-calibration.json",
+      "evals/promptfoo/audits/tutor-v1-preparation-20260907/reasoning-scope-calibration-24.json",
+      "evals/promptfoo/audits/tutor-v1-preparation-20260907/reasoning-scope-calibration-25.json"
+    ]
   },
   "guard_scope_calibration": {
     "agreed": 3,
     "total": 3,
-    "evidence": ["evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-0.json", "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-1.json", "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-2.json"]
+    "evidence": [
+      "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-0.json",
+      "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-1.json",
+      "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-2.json"
+    ]
   },
   "evaluator_revision": 6,
-  "execution_revision": 7
+  "execution_revision": 7,
+  "transfer_registry": {
+    "intent": "Register the frozen W9-W10 transfer rubrics alongside the historical v0/v1 checks without altering any legacy meaning.",
+    "owner": "component-104-transfer-evaluation",
+    "version": "v1",
+    "public_metric_ids": [
+      "transfer_trigger_target",
+      "medium_transfer_quality",
+      "assessment_item_validity",
+      "assessment_followup",
+      "verification_evidence"
+    ],
+    "deterministic_supporting_check_id": "t09_contract_and_progress",
+    "deterministic_metric_ids": [
+      "assessment_followup"
+    ],
+    "semantic_metric_ids": [
+      "transfer_trigger_target",
+      "medium_transfer_quality",
+      "assessment_item_validity",
+      "verification_evidence"
+    ],
+    "files": {
+      "transfer_trigger_target": "transfer_trigger_target.md",
+      "medium_transfer_quality": "medium_transfer_quality.md",
+      "assessment_item_validity": "assessment_item_validity.md",
+      "assessment_followup": "assessment_followup.md",
+      "verification_evidence": "verification_evidence.md"
+    },
+    "file_hashes": {
+      "transfer_trigger_target": "1fba1d94f6c9b039bf6bdb35f6d1854f7f25257cf982e5cef1ecd85c284f6f94",
+      "medium_transfer_quality": "907f58e8fa203562f193c873ee15f17d9908c0651c4c874e9298265d3d4a6a59",
+      "assessment_item_validity": "24a9751d8b0fa14b38dad6524764ab7cfad13489d94bb792b735d495b9c714a7",
+      "assessment_followup": "200939c6b86af918089967c6fff63d39b2fc01a3c8f3ed0bf02a1ec54ffe77d2",
+      "verification_evidence": "cadf5d30d2b59e27c7826b9e5af588711b1ae04df29a98e79e71ea661a4836f7"
+    },
+    "thresholds": {
+      "semantic_default": 0.8,
+      "hard": 1
+    },
+    "legacy_meanings_changed": false,
+    "legacy_checks_preserved": true,
+    "evidence": "evals/promptfoo/v1/transfer/manifest.json",
+    "note": "Transfer checks stay out of the legacy checks list so no historical assertion, threshold, or method can be reinterpreted by this registration."
+  }
 }

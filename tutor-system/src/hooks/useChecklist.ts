@@ -16,6 +16,9 @@ export interface GenerationModalState {
   context: ChecklistGenerationContext;
 }
 
+/** Progress fields the trusted transfer path owns; the room UI must never write them. */
+const TRANSFER_PROGRESS_OWNED_FIELDS: ReadonlyArray<keyof ChecklistItem> = ['status', 'understanding_level'];
+
 export interface UseChecklistReturn {
   // State
   checklist: SessionChecklist | null;
@@ -381,6 +384,14 @@ export function useChecklist(roomId: string): UseChecklistReturn {
   const updateItem = useCallback(async (itemId: string, updates: Partial<ChecklistItem>) => {
     if (!roomId) return;
 
+    // A transfer-policy progress pair is written by the trusted transfer path only. The browser
+    // refuses the write here as well as in the panel, so no caller can mutate progression.
+    if (checklist?.progress_policy_version === 'transfer_v1'
+      && TRANSFER_PROGRESS_OWNED_FIELDS.some((field) => field in updates)) {
+      setError('Transfer-policy progress is server-owned and cannot be edited from the room UI.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -398,7 +409,7 @@ export function useChecklist(roomId: string): UseChecklistReturn {
     } finally {
       setLoading(false);
     }
-  }, [roomId]);
+  }, [roomId, checklist]);
 
   // Refresh checklist data - reload existing data without clearing
   const refreshChecklist = useCallback(async () => {

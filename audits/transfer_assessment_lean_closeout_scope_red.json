@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "feature": "transfer_assessment_lean_closeout",
+  "phase": "red",
+  "baseline_ref": "refs/tdd/transfer_assessment_lean_closeout/pre_red",
+  "protected": [
+    "tutor-system/src/services/transferAssessmentService.ts",
+    "tutor-system/src/types/assessmentApi.ts",
+    "tutor-system/src/types/database.ts",
+    "tutor-system/supabase/functions/assessment-api/index.ts",
+    "tutor-system/supabase/migrations/**",
+    "specs/**",
+    "audits/**"
+  ],
+  "editable": [
+    "tutor-system/src/services/__tests__/transferMigrationExtensionCalls.test.ts"
+  ],
+  "semantic_overrides": {}
+}

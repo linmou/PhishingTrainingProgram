@@ -71,4 +71,65 @@ describe('v3 tutor decision contract', () => {
       assessment: null,
     }), { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] }).decision.instruction).toBe('guard');
   });
+
+  it('keeps the reason as the first serialized field and rejects a reordered payload', () => {
+    const knownIds = { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] };
+    const reordered = JSON.stringify({
+      decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: itemId },
+      reason: 'The learner applied the rule.',
+      response: 'A teammate sends a prize link.',
+      assessment: JSON.parse(decision()).assessment,
+    });
+
+    expect(parseTutorDecisionV3(decision(), knownIds).reason.length).toBeGreaterThan(0);
+    expect(() => parseTutorDecisionV3(reordered, knownIds)).toThrow('reason');
+  });
+
+  it.each(['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation'])(
+    'accepts tutoring with the real teaching instruction %s and a null target/assessment',
+    (instruction) => {
+      const parsed = parseTutorDecisionV3(decision({
+        decision: { mode: 'tutoring', instruction, target_item_id: null },
+        assessment: null,
+      }), { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] });
+
+      expect(parsed.decision).toEqual({ mode: 'tutoring', instruction, target_item_id: null });
+      expect(parsed.assessment).toBeNull();
+    }
+  );
+
+  it.each(['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation'])(
+    'accepts Guard with the real teaching instruction %s and a null target/assessment',
+    (instruction) => {
+      const parsed = parseTutorDecisionV3(decision({
+        decision: { mode: 'guard', instruction, target_item_id: null },
+        assessment: null,
+      }), { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] });
+
+      expect(parsed.decision).toEqual({ mode: 'guard', instruction, target_item_id: null });
+      expect(parsed.assessment).toBeNull();
+    }
+  );
+
+  it.each(['transfer_assess', 'scaffolding'])(
+    'rejects Guard with %s when a target or an assessment payload is present',
+    (instruction) => {
+      const knownIds = { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] };
+
+      expect(() => parseTutorDecisionV3(decision({
+        decision: { mode: 'guard', instruction, target_item_id: itemId },
+        assessment: null,
+      }), knownIds)).toThrow('guard');
+      expect(() => parseTutorDecisionV3(decision({
+        decision: { mode: 'guard', instruction, target_item_id: null },
+      }), knownIds)).toThrow('guard');
+    }
+  );
+
+  it('rejects Guard with transfer_assess because the instruction is assessment-only', () => {
+    expect(() => parseTutorDecisionV3(decision({
+      decision: { mode: 'guard', instruction: 'transfer_assess', target_item_id: null },
+      assessment: null,
+    }), { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] })).toThrow('guard');
+  });
 });

@@ -12,6 +12,25 @@ const manifest = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../rubrics/v1/manifest.json'), 'utf8')
 );
 
+/**
+ * Additive evaluator extension registry. The transfer adapter registers here by contract
+ * version so transfer checks run alongside the legacy v0/v1 checks without replacing them:
+ * no extension ever changes a legacy result, and an unknown version still fails closed.
+ */
+const evaluatorExtensions = new Map();
+
+function registerEvaluatorExtension(id, extension) {
+  if (typeof id !== 'string' || !id.trim()) throw new Error('An evaluator extension id is required.');
+  if (!extension || typeof extension !== 'object') throw new Error('An evaluator extension object is required.');
+  if (evaluatorExtensions.has(id)) throw new Error(`Evaluator extension ${id} is already registered.`);
+  evaluatorExtensions.set(id, { ...extension, id });
+  return evaluatorExtensions.get(id);
+}
+
+function evaluatorExtension(id) {
+  return evaluatorExtensions.get(id) || null;
+}
+
 function normalizeForEvaluation(value, version) {
   if (version !== 'v2' || !value || typeof value !== 'object') return value;
   return {
@@ -390,6 +409,8 @@ async function evaluateGeneratedOutput({
 
 module.exports = {
   manifest,
+  registerEvaluatorExtension,
+  evaluatorExtension,
   normalizeForEvaluation,
   checkedResult,
   judgeMessages,

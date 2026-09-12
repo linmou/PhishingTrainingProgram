@@ -61,6 +61,7 @@ async function call(messages, kind, settings) {
   }
 }
 function messagesFor(c, variant, policy, contractVersion = 'legacy') {
+  if (!['legacy', 'v2'].includes(contractVersion) && !require('./evaluator').evaluatorExtension(contractVersion)) throw new Error('Unsupported contract version.');
   if (variant === 'baseline') return c.baseline_messages;
   if (variant === 'aligned') {
     const schema = activeContract(contractVersion) + (contractVersion === 'v2'
@@ -123,7 +124,10 @@ async function run(options) {
   const settings = read(path.join(__dirname, 'settings.json'));
   const policy = options.policy ? fs.readFileSync(options.policy, 'utf8') : '';
   const contractVersion = options.contract_version || 'legacy';
-  if (!['legacy', 'v2'].includes(contractVersion)) throw new Error('Unsupported contract version.');
+  if (!['legacy', 'v2'].includes(contractVersion)) {
+    const { evaluatorExtension } = require('./evaluator');
+    if (!evaluatorExtension(contractVersion)) throw new Error('Unsupported contract version.');
+  }
   const rubrics = Object.fromEntries(cases.map(c => [c.id, rubricsFor(c)]));
   const sources = manifest.sources.map(source => ({...source, content:fs.readFileSync(path.join(root,source.path),'utf8')}));
   const identity = { variant: options.variant, contract_version: contractVersion, cases, settings, policy, rubrics, manifest, sources, runner_sha256:sha(fs.readFileSync(__filename,'utf8')), replay_directory:options.replay||null };

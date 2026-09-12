@@ -35,6 +35,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     initialAssessment?.correct_option_ids || []
   );
   const [contentConfirmed, setContentConfirmed] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +46,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     setOptions(assessment?.options || []);
     setCorrectOptionIds(assessment?.correct_option_ids || []);
     setContentConfirmed(false);
+    setDirty(false);
     setError(null);
   }, [decision]);
 
@@ -56,9 +58,12 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   if (!initialAssessment) return null;
 
+  const reviewStatus = saving ? 'saving' : dirty ? 'dirty' : 'ready';
+
   const setOptionText = (id: AssessmentOptionId, text: string) => {
     setOptions((current) => current.map((option) => option.id === id ? { ...option, text } : option));
     setContentConfirmed(false);
+    setDirty(true);
   };
 
   const setSelection = (id: AssessmentOptionId, checked: boolean) => {
@@ -67,12 +72,14 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       return checked ? uniqueSelections([...current, id]) : current.filter((value) => value !== id);
     });
     setContentConfirmed(false);
+    setDirty(true);
   };
 
   const handleSelectionTypeChange = (value: 'single' | 'multiple') => {
     setSelectionType(value);
     setCorrectOptionIds((current) => value === 'single' ? current.slice(0, 1) : uniqueSelections(current));
     setContentConfirmed(false);
+    setDirty(true);
   };
 
   const handleSubmit = async () => {
@@ -136,7 +143,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       {itemLabel && <p>Target: {itemLabel}</p>}
       <label>
         Question
-        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); }} rows={3} />
+        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); }} rows={3} />
       </label>
       <label>
         Answer type
@@ -166,12 +173,20 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         <input type="checkbox" checked={contentConfirmed} onChange={(event) => setContentConfirmed(event.target.checked)} />
         I confirm the concept, changed context, and answer key are appropriate.
       </label>
+      {/* Local review state only: there is no draft row, so this never reports a server status. */}
+      <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
+        {reviewStatus === 'saving'
+          ? 'Sending the confirmed assessment…'
+          : reviewStatus === 'dirty'
+            ? 'Unsaved edits — the previous confirmation was cleared.'
+            : 'Ready to send once you confirm.'}
+      </p>
       {error && <p role="alert">{error}</p>}
       <div>
         <button type="button" onClick={handleSubmit} disabled={saving}>
           {saving ? 'Saving…' : 'Confirm assessment'}
         </button>
-        {onCancel && <button type="button" onClick={onCancel} disabled={saving}>Cancel</button>}
+        {onCancel && <button type="button" onClick={onCancel} disabled={saving}>Discard candidate</button>}
       </div>
     </section>
   );
