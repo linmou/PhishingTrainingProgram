@@ -49,7 +49,9 @@ begin
   -- Disposable fixture: one tutor, one learner, one transfer_v1 checklist with one item, and
   -- one focus learner message. Created as the privileged Dashboard role.
   -- ---------------------------------------------------------------------------------------
-  insert into users(id, email, display_name, current_role, status)
+  -- NOTE: "current_role" must be double-quoted. It is a reserved keyword in Postgres (like
+  -- current_user), so an unquoted reference is a syntax error, not a column name.
+  insert into users(id, email, display_name, "current_role", status)
   values (v_tutor, 't009-tutor@example.invalid', 'T009 Tutor', 'tutor', 'active'),
          (v_student, 't009-student@example.invalid', 'T009 Student', 'student', 'active');
 
