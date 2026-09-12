@@ -18,10 +18,7 @@ const PRIVATE_MATERIAL = {
   raw_model_output: { text: 'raw' },
   reviewed_payload: { decision: {} },
   private_payload: { key: 'B' },
-  private_payload_hash: 'abc',
   source_transfer_basis: { changed_context: 'x' },
-  raw_hash: 'raw',
-  final_hash: 'final',
   reason: 'model reason',
 };
 
@@ -72,19 +69,33 @@ describe('operation allowlist', () => {
       expect(isAssessmentApiOperation(operation)).toBe(true);
     });
 
-    ['', 'drop_table', 'REVIEW_DRAFT', 'capabilities ', 'review-draft', null, undefined, 42, {}].forEach((value) => {
+    ['', 'drop_table', 'REVIEW_DRAFT', 'reject_draft ', 'review-draft', null, undefined, 42, {}].forEach((value) => {
       expect(isAssessmentApiOperation(value)).toBe(false);
     });
   });
 
-  it('covers every operation the R04 reconciliation added', () => {
-    expect(ASSESSMENT_API_OPERATIONS).toContain('reject_draft');
-    expect(ASSESSMENT_API_OPERATIONS).toContain('regenerate_draft');
+  it('exposes only the operations the lean design keeps', () => {
+    expect([...ASSESSMENT_API_OPERATIONS].sort()).toEqual([
+      'analyze_message',
+      'initialize_checklist',
+      'post_message',
+      'prepare_turn',
+      'process_message',
+      'review_draft',
+      'send_reviewed',
+    ]);
+  });
+
+  it('no longer advertises the removed operations', () => {
+    ['capabilities', 'reject_draft', 'regenerate_draft', 'cancel_question',
+     'invalidate_question', 'confirm_external_transfer'].forEach((operation) => {
+      expect(isAssessmentApiOperation(operation)).toBe(false);
+    });
   });
 
   it('declares every allowlisted operation with no duplicates', () => {
     expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(ASSESSMENT_API_OPERATIONS.length);
-    expect(ASSESSMENT_API_OPERATIONS.length).toBeGreaterThanOrEqual(13);
+    expect(ASSESSMENT_API_OPERATIONS.length).toBe(7);
   });
 });
 
@@ -102,7 +113,7 @@ describe('stable error codes', () => {
     expect(ASSESSMENT_API_ERROR_STATUS.FORBIDDEN.status).toBe(403);
     expect(ASSESSMENT_API_ERROR_STATUS.FORBIDDEN.retryable).toBe(false);
     expect(ASSESSMENT_API_ERROR_STATUS.DRAFT_REVISION_CONFLICT.status).toBe(409);
-    expect(ASSESSMENT_API_ERROR_STATUS.DRAFT_TRIGGER_SUPPRESSED.status).toBe(409);
+    expect(ASSESSMENT_API_ERROR_STATUS.DRAFT_ALREADY_SENT.status).toBe(409);
   });
 
   it('treats an unconfigured provider or verifier as unavailable', () => {

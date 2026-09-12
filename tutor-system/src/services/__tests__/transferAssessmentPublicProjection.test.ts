@@ -125,7 +125,7 @@ describe('public assessment result projection', () => {
       feedback_id: 'feedback-1',
     });
 
-    const delivery = await service.sendReviewed({ draftId: 'draft-1', expectedRevision: 2, expectedHash: 'a'.repeat(64) });
+    const delivery = await service.sendReviewed({ draftId: 'draft-1', expectedRevision: 2 });
 
     expect(Object.keys(delivery).sort()).toEqual(['feedback_id', 'message', 'question', 'room']);
     expect(Object.keys(delivery.message).sort()).toEqual([...PUBLIC_MESSAGE_DTO_KEYS].sort());
@@ -136,7 +136,7 @@ describe('public assessment result projection', () => {
 
   it('surfaces a tutoring delivery with no assessment question as a null question', async () => {
     const service = createService({ message: storedMessageRow(), question: null, room: {}, feedback_id: 'feedback-2' });
-    const delivery = await service.sendReviewed({ draftId: 'draft-1', expectedRevision: 2, expectedHash: 'a'.repeat(64) });
+    const delivery = await service.sendReviewed({ draftId: 'draft-1', expectedRevision: 2 });
     expect(delivery.question).toBeNull();
     expect(delivery.message.content).toBe('Let us look at how you checked the sender.');
   });

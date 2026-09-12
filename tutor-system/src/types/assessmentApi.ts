@@ -1,19 +1,13 @@
 // Purpose: define the transfer-assessment API contract — operation allowlist, response envelope, stable error codes, and the public DTO denylist — as one pure module shared by the Edge Function, the browser service, and their tests, so no engine-specific runtime is needed to verify it.
 
 export const ASSESSMENT_API_OPERATIONS = [
-  'capabilities',
   'initialize_checklist',
   'post_message',
   'analyze_message',
   'prepare_turn',
   'review_draft',
-  'reject_draft',
-  'regenerate_draft',
   'send_reviewed',
   'process_message',
-  'cancel_question',
-  'invalidate_question',
-  'confirm_external_transfer',
 ] as const;
 
 export type AssessmentApiOperation = (typeof ASSESSMENT_API_OPERATIONS)[number];
@@ -34,13 +28,9 @@ export const ASSESSMENT_API_ERROR_STATUS: Record<string, { status: number; retry
   FORBIDDEN: { status: 403, retryable: false },
   WRONG_LEARNER: { status: 409, retryable: false },
   DRAFT_REVISION_CONFLICT: { status: 409, retryable: false },
-  DRAFT_NOT_REJECTABLE: { status: 409, retryable: false },
-  DRAFT_NOT_REGENERABLE: { status: 409, retryable: false },
-  DRAFT_SNAPSHOT_STALE: { status: 409, retryable: false },
-  DRAFT_TRIGGER_SUPPRESSED: { status: 409, retryable: false },
+  DRAFT_ALREADY_SENT: { status: 409, retryable: false },
   CONTENT_CONFIRMATION_REQUIRED: { status: 409, retryable: false },
   ITEM_VALIDATION_FAILED: { status: 409, retryable: false },
-  IDEMPOTENCY_CONFLICT: { status: 409, retryable: false },
   AI_PROVIDER_NOT_CONFIGURED: { status: 503, retryable: true },
   AUTHORIZATION_NOT_CONFIGURED: { status: 503, retryable: false },
   PERSISTENCE_FAILED: { status: 500, retryable: true },
@@ -58,10 +48,7 @@ export const ASSESSMENT_PRIVATE_FIELD_NAMES = [
   'reviewed_payload',
   'reason',
   'private_payload',
-  'private_payload_hash',
   'source_transfer_basis',
-  'raw_hash',
-  'final_hash',
 ] as const;
 
 export function isAssessmentApiOperation(value: unknown): value is AssessmentApiOperation {

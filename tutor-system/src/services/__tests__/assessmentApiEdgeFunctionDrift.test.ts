@@ -60,20 +60,19 @@ const rpcFunctions = Array.from(
   )
 ).sort();
 
-const nonCapability = knownOperations.filter((operation) => operation !== 'capabilities');
 
 describe('Edge Function operation surface', () => {
   it('declares the same operations in its union and its allowlist', () => {
     expect(declaredOperations).toEqual(knownOperations);
   });
 
-  it('routes and dispatches every non-capabilities operation', () => {
-    expect(rpcRouted).toEqual(nonCapability);
-    expect(dispatched).toEqual(nonCapability);
+  it('routes and dispatches every declared operation', () => {
+    expect(rpcRouted).toEqual(knownOperations);
+    expect(dispatched).toEqual(knownOperations);
   });
 
   it('declares no operation the dispatch switch cannot handle', () => {
-    expect(knownOperations.filter((operation) => operation !== 'capabilities' && !dispatched.includes(operation))).toEqual([]);
+    expect(knownOperations.filter((operation) => !dispatched.includes(operation))).toEqual([]);
   });
 });
 
@@ -82,15 +81,17 @@ describe('Edge Function versus shared contract', () => {
     expect(knownOperations).toEqual([...ASSESSMENT_API_OPERATIONS].sort());
   });
 
-  it('exposes the two draft-disposition operations the R04 reconciliation added', () => {
-    expect(knownOperations).toContain('reject_draft');
-    expect(knownOperations).toContain('regenerate_draft');
-    expect(rpcFunctions).toContain('reject_assessment_draft_v1');
-    expect(rpcFunctions).toContain('regenerate_assessment_draft_v1');
+  it('no longer exposes the removed draft-disposition operations', () => {
+    ['reject_draft', 'regenerate_draft', 'capabilities', 'cancel_question',
+     'invalidate_question', 'confirm_external_transfer'].forEach((operation) => {
+      expect(knownOperations).not.toContain(operation);
+    });
+    expect(rpcFunctions).not.toContain('reject_assessment_draft_v1');
+    expect(rpcFunctions).not.toContain('regenerate_assessment_draft_v1');
   });
 
   it('maps every error code the draft RPCs can raise into the shared status table', () => {
-    ['DRAFT_NOT_REJECTABLE', 'DRAFT_NOT_REGENERABLE', 'DRAFT_SNAPSHOT_STALE', 'DRAFT_TRIGGER_SUPPRESSED', 'DRAFT_REVISION_CONFLICT', 'IDEMPOTENCY_CONFLICT'].forEach(
+    ['DRAFT_REVISION_CONFLICT', 'DRAFT_ALREADY_SENT', 'CONTENT_CONFIRMATION_REQUIRED', 'ITEM_VALIDATION_FAILED'].forEach(
       (code) => {
         expect(ASSESSMENT_API_ERROR_STATUS[code]).toBeDefined();
         expect(ASSESSMENT_API_ERROR_STATUS[code].status).toBe(409);
@@ -113,7 +114,7 @@ describe('Edge Function versus shared contract', () => {
       source.indexOf('function publicQuestion'),
       source.indexOf('function safeOperationData')
     );
-    ['correct_option_ids', 'private_payload', 'transfer_basis', 'raw_model_output', 'reviewed_payload', 'raw_hash', 'final_hash'].forEach(
+    ['correct_option_ids', 'private_payload', 'transfer_basis', 'raw_model_output', 'reviewed_payload'].forEach(
       (field) => {
         expect(projection).not.toContain(field);
       }
