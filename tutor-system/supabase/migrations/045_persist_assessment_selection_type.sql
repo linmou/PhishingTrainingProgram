@@ -158,5 +158,3 @@ BEGIN
     );
 END;
 $function$;
-
-commit;
