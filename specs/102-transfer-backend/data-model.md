@@ -40,8 +40,9 @@ The database validates the pair. React, model output, and direct clients cannot 
 | `private.assessment_drafts` | Raw model output, reviewed payload, scope/focus IDs, revision, reviewer, confirmation, status | Status is `draft`, `ignored`, or `sent`. A material edit increments `revision` and requires confirmation again; a draft that is never sent is simply never delivered. |
 | `private.assessment_question_keys` | Question ID, immutable correct labels, private payload, transfer basis, reviewer confirmation, draft revision, source item timestamp | Insert once for delivery; update/delete raises `ASSESSMENT_KEY_IMMUTABLE`. |
 | `private.learning_event_inbox` | Stable event/dedupe key, scope/source IDs, kind/payload, classifier, processing state, linked evidence/update, timestamps | Records applied, no-change, deferred, rejected, and error outcomes for replay/audit. |
+| `private.assessment_request_results` | Operation, request ID, actor, stable response | Generic request-idempotency ledger shared by every request-bearing RPC. Returns the recorded result for a repeated `(operation, request_id)`; not specific to any one operation. |
 
-There is exactly one assessment pipeline: a tutor message plus a public question, backed by one immutable private key.
+There is exactly one assessment pipeline: a tutor message plus a public question, backed by one immutable private key. Request idempotency is recorded in `assessment_request_results`, which is not an assessment artefact and is used by `post_message` and `process_message` among others.
 
 ## State transitions
 
