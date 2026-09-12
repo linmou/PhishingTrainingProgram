@@ -1155,7 +1155,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const sent = await transferAssessmentService.sendReviewed({
             draftId: transferDraft.draftId,
             expectedRevision: Number(reviewed.revision),
-            expectedHash: String(reviewed.final_hash),
         });
         const sentMessage = sent.message as Message | undefined;
         if (sentMessage) {

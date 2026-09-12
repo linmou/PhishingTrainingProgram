@@ -9,6 +9,7 @@ import type {
   TutorDecisionV3,
 } from '../types/assessment';
 import type { TransferProgress } from '../types/learningProgress';
+import type { Room } from '../types';
 
 export interface AssessmentApiError {
   code: string;
@@ -138,7 +139,7 @@ export function toPublicMessageDTO(row: Record<string, unknown>): PublicMessageD
 export interface ReviewedDeliveryDTO {
   message: PublicMessageDTO;
   question: PublicQuestionDTO | null;
-  room: Record<string, unknown>;
+  room: Room;
   feedback_id: string;
 }
 
@@ -163,7 +164,7 @@ function projectReviewedDelivery(result: Record<string, unknown>): ReviewedDeliv
     question: result.question ? toPublicQuestionDTO(asRecord(result.question)) : null,
     // The room row is already the public room shape the room API returns; it carries no
     // assessment material, so it is passed through rather than re-allowlisted here.
-    room: asRecord(result.room),
+    room: asRecord(result.room) as unknown as Room,
     feedback_id: String(result.feedback_id ?? ''),
   };
 }
