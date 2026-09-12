@@ -44,11 +44,19 @@ this feature.
   credentials: identical failing suites and failing tests, plus the new Multi-agent
   suites (`tutorDecisionContract.test.ts`, `RoomContext.multiAgentDraft.test.tsx`,
   `multi_agent_room_playback.e2e.test.tsx`).
-- `multi_agent_room_playback.e2e.test.tsx` (8 passing UI tests) covers both character
+- `multi_agent_room_playback.e2e.test.tsx` (11 passing UI tests) covers both character
   orders for the staged T / T+2s reveal, tag-free rendering, a learner message containing
   a literal agent tag staying learner-authored, typing allowed while submission and Enter
   are blocked, the Tutor message as the rating target in both orders, and the two-card
   editor replacing the single-response box only for an actual `multiagent` decision.
+- Playback fix: the 2s learner poll can deliver both rows of a pair in one batch after T+2
+  has passed, which used to render them together. `RoomPagePost` now moves its reveal clock
+  forward when a batch arrives already due, and holds the later member of a pair for the
+  playback gap measured from when the earlier member first appeared on that screen. Pairs
+  approved before the page opened are exempt, so reopening a room does not replay the pause.
+  Live measurement with unique markers in room `7b2bc257-…`: the two rows were stored 2000 ms
+  apart, the first appeared 4.1 s after the approval click (insert + poll), the second 1.4 s
+  after the first, and the learner's send button reported the playback lock throughout.
 - Production build passes (`react-scripts build`, exit 0, pre-existing lint warnings).
 - Live behavior cases (`plan/multi-character_initial/behavior-cases.json`) ran against
   `qwen3.5-flash` in both interaction modes, with per-case records under

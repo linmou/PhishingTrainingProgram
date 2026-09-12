@@ -14,8 +14,10 @@ import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { isTutorRoleLocked } from '../utils/studentAITone';
-import { decodeAgentMessage } from '../services/tutorDecisionContract';
+import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
 import '../components/RoomPagePost.css';
+
+const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
 
 const getAIResponseErrorMessage = (error: unknown): string => {
     if (!(error instanceof Error)) {
@@ -38,6 +40,27 @@ const COMPARISON_PAIR_LABELS = {
 /** Scheduled reveal time of a stored character message, or null for ordinary messages. */
 const agentMessageTime = (message: { content: string; is_ai_generated?: boolean | null; user_role?: string | null; created_at: string }): number | null =>
     decodeAgentMessage(message) ? new Date(message.created_at).getTime() : null;
+
+/** Two character rows belong to one pair when they share a parent, or when they were written together. */
+const isSameMultiAgentPair = (
+    message: { parent_message_id?: string | null; created_at: string },
+    other: { parent_message_id?: string | null; created_at: string }
+): boolean => (message.parent_message_id && other.parent_message_id
+    ? message.parent_message_id === other.parent_message_id
+    : Math.abs(new Date(other.created_at).getTime() - new Date(message.created_at).getTime()) <= MULTI_AGENT_PAIR_WINDOW_MS);
+
+/** The earlier member of this message's pair, when it is present and already due. */
+const earlierPairMember = <T extends { id: string; content: string; is_ai_generated?: boolean | null; user_role?: string | null; created_at: string; parent_message_id?: string | null }>(
+    message: T,
+    candidates: T[]
+): T | null => {
+    const revealAt = agentMessageTime(message);
+    if (revealAt === null) return null;
+    return candidates.find(candidate => candidate.id !== message.id
+        && agentMessageTime(candidate) !== null
+        && new Date(candidate.created_at).getTime() < revealAt
+        && isSameMultiAgentPair(message, candidate)) || null;
+};
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -126,25 +149,76 @@ const RoomPagePost: React.FC = () => {
         userDisliked: boolean;
     }>>({});
 
-    // Staged Multi-agent playback: only character-tagged rows are hidden until their timestamp.
-    useEffect(() => {
-        const dueTimes = messages
-            .map(agentMessageTime)
-            .filter((time): time is number => time !== null && time > Date.now());
-        if (dueTimes.length === 0) return;
+    // Staged Multi-agent playback. Two rules, in order:
+    // 1. a character row whose own timestamp is still in the future stays hidden (reload/join case);
+    // 2. the later member of a pair waits the playback gap measured from when the earlier member
+    //    first appeared here, because the 2s message poll can deliver both rows in one batch after
+    //    T+2 has already passed. Pairs approved before this page opened are shown at once.
+    const [playbackAnchors, setPlaybackAnchors] = useState<Record<string, number>>({});
+    const mountedAtRef = useRef(Date.now());
 
-        const timer = setTimeout(() => setNow(Date.now()), Math.min(...dueTimes) - Date.now() + 50);
-        return () => clearTimeout(timer);
-    }, [messages, now]);
-
-    const visibleMessages = messages.filter(message => {
+    const dueMessages = messages.filter(message => {
         const revealAt = agentMessageTime(message);
         return revealAt === null || revealAt <= now;
     });
-    const pendingPlayback = messages.some(message => {
+
+    useEffect(() => {
+        const currentTime = Date.now();
+        const due = messages.filter(message => {
+            const revealAt = agentMessageTime(message);
+            return revealAt !== null && revealAt <= Math.max(now, currentTime);
+        });
+
+        // A poll can deliver a character row whose timestamp has already passed; move the reveal
+        // clock forward first, otherwise the row stays behind a stale `now` until the next tick.
+        if (due.length > 0 && currentTime > now) {
+            setNow(currentTime);
+            return;
+        }
+
+        const missing = due.filter(message => playbackAnchors[message.id] === undefined);
+        if (missing.length === 0) return;
+
+        setPlaybackAnchors(previous => {
+            const next = { ...previous };
+            missing.forEach(message => { next[message.id] = Date.now(); });
+            return next;
+        });
+    }, [messages, now, playbackAnchors]);
+
+    const isHeldByPairStagger = (message: typeof messages[number]): boolean => {
         const revealAt = agentMessageTime(message);
-        return revealAt !== null && revealAt > now;
-    });
+        if (revealAt === null || revealAt < mountedAtRef.current) return false;
+
+        const earlier = earlierPairMember(message, dueMessages);
+        const earlierSeenAt = earlier ? playbackAnchors[earlier.id] : undefined;
+        return earlierSeenAt !== undefined && Date.now() - earlierSeenAt < MULTI_AGENT_PLAYBACK_DELAY_MS;
+    };
+
+    const visibleMessages = dueMessages.filter(message => !isHeldByPairStagger(message));
+    const pendingPlayback = visibleMessages.length !== messages.length;
+
+    useEffect(() => {
+        const currentTime = Date.now();
+        const deadlines = messages
+            .map(message => {
+                const revealAt = agentMessageTime(message);
+                if (revealAt === null) return null;
+                if (revealAt > currentTime) return revealAt;
+
+                const earlier = earlierPairMember(message, messages);
+                const earlierSeenAt = earlier ? playbackAnchors[earlier.id] : undefined;
+                if (earlierSeenAt === undefined || revealAt < mountedAtRef.current) return null;
+
+                const deadline = earlierSeenAt + MULTI_AGENT_PLAYBACK_DELAY_MS;
+                return deadline > currentTime ? deadline : null;
+            })
+            .filter((deadline): deadline is number => deadline !== null);
+        if (deadlines.length === 0) return;
+
+        const timer = setTimeout(() => setNow(Date.now()), Math.min(...deadlines) - currentTime + 50);
+        return () => clearTimeout(timer);
+    }, [messages, now, playbackAnchors]);
 
 
     // Join room on component mount

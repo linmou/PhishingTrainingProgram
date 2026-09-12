@@ -58,14 +58,32 @@ const agentRow = (id: string, character: 'riley' | 'tutor', content: string, off
 const RILEY_TEXT = 'The logo looks official, so I would trust it.';
 const TUTOR_TEXT = 'A logo does not prove the sender. What could you verify yourself?';
 
+let deliveredMessages: Message[] = [];
+
+let forceHarnessRender: (() => void) | null = null;
+
+/** Stable wrapper whose state bumps re-render the page tree without remounting it. */
+const RoomHarness: React.FC = () => {
+  const [, setTick] = React.useState(0);
+  forceHarnessRender = () => setTick((tick) => tick + 1);
+  return (
+    <MemoryRouter initialEntries={['/room/room-1']}>
+      <Routes>
+        <Route path="/room/:roomId" element={<RoomPagePost />} />
+      </Routes>
+    </MemoryRouter>
+  );
+};
+
 const renderRoom = (messages: Message[], overrides: Record<string, unknown> = {}) => {
   const sendMessage = jest.fn().mockResolvedValue(undefined);
   const { user = student, ...roomOverrides } = overrides as { user?: User } & Record<string, unknown>;
+  deliveredMessages = messages;
 
   (useAuth as jest.Mock).mockReturnValue({ user, loading: false });
   (useRoom as jest.Mock).mockReturnValue({
     currentRoom: room,
-    messages,
+    get messages() { return deliveredMessages; },
     participants: [tutor, student],
     loading: false,
     typingUsers: [],
@@ -100,21 +118,23 @@ const renderRoom = (messages: Message[], overrides: Record<string, unknown> = {}
     ...roomOverrides
   });
 
-  render(
-    <MemoryRouter initialEntries={['/room/room-1']}>
-      <Routes>
-        <Route path="/room/:roomId" element={<RoomPagePost />} />
-      </Routes>
-    </MemoryRouter>
-  );
+  render(<RoomHarness />);
 
-  return { sendMessage };
+  /** Deliver a later poll batch to the same mounted page. */
+  const deliver = (nextMessages: Message[]) => {
+    deliveredMessages = nextMessages;
+    forceHarnessRender?.();
+  };
+
+  return { sendMessage, deliver };
 };
 
 describe('Multi-agent room playback', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(START));
+    // jsdom has no layout engine; the feed's auto-scroll needs a stub.
+    (Element.prototype as unknown as { scrollIntoView: jest.Mock }).scrollIntoView = jest.fn();
   });
 
   afterEach(() => {
@@ -215,6 +235,42 @@ describe('Multi-agent room playback', () => {
     expect(rileyMeta?.querySelector('.comment-response-time')).toBeNull();
     // The avatar keeps the posting identity, not the character label.
     expect(within(rileyRow as HTMLElement).getByTitle('Taylor Tutor')).toBeInTheDocument();
+  });
+
+  it('still staggers a fresh pair when the poll delivers both rows in one batch', () => {
+    // Mounted first, then a single poll lands 5s after approval: both rows are already due.
+    const { deliver } = renderRoom([learnerMessage]);
+    jest.setSystemTime(new Date(new Date(START).getTime() + 5000));
+
+    act(() => {
+      deliver([
+        learnerMessage,
+        agentRow('ai-1', 'riley', RILEY_TEXT, 1000),
+        agentRow('ai-2', 'tutor', TUTOR_TEXT, 3000)
+      ]);
+    });
+
+    // eslint-disable-next-line no-console
+    expect(screen.getByText(RILEY_TEXT)).toBeInTheDocument();
+    expect(screen.queryByText(TUTOR_TEXT)).not.toBeInTheDocument();
+    expect(screen.getByTitle('Wait for the second AI message')).toBeInTheDocument();
+
+    act(() => { jest.advanceTimersByTime(2100); });
+
+    expect(screen.getByText(TUTOR_TEXT)).toBeInTheDocument();
+  });
+
+  it('shows a pair approved before the page opened without replaying the stagger', () => {
+    // Opening the room long after approval: both rows predate this mount.
+    jest.setSystemTime(new Date(new Date(START).getTime() + 600000));
+    renderRoom([
+      learnerMessage,
+      agentRow('ai-1', 'riley', RILEY_TEXT, -60000),
+      agentRow('ai-2', 'tutor', TUTOR_TEXT, -58000)
+    ]);
+
+    expect(screen.getByText(RILEY_TEXT)).toBeInTheDocument();
+    expect(screen.getByText(TUTOR_TEXT)).toBeInTheDocument();
   });
 
   it('keeps a learner message that literally contains an agent tag attributed to the learner', () => {
