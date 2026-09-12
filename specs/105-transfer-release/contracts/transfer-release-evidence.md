@@ -12,6 +12,10 @@ evals/transfer-assessment/release/<run-id>/
 
 The `<run-id>` is stable for the run and appears in every top-level record. The directory is immutable after completion. A rerun receives a new ID and must not overwrite a prior result.
 
+## Implementation status of this contract
+
+The runner implemented in this component writes the four top-level records `snapshot.json`, `run-record.json`, `report.json`, and `verdict.json`, and carries the lane and scenario results inside `run-record.json`, `report.json`, and `verdict.json`. The per-lane artifacts named in the table below (`privacy.json`, `attacks.json`, `activation.json`, `rollback.json`) are written by the lane drivers; until those drivers exist, every lane is recorded `blocked` in the records above and a bundle that omits a lane is invalid. `--verify` accepts either a bundle path or a run id resolved under the configured output root.
+
 ## Required Top-Level Artifacts
 
 | Artifact | Required content |
