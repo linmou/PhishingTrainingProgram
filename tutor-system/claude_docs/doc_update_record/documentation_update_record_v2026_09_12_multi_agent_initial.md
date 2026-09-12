@@ -28,6 +28,14 @@ this feature.
   the Multi-agent instructions live in `src/services/prompts/multiAgentTutorPrompt.ts` and are
   appended only for `interaction_mode = multi_agent` turns. The targeted eval records
   `dedicatedMultiAgentPrompt: true` for the multi-agent arm and `false` for the control arm.
+- Design decision recorded with the reviewer: because the learner asked for Multi-agent, the pair
+  is now the **required** output for an ordinary tutoring turn in that mode, and only
+  `protective_instruction` (imminent unsafe action), `explanation` (teaching or stop request) and
+  `guard` may answer instead. `aiService.ts` treats a `scaffolding`/`correction`/`consolidation`
+  decision as repairable on the first attempt and asks once more for the pair. This supersedes the
+  plan's advisory reading ("enabling it never forces it") and therefore changes the expected
+  outcomes of the plan's behavior cases B05–B09 and B12, which were written for the advisory
+  semantics; the case file itself was left unchanged.
 - Full Jest run equals baseline when both worktrees run with the same provider
   credentials: identical failing suites and failing tests, plus the new Multi-agent
   suites (`tutorDecisionContract.test.ts`, `RoomContext.multiAgentDraft.test.tsx`,
