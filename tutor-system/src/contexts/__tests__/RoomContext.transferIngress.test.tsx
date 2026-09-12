@@ -89,12 +89,7 @@ describe('RoomContext transfer ingress', () => {
     (getAIConfig as jest.Mock).mockResolvedValue(null);
 
     (supabase.channel as jest.Mock).mockImplementation(() => {
-      const channel: {
-        on: jest.Mock;
-        subscribe: jest.Mock;
-        unsubscribe: jest.Mock;
-        send: jest.Mock;
-      } = {
+      const channel = {
         on: jest.fn((type: string, filter: { table?: string; event?: string }, handler: RealtimeHandler) => {
           const key = `${filter?.table ?? type}:${filter?.event ?? ''}`;
           realtimeHandlers[key] = handler;
