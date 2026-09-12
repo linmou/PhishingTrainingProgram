@@ -3,6 +3,25 @@
  */
 
 import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room } from '../types';
+import { readPublicQuestion } from './transferAssessmentUiAdapter';
+
+/**
+ * Learner-visible question lines for a delivered assessment message. Only the public projection is
+ * read, so an export can never carry the answer key or the transfer basis.
+ */
+const renderPublicQuestionLines = (message: Message): string[] => {
+  const question = readPublicQuestion(message);
+  if (!question) return [];
+  const instruction = question.selectionType
+    ? question.selectionType === 'multiple'
+      ? 'Select all that apply.'
+      : 'Choose one.'
+    : 'Answer type not recorded for this question.';
+  return [
+    `   ${instruction}`,
+    ...question.options.map((option) => `   ${option.id}. ${option.text}`),
+  ];
+};
 
 interface BuildRoomExportDataArgs {
   room: Room;
@@ -89,12 +108,14 @@ export const buildRoomTextExport = ({
     ...feedbackSummary,
     'Messages:',
     '=========',
-    ...messages.map((message) => {
+    ...messages.flatMap((message) => {
       const feedbackStats = messageFeedbackStats[message.id];
       const feedbackInfo = feedbackStats && feedbackStats.total_feedback_count > 0
         ? ` [👍${feedbackStats.like_count} 👎${feedbackStats.dislike_count}${feedbackStats.overall_average_rating ? ` ★${feedbackStats.overall_average_rating.toFixed(1)}` : ''}]`
         : '';
-      return `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
+      const line = `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
+      // A delivered question exports its public rendering, never its private material.
+      return [line, ...renderPublicQuestionLines(message)];
     }),
     ...aiSummary,
   ].filter((line) => line !== '').join('\n');
