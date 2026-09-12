@@ -5,7 +5,7 @@ verification lane, stating precisely what was executed and what still requires a
 DDL-capable operator.
 
 Date: 2026-09-12
-Implementation commit ID: `__COMMIT__`
+Implementation commit ID: `e690d55`
 
 ## Changed documents and artifacts
 
