@@ -581,14 +581,6 @@ code {
     background-color: #e3f2fd;
 }
 
-.comment-action-ai {
-    color: #8b5cf6;
-}
-
-.comment-action-ai:hover {
-    background-color: #f3e8ff;
-}
-
 /* Comment Input */
 .comment-input-container {
     background: white;

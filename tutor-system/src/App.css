@@ -700,7 +700,6 @@ html, body, #root {
 /* Message Styles for AI */
 .message-ai {
     background: linear-gradient(145deg, #f8fafc, #e2e8f0);
-    border-left: 4px solid #8b5cf6;
 }
 
 .message-header {
