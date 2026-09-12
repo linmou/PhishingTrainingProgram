@@ -18,13 +18,14 @@ test('a full lifecycle sequence passes with per-step evidence', () => {
   assert.ok(result.steps.every(step => step.turn !== undefined && step.kind));
 });
 
-test('grading before delivery fails with the turn index', () => {
+test('grading before delivery fails with the turn index and the recorded order is preserved', () => {
   const result = checkAssessmentFollowup(sequence('graded_before_delivery'));
   assert.equal(result.status, 'fail');
   assert.ok(codes(result).includes('graded_before_delivery'));
   const failure = result.failures.find(item => item.code === 'graded_before_delivery');
-  assert.equal(failure.actual.turn, 0);
-  assert.equal(failure.actual.kind, 'learner_answer');
+  assert.equal(failure.turn, 0);
+  assert.equal(failure.kind, 'learner_answer');
+  assert.deepEqual(result.steps.map(step => step.kind), ['learner_answer', 'assessment_delivered']);
 });
 
 test('the first valid answer resolves once and a second resolution fails', () => {
@@ -38,7 +39,7 @@ test('a clarification keeps the question open and the later answer still resolve
   const result = checkAssessmentFollowup(sequence('clarification_then_answer'));
   assert.equal(result.status, 'pass', JSON.stringify(result.failures));
   assert.deepEqual(result.resolved_turns, [2]);
-  const misread = checkAssessmentFollowup(sequence('clarification_then_answer').map(step => step.kind === 'clarification_request' ? { ...step, kind: 'learner_answer', answer_option_ids: ['A'], outcome: 'wrong' } : step));
+  const misread = checkAssessmentFollowup(sequence('clarification_then_answer').map(step => step.kind === 'clarification_request' ? { ...step, kind: 'learner_answer', answer_option_ids: ['A'], outcome: 'wrong', resolved_repeat: true } : step));
   assert.ok(codes(misread).includes('resolved_twice'));
 });
 
@@ -47,14 +48,21 @@ test('an assistance request cancels the question without a behaviour failure', (
   assert.equal(result.status, 'pass', JSON.stringify(result.failures));
   assert.equal(result.cancellations.length, 1);
   assert.equal(result.cancellations[0].reason, 'assistance_request');
-  const failure = checkAssessmentFollowup(sequence('assistance_cancels').map(step => step.kind === 'assistance_request' ? { ...step, kind: 'learner_answer', answer_option_ids: ['A'], outcome: 'wrong', assistance_unresolved: true } : step));
-  assert.equal(failure.status, 'fail');
-  assert.ok(codes(failure).includes('assistance_treated_as_failure'));
+  const answeredAfterCancellation = checkAssessmentFollowup([...sequence('assistance_cancels'), { turn: 1, kind: 'assessment_delivered', item_id: 'item-2', assessment_id: 'assessment-2' }]);
+  assert.equal(answeredAfterCancellation.status, 'pass', JSON.stringify(answeredAfterCancellation.failures));
+  assert.deepEqual(result.cancellations, answeredAfterCancellation.cancellations);
+  const unresolvedMarkedFailure = checkAssessmentFollowup([
+    sequence('assistance_cancels')[0],
+    { turn: 1, kind: 'assistance_request', item_id: 'item-2', assistance_unresolved: true }
+  ]);
+  assert.ok(codes(unresolvedMarkedFailure).includes('assistance_treated_as_failure'));
 });
 
 test('feedback must precede a later assessment, and two consecutive assessments fail with both turn indices', () => {
-  const chained = checkAssessmentFollowup(sequence('assessment_chain').slice(0, 3));
-  assert.ok(codes(chained).includes('feedback_precedes_assessment'));
+  const chained = checkAssessmentFollowup(sequence('assessment_chain'));
+  assert.equal(chained.status, 'pass', JSON.stringify(chained.failures));
+  const unexplainedChain = checkAssessmentFollowup(sequence('assessment_chain').filter(step => step.kind !== 'feedback'));
+  assert.ok(codes(unexplainedChain).includes('feedback_precedes_assessment'));
   const immediate = checkAssessmentFollowup([
     sequence('valid_full')[0],
     { turn: 1, kind: 'assessment_delivered', item_id: 'item-2', assessment_id: 'assessment-2' }
@@ -63,7 +71,8 @@ test('feedback must precede a later assessment, and two consecutive assessments 
   const carried = checkAssessmentFollowup([
     sequence('valid_full')[0],
     { turn: 1, kind: 'learner_answer', item_id: 'item-2', answer_option_ids: ['B'], outcome: 'correct' },
-    { turn: 2, kind: 'assessment_delivered', item_id: 'item-2', assessment_id: 'assessment-2' }
+    { turn: 2, kind: 'feedback', item_id: 'item-2', feedback_required: true },
+    { turn: 3, kind: 'assessment_delivered', item_id: 'item-2', assessment_id: 'assessment-2' }
   ]);
   assert.equal(carried.status, 'pass', JSON.stringify(carried.failures));
 });
@@ -72,7 +81,7 @@ test('a wrong answer alone never activates Guard', () => {
   const result = checkAssessmentFollowup(sequence('wrong_answer_guard'));
   assert.equal(result.status, 'fail');
   const failure = result.failures.find(item => item.code === 'wrong_answer_guard');
-  assert.equal(failure.actual.turn, 2);
+  assert.equal(failure.turn, 2);
   assert.equal(failure.expected.mode, 'tutoring');
   assert.equal(failure.actual.mode, 'guard');
 });

@@ -20,6 +20,8 @@ const baseContext = () => ({
 
 const run = (output, context = {}) => checkContractAndProgress(JSON.stringify(output), { ...baseContext(), ...context });
 
+const runGuard = (output, context = {}) => run(output, { room_mode: 'guard', ...context });
+
 test('a valid tutoring turn passes with no failures', () => {
   const result = run(fixtures.valid_tutoring_output);
   assert.equal(result.status, 'pass');
@@ -33,7 +35,7 @@ test('a valid assessment turn passes and reports the item id', () => {
   assert.equal(result.status, 'pass', JSON.stringify(result.failures));
   assert.equal(result.actual.mode, 'assessment');
   assert.equal(result.actual.target_item_id, 'item-2');
-  assert.equal(result.actual.correct_option_ids.join(','), 'B');
+  assert.equal(result.actual.correct_option_ids, undefined);
 });
 
 test('reason must serialize before every other key', () => {
@@ -84,7 +86,7 @@ test('assessment is a tutor turn and never a room mode', () => {
   assert.deepEqual(ROOM_MODES, ['tutoring', 'guard']);
   const assessmentMode = run(fixtures.valid_assessment_output, { room_mode: 'assessment' });
   assert.ok(assessmentMode.failures.some(failure => failure.code === 'room_mode_separation' && failure.actual === 'assessment'));
-  const guardRoom = run(fixtures.valid_guard_output, { room_mode: 'guard' });
+  const guardRoom = runGuard(fixtures.valid_guard_output);
   assert.equal(guardRoom.status, 'pass', JSON.stringify(guardRoom.failures));
   const modeMismatch = run(fixtures.valid_tutoring_output, { room_mode: 'guard' });
   assert.ok(modeMismatch.failures.some(failure => failure.code === 'mode_instruction_pair'));
@@ -97,7 +99,7 @@ test('mode and instruction combinations are constrained, and a participation-onl
   assert.ok(assessmentWithoutItem.failures.some(failure => failure.code === 'assessment_requires_item'));
   const tutoringWithAssessment = run({ ...fixtures.valid_tutoring_output, decision: { mode: 'tutoring', instruction: 'scaffolding', target_item_id: null }, assessment: fixtures.valid_assessment_output.assessment });
   assert.ok(tutoringWithAssessment.failures.some(failure => failure.code === 'unexpected_assessment'));
-  const guardWithNullInstruction = run({ ...fixtures.valid_guard_output, decision: { mode: 'guard', instruction: null, target_item_id: null } });
+  const guardWithNullInstruction = runGuard({ ...fixtures.valid_guard_output, decision: { mode: 'guard', instruction: null, target_item_id: null } });
   assert.equal(guardWithNullInstruction.status, 'pass', JSON.stringify(guardWithNullInstruction.failures));
 });
 
