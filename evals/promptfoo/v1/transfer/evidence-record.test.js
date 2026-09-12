@@ -85,11 +85,18 @@ test('a run directory is write-once and a second write leaves the original bytes
   const directory = tmpRun();
   const runPath = writeRun(directory, { run_id: 'fixture-run-1', manifest_version: 'transfer-eval-v1' });
   const before = fs.readFileSync(path.join(runPath, 'snapshot.json'), 'utf8');
-  assert.throws(() => writeRun(directory, { run_id: 'fixture-run-1', manifest_version: 'transfer-eval-v1' }), /exists/i);
+  // Re-declaring the identical run snapshot resumes it; a different snapshot for the same run id
+  // is an attempted overwrite and must throw while the recorded bytes stay unchanged.
+  assert.equal(writeRun(directory, { run_id: 'fixture-run-1', manifest_version: 'transfer-eval-v1' }), runPath);
+  assert.throws(() => writeRun(directory, { run_id: 'fixture-run-1', manifest_version: 'transfer-eval-v2' }), /immutable|exists/i);
   assert.equal(fs.readFileSync(path.join(runPath, 'snapshot.json'), 'utf8'), before);
+  const evidencePath = require('./evidence-record').writeEvidence(runPath, validRecord());
+  const evidenceBytes = fs.readFileSync(evidencePath, 'utf8');
   assert.throws(() => writeEvidence(runPath, validRecord()), /exists/i);
-  writeEvidence(runPath, validRecord());
   assert.throws(() => writeEvidence(runPath, validRecord()), /exists/i);
+  assert.equal(fs.readFileSync(evidencePath, 'utf8'), evidenceBytes);
+  const secondCasePath = writeEvidence(runPath, { ...validRecord(), case_id: 'transfer-case-9' });
+  assert.notEqual(secondCasePath, evidencePath);
 });
 
 test('a partial run is preserved as incomplete evidence and never reported as accepted', () => {

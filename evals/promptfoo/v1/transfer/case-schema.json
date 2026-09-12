@@ -30,9 +30,22 @@
     "spontaneous_transfer",
     "semantic_pair_member"
   ],
-  "source_types": ["product_template", "synthetic_holdout"],
-  "partitions": ["calibration", "development", "regression"],
-  "statuses": ["pass", "fail", "not_applicable", "missing", "error"],
+  "source_types": [
+    "product_template",
+    "synthetic_holdout"
+  ],
+  "partitions": [
+    "calibration",
+    "development",
+    "regression"
+  ],
+  "statuses": [
+    "pass",
+    "fail",
+    "not_applicable",
+    "missing",
+    "error"
+  ],
   "required_fields": [
     "case_id",
     "case_version",
@@ -60,8 +73,18 @@
       "feedback_required",
       "progress_snapshot_hash"
     ],
-    "focus_student_message_required_fields": ["id", "room_id", "user_id", "user_role", "content"],
-    "prior_participation_modes": ["tutoring", "guard", "unknown"],
+    "focus_student_message_required_fields": [
+      "id",
+      "room_id",
+      "user_id",
+      "user_role",
+      "content"
+    ],
+    "prior_participation_modes": [
+      "tutoring",
+      "guard",
+      "unknown"
+    ],
     "forbidden_keys": [
       "evaluator",
       "expected",
@@ -85,7 +108,8 @@
       "baseline",
       "candidate",
       "label_rationale",
-      "review_status"
+      "review_status",
+      "gate_thresholds"
     ]
   },
   "evaluator": {
@@ -102,13 +126,30 @@
     ]
   },
   "pair": {
-    "required_fields": ["pair_id", "member", "changed_factor", "expected_contrast"],
-    "member_values": ["a", "b"],
+    "required_fields": [
+      "pair_id",
+      "member",
+      "changed_factor",
+      "expected_contrast"
+    ],
+    "member_values": [
+      "a",
+      "b"
+    ],
     "members_per_pair": 2
   },
   "transition": {
-    "required_fields": ["sequence_id", "steps", "causal_evidence_ref"],
-    "step_required_fields": ["turn", "learner_message", "expected_decision", "expected_state"]
+    "required_fields": [
+      "sequence_id",
+      "steps",
+      "causal_evidence_ref"
+    ],
+    "step_required_fields": [
+      "turn",
+      "learner_message",
+      "expected_decision",
+      "expected_state"
+    ]
   },
   "holdout_eligibility": {
     "required_fields": [

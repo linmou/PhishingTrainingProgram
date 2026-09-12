@@ -3,7 +3,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const { assess } = require('./quality-gate');
+const { assess } = require('../quality-gate');
 const policy = require('./gate-policy.json');
 
 const read = name => JSON.parse(fs.readFileSync(path.join(__dirname, name), 'utf8'));

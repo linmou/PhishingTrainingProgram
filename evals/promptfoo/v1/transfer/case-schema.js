@@ -157,8 +157,12 @@ function validateCases(cases) {
   return errors;
 }
 
+function checkForbiddenKeys(value) {
+  return walkForbiddenKeys(value, schema.input.forbidden_keys, '').map(found => ({ path: found.path, key: found.path.split('.').pop().replace(/\[\d+\]$/, '') }));
+}
+
 function loadCases(file) {
   return JSON.parse(fs.readFileSync(file || path.join(__dirname, 'cases.json'), 'utf8'));
 }
 
-module.exports = { validateCase, validateCases, loadCases, walkForbiddenKeys };
+module.exports = { validateCase, validateCases, loadCases, walkForbiddenKeys, checkForbiddenKeys };
