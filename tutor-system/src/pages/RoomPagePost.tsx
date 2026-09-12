@@ -230,7 +230,8 @@ const RoomPagePost: React.FC = () => {
 
         const response = [...messages]
             .reverse()
-            .find(message => message.is_ai_generated || message.user_role === 'tutor');
+            .find(message => (message.is_ai_generated || message.user_role === 'tutor')
+                && !message.id.startsWith('prepop-'));
 
         if (!response) return null;
         if (completedRatingMessageId === response.id) return null;
