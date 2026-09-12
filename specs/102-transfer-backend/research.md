@@ -24,7 +24,7 @@
 | Provider budget | v3 tutor generation uses `max_tokens=1200`; evidence classification follows the source plan's 4,096-token setting when implemented. | The existing 120-token legacy cap cannot safely carry v3 JSON; learner-visible 80-word rendering is a separate limit. | Reusing legacy cap and silently truncating output rejected. |
 | Provider retry | At most one automatic format-only repair retry; provider/network errors and truncation are surfaced separately. | The response contract requires bounded repair and preserves invalid attempts; no semantic resampling is authorized. | Unbounded retry, auto-pass/fail, and dummy response rejected. |
 | Database boundary | Hosted Supabase execution is authoritative; Docker/local Postgres is unavailable. | Static SQL and client mocks cannot prove RLS, grants, locks, transaction rollback, or deployed compatibility. | Claiming local-only acceptance rejected. |
-| Rollback | Disable new generation/delivery while preserving evidence; safely resolve or cancel already delivered work according to the source plan. | Rollback must be non-destructive and must not erase evidence or drop tables. | Destructive reset/drop and legacy reinterpretation rejected. |
+| Rollback | Disable new generation and delivery while preserving evidence; already delivered work is reconciled according to the source plan. | Rollback must be non-destructive and must not erase evidence or drop tables. | Destructive reset/drop and legacy reinterpretation rejected. |
 
 ## Source observations to verify
 

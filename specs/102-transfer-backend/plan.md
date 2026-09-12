@@ -88,9 +88,9 @@ The Edge Function is the only boundary that combines a verified principal with s
 ### W4: Verified principal and authorization
 
 1. Define `AssessmentPrincipalVerifier.verify(request): Promise<VerifiedPrincipal>` and inject it into the API handler. The deployment adapter may use any real trusted session/capability that resolves application user and stored room/session scope; tests inject a deterministic verifier. The contract does not require Supabase Auth, a bearer token, or `auth.uid()`.
-2. Require teacher authority for checklist initialization, preparation, review, send, cancellation, invalidation, and external confirmation; require own-learner scope for learner messages and answer processing.
+2. Require teacher authority for checklist initialization, preparation, review, and send; require own-learner scope for learner messages and answer processing.
 3. Test missing/forged/cross-room/cross-learner principals, private-column access, realtime/export/log/error leakage, direct table writes, and legacy-RPC bypasses at the hosted boundary.
-4. When no deployment adapter is configured, return capability `{ enabled: false, reason: 'AUTHORIZATION_NOT_CONFIGURED' }`, return the 503 error for transfer operations, perform no mutation, and do not add a sign-in product.
+4. When no deployment adapter is configured, return the 503 `AUTHORIZATION_NOT_CONFIGURED` error for every transfer operation, perform no mutation, and do not add a sign-in product. There is no `capabilities` operation.
 
 ### W5: Evidence application and lifecycle
 
@@ -112,7 +112,7 @@ The Edge Function is the only boundary that combines a verified principal with s
 |---|---|---|
 | W3 | Hosted schema/RLS/RPC execution, legacy preservation, generated-type comparison, direct-write/race/rollback results | Static migration regex checks or local mocks |
 | W4 | Authorization integration matrix with configured production verifier, plus injected-verifier tests and explicit missing-adapter blocker; privacy scans | UI hiding, local role values, Supabase Auth/`auth.uid()` assumptions, or injected verifier alone |
-| W5 | Atomic lifecycle and causal-history integration results across stale/race/idempotency/Guard/invalidation paths | Unit reducer tests alone |
+| W5 | Atomic lifecycle and causal-history integration results across stale, race, and Guard paths | Unit reducer tests alone |
 | W6 | Provider request/response inspection, 1,200-token assertion, bounded retry/error evidence, secret scan | A prompt string review or Promptfoo result |
 
 The feature flag remains disabled. Downstream evaluation and browser release gates remain pending and are not claimed by this component.
