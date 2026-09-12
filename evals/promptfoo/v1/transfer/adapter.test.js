@@ -85,7 +85,7 @@ test('registering the transfer evaluator leaves legacy evaluated output and gate
   const { registerEvaluatorExtension, evaluateGeneratedOutput } = require('../evaluator');
   const { assess } = require('../gate');
   const legacyCase = { id: 'legacy-case', source_type: 'ecological', role: 'peer', input: { prior_mode: null }, expected: { mode: 'tutoring', checks: ['mode_selection'] }, partitions: [], legacy: [] };
-  const snapshot = { cases: [legacyCase], settings: { repetitions: 1 }, rubrics: {}, manifest: JSON.parse(JSON.stringify(require('../rubrics/v1/manifest.json'))) };
+  const snapshot = { cases: [legacyCase], settings: { repetitions: 1 }, rubrics: {}, manifest: JSON.parse(JSON.stringify(require('../../rubrics/v1/manifest.json'))) };
   const report = { results: [{ case_id: 'legacy-case', repetition: 0, input: legacyCase, source_type: 'ecological', role: 'peer', partitions: [], parsed: { mode: 'tutoring' }, results: [{ metric: 'mode_selection', method: 'deterministic', status: 'pass', pass: true, score: 1 }] }] };
   const before = JSON.stringify(assess(report, snapshot));
   const rawOutput = JSON.stringify({ reasoning: 'evidence', mode: 'tutoring', mode_reason: 'engaged', decision: { instruction: 'scaffolding' }, suggested_response: 'What did you check?' });

@@ -15,8 +15,7 @@ function fullExamples(metricId) {
     kind,
     output: { suggested_response: `${kind} example` },
     human_label: kind !== 'contradictory',
-    judge_label: kind !== 'contradictory',
-    agreement: kind !== 'contradictory'
+    judge_label: kind !== 'contradictory'
   }));
 }
 
@@ -40,7 +39,7 @@ test('each semantic rubric needs all four annotated example kinds before calibra
 });
 
 test('a disagreement is recorded with both labels and keeps the rubric uncalibrated', () => {
-  const examples = SEMANTIC_RUBRIC_IDS.flatMap(fullExamples).map(example => example.metric_id === 'verification_evidence' && example.kind === 'boundary' ? { ...example, judge_label: !example.human_label, agreement: false } : example);
+  const examples = SEMANTIC_RUBRIC_IDS.flatMap(fullExamples).map(example => example.metric_id === 'verification_evidence' && example.kind === 'boundary' ? { ...example, human_label: false, judge_label: true } : example);
   const calibration = buildCalibration({ examples, judge_settings: { model: 'qwen3.5-flash' }, judge_version: 'v1' });
   assert.equal(calibration.status, 'incomplete');
   const disagreement = calibration.disagreements.find(item => item.metric_id === 'verification_evidence');

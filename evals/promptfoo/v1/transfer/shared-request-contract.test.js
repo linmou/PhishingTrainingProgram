@@ -23,7 +23,8 @@ test('the shared builder is the real production module and exposes the declared 
   const identity = sourceIdentity();
   assert.equal(identity.path, PRODUCTION_SOURCE);
   assert.equal(identity.sha256, sha256(fs.readFileSync(path.join(root, PRODUCTION_SOURCE))));
-  assert.deepEqual(Object.keys(shared.builders).sort(), ['buildTransferTutorRequestContextV3', 'buildTransferTutorRequestV3', 'buildTransferTutorUserMessageV3']);
+  assert.deepEqual(identity.exports.sort(), ['buildTransferTutorRequestContextV3', 'buildTransferTutorRequestV3', 'buildTransferTutorUserMessageV3']);
+  for (const name of identity.exports) assert.equal(typeof shared.builders[name], 'function', `${name} must be callable`);
   assert.equal(shared.context_contract_version, 'transfer_tutor_context_v3');
   assert.equal(shared.request_contract_version, 'transfer_tutor_request_v3');
 });
@@ -39,9 +40,9 @@ test('equivalent inputs produce byte-equal requests through the shared builder',
   const ordered = builders.buildTransferTutorRequestV3(builders.buildTransferTutorRequestContextV3(base));
   const permuted = builders.buildTransferTutorRequestV3(builders.buildTransferTutorRequestContextV3({
     ...base,
-    checklist_items: [...base.checklist_items].reverse().concat(base.checklist_items[0]),
+    checklist_items: [...base.checklist_items].reverse(),
     eligible_assessment_item_ids: [...base.eligible_assessment_item_ids, ...base.eligible_assessment_item_ids],
-    focus_student_message: { ...base.focus_student_message, content: base.focus_student_message.content.trim() }
+    focus_student_message: { ...base.focus_student_message, content: `  ${base.focus_student_message.content.trim()}  ` }
   }));
   assert.equal(builders.buildTransferTutorUserMessageV3(ordered), builders.buildTransferTutorUserMessageV3(permuted));
   const request = JSON.parse(builders.buildTransferTutorUserMessageV3(ordered));
@@ -89,9 +90,12 @@ test('the evaluation side resolves the production prompt without copying its tex
   assert.equal(shared.production_prompt.reference, `${PRODUCTION_PROMPT_SOURCE}#TRANSFER_V3_SYSTEM_PROMPT`);
   assert.equal(shared.production_prompt.sha256, sha256(fs.readFileSync(path.join(root, PRODUCTION_PROMPT_SOURCE))));
   assert.equal(shared.production_prompt.text, undefined);
-  const evaluationFiles = fs.readdirSync(__dirname).filter(name => name.endsWith('.js'));
-  for (const name of evaluationFiles) {
+  const edge = fs.readFileSync(path.join(root, PRODUCTION_PROMPT_SOURCE), 'utf8');
+  const promptBody = edge.slice(edge.indexOf('const TRANSFER_V3_SYSTEM_PROMPT'), edge.indexOf('const TRANSFER_EVIDENCE_SYSTEM_PROMPT'));
+  const promptLines = promptBody.split('\n').map(line => line.trim().replace(/^'|',?$|^\+ |^\]$/g, '').trim()).filter(line => line.length > 40);
+  assert.ok(promptLines.length > 0);
+  for (const name of fs.readdirSync(__dirname).filter(item => item.endsWith('.js'))) {
     const body = fs.readFileSync(path.join(__dirname, name), 'utf8');
-    assert.ok(!body.includes('Return exactly one JSON object with keys reason, decision, response, assessment in that order.'), `${name} must not copy the production prompt text`);
+    for (const line of promptLines) assert.ok(!body.includes(line), `${name} must not copy production prompt text`);
   }
 });
