@@ -15,11 +15,13 @@
 -- integration agent because component 102 has no active owner; it is a 102-owned change and follows
 -- 038-044 in the same sequence.
 --
+-- No explicit begin/commit: migrations 038-044 carry none and were applied through the SQL editor,
+-- which manages the transaction itself. Adding one risks an "already a transaction in progress"
+-- warning or an early commit.
+--
 -- Note for maintainers, because T009 PART 1 check 8 scans stored function bodies as text including
 -- comments: do not name a dropped object anywhere in a function body, not even to explain what
 -- replaced it. That check caught exactly that mistake in the first version of migration 044.
-
-begin;
 
 alter table public.messages
   add column if not exists assessment_selection_type text;
