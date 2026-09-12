@@ -24,6 +24,7 @@ import { transferAssessmentService } from '../services/transferAssessmentService
 import {
     assertDeliverableReview,
     mergeRoomMessages,
+    participationModeFromRoom,
     projectRoomMessage,
     publicAssessmentForDecision,
 } from './transferAssessmentUiAdapter';
@@ -186,7 +187,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     filter: `id=eq.${currentRoom.id}`
                 },
                 (payload) => {
-                    setCurrentRoom(normalizeRoom(payload.new as Room));
+                    const incoming = payload.new as Room;
+                    const mode = participationModeFromRoom(incoming);
+                    // Room participation stays binary: an unrecognized value is never adopted as
+                    // a mode, while the rest of the room row is still applied.
+                    setCurrentRoom(prev => normalizeRoom({
+                        ...incoming,
+                        active_response_mode: mode ?? prev?.active_response_mode ?? 'tutoring',
+                    }));
                 }
             )
             .on(
