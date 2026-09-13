@@ -12,7 +12,11 @@ import { Database } from '../types/database';
 import AvatarDisplay from '../components/AvatarDisplay';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { RoomTemplate } from '../types';
-import { getDemoRoomTemplateSeeds, toRoomTemplateInsertRow } from '../services/demoRoomTemplates';
+import {
+  getDemoRoomTemplateSeeds,
+  getMultiAgentTestRoomTemplateSeeds,
+  toRoomTemplateInsertRow
+} from '../services/demoRoomTemplates';
 import {
   isBehaviorDemoTemplateName,
   isBehaviorTestRoom,
@@ -28,7 +32,7 @@ type Room = Database['public']['Tables']['rooms']['Row'];
  * shipped seeds that produced those records, used only when the database returns none.
  */
 const shippedDemoTemplateRows = (): RoomTemplate[] =>
-  getDemoRoomTemplateSeeds().map((seed, index) => {
+  [...getDemoRoomTemplateSeeds(), ...getMultiAgentTestRoomTemplateSeeds()].map((seed, index) => {
     const row = toRoomTemplateInsertRow(seed);
     return {
       ...row,
@@ -38,6 +42,14 @@ const shippedDemoTemplateRows = (): RoomTemplate[] =>
       updated_at: new Date(0).toISOString()
     } as RoomTemplate;
   });
+
+const mergeShippedDemoTemplateRows = (templates: RoomTemplate[]): RoomTemplate[] => {
+  const existingNames = new Set(templates.map((template) => template.template_name));
+  return [
+    ...templates,
+    ...shippedDemoTemplateRows().filter((template) => !existingNames.has(template.template_name))
+  ];
+};
 
 const TestRoomsView: React.FC = () => {
   const { user } = useAuth();
@@ -75,7 +87,7 @@ const TestRoomsView: React.FC = () => {
     try {
       const all = await getRoomTemplatesByTutor(user.id);
       if (all.length > 0) {
-        setTemplates(all);
+        setTemplates(mergeShippedDemoTemplateRows(all));
         return;
       }
       console.warn('⚠️ No room templates readable; using the shipped demo template seeds');
@@ -151,7 +163,8 @@ const TestRoomsView: React.FC = () => {
               emotional_parameters: aiTemplate.prompt_config.emotional_parameters,
               custom_detection_areas: aiTemplate.prompt_config.detection_areas,
               custom_verification_steps: aiTemplate.prompt_config.verification_steps,
-              prompt_comparison: aiTemplate.prompt_config.prompt_comparison
+              prompt_comparison: aiTemplate.prompt_config.prompt_comparison,
+              interaction_mode: aiTemplate.prompt_config.interaction_mode
             }
           : undefined;
 
