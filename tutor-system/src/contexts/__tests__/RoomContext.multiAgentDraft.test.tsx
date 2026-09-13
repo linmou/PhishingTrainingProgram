@@ -68,6 +68,20 @@ const multiAgentDecision = {
     suggested_response: '[agent:riley] The logo looks official, so I would trust it.\n[agent:tutor] A logo does not prove the sender. What could you verify yourself?'
 };
 
+const rileyOnlyMultiAgentDecision = {
+    mode: 'multiagent',
+    instruction: 'multiagent',
+    mode_reason: 'The tempting shortcut is the useful target.',
+    suggested_response: '[agent:riley] The logo looks official, so I would trust it.'
+};
+
+const tutorOnlyMultiAgentDecision = {
+    mode: 'multiagent',
+    instruction: 'multiagent',
+    mode_reason: 'An accurate check is the useful target.',
+    suggested_response: '[agent:tutor] A logo can be copied. Check the sender independently.'
+};
+
 describe('RoomContext multi-agent draft', () => {
     let storedMessages: ReturnType<typeof learnerMessage>[];
     let insertMock: jest.Mock;
@@ -160,6 +174,50 @@ describe('RoomContext multi-agent draft', () => {
         ]);
     });
 
+    it('keeps a Riley-only multiagent decision as a one-message draft', async () => {
+        mockGeneration(rileyOnlyMultiAgentDecision);
+        const api = await renderRoom();
+
+        await act(async () => { await api().generateAIResponse(); });
+
+        expect(api().multiAgentDraft?.rawDecision).toMatchObject({ mode: 'multiagent', instruction: 'multiagent' });
+        expect(api().multiAgentDraft?.generatedMessages).toEqual([
+            { character: 'riley', content: 'The logo looks official, so I would trust it.' }
+        ]);
+        expect(api().aiSuggestion).toBeNull();
+    });
+
+    it('keeps a Tutor-only multiagent decision as a one-message draft', async () => {
+        mockGeneration(tutorOnlyMultiAgentDecision);
+        const api = await renderRoom();
+
+        await act(async () => { await api().generateAIResponse(); });
+
+        expect(api().multiAgentDraft?.generatedMessages).toEqual([
+            { character: 'tutor', content: 'A logo can be copied. Check the sender independently.' }
+        ]);
+        expect(api().aiSuggestion).toBeNull();
+    });
+
+    it('stores an approved Riley-only response as one tagged tutor row', async () => {
+        mockGeneration(rileyOnlyMultiAgentDecision);
+        const api = await renderRoom();
+        await act(async () => { await api().generateAIResponse(); });
+
+        await act(async () => { await api().approveMultiAgentDraft(['Trust the logo.']); });
+
+        expect(insertMock).toHaveBeenCalledTimes(1);
+        const rows = insertMock.mock.calls[0][0];
+        expect(rows).toEqual([expect.objectContaining({
+            content: '[agent:riley] Trust the logo.',
+            user_role: 'tutor',
+            is_ai_generated: true,
+            parent_message_id: 'message-1',
+            response_mode: 'tutoring'
+        })]);
+        expect(api().multiAgentDraft).toBeNull();
+    });
+
     it('stores an approved pair as two tagged tutor rows at T and T plus the playback delay', async () => {
         mockGeneration(multiAgentDecision);
         const api = await renderRoom();
@@ -206,7 +264,7 @@ describe('RoomContext multi-agent draft', () => {
 
         mockGeneration({
             mode: 'tutoring',
-            instruction: 'correction',
+            instruction: 'protective_instruction',
             mode_reason: 'The learner already acted.',
             suggested_response: 'Stop and check the sender another way.'
         });
@@ -230,7 +288,7 @@ describe('RoomContext multi-agent draft', () => {
 
         mockGeneration({
             mode: 'tutoring',
-            instruction: 'correction',
+            instruction: 'explanation',
             mode_reason: 'The learner relies on branding.',
             suggested_response: 'A logo is not proof. Check the sender another way.'
         });

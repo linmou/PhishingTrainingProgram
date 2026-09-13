@@ -49,6 +49,16 @@ test('accepts a multiagent decision only when the turn allows it', () => {
   expect(() => parseTutorDecision(multiAgent(response))).toThrow('not allowed for this turn');
 });
 
+test.each([
+  ['Riley', '[agent:riley] Trust the logo.', { character: 'riley', content: 'Trust the logo.' }],
+  ['Tutor', '[agent:tutor] Check the sender.', { character: 'tutor', content: 'Check the sender.' }]
+])('accepts a single %s response for a multiagent decision', (_character, response, decoded) => {
+  expect(parseTutorDecision(multiAgent(response), ALLOW).decision).toEqual({
+    mode: 'multiagent', instruction: 'multiagent'
+  });
+  expect(decodeMultiAgentResponse(response)).toEqual([decoded]);
+});
+
 test('accepts either character order and trims each decoded message', () => {
   const rileyFirst = decodeMultiAgentResponse('[agent:riley]  Trust the logo. \n[agent:tutor] Check the sender.');
   expect(rileyFirst).toEqual([
@@ -60,7 +70,6 @@ test('accepts either character order and trims each decoded message', () => {
 });
 
 test.each([
-  ['missing Tutor tag', '[agent:riley] Trust the logo.'],
   ['duplicate Riley tag', '[agent:riley] Trust the logo.\n[agent:riley] Still trust it.'],
   ['unknown third tag', '[agent:riley] Trust it.\n[agent:sam] Same here.\n[agent:tutor] Check the sender.'],
   ['untagged prefix', 'Here is a contrast:\n[agent:riley] Trust it.\n[agent:tutor] Check the sender.'],
