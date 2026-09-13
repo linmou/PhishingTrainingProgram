@@ -1,8 +1,8 @@
 /**
- * Purpose: human-review editor for one Multi-agent (Riley + AI Tutor) draft.
- * Renders exactly the two decoded character messages in model-generated order and lets the
- * tutor edit, regenerate, reject or approve them. Thumbnail controls stay out on purpose:
- * the pair is a fixed two-character contrast, not a configurable dialogue.
+ * Purpose: human-review editor for one Multi-agent draft.
+ * Renders one or two decoded character messages in model-generated order and lets the tutor
+ * edit, regenerate, reject or approve them. Thumbnail controls stay out on purpose: the
+ * response has fixed model-selected characters, not a configurable dialogue.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -15,11 +15,11 @@ const CHARACTER_LABELS: Record<DecodedAgentMessage['character'], string> = {
 };
 
 interface MultiAgentSuggestionEditorProps {
-  messages: [DecodedAgentMessage, DecodedAgentMessage];
+  messages: DecodedAgentMessage[];
   parentMessage?: string;
   isRegenerating?: boolean;
   errorMessage?: string | null;
-  onApprove: (editedMessages: [string, string]) => void | Promise<void>;
+  onApprove: (editedMessages: string[]) => void | Promise<void>;
   onReject: () => void;
   onRegenerate: () => void | Promise<void>;
 }
@@ -33,18 +33,15 @@ const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
   onReject,
   onRegenerate
 }) => {
-  const [drafts, setDrafts] = useState<[string, string]>([
-    messages[0].content,
-    messages[1].content
-  ]);
+  const [drafts, setDrafts] = useState<string[]>(() => messages.map(message => message.content));
 
-  // A regenerated or newly decoded pair replaces whatever the tutor was editing.
+  // A regenerated or newly decoded response replaces whatever the tutor was editing.
   useEffect(() => {
-    setDrafts([messages[0].content, messages[1].content]);
+    setDrafts(messages.map(message => message.content));
   }, [messages]);
 
-  const updateDraft = (index: 0 | 1, value: string) => {
-    setDrafts(prev => (index === 0 ? [value, prev[1]] : [prev[0], value]));
+  const updateDraft = (index: number, value: string) => {
+    setDrafts(previous => previous.map((draft, draftIndex) => draftIndex === index ? value : draft));
   };
 
   const canApprove = drafts.every(draft => draft.trim().length > 0) && !isRegenerating;
@@ -54,7 +51,7 @@ const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
       <header className="multi-agent-suggestion-header">
         <h3>Multi-agent response</h3>
         <p className="multi-agent-suggestion-hint">
-          Two simulated characters answer this turn. Review both messages before approving.
+          Review each simulated character response before approving.
         </p>
         {parentMessage && (
           <blockquote className="multi-agent-suggestion-parent">{parentMessage}</blockquote>
@@ -77,7 +74,7 @@ const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
             value={drafts[index]}
             rows={3}
             disabled={isRegenerating}
-            onChange={(event) => updateDraft(index as 0 | 1, event.target.value)}
+            onChange={(event) => updateDraft(index, event.target.value)}
           />
         </div>
       ))}
@@ -108,7 +105,7 @@ const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
         <button
           type="button"
           className="btn btn-primary btn-small"
-          onClick={() => onApprove([drafts[0].trim(), drafts[1].trim()])}
+          onClick={() => onApprove(drafts.map(draft => draft.trim()))}
           disabled={!canApprove}
         >
           <CheckCircle size={14} /> Approve

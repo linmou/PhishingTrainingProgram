@@ -185,18 +185,18 @@ export interface DecodedAgentMessage {
     content: string;
 }
 
-/** Learner-visible Student AI choice. Peer/Adult are single-agent; Multi-agent enables the two-character decision. */
+/** Learner-visible Student AI choice. Peer/Adult are single-agent; Multi-agent enables one-or-two-character decisions. */
 export type StudentAIChoice = 'peer' | 'adult' | 'multi_agent';
 
 /** Model-facing interaction mode carried by the request and the room AI prompt config. */
 export type InteractionMode = 'single_agent' | 'multi_agent';
 
-/** Human-review draft for one approved-pending two-character exchange. */
+/** Human-review draft for one approved-pending Multi-agent response. */
 export interface MultiAgentDraft {
     rawDecision: TutorActionDecision;
     parentMessageId: string;
     parentMessageContent: string;
-    generatedMessages: [DecodedAgentMessage, DecodedAgentMessage];
+    generatedMessages: DecodedAgentMessage[];
     startTime: number;
     contextMessages: string[];
     aiConfigSnapshot?: AIAssistantConfigSnapshot;
@@ -261,7 +261,7 @@ export interface RoomContextType {
     clearAISuggestion: () => void;
     /** Human-review draft for a model decision of mode `multiagent`. */
     multiAgentDraft: MultiAgentDraft | null;
-    approveMultiAgentDraft: (editedMessages: [string, string]) => Promise<void>;
+    approveMultiAgentDraft: (editedMessages: string[]) => Promise<void>;
     regenerateMultiAgentDraft: () => Promise<void>;
     rejectMultiAgentDraft: () => Promise<void>;
     aiInteractions: AIInteraction[];

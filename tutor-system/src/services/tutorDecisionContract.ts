@@ -1,6 +1,6 @@
 // #!/usr/bin/env node
 // Purpose: validate reason-first tutor decisions for both the legacy v2 and explicit transfer v3 contracts,
-// and own the multi-agent response grammar (two tagged character messages, either order).
+// and own the multi-agent response grammar (one or two tagged character messages, in model order).
 import { DecodedAgentMessage, RoomParticipationMode, TutorBehaviorDecision, TutorDecisionMode, TutorInstruction } from '../types';
 import { TutorDecisionV3, TutorInstruction as TutorInstructionV3 } from '../types/assessment';
 import { countAssessmentSegments, validateAssessmentRendering } from './assessmentRendering';
@@ -60,19 +60,19 @@ export function containsAgentTag(response: string): boolean {
 }
 
 /**
- * Decode the two tagged character messages of a multiagent response, in model-generated order.
- * Rejects missing/duplicate/unknown tags, empty bodies and untagged text before the first tag.
+ * Decode one or two tagged character messages of a multiagent response in model-generated order.
+ * Rejects duplicate/unknown tags, empty bodies and untagged text before the first tag.
  */
 export function decodeMultiAgentResponse(
   response: string
-): [DecodedAgentMessage, DecodedAgentMessage] {
+): DecodedAgentMessage[] {
   if (typeof response !== 'string' || !response.trim()) {
     throw new Error('AI tutor decision multiagent response must be a non-empty string');
   }
 
   const matches = Array.from(response.matchAll(ALL_AGENT_TAGS));
-  if (matches.length !== 2) {
-    throw new Error('AI tutor decision multiagent response must contain exactly two agent tags');
+  if (matches.length < 1 || matches.length > 2) {
+    throw new Error('AI tutor decision multiagent response must contain one or two agent tags');
   }
   if (response.slice(0, matches[0].index).trim()) {
     throw new Error('AI tutor decision multiagent response must not contain untagged text before the first agent tag');
@@ -92,11 +92,11 @@ export function decodeMultiAgentResponse(
     return { character: character as 'riley' | 'tutor', content };
   });
 
-  if (decoded[0].character === decoded[1].character) {
-    throw new Error('AI tutor decision multiagent response must contain exactly one Riley tag and one Tutor tag');
+  if (decoded.length === 2 && decoded[0].character === decoded[1].character) {
+    throw new Error('AI tutor decision multiagent response must not duplicate a character tag');
   }
 
-  return [decoded[0], decoded[1]];
+  return decoded;
 }
 
 export function parseTutorDecision(

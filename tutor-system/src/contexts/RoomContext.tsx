@@ -717,7 +717,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    /** Store one two-character Multi-agent decision for human review. */
+    /** Store one-or-two-character Multi-agent decision for human review. */
     const applyMultiAgentDraft = (
         decision: TutorActionDecision,
         parentMessageId: string,
@@ -1019,10 +1019,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     /**
-     * Persist an approved two-character pair as ordinary AI-generated tutor messages.
-     * Row 1 keeps the approval time; row 2 is future-dated by the playback delay.
+     * Persist an approved one-or-two-character response as ordinary AI-generated tutor messages.
+     * Row 1 keeps the approval time; a second row is future-dated by the playback delay.
      */
-    const approveMultiAgentDraft = async (editedMessages: [string, string]): Promise<void> => {
+    const approveMultiAgentDraft = async (editedMessages: string[]): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
         }
@@ -1034,7 +1034,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('No Multi-agent draft to approve');
         }
         if (editedMessages.some((content) => !content.trim())) {
-            throw new Error('Both character messages are required');
+            throw new Error('Every character message is required');
         }
 
         // Stale draft: the learner moved the conversation forward while the tutor reviewed.
@@ -1064,7 +1064,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error(`Failed to store the approved Multi-agent response: ${error.message}`);
         }
         if (!data || data.length !== rows.length) {
-            throw new Error('Approved Multi-agent response was not stored as a complete pair');
+            throw new Error('Approved Multi-agent response was not stored completely');
         }
 
         const stored = [...(data as Message[])].sort(

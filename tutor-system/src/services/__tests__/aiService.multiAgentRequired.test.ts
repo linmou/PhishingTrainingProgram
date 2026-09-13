@@ -158,10 +158,10 @@ describe('aiService Multi-agent enforcement', () => {
   });
 
   it.each([
-    ['protective_instruction', decision('tutoring', 'protective_instruction', 'Do not open that link. Open the real app instead.')],
-    ['explanation', decision('tutoring', 'explanation', 'A lock protects the connection, not the owner. Use the real app to check the alert.')],
-    ['guard', decision('guard', null, 'Deliberately repeating that interrupts practice. Stop and make a task attempt.')]
-  ])('accepts a %s turn without asking for the pair', async (_label, content) => {
+    ['protective_instruction', { mode: 'tutoring', instruction: 'protective_instruction' }, decision('tutoring', 'protective_instruction', 'Do not open that link. Open the real app instead.')],
+    ['explanation', { mode: 'tutoring', instruction: 'explanation' }, decision('tutoring', 'explanation', 'A lock protects the connection, not the owner. Use the real app to check the alert.')],
+    ['guard', { mode: 'guard', instruction: null }, decision('guard', null, 'Deliberately repeating that interrupts practice. Stop and make a task attempt.')]
+  ])('accepts the exact %s exception without asking for a multiagent response', async (_label, expectedDecision, content) => {
     await mockSupabaseFor('multi_agent');
     const fetchMock = mockModel([content]);
 
@@ -170,7 +170,38 @@ describe('aiService Multi-agent enforcement', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
-    expect(result.decision?.mode).not.toBe('multiagent');
+    expect(result.decision).toMatchObject(expectedDecision);
+  });
+
+  it('rejects a discretionary single-Tutor decision on the repair attempt too', async () => {
+    await mockSupabaseFor('multi_agent');
+    const fetchMock = mockModel([
+      decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.'),
+      decision('tutoring', 'correction', 'A copied logo does not prove the sender.')
+    ]);
+
+    const { generateTutorSuggestion } = await import('../aiService');
+    const result = await generateTutorSuggestion('room-1', 'tutor-1');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({ success: false });
+    expect(result.error).toContain('must use a multiagent response');
+  });
+
+  it('keeps Guard available after a repaired Multi-agent attempt', async () => {
+    await mockSupabaseFor('multi_agent');
+    const fetchMock = mockModel([
+      decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.'),
+      decision('guard', null, 'That disrupts the practice. Pause and make a task attempt.')
+    ]);
+
+    const { generateTutorSuggestion } = await import('../aiService');
+    const result = await generateTutorSuggestion('room-1', 'tutor-1');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({ success: true, decision: { mode: 'guard', instruction: null } });
+    const repairRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(repairRequest.messages[1].content).toContain('participation is deliberately disrupted');
   });
 
   it('keeps the single-agent path untouched: no patch prompt, no multiagent decision allowed', async () => {

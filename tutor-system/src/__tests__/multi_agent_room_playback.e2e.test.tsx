@@ -331,17 +331,36 @@ describe('Multi-agent room playback', () => {
     expect(screen.getByRole('button', { name: /Approve/ })).toBeInTheDocument();
   });
 
-  it('keeps the ordinary suggestion box when Multi-agent is enabled but the decision is single-Tutor', () => {
+  it('renders one editable card for a Riley-only multiagent decision', () => {
+    const draft = {
+      rawDecision: {
+        mode: 'multiagent', instruction: 'multiagent', mode_reason: 'Contrast',
+        suggested_response: `[agent:riley] ${RILEY_TEXT}`
+      },
+      parentMessageId: learnerMessage.id,
+      parentMessageContent: learnerMessage.content,
+      generatedMessages: [{ character: 'riley', content: RILEY_TEXT }],
+      startTime: new Date(START).getTime(),
+      contextMessages: []
+    };
+
+    renderRoom([learnerMessage], { user: tutor, multiAgentDraft: draft });
+
+    expect(screen.getByTestId('multi-agent-card-0')).toHaveTextContent('Riley');
+    expect(screen.queryByTestId('multi-agent-card-1')).not.toBeInTheDocument();
+  });
+
+  it('keeps the ordinary suggestion box for an allowed Multi-agent explanation exception', () => {
     renderRoom([learnerMessage], {
       user: tutor,
       aiSuggestion: TUTOR_TEXT,
       aiDecision: {
-        mode: 'tutoring', instruction: 'correction', mode_reason: 'Misconception',
+        mode: 'tutoring', instruction: 'explanation', mode_reason: 'Direct teaching request',
         suggested_response: TUTOR_TEXT
       },
       currentSuggestionContext: {
         rawDecision: {
-          mode: 'tutoring', instruction: 'correction', mode_reason: 'Misconception',
+          mode: 'tutoring', instruction: 'explanation', mode_reason: 'Direct teaching request',
           suggested_response: TUTOR_TEXT
         },
         finalMode: 'tutoring',

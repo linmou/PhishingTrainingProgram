@@ -516,7 +516,7 @@ const RoomPagePost: React.FC = () => {
         clearAISuggestion();
     };
 
-    const handleApproveMultiAgent = async (editedMessages: [string, string]) => {
+    const handleApproveMultiAgent = async (editedMessages: string[]) => {
         setMultiAgentError(null);
         try {
             await approveMultiAgentDraft(editedMessages);
@@ -863,7 +863,7 @@ const RoomPagePost: React.FC = () => {
                     />
                 )}
 
-                {/* Multi-agent two-character review for tutors */}
+                {/* Multi-agent one-or-two-character review for tutors */}
                 {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
                     <MultiAgentSuggestionEditor
                         messages={multiAgentDraft.generatedMessages}

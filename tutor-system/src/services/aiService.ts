@@ -72,19 +72,18 @@ const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
 /** Appended to the last user turn when the model returns an unparsable tutor decision. */
 export const TUTOR_DECISION_REPAIR_INSTRUCTION =
     'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"tutoring","instruction":"scaffolding"},"response":"learner-facing message"}. Do not emit legacy fields, markdown, code fences, or text outside the object.';
-/** A multiagent reply carries reason plus two tagged messages, so it needs a larger completion budget. */
+/** A multiagent reply carries a reason plus one or two tagged messages, so it needs a larger completion budget. */
 const MULTI_AGENT_MAX_TOKENS = 240;
 /**
- * Single-Tutor instructions that may not answer a Multi-agent-enabled turn. A tutor who selected
- * the mode asked for the two-character contrast, so a discretionary hint, correction or wrap-up is
- * sent back once as a repair instead of being shown as the suggestion.
+ * Single-Tutor instructions that may not answer a Multi-agent-enabled turn. A discretionary hint,
+ * correction or wrap-up is sent back once as a repair instead of being shown as the suggestion.
  * protective_instruction, explanation and Guard stay allowed: they cover imminent unsafe action,
  * an explicit request to explain, and participation correction.
  */
-const MULTI_AGENT_DISCRETIONARY_INSTRUCTIONS: Array<TutorInstruction | null> = ['scaffolding', 'correction', 'consolidation'];
-/** Repair instruction for a multiagent-enabled turn: keep the two-message shape instead of falling back. */
+const MULTI_AGENT_FORBIDDEN_INSTRUCTIONS: Array<TutorInstruction | null> = ['scaffolding', 'correction', 'consolidation'];
+/** Repair instruction for a multiagent-enabled turn: preserve the tagged response shape or a valid exception. */
 export const MULTI_AGENT_REPAIR_INSTRUCTION =
-    'The learner enabled Multi-agent, so return the two-character pair unless the learner is about to act unsafely or asks you to explain or stop. Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"multiagent","instruction":"multiagent"},"response":"[agent:riley] one short wrong recommendation\\n[agent:tutor] one short accurate correction"}. Use exactly those two tags once each, keep every message under 35 words, and do not emit markdown, code fences, or text outside the object.';
+    'The learner enabled Multi-agent, so return a tagged Multi-agent response unless the learner is about to act unsafely, asks you to explain or stop, or participation is deliberately disrupted. Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"multiagent","instruction":"multiagent"},"response":"[agent:riley] one short wrong recommendation"}. Response must contain one tagged Riley or AI Tutor message, or one message from each character, with no duplicate tag. Keep every message under 35 words, and do not emit markdown, code fences, or text outside the object.';
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
@@ -682,7 +681,7 @@ export class TutorSuggestionService {
 
             const temperature =
                 typeof config.temperature === 'number' ? config.temperature : 0.3;
-            // A multiagent envelope carries reason plus two tagged messages, so it gets its own budget;
+            // A multiagent envelope carries a reason plus one or two tagged messages, so it gets its own budget;
             // the room's single-response max_tokens cannot fit it (a 100-token room truncates the JSON).
             const maxTokens = interactionMode === 'multi_agent'
                 ? MULTI_AGENT_MAX_TOKENS
@@ -725,13 +724,12 @@ export class TutorSuggestionService {
                         { allowMultiagent }
                     );
 
-                    // The learner selected Multi-agent: ask once more for the pair before showing a
-                    // discretionary single-Tutor hint as the suggestion. Safety, explanation and
-                    // Guard decisions are accepted as they are.
-                    if (attempt === 0
-                        && allowMultiagent
-                        && MULTI_AGENT_DISCRETIONARY_INSTRUCTIONS.includes(decision.instruction)) {
-                        throw new Error('AI tutor decision must use the multiagent pair for this Multi-agent turn');
+                    // Safety, explanation, and Guard are the only single-Tutor exceptions in this
+                    // interaction mode. Apply the same check on both attempts so retry cannot
+                    // weaken the selected response contract.
+                    if (allowMultiagent
+                        && MULTI_AGENT_FORBIDDEN_INSTRUCTIONS.includes(decision.instruction)) {
+                        throw new Error('AI tutor decision must use a multiagent response for this Multi-agent turn');
                     }
 
                     return {
