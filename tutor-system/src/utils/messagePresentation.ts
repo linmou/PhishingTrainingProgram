@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Purpose: resolve the role, response mode, and optional Multi-agent tag into one pure UI profile.
 
 import type { Message, TutorTurnMode, UserRole } from '../types';

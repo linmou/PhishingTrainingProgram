@@ -16,6 +16,7 @@
 - React components: PascalCase files (e.g., `RoomPage.tsx`), one component per file when possible.
 - Tests: `*.test.ts` / `*.test.tsx` colocated under `src/__tests__/`.
 - Services/utilities use named exports; avoid default exports in shared modules.
+- CRA-consumed TypeScript/TSX modules must not start with a Unix shebang; reserve shebangs for standalone executable scripts so Webpack can parse imported modules.
 - Linting via CRA ESLint (`react-app`, `react-app/jest`). Configure editor to auto‑fix on save.
 
 ## Testing Guidelines
