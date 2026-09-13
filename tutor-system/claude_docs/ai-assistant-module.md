@@ -2,6 +2,8 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
+Last updated: 2026-09-13 (multiagent persistence correction; commit pending)
+
 ## Overview
 
 The AI Assistant module adds intelligent response generation capabilities to the tutoring system. Tutors can configure and use AI to generate educational responses during tutoring sessions, enhancing the learning experience for students.
@@ -62,6 +64,8 @@ Runtime source of truth:
 - `parent_message_id`: Reference to responded message
 
 Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
+
+`RoomContext.approveMultiAgentDraft` persists every approved Riley or AI Tutor row with `response_mode='multiagent'`, preserving the character tag for the presentation resolver to decode.
 
 ## Features
 
@@ -212,7 +216,7 @@ interface RoomContextType {
 **Message Display** - Resolved from persisted message semantics:
 - Role profile and badge come from `user_role`
 - Guard overrides the profile; assessment keeps the role profile and adds the interactive UI
-- Multi-agent tutor rows decode a leading Riley or Tutor tag and strip it from the body
+- Multi-agent tutor rows decode a leading Riley or Tutor tag, strip it from the body, and use the complete Riley or AI Tutor profile for both the author label and avatar; the persisted tutor account avatar is not reused
 - Generate AI Response buttons on student messages
 
 ### Database Integration

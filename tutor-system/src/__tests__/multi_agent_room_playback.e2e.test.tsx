@@ -53,7 +53,7 @@ const agentRow = (id: string, character: 'riley' | 'tutor', content: string, off
     id, room_id: room.id, user_id: tutor.id, content: `[agent:${character}] ${content}`,
     user_role: 'tutor', ai_model_used: 'qwen3.5-flash', ai_response_time_ms: 900,
     parent_message_id: learnerMessage.id, created_at: at(offsetMs), response_mode: 'multiagent',
-    display_name: 'Taylor Tutor'
+    display_name: 'Taylor Tutor', avatar_url: 'https://example.test/taylor.png'
   } as Message;
 };
 
@@ -234,8 +234,32 @@ describe('Multi-agent room playback', () => {
     const rileyMeta = (rileyRow as HTMLElement).querySelector('.comment-meta');
     expect(rileyMeta?.textContent || '').not.toMatch(/ms/);
     expect(rileyMeta?.querySelector('.comment-response-time')).toBeNull();
-    // The avatar keeps the posting identity, not the character label.
-    expect(within(rileyRow as HTMLElement).getByTitle('Taylor Tutor')).toBeInTheDocument();
+    expect(within(rileyRow as HTMLElement).getByTitle('Riley')).toBeInTheDocument();
+    expect(within(rileyRow as HTMLElement).queryByTitle('Taylor Tutor')).not.toBeInTheDocument();
+    expect(within(rileyRow as HTMLElement).queryByRole('img')).not.toBeInTheDocument();
+
+    const tutorRow = screen.getByText(TUTOR_TEXT).closest('.post-comment');
+    expect(within(tutorRow as HTMLElement).getByText('AI Tutor')).toBeInTheDocument();
+    expect(within(tutorRow as HTMLElement).getByTitle('AI Tutor')).toBeInTheDocument();
+    expect(within(tutorRow as HTMLElement).queryByTitle('Taylor Tutor')).not.toBeInTheDocument();
+    expect(within(tutorRow as HTMLElement).queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.queryByText(/\[agent:(?:riley|tutor)\]/)).not.toBeInTheDocument();
+  });
+
+  it('keeps a valid agent tag literal outside Multi-agent mode', () => {
+    renderRoom([
+      learnerMessage,
+      {
+        ...agentRow('tutor-1', 'riley', RILEY_TEXT, 0),
+        response_mode: 'tutoring'
+      }
+    ]);
+
+    expect(screen.getByText('Taylor Tutor')).toBeInTheDocument();
+    expect(screen.getByTitle('Taylor Tutor')).toBeInTheDocument();
+    expect(screen.getByRole('img')).toHaveAttribute('src', 'https://example.test/taylor.png');
+    expect(screen.getByText(`[agent:riley] ${RILEY_TEXT}`)).toBeInTheDocument();
+    expect(screen.queryByText('Riley')).not.toBeInTheDocument();
   });
 
   it('still staggers a fresh pair when the poll delivers both rows in one batch', () => {

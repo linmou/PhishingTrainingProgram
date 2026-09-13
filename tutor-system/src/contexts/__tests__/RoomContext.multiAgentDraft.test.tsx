@@ -212,7 +212,7 @@ describe('RoomContext multi-agent draft', () => {
             content: '[agent:riley] Trust the logo.',
             user_role: 'tutor',
             parent_message_id: 'message-1',
-            response_mode: 'tutoring'
+            response_mode: 'multiagent'
         })]);
         expect(api().multiAgentDraft).toBeNull();
     });
@@ -233,7 +233,7 @@ describe('RoomContext multi-agent draft', () => {
         ]);
         expect(rows.map((row: any) => row.user_role)).toEqual(['tutor', 'tutor']);
         expect(rows.every((row: any) => row.parent_message_id === 'message-1')).toBe(true);
-        expect(rows.every((row: any) => row.response_mode === 'tutoring')).toBe(true);
+        expect(rows.every((row: any) => row.response_mode === 'multiagent')).toBe(true);
         expect(new Date(rows[1].created_at).getTime() - new Date(rows[0].created_at).getTime()).toBe(2000);
         expect(api().multiAgentDraft).toBeNull();
     });

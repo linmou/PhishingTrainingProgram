@@ -1083,7 +1083,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ai_model_used: draft.aiConfigSnapshot?.model_name || currentRoom.ai_assistant_model || DEFAULT_AI_MODEL,
             ai_response_time_ms: approvalTime - draft.startTime,
             parent_message_id: draft.parentMessageId.startsWith('prepop-') ? null : draft.parentMessageId,
-            response_mode: 'tutoring' as const,
+            response_mode: 'multiagent' as const,
             content: formatAgentTaggedContent(generated.character, editedMessages[index]),
             created_at: new Date(approvalTime + index * MULTI_AGENT_PLAYBACK_DELAY_MS).toISOString()
         }));
