@@ -10,8 +10,27 @@ const migration = fs.readFileSync(
   path.resolve(process.cwd(), 'supabase/migrations/025_transfer_assessment_storage.sql'),
   'utf8'
 );
+const messageRepresentationMigration = path.resolve(
+  process.cwd(),
+  'supabase/migrations/046_refactor_message_representation.sql'
+);
 
 describe('transfer assessment hosted migration', () => {
+  it('adds the message-level Multi-agent mode and removes the legacy AI boolean/index', () => {
+    expect(fs.existsSync(messageRepresentationMigration)).toBe(true);
+    const migrationText = fs.readFileSync(messageRepresentationMigration, 'utf8');
+    expect(migrationText).toMatch(/ALTER TYPE tutor_turn_mode ADD VALUE IF NOT EXISTS 'multiagent'/);
+    expect(migrationText).toMatch(/DROP INDEX IF EXISTS idx_messages_is_ai_generated/);
+    expect(migrationText).toMatch(/DROP COLUMN IF EXISTS is_ai_generated/);
+  });
+
+  it('recreates current message-writing RPCs explicitly without rewriting stored function text', () => {
+    const migrationText = fs.readFileSync(messageRepresentationMigration, 'utf8');
+
+    expect(migrationText).toMatch(/CREATE OR REPLACE FUNCTION public\.post_assessment_message_v1\(/i);
+    expect(migrationText).toMatch(/CREATE OR REPLACE FUNCTION public\.send_reviewed_tutor_response_v3\(/i);
+    expect(migrationText).not.toMatch(/pg_proc|pg_get_functiondef|regexp_replace/i);
+  });
   it('is atomic and restores the transfer state required by assessment failures', () => {
     expect(migration.trimStart()).toMatch(/^BEGIN;/);
     expect(migration.trimEnd()).toMatch(/COMMIT;$/);

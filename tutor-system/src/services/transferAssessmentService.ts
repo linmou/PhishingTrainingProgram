@@ -44,7 +44,8 @@ export interface PublicMessageDTO {
   user_id: string;
   content: string;
   user_role: string;
-  is_ai_generated: boolean;
+  ai_model_used?: string | null;
+  ai_response_time_ms?: number | null;
   parent_message_id: string | null;
   response_mode: string | null;
   created_at: string;
@@ -57,7 +58,8 @@ export const PUBLIC_MESSAGE_DTO_KEYS: ReadonlyArray<keyof PublicMessageDTO> = [
   'user_id',
   'content',
   'user_role',
-  'is_ai_generated',
+  'ai_model_used',
+  'ai_response_time_ms',
   'parent_message_id',
   'response_mode',
   'created_at',
@@ -279,7 +281,6 @@ export class TransferAssessmentService {
       user_id: userId,
       content: input.content,
       user_role: role,
-      is_ai_generated: false,
       parent_message_id: input.replyToMessageId || null,
       response_mode: 'tutoring',
     }).select('*').single();
@@ -408,7 +409,6 @@ export class TransferAssessmentService {
       user_id: userId,
       content,
       user_role: 'tutor',
-      is_ai_generated: true,
       parent_message_id: input.focusStudentMessageId,
       response_mode: mode === 'assessment' ? 'assessment' : 'tutoring',
     };

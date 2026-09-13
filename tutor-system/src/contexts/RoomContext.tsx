@@ -493,7 +493,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         user_id: 'system', // Use system as user_id for pre-populated messages
                         content: item.message,
                         user_role: item.role as UserRole,
-                        is_ai_generated: false,
                         ai_model_used: null,
                         ai_response_time_ms: null,
                         parent_message_id: null,
@@ -674,7 +673,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user_id: user.id,
             content,
             user_role: user.current_role as UserRole,
-            is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: parentMessageId,
@@ -795,7 +793,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             let parentMessageContent: string = '';
             if (!prompt) {
                 const latestMessage = messages
-                    .filter(m => m.user_role === 'student' && !m.is_ai_generated)
+                    .filter(m => m.user_role === 'student')
                     .slice(-1)[0];
 
                 if (latestMessage) {
@@ -1004,7 +1002,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const draft = multiAgentDraft;
         // Regeneration answers the learner's latest turn, which may have moved on during review.
         const latestLearnerMessage = messages
-            .filter(message => message.user_role === 'student' && !message.is_ai_generated)
+            .filter(message => message.user_role === 'student')
             .slice(-1)[0];
         const parentMessageId = latestLearnerMessage?.id || draft.parentMessageId;
         const parentMessageContent = latestLearnerMessage?.content || draft.parentMessageContent;
@@ -1071,7 +1069,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Stale draft: the learner moved the conversation forward while the tutor reviewed.
         const latestLearnerMessage = messages
-            .filter(message => message.user_role === 'student' && !message.is_ai_generated)
+            .filter(message => message.user_role === 'student')
             .slice(-1)[0];
         if (!latestLearnerMessage || latestLearnerMessage.id !== draft.parentMessageId) {
             throw new Error('The learner sent a newer message, so this draft is stale. Regenerate before approving.');
@@ -1082,11 +1080,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             room_id: currentRoom.id,
             user_id: user.id,
             user_role: 'tutor' as UserRole,
-            is_ai_generated: true,
             ai_model_used: draft.aiConfigSnapshot?.model_name || currentRoom.ai_assistant_model || DEFAULT_AI_MODEL,
             ai_response_time_ms: approvalTime - draft.startTime,
             parent_message_id: draft.parentMessageId.startsWith('prepop-') ? null : draft.parentMessageId,
-            response_mode: 'tutoring' as TutorResponseMode,
+            response_mode: 'multiagent' as const,
             content: formatAgentTaggedContent(generated.character, editedMessages[index]),
             created_at: new Date(approvalTime + index * MULTI_AGENT_PLAYBACK_DELAY_MS).toISOString()
         }));

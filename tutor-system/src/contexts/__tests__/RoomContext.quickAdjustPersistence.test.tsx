@@ -122,7 +122,6 @@ describe('RoomContext Quick Adjust persistence', () => {
                                         user_id: 'student-1',
                                         content: 'Is this email fake?',
                                         user_role: 'student',
-                                        is_ai_generated: false,
                                         ai_model_used: null,
                                         ai_response_time_ms: null,
                                         parent_message_id: null,

@@ -128,7 +128,6 @@ describe('RoomContext AI generation failures', () => {
                     user_id: 'student-1',
                     content: 'Is it safe to share my live location?',
                     user_role: 'student',
-                    is_ai_generated: false,
                     ai_model_used: null,
                     ai_response_time_ms: null,
                     parent_message_id: null,

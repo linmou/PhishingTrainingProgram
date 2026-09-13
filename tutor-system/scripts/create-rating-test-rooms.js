@@ -52,7 +52,7 @@ const createRoom = async (title, description, dialogue) => {
     user_id: TUTOR_ID,
     content: 'REAL REPLY (persisted, unrated): check the sender address before you click anything.',
     user_role: 'tutor',
-    is_ai_generated: true
+    response_mode: 'tutoring'
   });
   if (msgError) throw new Error(`room B message: ${msgError.message}`);
 

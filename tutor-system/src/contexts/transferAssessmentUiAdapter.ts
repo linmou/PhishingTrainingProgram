@@ -180,7 +180,6 @@ export function projectRoomMessage(
     user_id: String(projected.user_id ?? ''),
     content: typeof projected.content === 'string' ? projected.content : '',
     user_role: (projected.user_role ?? 'student') as Message['user_role'],
-    is_ai_generated: projected.is_ai_generated === true,
     ai_model_used: typeof projected.ai_model_used === 'string' ? projected.ai_model_used : null,
     ai_response_time_ms:
       typeof projected.ai_response_time_ms === 'number' ? projected.ai_response_time_ms : null,

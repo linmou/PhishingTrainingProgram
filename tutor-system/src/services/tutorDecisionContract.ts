@@ -39,10 +39,10 @@ function readAgentTag(content: string): { character: string; index: number; end:
  */
 export function decodeAgentMessage(message: {
   content: string;
-  is_ai_generated?: boolean | null;
   user_role?: string | null;
+  response_mode?: string | null;
 }): DecodedAgentMessage | null {
-  if (message.is_ai_generated !== true || message.user_role !== 'tutor') return null;
+  if (message.response_mode !== 'multiagent' || message.user_role !== 'tutor') return null;
   const tag = readAgentTag(message.content);
   if (!tag) return null;
   const body = message.content.slice(tag.end).trim();

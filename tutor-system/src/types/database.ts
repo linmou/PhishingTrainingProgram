@@ -113,11 +113,10 @@ export interface Database {
                     user_id: string
                     content: string
                     user_role: 'student' | 'tutor' | 'observer'
-                    is_ai_generated: boolean
                     ai_model_used: string | null
                     ai_response_time_ms: number | null
                     parent_message_id: string | null
-                    response_mode: 'tutoring' | 'guard' | 'assessment' | null
+                    response_mode: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id: string | null
                     created_at: string
                 }
@@ -127,11 +126,10 @@ export interface Database {
                     user_id: string
                     content: string
                     user_role: 'student' | 'tutor' | 'observer'
-                    is_ai_generated?: boolean
                     ai_model_used?: string | null
                     ai_response_time_ms?: number | null
                     parent_message_id?: string | null
-                    response_mode?: 'tutoring' | 'guard' | 'assessment' | null
+                    response_mode?: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id?: string | null
                     created_at?: string
                 }
@@ -141,11 +139,10 @@ export interface Database {
                     user_id?: string
                     content?: string
                     user_role?: 'student' | 'tutor' | 'observer'
-                    is_ai_generated?: boolean
                     ai_model_used?: string | null
                     ai_response_time_ms?: number | null
                     parent_message_id?: string | null
-                    response_mode?: 'tutoring' | 'guard' | 'assessment' | null
+                    response_mode?: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id?: string | null
                     created_at?: string
                 }
@@ -562,7 +559,7 @@ export interface Database {
             user_status: 'active' | 'inactive'
             session_status: 'active' | 'completed' | 'cancelled'
             tutor_response_mode: 'tutoring' | 'guard'
-            tutor_turn_mode: 'tutoring' | 'guard' | 'assessment'
+            tutor_turn_mode: 'tutoring' | 'guard' | 'assessment' | 'multiagent'
         }
         CompositeTypes: {
             [_ in never]: never

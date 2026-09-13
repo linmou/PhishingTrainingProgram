@@ -44,16 +44,18 @@ const room: Room = {
 
 const learnerMessage: Message = {
   id: 'message-1', room_id: room.id, user_id: student.id, content: 'The logo looks familiar.',
-  user_role: 'student', is_ai_generated: false, ai_model_used: null, ai_response_time_ms: null,
+  user_role: 'student', ai_model_used: null, ai_response_time_ms: null,
   parent_message_id: null, created_at: at(0), display_name: 'Sam Student'
-};
+} as Message;
 
-const agentRow = (id: string, character: 'riley' | 'tutor', content: string, offsetMs: number): Message => ({
-  id, room_id: room.id, user_id: tutor.id, content: `[agent:${character}] ${content}`,
-  user_role: 'tutor', is_ai_generated: true, ai_model_used: 'qwen3.5-flash', ai_response_time_ms: 900,
-  parent_message_id: learnerMessage.id, created_at: at(offsetMs), response_mode: 'tutoring',
-  display_name: 'Taylor Tutor'
-});
+const agentRow = (id: string, character: 'riley' | 'tutor', content: string, offsetMs: number): Message => {
+  return {
+    id, room_id: room.id, user_id: tutor.id, content: `[agent:${character}] ${content}`,
+    user_role: 'tutor', ai_model_used: 'qwen3.5-flash', ai_response_time_ms: 900,
+    parent_message_id: learnerMessage.id, created_at: at(offsetMs), response_mode: 'multiagent',
+    display_name: 'Taylor Tutor'
+  } as Message;
+};
 
 const RILEY_TEXT = 'The logo looks official, so I would trust it.';
 const TUTOR_TEXT = 'A logo does not prove the sender. What could you verify yourself?';
@@ -158,8 +160,7 @@ describe('Multi-agent room playback', () => {
     act(() => { jest.advanceTimersByTime(2100); });
 
     expect(screen.getByText(TUTOR_TEXT)).toBeInTheDocument();
-    // The Tutor character posts under the tutor account name, like any other tutor row.
-    expect(screen.getByText('Taylor Tutor')).toBeInTheDocument();
+    expect(screen.getByText('AI Tutor')).toBeInTheDocument();
   });
 
   it('reveals a Tutor-first pair in the same staged order', () => {
@@ -284,6 +285,16 @@ describe('Multi-agent room playback', () => {
     expect(screen.getAllByText('Sam Student').length).toBeGreaterThan(0);
     expect(screen.queryByText('Riley')).not.toBeInTheDocument();
     expect(screen.getByText('[agent:riley] The logo looks official, so I would trust it.')).toBeInTheDocument();
+  });
+
+  it('keeps a malformed Multi-agent tag literal instead of inventing a character identity', () => {
+    renderRoom([
+      learnerMessage,
+      { ...agentRow('ai-1', 'riley', RILEY_TEXT, 0), content: '[agent:riley Trust the logo.' }
+    ]);
+
+    expect(screen.getByText('[agent:riley Trust the logo.')).toBeInTheDocument();
+    expect(screen.queryByText('Riley')).not.toBeInTheDocument();
   });
 
   it.each([

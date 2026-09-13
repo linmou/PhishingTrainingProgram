@@ -9,7 +9,7 @@ import { RoomProvider } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import StudentView from '../pages/StudentView';
-import RoomPage from '../pages/RoomPage';
+import RoomPagePost from '../pages/RoomPagePost';
 import { BEHAVIOR_TEST_ROOM_MARKER } from '../utils/behaviorTestRooms';
 
 const feature = loadFeature('./features/student_view.feature');
@@ -36,7 +36,7 @@ const TestApp = () => (
         <RoomProvider>
             <Routes>
                 <Route path="/student" element={<StudentView />} />
-                <Route path="/room/:roomId" element={<RoomPage />} />
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
             </Routes>
             <LocationDisplay />
         </RoomProvider>

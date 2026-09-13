@@ -4,7 +4,7 @@ import type { ProgressPolicyVersion, TransferProgress } from './learningProgress
 
 export type AssessmentOptionId = 'A' | 'B' | 'C' | 'D';
 export type AssessmentSelectionType = 'single' | 'multiple';
-export type TutorTurnMode = 'tutoring' | 'guard' | 'assessment';
+export type TutorTurnMode = 'tutoring' | 'guard' | 'assessment' | 'multiagent';
 export type RoomParticipationMode = 'tutoring' | 'guard';
 export type TeachingInstruction =
   | 'protective_instruction'

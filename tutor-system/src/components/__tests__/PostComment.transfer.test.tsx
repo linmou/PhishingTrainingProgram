@@ -55,4 +55,18 @@ describe('PostComment transfer assessment rendering', () => {
 
     expect(screen.getByText('Security Supervisor')).toBeInTheDocument();
   });
+
+  it('keeps the tutor base profile while assessment mode renders its interactive options', () => {
+    const message = {
+      ...projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment),
+      display_name: 'Training Tutor',
+      response_mode: 'assessment' as const,
+    };
+
+    render(<PostComment message={message} currentUserId="tutor-1" currentUserRole="tutor" />);
+
+    expect(screen.getByText('Training Tutor')).toBeInTheDocument();
+    expect(screen.getByText('Choose one.')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+  });
 });

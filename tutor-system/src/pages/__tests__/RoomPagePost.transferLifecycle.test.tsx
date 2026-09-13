@@ -50,7 +50,7 @@ const learnerMessage: Message = {
   user_id: 'learner-a',
   content: learnerAMessageRow.content,
   user_role: 'student',
-  is_ai_generated: false,
+  response_mode: 'tutoring',
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: null,

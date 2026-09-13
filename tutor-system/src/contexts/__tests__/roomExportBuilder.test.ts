@@ -29,12 +29,12 @@ describe('buildRoomExportData', () => {
       user_id: 'student-1',
       content: 'Is this giveaway real?',
       user_role: 'student' as UserRole,
-      is_ai_generated: false,
       ai_model_used: null,
       ai_response_time_ms: null,
       parent_message_id: null,
       created_at: '2026-03-28T12:01:00Z',
       display_name: 'Student',
+      response_mode: 'tutoring',
     },
     {
       id: 'msg-2',
@@ -42,12 +42,12 @@ describe('buildRoomExportData', () => {
       user_id: 'tutor-123',
       content: 'Look at the domain and the urgency language.',
       user_role: 'tutor' as UserRole,
-      is_ai_generated: false,
       ai_model_used: 'gpt-4o-mini',
       ai_response_time_ms: 2100,
       parent_message_id: 'msg-1',
       created_at: '2026-03-28T12:02:00Z',
       display_name: 'Tutor',
+      response_mode: 'multiagent',
     },
   ];
 
@@ -116,11 +116,13 @@ describe('buildRoomExportData', () => {
         id: 'msg-1',
         feedback_stats: undefined,
         ai_model_used: null,
+        response_mode: 'tutoring',
       }),
       expect.objectContaining({
         id: 'msg-2',
         feedback_stats: messageFeedbackStats['msg-2'],
         ai_model_used: 'gpt-4o-mini',
+        response_mode: 'multiagent',
       }),
     ]);
     expect(exportData.ai_interactions?.[0]).toEqual(

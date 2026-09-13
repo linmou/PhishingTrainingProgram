@@ -53,10 +53,10 @@ const buildMessage = (
   user_id: `${role}-${id}`,
   content,
   user_role: role,
-  is_ai_generated: isAI,
   ai_model_used: isAI ? 'test-model' : null,
   ai_response_time_ms: isAI ? 250 : null,
   parent_message_id: null,
+  response_mode: null,
   created_at: createdAt,
   display_name: role === 'tutor' ? 'Tutor' : 'Student',
 });
@@ -276,15 +276,17 @@ describe('student Tutor-response rating gate', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
-  it('gates an AI-generated response independently of its stored author role', () => {
-    messages = [buildMessage('ai-only', 'student', 'AI-only response', true)];
+  it('does not gate a student-authored row based on model diagnostics', async () => {
+    messages = [buildMessage('ai-only', 'student', 'Student-authored response with diagnostics', true)];
     messageFeedbackStats = { 'ai-only': feedbackStats('ai-only', null) };
 
     renderRoom();
-    enterReplyAndSubmit('Student reply to AI');
+    enterReplyAndSubmit('Student reply');
 
-    expect(sendMessage).not.toHaveBeenCalled();
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('AI-only response');
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledWith('Student reply', { replyToMessageId: undefined });
+    });
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
   it('lets a student send when that student already rated the latest response', async () => {

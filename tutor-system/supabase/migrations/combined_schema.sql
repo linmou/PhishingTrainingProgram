@@ -9,6 +9,7 @@ CREATE TYPE user_role AS ENUM ('student', 'tutor', 'observer');
 CREATE TYPE user_status AS ENUM ('active', 'inactive');
 
 CREATE TYPE session_status AS ENUM ('active', 'completed', 'cancelled');
+CREATE TYPE tutor_turn_mode AS ENUM ('tutoring', 'guard', 'assessment', 'multiagent');
 
 -- Create users table
 CREATE TABLE users (
@@ -43,10 +44,10 @@ CREATE TABLE messages (
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     user_role user_role NOT NULL,
-    is_ai_generated BOOLEAN DEFAULT false NOT NULL,
     ai_model_used TEXT,
     ai_response_time_ms INTEGER,
     parent_message_id UUID REFERENCES messages (id) ON DELETE SET NULL,
+    response_mode tutor_turn_mode,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -97,8 +98,6 @@ CREATE INDEX idx_rooms_is_active ON rooms (is_active);
 CREATE INDEX idx_messages_room_id ON messages (room_id);
 
 CREATE INDEX idx_messages_created_at ON messages (created_at);
-
-CREATE INDEX idx_messages_is_ai_generated ON messages (is_ai_generated);
 
 CREATE INDEX idx_messages_parent_message_id ON messages (parent_message_id);
 

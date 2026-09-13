@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Test file: src/components/PostComment.tsx
- * Purpose: lock the non-AI tutor badge to the exact mixed-case "AI chatbot" label.
+ * Purpose: lock role/mode message presentation to the exact mixed-case "AI chatbot" tutor badge.
  */
 
 import React from 'react';
@@ -17,7 +17,6 @@ describe('PostComment role badges', () => {
         user_id: 'tutor-1',
         content: 'Please verify the sender before opening the link.',
         user_role: 'tutor',
-        is_ai_generated: false,
         ai_model_used: null,
         ai_response_time_ms: null,
         parent_message_id: null,
@@ -27,7 +26,7 @@ describe('PostComment role badges', () => {
         ...overrides
     });
 
-    it('renders the non-AI tutor badge as AI chatbot for a non-student viewer', () => {
+    it('renders the tutor badge as AI chatbot for a non-student viewer', () => {
         const message = buildMessage({ id: 'message-tutor-1' });
 
         render(
@@ -57,11 +56,24 @@ describe('PostComment role badges', () => {
         expect(document.querySelector('.comment-role-badge')).not.toBeInTheDocument();
     });
 
-    it('keeps the AI Assistant and model badge for generated messages', () => {
+    it('keeps the ordinary observer role badge styling for non-student viewers', () => {
+        render(
+            <PostComment
+                message={buildMessage({ user_role: 'observer', display_name: 'Observer One' })}
+                currentUserId="tutor-1"
+                currentUserRole="tutor"
+            />
+        );
+
+        const badge = screen.getByText('👁️ observer', { exact: true });
+        expect(badge).toHaveClass('comment-role-badge');
+        expect(badge).not.toHaveClass('comment-role-badge--tutor');
+    });
+
+    it('does not render stored model diagnostics as a visual chip', () => {
         render(
             <PostComment
                 message={buildMessage({
-                    is_ai_generated: true,
                     ai_model_used: 'gpt-4o-mini'
                 })}
                 currentUserId="tutor-1"
@@ -69,9 +81,43 @@ describe('PostComment role badges', () => {
             />
         );
 
-        expect(screen.getByText(/AI Assistant/)).toBeInTheDocument();
-        expect(screen.getByText(/AI · gpt-4o-mini/)).toBeInTheDocument();
-        expect(document.querySelector('.comment-role-badge')).not.toBeInTheDocument();
+        expect(screen.getByText('Training Tutor')).toBeInTheDocument();
+        expect(screen.queryByText(/AI · gpt-4o-mini/)).not.toBeInTheDocument();
+        expect(screen.getByText('👨‍🏫 AI chatbot', { exact: true })).toBeInTheDocument();
+    });
+
+    it('uses the tagged Riley profile only for an explicit Multi-agent tutor message', () => {
+        render(
+            <PostComment
+                message={buildMessage({
+                    content: '[agent:riley] Trust the logo.',
+                    response_mode: 'multiagent' as any
+                })}
+                currentUserId="viewer-1"
+                currentUserRole="tutor"
+            />
+        );
+
+        expect(screen.getByText('Riley')).toBeInTheDocument();
+        expect(screen.getByText('Trust the logo.')).toBeInTheDocument();
+        expect(screen.queryByText(/\[agent:riley\]/)).not.toBeInTheDocument();
+    });
+
+    it('uses the AI Tutor profile for a valid Tutor tag and strips the tag from the body', () => {
+        render(
+            <PostComment
+                message={buildMessage({
+                    content: '[agent:tutor] Check the sender independently.',
+                    response_mode: 'multiagent' as any
+                })}
+                currentUserId="viewer-1"
+                currentUserRole="tutor"
+            />
+        );
+
+        expect(screen.getByText('AI Tutor')).toBeInTheDocument();
+        expect(screen.getByText('Check the sender independently.')).toBeInTheDocument();
+        expect(screen.queryByText(/\[agent:tutor\]/)).not.toBeInTheDocument();
     });
 
     it.each([

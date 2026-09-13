@@ -34,7 +34,7 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
         // Get recent chat messages (the actual discussion)
         const { data: messages } = await supabase
             .from('messages')
-            .select('content, user_role, is_ai_generated, created_at')
+            .select('content, user_role, response_mode, created_at')
             .eq('room_id', roomId)
             .order('created_at', { ascending: true })
             .limit(15); // Last 15 messages for context
@@ -71,9 +71,8 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
                     return;
                 }
 
-                const role = msg.is_ai_generated ? 'assistant' : 'user';
-                const prefix = msg.is_ai_generated ? 'AI suggested: ' : 
-                              msg.user_role === 'student' ? 'Student: ' :
+                const role = msg.user_role === 'tutor' ? 'assistant' : 'user';
+                const prefix = msg.user_role === 'student' ? 'Student: ' :
                               msg.user_role === 'tutor' ? 'Tutor: ' : 'Observer: ';
                 
                 context.push({

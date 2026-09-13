@@ -15,6 +15,8 @@
 
 import { supabase } from '../supabase';
 import { User, Room, Message, Session, UserRole } from '../../types';
+import fs from 'fs';
+import path from 'path';
 
 // Mock Supabase for testing
 const mockSupabaseClient = {
@@ -33,6 +35,14 @@ jest.mock('../supabase', () => ({
 }));
 
 describe('Database Schema and Operations - Task 2 Tests', () => {
+    it('publishes the role/mode message contract without the removed AI boolean', () => {
+        const databaseSource = fs.readFileSync(path.resolve(process.cwd(), 'src/types/database.ts'), 'utf8');
+        const messagesContract = databaseSource.slice(databaseSource.indexOf('messages: {'), databaseSource.indexOf('sessions: {'));
+        expect(messagesContract).toMatch(/response_mode: 'tutoring' \| 'guard' \| 'assessment' \| 'multiagent' \| null/);
+        expect(messagesContract).not.toContain('is_ai_generated');
+        expect(databaseSource).toMatch(/tutor_turn_mode: 'tutoring' \| 'guard' \| 'assessment' \| 'multiagent'/);
+    });
+
     let mockUser: User;
     let mockTutor: User;
     let mockStudent: User;
@@ -94,12 +104,11 @@ describe('Database Schema and Operations - Task 2 Tests', () => {
             user_id: 'test-user-id',
             content: 'Test message content',
             user_role: 'student',
-            is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: null,
             created_at: '2024-01-01T00:00:00Z'
-        };
+        } as Message;
 
         mockSession = {
             id: 'test-session-id',

@@ -39,7 +39,7 @@ const COMPARISON_PAIR_LABELS = {
 } as const;
 
 /** Scheduled reveal time of a stored character message, or null for ordinary messages. */
-const agentMessageTime = (message: { content: string; is_ai_generated?: boolean | null; user_role?: string | null; created_at: string }): number | null =>
+const agentMessageTime = (message: { content: string; response_mode?: string | null; user_role?: string | null; created_at: string }): number | null =>
     decodeAgentMessage(message) ? new Date(message.created_at).getTime() : null;
 
 /** Two character rows belong to one pair when they share a parent, or when they were written together. */
@@ -51,7 +51,7 @@ const isSameMultiAgentPair = (
     : Math.abs(new Date(other.created_at).getTime() - new Date(message.created_at).getTime()) <= MULTI_AGENT_PAIR_WINDOW_MS);
 
 /** The earlier member of this message's pair, when it is present and already due. */
-const earlierPairMember = <T extends { id: string; content: string; is_ai_generated?: boolean | null; user_role?: string | null; created_at: string; parent_message_id?: string | null }>(
+const earlierPairMember = <T extends { id: string; content: string; response_mode?: string | null; user_role?: string | null; created_at: string; parent_message_id?: string | null }>(
     message: T,
     candidates: T[]
 ): T | null => {
@@ -339,7 +339,7 @@ const RoomPagePost: React.FC = () => {
 
         const latest = [...visibleMessages]
             .reverse()
-            .find(message => (message.is_ai_generated || message.user_role === 'tutor')
+            .find(message => message.user_role === 'tutor'
                 && !message.id.startsWith('prepop-'));
 
         if (!latest) return null;

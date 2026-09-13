@@ -78,7 +78,6 @@ export interface Message {
     user_id: string;
     content: string;
     user_role: UserRole;
-    is_ai_generated: boolean;
     ai_model_used: string | null;
     ai_response_time_ms: number | null;
     parent_message_id: string | null;
@@ -156,7 +155,7 @@ export interface AIResponse {
 }
 
 export type RoomParticipationMode = 'tutoring' | 'guard';
-export type TutorTurnMode = RoomParticipationMode | 'assessment';
+export type TutorTurnMode = RoomParticipationMode | 'assessment' | 'multiagent';
 /** Legacy alias for APIs that exclusively control room participation. */
 export type TutorResponseMode = RoomParticipationMode;
 
@@ -467,8 +466,9 @@ export interface ChatExportData {
         display_name?: string;
         content: string;
         created_at: string;
-        is_ai_generated: boolean;
+        response_mode?: TutorTurnMode | null;
         ai_model_used?: string | null;
+        ai_response_time_ms?: number | null;
         feedback_stats?: MessageFeedbackStats;
     }>;
     export_metadata: {

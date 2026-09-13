@@ -50,7 +50,7 @@ const tutor: User = {
 
 const learnerMessage = (id: string, content: string) => ({
     id, room_id: 'room-1', user_id: 'student-1', content, user_role: 'student',
-    is_ai_generated: false, ai_model_used: null, ai_response_time_ms: null,
+    ai_model_used: null, ai_response_time_ms: null,
     parent_message_id: null, created_at: '2026-03-26T10:00:00Z'
 });
 
@@ -211,9 +211,8 @@ describe('RoomContext multi-agent draft', () => {
         expect(rows).toEqual([expect.objectContaining({
             content: '[agent:riley] Trust the logo.',
             user_role: 'tutor',
-            is_ai_generated: true,
             parent_message_id: 'message-1',
-            response_mode: 'tutoring'
+            response_mode: 'multiagent'
         })]);
         expect(api().multiAgentDraft).toBeNull();
     });
@@ -233,8 +232,8 @@ describe('RoomContext multi-agent draft', () => {
             '[agent:tutor] Check the sender.'
         ]);
         expect(rows.map((row: any) => row.user_role)).toEqual(['tutor', 'tutor']);
-        expect(rows.every((row: any) => row.is_ai_generated && row.parent_message_id === 'message-1')).toBe(true);
-        expect(rows.every((row: any) => row.response_mode === 'tutoring')).toBe(true);
+        expect(rows.every((row: any) => row.parent_message_id === 'message-1')).toBe(true);
+        expect(rows.every((row: any) => row.response_mode === 'multiagent')).toBe(true);
         expect(new Date(rows[1].created_at).getTime() - new Date(rows[0].created_at).getTime()).toBe(2000);
         expect(api().multiAgentDraft).toBeNull();
     });

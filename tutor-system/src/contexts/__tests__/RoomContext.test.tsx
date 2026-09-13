@@ -185,7 +185,6 @@ describe('RoomContext - Room Management Tests', () => {
             user_id: mockUser.id,
             content: 'Test message',
             user_role: 'tutor',
-            is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: null,
@@ -807,7 +806,7 @@ describe('RoomContext - Room Management Tests', () => {
 
         it('should generate AI response successfully', async () => {
             const roomWithAI = { ...mockRoom, ai_assistant_enabled: true };
-            const studentMessage = { ...mockMessage, user_role: 'student', is_ai_generated: false };
+            const studentMessage = { ...mockMessage, user_role: 'student' };
 
             (generateAndSaveAIResponse as jest.Mock).mockResolvedValue('ai-message-id');
 

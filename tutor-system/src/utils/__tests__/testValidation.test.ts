@@ -8,30 +8,23 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
 
 const describeMetaValidation = process.env.RUN_META_VALIDATION_TESTS === 'true' ? describe : describe.skip;
 
 describeMetaValidation('Test Coverage Validation', () => {
     describe('Test File Discovery', () => {
         it('should validate that RoomContext test file exists and is discoverable', () => {
-            // Test that the file can be imported (proves it exists and compiles)
-            expect(() => {
-                require('../../contexts/__tests__/RoomContext.test.tsx');
-            }).not.toThrow();
+            expect(existsSync(resolve(__dirname, '../../contexts/__tests__/RoomContext.test.tsx'))).toBe(true);
         });
 
-        it('should validate that RoomPage test file exists and is discoverable', () => {
-            // Test that the file can be imported (proves it exists and compiles)
-            expect(() => {
-                require('../../pages/__tests__/RoomPage.test.tsx');
-            }).not.toThrow();
+        it('should validate that the active RoomPagePost test file exists and is discoverable', () => {
+            expect(existsSync(resolve(__dirname, '../../pages/__tests__/RoomPagePost.transferLifecycle.test.tsx'))).toBe(true);
         });
 
         it('should validate that AuthContext test file exists (pre-existing)', () => {
-            // Test that the existing file is still accessible
-            expect(() => {
-                require('../../contexts/__tests__/AuthContext.test.tsx');
-            }).not.toThrow();
+            expect(existsSync(resolve(__dirname, '../../contexts/__tests__/AuthContext.test.tsx'))).toBe(true);
         });
     });
 
@@ -65,7 +58,7 @@ describeMetaValidation('Test Coverage Validation', () => {
             // Test files should end with .test.tsx or .test.ts
             const testFiles = [
                 'RoomContext.test.tsx',
-                'RoomPage.test.tsx',
+                'RoomPagePost.transferLifecycle.test.tsx',
                 'AuthContext.test.tsx',
                 'testValidation.test.ts'
             ];

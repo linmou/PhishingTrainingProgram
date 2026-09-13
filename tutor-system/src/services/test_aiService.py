@@ -16,7 +16,7 @@ import unittest
 import json
 import time
 from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 
 class MockSupabaseClient:
@@ -46,7 +46,7 @@ class MockTable:
     def __init__(self, data: List[Dict], table_name: str):
         self.data = data
         self.table_name = table_name
-        self.filters = {}
+        self.filters: Dict[str, Any] = {}
         self.select_fields = '*'
     
     def select(self, fields: str = '*'):
@@ -88,7 +88,7 @@ class MockTable:
 class MockResponse:
     """Mock Supabase response"""
     
-    def __init__(self, data: Any, error: Dict = None):
+    def __init__(self, data: Any, error: Optional[Dict[str, Any]] = None):
         self.data = data
         self.error = error
 
@@ -96,7 +96,7 @@ class MockResponse:
 class MockRPCResponse:
     """Mock RPC response"""
     
-    def __init__(self, data: Any, error: Dict = None):
+    def __init__(self, data: Any, error: Optional[Dict[str, Any]] = None):
         self.data = data
         self.error = error
 
@@ -335,7 +335,7 @@ class TestAIService(unittest.TestCase):
             'user_id': self.tutor_id,
             'content': 'Photosynthesis is the process...',
             'user_role': 'tutor',
-            'is_ai_generated': True,
+            'response_mode': 'tutoring',
             'ai_model_used': 'gpt-3.5-turbo',
             'ai_response_time_ms': 1500,
             'parent_message_id': 'parent-msg-123'
@@ -345,7 +345,8 @@ class TestAIService(unittest.TestCase):
         self.assertEqual(len(response.data), 1)
         
         message = response.data[0]
-        self.assertTrue(message['is_ai_generated'])
+        self.assertEqual(message['response_mode'], 'tutoring')
+        self.assertNotIn('is_ai_generated', message)
         self.assertEqual(message['ai_model_used'], 'gpt-3.5-turbo')
         self.assertEqual(message['ai_response_time_ms'], 1500)
         self.assertEqual(message['parent_message_id'], 'parent-msg-123')
@@ -391,7 +392,7 @@ class TestAIService(unittest.TestCase):
             'user_id': self.tutor_id,
             'content': ai_response['content'],
             'user_role': 'tutor',
-            'is_ai_generated': True,
+            'response_mode': 'tutoring',
             'ai_model_used': ai_response['model_used'],
             'ai_response_time_ms': ai_response['response_time_ms']
         })

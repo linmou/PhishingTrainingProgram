@@ -383,7 +383,6 @@ describe('Room OP Configuration', () => {
                 user_id: 'student-456',
                 content: 'This response helped me understand the red flags.',
                 user_role: 'student' as const,
-                is_ai_generated: false,
                 ai_model_used: null,
                 ai_response_time_ms: null,
                 parent_message_id: null,

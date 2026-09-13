@@ -89,10 +89,15 @@ test('rejects agent tags in a non-multiagent response', () => {
   expect(() => parseTutorDecision(JSON.stringify(tagged))).toThrow('must not contain agent tags');
 });
 
-test('reads character identity only from AI-generated tutor-side rows', () => {
-  const row = { content: '[agent:riley] Trust the logo.', is_ai_generated: true, user_role: 'tutor' };
+test('reads character identity only from Multi-agent tutor rows', () => {
+  const row = { content: '[agent:riley] Trust the logo.', user_role: 'tutor', response_mode: 'multiagent' };
   expect(decodeAgentMessage(row)).toEqual({ character: 'riley', content: 'Trust the logo.' });
-  expect(decodeAgentMessage({ ...row, is_ai_generated: false })).toBeNull();
+  expect(decodeAgentMessage({ ...row, response_mode: 'tutoring' })).toBeNull();
+  expect(decodeAgentMessage({ ...row, response_mode: 'guard' })).toBeNull();
+  expect(decodeAgentMessage({ ...row, response_mode: 'assessment' })).toBeNull();
   expect(decodeAgentMessage({ ...row, user_role: 'student' })).toBeNull();
-  expect(decodeAgentMessage({ content: 'Trust the logo.', is_ai_generated: true, user_role: 'tutor' })).toBeNull();
+  expect(decodeAgentMessage({ content: 'Trust the logo.', user_role: 'tutor', response_mode: 'multiagent' })).toBeNull();
+  expect(decodeAgentMessage({ content: '[agent:unknown] Trust the logo.', user_role: 'tutor', response_mode: 'multiagent' })).toBeNull();
+  expect(decodeAgentMessage({ content: '[agent:riley Trust the logo.', user_role: 'tutor', response_mode: 'multiagent' })).toBeNull();
+  expect(decodeAgentMessage({ content: '[agent:tutor Check the sender.', user_role: 'tutor', response_mode: 'multiagent' })).toBeNull();
 });

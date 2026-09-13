@@ -9,7 +9,7 @@ import { RoomProvider, useRoom } from '../contexts/RoomContext';
 import { supabase } from '../services/supabase';
 import HomePage from '../pages/HomePage';
 import TutorView from '../pages/TutorView';
-import RoomPage from '../pages/RoomPage';
+import RoomPagePost from '../pages/RoomPagePost';
 import { User } from '../types';
 
 const feature = loadFeature('./features/tutor_view.feature', { tagFilter: '@tutor-ui' });
@@ -58,7 +58,7 @@ const TestApp = () => (
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/tutor" element={<TutorView />} />
-                <Route path="/room/:roomId" element={<RoomPage />} />
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
             </Routes>
             <LocationDisplay />
         </RoomProvider>

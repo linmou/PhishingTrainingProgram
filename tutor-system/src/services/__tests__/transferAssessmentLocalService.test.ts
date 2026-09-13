@@ -260,7 +260,6 @@ describe('sendReviewed', () => {
       user_id: 'tutor-1',
       content: 'Which statement best describes the risk?',
       user_role: 'tutor',
-      is_ai_generated: true,
       parent_message_id: 'focus-1',
       response_mode: 'assessment',
       created_at: '2026-09-12T00:00:01.000Z',
