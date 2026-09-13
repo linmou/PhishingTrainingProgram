@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-13 (multiagent persistence correction; commit pending)
+Last updated: 2026-09-13 (multiagent persistence correction; commit 8e27d20)
 
 ## Overview
 

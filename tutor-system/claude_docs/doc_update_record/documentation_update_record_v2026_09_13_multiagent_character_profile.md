@@ -3,7 +3,7 @@
 Intent: record the correction that makes the rendered Riley and AI Tutor profiles match their decoded Multi-agent identities.
 
 Date: 2026-09-13
-Commit: uncommitted
+Commit: 8e27d20
 
 Updated `ai-assistant-module.md` to clarify that valid Multi-agent tags select the complete character profile, including the author label and avatar identity, while the persisted tutor account avatar is not rendered for either Riley or AI Tutor.
 
