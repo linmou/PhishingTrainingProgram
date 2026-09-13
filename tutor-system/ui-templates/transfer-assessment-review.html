@@ -1,0 +1,525 @@
+<!doctype html>
+<!-- Purpose: standalone interactive template for reviewing the tutor transfer-assessment editor UI. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Transfer Assessment Editor Template</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f8f9fa;
+      --surface: #ffffff;
+      --surface-muted: #f7f8fa;
+      --border: #d9dee5;
+      --border-strong: #aeb7c3;
+      --text: #1d2733;
+      --muted: #647181;
+      --primary: #667eea;
+      --primary-dark: #764ba2;
+      --primary-hover: #5a67d8;
+      --primary-soft: #f2f3ff;
+      --success: #26834a;
+      --success-soft: #edf8f1;
+      --danger: #b42318;
+      --focus: #8bb8f3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    select,
+    summary,
+    input[type="radio"],
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .template-bar {
+      border-bottom: 1px solid var(--border);
+      background: #ffffff;
+      color: #465363;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .template-bar__inner {
+      width: min(100% - 32px, 720px);
+      margin: 0 auto;
+      padding: 9px 0;
+    }
+
+    main {
+      width: min(100% - 32px, 720px);
+      margin: 28px auto 48px;
+    }
+
+    .assessment-editor {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .editor-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px 17px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .editor-header h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    .target {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .draft-badge {
+      flex: none;
+      padding: 4px 8px;
+      border: 1px solid #cbd3dc;
+      border-radius: 4px;
+      background: var(--surface-muted);
+      color: #536171;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .editor-body {
+      display: grid;
+      gap: 22px;
+      padding: 22px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-label,
+    fieldset legend {
+      color: #303c49;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    textarea {
+      min-height: 92px;
+      padding: 11px 12px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    select {
+      height: 42px;
+      padding: 0 36px 0 11px;
+    }
+
+    textarea:focus,
+    select:focus,
+    button:focus-visible,
+    summary:focus-visible,
+    input:focus-visible {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--focus);
+      outline: none;
+    }
+
+    fieldset {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    fieldset legend {
+      margin-bottom: 10px;
+      padding: 0;
+    }
+
+    .options {
+      display: grid;
+      gap: 9px;
+    }
+
+    .option-row {
+      display: grid;
+      grid-template-columns: 22px 24px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+
+    .option-row:has(.key-control:checked) {
+      border-color: rgba(102, 126, 234, 0.72);
+      background: var(--primary-soft);
+    }
+
+    .key-control {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    .option-letter {
+      color: #435062;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .option-text {
+      min-height: 46px;
+      padding: 9px 10px;
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .answer-key {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 11px;
+      padding: 13px 14px;
+      border: 1px solid #a9d5b8;
+      border-radius: 10px;
+      background: var(--success-soft);
+    }
+
+    .answer-key-mark {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--success);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .answer-key-label {
+      display: block;
+      margin-bottom: 2px;
+      color: #21653a;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .answer-key-text {
+      margin: 0;
+      color: #1f5130;
+      font-size: 14px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .editor-footer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-muted);
+    }
+
+    .status {
+      min-height: 20px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status[data-state="error"] {
+      color: var(--danger);
+      font-weight: 650;
+    }
+
+    .status[data-state="sent"] {
+      color: #18723b;
+      font-weight: 650;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+    }
+
+    .button {
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    .button:disabled,
+    textarea:disabled,
+    select:disabled,
+    input:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .button-secondary {
+      border-color: var(--border-strong);
+      background: var(--surface);
+      color: #3c4857;
+    }
+
+    .button-secondary:hover:not(:disabled) {
+      background: #f1f3f5;
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #ffffff;
+    }
+
+    .button-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--primary-hover) 0%, #6b4395 100%);
+    }
+
+    @media (max-width: 520px) {
+      .template-bar__inner,
+      main {
+        width: min(100% - 20px, 720px);
+      }
+
+      main {
+        margin-top: 10px;
+      }
+
+      .editor-header,
+      .editor-body,
+      .editor-footer {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .editor-header {
+        padding-top: 16px;
+      }
+
+      .editor-body {
+        gap: 18px;
+        padding-top: 18px;
+        padding-bottom: 18px;
+      }
+
+      #question {
+        min-height: 128px;
+      }
+
+      .option-row {
+        grid-template-columns: 20px 20px minmax(0, 1fr);
+        gap: 7px;
+        padding: 8px;
+      }
+
+      .editor-footer {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .button-primary {
+        grid-row: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="template-bar">
+    <div class="template-bar__inner">Tutor view template</div>
+  </div>
+
+  <main>
+    <section class="assessment-editor" aria-labelledby="editor-title">
+      <header class="editor-header">
+        <div>
+          <h1 id="editor-title">Review transfer assessment</h1>
+          <p class="target">Target: Verify suspicious account messages</p>
+        </div>
+        <span class="draft-badge">Draft</span>
+      </header>
+
+      <div class="editor-body">
+        <label class="field">
+          <span class="field-label">Question</span>
+          <textarea id="question" rows="3">You received an email claiming your account will be locked unless you click the link immediately. What is the safest action?</textarea>
+        </label>
+
+        <fieldset>
+          <legend>Answer choices</legend>
+          <div class="options" id="options">
+            <label class="option-row">
+              <input class="key-control" type="radio" name="correct-answer" aria-label="Correct answer A">
+              <span class="option-letter">A</span>
+              <textarea class="option-text" rows="2" aria-label="Option A">Click the link quickly to avoid losing access.</textarea>
+            </label>
+            <label class="option-row">
+              <input class="key-control" type="radio" name="correct-answer" aria-label="Correct answer B" checked>
+              <span class="option-letter">B</span>
+              <textarea class="option-text" rows="2" aria-label="Option B">Open your banking app directly and check for notifications.</textarea>
+            </label>
+            <label class="option-row">
+              <input class="key-control" type="radio" name="correct-answer" aria-label="Correct answer C">
+              <span class="option-letter">C</span>
+              <textarea class="option-text" rows="2" aria-label="Option C">Reply to the email asking for more details.</textarea>
+            </label>
+            <label class="option-row">
+              <input class="key-control" type="radio" name="correct-answer" aria-label="Correct answer D">
+              <span class="option-letter">D</span>
+              <textarea class="option-text" rows="2" aria-label="Option D">Forward the email to all your contacts.</textarea>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="answer-key" aria-live="polite">
+          <span class="answer-key-mark" aria-hidden="true">✓</span>
+          <div>
+            <span class="answer-key-label">Correct answer</span>
+            <p class="answer-key-text" id="answer-key-text"></p>
+          </div>
+        </div>
+      </div>
+
+      <footer class="editor-footer">
+        <p class="status" id="status" role="status" aria-live="polite">Ready to send</p>
+        <div class="actions">
+          <button class="button button-secondary" id="discard" type="button">Discard</button>
+          <button class="button button-primary" id="send" type="button">Send assessment</button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const question = document.querySelector('#question');
+    const optionTextareas = Array.from(document.querySelectorAll('.option-text'));
+    const options = document.querySelector('#options');
+    const answerKeyText = document.querySelector('#answer-key-text');
+    const status = document.querySelector('#status');
+    const discardButton = document.querySelector('#discard');
+    const sendButton = document.querySelector('#send');
+
+    function keyControls() {
+      return Array.from(document.querySelectorAll('.key-control'));
+    }
+
+    function renderAnswerKey() {
+      const selected = keyControls().findIndex((control) => control.checked);
+      answerKeyText.textContent = selected < 0
+        ? 'No correct answer selected'
+        : `${String.fromCharCode(65 + selected)} — ${optionTextareas[selected].value.trim()}`;
+    }
+
+    function markEdited() {
+      status.dataset.state = 'dirty';
+      status.textContent = 'Unsaved edits';
+      renderAnswerKey();
+    }
+
+    function setBusy(busy) {
+      [question, ...optionTextareas, ...keyControls(), discardButton, sendButton]
+        .forEach((control) => { control.disabled = busy; });
+      sendButton.textContent = busy ? 'Sending assessment...' : 'Send assessment';
+    }
+
+    question.addEventListener('input', markEdited);
+    optionTextareas.forEach((textarea) => textarea.addEventListener('input', markEdited));
+    options.addEventListener('change', markEdited);
+
+    discardButton.addEventListener('click', () => {
+      status.dataset.state = 'error';
+      status.textContent = 'Draft discarded in this template';
+    });
+
+    sendButton.addEventListener('click', () => {
+      const selectedCount = keyControls().filter((control) => control.checked).length;
+      const validCount = selectedCount === 1;
+      const hasBlankContent = !question.value.trim() || optionTextareas.some((textarea) => !textarea.value.trim());
+
+      if (hasBlankContent || !validCount) {
+        status.dataset.state = 'error';
+        status.textContent = hasBlankContent
+          ? 'Question and answers cannot be blank'
+          : 'Choose exactly one correct answer';
+        return;
+      }
+
+      setBusy(true);
+      status.dataset.state = 'sending';
+      status.textContent = 'Sending assessment...';
+      window.setTimeout(() => {
+        setBusy(false);
+        status.dataset.state = 'sent';
+        status.textContent = 'Assessment sent';
+      }, 900);
+    });
+
+    renderAnswerKey();
+  </script>
+</body>
+</html>
