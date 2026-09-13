@@ -1113,13 +1113,14 @@ export const initializeAIAssistant = async (
         emotional_parameters?: any;
         custom_detection_areas?: string[];
         custom_verification_steps?: string[];
+        interaction_mode?: InteractionMode;
     }
 ): Promise<string> => {
     let finalSystemPrompt = systemPrompt;
     let finalPromptConfig = null;
 
-    // Generate system prompt from config if needed
-    if (!finalSystemPrompt && promptConfig) {
+    // Materialize the extended config even when callers provide a prebuilt prompt.
+    if (promptConfig) {
         const scenario = promptConfig.scenario ? SCENARIO_TEMPLATES[promptConfig.scenario] : null;
         const detectionAreas = promptConfig.custom_detection_areas || scenario?.detection_areas || [];
         const verificationSteps = promptConfig.custom_verification_steps || scenario?.verification_steps || [];
@@ -1132,10 +1133,13 @@ export const initializeAIAssistant = async (
             cognitive_parameters: promptConfig.cognitive_parameters || PRESET_CONFIGS.supportive_adult.cognitive_parameters,
             emotional_parameters: promptConfig.emotional_parameters || PRESET_CONFIGS.supportive_adult.emotional_parameters,
             detection_areas: detectionAreas,
-            verification_steps: verificationSteps
+            verification_steps: verificationSteps,
+            interaction_mode: promptConfig.interaction_mode
         };
 
-        finalSystemPrompt = generateSystemPrompt(finalPromptConfig);
+        if (!finalSystemPrompt) {
+            finalSystemPrompt = generateSystemPrompt(finalPromptConfig);
+        }
     }
 
     const defaultPrompt = finalSystemPrompt ||

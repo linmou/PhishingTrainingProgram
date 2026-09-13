@@ -2,7 +2,7 @@
 
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
-Updated: 2026-09-12
+Updated: 2026-09-13
 Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns; transfer assessment v3 is implemented behind a disabled trusted API capability. Hosted browser and database acceptance for transfer v3 and for Multi-agent remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
@@ -95,7 +95,7 @@ Preserve frozen runs under their original contract snapshots. Contract changes r
 
 Intent: define the one-or-two-character decision for ordinary tutoring turns when the learner selects Multi-agent, while keeping the v2 envelope above unchanged.
 
-The learner's Student AI choice is persisted in `prompt_config` and sent as the request's `interaction_mode` (`single_agent` by default; old callers keep the old behavior). Under `multi_agent`, an ordinary tutoring turn returns:
+The learner's Student AI choice is persisted in `prompt_config` and sent as the request's `interaction_mode` (`single_agent` by default; old callers keep the old behavior). The Test Rooms page ships a dedicated `Demo: Multi-agent Response Room` template that sets this value directly, so its rooms exercise Multi-agent behavior without a learner-side selector. Under `multi_agent`, an ordinary tutoring turn returns:
 
 | Field | Value | Boundary |
 | --- | --- | --- |

@@ -8,6 +8,7 @@ import {
   buildCasualPeerAIConfig,
   buildEcologicalCaseFromSeed,
   getDemoRoomTemplateSeeds,
+  getMultiAgentTestRoomTemplateSeeds,
   getEcologicalCasesFromTemplates,
   toRoomTemplateInsertRow,
   GLOBAL_TEMPLATE_TUTOR_ID
@@ -16,6 +17,19 @@ import fs from 'fs';
 import path from 'path';
 
 describe('demoRoomTemplates', () => {
+  it('ships a dedicated Multi-agent-only test room seed', () => {
+    const seeds = getMultiAgentTestRoomTemplateSeeds();
+    expect(seeds).toHaveLength(1);
+    expect(seeds[0].case_id).toBe('multiagent_test_room');
+    expect(seeds[0].template_name).toBe('Demo: Multi-agent Response Room');
+    expect(seeds[0].test_only).toBe(true);
+    expect(seeds[0].ai_config_template.enabled).toBe(true);
+    expect(seeds[0].ai_config_template.prompt_config.interaction_mode).toBe('multi_agent');
+    expect(seeds[0].pre_populated_dialogue.map((message) => message.role)).toEqual(
+      expect.arrayContaining(['others', 'tutor', 'student'])
+    );
+  });
+
   it('builds an AI config with the improved tutoring markers', () => {
     const config = buildCasualPeerAIConfig('Account Security Alert');
 
