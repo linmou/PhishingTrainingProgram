@@ -160,7 +160,7 @@ describe('Multi-agent room playback', () => {
     act(() => { jest.advanceTimersByTime(2100); });
 
     expect(screen.getByText(TUTOR_TEXT)).toBeInTheDocument();
-    expect(screen.getByText('AI Tutor')).toBeInTheDocument();
+    expect(screen.getByText('Taylor Tutor')).toBeInTheDocument();
   });
 
   it('reveals a Tutor-first pair in the same staged order', () => {
@@ -239,10 +239,9 @@ describe('Multi-agent room playback', () => {
     expect(within(rileyRow as HTMLElement).queryByRole('img')).not.toBeInTheDocument();
 
     const tutorRow = screen.getByText(TUTOR_TEXT).closest('.post-comment');
-    expect(within(tutorRow as HTMLElement).getByText('AI Tutor')).toBeInTheDocument();
-    expect(within(tutorRow as HTMLElement).getByTitle('AI Tutor')).toBeInTheDocument();
-    expect(within(tutorRow as HTMLElement).queryByTitle('Taylor Tutor')).not.toBeInTheDocument();
-    expect(within(tutorRow as HTMLElement).queryByRole('img')).not.toBeInTheDocument();
+    expect(within(tutorRow as HTMLElement).getByText('Taylor Tutor')).toBeInTheDocument();
+    expect(within(tutorRow as HTMLElement).getByTitle('Taylor Tutor')).toBeInTheDocument();
+    expect(within(tutorRow as HTMLElement).getByRole('img')).toHaveAttribute('src', 'https://example.test/taylor.png');
     expect(screen.queryByText(/\[agent:(?:riley|tutor)\]/)).not.toBeInTheDocument();
   });
 
@@ -359,11 +358,33 @@ describe('Multi-agent room playback', () => {
 
     expect(screen.getByTestId('multi-agent-suggestion-editor')).toBeInTheDocument();
     expect(screen.getByTestId('multi-agent-card-0')).toHaveTextContent('Riley');
-    expect(screen.getByTestId('multi-agent-card-1')).toHaveTextContent('AI Tutor');
+    expect(screen.getByTestId('multi-agent-card-1')).toHaveTextContent('Taylor Tutor');
     expect(screen.queryByTestId('ai-suggestion-box')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Regenerate/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Reject/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Approve/ })).toBeInTheDocument();
+  });
+
+  it('falls back to Tutor when the active tutor profile has no display name', () => {
+    const draft = {
+      rawDecision: {
+        mode: 'multiagent', instruction: 'multiagent', mode_reason: 'Contrast',
+        suggested_response: `[agent:tutor] ${TUTOR_TEXT}`
+      },
+      parentMessageId: learnerMessage.id,
+      parentMessageContent: learnerMessage.content,
+      generatedMessages: [{ character: 'tutor', content: TUTOR_TEXT }],
+      startTime: new Date(START).getTime(),
+      contextMessages: []
+    };
+
+    renderRoom([learnerMessage], {
+      user: { ...tutor, display_name: '' } as User,
+      multiAgentDraft: draft
+    });
+
+    expect(screen.getByTestId('multi-agent-card-0')).toHaveTextContent('Tutor');
+    expect(screen.queryByText('AI Tutor')).not.toBeInTheDocument();
   });
 
   it('renders one editable card for a Riley-only multiagent decision', () => {

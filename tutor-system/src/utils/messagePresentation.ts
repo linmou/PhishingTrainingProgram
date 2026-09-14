@@ -64,11 +64,11 @@ export function resolveMessagePresentation(
 
   if (agent) {
     const isRiley = agent.character === 'riley';
-    const characterName = isRiley ? 'Riley' : 'AI Tutor';
+    const characterName = isRiley ? 'Riley' : baseName;
     return {
       displayName: characterName,
       avatarName: characterName,
-      avatarUrl: null,
+      avatarUrl: isRiley ? null : message.avatar_url || null,
       body: agent.content,
       roleBadge: viewerRole === 'student' ? null : `${ROLE_ICONS.tutor} AI chatbot`,
       roleColor: isRiley ? '#d97706' : ROLE_COLORS.tutor,

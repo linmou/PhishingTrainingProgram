@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-13 (multiagent persistence correction; commit 8e27d20)
+Last updated: 2026-09-14 (Multi-agent Tutor profile surface correction; working tree)
 
 ## Overview
 
@@ -28,6 +28,10 @@ The AI Assistant module adds intelligent response generation capabilities to the
 4. **Room Context Integration**
    - AI functionality integrated into room management
    - Real-time AI response handling
+
+5. **Multi-agent Suggestion Editor** (`src/components/MultiAgentSuggestionEditor.tsx`)
+   - Tutor review cards use the active tutor profile display name
+   - Missing tutor names fall back to `Tutor`; Riley remains the simulated `Riley` profile
 
 ### Database Schema Extensions
 
@@ -65,7 +69,7 @@ Runtime source of truth:
 
 Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
 
-`RoomContext.approveMultiAgentDraft` persists every approved Riley or AI Tutor row with `response_mode='multiagent'`, preserving the character tag for the presentation resolver to decode.
+`RoomContext.approveMultiAgentDraft` persists every approved Riley or Tutor-tagged row with `response_mode='multiagent'`, preserving the character tag for the presentation resolver to decode.
 
 ## Features
 
@@ -112,7 +116,7 @@ Maintains chat history for:
 - Consistent conversation flow
 - Educational continuity
 
-Tutor rows become assistant turns. Student and observer rows become user turns. Valid Multi-agent tutor tags are stripped and preserved as Riley or AI Tutor labels; tags outside Multi-agent mode remain ordinary text.
+Tutor rows become assistant turns. Student and observer rows become user turns. Valid Multi-agent tutor tags are stripped and preserved as Riley or the stored tutor profile; tags outside Multi-agent mode remain ordinary text.
 
 ## Usage
 
@@ -133,9 +137,13 @@ Tutor rows become assistant turns. Student and observer rows become user turns. 
    - Adjust temperature for creativity level
    - Control response length with max tokens
 
+4. **Review Multi-agent Drafts**
+   - Review each character response before approval
+   - Tutor cards use the active tutor profile name, while Riley remains simulated
+
 ### For Students and Observers
 
-- Tutor messages use their role profile; Guard and Multi-agent identities come from `response_mode`
+- Tutor messages use their role profile; Guard uses its supervisor profile; Multi-agent Riley rows use the simulated Riley profile and Tutor rows use the stored tutor profile
 - The `AI chatbot` role badge remains hidden from student viewers
 - No AI controls available (tutor-only feature)
 
@@ -216,7 +224,7 @@ interface RoomContextType {
 **Message Display** - Resolved from persisted message semantics:
 - Role profile and badge come from `user_role`
 - Guard overrides the profile; assessment keeps the role profile and adds the interactive UI
-- Multi-agent tutor rows decode a leading Riley or Tutor tag, strip it from the body, and use the complete Riley or AI Tutor profile for both the author label and avatar; the persisted tutor account avatar is not reused
+- Multi-agent tutor rows decode a leading Riley or Tutor tag and strip it from the body; Riley uses the simulated Riley profile, while the Tutor tag uses the persisted tutor account name and avatar
 - Generate AI Response buttons on student messages
 
 ### Database Integration

@@ -877,6 +877,7 @@ const RoomPagePost: React.FC = () => {
                 {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
                     <MultiAgentSuggestionEditor
                         messages={multiAgentDraft.generatedMessages}
+                        tutorName={user?.display_name}
                         parentMessage={multiAgentDraft.parentMessageContent}
                         isRegenerating={loadingAI}
                         errorMessage={multiAgentError}

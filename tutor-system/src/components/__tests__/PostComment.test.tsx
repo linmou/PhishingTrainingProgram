@@ -87,10 +87,13 @@ describe('PostComment role badges', () => {
     });
 
     it('uses the tagged Riley profile only for an explicit Multi-agent tutor message', () => {
+        const tutorAvatarUrl = 'https://example.test/tutor-avatar.png';
+
         render(
             <PostComment
                 message={buildMessage({
                     content: '[agent:riley] Trust the logo.',
+                    avatar_url: tutorAvatarUrl,
                     response_mode: 'multiagent' as any
                 })}
                 currentUserId="viewer-1"
@@ -99,15 +102,20 @@ describe('PostComment role badges', () => {
         );
 
         expect(screen.getByText('Riley')).toBeInTheDocument();
+        expect(screen.getByTitle('Riley')).toBeInTheDocument();
+        expect(screen.queryByRole('img')).not.toBeInTheDocument();
         expect(screen.getByText('Trust the logo.')).toBeInTheDocument();
         expect(screen.queryByText(/\[agent:riley\]/)).not.toBeInTheDocument();
     });
 
-    it('uses the AI Tutor profile for a valid Tutor tag and strips the tag from the body', () => {
+    it('uses the stored tutor profile for a valid Tutor tag and strips the tag from the body', () => {
+        const tutorAvatarUrl = 'https://example.test/tutor-avatar.png';
+
         render(
             <PostComment
                 message={buildMessage({
                     content: '[agent:tutor] Check the sender independently.',
+                    avatar_url: tutorAvatarUrl,
                     response_mode: 'multiagent' as any
                 })}
                 currentUserId="viewer-1"
@@ -115,7 +123,9 @@ describe('PostComment role badges', () => {
             />
         );
 
-        expect(screen.getByText('AI Tutor')).toBeInTheDocument();
+        expect(screen.getByText('Training Tutor')).toBeInTheDocument();
+        expect(screen.queryByText('AI Tutor')).not.toBeInTheDocument();
+        expect(screen.getByRole('img', { name: 'Training Tutor' })).toHaveAttribute('src', tutorAvatarUrl);
         expect(screen.getByText('Check the sender independently.')).toBeInTheDocument();
         expect(screen.queryByText(/\[agent:tutor\]/)).not.toBeInTheDocument();
     });

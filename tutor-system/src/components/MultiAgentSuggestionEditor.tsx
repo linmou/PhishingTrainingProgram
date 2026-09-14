@@ -11,11 +11,12 @@ import type { DecodedAgentMessage } from '../types';
 
 const CHARACTER_LABELS: Record<DecodedAgentMessage['character'], string> = {
   riley: 'Riley',
-  tutor: 'AI Tutor'
+  tutor: 'Tutor'
 };
 
 interface MultiAgentSuggestionEditorProps {
   messages: DecodedAgentMessage[];
+  tutorName?: string | null;
   parentMessage?: string;
   isRegenerating?: boolean;
   errorMessage?: string | null;
@@ -26,6 +27,7 @@ interface MultiAgentSuggestionEditorProps {
 
 const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
   messages,
+  tutorName,
   parentMessage,
   isRegenerating = false,
   errorMessage = null,
@@ -34,6 +36,7 @@ const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
   onRegenerate
 }) => {
   const [drafts, setDrafts] = useState<string[]>(() => messages.map(message => message.content));
+  const tutorLabel = tutorName?.trim() || CHARACTER_LABELS.tutor;
 
   // A regenerated or newly decoded response replaces whatever the tutor was editing.
   useEffect(() => {
@@ -64,13 +67,14 @@ const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
           key={`${message.character}-${index}`}
           data-testid={`multi-agent-card-${index}`}
         >
+          { /* Tutor cards use the active tutor profile; Riley remains simulated. */ }
           <label className="multi-agent-card-label" htmlFor={`multi-agent-message-${index}`}>
-            {CHARACTER_LABELS[message.character]}
+            {message.character === 'tutor' ? tutorLabel : CHARACTER_LABELS[message.character]}
           </label>
           <textarea
             id={`multi-agent-message-${index}`}
             className="multi-agent-card-input"
-            aria-label={CHARACTER_LABELS[message.character]}
+            aria-label={message.character === 'tutor' ? tutorLabel : CHARACTER_LABELS[message.character]}
             value={drafts[index]}
             rows={3}
             disabled={isRegenerating}
