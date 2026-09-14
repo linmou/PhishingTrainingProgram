@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-14 (Multi-agent Tutor profile surface correction; working tree)
+Last updated: 2026-09-14 (Multi-agent Tutor profile surface correction; commit 1fb2e9b)
 
 ## Overview
 
