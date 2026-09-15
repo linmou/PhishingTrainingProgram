@@ -414,6 +414,7 @@ export class TransferAssessmentService {
       prior_participation_mode: room?.active_response_mode || 'unknown',
       checklist_items: itemRows,
       eligible_assessment_item_ids: eligibleItemIds,
+      assessment_blocked: assessmentBlocked,
       assessment_candidate_item_ids: itemRows
         .filter((item) => item.status !== 'covered')
         .map((item) => item.id),
@@ -426,40 +427,52 @@ export class TransferAssessmentService {
       progress_snapshot_hash: progressSnapshotHash,
     };
 
-    const response = await fetch(`${providerBaseUrl.replace(/\/$/, '')}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${providerKey}` },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: TRANSFER_V3_SYSTEM_PROMPT },
-          { role: 'user', content: JSON.stringify(promptContext) },
-        ],
-        temperature: 0.3,
-        max_tokens: 1200,
-        enable_thinking: false,
-        response_format: { type: 'json_object' },
-      }),
-    });
-    if (!response.ok) throw new Error(`AI_PROVIDER_ERROR: ${response.status}`);
-    const payload = await response.json();
-    const rawContent = payload?.choices?.[0]?.message?.content;
-    let candidate: unknown;
-    try {
-      candidate = JSON.parse(rawContent);
-    } catch {
-      throw new Error('AI_OUTPUT_INVALID');
+    const providerUrl = `${providerBaseUrl.replace(/\/$/, '')}/chat/completions`;
+    let candidate: Record<string, any> | null = null;
+    let lastValidationError: unknown = null;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await fetch(providerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${providerKey}` },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: TRANSFER_V3_SYSTEM_PROMPT },
+            { role: 'user', content: JSON.stringify({
+              ...promptContext,
+              ...(attempt === 1 ? {
+                format_repair: 'The previous output was invalid. Return valid JSON. If assessment is blocked or unsupported, return tutoring or guard with learning_evidence and assessment null.',
+              } : {}),
+            }) },
+          ],
+          temperature: 0.3,
+          max_tokens: 1200,
+          enable_thinking: false,
+          response_format: { type: 'json_object' },
+        }),
+      });
+      if (!response.ok) throw new Error(`AI_PROVIDER_ERROR: ${response.status}`);
+      const payload = await response.json();
+      const rawContent = payload?.choices?.[0]?.message?.content;
+      try {
+        const parsed = JSON.parse(rawContent) as unknown;
+        assertV3DraftShape(
+          parsed,
+          itemIds,
+          messageIds,
+          new Set(eligibleItemIds),
+          focusMessage.id,
+          assessmentBlocked
+        );
+        candidate = parsed;
+        break;
+      } catch (validationError) {
+        lastValidationError = validationError;
+      }
     }
-    assertV3DraftShape(
-      candidate,
-      itemIds,
-      messageIds,
-      new Set(eligibleItemIds),
-      focusMessage.id,
-      assessmentBlocked
-    );
+    if (!candidate) throw (lastValidationError instanceof Error ? lastValidationError : new Error('AI_OUTPUT_INVALID'));
 
-    for (const evidence of (candidate as any).learning_evidence as TransferEvidenceDecision[]) {
+    for (const evidence of candidate.learning_evidence as TransferEvidenceDecision[]) {
       const item = itemRows.find((row) => row.id === evidence.item_id);
       if (!item) continue;
       const alreadyStored = evidenceRows.some(

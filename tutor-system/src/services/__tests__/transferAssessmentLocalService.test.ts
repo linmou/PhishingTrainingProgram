@@ -215,6 +215,7 @@ describe('prepareTurn', () => {
     expect(request.temperature).toBe(0.3);
     expect(request.messages[0].role).toBe('system');
     expect(JSON.parse(request.messages[1].content).eligible_assessment_item_ids).toEqual([]);
+    expect(JSON.parse(request.messages[1].content).assessment_blocked).toBe(false);
     expect(prepared.item_id).toBe(ITEM_ID);
     expect(prepared.student_id).toBe('student-1');
     expect((prepared.decision as any).decision.mode).toBe('assessment');
@@ -267,6 +268,37 @@ describe('prepareTurn', () => {
     expect((prepared.decision as any).decision.mode).toBe('tutoring');
     expect(prepared.item_id).toBeNull();
     expect(insertedInto('coverage_evidence')).toEqual([]);
+  });
+
+  it('repairs an unsupported assessment into an ordinary tutoring decision', async () => {
+    arrangePrepare();
+    const unsupported = decision();
+    unsupported.learning_evidence = [];
+    const tutoring = {
+      reason: 'The learner has not demonstrated a configured concept yet.',
+      learning_evidence: [],
+      decision: { mode: 'tutoring', instruction: 'explanation', target_item_id: null },
+      response: 'Let us inspect the link destination before deciding whether the message is safe.',
+      assessment: null,
+    };
+    const fetchMock = jest.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: JSON.stringify(unsupported) } }] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: JSON.stringify(tutoring) } }] }),
+      });
+    (globalThis as any).fetch = fetchMock;
+
+    const prepared = await service().prepareTurn({
+      roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect((prepared.decision as any).decision.mode).toBe('tutoring');
+    expect(prepared.item_id).toBeNull();
   });
 
   it('rejects assessment when neither stored nor current learner evidence supports its target', async () => {
@@ -322,6 +354,7 @@ describe('prepareTurn', () => {
     const request = JSON.parse((fetchMock as any).mock.calls[0][1].body);
     expect(JSON.parse(request.messages[1].content)).toMatchObject({
       feedback_required: true,
+      assessment_blocked: true,
       eligible_assessment_item_ids: [],
     });
   });
