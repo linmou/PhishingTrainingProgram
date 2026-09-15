@@ -3,7 +3,7 @@
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
 Updated: 2026-09-13
-Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns; transfer assessment v3 is implemented behind a disabled trusted API capability. Hosted browser and database acceptance for transfer v3 and for Multi-agent remain pending.
+Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns; transfer assessment v3 is a browser-local research flow. Live semantic evaluation and browser acceptance for transfer v3 and for Multi-agent remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -126,6 +126,14 @@ The v3 model output is reason-first JSON with this shape:
 ```json
 {
   "reason": "The learner applied the rule in a meaningfully changed context.",
+  "learning_evidence": [
+    {
+      "item_id": "checklist-item-id",
+      "evidence_message_id": "message-id",
+      "signal": "initial",
+      "analysis": "The learner applied the configured verification rule."
+    }
+  ],
   "decision": {
     "mode": "assessment",
     "instruction": "transfer_assess",
@@ -157,10 +165,10 @@ Allowed v3 combinations under T09 are:
 - `assessment` with `transfer_assess`, one known target item, and a complete four-option payload;
 - `guard` with `guard`, a null target, and `assessment: null`; or `guard` with a real teaching instruction and no assessment payload.
 
-The parser rejects missing or blank fields, non-first `reason`, unknown item/message IDs, noncanonical or duplicate option IDs/text, invalid key cardinality, overlong assessment rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments. The teacher editor validates the same contract before review submission.
+The same v3 call performs T02 evidence classification before choosing the tutor turn. `learning_evidence` records every configured concept demonstrated by the focus learner message, using `initial`, `contradiction`, or `spontaneous_transfer`; an empty array means that message supplies no measurable evidence. Assessment requires prior stored evidence or a new `initial` signal for its target. The parser rejects evidence attributed to another learner/message, duplicate item signals, unknown IDs, missing or blank fields, noncanonical option content, invalid key cardinality, overlong rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments.
 
-The server owns the raw draft, immutable answer key, progress snapshot hash, revision, idempotency record, and exact answer grading. The public question record contains no answer key or transfer basis. A learner's valid answer is processed deterministically; an optional explanation cannot overturn an otherwise valid exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade. The first valid answer is the only answer that can resolve a question. A resolved question must receive its tutoring or independently required Guard feedback before another assessment is eligible, and already verified concepts are not routinely reassessed unless later learner evidence contradicts them.
+For this research build, the browser owns the draft, answer key, snapshot, exact grading, and progress writes through public Supabase tables. The learner-facing React projection omits the answer key and transfer basis; these values remain inspectable by a participant using browser/database tools and are not a security boundary. A learner's valid answer is processed deterministically; an optional explanation cannot overturn an otherwise valid exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade. The first valid answer resolves the question. A resolved question must receive tutoring or independently required Guard feedback before another assessment is eligible, and already verified concepts are not routinely reassessed unless later learner evidence contradicts them.
 
 Answers received before delivery are not graded, do not create feedback, and preserve the existing transfer progress pair. Delivery is a prerequisite for entering the parsing and grading path.
 
-The v3 provider budget is 1,200 completion tokens and is applied only in the trusted Edge Function. The legacy client path keeps its existing behavior and remains a separate contract. `TRANSFER_ASSESSMENT_ENABLED=false` is the release default; enabling it requires verified Supabase Auth principals, migration application, SQL/RLS tests, provider configuration, and browser acceptance.
+The browser applies the v3 provider budget of 1,200 completion tokens. The legacy prompt remains a separate contract for rooms without an active `transfer_v1` checklist. Enabling transfer requires provider configuration and browser acceptance; participant authentication and answer-key secrecy are outside this research-build contract.

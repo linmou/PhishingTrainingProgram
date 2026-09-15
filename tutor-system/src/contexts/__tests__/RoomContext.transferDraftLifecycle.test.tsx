@@ -187,6 +187,19 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
   });
 
+  it('uses the checklist owner message when another learner posted later', async () => {
+    mockTables([learnerAMessageRow, learnerBMessageRow]);
+    await mountRoom();
+
+    await act(async () => {
+      await room!.generateAIResponse();
+    });
+
+    expect(prepareTurn).toHaveBeenCalledWith(expect.objectContaining({
+      focusStudentMessageId: LEARNER_A_MESSAGE_ID,
+    }));
+  });
+
   it('keeps the tutoring-turn item id as null rather than the text "null"', async () => {
     prepareTurn.mockResolvedValue(preparedTutoringTurnResult);
     await mountRoom();

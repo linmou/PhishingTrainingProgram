@@ -29,6 +29,7 @@ function mockMakeChain(table: string): any {
     },
     select: () => builder,
     eq: () => builder,
+    in: () => builder,
     order: () => builder,
     limit: () => builder,
     single: async () => ({ data: mockSingle[table] ?? null, error: null }),
@@ -67,6 +68,12 @@ const OPTIONS = [
 function decision(): any {
   return {
     reason: 'The learner transferred the concept and the message is unfamiliar.',
+    learning_evidence: [{
+      item_id: ITEM_ID,
+      evidence_message_id: 'focus-1',
+      signal: 'initial',
+      analysis: 'The learner expresses a belief about whether the familiar-looking message is safe.',
+    }],
     decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: ITEM_ID },
     response: 'Which statement best describes the risk to this account?',
     assessment: {
@@ -165,7 +172,7 @@ beforeEach(() => {
 });
 
 describe('initializeChecklist', () => {
-  it('creates one active transfer_v1 checklist and items that are eligible for transfer', async () => {
+  it('creates one active transfer_v1 checklist with unevidenced pending items', async () => {
     const result = await service().initializeChecklist({
       roomId: 'room-1',
       studentId: 'student-1',
@@ -184,8 +191,8 @@ describe('initializeChecklist', () => {
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
       expect(item.checklist_id).toBe(checklists[0].id);
-      expect(item.status).toBe('partially_covered');
-      expect(item.understanding_level).toBe('basic');
+      expect(item.status).toBe('pending');
+      expect(item.understanding_level).toBe('none');
     }
     expect(result.checklist_id).toBe(checklists[0].id);
   });
@@ -207,6 +214,7 @@ describe('prepareTurn', () => {
     expect(request.enable_thinking).toBe(false);
     expect(request.temperature).toBe(0.3);
     expect(request.messages[0].role).toBe('system');
+    expect(JSON.parse(request.messages[1].content).eligible_assessment_item_ids).toEqual([]);
     expect(prepared.item_id).toBe(ITEM_ID);
     expect(prepared.student_id).toBe('student-1');
     expect((prepared.decision as any).decision.mode).toBe('assessment');
@@ -225,6 +233,97 @@ describe('prepareTurn', () => {
     await expect(
       service().prepareTurn({ roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID })
     ).rejects.toThrow('AI_OUTPUT_INVALID');
+  });
+
+  it('rejects a focus message written by someone other than the checklist owner', async () => {
+    arrangePrepare();
+    mockMaybeSingle.messages = {
+      id: 'focus-1', room_id: 'room-1', user_id: 'student-2', user_role: 'student', content: 'It looked fine to me.',
+    };
+
+    await expect(
+      service().prepareTurn({ roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID })
+    ).rejects.toThrow('checklist owner');
+  });
+
+  it('allows ordinary tutoring when the focus message supplies no measurable evidence', async () => {
+    arrangePrepare();
+    const tutoring = {
+      reason: 'The learner is asking for help without yet demonstrating a configured concept.',
+      learning_evidence: [],
+      decision: { mode: 'tutoring', instruction: 'explanation', target_item_id: null },
+      response: 'A familiar name can still be copied. Let us inspect where the link really goes.',
+      assessment: null,
+    };
+    (globalThis as any).fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify(tutoring) } }] }),
+    }));
+
+    const prepared = await service().prepareTurn({
+      roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID,
+    });
+
+    expect((prepared.decision as any).decision.mode).toBe('tutoring');
+    expect(prepared.item_id).toBeNull();
+    expect(insertedInto('coverage_evidence')).toEqual([]);
+  });
+
+  it('rejects assessment when neither stored nor current learner evidence supports its target', async () => {
+    arrangePrepare();
+    const unsupported = decision();
+    unsupported.learning_evidence = [];
+    (globalThis as any).fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify(unsupported) } }] }),
+    }));
+
+    await expect(service().prepareTurn({
+      roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID,
+    })).rejects.toThrow('AI_OUTPUT_INVALID');
+  });
+
+  it('blocks another assessment while one is unresolved', async () => {
+    arrangePrepare();
+    mockList.messages = [deliveredAssessmentRow()];
+    (globalThis as any).fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify(decision()) } }] }),
+    }));
+
+    await expect(service().prepareTurn({
+      roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID,
+    })).rejects.toThrow('AI_OUTPUT_INVALID');
+  });
+
+  it('tells the single transfer prompt when resolved feedback is still required', async () => {
+    const fetchMock = arrangePrepare();
+    mockList.messages = [{
+      ...deliveredAssessmentRow(),
+      assessment_lifecycle: 'answered',
+      assessment_result: 'fail',
+      assessment_answer_message_id: ANSWER_ID,
+    }];
+    const tutoring = {
+      reason: 'The failed assessment requires corrective feedback before another assessment.',
+      learning_evidence: [],
+      decision: { mode: 'tutoring', instruction: 'correction', target_item_id: null },
+      response: 'A familiar sender can be compromised, so verify through the official app.',
+      assessment: null,
+    };
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify(tutoring) } }] }),
+    });
+    (globalThis as any).fetch = fetchMock;
+
+    await service().prepareTurn({ roomId: 'room-1', focusStudentMessageId: 'focus-1', checklistId: CHECKLIST_ID });
+
+    const request = JSON.parse((fetchMock as any).mock.calls[0][1].body);
+    expect(JSON.parse(request.messages[1].content)).toMatchObject({
+      feedback_required: true,
+      eligible_assessment_item_ids: [],
+    });
   });
 });
 
@@ -246,9 +345,57 @@ describe('processMessage', () => {
     arrangeGrading('A');
     const processed = await service().processMessage(ANSWER_ID);
 
-    expect(processed.result).toBe('needs_review');
+    expect(processed.result).toBe('fail');
     expect(updated('checklist_items')).toEqual([{ status: 'needs_review', understanding_level: 'basic' }]);
     expect(updated('session_checklists')[0]).toMatchObject({ completed_items: 0, completion_percentage: 0, is_active: true });
+  });
+
+  it('closes a resolved question with the live answered lifecycle value', async () => {
+    arrangeGrading('B');
+    await service().processMessage(ANSWER_ID);
+
+    expect(updated('messages')[1]).toMatchObject({
+      assessment_lifecycle: 'answered',
+      assessment_result: 'pass',
+      assessment_answer_message_id: ANSWER_ID,
+    });
+    expect(insertedInto('coverage_evidence')[0]).toMatchObject({
+      item_id: ITEM_ID,
+      message_id: ANSWER_ID,
+      assessment_id: 'assessment-1',
+      detection_method: 'transfer_assessment',
+    });
+    expect(insertedInto('checklist_updates')[0]).toMatchObject({
+      checklist_id: CHECKLIST_ID,
+      item_id: ITEM_ID,
+      previous_status: 'partially_covered',
+      new_status: 'covered',
+      assessment_id: 'assessment-1',
+    });
+  });
+
+  it('cancels an assessment when the learner asks for answer-coaching help', async () => {
+    arrangeGrading('What does compromised mean?');
+
+    const processed = await service().processMessage(ANSWER_ID);
+
+    expect(processed.result).toBeNull();
+    expect(updated('messages')).toContainEqual(expect.objectContaining({
+      assessment_lifecycle: 'cancelled',
+      assessment_answer_message_id: ANSWER_ID,
+    }));
+    expect(updated('checklist_items')).toEqual([]);
+  });
+
+  it('does not grade an assessment owned by another learner', async () => {
+    arrangeGrading('B');
+    mockMaybeSingle.session_checklists = null;
+
+    const processed = await service().processMessage(ANSWER_ID);
+
+    expect(processed.result).toBeNull();
+    expect(updated('messages')).toEqual([]);
+    expect(updated('checklist_items')).toEqual([]);
   });
 });
 
@@ -287,6 +434,21 @@ describe('sendReviewed', () => {
     });
     expect(sent.message.id).toBe(ASSESSMENT_ROW_ID);
     expect((sent.message as Row).assessment_key).toBeUndefined();
+  });
+
+  it('refuses a second delivered assessment for the same checklist', async () => {
+    mockList.messages = [{ id: 'already-open' }];
+
+    await expect(service().sendReviewed({
+      reviewedPayload: decision(),
+      roomId: 'room-1',
+      studentId: 'student-1',
+      checklistId: CHECKLIST_ID,
+      itemId: ITEM_ID,
+      focusStudentMessageId: 'focus-1',
+    })).rejects.toThrow('ASSESSMENT_ALREADY_OPEN');
+
+    expect(insertedInto('messages')).toEqual([]);
   });
 });
 

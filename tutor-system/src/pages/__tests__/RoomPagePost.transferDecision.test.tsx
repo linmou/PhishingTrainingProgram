@@ -20,6 +20,7 @@ import {
   TRANSFER_ROOM_ID,
   learnerAMessageRow,
   preparedCandidate,
+  preparedTutoringTurnResult,
   transferRoom,
 } from '../../test-support/transferRoomFixtures';
 import type { Message } from '../../types';
@@ -188,5 +189,15 @@ describe('RoomPagePost structured decision consumption', () => {
 
     expect(screen.getByText('Review transfer assessment')).toBeInTheDocument();
     expect(screen.queryByTestId('ai-suggestion-box')).not.toBeInTheDocument();
+  });
+
+  it('renders an ordinary tutoring suggestion returned by the transfer prompt', () => {
+    mount({
+      transferDraft: { ...candidateDraft, decision: preparedTutoringTurnResult.decision, itemId: null },
+      aiSuggestion: (preparedTutoringTurnResult.decision as TutorDecisionV3).response,
+    });
+
+    expect(screen.getByTestId('ai-suggestion-box')).toBeInTheDocument();
+    expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
   });
 });

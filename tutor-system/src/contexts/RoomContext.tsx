@@ -576,6 +576,28 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
         }
         if (!currentSuggestionContext && transferChecklist?.progress_policy_version === 'transfer_v1') {
+            if (user.current_role === 'tutor' && transferDraft && transferDraft.decision.decision.mode !== 'assessment') {
+                const reviewedDecision: TutorDecisionV3 = {
+                    ...transferDraft.decision,
+                    response: content,
+                };
+                const sent = await transferAssessmentService.sendReviewed({
+                    reviewedPayload: reviewedDecision,
+                    roomId: transferDraft.roomId,
+                    studentId: transferDraft.studentId,
+                    checklistId: transferDraft.checklistId,
+                    itemId: null,
+                    focusStudentMessageId: transferDraft.focusStudentMessageId,
+                });
+                const deliveredView = addDisplayNameToMessage(
+                    projectRoomMessage(sent.message as unknown as Record<string, unknown>),
+                    participants
+                );
+                setMessages(prev => mergeRoomMessages(prev, [deliveredView]));
+                setCurrentRoom(sent.room);
+                clearAISuggestion();
+                return;
+            }
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,
@@ -807,7 +829,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('No student message found to respond to');
             }
 
-            let transferChecklist = null;
+            let transferChecklist: Awaited<ReturnType<typeof ChecklistService.getActiveTransferChecklistForRoom>> | null = null;
             try {
                 const checklistService = ChecklistService as typeof ChecklistService & {
                     getActiveTransferChecklistForRoom?: typeof ChecklistService.getActiveTransferChecklistForRoom;
@@ -817,6 +839,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn('Transfer preparation unavailable; keeping legacy AI generation:', transferError);
             }
             if (transferChecklist?.progress_policy_version === 'transfer_v1') {
+                const checklistOwnerId = transferChecklist.student_id;
+                const checklistOwnerMessage = messages
+                    .filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId)
+                    .slice(-1)[0];
+                if (!checklistOwnerMessage) {
+                    throw new Error('No learner message found for the transfer checklist owner');
+                }
+                parentMessageId = checklistOwnerMessage.id;
+                parentMessageContent = checklistOwnerMessage.content;
                 const prepared = await transferAssessmentService.prepareTurn({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,

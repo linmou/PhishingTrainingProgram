@@ -38,8 +38,19 @@ export interface PrivateAssessment extends PublicAssessment {
   correct_option_ids: AssessmentOptionId[];
 }
 
+export type TransferEvidenceSignal = 'initial' | 'contradiction' | 'spontaneous_transfer';
+
+export interface TransferEvidenceDecision {
+  item_id: string;
+  evidence_message_id: string;
+  signal: TransferEvidenceSignal;
+  analysis: string;
+}
+
 export interface TutorDecisionV3 {
   reason: string;
+  /** Required from the transfer provider; optional for reviewed legacy fixtures and consumers. */
+  learning_evidence?: TransferEvidenceDecision[];
   decision: {
     mode: TutorTurnMode;
     instruction: TutorInstruction;

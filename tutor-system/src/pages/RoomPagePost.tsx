@@ -864,7 +864,7 @@ const RoomPagePost: React.FC = () => {
                 </div>
 
                 {/* Structured transfer-assessment review for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && transferDraft && (
+                {user?.current_role === 'tutor' && canUseAI && transferDraft?.decision.decision.mode === 'assessment' && (
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
                         onSubmit={confirmTransferDraft}
@@ -899,18 +899,19 @@ const RoomPagePost: React.FC = () => {
                 )}
 
                 {/* Legacy AI Suggestion Box for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && !multiAgentDraft && (
+                {user?.current_role === 'tutor' && canUseAI && aiSuggestion &&
+                    transferDraft?.decision.decision.mode !== 'assessment' && !multiAgentDraft && (
                         <AISuggestionBox
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}
-                        onReject={handleRejectAISuggestion}
+                        onReject={transferDraft ? async () => clearAISuggestion() : handleRejectAISuggestion}
                         onRegenerate={regenerateAIResponse}
                         isVisible={true}
                         parentMessage={currentSuggestionContext?.parentMessageContent}
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
                         initialParameters={aiConfig?.prompt_config || undefined}
-                        isGuardMode={finalMode === 'guard'}
+                        isGuardMode={transferDraft?.decision.decision.mode === 'guard' || finalMode === 'guard'}
                         onToggleGuard={handleToggleSuggestionMode}
                         lockedRole={
                             isTutorRoleLocked(aiConfig?.prompt_config)
