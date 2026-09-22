@@ -24,13 +24,33 @@ export type AssessmentApiEnvelope<T> =
 /** Stable error codes with the HTTP status and retryability the boundary must return. */
 export const ASSESSMENT_API_ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   INVALID_REQUEST: { status: 400, retryable: false },
+  UNAUTHORIZED: { status: 401, retryable: false },
   FORBIDDEN: { status: 403, retryable: false },
   WRONG_LEARNER: { status: 409, retryable: false },
   ITEM_VALIDATION_FAILED: { status: 409, retryable: false },
+  ASSESSMENT_FEATURE_DISABLED: { status: 503, retryable: false },
+  LEGACY_CHECKLIST: { status: 409, retryable: false },
+  LEGACY_ASSESSMENT_INCOMPLETE: { status: 409, retryable: false },
+  UNSUPPORTED_ROOM_SCOPE: { status: 409, retryable: false },
+  ASSESSMENT_ALREADY_OPEN: { status: 409, retryable: false },
+  ASSESSMENT_TERMINAL: { status: 409, retryable: false },
+  INVALID_SCOPE: { status: 409, retryable: false },
   AI_PROVIDER_NOT_CONFIGURED: { status: 503, retryable: true },
+  AI_PROVIDER_ERROR: { status: 502, retryable: true },
+  AI_OUTPUT_TRUNCATED: { status: 502, retryable: true },
+  AI_OUTPUT_INVALID: { status: 502, retryable: false },
   AUTHORIZATION_NOT_CONFIGURED: { status: 503, retryable: false },
+  PROGRESSION_LOCKED: { status: 409, retryable: false },
   PERSISTENCE_FAILED: { status: 500, retryable: true },
 };
+
+export const PUBLIC_ASSESSMENT_DTO_KEYS = [
+  'id',
+  'student_id',
+  'selection_type',
+  'stem',
+  'options',
+] as const;
 
 /**
  * Field names that must never reach a learner-facing DTO. The public projection is
@@ -38,10 +58,13 @@ export const ASSESSMENT_API_ERROR_STATUS: Record<string, { status: number; retry
  */
 export const ASSESSMENT_PRIVATE_FIELD_NAMES = [
   'correct_option_ids',
+  'learner_safe_explanation',
   'transfer_basis',
   'rationale',
   'raw_model_output',
+  'raw_provider_output',
   'reviewed_payload',
+  'rendered_text',
   'reason',
   'private_payload',
   'source_transfer_basis',

@@ -118,6 +118,17 @@ export interface Database {
                     parent_message_id: string | null
                     response_mode: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id: string | null
+                    assessment_student_id: string | null
+                    assessment_request_id: string | null
+                    assessment_options: Json | null
+                    assessment_selection_type: 'single' | 'multiple' | null
+                    assessment_lifecycle: 'delivered' | 'passed' | 'failed' | 'cancelled' | 'legacy_incomplete' | null
+                    assessment_answer_message_id: string | null
+                    assessment_selected_option_ids: string[] | null
+                    assessment_result: 'pass' | 'fail' | null
+                    assessment_closed_at: string | null
+                    assessment_checklist_id: string | null
+                    assessment_item_id: string | null
                     created_at: string
                 }
                 Insert: {
@@ -131,6 +142,17 @@ export interface Database {
                     parent_message_id?: string | null
                     response_mode?: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id?: string | null
+                    assessment_student_id?: string | null
+                    assessment_request_id?: string | null
+                    assessment_options?: Json | null
+                    assessment_selection_type?: 'single' | 'multiple' | null
+                    assessment_lifecycle?: 'delivered' | 'passed' | 'failed' | 'cancelled' | 'legacy_incomplete' | null
+                    assessment_answer_message_id?: string | null
+                    assessment_selected_option_ids?: string[] | null
+                    assessment_result?: 'pass' | 'fail' | null
+                    assessment_closed_at?: string | null
+                    assessment_checklist_id?: string | null
+                    assessment_item_id?: string | null
                     created_at?: string
                 }
                 Update: {
@@ -144,6 +166,17 @@ export interface Database {
                     parent_message_id?: string | null
                     response_mode?: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id?: string | null
+                    assessment_student_id?: string | null
+                    assessment_request_id?: string | null
+                    assessment_options?: Json | null
+                    assessment_selection_type?: 'single' | 'multiple' | null
+                    assessment_lifecycle?: 'delivered' | 'passed' | 'failed' | 'cancelled' | 'legacy_incomplete' | null
+                    assessment_answer_message_id?: string | null
+                    assessment_selected_option_ids?: string[] | null
+                    assessment_result?: 'pass' | 'fail' | null
+                    assessment_closed_at?: string | null
+                    assessment_checklist_id?: string | null
+                    assessment_item_id?: string | null
                     created_at?: string
                 }
             }
@@ -538,14 +571,102 @@ export interface Database {
                     p_room_id: string
                     p_student_id: string
                     p_template_name: string
+                    p_actor_id: string
                 }
                 Returns: string
+            }
+            analyze_transfer_message_v1: {
+                Args: {
+                    p_room_id: string
+                    p_message_id: string
+                    p_actor_id: string
+                    p_request_id: string
+                }
+                Returns: Json
             }
             apply_learning_event_v1: {
                 Args: {
                     p_event: Json
                 }
                 Returns: Json
+            }
+            prepare_transfer_turn_v1: {
+                Args: {
+                    p_room_id: string
+                    p_focus_student_message_id: string
+                    p_checklist_id: string
+                    p_actor_id: string
+                    p_request_id: string
+                }
+                Returns: Json
+            }
+            send_reviewed_tutor_response_v4: {
+                Args: {
+                    p_reviewed_payload: Json
+                    p_room_id: string
+                    p_student_id: string
+                    p_checklist_id: string
+                    p_item_id: string
+                    p_focus_student_message_id: string
+                    p_actor_id: string
+                    p_request_id: string
+                }
+                Returns: Json
+            }
+            post_assessment_message_v2: {
+                Args: {
+                    p_room_id: string
+                    p_content: string
+                    p_parent_message_id: string
+                    p_assessment_id: string
+                    p_selected_option_ids: string[]
+                    p_actor_id: string
+                    p_request_id: string
+                }
+                Returns: Json
+            }
+            get_transfer_assessment_processing_context_v1: {
+                Args: {
+                    p_assessment_id: string
+                    p_message_id: string
+                    p_actor_id: string
+                }
+                Returns: Json
+            }
+            process_assessment_message_v2: {
+                Args: {
+                    p_assessment_id: string
+                    p_message_id: string
+                    p_actor_id: string
+                    p_request_id: string
+                    p_expected_attempt_count: number
+                    p_expected_resolution: string
+                    p_answer_outcome: string
+                    p_selected_option_ids: string[]
+                    p_next_progress: Json
+                    p_applied_transition: string | null
+                }
+                Returns: Json
+            }
+            record_transfer_provider_attempt_v1: {
+                Args: {
+                    p_request_id: string
+                    p_room_id: string
+                    p_student_id: string
+                    p_checklist_id: string
+                    p_focus_student_message_id: string
+                    p_attempt_ordinal: number
+                    p_provider_base_url: string
+                    p_provider_model: string
+                    p_max_tokens: number
+                    p_request_hash: string
+                    p_request_payload: Json
+                    p_raw_response: Json | null
+                    p_finish_reason: string | null
+                    p_validation_outcome: string
+                    p_error_code: string | null
+                }
+                Returns: string
             }
             update_checklist_progress: {
                 Args: {

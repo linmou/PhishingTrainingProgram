@@ -3,8 +3,8 @@
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
 Updated: 2026-09-22
-Implementation commit ID: `91d8036`
-Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns. Transfer assessment v3 now has a pure server-authoritative attempt/result contract in component 101; component 102 persistence, projection, and downstream acceptance remain pending.
+Implementation commit ID: `de3777b` (component 102), consuming `91d8036` (component 101)
+Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns. Transfer assessment v3 now has persisted server-authoritative attempts and role-safe projections; hosted, provider, downstream UI, and initiative integration acceptance remain pending, so activation stays disabled.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -175,4 +175,4 @@ The attempt snapshot accepts at most two valid selections. A first incorrect sel
 
 Answers received before delivery are not graded, do not create feedback, and preserve the existing transfer progress pair. Delivery is a prerequisite for entering the parsing and grading path.
 
-The browser applies the v3 provider budget of 1,200 completion tokens. The legacy prompt remains a separate contract for rooms without an active `transfer_v1` checklist. Enabling transfer requires provider configuration and browser acceptance; participant authentication and answer-key secrecy are outside this research-build contract.
+The trusted `assessment-api` Edge Function applies the v3 provider budget of 1,200 completion tokens and requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`. It records credential-free provider evidence and permits one format-only repair. The production transfer prompt is absent from the browser bundle. Enabling transfer still requires hosted, provider, downstream UI, and integration acceptance.
