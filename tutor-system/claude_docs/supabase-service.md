@@ -14,6 +14,8 @@ Core database client configuration and service abstraction layer. Provides type-
 
 The Edge Function verifies the caller, checks room and role scope, and calls service-role-only RPCs. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution. Missing verifier configuration, feature activation, or required provider settings fails closed.
 
+The Edge Function imports the existing CRA resolver directly. `deno.json` enables sloppy relative-import resolution for that established module graph; there is no copied Edge lifecycle implementation.
+
 Production generation requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`. `TRANSFER_ASSESSMENT_ENABLED` remains `false` until hosted schema, provider, downstream UI, and initiative integration gates pass.
 
 ## Client Configuration

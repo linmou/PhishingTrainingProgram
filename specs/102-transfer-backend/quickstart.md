@@ -20,7 +20,7 @@ rtk proxy sh .specify/scripts/bash/check-prerequisites.sh --json --require-tasks
 
 ```bash
 rtk proxy sh -c 'cd tutor-system && CI=true npm test -- --watchAll=false --runInBand --runTestsByPath src/services/__tests__/transferAssessmentApiContract.test.ts src/services/__tests__/transferAssessmentLocalService.test.ts src/services/__tests__/transferAssessmentMigration.test.ts src/services/__tests__/transferAssessmentService.test.ts src/services/__tests__/transferTutorRequestV3.test.ts'
-rtk proxy sh -c 'cd tutor-system && deno test --allow-env --allow-net supabase/functions/assessment-api/index.test.ts'
+rtk proxy sh -c 'cd tutor-system && deno test --allow-env --allow-net --unstable-sloppy-imports supabase/functions/assessment-api/index.test.ts'
 rtk proxy sh -c 'cd tutor-system && npm run build'
 ```
 
