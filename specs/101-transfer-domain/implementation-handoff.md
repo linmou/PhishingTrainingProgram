@@ -3,6 +3,19 @@
 **Intent**: report component 101's implemented public contracts, preserved TDD evidence, exact commands and results, and the downstream risks for component 102 and 104, without claiming any integration promotion.
 **Date**: 2026-09-11
 
+## 2026-09-22 Upgrade Status
+
+The evidence below records the prior one-attempt implementation and must not be used as completion evidence for the current upgrade. The approved upgrade is planned but not implemented. Current tasks are in `tasks.md` and require:
+
+- `PrivateAssessment.learner_safe_explanation` with structural validation and unresolved-public exclusion;
+- a server-owned `TransferAttemptSnapshot` persisted by component 102 across reloads and tabs;
+- first incorrect -> `retryable` with unchanged progress and no terminal feedback;
+- correct on either attempt -> terminal `passed`; second incorrect -> terminal `failed`;
+- duplicate, stale, invalid, Guard-deferred, and third submissions -> no additional attempt or transition;
+- terminal-only `TransferTerminalFeedback` containing correct option IDs and learner-safe explanation.
+
+No revised implementation command, test count, or commit SHA exists yet. Tasks T001-T031 must replace this historical evidence during implementation.
+
 ## Normative Source
 
 - Normative source SHA-256: `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2`, recorded during T001 and restated here so the implementation handoff the task names actually exists.
@@ -17,7 +30,7 @@
 - `transferAssessmentGoldenFixtures.ts` moved from `src/services/__tests__/fixtures/` to `src/services/` because Jest collected the old location as an empty test suite under full discovery. Import paths updated in both consuming test suites.
 - No change to `transferAssessmentService.ts`, its test, `specs/**` content semantics, or any 102-owned surface.
 
-## Behaviour Implemented
+## Prior Behaviour Implemented (Superseded)
 
 - Delivery, staleness, duplicate, feedback, and protective-deferral gates run before any parse or grade, so an undelivered, stale, already-resolved, feedback-pending, or Guard-deferred answer can never create a second effect.
 - Pending repair without learner evidence that references the repair returns `unresolved` with `await_learner_evidence`; evidence that references the repair applies the `post_repair_signal` transition to return the target to `partially_covered/basic` and leaves grading to a fresh assessment.

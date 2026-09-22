@@ -1,7 +1,7 @@
-# Data Model: W2 Deterministic Transfer Behavior
+# Data Model: Server-Authoritative Transfer Attempts
 
-**Intent**: Define the public/private records, progress pairs, event transitions, and golden fixture shape that implementation and tests must share.
-**Date**: 2026-09-11
+**Intent**: Define the assessment, attempt, result, progress, and fixture records shared by deterministic implementation and downstream consumers.
+**Date**: 2026-09-22
 
 ## Contract Records
 
@@ -33,9 +33,38 @@ The context must not contain a learner-visible answer key or private transfer ba
 
 ### Assessment records
 
-- `PrivateAssessment`: exactly four unique options in A-D order, selection type, stem, rendered text, one key for `single` or two/three keys for `multiple`, and a non-empty transfer basis with known source evidence IDs. Its changed context tests the same concept in a relevant new situation, not a cosmetic brand/name substitution or an unstated prerequisite.
-- `PublicAssessment`: the component 101 public contract consumed by component 102, containing assessment ID, stem, rendered text, selection type, and options. It excludes `correct_option_ids`, transfer basis, rationale, raw model output, API operations, and transport fields. Component 102 owns projection into its service/API DTO.
+- `PrivateAssessment`: exactly four unique options in A-D order, selection type, stem, rendered text, one key for `single` or two/three keys for `multiple`, required trimmed non-empty `learner_safe_explanation`, and a non-empty transfer basis with known source evidence IDs. Its changed context tests the same concept in a relevant new situation, not a cosmetic substitution or unstated prerequisite.
+- `PublicAssessment`: the unresolved contract consumed by component 102, containing assessment ID, stem, rendered text, selection type, and options. It excludes `correct_option_ids`, `learner_safe_explanation`, transfer basis, rationale, raw model output, API operations, and transport fields.
 - `ParsedSelection`: `{ kind: 'selection', option_ids }`, `{ kind: 'clarification_required', code }`, or `{ kind: 'not_selection' }`.
+
+### `TransferAttemptSnapshot`
+
+| Field | Shape | Rule |
+|---|---|---|
+| `assessment_id` | string | Must match the current delivered assessment. |
+| `accepted_attempt_count` | `0 | 1 | 2` | Counts only validated selections accepted for this assessment. |
+| `resolution` | `open | passed | failed` | `open` allows a valid selection only while count is 0 or 1; terminal states require count 1 or 2. |
+| `processed_answer_message_ids` | readonly string array | Contains the unique identities of consumed valid selections; length equals `accepted_attempt_count`. Replays do not increment the count or reapply progress. |
+
+State invariants:
+
+- `open/0` is the initial delivered state.
+- `open/1` exists only after the first incorrect valid selection.
+- `passed/1` means correct on the first attempt; `passed/2` means incorrect then correct.
+- `failed/2` means two incorrect valid selections.
+- `open/2`, `failed/0`, `failed/1`, `passed/0`, counts outside 0-2, and mismatched assessment identities are invalid.
+- Component 102 persists and updates this snapshot atomically. Component 101 only validates and transforms immutable values.
+
+### Result union
+
+`TransferResolvedAssessment` is discriminated by `disposition`:
+
+- `retryable`: first incorrect; next snapshot is `open/1`, `remaining_attempts` is 1, progress is unchanged, transition is null, and terminal feedback is absent.
+- `passed`: correct on attempt one or two; next snapshot is terminal, `remaining_attempts` is 0, transition is `assessment_pass`, and terminal feedback is present.
+- `failed`: second incorrect; next snapshot is `failed/2`, `remaining_attempts` is 0, transition is `assessment_fail`, and terminal feedback is present.
+- `not_delivered`, `unresolved`, `assisted`, `duplicate`, `stale`, or `guard_deferred`: no attempt is consumed and transition is null.
+
+`TransferTerminalFeedback` contains `correct_option_ids` and `learner_safe_explanation`. It exists only on terminal `passed` and `failed` results and remains private until component 102 authorizes its projection.
 
 ## Progress State Model
 
@@ -69,10 +98,11 @@ The table is the expected deterministic behavior to encode in fixtures and tests
 |---|---|---|
 | `not_delivered` | Matching question is draft/unsent or delivery is false | Preserve current pair; no grade or feedback. |
 | `unresolved` | Ambiguous or format clarification, or no recognized selection | Keep question open; no grade. |
-| `passed` | Delivered question, first valid selection, exact key set | Apply pass once; require feedback before another assessment. |
-| `failed` | Delivered question, first valid selection, non-exact set | Apply fail once; require repair and new learner evidence. |
+| `retryable` | First accepted valid selection is not the exact key set | Keep question open at `open/1`; preserve progress; disclose no terminal feedback. |
+| `passed` | First or second accepted valid selection is the exact key set | Apply pass once; close question; require feedback; attach terminal feedback. |
+| `failed` | Second accepted valid selection is not the exact key set | Apply fail once; close question; require repair; attach terminal feedback. |
 | `assisted` | Content help could coach answer | Cancel/close without failing grade; no same-message assessment chain. |
-| `duplicate` / `stale` | Resolution already committed or snapshot/message no longer current | Preserve committed result; no second side effect. |
+| `duplicate` / `stale` | Answer identity already processed, question terminal/exhausted, or snapshot/message no longer current | Preserve state; consume no attempt; no second side effect. |
 
 ## Golden Fixture Record
 
@@ -80,7 +110,7 @@ Each fixture must include:
 
 - `fixture_id`, `suite`, `contract_version`, and `policy_version`.
 - normalized input records and referenced known item/message IDs.
-- expected output/disposition, expected progress pair, and expected next-action boundary.
+- input and expected `TransferAttemptSnapshot`, disposition, remaining attempts, progress pair, transition, disclosure fields, and next-action boundary.
 - a short evidence note linking the fixture to the source requirement or scenario.
 - boundary metadata for parser syntax, subset membership, word-like segment count, sentence count, or matrix cell where applicable.
 

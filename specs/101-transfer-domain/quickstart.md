@@ -1,7 +1,7 @@
-# W2 Deterministic Verification Quickstart
+# Server-Authoritative Attempt Verification Quickstart
 
 **Intent**: Give the implementation owner exact local commands and evidence expectations for the deterministic component.
-**Date**: 2026-09-11
+**Date**: 2026-09-22
 
 Run from `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system` after dependencies are installed.
 
@@ -18,7 +18,7 @@ CI=true npm test -- --watchAll=false --runInBand --runTestsByPath \
   src/services/__tests__/transferAssessmentGoldenFixtures.test.ts
 ```
 
-The exact fixture file names may be split by suite if implementation keeps fixtures colocated, but the command must name every W2 suite explicitly before completion.
+The focused result must include required-explanation validation, unresolved-public privacy, correct-first, incorrect-correct, incorrect-incorrect, duplicate-at-each-stage, terminal third submission, reload/tab-equivalent snapshots, and all existing parser/grader/reducer regression cases.
 
 ## Type and regression checks
 
@@ -33,6 +33,7 @@ The repository does not define a dedicated mypy check because this component is 
 ## Evidence requirements
 
 - Record command, exit status, test file set, and observed counts in the implementation handoff.
-- Preserve fixture manifest/version and any failure output; do not omit errored cases from a denominator.
+- Preserve fixture manifest/version, state/result input-output pairs, and any failure output; do not omit errored cases from a denominator.
+- Record that first-incorrect fixtures have unchanged progress and no terminal feedback, while passed/failed fixtures have one transition and terminal feedback.
 - Label these tests as deterministic/mock-only. They do not prove SQL/RLS, authorization, provider configuration, browser privacy, or deployment compatibility.
 - Keep `TRANSFER_ASSESSMENT_ENABLED` disabled.
