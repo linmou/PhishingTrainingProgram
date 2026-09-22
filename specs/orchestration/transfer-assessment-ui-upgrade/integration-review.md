@@ -51,4 +51,10 @@ All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. 
 
 ## Integration And Promotion
 
-Pending.
+### Wave 1 - 101 Transfer Domain
+
+- Activation: `start_implementation_wave` validated from `implementation_ready` to `implementing`.
+- Owner: `/root/owner_101_domain`.
+- Preconditions: planning commit `ccdf695`, clean worktree, reconciliation passed, and E01 packet defined.
+- Required workflow: `speckit-implement` with the repository-required `fast-multi-agent-tdd` controller before permanent test or production edits.
+- Promotion condition: local TDD evidence and component verification, followed by an integration merge, real E01 handoff test, affected regression/integration/E2E/smoke commands, and a machine-validated coverage manifest.
