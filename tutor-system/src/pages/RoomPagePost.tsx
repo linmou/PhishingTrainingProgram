@@ -16,6 +16,7 @@ import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { isTutorRoleLocked } from '../utils/studentAITone';
 import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
+import { getRatingLabel } from '../components/feedbackRatingLabels';
 import '../components/RoomPagePost.css';
 
 const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
@@ -115,6 +116,7 @@ const RoomPagePost: React.FC = () => {
     const [ratingReminder, setRatingReminder] = useState<{ id: string; content: string } | null>(null);
     const [ratingFeedbackType, setRatingFeedbackType] = useState<'like' | 'dislike' | null>(null);
     const [ratingValue, setRatingValue] = useState(0);
+    const [ratingHoveredValue, setRatingHoveredValue] = useState(0);
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
     const [multiAgentError, setMultiAgentError] = useState<string | null>(null);
@@ -400,6 +402,7 @@ const RoomPagePost: React.FC = () => {
             setRatingReminder(null);
             setRatingFeedbackType(null);
             setRatingValue(0);
+            setRatingHoveredValue(0);
         } catch (error) {
             console.error('Failed to submit required response rating:', error);
             alert('Failed to save your rating. Please try again.');
@@ -996,7 +999,10 @@ const RoomPagePost: React.FC = () => {
                                 className={ratingFeedbackType === 'like' ? 'selected' : ''}
                                 aria-pressed={ratingFeedbackType === 'like'}
                                 disabled={submittingRequiredRating}
-                                onClick={() => setRatingFeedbackType('like')}
+                                onClick={() => {
+                                    setRatingFeedbackType('like');
+                                    setRatingHoveredValue(0);
+                                }}
                             >
                                 Helpful
                             </button>
@@ -1005,7 +1011,10 @@ const RoomPagePost: React.FC = () => {
                                 className={ratingFeedbackType === 'dislike' ? 'selected' : ''}
                                 aria-pressed={ratingFeedbackType === 'dislike'}
                                 disabled={submittingRequiredRating}
-                                onClick={() => setRatingFeedbackType('dislike')}
+                                onClick={() => {
+                                    setRatingFeedbackType('dislike');
+                                    setRatingHoveredValue(0);
+                                }}
                             >
                                 Not helpful
                             </button>
@@ -1013,7 +1022,12 @@ const RoomPagePost: React.FC = () => {
 
                         {ratingFeedbackType && (
                             <div className="rating-reminder-details">
-                                <p>Choose a rating</p>
+                                <p>
+                                    {getRatingLabel(
+                                        ratingFeedbackType === 'like',
+                                        ratingHoveredValue || ratingValue
+                                    )}
+                                </p>
                                 <div className="rating-reminder-stars" aria-label="Rating">
                                     {[1, 2, 3, 4, 5].map(star => (
                                         <button
@@ -1022,6 +1036,8 @@ const RoomPagePost: React.FC = () => {
                                             className={ratingValue >= star ? 'selected' : ''}
                                             aria-label={`${star} star${star === 1 ? '' : 's'}`}
                                             disabled={submittingRequiredRating}
+                                            onMouseEnter={() => setRatingHoveredValue(star)}
+                                            onMouseLeave={() => setRatingHoveredValue(0)}
                                             onClick={() => setRatingValue(star)}
                                         >
                                             ★

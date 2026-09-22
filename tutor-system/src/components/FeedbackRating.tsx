@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Star, X } from 'lucide-react';
+import { getRatingLabel } from './feedbackRatingLabels';
 import './FeedbackRating.css';
 
 interface FeedbackRatingProps {
@@ -28,28 +29,6 @@ const FeedbackRating: React.FC<FeedbackRatingProps> = ({
         }
     };
 
-    const getRatingText = (rating: number) => {
-        if (isLike) {
-            switch (rating) {
-                case 1: return 'Slightly helpful';
-                case 2: return 'Somewhat helpful';
-                case 3: return 'Moderately helpful';
-                case 4: return 'Very helpful';
-                case 5: return 'Extremely helpful';
-                default: return 'How helpful was this?';
-            }
-        } else {
-            switch (rating) {
-                case 1: return 'Slightly unhelpful';
-                case 2: return 'Somewhat unhelpful';
-                case 3: return 'Moderately unhelpful';
-                case 4: return 'Very unhelpful';
-                case 5: return 'Extremely unhelpful';
-                default: return 'How unhelpful was this?';
-            }
-        }
-    };
-
     const displayRating = hoveredRating || selectedRating;
 
     return (
@@ -69,7 +48,7 @@ const FeedbackRating: React.FC<FeedbackRatingProps> = ({
             
             <div className="feedback-rating-content">
                 <p className="feedback-rating-description">
-                    {getRatingText(displayRating)}
+                    {getRatingLabel(isLike, displayRating)}
                 </p>
                 
                 <div className="feedback-rating-stars">

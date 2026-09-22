@@ -204,7 +204,32 @@ describe('student Tutor-response rating gate', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+    fireEvent.mouseEnter(within(dialog).getByRole('button', { name: '5 stars' }));
+    expect(within(dialog).getByText('Extremely helpful')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: '5 stars' }));
+    fireEvent.mouseLeave(within(dialog).getByRole('button', { name: '5 stars' }));
+    expect(within(dialog).getByText('Extremely helpful')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Not helpful' }));
+    fireEvent.mouseEnter(within(dialog).getByRole('button', { name: '1 star' }));
+    expect(within(dialog).getByText('Slightly unhelpful')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: '1 star' }));
+    fireEvent.mouseLeave(within(dialog).getByRole('button', { name: '1 star' }));
+    expect(within(dialog).getByText('Slightly unhelpful')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '5 stars' }));
+
+    const feedbackRatingSource = readFileSync(
+      path.resolve(__dirname, '../components/FeedbackRating.tsx'),
+      'utf8'
+    );
+    const roomPageSource = readFileSync(
+      path.resolve(__dirname, '../pages/RoomPagePost.tsx'),
+      'utf8'
+    );
+    expect(feedbackRatingSource).toMatch(/feedbackRatingLabels/);
+    expect(roomPageSource).toMatch(/feedbackRatingLabels/);
+    expect(feedbackRatingSource).toMatch(/getRatingLabel\s*\(/);
+    expect(roomPageSource).toMatch(/getRatingLabel\s*\(/);
     expect(
       within(dialog)
         .getAllByRole('button')
