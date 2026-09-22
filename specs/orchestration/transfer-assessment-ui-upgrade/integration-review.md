@@ -58,3 +58,10 @@ All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. 
 - Preconditions: planning commit `ccdf695`, clean worktree, reconciliation passed, and E01 packet defined.
 - Required workflow: `speckit-implement` with the repository-required `fast-multi-agent-tdd` controller before permanent test or production edits.
 - Promotion condition: local TDD evidence and component verification, followed by an integration merge, real E01 handoff test, affected regression/integration/E2E/smoke commands, and a machine-validated coverage manifest.
+
+### Wave 1 Restart - TDD Role Provenance
+
+- User requirement: every TDD role must be explicitly delegated as `gpt-5.6-luna` with `xhigh` reasoning.
+- The first 101 Red attempt used delegation without explicit model provenance. Its preserved start snapshot `refs/tdd/transfer_domain_two_attempt_upgrade/pre_red` at `4ace40d97b4157f7b9c9f17a8fce00499982a4a3` and ignored reviewer records remain historical evidence only; they are not valid for this implementation run.
+- No production file was modified in that attempt. The three agent-created Red test edits were restored exactly to the preserved pre-Red snapshot with the user's explicit authorization.
+- Replacement owner: a newly delegated 101 owner using `gpt-5.6-luna` / `xhigh`, feature ID `transfer_domain_two_attempt_luna`. The owner must delegate its monitor and all reviewer roles with the same explicit model and reasoning settings.
