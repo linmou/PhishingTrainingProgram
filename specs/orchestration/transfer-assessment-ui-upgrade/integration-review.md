@@ -29,11 +29,12 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 
 ## Clarification Batch 1
 
-- Status: awaiting human answer.
+- Status: answered 2026-09-22.
 - Affected components: 102, 104, and integration/release configuration evidence.
 - Question: choose the authoritative target-generation model and evaluation-judge model/provider configuration.
 - Evidence: `tutor-system/.env.example` defines `REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` but no model. The current browser call silently defaults to `qwen3.5-flash`; checked-in evaluation settings are historical and cannot establish the upgraded run's authority.
 - Constraint: implementation must use required configuration with no runtime model fallback. A missing value fails closed; pattern matching cannot replace the LLM call or judge.
+- Canonical answer: Option A. Target generation and evaluation judging use `qwen3.5-flash` through the existing DashScope-compatible provider. The server-side target model and evaluation judge model must be explicit required configuration values, not browser defaults.
 
 ## Reconciliation
 
