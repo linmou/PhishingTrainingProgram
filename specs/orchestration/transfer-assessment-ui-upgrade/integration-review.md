@@ -22,10 +22,10 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 
 | Component | Owner | Artifacts | Analysis | Commit |
 |---|---|---|---|---|
-| 101 | `/root/owner_101_domain` | In progress | Pending | Pending |
-| 102 | `/root/owner_102_backend` | In progress; deleted package must be restored | Pending | Pending |
-| 103 | `/root/owner_103_ui` | In progress from revised spec | Pending | `94f0dce` input, `81e404c` allocation head |
-| 104 | `/root/owner_104_evaluation` | In progress | Pending | Pending |
+| 101 | `/root/owner_101_domain` | Complete | PASS; 0 CRITICAL/HIGH | `765a8e9` |
+| 102 | `/root/owner_102_backend` | Complete; package restored | PASS; 0 CRITICAL/HIGH | `a8c8b31` |
+| 103 | `/root/owner_103_ui` | Complete | PASS; 0 CRITICAL/HIGH | `ade6a74` |
+| 104 | `/root/owner_104_evaluation` | Complete | PASS; 0 CRITICAL/HIGH | `b03e162` |
 
 ## Clarification Batch 1
 
@@ -38,7 +38,7 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 
 ## Reconciliation
 
-Pending all component artifact gates. No implementation is authorized yet.
+All component planning packages passed their local artifact gates. Cross-component reconciliation is in progress; implementation remains closed.
 
 ## Integration And Promotion
 
