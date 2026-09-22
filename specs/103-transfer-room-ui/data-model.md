@@ -30,7 +30,7 @@ The React-only review, public-question, and lifecycle state wrappers described b
 - `focus`: selected `student_id`, `focus_student_message_id`, `checklist_id`, and `target_item_id` when a teacher is reviewing a transfer turn.
 - `review`: the nullable UI-local `TeacherReviewCandidateView` (see below) with local UI status (`idle`, `preparing`, `ready`, `dirty`, `sending`, `delivered`, `superseded`, `validation`, `unavailable`, `retryable`). Local status is view state only and is not a progress state.
 - `publicQuestion`: nullable `PublicAssessmentDTO` attached to a delivered message.
-- `answerPresentation`: component 102's persisted attempts used/remaining, retry or terminal outcome, and role-safe feedback mapped into read-only UI state. React may add only local selected option IDs, submission/loading error, and disclosure state.
+- `answerPresentation`: component 102's canonical `ProcessedMessageDTO` mapped into read-only React presentation state. The adapter preserves the upstream `message_id`, `assessment_id`, `processing_state`, `answer_outcome`, attempt fields, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback`; React may add only local selected option IDs, submission/loading error, and disclosure state.
 - `catchUp`: loading/error cursor state for initial fetch, realtime reconnect, and retry; it does not replace persisted lifecycle status.
 
 ### TeacherReviewCandidateView (component-103 UI state)
@@ -50,12 +50,12 @@ Learner-visible allowlist:
 - `id`: assessment question identity. In the one-table design the delivered tutor message is the question, so its own message id is the assessment identity.
 - `student_id`: persisted target learner identity used to make answer controls interactive only for that learner; every other role sees a read-only question.
 - `selection_type`: `single` or `multiple`.
-- `stem` and canonical `rendered_text`.
+- `stem`.
 - `options`: exactly four ordered entries with only `id` (`A`-`D`) and `text`.
 
 Explicitly excluded: `correct_option_ids`, `transfer_basis`, private reason/rationale, model response metadata, `assessment_key`, and teacher-only lifecycle metadata.
 
-The promoted component 102 contract persists enough public data to reconstruct the same question after reload: assessment identity, selection type, stem, and ordered options. Message content is the stem only. `rendered_text` may remain a teacher-preview field but is never used as the learner question source, preventing a second embedded option list.
+The canonical public DTO is exactly `{ id, student_id, selection_type, stem, options }`. It persists enough public data to reconstruct the same question after reload. Message content equals the stem and options exist only in the structured DTO, preventing a second embedded option list.
 
 ### LearnerAnswerSubmission (component 102 request consumed unchanged)
 
@@ -71,8 +71,9 @@ The UI sends this projection through component 102's trusted service facade and 
 
 - `selectedOptionIds`: participant-local ordered option IDs chosen in the currently mounted control.
 - `submitting` and `submissionError`: participant-local request presentation.
-- `attemptsUsed`, `attemptsRemaining`, `outcome`, and `terminal`: copied from component 102 and never incremented, reset, or inferred in React.
-- `correctOptionIds` and `learnerSafeExplanation`: absent before terminal disclosure; present only when component 102 includes them in a role-safe terminal result.
+- `displayState`: component-owned mapping of canonical `processing_state`, `answer_outcome`, `terminal`, `code`, and `already_processed`; it does not rename or replace the stored upstream fields.
+- `attemptNumber`, `attemptsUsed`, and `attemptsRemaining`: read-only presentation of upstream `attempt_number`, `attempts_used`, and `attempts_remaining`; never incremented, reset, or inferred in React.
+- `terminalFailureFeedback`: direct presentation mapping of upstream `terminal_failure_feedback`; null unless the authorized learner receives terminal `answer_outcome: failed`, then exposes only its `correct_option_ids` and `learner_safe_explanation`.
 
 Reload, reconnect, remount, and another tab may reset `selectedOptionIds`, `submitting`, and `submissionError`. They must re-read and preserve the authoritative attempt and terminal fields.
 

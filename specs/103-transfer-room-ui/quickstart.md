@@ -8,7 +8,7 @@ Give the implementation owner a focused verification order for W7-W8. These comm
 
 - Work from `tutor-system/` with the existing lockfile installed.
 - Use component 101's shared assessment/progress exports and component 102's exported six-operation facade (`initializeChecklist`, `postMessage`, `prepareTurn`, `sendReviewed`, `processMessage`, `analyzeMessage`), `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed envelopes. Keep React-only view-state types in `src/contexts/transferAssessmentUiAdapter.ts`; do not edit shared type files, `transferAssessmentService.ts`, or its service tests from component 103. There is no draft DTO, no `review_draft`, no `reject_draft`, and no `regenerate_draft`.
-- Require the promoted 102 result to persist attempts used/remaining, retry versus terminal state, idempotency outcome, terminal-only correct answer and learner-safe explanation, reload-safe selection type, and stem-only message content. Stop on contract drift; do not add a browser counter or text parser.
+- Consume component 102's canonical `PublicAssessmentDTO { id, student_id, selection_type, stem, options }` and `ProcessedMessageDTO { message_id, assessment_id, processing_state, answer_outcome, attempt_number, attempts_used, attempts_remaining, selected_option_ids, terminal, transition, feedback_required, code, already_processed, terminal_failure_feedback }` without redefining or renaming fields. Stop on contract drift; do not add a browser counter, compatibility DTO, or text parser.
 - Keep `TRANSFER_ASSESSMENT_ENABLED` disabled unless the release owner has authorized a gate-complete environment.
 - Use isolated test data. Do not target a linked hosted project with reset, seed, migration push, or destructive commands.
 
@@ -58,7 +58,7 @@ The focused tests must cover:
 - dirty edit, reconfirm, an already-open delivery refused as superseded, and mode mismatch;
 - tutoring/Guard room participation with assessment turn delivery;
 - single-answer radios, multiple-answer checkboxes, explicit disabled-until-selected submission, canonical option IDs, and no free-text assessment input;
-- first-incorrect retry without disclosure, correct terminal on either attempt, second-incorrect terminal with role-safe answer/explanation, and no third submission;
+- `answer_outcome: retry` without disclosure, terminal `passed` on either attempt with null feedback, terminal `failed` with `terminal_failure_feedback` for applied or deferred processing, rejected/null outcomes, and no third submission;
 - initial fetch, realtime duplicate, reconnect catch-up, reload, timeout retry, and duplicate-tab convergence on the same persisted attempts used/remaining and terminal state;
 - stem and options rendered exactly once, expanded-by-default messages, accessible participant-local folding, and preserved selection/result state while collapsed;
 - owner-scoped progress views, legacy/transfer separation, and public/private exports;

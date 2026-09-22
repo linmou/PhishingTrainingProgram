@@ -57,7 +57,7 @@ Root `AGENTS.md` and agent context are integration-owned. Running `.specify/scri
 
 Consume component 101's shared assessment/progress domain exports and component 102's exported `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed operation envelopes for preparation, delivery, persisted messages, and lifecycle results. The React-only review, public-question, and lifecycle view-state types are defined with their mappings in `src/contexts/transferAssessmentUiAdapter.ts` before entering `RoomContext`; the adapter imports 101/102 types unchanged and does not redeclare DTOs, edit shared type barrels, or map API operation names. Components receive the candidate `TutorDecisionV3` only on the teacher review path and `PublicAssessmentDTO` only on learner/public message paths.
 
-The learner question projection contains assessment identity, selection type, stem, and ordered A-D options. The learner result projection adds server-authoritative attempts used/remaining, retry or terminal outcome, and role-safe terminal feedback. It excludes key IDs and the learner-safe explanation before terminal disclosure, plus transfer basis, private reason/rationale, raw model output, and teacher action at every stage. Unknown fields are not spread into public component props or exports.
+The learner question projection consumes component 102's exact `PublicAssessmentDTO { id, student_id, selection_type, stem, options }`. The adapter maps the canonical `ProcessedMessageDTO` fields into component-owned presentation states without redefining or renaming the shared DTO. Learner feedback reads only `terminal_failure_feedback`, and only when `answer_outcome` is terminal `failed`; retry and passed results keep it null. Unknown fields are not spread into public component props or exports.
 
 ### 2. Identity and focus
 
@@ -85,7 +85,7 @@ Render `PublicAssessmentDTO` through the existing `PublicAssessmentQuestion` ins
 
 `RoomContext` maps component 102's result onto the delivered question. A first incorrect result displays only retry feedback and the persisted remaining count. Correct on either attempt and second incorrect are terminal; only an authorized terminal result can disclose the correct answer and learner-safe explanation. Reloads, remounts, reconnects, retries, and duplicate tabs re-read the same persisted attempt lifecycle. React never grades, increments or resets attempts, decides terminal state, or updates progress.
 
-Question rendering uses the structured stem once and structured options once. It ignores any legacy `rendered_text` option list rather than parsing strings. Every assessment message starts expanded; `PostComment` owns a participant-local disclosure toggle that does not unmount or change answer selection/result state and is never written to room state.
+Question rendering uses `PublicAssessmentDTO.stem` once and `PublicAssessmentDTO.options` once. The public DTO has no `rendered_text`, so no option-bearing string reaches the learner renderer. Every assessment message starts expanded; `PostComment` owns a participant-local disclosure toggle that does not unmount or change answer selection/result state and is never written to room state.
 
 ### 6. Room and turn modes
 

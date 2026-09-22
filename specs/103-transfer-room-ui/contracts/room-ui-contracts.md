@@ -33,45 +33,55 @@ It may not receive or display a draft identity, a draft revision, or an expected
 
 ## Public learner assessment allowlist
 
-Learner components import component 102's exported `PublicAssessmentDTO` directly and consume only its assessment identity, target learner identity, selection type, stem, rendered text, and ordered option fields. Component 103 does not redeclare this type. The delivered tutor message is the question: its own `id` is the assessment identity and its `content` is the stem. `student_id` determines which learner receives answer controls; teachers, observers, and other learners receive a read-only public rendering.
+Learner components import component 102's exported `PublicAssessmentDTO` directly and consume only `id`, `student_id`, `selection_type`, `stem`, and ordered `options`. Component 103 does not redeclare this type. The delivered tutor message is the question: its own `id` is the assessment identity and its `content` equals the stem. `student_id` is stable UI routing metadata: answer controls render only when the local participant matches it, and missing or mismatched identity fails closed. It is never treated as authorization; component 102 still verifies the principal and target learner.
 
 The projection has no `correct_option_ids`, `transfer_basis`, private `reason`, provider output, or teacher action. The renderer derives no answer key and does not perform semantic grading.
 
-The promoted component 102 contract must reconstruct the same `PublicAssessmentDTO` after reload, including `selection_type`, stem, and ordered options. Persisted message content is the stem only. The UI ignores `rendered_text` for learner rendering and never appends options to message content, so the stem and each structured option render exactly once. A missing selection type is an unavailable state; the UI never infers it from the answer key.
+The promoted component 102 contract reconstructs the same `PublicAssessmentDTO` after reload. `rendered_text` is not a public DTO field. Persisted `message.content` equals `assessment.stem`, and options appear only in `assessment.options`, so the UI renders the stem and each structured option exactly once. A missing selection type is an unavailable state; the UI never infers it from the answer key.
 
 ## Answer lifecycle result consumed by React
 
-The promoted `ProcessedMessageDTO` must let the UI render the persisted lifecycle without another authority. Component 103 proposes and consumes this exact shape; reconciliation must return any mismatch to component 102 rather than adapting it locally:
+The promoted `ProcessedMessageDTO` lets the UI render the persisted lifecycle without another authority. Component 103 imports and consumes this component-102-owned shape without redefining or renaming its fields:
 
 ```ts
 interface ProcessedMessageDTO {
-  question_id: string;
-  answer_message_id: string;
-  outcome: 'retry_incorrect' | 'terminal_correct' | 'terminal_incorrect';
-  attempts_used: 1 | 2;
-  attempts_remaining: 0 | 1;
+  message_id: string;
+  assessment_id: string;
+  processing_state: 'applied' | 'duplicate' | 'rejected' | 'deferred';
+  answer_outcome: 'retry' | 'passed' | 'failed' | null;
+  attempt_number: 1 | 2 | null;
+  attempts_used: 0 | 1 | 2;
+  attempts_remaining: 0 | 1 | 2;
+  selected_option_ids: AssessmentOptionId[] | null;
   terminal: boolean;
-  selected_option_ids: AssessmentOptionId[];
-  correct_option_ids?: AssessmentOptionId[];
-  learner_safe_explanation?: string;
+  transition: Record<string, unknown> | null;
+  feedback_required: boolean;
+  code: string | null;
   already_processed: boolean;
+  terminal_failure_feedback: {
+    correct_option_ids: AssessmentOptionId[];
+    learner_safe_explanation: string;
+  } | null;
 }
 ```
 
-`PublicAssessmentDTO` must include `student_id: string` in addition to `id`, `selection_type`, `stem`, `rendered_text`, and ordered options. The consumer semantics are:
+`PublicAssessmentDTO` is exactly `{ id, student_id, selection_type, stem, options }`. The consumer semantics are:
 
 | Semantic field | UI use | Constraint |
 |---|---|---|
-| `question_id` and `answer_message_id` | merge the result onto one delivered question/answer pair | stable persisted identities |
-| `outcome` | render retry, correct terminal, or incorrect terminal feedback | server-derived; never inferred from selected options |
+| `message_id` and `assessment_id` | merge the result onto one persisted answer/question pair | stable persisted identities |
+| `processing_state` | render applied, duplicate, rejected, or deferred mechanics | must not be renamed into a learning outcome |
+| `answer_outcome` | map `retry`, `passed`, `failed`, or null into component-owned presentation state | server-derived; never inferred from selected options |
+| `attempt_number` | identify the accepted first or second attempt | null when no attempt was applied |
 | `attempts_used` and `attempts_remaining` | display the authoritative count | persisted and identical after reload/reconnect/tab activity |
 | `terminal` | disable submission after resolution | server-derived; the UI has no reset path |
 | `selected_option_ids` | render the accepted selection when authorized | canonical IDs only |
-| `correct_option_ids` | render the role-safe answer | absent on retry and terminal-correct; required on terminal-incorrect |
-| `learner_safe_explanation` | render terminal teaching feedback | absent on retry and terminal-correct; required and non-empty on terminal-incorrect |
+| `transition` and `feedback_required` | render server-owned progress/feedback status without applying it locally | never interpreted as a browser write instruction |
+| `code` | render a safe rejected/deferred/error state | never silently coerced into an outcome |
 | `already_processed` | merge a replay without another visible attempt | returns the same persisted lifecycle |
+| `terminal_failure_feedback` | render its exact `correct_option_ids` and `learner_safe_explanation` | non-null only for an authorized terminal `answer_outcome: failed`, including a committed failure whose progress transition is deferred; null for retry, passed, null outcome, and unauthorized projections |
 
-The first incorrect result is non-terminal, reports one remaining attempt, and discloses neither the correct answer nor the learner-safe explanation. A correct answer on either attempt and a second incorrect answer are terminal. A third submission is rejected or returned as already terminal without another grade or progress transition.
+The first incorrect result is `answer_outcome: retry`, non-terminal, reports one remaining attempt, and has null `terminal_failure_feedback`. A correct answer on either attempt is terminal `passed` with null terminal feedback. A second incorrect answer is terminal `failed` and may disclose non-null `terminal_failure_feedback` only to the authorized learner, even when `processing_state: deferred` records a deferred progress transition. A third submission is rejected or returned as already processed without another grade or progress transition.
 
 ## Message relationship contract
 
@@ -100,11 +110,11 @@ The component-103 adapter imports component 101/102 exports unchanged and define
 - `duplicate`: an idempotent replay whose persisted result can be shown once;
 - `unauthorized`: no data or action is rendered (`FORBIDDEN`, `UNAUTHORIZED`);
 - `retryable`: transient transport or provider failure with a safe retry action;
-- `retry`: a persisted first-incorrect result with attempts remaining and no answer/explanation disclosure;
-- `terminal-correct`: a persisted correct result on either accepted attempt;
-- `terminal-incorrect`: a persisted second-incorrect result with role-safe answer/explanation disclosure;
-- `duplicate` or `already-terminal`: an idempotent replay whose persisted lifecycle is rendered once;
-- `invalid`: malformed, stale, unauthorized, or inconsistent lifecycle data that fails closed.
+- `retry`: mapped from `answer_outcome: retry`, with attempts remaining and null `terminal_failure_feedback`;
+- `terminal-correct`: mapped from terminal `answer_outcome: passed`, with null `terminal_failure_feedback`;
+- `terminal-incorrect`: mapped from terminal `answer_outcome: failed`, using `terminal_failure_feedback` without renaming or flattening its upstream fields;
+- `duplicate` or `already-terminal`: mapped from `processing_state`, `already_processed`, and the returned persisted lifecycle;
+- `invalid`: malformed, stale, unauthorized, rejected, or inconsistent lifecycle data that fails closed while preserving the upstream `code`.
 
 These states are view state only. They are never progress state and never a substitute for a server result.
 

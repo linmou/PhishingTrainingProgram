@@ -44,15 +44,15 @@ Record the repository and normative-plan evidence used to choose the smallest W7
 
 ### Decision: Render the backend-authoritative two-attempt lifecycle
 
-- **Decision**: Component 102 persists accepted attempts and returns attempts used/remaining, retry or terminal outcome, idempotency state, and role-safe terminal feedback. Component 103 renders those values and has no local attempt counter or reset path. Reloads, remounts, reconnects, retries, and duplicate tabs re-read the same lifecycle.
+- **Decision**: Component 103 imports component 102's canonical `ProcessedMessageDTO` unchanged and maps `processing_state`, `answer_outcome`, `attempt_number`, attempt counts, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback` into UI presentation. It has no local attempt counter or reset path. Reloads, remounts, reconnects, retries, and duplicate tabs re-read the same lifecycle.
 - **Rationale**: Browser-owned counting would let reloads or tabs regain attempts and would make React decide when to disclose the correct answer. That violates the server-authority constitution and cannot handle simultaneous final submissions safely.
 - **Alternatives considered**: Page-local attempt state, local-storage synchronization, or a client-generated terminal flag. All remain client authority and were rejected.
 
 ### Decision: Use selection controls and structured rendering
 
-- **Decision**: Extend the existing `PublicAssessmentQuestion` component: radio controls for single-answer questions, checkboxes for multiple-answer questions, an explicit Submit answer action disabled until selected, and no free-text assessment input. Render `stem` once and structured options once; ignore `rendered_text` as a learner rendering source.
+- **Decision**: Extend the existing `PublicAssessmentQuestion` component: radio controls for single-answer questions, checkboxes for multiple-answer questions, an explicit Submit answer action disabled until selected, and no free-text assessment input. Consume component 102's exact `PublicAssessmentDTO { id, student_id, selection_type, stem, options }`; render `stem` once and structured `options` once.
 - **Rationale**: The revised requirement makes valid submissions deterministic and fixes duplicated options at the data boundary instead of parsing display strings.
-- **Alternatives considered**: Parsing option labels from chat text, appending options to `rendered_text`, or stripping duplicated lines with pattern matching. These are unnecessary and brittle.
+- **Alternatives considered**: Adding `rendered_text` back to the public DTO, parsing option labels from chat text, or stripping duplicated lines with pattern matching. These conflict with 102 ownership or are unnecessary and brittle.
 
 ### Decision: Keep folding participant-local
 
@@ -97,7 +97,7 @@ The planning package for this component was written before upstream component 10
 ### Required upstream contracts for the UI upgrade (2026-09-22)
 
 - Component 101 supplies the two-attempt lifecycle semantics and learner-safe explanation field. Component 103 imports those contracts unchanged.
-- Component 102 persists selection type and exposes a reload-safe `PublicAssessmentDTO`; stores the learner message content as the stem rather than a rendered option list; persists attempts; and returns retry/terminal feedback with terminal-only answer and learner-safe explanation disclosure.
+- Component 102 owns the exact public and processed DTO fields. `PublicAssessmentDTO` has no `rendered_text`; `message.content` equals its stem. `ProcessedMessageDTO.terminal_failure_feedback` is non-null only for an authorized terminal `answer_outcome: failed` and contains the correct option IDs plus learner-safe explanation.
 - Component 102 resolves simultaneous/replayed submissions idempotently. Component 103 merges the returned persisted result and does not use button disabling as concurrency control.
 - Any promoted field-name or lifecycle mismatch is returned to component 101/102 during reconciliation. Component 103 does not add a compatibility DTO, local counter, text parser, or silent fallback.
 
@@ -120,5 +120,5 @@ After the corrections above, the package was re-checked for the consistency clas
 - **CRITICAL (resolved)**: The spec, plan, data model, contracts, tasks, and quickstart referenced a draft entity, a draft revision, a content hash, and three operations that do not exist in the promoted 102 contract. Implementing them was impossible. Resolved by Decisions 2026-09-12a through 2026-09-12e above.
 - **HIGH (resolved)**: FR-005 and FR-006 described server behavior with no corresponding server surface, so their tests could not fail and could not pass. Resolved by withdrawing and restating both.
 - **HIGH (resolved 2026-09-22)**: The revised spec originally assigned the two-attempt counter and reset behavior to the browser. Resolved by applying the approved backend-authoritative decision across the spec, plan, data model, consumer contract, tasks, and quickstart.
-- **MEDIUM (promoted dependency)**: Reload-safe selection type, persisted attempts, terminal feedback, and stem-only message content are required component 102 outputs. Component 103 fails closed if they are unavailable; it does not infer or locally recreate them.
+- **MEDIUM (resolved by reconciliation)**: Component 103 previously proposed competing DTO names. The package now consumes 102's canonical public and processed DTOs verbatim and confines renamed presentation concepts to component-owned React view state.
 - **LOW**: No remaining `[NEEDS CLARIFICATION]` marker, and every FR maps to a task in the Traceability table.

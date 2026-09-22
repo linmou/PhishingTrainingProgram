@@ -11,6 +11,7 @@ result: each number was read from the command output recorded in the run logs.
 - Current allocation head: `81e404c`, which preserves revised spec commit `94f0dce` and merges baseline `d6e1a589893e72862955404c277f5eb65b6edc4f`.
 - The approved correction makes the two-attempt lifecycle backend-authoritative across reloads, remounts, reconnects, retries, and duplicate tabs.
 - The implementation paths planned for this upgrade are `src/components/AssessmentDraftEditor.tsx`, `PublicAssessmentQuestion.tsx`, `PostComment.tsx`, `RoomPagePost.css`, `PostComment.css`, `src/contexts/transferAssessmentUiAdapter.ts`, `RoomContext.tsx`, `roomExportBuilder.ts`, `src/pages/RoomPagePost.tsx`, and their existing focused tests named in `quickstart.md`.
+- Reconciliation correction: component 102 owns DTO names. Component 103 consumes `PublicAssessmentDTO { id, student_id, selection_type, stem, options }` and canonical `ProcessedMessageDTO` fields unchanged; `terminal_failure_feedback` is the only learner disclosure source and is rendered only for terminal `answer_outcome: failed`.
 - The historical evidence below predates the new radio/checkbox submission, persisted two-attempt lifecycle, learner-safe explanation, exact-once option rendering, and participant-local folding requirements. It remains provenance only and does not satisfy the new implementation tasks; new red/green commands and results must be appended during implementation.
 
 ## Environment
