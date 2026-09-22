@@ -8,6 +8,7 @@ Give the implementation owner a focused verification order for W7-W8. These comm
 
 - Work from `tutor-system/` with the existing lockfile installed.
 - Use component 101's shared assessment/progress exports and component 102's exported six-operation facade (`initializeChecklist`, `postMessage`, `prepareTurn`, `sendReviewed`, `processMessage`, `analyzeMessage`), `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed envelopes. Keep React-only view-state types in `src/contexts/transferAssessmentUiAdapter.ts`; do not edit shared type files, `transferAssessmentService.ts`, or its service tests from component 103. There is no draft DTO, no `review_draft`, no `reject_draft`, and no `regenerate_draft`.
+- Require the promoted 102 result to persist attempts used/remaining, retry versus terminal state, idempotency outcome, terminal-only correct answer and learner-safe explanation, reload-safe selection type, and stem-only message content. Stop on contract drift; do not add a browser counter or text parser.
 - Keep `TRANSFER_ASSESSMENT_ENABLED` disabled unless the release owner has authorized a gate-complete environment.
 - Use isolated test data. Do not target a linked hosted project with reset, seed, migration push, or destructive commands.
 
@@ -28,7 +29,7 @@ gate by editing this command.
 cd tutor-system
 CI=true npx react-scripts test --watchAll=false --runInBand --runTestsByPath \
   src/components/__tests__/AssessmentDraftEditor.test.tsx \
-  src/components/__tests__/ChatMessage.transfer.test.tsx \
+  src/components/__tests__/PublicAssessmentQuestion.test.tsx \
   src/components/__tests__/PostComment.transfer.test.tsx \
   src/components/__tests__/ChecklistPanel.transfer.test.tsx \
   src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx \
@@ -53,11 +54,13 @@ npm run build
 The focused tests must cover:
 
 - correct focus student/message/checklist/item identity and parent IDs, including `itemId` kept `string | null`;
-- public learner fields versus private teacher review-candidate fields, with `assessment_key` asserted absent from UI state, props, and exports;
+- public learner fields versus private teacher review-candidate fields, with `assessment_key` and pre-terminal learner-safe explanation asserted absent from UI state, props, and exports;
 - dirty edit, reconfirm, an already-open delivery refused as superseded, and mode mismatch;
 - tutoring/Guard room participation with assessment turn delivery;
-- deterministic answer submission through chat without a local progress write;
-- initial fetch, realtime duplicate, reconnect catch-up, reload, timeout retry, and duplicate-tab convergence;
+- single-answer radios, multiple-answer checkboxes, explicit disabled-until-selected submission, canonical option IDs, and no free-text assessment input;
+- first-incorrect retry without disclosure, correct terminal on either attempt, second-incorrect terminal with role-safe answer/explanation, and no third submission;
+- initial fetch, realtime duplicate, reconnect catch-up, reload, timeout retry, and duplicate-tab convergence on the same persisted attempts used/remaining and terminal state;
+- stem and options rendered exactly once, expanded-by-default messages, accessible participant-local folding, and preserved selection/result state while collapsed;
 - owner-scoped progress views, legacy/transfer separation, and public/private exports;
 - structured downstream decision consumption rather than copied suggestion text.
 

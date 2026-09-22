@@ -14,7 +14,7 @@ Component 102's browser facade exports exactly these six typed methods. This tab
 | `prepare_turn` (`prepareTurn`) | `roomId`, `focusStudentMessageId`, `checklistId` | the generated candidate `TutorDecisionV3` decision plus the prepared scope identity (`room_id`, `student_id`, `checklist_id`, `item_id`, `focus_student_message_id`) and the server's informational `progress_snapshot_hash` echo |
 | `send_reviewed` (`sendReviewed`) | `reviewedPayload` (`TutorDecisionV3`), `roomId`, `studentId`, `checklistId`, `itemId` (`string \| null`), `focusStudentMessageId` | `ReviewedDeliveryDTO` = delivered `PublicMessageDTO` plus the updated `Room` |
 | `post_message` (`postMessage`) | `roomId`, content, optional `replyToMessageId`, optional `assessmentId` | persisted message row (`Record<string, unknown>`) that the UI must project before it enters React state |
-| `process_message` (`processMessage`) | persisted answer/message ID | `ProcessedMessageDTO` = the server's own grading lifecycle result, never a client grade or progress write instruction |
+| `process_message` (`processMessage`) | persisted answer/message ID plus the delivered assessment identity carried by the stored message | `ProcessedMessageDTO` = the server's persisted grading and attempt lifecycle result, never a client grade, attempt mutation, disclosure decision, or progress write instruction |
 | `analyze_message` (`analyzeMessage`) | persisted message ID and room ID | explicit evidence/lifecycle result for the server-owned path |
 
 There is no `capabilities`, no `review_draft`, no `reject_draft`, and no `regenerate_draft` operation. Teacher confirmation is UI-local review state; the only persistence call on the review path is `sendReviewed`. `sendReviewed` carries no expected draft revision and no expected content hash, because no draft row exists.
@@ -33,15 +33,49 @@ It may not receive or display a draft identity, a draft revision, or an expected
 
 ## Public learner assessment allowlist
 
-Learner components import component 102's exported `PublicAssessmentDTO` directly and consume only its assessment identity, selection type, stem, rendered text, and ordered option fields. Component 103 does not redeclare this type. The delivered tutor message is the question: its own `id` is the assessment identity and its `content` is the stem.
+Learner components import component 102's exported `PublicAssessmentDTO` directly and consume only its assessment identity, target learner identity, selection type, stem, rendered text, and ordered option fields. Component 103 does not redeclare this type. The delivered tutor message is the question: its own `id` is the assessment identity and its `content` is the stem. `student_id` determines which learner receives answer controls; teachers, observers, and other learners receive a read-only public rendering.
 
 The projection has no `correct_option_ids`, `transfer_basis`, private `reason`, provider output, or teacher action. The renderer derives no answer key and does not perform semantic grading.
 
-Recorded upstream limitation: the promoted one-table design stores only the ordered options on the delivered message (`messages.assessment_options`). It does not persist `selection_type` or `rendered_text`, and the public message DTO allowlist does not carry them either, so a room reload cannot reconstruct a complete `PublicAssessmentDTO` from persisted state. The UI therefore renders the stem and the ordered options from the message, renders the canonical instruction only when a selection type is explicitly available, and otherwise shows an explicit unavailable-instruction state. It never infers the selection type from the assessment key and never reads `assessment_key` at all.
+The promoted component 102 contract must reconstruct the same `PublicAssessmentDTO` after reload, including `selection_type`, stem, and ordered options. Persisted message content is the stem only. The UI ignores `rendered_text` for learner rendering and never appends options to message content, so the stem and each structured option render exactly once. A missing selection type is an unavailable state; the UI never infers it from the answer key.
+
+## Answer lifecycle result consumed by React
+
+The promoted `ProcessedMessageDTO` must let the UI render the persisted lifecycle without another authority. Component 103 proposes and consumes this exact shape; reconciliation must return any mismatch to component 102 rather than adapting it locally:
+
+```ts
+interface ProcessedMessageDTO {
+  question_id: string;
+  answer_message_id: string;
+  outcome: 'retry_incorrect' | 'terminal_correct' | 'terminal_incorrect';
+  attempts_used: 1 | 2;
+  attempts_remaining: 0 | 1;
+  terminal: boolean;
+  selected_option_ids: AssessmentOptionId[];
+  correct_option_ids?: AssessmentOptionId[];
+  learner_safe_explanation?: string;
+  already_processed: boolean;
+}
+```
+
+`PublicAssessmentDTO` must include `student_id: string` in addition to `id`, `selection_type`, `stem`, `rendered_text`, and ordered options. The consumer semantics are:
+
+| Semantic field | UI use | Constraint |
+|---|---|---|
+| `question_id` and `answer_message_id` | merge the result onto one delivered question/answer pair | stable persisted identities |
+| `outcome` | render retry, correct terminal, or incorrect terminal feedback | server-derived; never inferred from selected options |
+| `attempts_used` and `attempts_remaining` | display the authoritative count | persisted and identical after reload/reconnect/tab activity |
+| `terminal` | disable submission after resolution | server-derived; the UI has no reset path |
+| `selected_option_ids` | render the accepted selection when authorized | canonical IDs only |
+| `correct_option_ids` | render the role-safe answer | absent on retry and terminal-correct; required on terminal-incorrect |
+| `learner_safe_explanation` | render terminal teaching feedback | absent on retry and terminal-correct; required and non-empty on terminal-incorrect |
+| `already_processed` | merge a replay without another visible attempt | returns the same persisted lifecycle |
+
+The first incorrect result is non-terminal, reports one remaining attempt, and discloses neither the correct answer nor the learner-safe explanation. A correct answer on either attempt and a second incorrect answer are terminal. A third submission is rejected or returned as already terminal without another grade or progress transition.
 
 ## Message relationship contract
 
-Every assessment answer message must preserve the persisted assessment identity and its actual `parent_message_id` when a question is being answered. An ordinary learner message has no assessment identity. A UI retry must reuse the upstream request identity and must merge the returned persisted message by ID.
+Every assessment answer must preserve the persisted assessment identity and its actual `parent_message_id`. The selection control serializes only displayed canonical option IDs into the existing `content` field: `B` for a single answer and uppercase IDs in A-D order separated by comma-space (for example, `B, D`) for multiple answers. It does not accept free text. An ordinary learner chat message has no assessment identity. A UI retry reuses the upstream request identity and merges the returned persisted message/result by ID.
 
 `itemId` is `string | null`. A tutoring or Guard turn has no checklist item, and the browser must pass `null` rather than the string `"null"`, which the server rejects as an invalid UUID.
 
@@ -66,9 +100,22 @@ The component-103 adapter imports component 101/102 exports unchanged and define
 - `duplicate`: an idempotent replay whose persisted result can be shown once;
 - `unauthorized`: no data or action is rendered (`FORBIDDEN`, `UNAUTHORIZED`);
 - `retryable`: transient transport or provider failure with a safe retry action;
-- `lifecycle`: the server's own answer outcome, including unresolved-format, already-processed, assisted, and invalidated results.
+- `retry`: a persisted first-incorrect result with attempts remaining and no answer/explanation disclosure;
+- `terminal-correct`: a persisted correct result on either accepted attempt;
+- `terminal-incorrect`: a persisted second-incorrect result with role-safe answer/explanation disclosure;
+- `duplicate` or `already-terminal`: an idempotent replay whose persisted lifecycle is rendered once;
+- `invalid`: malformed, stale, unauthorized, or inconsistent lifecycle data that fails closed.
 
 These states are view state only. They are never progress state and never a substitute for a server result.
+
+## Selection and disclosure controls
+
+- `single` questions render one radio group; `multiple` questions render checkboxes.
+- Submit answer is explicit and disabled with no selection, while a submission is pending, or after a terminal result.
+- Option order is canonical A-D; selection serialization is deterministic and independent of click order.
+- Every transfer-assessment message starts expanded and exposes an accessible collapse/expand icon to every participant.
+- Expanded state is participant-local React state and is never written to room, message, attempt, or progress state.
+- Collapsing does not clear a selection, cancel a submission, or alter the authoritative lifecycle result.
 
 ## Contract ownership
 

@@ -6,6 +6,13 @@ Record the commands actually run on branch `103-transfer-room-ui`, their exit co
 counts, every failure with its cause, and every gate that is deferred. Nothing here is a projected
 result: each number was read from the command output recorded in the run logs.
 
+## Upgrade Planning Status (2026-09-22)
+
+- Current allocation head: `81e404c`, which preserves revised spec commit `94f0dce` and merges baseline `d6e1a589893e72862955404c277f5eb65b6edc4f`.
+- The approved correction makes the two-attempt lifecycle backend-authoritative across reloads, remounts, reconnects, retries, and duplicate tabs.
+- The implementation paths planned for this upgrade are `src/components/AssessmentDraftEditor.tsx`, `PublicAssessmentQuestion.tsx`, `PostComment.tsx`, `RoomPagePost.css`, `PostComment.css`, `src/contexts/transferAssessmentUiAdapter.ts`, `RoomContext.tsx`, `roomExportBuilder.ts`, `src/pages/RoomPagePost.tsx`, and their existing focused tests named in `quickstart.md`.
+- The historical evidence below predates the new radio/checkbox submission, persisted two-attempt lifecycle, learner-safe explanation, exact-once option rendering, and participant-local folding requirements. It remains provenance only and does not satisfy the new implementation tasks; new red/green commands and results must be appended during implementation.
+
 ## Environment
 
 - Worktree: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-room-ui`, branch `103-transfer-room-ui`.

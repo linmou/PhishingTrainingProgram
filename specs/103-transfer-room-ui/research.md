@@ -42,6 +42,24 @@ Record the repository and normative-plan evidence used to choose the smallest W7
 - **Rationale**: The existing `AssessmentDraftEditor` already resets `contentConfirmed` on edits and calls the shared v3 validator. There is no draft row, so there is no server-side revision to confirm against; W7/W8 add lifecycle tests and the conflict/catch-up handling around this behavior.
 - **Alternatives considered**: Preserving confirmation after edits, or inventing a client-side revision to simulate the dropped draft table. The first can deliver content different from what the teacher reviewed; the second implements an API that does not exist.
 
+### Decision: Render the backend-authoritative two-attempt lifecycle
+
+- **Decision**: Component 102 persists accepted attempts and returns attempts used/remaining, retry or terminal outcome, idempotency state, and role-safe terminal feedback. Component 103 renders those values and has no local attempt counter or reset path. Reloads, remounts, reconnects, retries, and duplicate tabs re-read the same lifecycle.
+- **Rationale**: Browser-owned counting would let reloads or tabs regain attempts and would make React decide when to disclose the correct answer. That violates the server-authority constitution and cannot handle simultaneous final submissions safely.
+- **Alternatives considered**: Page-local attempt state, local-storage synchronization, or a client-generated terminal flag. All remain client authority and were rejected.
+
+### Decision: Use selection controls and structured rendering
+
+- **Decision**: Extend the existing `PublicAssessmentQuestion` component: radio controls for single-answer questions, checkboxes for multiple-answer questions, an explicit Submit answer action disabled until selected, and no free-text assessment input. Render `stem` once and structured options once; ignore `rendered_text` as a learner rendering source.
+- **Rationale**: The revised requirement makes valid submissions deterministic and fixes duplicated options at the data boundary instead of parsing display strings.
+- **Alternatives considered**: Parsing option labels from chat text, appending options to `rendered_text`, or stripping duplicated lines with pattern matching. These are unnecessary and brittle.
+
+### Decision: Keep folding participant-local
+
+- **Decision**: Every assessment message starts expanded. `PostComment` owns an accessible expanded/collapsed boolean for its mounted participant; toggling it does not update room state and does not unmount or clear answer selection or lifecycle feedback.
+- **Rationale**: Folding is a display preference, not collaborative assessment state. Keeping the interactive child mounted preserves in-progress selection without introducing persistence.
+- **Alternatives considered**: Persisting folding on the message or in shared room context. Both would incorrectly make one participant's preference affect others.
+
 ## Reconciliation decisions (2026-09-12)
 
 The planning package for this component was written before upstream component 102 collapsed transfer-assessment storage from five tables to one private table (`private.learning_event_inbox`) with the assessment stamped onto `public.messages`, and before the review step was folded into `send_reviewed`. The promoted 102 contract is exactly six operations: `initialize_checklist`, `post_message`, `prepare_turn`, `send_reviewed`, `process_message`, `analyze_message`. Everything below records a correction of the stale text, not a deferral of it. The old text is wrong and is removed rather than implemented.
@@ -76,16 +94,17 @@ The planning package for this component was written before upstream component 10
 - **Reason**: Tasks that name deleted operations would have produced tests and code for an API that cannot exist.
 - **Alternatives considered**: Leaving the tasks and marking them "deferred upstream". Rejected: they are not deferred, they are withdrawn, and a future reader would otherwise wait for a contract that was deliberately dropped.
 
-### Upstream gaps recorded, not worked around (2026-09-12)
+### Required upstream contracts for the UI upgrade (2026-09-22)
 
-- The delivered tutor message stores only the ordered options (`messages.assessment_options`) and the stem (`messages.content`). The selection type and rendered text are not persisted, and `PublicMessageDTO` does not carry them. A room reload cannot reconstruct a complete `PublicAssessmentDTO`; the UI renders the stem, the ordered options, and an explicit unavailable-instruction state rather than inferring a selection type from `assessment_key`.
-- `process_assessment_message_v1` returns `message_id`, while `ProcessedMessageDTO.question_id` in the 102 facade reads `question_id`. This is component 102's mapping and is reported, not edited here.
-- `assessment_key` is readable from `public.messages` by a crafted request by recorded owner tradeoff. Component 103's obligation is that the browser never retains or renders it; the tests assert its absence from UI state, props, and exports.
+- Component 101 supplies the two-attempt lifecycle semantics and learner-safe explanation field. Component 103 imports those contracts unchanged.
+- Component 102 persists selection type and exposes a reload-safe `PublicAssessmentDTO`; stores the learner message content as the stem rather than a rendered option list; persists attempts; and returns retry/terminal feedback with terminal-only answer and learner-safe explanation disclosure.
+- Component 102 resolves simultaneous/replayed submissions idempotently. Component 103 merges the returned persisted result and does not use button disabling as concurrency control.
+- Any promoted field-name or lifecycle mismatch is returned to component 101/102 during reconciliation. Component 103 does not add a compatibility DTO, local counter, text parser, or silent fallback.
 
 
 - Normative source SHA-256: `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2`.
 - Normative package: `plan/transfer_assessment_implementation_plan/final_plan.md`, `traceability_graph.md`, `verification_gates.md`, `milestone_ledger.md`, and `work_packages/03_transfer_runtime.md`.
-- Existing UI path: `tutor-system/src/contexts/RoomContext.tsx`, `src/pages/RoomPagePost.tsx`, `src/components/AssessmentDraftEditor.tsx`, `src/components/PostComment.tsx`, and `src/components/ChatMessage.tsx`.
+- Existing UI path: `tutor-system/src/contexts/RoomContext.tsx`, `src/pages/RoomPagePost.tsx`, `src/components/AssessmentDraftEditor.tsx`, `src/components/PublicAssessmentQuestion.tsx`, and `src/components/PostComment.tsx`.
 - Component 101-owned shared assessment/progress exports: `tutor-system/src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`; component 103 does not edit them.
 - Component 102-owned browser facade: `tutor-system/src/services/transferAssessmentService.ts`; component 103 consumes its exported types and methods without modifying it.
 - Existing tests: `src/services/__tests__/transferAssessmentService.test.ts`, `src/services/__tests__/transferAssessmentMigration.test.ts`, and the room/component test suites.
@@ -100,6 +119,6 @@ After the corrections above, the package was re-checked for the consistency clas
 
 - **CRITICAL (resolved)**: The spec, plan, data model, contracts, tasks, and quickstart referenced a draft entity, a draft revision, a content hash, and three operations that do not exist in the promoted 102 contract. Implementing them was impossible. Resolved by Decisions 2026-09-12a through 2026-09-12e above.
 - **HIGH (resolved)**: FR-005 and FR-006 described server behavior with no corresponding server surface, so their tests could not fail and could not pass. Resolved by withdrawing and restating both.
-- **MEDIUM (recorded, not resolved here)**: The learner public question cannot be fully reconstructed from persisted state because the selection type is not persisted. Mitigated in the UI contract and recorded as an upstream gap for component 102; no silent fallback is introduced.
-- **LOW**: No remaining `[NEEDS CLARIFICATION]` marker, and every restated FR still maps to a task in the Traceability table.
-
+- **HIGH (resolved 2026-09-22)**: The revised spec originally assigned the two-attempt counter and reset behavior to the browser. Resolved by applying the approved backend-authoritative decision across the spec, plan, data model, consumer contract, tasks, and quickstart.
+- **MEDIUM (promoted dependency)**: Reload-safe selection type, persisted attempts, terminal feedback, and stem-only message content are required component 102 outputs. Component 103 fails closed if they are unavailable; it does not infer or locally recreate them.
+- **LOW**: No remaining `[NEEDS CLARIFICATION]` marker, and every FR maps to a task in the Traceability table.
