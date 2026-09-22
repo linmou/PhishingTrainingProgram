@@ -220,6 +220,59 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
   }
 });
 
+Deno.test('fails preparation without retry when provider audit persistence fails', async () => {
+  let providerCalls = 0;
+  const handler = createAssessmentApiHandler(dependencies({
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    rpc: async (name) => {
+      if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
+      return { data: null, error: { message: 'audit insert failed' } };
+    },
+    fetch: async () => {
+      providerCalls += 1;
+      return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
+    },
+  }));
+  const response = await handler(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const payload = await response.json();
+  assertEquals(payload.error.code, 'PERSISTENCE_FAILED');
+  assertEquals(providerCalls, 1);
+});
+
+Deno.test('preserves trusted ordinary-message and tutoring-turn branches', async () => {
+  const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    rpc: async (name, args) => {
+      calls.push({ name, args });
+      if (name === 'post_assessment_message_v2') return { data: { message: { id: 'message-1' } }, error: null };
+      return { data: {
+        message: {
+          id: 'tutor-1', room_id: 'room-1', user_id: 'teacher-1', content: 'Let us review.',
+          user_role: 'tutor', parent_message_id: 'focus-1', response_mode: 'tutoring',
+          assessment: null, created_at: '2026-09-22T00:00:00Z',
+        }, room: { id: 'room-1' },
+      }, error: null };
+    },
+  }));
+  const ordinary = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
+  assertEquals((await ordinary.json()).ok, true);
+  const reviewed = await handler(request('send_reviewed', {
+    room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+    item_id: null, focus_student_message_id: 'focus-1',
+    reviewed_payload: {
+      reason: 'Teach before assessing.',
+      decision: { mode: 'tutoring', instruction: 'explanation', target_item_id: null },
+      response: 'Let us review.', assessment: null,
+    },
+  }));
+  const payload = await reviewed.json();
+  assertEquals(payload.data.message.assessment, null);
+  assertEquals(calls[0].args.p_assessment_id, null);
+  assertEquals(calls[1].args.p_item_id, null);
+});
+
 Deno.test('retries a stale CAS snapshot and returns the committed authoritative result', async () => {
   let contextReads = 0;
   let commits = 0;
