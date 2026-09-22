@@ -22,10 +22,10 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 
 | Component | Owner | Artifacts | Analysis | Commit |
 |---|---|---|---|---|
-| 101 | `/root/owner_101_domain` | Complete | PASS; 0 CRITICAL/HIGH | `765a8e9` |
-| 102 | `/root/owner_102_backend` | Complete; package restored | PASS; 0 CRITICAL/HIGH | `a8c8b31` |
-| 103 | `/root/owner_103_ui` | Complete | PASS; 0 CRITICAL/HIGH | `ade6a74` |
-| 104 | `/root/owner_104_evaluation` | Complete | PASS; 0 CRITICAL/HIGH | `b03e162` |
+| 101 | `/root/owner_101_domain` | Complete | PASS; 0 CRITICAL/HIGH | `ccdf695` |
+| 102 | `/root/owner_102_backend` | Complete; package restored | PASS; 0 CRITICAL/HIGH | `a43c143` |
+| 103 | `/root/owner_103_ui` | Complete | PASS; 0 CRITICAL/HIGH | `f114362` |
+| 104 | `/root/owner_104_evaluation` | Complete | PASS; 0 CRITICAL/HIGH | `c796576` |
 
 ## Clarification Batch 1
 
@@ -38,7 +38,16 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 
 ## Reconciliation
 
-All component planning packages passed their local artifact gates. Cross-component reconciliation is in progress; implementation remains closed.
+All component planning packages passed their local artifact gates. Reconciliation passed after the following component-local corrections:
+
+| ID | Conflict | Canonical resolution | Owner | Corrective commit |
+|---|---|---|---|---|
+| R01 | 101 described pass and failure terminal feedback alike while the approved learner behavior discloses feedback only after the second incorrect attempt. | Passed domain feedback remains private/server-only with `learner_feedback_authorized: false`; only failed second attempts authorize learner key/explanation projection. | 101 | `ccdf695` |
+| R02 | 102 excluded learner target routing metadata while 103 required it to select which participant receives controls. | `PublicAssessmentDTO` is `{ id, student_id, selection_type, stem, options }`; `student_id` is immutable routing metadata, never authorization. | 102 | `a43c143` |
+| R03 | 103 proposed renamed DTO fields and retained `rendered_text`, conflicting with the 102-owned facade and exact-once option rendering. | 103 consumes the exact 102 `ProcessedMessageDTO`; public assessment excludes `rendered_text`; adapter-local names exist only after mapping. | 103 | `f114362` |
+| R04 | 104 did not pin the exact reconciled DTO fields and initially referred to browser-prefixed provider authority. | 104 pins the exact 102 DTO and server-only `OAI_API_KEY`, `OAI_BASE_URL`, `OAI_MODEL=qwen3.5-flash` configuration. | 104 | `c796576` |
+
+All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. The authoritative DAG and five edge work packets are recorded in `dependency-graph.md`; implementation is now dependency-ready for 101 only.
 
 ## Integration And Promotion
 
