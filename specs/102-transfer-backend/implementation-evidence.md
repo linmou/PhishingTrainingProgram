@@ -32,6 +32,7 @@
 - Browser service invokes only the six trusted operations and has no direct table access, provider transport, grading, progress mutation, browser identity authority, local attempt count, or model fallback.
 - Public assessment projection is exactly `{id, student_id, selection_type, stem, options}` at runtime. `student_id` is routing metadata only.
 - Edge processing reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and submits the result to a row-locked expected-count/expected-resolution RPC. `CONCURRENT_MODIFICATION` causes a bounded reread and re-resolution.
+- `tutor-system/deno.json` enables Deno sloppy-import resolution for the existing CRA domain graph, so the Edge boundary can import the one component-101 resolver rather than copy its lifecycle rules.
 - First wrong commits attempt 1 without a learning event or feedback. Pass and second failure commit attempt, lifecycle, causal learning event, progress/history, and result together. Only committed failure returns key plus learner-safe explanation.
 - Provider configuration is server-only and requires exact `qwen3.5-flash`; one format repair is permitted and every attempt is privately audited without credentials.
 - `TRANSFER_ASSESSMENT_ENABLED=false` remains documented and the default deployment state.
