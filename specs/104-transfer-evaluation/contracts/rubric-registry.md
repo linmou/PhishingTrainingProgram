@@ -32,11 +32,13 @@ It returns typed per-case results with `pass`, `fail`, `missing`, or `error`. It
 
 `learner_explanation_disclosure` MUST cover:
 
+- exact `PublicAssessmentDTO {id, student_id, selection_type, stem, options}` and rejection of `rendered_text` or any extra field;
 - no `correct_option_ids` or `learner_safe_explanation` in delivery, first-incorrect, or pass projections;
 - both fields in the authorized learner's second-incorrect terminal projection;
 - no transfer basis, model rationale, raw output, credentials, unrelated learner data, or other private fields in learner projections;
 - generated/reviewed explanation provenance and equality between the reviewed value and terminal learner value;
 - explicit fail/missing/error evidence for leakage, partial terminal feedback, or missing provenance.
+- canonical `ProcessedMessageDTO.processing_state`, `answer_outcome`, and `terminal_failure_feedback` field names rather than evaluator aliases.
 
 The check compares explicit DTO allowlists, stage, identity, and source provenance. It does not use keyword matching as a semantic-quality substitute.
 

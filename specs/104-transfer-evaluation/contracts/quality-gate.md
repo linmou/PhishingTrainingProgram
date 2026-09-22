@@ -23,6 +23,7 @@ Return `accepted` only when all of the following hold:
 11. The manifest pins promoted component 101/102 contract identities and every attempt sequence enforces the two-attempt lifecycle with exactly one terminal transition.
 12. `learner_explanation_quality` is calibrated and meets its frozen semantic thresholds; missing, incorrect, contradictory, irrelevant, or privacy-unsafe reviewed explanations remain blocking.
 13. Target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider recorded at integration commit `df40f32`; missing/mismatched settings block with no fallback.
+14. Every `PublicAssessmentDTO` contains exactly `id`, `student_id`, `selection_type`, `stem`, and `options` with no `rendered_text`, and every result projection uses the canonical `ProcessedMessageDTO` field names.
 
 Return `failed` for an observed behavior/threshold/pair/regression failure with complete evidence. Return `incomplete` for missing or errored execution/judge/manifest evidence. Both outcomes block acceptance.
 
@@ -69,6 +70,8 @@ The later implementation must include explicit tests for at least:
 | Terminal failure omits answer or explanation | incomplete | both role-safe feedback fields are required together |
 | Missing/mismatched 101/102 contract identity | incomplete | upgraded evidence cannot run against an unknown producer contract |
 | Target/judge model or provider mismatch | incomplete | required `qwen3.5-flash` DashScope-compatible configuration is named |
+| Public assessment omits `student_id` or contains `rendered_text` | incomplete | exact canonical allowlist and offending field are reported |
+| Result uses noncanonical processing/outcome/feedback fields | incomplete | expected `processing_state`, `answer_outcome`, and `terminal_failure_feedback` are reported |
 
 ## Non-substitution boundary
 

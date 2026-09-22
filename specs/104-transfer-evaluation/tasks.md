@@ -121,7 +121,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 
 **Purpose**: Bind the upgrade to real promoted producer contracts before any executable change.
 
-- [ ] T045 Record promoted component 101 contract commit/hash, component 102 contract commit/hash, integration promotion SHA, canonical T09 reconciliation reference, and ownership boundaries in `specs/104-transfer-evaluation/integration-edge.md`.
+- [ ] T045 Record promoted component 101 contract commit/hash, component 102 planning commit `a8c8b31a91bcc1970071117ac0dbbd2dffce85ef` plus its final reconciled commit/hash, integration promotion SHA, canonical T09 reconciliation reference, and ownership boundaries in `specs/104-transfer-evaluation/integration-edge.md`.
 - [ ] T046 [P] Record the authorized `qwen3.5-flash` target/judge and DashScope-compatible provider decision from integration commit `df40f32`, required environment variable names, and no-fallback rule in `specs/104-transfer-evaluation/quickstart.md` and `evals/promptfoo/v1/transfer/manifest.json`.
 - [ ] T047 Activate the repository `fast-multi-agent-tdd` workflow for the executable upgrade and record its request map/scope before changing tests or harness code under `audits/transfer_eval_two_attempt_*`.
 
@@ -143,7 +143,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 **Independent Test**: Deterministic fixtures enforce at most two consumed valid attempts, first-wrong retry, correct-on-either pass, second-wrong fail, and exactly one terminal transition across reload/tab/concurrency variants.
 
 - [ ] T052 [P] [US2] Write failing lifecycle tests in `evals/promptfoo/v1/transfer/followup.test.js` for the full attempt matrix, non-consuming dispositions, concurrent second submissions, idempotent replay, and post-terminal/third submissions.
-- [ ] T053 [P] [US2] Write failing producer-contract compatibility tests in `evals/promptfoo/v1/transfer/contract-checks.test.js` for promoted `TransferAttemptSnapshot`, `TransferResolvedAssessment`, and `ProcessedMessageDTO` fields and terminal-feedback cardinality.
+- [ ] T053 [P] [US2] Write failing producer-contract compatibility tests in `evals/promptfoo/v1/transfer/contract-checks.test.js` for promoted `TransferAttemptSnapshot`/`TransferResolvedAssessment`; exact `PublicAssessmentDTO {id, student_id, selection_type, stem, options}` with no `rendered_text`; and every canonical `ProcessedMessageDTO` field including `processing_state`, `answer_outcome`, and terminal-feedback cardinality.
 - [ ] T054 [US2] Upgrade deterministic lifecycle evaluation in `evals/promptfoo/v1/transfer/followup-checks.js` to compare promoted authoritative snapshots and dispositions while preserving distinct `fail`, `missing`, and `error` evidence.
 - [ ] T055 [US2] Upgrade contract/progress checks and evaluator registration in `evals/promptfoo/v1/transfer/contract-checks.js` and `evals/promptfoo/v1/evaluator.js` without calculating answer correctness or mutating attempt state.
 
@@ -154,7 +154,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 **Independent Test**: Calibration distinguishes correct from incorrect/irrelevant/contradictory/privacy-unsafe explanations, and disclosure fixtures expose key plus explanation only for an authorized second-incorrect terminal failure.
 
 - [ ] T056 [P] [US3] Write failing semantic calibration tests in `evals/promptfoo/v1/transfer/calibration.test.js` for positive, incorrect, irrelevant, contradictory, missing, privacy-unsafe, teacher-edited, judge-error, and disagreement examples.
-- [ ] T057 [P] [US3] Write failing disclosure/provenance tests in `evals/promptfoo/v1/transfer/contract-checks.test.js` and `evidence-record.test.js` for delivery, first incorrect, pass, second-incorrect terminal, partial feedback, wrong-role, and generated-versus-reviewed value cases.
+- [ ] T057 [P] [US3] Write failing disclosure/provenance tests in `evals/promptfoo/v1/transfer/contract-checks.test.js` and `evidence-record.test.js` for the exact public-assessment allowlist, prohibited `rendered_text`, delivery, first incorrect, pass, second-incorrect terminal, partial feedback, wrong-role, and generated-versus-reviewed value cases.
 - [ ] T058 [US3] Add the `learner_explanation_quality` rubric and registry entry in `evals/promptfoo/rubrics/v1/learner_explanation_quality.md`, `evals/promptfoo/rubrics/v1/manifest.json`, and `evals/promptfoo/v1/transfer/metric-registry.json` with one semantic property and frozen calibration rules.
 - [ ] T059 [US3] Implement/register `learner_explanation_disclosure` in `evals/promptfoo/v1/transfer/contract-checks.js` and `evals/promptfoo/v1/evaluator.js` using explicit DTO allowlists, stage, identity, and provenance rather than keyword matching.
 - [ ] T060 [US3] Preserve generated/reviewed explanation values, edit provenance, reviewed-value judgment, terminal learner projection, and full input-output pairs in `evals/promptfoo/v1/transfer/evidence-record.js`.
@@ -165,7 +165,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 
 **Independent Test**: Gate fixtures produce no accepted verdict for any missing lifecycle/disclosure row, explanation failure, upstream hash drift, provider mismatch, request mismatch, or baseline regression.
 
-- [ ] T061 [P] [US4] Write failing request-parity/comparison tests in `evals/promptfoo/v1/transfer/shared-request-contract.test.js` and `comparison.test.js` for promoted builder/prompt/context hashes, terminal explanation request shape, target/judge model/provider settings, and normalized request equality.
+- [ ] T061 [P] [US4] Write failing request-parity/comparison tests in `evals/promptfoo/v1/transfer/shared-request-contract.test.js` and `comparison.test.js` for promoted builder/prompt/context hashes, canonical public/result DTO field names, terminal explanation request shape, server-only `OAI_*` target/judge model/provider settings, and normalized request equality.
 - [ ] T062 [P] [US4] Write failing quality-gate tests in `evals/promptfoo/v1/transfer/quality-gate.test.js` for lifecycle/disclosure hard checks, explanation thresholds, missing promoted hashes, zero coverage, semantic pairs, provider mismatch, and non-regression.
 - [ ] T063 [US4] Upgrade shared-request consumption, runner registration, and comparison in `evals/promptfoo/v1/transfer/shared-request-contract.js`, `runner-config.js`, and `comparison.js` without copying the production prompt or provider-secret logic.
 - [ ] T064 [US4] Upgrade the blocking gate, immutable report, and non-substitution diagnostics in `evals/promptfoo/v1/transfer/quality-gate.js` and `report.js`.

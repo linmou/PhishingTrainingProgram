@@ -4,7 +4,7 @@
 
 ## Decision 0: Consume promoted lifecycle and DTO contracts
 
-**Decision**: Pin and consume component 101's `TransferAttemptSnapshot`/`TransferResolvedAssessment` and component 102's `ProcessedMessageDTO`/`terminal_failure_feedback` contracts. Evaluation fixtures record their observable before/after results; evaluator code does not re-grade answers, increment attempts, authorize users, or apply progress.
+**Decision**: Pin and consume component 101's `TransferAttemptSnapshot`/`TransferResolvedAssessment` and component 102's exact public/result contracts. `PublicAssessmentDTO` is `{id, student_id, selection_type, stem, options}` and excludes `rendered_text`. `ProcessedMessageDTO` uses canonical `processing_state`, `answer_outcome`, attempt/result fields, and terminal-only `terminal_failure_feedback`. Evaluation fixtures record observable before/after results; evaluator code does not re-grade answers, increment attempts, authorize users, or apply progress.
 
 **Rationale**: Attempts are server-authoritative across reloads and tabs. Reconstructing their rules in the harness would create a second authority and could make a synthetic fixture pass while the real producer-consumer handoff fails.
 
@@ -62,7 +62,7 @@
 
 **Rationale**: This preserves comparable evidence and holdout independence. Exposed holdouts move to regression and require independent replacements.
 
-**Settings boundary**: Integration commit `df40f32` records the human decision that target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider. `tutor-system/.env.example` supplies the provider key/base-URL variable names. The upgraded manifest records effective settings without credentials; missing or mismatched runtime configuration blocks with no fallback.
+**Settings boundary**: Integration commit `df40f32` records the human decision that target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider. Production configuration is server-only `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`; browser-prefixed variables are not provider authority. The upgraded manifest records effective settings without credentials; missing or mismatched runtime configuration blocks with no fallback.
 
 ## Decision 5: Preserve raw evidence immutably and fail closed
 

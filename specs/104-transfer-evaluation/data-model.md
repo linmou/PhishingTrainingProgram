@@ -43,7 +43,8 @@ Fields:
 - `assessment_id`, `sequence_id`, and ordered `steps`.
 - `before` and `after`: promoted `TransferAttemptSnapshot` projections containing `accepted_attempt_count`, `resolution`, and processed message identities.
 - `submission`: message/request identity, selected option IDs, client context (`same_page`, `reload`, `separate_tab`, or `concurrent`), and expected processing disposition.
-- `result`: `processing_state`, `answer_outcome`, accepted attempt number, attempts used/remaining, terminal flag, transition identity, feedback-required flag, result code, replay identity, and terminal feedback presence.
+- `public_assessment`: exact `PublicAssessmentDTO` projection with `id`, `student_id`, `selection_type`, `stem`, and `options`; `rendered_text` is prohibited.
+- `result`: exact `ProcessedMessageDTO` projection with `message_id`, `assessment_id`, `processing_state`, `answer_outcome`, `attempt_number`, `attempts_used`, `attempts_remaining`, `selected_option_ids`, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback`.
 - `expected`: consuming/non-consuming verdict, expected resolution, expected transition count, and allowed role-safe fields.
 
 The evaluator compares actual producer output with these frozen expectations. It does not calculate correctness, mutate counters, or infer authorization.

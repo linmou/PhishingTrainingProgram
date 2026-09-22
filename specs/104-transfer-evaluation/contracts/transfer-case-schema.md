@@ -73,8 +73,10 @@ Expected labels are outside the target projection but are passed to the evaluato
 
 - the message/request identity and client context (`same_page`, `reload`, `separate_tab`, or `concurrent`);
 - promoted component 101 `TransferAttemptSnapshot` projections before and after processing;
-- promoted component 102 `ProcessedMessageDTO` observable fields, including processing state, answer outcome, attempt number/counts, terminal state, transition identity, result code, replay identity, and terminal-feedback presence;
+- exact promoted component 102 `ProcessedMessageDTO` fields: `message_id`, `assessment_id`, `processing_state`, `answer_outcome`, `attempt_number`, `attempts_used`, `attempts_remaining`, `selected_option_ids`, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback`;
 - expected consuming/non-consuming disposition and exact allowed role-safe projection fields.
+
+Every public assessment projection is exactly `id`, `student_id`, `selection_type`, `stem`, and `options`. `rendered_text`, key, explanation, transfer basis, rationale, and raw output are prohibited from `PublicAssessmentDTO`.
 
 Valid sequences enforce: first wrong is retryable with one attempt remaining and no transition; correct on attempt one or two passes once; second wrong fails once; no third attempt or second terminal transition is consumed. Duplicate, stale, malformed, unauthorized, assistance, Guard, and post-terminal steps remain non-consuming according to the promoted contracts.
 
@@ -95,5 +97,6 @@ Valid sequences enforce: first wrong is retryable with one attempt remaining and
 - Reject an eligible holdout with prompt/development exposure.
 - Reject a changed contract/case version from a baseline/candidate comparison unless a new manifest and comparable baseline are created.
 - Reject a lifecycle case that resolves the first valid incorrect answer, consumes more than two valid attempts, applies more than one terminal progress transition, or exposes terminal feedback outside an authorized second-incorrect failure.
+- Reject a public assessment projection missing `student_id`, containing `rendered_text`, or differing from the canonical five-field allowlist.
 - Reject an explanation case that omits generated/reviewed provenance, judges the wrong value, or places evaluator annotations in target inputs.
 - Preserve all historical case versions; do not edit a frozen case in place.

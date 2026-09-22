@@ -72,7 +72,7 @@ tutor-system/
 ### Upgrade ownership and dependency gate
 
 - Component 101 contract inputs: `PrivateAssessment.learner_safe_explanation`, `TransferAttemptSnapshot`, and the `TransferResolvedAssessment` discriminated union in `specs/101-transfer-domain/contracts/transfer-domain-determinism.md` and `tutor-decision-v3.md`.
-- Component 102 contract inputs: `TransferTutorRequestV3`, `TransferTutorRequestContextV3`, canonical builders in `ecologicalTutorCall.ts`, and `ProcessedMessageDTO` with `answer_outcome`, attempt counters, terminal state, transition, and terminal-only `terminal_failure_feedback` in `specs/102-transfer-backend/contracts/`.
+- Component 102 contract inputs: `TransferTutorRequestV3`, `TransferTutorRequestContextV3`, canonical builders in `ecologicalTutorCall.ts`; `PublicAssessmentDTO {id, student_id, selection_type, stem, options}` with no `rendered_text`; and `ProcessedMessageDTO` with canonical `processing_state`, `answer_outcome`, attempt fields, terminal state, transition, and terminal-only `terminal_failure_feedback` in `specs/102-transfer-backend/contracts/` at component commit `a8c8b31a91bcc1970071117ac0dbbd2dffce85ef` plus the reconciled `student_id` correction.
 - Component 104 additions: versioned attempt-sequence fixtures, `learner_explanation_quality`, `learner_explanation_disclosure`, upgraded manifests/comparison/gate logic, and immutable per-step evidence.
 - Implementation cannot begin until the integration branch promotes immutable 101 and 102 contract SHAs and reconciles canonical T09's former first-valid-resolution text. No evaluation-local fallback is permitted.
 
