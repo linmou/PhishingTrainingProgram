@@ -4,6 +4,12 @@
 
 **Recorded**: 2026-09-12 on branch `104-transfer-evaluation`.
 
+## 2026-09-22 planning status
+
+The observed results below apply only to the historical first-valid-resolution harness. They do not validate the new server-authoritative two-attempt lifecycle, learner-safe explanation quality, terminal disclosure, promoted 101/102 contracts, or upgraded request parity. No upgraded executable code or tests were changed during planning, and no upgraded evaluation verdict exists.
+
+The required live configuration is explicit: target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider per integration commit `df40f32`, with no runtime fallback. New live calibration and runs remain future implementation tasks after promoted 101/102 contracts, offline TDD, and canonical T09 reconciliation.
+
 ## 1. Observed offline results
 
 | # | Command (run from the worktree root) | Exit | Observed counts |

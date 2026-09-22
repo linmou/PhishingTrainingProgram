@@ -20,9 +20,10 @@
 
 - `run_id` and `manifest_version` identify a write-once run.
 - `artifact_hashes` includes the adopted constitution, canonical T09 specification, response contract, evaluation plan, case manifest, rubric registry, evaluation adapter, shared `ecologicalTutorCall.ts` v3 builder, backend-owned production prompt reference/content hash, deterministic checker, gate source, and relevant fixture/provenance files. Prompt text is referenced and hashed, not duplicated in evaluation artifacts.
+- `artifact_hashes` also includes the promoted component 101 lifecycle contract, component 102 assessment API/provider/RPC contracts, their component commit SHAs, and the integration promotion SHA.
 - `shared_request_contract` records the shared v3 contract version/hash, builder export identity, production prompt reference/hash, product and evaluation effective completion-token budgets (both exactly `1200`), normalized parity-fixture request hashes/result, and provider configuration reference without endpoint credentials or secret values.
 - `partitions` names calibration, development, regression, unchanged production baseline, contract-compatible baseline, candidate, and eligible independent holdout sets, with case/version hashes and exposure status.
-- `settings` records target/judge model identities, endpoint names without credentials, temperatures, token limits, thinking/provider options, timeout, concurrency, retry/repair limits, repetitions, and seed policy.
+- `settings` records target/judge model identities (`qwen3.5-flash`), the existing DashScope-compatible endpoint name without credentials, temperatures, token limits, thinking/provider options, timeout, concurrency, retry/repair limits, repetitions, and seed policy. A mismatch or missing value blocks with no fallback.
 - `comparison` records baseline/candidate joins by case/version, metric/assertion version, partition, target-generation identity, repetition, and allowed changed experimental factors.
 - `thresholds` records per-metric/partition thresholds, 100% hard checks, pair rule, non-regression rule, and missing/error/zero-coverage behavior.
 - `execution` records commands, exit codes, git revision, worktree status, start/end times, and token usage when available.
@@ -38,6 +39,8 @@ Each expected `case_id`/version/check/repetition/turn identity has an evidence r
 - raw judge request/response/settings for semantic checks;
 - provider, parsing, retry, timeout, and error metadata without secrets;
 - pair/transition membership and step identity;
+- authoritative attempt before/after snapshots, processing disposition, accepted attempt number, attempt counters, terminal/progress identities, and reload/tab/concurrency context;
+- generated/reviewed explanation values, edit provenance, exact role-safe projection, and quality/disclosure result identity;
 - links to source provenance and manifest hashes.
 
 Statuses are exactly `pass`, `fail`, `not_applicable`, `missing`, and `error`. `not_applicable` requires a predeclared conditional rule, `applicable=false`, and null pass/score. Missing/error results are never omitted.
@@ -49,5 +52,6 @@ Statuses are exactly `pass`, `fail`, `not_applicable`, `missing`, and `error`. `
 - Replays or rejudgments reference the source run and create a new record with changed evaluator/version metadata.
 - Any case, rubric, prompt/adapter, contract, setting, threshold, or gate change creates a new manifest version and comparable baseline.
 - Any shared-builder, production-prompt hash, effective-budget, or product/evaluation parity mismatch blocks the run as `incomplete`; the evaluation adapter cannot fall back to local prompt/request construction.
+- Any missing/mismatched promoted 101/102 contract identity or target/judge model/provider setting blocks the run as `incomplete`; the evaluator cannot fall back to historical lifecycle or provider settings.
 - Redact credentials and personal identifiers without altering tested meaning; record unavailable metadata explicitly.
 - Preserve interrupted runs as partial/incomplete evidence, never as accepted results.

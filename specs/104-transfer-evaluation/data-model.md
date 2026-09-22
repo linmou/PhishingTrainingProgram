@@ -1,4 +1,4 @@
-# Data Model: Transfer Evaluation Evidence
+# Data Model: Two-Attempt Transfer Evaluation Evidence
 
 **Intent**: define the evaluator records and relationships needed to preserve comparable W9-W10 evidence without adding product state.
 
@@ -18,6 +18,8 @@ Required fields:
 - `partition`: calibration, development, regression, baseline, candidate, or holdout membership, with the required source/role partitions derived from it.
 - `pair`: nullable pair ID, member role, changed semantic factor, and expected contrast.
 - `transition`: nullable ordered state/turn assertions for stateful sequences.
+- `attempt_sequence`: nullable ordered authoritative before/after attempt snapshots, processing disposition, terminal outcome, transition identity, reload/tab/concurrency context, and role-safe projection assertions.
+- `explanation`: nullable generated/reviewed values, edit provenance, correct-answer reference, tested concept/context, disclosure stage, and applicable quality/disclosure checks.
 - `holdout_eligibility`: author independence, prompt exposure, development exposure, creation version, exposed flag, replacement link, and eligibility verdict.
 
 Validation rules:
@@ -28,6 +30,38 @@ Validation rules:
 - A semantic pair has exactly two members, a single changed meaning-bearing factor, and different expected outcomes where the behavior requires a contrast.
 - A holdout marked eligible has no target-prompt or development-dialogue exposure; exposed holdouts are regression-only.
 - Missing or malformed expected metadata is a manifest error, not `not_applicable`.
+- A first valid incorrect step remains open with exactly one remaining attempt and no terminal feedback or progress transition.
+- A correct accepted step on attempt one or two passes once; a second valid incorrect step fails once; no sequence consumes a third attempt or applies two terminal transitions.
+- Duplicate, stale, malformed, unauthorized, assistance, Guard, replay, and post-terminal steps are non-consuming according to the promoted upstream disposition.
+
+## AttemptSequence
+
+One ordered evaluator record consuming the promoted component 101/102 lifecycle contract.
+
+Fields:
+
+- `assessment_id`, `sequence_id`, and ordered `steps`.
+- `before` and `after`: promoted `TransferAttemptSnapshot` projections containing `accepted_attempt_count`, `resolution`, and processed message identities.
+- `submission`: message/request identity, selected option IDs, client context (`same_page`, `reload`, `separate_tab`, or `concurrent`), and expected processing disposition.
+- `result`: `processing_state`, `answer_outcome`, accepted attempt number, attempts used/remaining, terminal flag, transition identity, feedback-required flag, result code, replay identity, and terminal feedback presence.
+- `expected`: consuming/non-consuming verdict, expected resolution, expected transition count, and allowed role-safe fields.
+
+The evaluator compares actual producer output with these frozen expectations. It does not calculate correctness, mutate counters, or infer authorization.
+
+## ExplanationEvidence
+
+One record joining model generation, teacher review, terminal disclosure, and semantic judgment.
+
+Fields:
+
+- `generated_value` and `reviewed_value`, each with source artifact/version.
+- `edit_provenance`: editor role, changed/not-changed flag, review identity, and confirmation identity without personal data.
+- `correct_option_ids`, `concept_rule`, `source_context`, and `changed_context` as evaluator-only references.
+- `learner_projection_stage`: `delivery`, `first_incorrect`, `passed`, or `second_incorrect_terminal`.
+- `quality_result`: `learner_explanation_quality` judgment over the reviewed value.
+- `disclosure_result`: `learner_explanation_disclosure` expected/actual allowed and prohibited fields plus upstream provenance.
+
+Generated and reviewed values remain distinct. Only the reviewed value is scored as the terminal learner-facing explanation.
 
 ## MetricContract
 
@@ -47,7 +81,7 @@ Fields:
 - `calibration`: required annotations, judge version/settings, and calibration verdict.
 - `version`: immutable contract version.
 
-The five public T09 metric IDs are the exact semantic rubric names from [rubric-registry.md](contracts/rubric-registry.md). The deterministic supporting check is `t09_contract_and_progress`.
+The six public T09 metric IDs are defined in [rubric-registry.md](contracts/rubric-registry.md). Deterministic supporting checks are `t09_contract_and_progress` and `learner_explanation_disclosure`.
 
 ## RunManifest
 
@@ -57,6 +91,7 @@ Fields:
 
 - `run_id`, `manifest_version`, and creation timestamp.
 - Hashes/references for constitution, T09 specification, response contract, evaluation plan, case manifest, rubric registry, adapter/prompt, deterministic checker, and gate source.
+- Promoted component 101/102 contract paths, commit SHAs, content hashes, and integration promotion SHA.
 - `partition_plan`: calibration, baseline, contract-compatible baseline, candidate, development/regression, and eligible holdout IDs.
 - `settings`: target/judge model identities, endpoints without credentials, temperatures, token limits, retry/repair limits, timeout, concurrency, repetitions, and seed policy.
 - `comparison`: baseline/candidate pairing rules, case/check versions, target generation ID and repetition join keys, and permitted changed experimental factors.
@@ -90,6 +125,8 @@ Fields:
 
 - Complete target input projection and source/partition/provenance references.
 - Raw target request/response, parsed response, displayed response, and target-generation ID.
+- Authoritative attempt before/after snapshots, processing disposition, terminal/progress identities, and exact role-safe DTO projection for each sequence step.
+- Generated and reviewed explanation values plus edit provenance, with learner-facing judgment attached to the reviewed value.
 - `expected` and `actual` values, or semantic judgment output and rationale.
 - `method`, `status` (`pass`, `fail`, `not_applicable`, `missing`, or `error`), score when supplied, and applicability evidence.
 - Raw and parsed judge output/settings for LLM rubrics.
@@ -123,6 +160,8 @@ RunManifest 1 -- 1 SharedRequestContractSnapshot
 RunManifest 1 -- * CaseEvidence
 TransferCase 1 -- * CaseEvidence
 MetricContract 1 -- * CaseEvidence
+AttemptSequence 1 -- * ordered AttemptStepEvidence
+ExplanationEvidence 1 -- 1 reviewed learner projection
 SemanticPair 1 -- 2 TransferCase
 StatefulSequence 1 -- * ordered transition assertions
 CaseEvidence * -- 1 QualityGateVerdict (aggregation only)

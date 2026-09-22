@@ -1,6 +1,14 @@
-# Research: Frozen Transfer Behavior Evaluation
+# Research: Two-Attempt Transfer Behavior Evaluation
 
-**Intent**: record the source-grounded decisions used to plan W9-W10 without changing T09 behavior or inventing live evaluation settings.
+**Intent**: record the source-grounded decisions for the two-attempt and learner-safe explanation upgrade without copying product logic or inventing live settings.
+
+## Decision 0: Consume promoted lifecycle and DTO contracts
+
+**Decision**: Pin and consume component 101's `TransferAttemptSnapshot`/`TransferResolvedAssessment` and component 102's `ProcessedMessageDTO`/`terminal_failure_feedback` contracts. Evaluation fixtures record their observable before/after results; evaluator code does not re-grade answers, increment attempts, authorize users, or apply progress.
+
+**Rationale**: Attempts are server-authoritative across reloads and tabs. Reconstructing their rules in the harness would create a second authority and could make a synthetic fixture pass while the real producer-consumer handoff fails.
+
+**Promotion condition**: The integration branch must provide immutable 101 and 102 contract SHAs and reconcile the canonical T09 first-valid-resolution text before upgraded cases freeze.
 
 ## Decision 1: Extend the existing versioned evaluator boundary
 
@@ -30,16 +38,23 @@
 
 **Source evidence**: `tutor-behavior-evaluation-plan.md`, `ai-behavior-design-eval/references/evaluation-contract.md`, and the Promptfoo integration reference.
 
-## Decision 3: Keep five public rubrics and one deterministic supporting check
+## Decision 3: Preserve existing rubrics and add focused explanation checks
 
-**Decision**: Register exactly `transfer_trigger_target`, `medium_transfer_quality`, `assessment_item_validity`, `assessment_followup`, and `verification_evidence` as public T09 rubric IDs. `assessment_followup` is deterministic; the other four use calibrated semantic judgment. Register `t09_contract_and_progress` as the separate deterministic supporting check.
+**Decision**: Preserve `transfer_trigger_target`, `medium_transfer_quality`, `assessment_item_validity`, `assessment_followup`, and `verification_evidence`. Add `learner_explanation_quality` as one semantic metric and `learner_explanation_disclosure` as one deterministic supporting check. Expand `assessment_followup` to the two-attempt sequence and retain `t09_contract_and_progress` for structure/grading/progress contract evidence.
 
-**Rationale**: These identifiers and methods are already defined by the canonical T09 evaluation plan. The supporting check keeps schema, exact grading, valid progress pairs, IDs, rendering, and tutor-turn/room-mode separation visible without pretending that structure proves semantic quality.
+**Rationale**: Explanation correctness is semantic and must not be hidden inside item-validity or lifecycle scores. Disclosure timing and role-field presence are deterministic. Keeping these properties separate makes omission, incorrectness, and leakage independently visible.
 
 **Alternatives considered**:
 
 - A single composite transfer score was rejected because it would hide independent failures and violate metric ownership.
 - Keyword matching for transfer meaning was rejected because the canonical behavior requires semantic pair and evidence-grounding judgments.
+- Pattern matching for explanation safety/correctness was rejected because it cannot establish semantic correctness or privacy provenance. Explicit DTO allowlists and provenance cover disclosure; the calibrated judge covers meaning.
+
+## Decision 3A: Evaluate the reviewed learner-facing explanation
+
+**Decision**: Preserve generated and teacher-reviewed explanation values plus edit provenance. Semantic quality is evaluated on the reviewed value used by `terminal_failure_feedback`; generated-value quality may be reported diagnostically but cannot replace the consumer-facing check.
+
+**Rationale**: The teacher can edit the explanation before delivery. Evaluating only the generated draft would not measure what the learner receives.
 
 ## Decision 4: Freeze partitions and comparison order before prompt edits
 
@@ -47,7 +62,7 @@
 
 **Rationale**: This preserves comparable evidence and holdout independence. Exposed holdouts move to regression and require independent replacements.
 
-**Settings boundary**: The checked-in `.env.example` exposes the OpenAI-compatible API key/base URL names and a DashScope example endpoint but no usable credentials. The existing v1 settings file is historical execution context, not an authorized transfer-run freeze. The future manifest must record effective model, judge, temperature, token limits, retries, concurrency, timeout, and seed policy without credentials; missing required configuration remains blocking.
+**Settings boundary**: Integration commit `df40f32` records the human decision that target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider. `tutor-system/.env.example` supplies the provider key/base-URL variable names. The upgraded manifest records effective settings without credentials; missing or mismatched runtime configuration blocks with no fallback.
 
 ## Decision 5: Preserve raw evidence immutably and fail closed
 
@@ -69,7 +84,8 @@
 
 ## Open execution prerequisites, not planning ambiguities
 
-- A live target/judge model, base URL, credentials, and provider options must come from the checked-in configuration or authorized environment before execution. No value is invented here.
+- Runtime target/judge configuration must match `qwen3.5-flash` and the existing DashScope-compatible provider recorded at integration commit `df40f32`; credentials remain external and missing configuration blocks execution.
 - Independent holdout authorship and exposure status must be recorded when cases are created.
 - Component 102 must provide the shared `ecologicalTutorCall.ts` v3 builder/identity, backend-owned production prompt reference/hash, effective 1,200-token setting, and a production/provider adapter that emits the frozen v3 response fields; missing exports are integration blockers, not reasons to weaken the manifest or create evaluation copies.
+- Components 101 and 102 must provide promoted immutable lifecycle/DTO contract identities; historical first-valid fixtures remain regression history and do not prove the upgraded lifecycle.
 - The downstream product gates must be run separately; this package cannot resolve their infrastructure or authorization prerequisites.
