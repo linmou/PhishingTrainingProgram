@@ -15,6 +15,7 @@ import {
   TRANSFER_ASSESSMENT_OPTIONS,
   TRANSFER_CORRECT_OPTION_IDS,
 } from '../transferAssessmentGoldenFixtures';
+import type { TransferAttemptSnapshot } from '../../types';
 
 const SNAPSHOT_HASH = 'snapshot-hash-1';
 
@@ -68,6 +69,39 @@ function answer(
     assessment: assessment(),
     ...overrides,
   };
+}
+
+function attemptSnapshot(overrides: Partial<TransferAttemptSnapshot> = {}): TransferAttemptSnapshot {
+  return {
+    assessment_id: 'assessment-1',
+    accepted_attempt_count: 0,
+    resolution: 'open',
+    processed_answer_message_ids: [],
+    ...overrides,
+  };
+}
+
+function authoritativeContext(overrides: Partial<TransferLifecycleContext> = {}): TransferLifecycleContext {
+  return {
+    ...context(),
+    attempt_snapshot: attemptSnapshot(),
+    ...overrides,
+  } as TransferLifecycleContext;
+}
+
+function authoritativeAssessment(overrides: Partial<TransferAssessment> = {}): TransferAssessment {
+  return {
+    ...assessment(),
+    learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
+    ...overrides,
+  } as TransferAssessment;
+}
+
+function authoritativeAnswer(
+  content: string,
+  overrides: Partial<Parameters<typeof resolveTransferAnswer>[1]> = {}
+): Parameters<typeof resolveTransferAnswer>[1] {
+  return answer(content, { assessment: authoritativeAssessment(), ...overrides });
 }
 
 describe('transfer assessment orchestrator', () => {
@@ -377,5 +411,166 @@ describe('transfer resolved assessment privacy', () => {
 
     expect(Object.keys(projected).sort()).toEqual(['id', 'options', 'rendered_text', 'selection_type', 'stem']);
     expect(progress.understanding_level).toBe('basic');
+  });
+});
+
+describe('server-authoritative two-attempt lifecycle', () => {
+  it('passes on the first valid attempt and retains private feedback without learner authorization', () => {
+    const result = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('B'));
+
+    expect(result).toMatchObject({
+      disposition: 'passed',
+      remaining_attempts: 0,
+      applied_transition: 'assessment_pass',
+      learner_feedback_authorized: false,
+      terminal_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
+      },
+      attempt_snapshot: {
+        assessment_id: 'assessment-1',
+        accepted_attempt_count: 1,
+        resolution: 'passed',
+        processed_answer_message_ids: ['answer-1'],
+      },
+    });
+  });
+
+  it('keeps the first incorrect valid attempt retryable with unchanged progress and no terminal feedback', () => {
+    const result = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('A'));
+
+    expect(result).toMatchObject({
+      disposition: 'retryable',
+      progress: PARTIALLY_COVERED,
+      remaining_attempts: 1,
+      applied_transition: null,
+      attempt_snapshot: {
+        accepted_attempt_count: 1,
+        resolution: 'open',
+        processed_answer_message_ids: ['answer-1'],
+      },
+    });
+    expect(result).not.toHaveProperty('terminal_feedback');
+    expect(result).not.toHaveProperty('learner_feedback_authorized');
+  });
+
+  it('passes on the second valid attempt after one incorrect attempt', () => {
+    const first = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('A'));
+    const secondContext = authoritativeContext({
+      progress: first.progress,
+      attempt_snapshot: (first as { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot,
+    });
+    const second = resolveTransferAnswer(
+      secondContext,
+      authoritativeAnswer('B', { answer_message_id: 'answer-2' })
+    );
+
+    expect(second).toMatchObject({
+      disposition: 'passed',
+      progress: COVERED,
+      remaining_attempts: 0,
+      learner_feedback_authorized: false,
+      applied_transition: 'assessment_pass',
+      attempt_snapshot: {
+        accepted_attempt_count: 2,
+        resolution: 'passed',
+        processed_answer_message_ids: ['answer-1', 'answer-2'],
+      },
+    });
+  });
+
+  it('fails only on the second incorrect valid attempt and authorizes terminal learner feedback', () => {
+    const first = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('A'));
+    const second = resolveTransferAnswer(
+      authoritativeContext({
+        progress: first.progress,
+        attempt_snapshot: (first as { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot,
+      }),
+      authoritativeAnswer('C', { answer_message_id: 'answer-2' })
+    );
+
+    expect(second).toMatchObject({
+      disposition: 'failed',
+      progress: { status: 'needs_review', understanding_level: 'basic' },
+      remaining_attempts: 0,
+      learner_feedback_authorized: true,
+      applied_transition: 'assessment_fail',
+      terminal_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
+      },
+      attempt_snapshot: {
+        accepted_attempt_count: 2,
+        resolution: 'failed',
+        processed_answer_message_ids: ['answer-1', 'answer-2'],
+      },
+    });
+  });
+
+  it('suppresses duplicate and terminal third submissions without a third attempt or transition', () => {
+    const first = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('A'));
+    const duplicate = resolveTransferAnswer(
+      authoritativeContext({
+        progress: first.progress,
+        attempt_snapshot: (first as { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot,
+      }),
+      authoritativeAnswer('A')
+    );
+
+    expect(duplicate).toMatchObject({
+      disposition: 'duplicate',
+      applied_transition: null,
+      attempt_snapshot: {
+        accepted_attempt_count: 1,
+        resolution: 'open',
+        processed_answer_message_ids: ['answer-1'],
+      },
+    });
+
+    const passed = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('B'));
+    const third = resolveTransferAnswer(
+      authoritativeContext({
+        progress: passed.progress,
+        feedback_required: passed.feedback_required,
+        attempt_snapshot: (passed as { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot,
+      }),
+      authoritativeAnswer('B', { answer_message_id: 'answer-3' })
+    );
+
+    expect(third).toMatchObject({
+      disposition: 'duplicate',
+      applied_transition: null,
+      attempt_snapshot: {
+        accepted_attempt_count: 1,
+        resolution: 'passed',
+        processed_answer_message_ids: ['answer-1'],
+      },
+    });
+  });
+
+  it('rejects malformed server snapshots before grading', () => {
+    expect(() => resolveTransferAnswer(
+      authoritativeContext({
+        attempt_snapshot: {
+          assessment_id: 'assessment-1',
+          accepted_attempt_count: 2,
+          resolution: 'open',
+          processed_answer_message_ids: ['answer-1', 'answer-2'],
+        } as TransferAttemptSnapshot,
+      }),
+      authoritativeAnswer('B')
+    )).toThrow('INVALID_ATTEMPT_SNAPSHOT');
+  });
+
+  it.each([
+    ['stale', authoritativeContext(), authoritativeAnswer('B', { assessment: authoritativeAssessment({ progress_snapshot_hash: 'old' }) })],
+    ['assistance', authoritativeContext(), authoritativeAnswer('What does compromised mean?')],
+    ['guard', authoritativeContext({ participation_mode: 'guard' }), authoritativeAnswer('B')],
+  ])('does not consume an attempt for %s input', (_name, inputContext, input) => {
+    const initial = (inputContext as TransferLifecycleContext & { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot;
+    const result = resolveTransferAnswer(inputContext, input);
+
+    expect((result as { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot).toEqual(initial);
+    expect(result).toMatchObject({ applied_transition: null });
   });
 });
