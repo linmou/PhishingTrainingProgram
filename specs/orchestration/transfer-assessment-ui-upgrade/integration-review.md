@@ -27,6 +27,14 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 | 103 | `/root/owner_103_ui` | In progress from revised spec | Pending | `94f0dce` input, `81e404c` allocation head |
 | 104 | `/root/owner_104_evaluation` | In progress | Pending | Pending |
 
+## Clarification Batch 1
+
+- Status: awaiting human answer.
+- Affected components: 102, 104, and integration/release configuration evidence.
+- Question: choose the authoritative target-generation model and evaluation-judge model/provider configuration.
+- Evidence: `tutor-system/.env.example` defines `REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` but no model. The current browser call silently defaults to `qwen3.5-flash`; checked-in evaluation settings are historical and cannot establish the upgraded run's authority.
+- Constraint: implementation must use required configuration with no runtime model fallback. A missing value fails closed; pattern matching cannot replace the LLM call or judge.
+
 ## Reconciliation
 
 Pending all component artifact gates. No implementation is authorized yet.
