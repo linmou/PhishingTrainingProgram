@@ -15,7 +15,10 @@ ALTER TABLE public.messages DROP CONSTRAINT IF EXISTS messages_assessment_lifecy
 ALTER TABLE public.messages
   ADD CONSTRAINT messages_assessment_lifecycle_check CHECK (
     assessment_lifecycle IS NULL
-    OR assessment_lifecycle IN ('delivered', 'passed', 'failed', 'cancelled', 'legacy_incomplete')
+    OR assessment_lifecycle IN (
+      'delivered', 'passed', 'failed', 'cancelled', 'legacy_incomplete',
+      'answered', 'invalidated'
+    )
   );
 
 CREATE TABLE IF NOT EXISTS private.transfer_assessments (
@@ -111,10 +114,9 @@ REVOKE ALL ON private.transfer_assessments,
   private.transfer_provider_attempts
   FROM PUBLIC, anon, authenticated;
 GRANT USAGE ON SCHEMA private TO service_role;
-GRANT SELECT, INSERT, UPDATE ON private.transfer_assessments,
-  private.transfer_assessment_attempts,
-  private.transfer_provider_attempts
-  TO service_role;
+GRANT SELECT, INSERT, UPDATE ON private.transfer_assessments TO service_role;
+GRANT SELECT, INSERT ON private.transfer_assessment_attempts,
+  private.transfer_provider_attempts TO service_role;
 
 CREATE OR REPLACE FUNCTION private.reject_transfer_assessment_private_mutation()
 RETURNS TRIGGER
@@ -373,6 +375,10 @@ BEGIN
   IF FOUND THEN
     SELECT * INTO v_message FROM public.messages WHERE id = v_existing.question_message_id;
     SELECT * INTO v_room FROM public.rooms WHERE id = v_existing.room_id;
+    IF v_existing.room_id <> p_room_id OR v_existing.student_id <> p_student_id
+       OR v_room.tutor_id <> p_actor_id THEN
+      RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501';
+    END IF;
     RETURN jsonb_build_object(
       'message', jsonb_build_object(
         'id', v_message.id, 'room_id', v_message.room_id, 'user_id', v_message.user_id,
@@ -499,7 +505,8 @@ BEGIN
   IF current_user NOT IN ('service_role', 'postgres') THEN
     RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501';
   END IF;
-  SELECT * INTO v_existing FROM public.messages WHERE assessment_request_id = p_request_id;
+  SELECT * INTO v_existing FROM public.messages
+  WHERE assessment_request_id = p_request_id AND room_id = p_room_id AND user_id = p_actor_id;
   IF FOUND THEN
     RETURN jsonb_build_object('message', to_jsonb(v_existing), 'analysis_pending', TRUE, 'request_id', p_request_id);
   END IF;
@@ -638,8 +645,12 @@ BEGIN
   IF current_user NOT IN ('service_role', 'postgres') THEN
     RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501';
   END IF;
-  SELECT * INTO v_existing FROM private.transfer_assessment_attempts
-  WHERE request_id = p_request_id OR answer_message_id = p_message_id
+  SELECT attempt.* INTO v_existing
+  FROM private.transfer_assessment_attempts attempt
+  JOIN private.transfer_assessments assessment ON assessment.id = attempt.assessment_id
+  WHERE attempt.assessment_id = p_assessment_id
+    AND assessment.student_id = p_actor_id
+    AND (attempt.request_id = p_request_id OR attempt.answer_message_id = p_message_id)
   ORDER BY created_at LIMIT 1;
   IF FOUND THEN
     RETURN v_existing.response_payload || jsonb_build_object(

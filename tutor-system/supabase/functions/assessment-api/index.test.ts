@@ -98,7 +98,10 @@ Deno.test('returns the exact public assessment target and strips private fields'
           created_at: '2026-09-22T00:00:00Z',
           assessment: {
             id: 'assessment-1', student_id: 'learner-1', selection_type: 'single', stem: 'Safest action?',
-            options: [{ id: 'A', text: 'Click' }], rendered_text: 'private',
+            options: [
+              { id: 'A', text: 'Click' }, { id: 'B', text: 'Verify' },
+              { id: 'C', text: 'Reply' }, { id: 'D', text: 'Forward' },
+            ], rendered_text: 'private',
             correct_option_ids: ['B'], learner_safe_explanation: 'private',
           },
         }, room: { id: 'room-1' },

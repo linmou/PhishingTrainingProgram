@@ -140,7 +140,7 @@ function optionIds(value: unknown): AssessmentOptionId[] | null {
 }
 
 function options(value: unknown): AssessmentOption[] {
-  if (!Array.isArray(value)) throw new Error('ITEM_VALIDATION_FAILED');
+  if (!Array.isArray(value) || value.length !== 4) throw new Error('ITEM_VALIDATION_FAILED');
   return value.map((candidate) => {
     const option = asRecord(candidate);
     const id = requiredString(option.id, 'ITEM_VALIDATION_FAILED') as AssessmentOptionId;

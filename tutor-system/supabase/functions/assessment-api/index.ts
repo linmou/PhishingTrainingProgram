@@ -124,17 +124,18 @@ function projectAssessment(value: unknown): Record<string, unknown> {
   if (source.selection_type !== 'single' && source.selection_type !== 'multiple') {
     throw new Error('ITEM_VALIDATION_FAILED');
   }
+  if (!Array.isArray(source.options) || source.options.length !== 4) {
+    throw new Error('ITEM_VALIDATION_FAILED');
+  }
   return {
     id: requiredString(source.id, 'INVALID_SCOPE'),
     student_id: studentId,
     selection_type: source.selection_type,
     stem: requiredString(source.stem, 'ITEM_VALIDATION_FAILED'),
-    options: Array.isArray(source.options)
-      ? source.options.map((item: unknown) => {
-        const option = asRecord(item);
-        return { id: requiredString(option.id), text: requiredString(option.text) };
-      })
-      : [],
+    options: source.options.map((item: unknown) => {
+      const option = asRecord(item);
+      return { id: requiredString(option.id), text: requiredString(option.text) };
+    }),
   };
 }
 
@@ -405,7 +406,7 @@ async function processMessage(
 
 export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
   return async (request: Request): Promise<Response> => {
-    if (request.method === 'OPTIONS') return response(null, 204);
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
     if (request.method !== 'POST') return fail('INVALID_REQUEST');
     let body: Record<string, any>;
     try {
