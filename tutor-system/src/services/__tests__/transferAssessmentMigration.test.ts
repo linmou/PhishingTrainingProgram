@@ -1,75 +1,59 @@
-#!/usr/bin/env node
-/**
- * Test responsible for the hosted Supabase transfer-assessment migration's transactional, authorization, and live-schema compatibility guarantees.
- */
+// Test responsibility: statically verify the forward-only server-authority migration boundary.
 
 import fs from 'fs';
 import path from 'path';
 
-const migration = fs.readFileSync(
-  path.resolve(process.cwd(), 'supabase/migrations/025_transfer_assessment_storage.sql'),
-  'utf8'
-);
-const messageRepresentationMigration = path.resolve(
-  process.cwd(),
-  'supabase/migrations/046_refactor_message_representation.sql'
-);
+const migrationPath = path.resolve(process.cwd(), 'supabase/migrations/20260922000000_transfer_assessment_server_authority.sql');
 
-describe('transfer assessment hosted migration', () => {
-  it('adds the message-level Multi-agent mode and removes the legacy AI boolean/index', () => {
-    expect(fs.existsSync(messageRepresentationMigration)).toBe(true);
-    const migrationText = fs.readFileSync(messageRepresentationMigration, 'utf8');
-    expect(migrationText).toMatch(/ALTER TYPE tutor_turn_mode ADD VALUE IF NOT EXISTS 'multiagent'/);
-    expect(migrationText).toMatch(/DROP INDEX IF EXISTS idx_messages_is_ai_generated/);
-    expect(migrationText).toMatch(/DROP COLUMN IF EXISTS is_ai_generated/);
+describe('server-authoritative transfer assessment migration', () => {
+  it('exists as one atomic forward migration and does not reactivate archived files', () => {
+    expect(fs.existsSync(migrationPath)).toBe(true);
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    expect(sql.trimStart()).toMatch(/^--!\/usr\/bin\/env psql\n-- Purpose:/);
+    expect(sql).toMatch(/\bBEGIN\s*;/i);
+    expect(sql.trimEnd()).toMatch(/COMMIT;$/i);
+    expect(sql).not.toContain('archived_migrations/');
   });
 
-  it('recreates current message-writing RPCs explicitly without rewriting stored function text', () => {
-    const migrationText = fs.readFileSync(messageRepresentationMigration, 'utf8');
-
-    expect(migrationText).toMatch(/CREATE OR REPLACE FUNCTION public\.post_assessment_message_v1\(/i);
-    expect(migrationText).toMatch(/CREATE OR REPLACE FUNCTION public\.send_reviewed_tutor_response_v3\(/i);
-    expect(migrationText).not.toMatch(/pg_proc|pg_get_functiondef|regexp_replace/i);
-  });
-  it('is atomic and restores the transfer state required by assessment failures', () => {
-    expect(migration.trimStart()).toMatch(/^BEGIN;/);
-    expect(migration.trimEnd()).toMatch(/COMMIT;$/);
-    expect(migration).toMatch(/DROP CONSTRAINT IF EXISTS checklist_items_status_check/i);
-    expect(migration).toMatch(/status IN \([\s\S]*?'pending'[\s\S]*?'partially_covered'[\s\S]*?'covered'[\s\S]*?'needs_review'/i);
+  it('moves grading material and attempts into private storage', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    expect(sql).toMatch(/CREATE TABLE(?: IF NOT EXISTS)? private\.transfer_assessments/i);
+    expect(sql).toMatch(/learner_safe_explanation/i);
+    expect(sql).toMatch(/CREATE TABLE(?: IF NOT EXISTS)? private\.transfer_assessment_attempts/i);
+    expect(sql).toMatch(/UNIQUE\s*\(assessment_id, ordinal\)/i);
+    expect(sql).toMatch(/UNIQUE\s*\(answer_message_id\)/i);
+    expect(sql).toMatch(/UNIQUE\s*\(request_id\)/i);
+    expect(sql).toMatch(/attempt_count\s+BETWEEN\s+0\s+AND\s+2/i);
   });
 
-  it('removes the actual permissive hosted policies before applying scoped access rules', () => {
-    for (const tableName of [
-      'session_checklists',
-      'checklist_items',
-      'coverage_evidence',
-      'checklist_updates'
-    ]) {
-      expect(migration).toContain(`DROP POLICY IF EXISTS "Allow all operations on ${tableName}" ON ${tableName};`);
-    }
+  it('stores immutable target routing metadata and removes the public key', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    expect(sql).toMatch(/ADD COLUMN IF NOT EXISTS assessment_student_id UUID/i);
+    expect(sql).toMatch(/DROP COLUMN IF EXISTS assessment_key/i);
+    expect(sql).toMatch(/assessment_student_id/i);
+    expect(sql).toMatch(/v_assessment->>'stem'/i);
   });
 
-  it('keeps the reviewed-send RPC compatible with the app simplified-auth client', () => {
-    expect(migration).toMatch(/DROP FUNCTION IF EXISTS send_reviewed_tutor_response\([\s\S]*?tutor_response_mode, TEXT, tutor_response_mode, TEXT, TEXT, INTEGER, JSONB\s*\);/);
-    expect(migration).toMatch(/DROP FUNCTION IF EXISTS send_reviewed_tutor_response\([\s\S]*?tutor_response_mode, TEXT, TEXT, tutor_response_mode, TEXT, TEXT, INTEGER, JSONB\s*\);/);
-    expect(migration).toMatch(/CREATE FUNCTION send_reviewed_tutor_response\([\s\S]*?p_raw_instruction TEXT/);
-    const reviewedSendSection = migration.slice(migration.lastIndexOf('CREATE FUNCTION send_reviewed_tutor_response('));
-    expect(reviewedSendSection).not.toMatch(/p_tutor_id IS DISTINCT FROM auth\.uid\(\)/);
-    expect(reviewedSendSection).toMatch(/GRANT EXECUTE ON FUNCTION send_reviewed_tutor_response\([\s\S]*?\) TO anon, authenticated;/);
+  it('defines service-role-only versioned RPCs with expected-snapshot compare-and-swap', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    for (const name of [
+      'send_reviewed_tutor_response_v4', 'post_assessment_message_v2',
+      'get_transfer_assessment_processing_context_v1', 'process_assessment_message_v2',
+      'record_transfer_provider_attempt_v1',
+    ]) expect(sql).toContain(name);
+    expect(sql).toMatch(/p_expected_attempt_count/i);
+    expect(sql).toMatch(/p_expected_resolution/i);
+    expect(sql).toMatch(/FOR UPDATE/i);
+    expect(sql).toMatch(/CONCURRENT_MODIFICATION/i);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION[\s\S]*?FROM PUBLIC, anon, authenticated/i);
+    expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION[\s\S]*?TO service_role/i);
   });
 
-  it('rejects unknown progress events and requires source evidence from the learner in the same room', () => {
-    expect(migration).toMatch(/v_kind NOT IN \([\s\S]*?'initial_signal'[\s\S]*?'assessment_fail'[\s\S]*?'contradiction'/);
-    expect(migration).toMatch(/UNKNOWN_EVENT_KIND/);
-    expect(migration).toMatch(/jsonb_array_elements_text\(p_event->'source_evidence_message_ids'\)/);
-    expect(migration).toMatch(/m\.room_id = v_room\.id/);
-    expect(migration).toMatch(/m\.user_id = v_student_id/);
-    expect(migration).toMatch(/m\.user_role = 'student'/);
-  });
-
-  it('grades only an explicitly tagged assessment answer from the question room', () => {
-    expect(migration).toMatch(/IF v_message\.assessment_id IS NULL THEN\s+RAISE EXCEPTION 'ASSESSMENT_NOT_OPEN'/);
-    expect(migration).toMatch(/q\.id = v_message\.assessment_id\s+AND q\.room_id = v_message\.room_id/);
-    expect(migration).not.toMatch(/v_message\.assessment_id IS NULL AND q\.room_id = v_message\.room_id/);
+  it('keeps first-wrong separate from the terminal learning-event transaction', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    expect(sql).toMatch(/p_answer_outcome = 'retry'/i);
+    expect(sql).toMatch(/p_answer_outcome IN \('passed', 'failed'\)/i);
+    expect(sql).toMatch(/apply_learning_event_v1/i);
+    expect(sql).toMatch(/terminal_failure_feedback/i);
   });
 });
