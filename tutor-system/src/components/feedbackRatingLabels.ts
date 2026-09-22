@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Shared wording for the helpfulness intensity scale used by every message-rating entry point.
 
 const HELPFUL_LABELS: Record<number, string> = {
