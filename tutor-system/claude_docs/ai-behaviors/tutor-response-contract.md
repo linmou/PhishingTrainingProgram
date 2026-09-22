@@ -2,8 +2,9 @@
 
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
-Updated: 2026-09-13
-Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns; transfer assessment v3 is a browser-local research flow. Live semantic evaluation and browser acceptance for transfer v3 and for Multi-agent remain pending.
+Updated: 2026-09-22
+Implementation commit ID: `c2ea0b9`
+Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns. Transfer assessment v3 now has a pure server-authoritative attempt/result contract in component 101; component 102 persistence, projection, and downstream acceptance remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -149,6 +150,7 @@ The v3 model output is reason-first JSON with this shape:
       {"id": "D", "text": "Forward it to everyone"}
     ],
     "correct_option_ids": ["B"],
+    "learner_safe_explanation": "A familiar displayed identity does not verify who controls the account.",
     "transfer_basis": {
       "concept_rule": "Displayed identity is not independent authentication.",
       "source_context": "The original account-alert example.",
@@ -167,7 +169,9 @@ Allowed v3 combinations under T09 are:
 
 The same v3 call performs T02 evidence classification before choosing the tutor turn. `learning_evidence` records every configured concept demonstrated by the focus learner message, using `initial`, `contradiction`, or `spontaneous_transfer`; an empty array means that message supplies no measurable evidence. Assessment requires prior stored evidence or a new `initial` signal for its target. The parser rejects evidence attributed to another learner/message, duplicate item signals, unknown IDs, missing or blank fields, noncanonical option content, invalid key cardinality, overlong rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments.
 
-For this research build, the browser owns the draft, answer key, snapshot, exact grading, and progress writes through public Supabase tables. The learner-facing React projection omits the answer key and transfer basis; these values remain inspectable by a participant using browser/database tools and are not a security boundary. A learner's valid answer is processed deterministically; an optional explanation cannot overturn an otherwise valid exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade. The first valid answer resolves the question. A resolved question must receive tutoring or independently required Guard feedback before another assessment is eligible, and already verified concepts are not routinely reassessed unless later learner evidence contradicts them.
+Component 101 keeps the resolver pure: component 102 supplies and persists the server-owned `TransferAttemptSnapshot`, then projects the returned state by role. The learner-facing assessment shape omits the answer key, learner-safe explanation, and transfer basis. A valid selection is processed deterministically; an optional explanation cannot overturn an exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade.
+
+The attempt snapshot accepts at most two valid selections. A first incorrect selection returns `retryable` with unchanged progress, one remaining attempt, no transition, and no terminal feedback. A correct first or second selection returns terminal `passed`, applies `assessment_pass` once, requires tutor feedback, and sets `learner_feedback_authorized: false`. A second incorrect selection returns terminal `failed`, applies `assessment_fail` once, requires repair, and includes private terminal feedback with `learner_feedback_authorized: true`. Only that failed result authorizes component 102 to project the correct option IDs and learner-safe explanation to the learner. Duplicate, terminal, stale, undelivered, ambiguous, assisted, malformed, and Guard-deferred inputs do not consume an attempt. The feature flag remains disabled pending downstream persistence, authorization, evaluation, and browser gates.
 
 Answers received before delivery are not graded, do not create feedback, and preserve the existing transfer progress pair. Delivery is a prerequisite for entering the parsing and grading path.
 

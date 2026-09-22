@@ -201,7 +201,30 @@ export interface MultiAgentDraft {
     aiConfigSnapshot?: AIAssistantConfigSnapshot;
 }
 
-export type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, PrivateAssessment, PublicAssessment, RoomParticipationMode as AssessmentRoomParticipationMode, TeachingInstruction, TutorDecisionV3, TutorTurnMode as AssessmentTutorTurnMode, TransferBasis, TransferChecklistItemSnapshot, TransferTurnContext } from './assessment';
+export type {
+    AssessmentOption,
+    AssessmentOptionId,
+    AssessmentSelectionType,
+    PrivateAssessment,
+    PublicAssessment,
+    RoomParticipationMode as AssessmentRoomParticipationMode,
+    TeachingInstruction,
+    TutorDecisionV3,
+    TutorTurnMode as AssessmentTutorTurnMode,
+    TransferAttemptResult,
+    TransferAttemptResultBase,
+    TransferAttemptResultNextAction,
+    TransferAttemptSnapshot,
+    TransferBasis,
+    TransferChecklistItemSnapshot,
+    TransferFailedResult,
+    TransferNonConsumingDisposition,
+    TransferNonConsumingResult,
+    TransferPassedResult,
+    TransferRetryResult,
+    TransferTerminalFeedback,
+    TransferTurnContext,
+} from './assessment';
 export type { ProgressPolicyVersion, TransferProgress, TransferStatus, TransferUnderstandingLevel } from './learningProgress';
 
 // Context types

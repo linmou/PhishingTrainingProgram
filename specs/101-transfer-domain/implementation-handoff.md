@@ -1,11 +1,39 @@
 # Implementation Handoff: W2 Deterministic Transfer Behavior
 
 **Intent**: report component 101's implemented public contracts, preserved TDD evidence, exact commands and results, and the downstream risks for component 102 and 104, without claiming any integration promotion.
-**Date**: 2026-09-11
+**Date**: 2026-09-22
+**Implementation commit ID**: `c2ea0b9`
+
+## Current Implementation (2026-09-22)
+
+The two-attempt transfer lifecycle is implemented in the pure component 101 domain boundary. The resolver accepts a server-owned `TransferAttemptSnapshot`, validates lifecycle invariants, and returns immutable result snapshots. Component 102 remains responsible for persistence, concurrency, idempotency, API DTOs, and role-safe projection. `transferAssessmentService.ts`, Supabase migrations/functions, React/UI code, provider calls, and evaluation/release surfaces were not changed.
+
+### Public contracts
+
+- `PrivateAssessment.learner_safe_explanation` is required and validated as trimmed, non-empty text by `tutorDecisionContract.ts`; it is absent from `PublicAssessment`.
+- `TransferAttemptSnapshot` carries `assessment_id`, accepted attempt count `0 | 1 | 2`, `open | passed | failed` resolution, and processed answer-message identities.
+- `TransferRetryResult` reports the first incorrect valid selection with unchanged progress, one remaining attempt, no transition, and no terminal feedback.
+- `TransferPassedResult` reports a correct first or second selection, applies `assessment_pass` once, requires feedback, retains terminal feedback privately, and sets `learner_feedback_authorized: false`.
+- `TransferFailedResult` reports the second incorrect selection, applies `assessment_fail` once, requires repair, includes terminal feedback, and sets `learner_feedback_authorized: true`.
+- Non-consuming results preserve the input snapshot and do not expose terminal feedback. All attempt/result/feedback types are exported from `tutor-system/src/types/index.ts`.
+
+### Lifecycle evidence
+
+The `transfer_v1` manifest version `1` contains nine executable `attempt_sequence` records: `correct_first`, `incorrect_correct`, `incorrect_incorrect`, `duplicate`, `reload_tab_equivalent`, `terminal_third_submission`, `stale_snapshot`, `guard_deferred`, and `assistance`. The fixture suite replays every record through `resolveTransferAnswer`, asserting progress, next action, applied transition, remaining attempts, immutable snapshot, terminal-feedback presence, and disclosure authorization. First-incorrect outputs contain no terminal feedback; passed outputs retain private feedback with authorization false; only second-incorrect failure authorizes feedback disclosure.
+
+### Current verification
+
+- Exact command from `quickstart.md`: **7 suites passed, 208 tests passed**.
+- Focused attempt/contract command: **3 suites passed, 154 tests passed**.
+- `npx tsc --noEmit`: non-zero due to the repository baseline (**514 errors in 47 files**). The attributable errors found during implementation are resolved; no remaining errors point to the modified transfer contracts.
+- `CI=true npm run test:regression -- --runInBand`: **33 failed, 9 skipped, 91 passed suites**; **130 failed, 141 skipped, 935 passed tests**. Transfer service/orchestrator/fixture suites pass. Failures are unrelated repository/test-environment debt, including missing archived migration files, incomplete Supabase mocks, missing optional test packages, and unrelated UI/service suites.
+- `npm run build`: succeeds with existing CRA lint warnings; no transfer-specific build warning was introduced.
+
+No integration merge, handoff test, hosted database/RLS check, authorization check, provider evaluation, browser acceptance, or release smoke run was performed. Component 102 must persist the returned snapshot atomically across reloads/tabs, deduplicate by answer identity, exclude private feedback on retry/pass, and project key/explanation only when `learner_feedback_authorized` is true. Component 104 evaluates explanation quality separately. `TRANSFER_ASSESSMENT_ENABLED` remains disabled.
 
 ## 2026-09-22 Upgrade Status
 
-The evidence below records the prior one-attempt implementation and must not be used as completion evidence for the current upgrade. The approved upgrade is planned but not implemented. Current tasks are in `tasks.md` and require:
+The evidence below records the prior one-attempt implementation and is retained as historical context only. The current implementation and verification are recorded above.
 
 - `PrivateAssessment.learner_safe_explanation` with structural validation and unresolved-public exclusion;
 - a server-owned `TransferAttemptSnapshot` persisted by component 102 across reloads and tabs;
@@ -14,7 +42,7 @@ The evidence below records the prior one-attempt implementation and must not be 
 - duplicate, stale, invalid, Guard-deferred, and third submissions -> no additional attempt or transition;
 - terminal-only `TransferTerminalFeedback` containing correct option IDs and learner-safe explanation, with learner disclosure forbidden on pass and authorized only on second-incorrect failure.
 
-No revised implementation command, test count, or commit SHA exists yet. Tasks T001-T031 must replace this historical evidence during implementation.
+The revised implementation command, test counts, and current contract evidence are recorded in `Current Implementation` above. The historical task list remains the traceability source for T001-T031.
 
 ## Normative Source
 
@@ -22,7 +50,7 @@ No revised implementation command, test count, or commit SHA exists yet. Tasks T
 - Component planning commit: `d64b4bed13f57c3fb03442b9d6c757f868d17129`.
 - Local implementation commit: `4b818a2 feat(transfer): implement pure transfer-assessment resolver and changed-context rejection`.
 
-## Changed Public Contracts
+## Prior Changed Public Contracts (Historical)
 
 - `transferAssessmentOrchestrator.ts` is new and is the component's pure entry point. It exports `resolveTransferAnswer`, `createTransferTurnContext`, `reduceTurnEvent`, and the types `TransferAssessment`, `TransferLifecycleContext`, `TransferAnswerInput`, `TransferTurnContextInput`, `TransferResolvedAssessment`, `TransferAssessmentDisposition`, `TransferAssessmentNextAction`.
 - `TransferLifecycleContext` gained `pending_repair_message_id`; `TransferAnswerInput` gained optional `references_message_id`.
@@ -30,14 +58,14 @@ No revised implementation command, test count, or commit SHA exists yet. Tasks T
 - `transferAssessmentGoldenFixtures.ts` moved from `src/services/__tests__/fixtures/` to `src/services/` because Jest collected the old location as an empty test suite under full discovery. Import paths updated in both consuming test suites.
 - No change to `transferAssessmentService.ts`, its test, `specs/**` content semantics, or any 102-owned surface.
 
-## Prior Behaviour Implemented (Superseded)
+## Prior Behaviour Implemented (Historical)
 
 - Delivery, staleness, duplicate, feedback, and protective-deferral gates run before any parse or grade, so an undelivered, stale, already-resolved, feedback-pending, or Guard-deferred answer can never create a second effect.
 - Pending repair without learner evidence that references the repair returns `unresolved` with `await_learner_evidence`; evidence that references the repair applies the `post_repair_signal` transition to return the target to `partially_covered/basic` and leaves grading to a fresh assessment.
 - First valid selection grades by exact deduplicated set equality only, mapping to `passed`/`assessment_pass` or `failed`/`assessment_fail` through the single reducer authority.
 - Ambiguous or unrecognized input returns `unresolved` with its stable clarification code; content help returns `assisted` with `cancel_question`.
 
-## Verification Evidence
+## Prior Verification Evidence (Historical)
 
 - Focused W2 suites, exact `quickstart.md` command: `Test Suites: 7 passed, 7 total`, `Tests: 185 passed, 185 total`.
 - Pre-Green revision `refs/tdd/transfer_domain/pre_red_round_2` at the frozen Red measurement failed with `Cannot find module '../transferAssessmentOrchestrator'` and `Received function did not throw` for the cosmetic changed-context case. Those are the failures Green cleared.

@@ -24,6 +24,7 @@ function decision(overrides: Record<string, unknown> = {}) {
         { id: 'D', text: 'Opening the link proves identity' },
       ],
       correct_option_ids: ['B'],
+      learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
       transfer_basis: {
         concept_rule: 'A familiar displayed identity is not sufficient authentication.',
         source_context: 'An account-warning email using a familiar organization name.',
@@ -59,6 +60,24 @@ describe('v3 tutor decision contract', () => {
     expect(() => parseTutorDecisionV3(decision({ assessment: { ...validAssessment, options: validAssessment.options.map((option: { id: string; text: string }) => option.id === 'D' ? { ...option, id: 'E' } : option) } }), knownIds)).toThrow('options');
     expect(() => parseTutorDecisionV3(decision({ assessment: { ...validAssessment, correct_option_ids: [] } }), knownIds)).toThrow('correct');
     expect(() => parseTutorDecisionV3(decision({ assessment: { ...validAssessment, correct_option_ids: ['A', 'B', 'C', 'D'] } }), knownIds)).toThrow('correct');
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['blank', '   '],
+    ['non-string', 42],
+  ])('rejects a %s learner-safe explanation', (_caseName, explanation) => {
+    const payload = JSON.parse(decision());
+    if (explanation === undefined) {
+      delete payload.assessment.learner_safe_explanation;
+    } else {
+      payload.assessment.learner_safe_explanation = explanation;
+    }
+
+    expect(() => parseTutorDecisionV3(
+      JSON.stringify(payload),
+      { knownItemIds: [itemId], knownMessageIds: [sourceMessageId] }
+    )).toThrow(/learner_safe_explanation|explanation/i);
   });
 
   it('allows ordinary tutoring and Guard turns only with explicit instructions', () => {
