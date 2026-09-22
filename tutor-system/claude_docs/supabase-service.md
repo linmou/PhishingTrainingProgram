@@ -1,7 +1,20 @@
 # supabase.ts - Database Service Layer
 
+Intent: document browser and trusted Supabase service boundaries.
+
+Updated: 2026-09-22
+Implementation commit: `419f785`
+
 ## Purpose
 Core database client configuration and service abstraction layer. Provides type-safe database operations, authentication helpers, and comprehensive logging for the educational platform.
+
+## Transfer Assessment Boundary
+
+`transferAssessmentService.ts` is a transport-only browser facade. It invokes the `assessment-api` Edge Function using exactly six operation names and allowlists returned DTO fields. It contains no direct table access, browser provider call, answer parser, grader, progress mutation, local attempt counter, or fallback model.
+
+The Edge Function verifies the caller, checks room and role scope, and calls service-role-only RPCs. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution. Missing verifier configuration, feature activation, or required provider settings fails closed.
+
+Production generation requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`. `TRANSFER_ASSESSMENT_ENABLED` remains `false` until hosted schema, provider, downstream UI, and initiative integration gates pass.
 
 ## Client Configuration
 

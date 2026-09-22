@@ -36,6 +36,42 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
   };
 }
 
+function providerScope(): Record<string, unknown> {
+  return {
+    room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+    focus_student_message_id: 'focus-1',
+    context: {
+      room_id: 'room-1', checklist_id: 'checklist-1', focus_student_id: 'learner-1',
+      focus_student_message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'It looked familiar.' },
+      prior_participation_mode: 'tutoring',
+      checklist_items: [{
+        id: 'item-1', area_text: 'Verify independently', priority: 'critical',
+        status: 'partially_covered', understanding_level: 'basic',
+        relevant_evidence_message_ids: ['focus-1'], repair_message_id: null,
+      }],
+      eligible_assessment_item_ids: ['item-1'], unresolved_assessment: null,
+      feedback_required: false, progress_snapshot_hash: 'snapshot-1',
+    },
+  };
+}
+
+function validProviderPayload(): Record<string, unknown> {
+  return {
+    choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+      reason: 'Assess transfer.',
+      learning_evidence: [],
+      decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: 'item-1' },
+      response: 'Which action is safest?',
+      assessment: {
+        selection_type: 'single', stem: 'Which action is safest?', rendered_text: 'Which action is safest?',
+        options: [{ id: 'A', text: 'Click' }, { id: 'B', text: 'Verify' }, { id: 'C', text: 'Reply' }, { id: 'D', text: 'Forward' }],
+        correct_option_ids: ['B'], learner_safe_explanation: 'Verify through the official app.',
+        transfer_basis: { concept_rule: 'verify', source_context: 'x', changed_context: 'y', source_evidence_message_ids: ['focus-1'] },
+      },
+    }) } }],
+  };
+}
+
 Deno.test('fails closed before data access when no principal verifier is wired', async () => {
   let calls = 0;
   const handler = createAssessmentApiHandler(dependencies({
@@ -100,6 +136,85 @@ Deno.test('requires every server-only provider setting with no model fallback', 
   const payload = await response.json();
   assertEquals(response.status, 503);
   assertEquals(payload.error.code, 'AI_PROVIDER_NOT_CONFIGURED');
+});
+
+Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and private audit', async () => {
+  const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
+  const audits: Record<string, unknown>[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    env: (name) => ({
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    rpc: async (name, args) => {
+      if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
+      if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
+      return { data: 'audit-1', error: null };
+    },
+    fetch: async (input, init) => {
+      requests.push({ url: String(input), body: JSON.parse(String(init?.body)) });
+      return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
+    },
+  }));
+  const response = await handler(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const payload = await response.json();
+  assertEquals(payload.ok, true);
+  assertEquals(requests[0].url, 'https://provider.invalid/v1/chat/completions');
+  assertEquals(requests[0].body.model, 'qwen3.5-flash');
+  assertEquals(requests[0].body.max_tokens, 1200);
+  assertEquals(requests[0].body.response_format, { type: 'json_object' });
+  assert(JSON.stringify(requests[0].body).includes('learner_safe_explanation'));
+  assert(!JSON.stringify(audits[0]).includes('server-secret'));
+  assertEquals(audits[0].p_validation_outcome, 'valid');
+});
+
+Deno.test('performs one format-only repair and rejects a second invalid result', async () => {
+  let providerCalls = 0;
+  const audits: Record<string, unknown>[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    rpc: async (name, args) => {
+      if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
+      if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
+      return { data: 'audit', error: null };
+    },
+    fetch: async () => {
+      providerCalls += 1;
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: '{invalid' } }] }), { status: 200 });
+    },
+  }));
+  const response = await handler(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const payload = await response.json();
+  assertEquals(payload.error.code, 'AI_OUTPUT_INVALID');
+  assertEquals(providerCalls, 2);
+  assertEquals(audits.map((entry) => entry.p_attempt_ordinal), [1, 2]);
+});
+
+Deno.test('does not repair truncation, HTTP failure, or network failure', async () => {
+  for (const scenario of ['truncated', 'http', 'network']) {
+    let providerCalls = 0;
+    const handler = createAssessmentApiHandler(dependencies({
+      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      rpc: async (name) => name === 'prepare_transfer_turn_v1'
+        ? { data: providerScope(), error: null }
+        : { data: 'audit', error: null },
+      fetch: async () => {
+        providerCalls += 1;
+        if (scenario === 'network') throw new Error('offline');
+        if (scenario === 'http') return new Response('{}', { status: 500 });
+        return new Response(JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: '{}' } }] }), { status: 200 });
+      },
+    }));
+    const response = await handler(request('prepare_turn', {
+      room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+    }));
+    const payload = await response.json();
+    assertEquals(payload.error.code, scenario === 'truncated' ? 'AI_OUTPUT_TRUNCATED' : 'AI_PROVIDER_ERROR');
+    assertEquals(providerCalls, 1);
+  }
 });
 
 Deno.test('retries a stale CAS snapshot and returns the committed authoritative result', async () => {
