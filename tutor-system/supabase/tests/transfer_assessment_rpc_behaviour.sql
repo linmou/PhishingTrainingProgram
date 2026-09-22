@@ -55,8 +55,8 @@ begin
   insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
   values (v_item, v_check, 'Recognise a familiar-sender lure', 'verification_step', 'partially_covered', 'basic');
 
-  insert into messages(id, room_id, user_id, content, user_role, is_ai_generated)
-  values (v_focus, v_room, v_student, 'My bank emailed a link so it must be safe.', 'student', false);
+  insert into messages(id, room_id, user_id, content, user_role)
+  values (v_focus, v_room, v_student, 'My bank emailed a link so it must be safe.', 'student');
 
   -- =======================================================================================
   -- A1: send_reviewed delivers and stamps the assessment onto the tutor message
@@ -116,8 +116,8 @@ begin
   -- A4: a second delivery for the same learner is refused
   -- =======================================================================================
   begin
-    insert into messages(id, room_id, user_id, content, user_role, is_ai_generated)
-    values (gen_random_uuid(), v_room, v_student, 'Second focus message.', 'student', false)
+    insert into messages(id, room_id, user_id, content, user_role)
+    values (gen_random_uuid(), v_room, v_student, 'Second focus message.', 'student')
     returning id into v_focus2;
 
     v_res := send_reviewed_tutor_response_v3(
@@ -176,8 +176,8 @@ begin
   -- =======================================================================================
   -- A6: process_message grades from the message row
   -- =======================================================================================
-  insert into messages(id, room_id, user_id, content, user_role, is_ai_generated, parent_message_id)
-  values (v_answer, v_room, v_student, 'B', 'student', false, v_msg);
+  insert into messages(id, room_id, user_id, content, user_role, parent_message_id)
+  values (v_answer, v_room, v_student, 'B', 'student', v_msg);
 
   v_res := process_assessment_message_v1(v_answer, v_student, gen_random_uuid());
   v_result := (select assessment_result from messages where id = v_msg);
@@ -233,8 +233,8 @@ begin
     insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
     values (v_item2, v_check, 'Second objective', 'verification_step', 'partially_covered', 'basic');
 
-    insert into messages(id, room_id, user_id, content, user_role, is_ai_generated)
-    values (v_focus3, v_room, v_student, 'Third focus message.', 'student', false);
+    insert into messages(id, room_id, user_id, content, user_role)
+    values (v_focus3, v_room, v_student, 'Third focus message.', 'student');
 
     v_res := send_reviewed_tutor_response_v3(
       jsonb_build_object(
@@ -253,8 +253,8 @@ begin
             'source_evidence_message_ids', jsonb_build_array(v_focus3::text)))),
       v_room, v_student, v_check, v_item2, v_focus3, v_tutor, gen_random_uuid());
 
-    insert into messages(id, room_id, user_id, content, user_role, is_ai_generated, parent_message_id)
-    values (v_junk, v_room, v_student, 'I am not sure what you mean', 'student', false,
+    insert into messages(id, room_id, user_id, content, user_role, parent_message_id)
+    values (v_junk, v_room, v_student, 'I am not sure what you mean', 'student',
             (v_res->'message'->>'id')::uuid);
 
     v_res := process_assessment_message_v1(v_junk, v_student, gen_random_uuid());

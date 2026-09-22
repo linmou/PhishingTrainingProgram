@@ -15,7 +15,6 @@ const buildMessage = (overrides: Partial<Message> = {}): Message => ({
     user_id: 'tutor-1',
     content: 'Stop and verify the destination in the real service.',
     user_role: 'tutor',
-    is_ai_generated: false,
     ai_model_used: null,
     ai_response_time_ms: null,
     parent_message_id: null,
@@ -59,5 +58,22 @@ describe('PostComment Guard Mode identity', () => {
             />
         );
         expect(screen.getByText('Original Tutor')).toBeInTheDocument();
+    });
+
+    it('keeps tags literal outside Multi-agent mode', () => {
+        render(
+            <PostComment
+                message={buildMessage({
+                    content: '[agent:riley] Trust the logo.',
+                    response_mode: 'tutoring'
+                })}
+                currentUserId="student-1"
+                currentUserRole="student"
+            />
+        );
+
+        expect(screen.getByText('Original Tutor')).toBeInTheDocument();
+        expect(screen.getByText('[agent:riley] Trust the logo.')).toBeInTheDocument();
+        expect(screen.queryByText('Riley')).not.toBeInTheDocument();
     });
 });

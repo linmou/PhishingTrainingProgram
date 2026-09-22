@@ -302,7 +302,8 @@ describe('Room Template Management', () => {
                                 confidence_building: 'high'
                             },
                             detection_areas: ['Fear-Based Urgency'],
-                            verification_steps: ['Do NOT Click']
+                            verification_steps: ['Do NOT Click'],
+                            interaction_mode: 'multi_agent'
                         }
                     },
                     op_config_template: null,
@@ -368,7 +369,8 @@ describe('Room Template Management', () => {
                     'tutor-123',
                     expect.objectContaining({
                         role: 'peer',
-                        scenario: 'Account Security Alert'
+                        scenario: 'Account Security Alert',
+                        interaction_mode: 'multi_agent'
                     })
                 );
             });
@@ -376,6 +378,81 @@ describe('Room Template Management', () => {
             expect(
                 await screen.findByText(/Test room created from the selected AI tutor template/i)
             ).toBeInTheDocument();
+        });
+
+        test('should include the shipped Multi-agent room when database templates already exist', async () => {
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([
+                {
+                    id: 'template-existing',
+                    template_name: 'Demo: Lock Icon Myth (Direct Correction)',
+                    title_template: 'Demo: Lock Icon Myth',
+                    description_template: 'Existing behavior demo',
+                    image_url: null,
+                    pre_populated_dialogue: null,
+                    op_config_template: null,
+                    password_config: null
+                }
+            ]);
+
+            render(
+                <TestWrapper>
+                    <TestRoomsView />
+                </TestWrapper>
+            );
+
+            fireEvent.click(screen.getByTestId('create-test-room'));
+
+            const templateSelect = await screen.findByLabelText(/use template/i);
+            await waitFor(() => {
+                expect(
+                    Array.from((templateSelect as HTMLSelectElement).options).some(
+                        (option) => option.textContent === 'Demo: Multi-agent Response Room'
+                    )
+                ).toBe(true);
+            });
+        });
+
+        test('should create the shipped Multi-agent room through the database-empty fallback', async () => {
+            const mockCreateRoom = supabaseService.createRoom as jest.Mock;
+            mockCreateRoom.mockResolvedValue({ id: 'room-multiagent', title: 'Demo: Multi-agent Response Room' });
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([]);
+
+            render(
+                <TestWrapper>
+                    <TestRoomsView />
+                </TestWrapper>
+            );
+
+            fireEvent.click(screen.getByTestId('create-test-room'));
+            const templateSelect = await screen.findByLabelText(/use template/i) as HTMLSelectElement;
+            const multiAgentOption = await waitFor(() => {
+                const option = Array.from(templateSelect.options).find(
+                    (candidate) => candidate.textContent === 'Demo: Multi-agent Response Room'
+                );
+                expect(option).toBeDefined();
+                return option!;
+            });
+
+            fireEvent.change(templateSelect, { target: { value: multiAgentOption.value } });
+            fireEvent.click(screen.getByText('🚀 Create Room'));
+
+            await waitFor(() => {
+                expect(mockCreateRoom).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        title: 'Demo: Multi-agent Response Room',
+                        description: expect.stringContaining('[behavior-test-room]')
+                    })
+                );
+            });
+            await waitFor(() => {
+                expect(aiService.initializeAIAssistant).toHaveBeenCalledWith(
+                    'room-multiagent',
+                    'qwen3.5-flash',
+                    expect.any(String),
+                    'tutor-123',
+                    expect.objectContaining({ interaction_mode: 'multi_agent' })
+                );
+            });
         });
 
         test('should load templates using the current tutor id', async () => {

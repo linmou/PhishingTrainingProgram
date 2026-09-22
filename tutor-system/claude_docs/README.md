@@ -44,6 +44,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Candidate 11 documentation update](./doc_update_record/documentation_update_record_v2026_09_08_candidate_11_production.md)** - Production prompt/contract integration, local verification, and release-evidence boundary
 - **[Web test-room E2E update](./doc_update_record/documentation_update_record_v2026_09_08_web_test_rooms_e2e.md)** - Real-browser room creation, provider-backed suggestions, and legacy heuristic boundary
 - **[Transfer assessment W0 documentation update](./doc_update_record/documentation_update_record_v2026_09_11_transfer_assessment_w0.md)** - Canonical T09, aligned contract/evaluation plan, applicability audit, and BDD lifecycle
+- **[Transfer browser behavior documentation update](./doc_update_record/documentation_update_record_v2026_09_14_transfer_browser_behavior.md)** - Single-prompt learner evidence scheduling, browser lifecycle, and verification evidence
 - **[ai-assistant-module.md](./ai-assistant-module.md)** - Comprehensive guide to the AI assistant functionality including configuration, integration, and testing
 - **[ai-suggestion-tracking.md](./ai-suggestion-tracking.md)** - AI suggestion tracking implementation with tutor feedback collection
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login

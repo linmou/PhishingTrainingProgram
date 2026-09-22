@@ -1,5 +1,9 @@
 # AI Assistant Module Documentation
 
+Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
+
+Last updated: 2026-09-14 (Multi-agent Tutor profile surface correction; commit 1fb2e9b)
+
 ## Overview
 
 The AI Assistant module adds intelligent response generation capabilities to the tutoring system. Tutors can configure and use AI to generate educational responses during tutoring sessions, enhancing the learning experience for students.
@@ -17,13 +21,17 @@ The AI Assistant module adds intelligent response generation capabilities to the
    - Configuration interface for tutors
    - Model selection and parameter tuning
 
-3. **Chat Message Component** (`src/components/ChatMessage.tsx`)
-   - Enhanced message display with AI indicators
-   - AI response generation triggers
+3. **Message Presentation** (`src/components/PostComment.tsx`, `src/utils/messagePresentation.ts`)
+   - Resolves display identity from message role, response mode, and Multi-agent tags
+   - Renders Guard, assessment, and Multi-agent turns on the active room route
 
 4. **Room Context Integration**
    - AI functionality integrated into room management
    - Real-time AI response handling
+
+5. **Multi-agent Suggestion Editor** (`src/components/MultiAgentSuggestionEditor.tsx`)
+   - Tutor review cards use the active tutor profile display name
+   - Missing tutor names fall back to `Tutor`; Riley remains the simulated `Riley` profile
 
 ### Database Schema Extensions
 
@@ -52,11 +60,16 @@ Runtime source of truth:
 - Structured controls such as `prompt_config`, `temperature`, and `max_tokens` are persisted in `ai_assistant_configs`
 - `getAIConfig()` merges room fields with `ai_assistant_configs` so Quick Adjust and settings screens can be rehydrated after reload
 
-**messages** - Added AI metadata:
-- `is_ai_generated`: Identifies AI-generated messages
+**messages** - Added tutor-turn metadata:
+- `user_role`: Establishes student, tutor, or observer conversation identity
+- `response_mode`: Establishes `tutoring`, `guard`, `assessment`, or `multiagent` presentation
 - `ai_model_used`: Model that generated the response
 - `ai_response_time_ms`: Generation time metrics
 - `parent_message_id`: Reference to responded message
+
+Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
+
+`RoomContext.approveMultiAgentDraft` persists every approved Riley or Tutor-tagged row with `response_mode='multiagent'`, preserving the character tag for the presentation resolver to decode.
 
 ## Features
 
@@ -103,6 +116,8 @@ Maintains chat history for:
 - Consistent conversation flow
 - Educational continuity
 
+Tutor rows become assistant turns. Student and observer rows become user turns. Valid Multi-agent tutor tags are stripped and preserved as Riley or the stored tutor profile; tags outside Multi-agent mode remain ordinary text.
+
 ## Usage
 
 ### For Tutors
@@ -122,10 +137,14 @@ Maintains chat history for:
    - Adjust temperature for creativity level
    - Control response length with max tokens
 
+4. **Review Multi-agent Drafts**
+   - Review each character response before approval
+   - Tutor cards use the active tutor profile name, while Riley remains simulated
+
 ### For Students and Observers
 
-- AI messages appear with special purple styling
-- AI responses are clearly marked with model and timing info
+- Tutor messages use their role profile; Guard uses its supervisor profile; Multi-agent Riley rows use the simulated Riley profile and Tutor rows use the stored tutor profile
+- The `AI chatbot` role badge remains hidden from student viewers
 - No AI controls available (tutor-only feature)
 
 ## API Reference
@@ -182,7 +201,7 @@ addToConversationContext(
 
 ### Data Privacy
 - Conversation history stored securely in PostgreSQL
-- AI responses clearly marked in database
+- Tutor-turn identity stored through `user_role` and `response_mode`
 - No external API calls (dummy implementation)
 
 ## Integration
@@ -202,9 +221,10 @@ interface RoomContextType {
 }
 ```
 
-**Message Display** - Enhanced with AI indicators:
-- Purple gradient background for AI messages
-- AI badge showing model and response time
+**Message Display** - Resolved from persisted message semantics:
+- Role profile and badge come from `user_role`
+- Guard overrides the profile; assessment keeps the role profile and adds the interactive UI
+- Multi-agent tutor rows decode a leading Riley or Tutor tag and strip it from the body; Riley uses the simulated Riley profile, while the Tutor tag uses the persisted tutor account name and avatar
 - Generate AI Response buttons on student messages
 
 ### Database Integration
@@ -252,11 +272,11 @@ python -m unittest src/services/test_aiService.py
 2. **Generate Responses**
    - Send student message
    - Click "Generate AI Response"
-   - Verify AI message appears with proper styling
+   - Verify the tutor message uses the expected role and response-mode presentation
 
 3. **Test Different Models**
    - Change AI model in settings
-   - Generate responses and verify model name in badge
+   - Generate responses and verify model metadata in the tutor export
 
 4. **Test Error Handling**
    - AI service has 5% failure rate
@@ -322,7 +342,7 @@ To replace dummy service with real AI:
 3. **Styling Issues**
    - Ensure CSS includes AI styles
    - Check for conflicting CSS rules
-   - Verify AI message class is applied
+   - Verify the expected role or response-mode class is applied
 
 ### Debug Mode
 

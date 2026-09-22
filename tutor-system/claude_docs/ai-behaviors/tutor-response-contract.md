@@ -2,8 +2,8 @@
 
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
-Updated: 2026-09-11
-Status: candidate 11's legacy v2 prompt contract remains implemented; transfer assessment v3 is implemented behind a disabled trusted API capability. Hosted browser and database acceptance for transfer v3 remain pending.
+Updated: 2026-09-13
+Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns; transfer assessment v3 is a browser-local research flow. Live semantic evaluation and browser acceptance for transfer v3 and for Multi-agent remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -30,8 +30,8 @@ Resolve fields in the order below, then compose the response. This is the decisi
 
 | Order / field | Definition and consumer | Type / allowed values / nullability | Upstream dependency | Grounding |
 | --- | --- | --- | --- | --- |
-| 1. `decision.mode` | Participation decision for human review; does not automatically change room state. | Required string: `tutoring` or `guard`; non-null. | Observable engagement and known prior participation state. | [G01](tutor-behavior-specification.md#g01-participation-state-decision) defines participation eligibility and recovery, so resolve mode first to establish which participation obligations apply. |
-| 2. `decision.instruction` | First substantive instructional move, excluding a brief acknowledgment; used to review the proposed response. | Required string: `protective_instruction`, `correction`, `scaffolding`, `explanation`, `consolidation`, or explicit null. | Resolve mode first: null is allowed only with `guard`; either mode may include instruction. Use risk and learning evidence to choose the action. | [G02](tutor-behavior-specification.md#g02-disruption-identification-and-correction) permits participation-only intervention in Guard; [T01](tutor-behavior-specification.md#t01-correction-and-protective-instruction-eligibility)/[T02](tutor-behavior-specification.md#t02-learning-state-and-target-selection) govern instructional action and learning targets. Thus mode constrains whether instruction may be absent, while instructional evidence determines its category. |
+| 1. `decision.mode` | Participation decision for human review; `multiagent` is a presentation decision and does not change room state. | Required string: `tutoring`, `guard`, or `multiagent` when the request enables Multi-agent; non-null. | Observable engagement and known prior participation state; Multi-agent eligibility for the presentation decision. | [G01](tutor-behavior-specification.md#g01-participation-state-decision) defines participation eligibility and recovery, so resolve mode first to establish which participation obligations apply. The Multi-agent extension below defines the additional presentation decision. |
+| 2. `decision.instruction` | First substantive instructional move, excluding a brief acknowledgment, or the `multiagent` presentation instruction; used to review the proposed response. | Required string: `protective_instruction`, `correction`, `scaffolding`, `explanation`, `consolidation`, `multiagent`, or explicit null. `multiagent` is required only with `mode=multiagent`; null is allowed only with `guard`. | Resolve mode first: `mode=multiagent` requires `instruction=multiagent`; otherwise use risk and learning evidence to choose the instructional action. | [G02](tutor-behavior-specification.md#g02-disruption-identification-and-correction) permits participation-only intervention in Guard; [T01](tutor-behavior-specification.md#t01-correction-and-protective-instruction-eligibility)/[T02](tutor-behavior-specification.md#t02-learning-state-and-target-selection) govern instructional action and learning targets. The Multi-agent extension defines the presentation value. |
 
 For additional decision fields, record their position, definition, consumer, type, categories, upstream dependencies, and exact requirement references with derivation logic in the same row. Independent fields need no invented dependency.
 
@@ -57,9 +57,10 @@ Every field and category owns its grounding through the linked canonical require
 | `scaffolding` | Give a focused hint or question leaving a reasoning step to the learner. | Useful question-only scaffolds are allowed; no question quota. | [T01](tutor-behavior-specification.md#t01-correction-and-protective-instruction-eligibility) permits scaffolding and [T02](tutor-behavior-specification.md#t02-learning-state-and-target-selection) requires an evidence-based target, so the hint or question must leave a useful reasoning step on that target. |
 | `explanation` | Explain or elaborate knowledge without first correcting a false inference. | A correct partial answer may need elaboration rather than correction. | [T01](tutor-behavior-specification.md#t01-correction-and-protective-instruction-eligibility) permits explanation and [T02](tutor-behavior-specification.md#t02-learning-state-and-target-selection) grounds the target in learner evidence, so missing knowledge can call for elaboration without implying a misconception. |
 | `consolidation` | Reinforce demonstrated understanding without opening a new target. | Appropriate when no useful unmet target remains. | [T02](tutor-behavior-specification.md#t02-learning-state-and-target-selection) ties teaching to evidenced learning needs, so demonstrated understanding without a useful unmet target supports consolidation. |
+| `multiagent` | Present one tagged Riley or AI Tutor message, or a contrast containing one of each, for an ordinary Multi-agent tutoring turn. | Valid only with `mode=multiagent`; it is a presentation instruction, not an instructional action category. | The Multi-agent extension below defines the one-or-two-message response and its safety, explanation, and Guard exceptions. |
 | null | No instructional move; address participation only. | Valid only in Guard; a participation request is not an instructional correction. | [G02](tutor-behavior-specification.md#g02-disruption-identification-and-correction) allows participation correction without teaching, so Guard can omit an instructional move; this contract uses explicit null so a deliberate absence can be distinguished from a missing required decision. |
 
-Label the first substantive instructional move: correction followed by scaffolding is `correction`; protection followed by explanation is `protective_instruction`. Brief acknowledgment does not change the label. Connected follow-up teaching is allowed. Guard may include instruction when needed; [G02](tutor-behavior-specification.md#g02-disruption-identification-and-correction) alone does not require it. [T04](tutor-behavior-specification.md#t04-contextual-knowledge-quality) governs any knowledge supplied in either mode.
+Except for `multiagent`, label the first substantive instructional move: correction followed by scaffolding is `correction`; protection followed by explanation is `protective_instruction`. Brief acknowledgment does not change the label. Connected follow-up teaching is allowed. Guard may include instruction when needed; [G02](tutor-behavior-specification.md#g02-disruption-identification-and-correction) alone does not require it. [T04](tutor-behavior-specification.md#t04-contextual-knowledge-quality) governs any knowledge supplied in either mode.
 
 ## Invalid-output handling
 
@@ -90,6 +91,30 @@ Migration `024_raw_instruction.sql` adds the nullable, constrained audit column 
 
 Preserve frozen runs under their original contract snapshots. Contract changes require a new contract/evaluation version and fresh comparable baseline before acceptance; updating this template does not migrate production or reinterpret historical evidence.
 
+## Multi-agent extension (v2)
+
+Intent: define the one-or-two-character decision for ordinary tutoring turns when the learner selects Multi-agent, while keeping the v2 envelope above unchanged.
+
+The learner's Student AI choice is persisted in `prompt_config` and sent as the request's `interaction_mode` (`single_agent` by default; old callers keep the old behavior). The Test Rooms page ships a dedicated `Demo: Multi-agent Response Room` template that sets this value directly, so its rooms exercise Multi-agent behavior without a learner-side selector. Under `multi_agent`, an ordinary tutoring turn returns:
+
+| Field | Value | Boundary |
+| --- | --- | --- |
+| `decision.mode` | `multiagent` | Presentation decision only. It never enters `rooms.active_response_mode`; approved rows persist with message-level `response_mode=multiagent`. |
+| `decision.instruction` | `multiagent` | Required with `mode=multiagent`; invalid in every other mode. |
+| `response` | one or two tagged messages | One `[agent:riley] …` or one `[agent:tutor] …`, or one of each in either order. No untagged text may precede the first tag; no body may be empty; a third, duplicate, or unknown tag is invalid. Agent tags are invalid outside `multiagent`. |
+
+Riley is a simulated AI participant who voices one plausible but incorrect recommendation from supplied facts only; the AI Tutor stays accurate and may name the flaw in Riley's reasoning. Guard turns (active or recovering) and transfer-assessment turns never use `multiagent`. `decodeMultiAgentResponse` validates generated drafts; `decodeAgentMessage` recovers character identity only from tutor rows persisted with `response_mode=multiagent`, so a learner or an out-of-mode row containing the same literal tag text keeps its ordinary identity and text.
+
+The mode has its own prompt: `src/services/prompts/multiAgentTutorPrompt.ts` is appended after the active tutor policy only when the request's `interaction_mode` is `multi_agent`, so the evaluated candidate 11 policy is sent byte-identical in every other case. That block owns the one-or-two-tag output contract, the permitted fallbacks, the Riley and AI Tutor role boundaries, and worked decisions.
+
+With the mode enabled an ordinary tutoring turn — including a greeting, small talk, a topic preference, or a bare question — returns `mode=multiagent` and `instruction=multiagent` with one or two tagged messages. Only three single-Tutor answers are permitted instead: `protective_instruction` when the learner is about to act unsafely, `explanation` when the learner asks to be taught or asks to stop the role-play, and `guard` when participation is deliberately disrupted. `scaffolding`, `correction` and `consolidation` are rejected on every attempt; the service repairs once and then fails generation rather than accepting a forbidden retry response. Guard and transfer-assessment turns keep the single-Tutor path unchanged.
+
+Human review shows one or two decoded messages in model order, without speaker selection. Approval requires the draft's parent learner message to still be the latest learner message, then inserts one or two `messages` rows with `user_role=tutor`, a shared `parent_message_id`, and `response_mode=multiagent`. For a two-message response, rows are timestamped at T and T+2s; the later row stays hidden until its timestamp, and submission is blocked during that window.
+
+A multiagent turn uses its own completion budget (`MULTI_AGENT_MAX_TOKENS`) because the envelope can carry a reason plus two tagged messages. A response that stops on the length limit is reported as a truncated decision instead of being parsed as a partial envelope, and the repair retry preserves the one-or-two-message Multi-agent contract or an allowed exception.
+
+Known limitation: a Multi-agent response is stored through the ordinary messages path, so the reviewed-send audit record (`ai_suggestion_feedback`) is not written for it. Multi-agent human-edit provenance would be a separate requirement.
+
 ## Transfer assessment v3 contract
 
 Intent: define the structured teacher-review payload used by the T09 transfer-assessment lifecycle while preserving the legacy v2 contract above.
@@ -101,6 +126,14 @@ The v3 model output is reason-first JSON with this shape:
 ```json
 {
   "reason": "The learner applied the rule in a meaningfully changed context.",
+  "learning_evidence": [
+    {
+      "item_id": "checklist-item-id",
+      "evidence_message_id": "message-id",
+      "signal": "initial",
+      "analysis": "The learner applied the configured verification rule."
+    }
+  ],
   "decision": {
     "mode": "assessment",
     "instruction": "transfer_assess",
@@ -132,10 +165,10 @@ Allowed v3 combinations under T09 are:
 - `assessment` with `transfer_assess`, one known target item, and a complete four-option payload;
 - `guard` with `guard`, a null target, and `assessment: null`; or `guard` with a real teaching instruction and no assessment payload.
 
-The parser rejects missing or blank fields, non-first `reason`, unknown item/message IDs, noncanonical or duplicate option IDs/text, invalid key cardinality, overlong assessment rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments. The teacher editor validates the same contract before review submission.
+The same v3 call performs T02 evidence classification before choosing the tutor turn. `learning_evidence` records every configured concept demonstrated by the focus learner message, using `initial`, `contradiction`, or `spontaneous_transfer`; an empty array means that message supplies no measurable evidence. Assessment requires prior stored evidence or a new `initial` signal for its target. The parser rejects evidence attributed to another learner/message, duplicate item signals, unknown IDs, missing or blank fields, noncanonical option content, invalid key cardinality, overlong rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments.
 
-The server owns the raw draft, immutable answer key, progress snapshot hash, revision, idempotency record, and exact answer grading. The public question record contains no answer key or transfer basis. A learner's valid answer is processed deterministically; an optional explanation cannot overturn an otherwise valid exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade. The first valid answer is the only answer that can resolve a question. A resolved question must receive its tutoring or independently required Guard feedback before another assessment is eligible, and already verified concepts are not routinely reassessed unless later learner evidence contradicts them.
+For this research build, the browser owns the draft, answer key, snapshot, exact grading, and progress writes through public Supabase tables. The learner-facing React projection omits the answer key and transfer basis; these values remain inspectable by a participant using browser/database tools and are not a security boundary. A learner's valid answer is processed deterministically; an optional explanation cannot overturn an otherwise valid exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade. The first valid answer resolves the question. A resolved question must receive tutoring or independently required Guard feedback before another assessment is eligible, and already verified concepts are not routinely reassessed unless later learner evidence contradicts them.
 
 Answers received before delivery are not graded, do not create feedback, and preserve the existing transfer progress pair. Delivery is a prerequisite for entering the parsing and grading path.
 
-The v3 provider budget is 1,200 completion tokens and is applied only in the trusted Edge Function. The legacy client path keeps its existing behavior and remains a separate contract. `TRANSFER_ASSESSMENT_ENABLED=false` is the release default; enabling it requires verified Supabase Auth principals, migration application, SQL/RLS tests, provider configuration, and browser acceptance.
+The browser applies the v3 provider budget of 1,200 completion tokens. The legacy prompt remains a separate contract for rooms without an active `transfer_v1` checklist. Enabling transfer requires provider configuration and browser acceptance; participant authentication and answer-key secrecy are outside this research-build contract.

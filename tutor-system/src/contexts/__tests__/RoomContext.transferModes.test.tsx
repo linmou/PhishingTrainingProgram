@@ -176,6 +176,24 @@ describe('RoomContext transfer turn modes', () => {
     expect(JSON.stringify(sendReviewed.mock.calls[0][0])).not.toContain('"null"');
   });
 
+  it('sends an edited transfer tutoring draft as a reply to its focus learner message', async () => {
+    await mountWithCandidate(preparedTutoringTurnResult);
+
+    await act(async () => {
+      await room!.sendMessage('A familiar display name can still be copied.');
+    });
+
+    expect(sendReviewed).toHaveBeenCalledWith(expect.objectContaining({
+      reviewedPayload: expect.objectContaining({
+        response: 'A familiar display name can still be copied.',
+        decision: expect.objectContaining({ mode: 'tutoring' }),
+      }),
+      focusStudentMessageId: LEARNER_A_MESSAGE_ID,
+      itemId: null,
+    }));
+    expect(room!.transferDraft).toBeNull();
+  });
+
   it('refuses assessment mode paired with a teaching instruction', async () => {
     await mountWithCandidate(preparedTurnResult);
     const incompatible = {

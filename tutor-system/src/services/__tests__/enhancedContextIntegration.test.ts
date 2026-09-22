@@ -35,7 +35,6 @@ jest.mock('../supabase', () => ({
                                     id: 'msg-1',
                                     content: 'The email looks official but something feels off',
                                     user_role: 'student',
-                                    is_ai_generated: false,
                                     created_at: '2024-01-15T10:05:00Z',
                                     parent_message_id: null
                                 },
@@ -43,7 +42,6 @@ jest.mock('../supabase', () => ({
                                     id: 'msg-2', 
                                     content: 'Great observation! What specific details make you suspicious?',
                                     user_role: 'tutor',
-                                    is_ai_generated: false,
                                     created_at: '2024-01-15T10:06:00Z',
                                     parent_message_id: 'msg-1'
                                 },
@@ -51,7 +49,6 @@ jest.mock('../supabase', () => ({
                                     id: 'msg-3',
                                     content: 'The sender email has a weird domain and there are spelling mistakes',
                                     user_role: 'student', 
-                                    is_ai_generated: false,
                                     created_at: '2024-01-15T10:07:00Z',
                                     parent_message_id: 'msg-2'
                                 }

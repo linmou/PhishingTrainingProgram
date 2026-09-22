@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import TutorView from '../pages/TutorView';
-import RoomPage from '../pages/RoomPage';
 import RoomPagePost from '../pages/RoomPagePost';
 import { AuthProvider } from '../contexts/AuthContext';
 import { RoomProvider } from '../contexts/RoomContext';
@@ -175,7 +174,7 @@ describe('Room Password Protection', () => {
                     <AuthProvider>
                         <RoomProvider>
                             <Routes>
-                                <Route path="/room/:roomId" element={<RoomPage />} />
+                                <Route path="/room/:roomId" element={<RoomPagePost />} />
                             </Routes>
                         </RoomProvider>
                     </AuthProvider>

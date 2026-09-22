@@ -47,19 +47,16 @@ describe('buildAIContextFromExistingData', () => {
       {
         content: 'What makes this email suspicious?',
         user_role: 'student',
-        is_ai_generated: false,
         created_at: '2024-01-15T10:05:00Z'
       },
       {
         content: 'Great question! The urgency and suspicious link are red flags.',
         user_role: 'tutor', 
-        is_ai_generated: false,
         created_at: '2024-01-15T10:06:00Z'
       },
       {
         content: 'I can help explain the key warning signs in this phishing attempt.',
         user_role: 'tutor',
-        is_ai_generated: true,
         created_at: '2024-01-15T10:07:00Z'
       }
     ];
@@ -117,12 +114,12 @@ describe('buildAIContextFromExistingData', () => {
     expect(studentMessage.content).toContain('Student: What makes this email suspicious?');
 
     const tutorMessage = context[4];
-    expect(tutorMessage.role).toBe('user');
+    expect(tutorMessage.role).toBe('assistant');
     expect(tutorMessage.content).toContain('Tutor: Great question!');
 
     const aiMessage = context[5];
     expect(aiMessage.role).toBe('assistant');
-    expect(aiMessage.content).toContain('AI suggested: I can help explain');
+    expect(aiMessage.content).toContain('Tutor: I can help explain');
   });
 
   it('should handle room without pre_populated_dialogue', async () => {
@@ -138,7 +135,6 @@ describe('buildAIContextFromExistingData', () => {
       {
         content: 'Hello, let\'s start the training',
         user_role: 'tutor',
-        is_ai_generated: false,
         created_at: '2024-01-15T11:01:00Z'
       }
     ];

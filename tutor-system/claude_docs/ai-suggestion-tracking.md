@@ -1,8 +1,8 @@
 # AI Suggestion Tracking Implementation
 
 > Intent: Document how AI suggestions are displayed, transferred to the composer, and tracked after the Guard Mode UI update.
-> Updated: 2026-09-09
-> Commit ID: `20f6e32`
+> Updated: 2026-09-13
+> Commit ID: `31cf4e4`
 
 ## Overview
 This implementation modifies the AI assistant to only provide suggestions (not create posts), tracks how tutors interact with these suggestions, and records the Guard Mode decision separately from the reviewed wording.
@@ -100,6 +100,12 @@ The download feature now supports two formats:
    - Activate or deactivate Guard directly from the AI suggestion card; the control confirms the change and persists the room response mode.
 
 When Guard Mode is active for a tutor, the composer profile switches to the `Security Supervisor` identity. The AI card continues to show only the response content; internal AI reasoning and mode metadata remain non-visual. A successful reviewed send persists the resolved response mode and updates the room authority. Failed sends retain the editable composer draft.
+
+### Transfer Assessment Review
+
+When a prepared transfer assessment is available, the tutor reviews it in the room view instead of using the ordinary suggestion card. The tutor can edit the question, answer text, and selected correct answers, then send it directly. There is no learner preview or separate acknowledgement gate.
+
+The AI-selected `selection_type` is fixed for that draft: `single` renders radio controls and requires one answer; `multiple` renders checkboxes and requires two or three answers. The review surface shows every currently selected correct answer and updates immediately when the tutor changes an answer or its text. A failed send keeps those edits available for retry.
 
 ### Data Collection
 Every interaction is tracked:

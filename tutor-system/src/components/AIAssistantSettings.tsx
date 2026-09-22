@@ -183,6 +183,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
     };
 
     const roleLockedByStudent = isTutorRoleLocked(aiConfig?.prompt_config);
+    const lockedChoice = aiConfig?.prompt_config?.student_tone_lock?.chosen_choice;
     const lockedRoleIntensity =
         aiConfig?.prompt_config?.student_tone_lock?.chosen_role ||
         aiConfig?.prompt_config?.role?.role;
@@ -427,9 +428,11 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                                         {roleLockedByStudent ? (
                                             <p className="ai-setting-description">
                                                 Locked — student chose{' '}
-                                                {roleIntensityToTone(lockedRoleIntensity) === 'peer'
-                                                    ? 'Peer'
-                                                    : 'Adult'}
+                                                {lockedChoice === 'multi_agent'
+                                                    ? 'Multi-agent'
+                                                    : roleIntensityToTone(lockedRoleIntensity) === 'peer'
+                                                      ? 'Peer'
+                                                      : 'Adult'}
                                                 . Tone cannot be changed by the tutor.
                                             </p>
                                         ) : (

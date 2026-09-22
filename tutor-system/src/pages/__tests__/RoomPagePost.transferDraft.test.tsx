@@ -4,7 +4,7 @@
  * surface is wired to the room context, can be discarded, and surfaces an authoritative refusal
  * without leaving a phantom learner message.
  *
- * Responsibility: prove the page-level review contract for US1 (review, reconfirm, discard, send
+ * Responsibility: prove the page-level review contract for US1 (review, one-click send, discard, send
  * failure) rather than only the editor's internal state.
  */
 
@@ -134,7 +134,7 @@ describe('RoomPagePost transfer review surface', () => {
   it('discards the candidate through the room context without delivering anything', () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Discard candidate' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
 
     expect(clearAISuggestion).toHaveBeenCalledTimes(1);
     expect(confirmTransferDraft).not.toHaveBeenCalled();
@@ -144,12 +144,16 @@ describe('RoomPagePost transfer review surface', () => {
     confirmTransferDraft.mockRejectedValue(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered'));
     renderPage();
 
-    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'A caller requests a fee. What is safest?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
     });
-    expect(screen.getByRole('button', { name: 'Confirm assessment' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Question')).toHaveValue('A caller requests a fee. What is safest?');
+    confirmTransferDraft.mockResolvedValue(undefined);
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
+    await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(2));
+    expect(confirmTransferDraft.mock.calls[1][0]).toEqual(confirmTransferDraft.mock.calls[0][0]);
   });
 });

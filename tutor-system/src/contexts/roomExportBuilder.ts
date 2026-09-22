@@ -141,8 +141,9 @@ export const buildRoomExportData = ({
       display_name: msg.display_name,
       content: msg.content,
       created_at: msg.created_at,
-      is_ai_generated: msg.is_ai_generated,
+      response_mode: msg.response_mode,
       ai_model_used: msg.ai_model_used,
+      ai_response_time_ms: msg.ai_response_time_ms,
       feedback_stats: messageFeedbackStats[msg.id] || undefined,
     })),
     export_metadata: {

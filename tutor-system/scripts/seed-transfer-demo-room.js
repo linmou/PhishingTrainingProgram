@@ -130,7 +130,6 @@ async function seed() {
       user_id: message.role === 'tutor' ? tutorId : learnerId,
       content: message.content,
       user_role: message.role,
-      is_ai_generated: message.role === 'tutor',
       response_mode: 'tutoring',
     });
     if (messageError) throw new Error(`message insert failed: ${messageError.message}`);

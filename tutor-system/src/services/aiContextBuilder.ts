@@ -5,6 +5,7 @@
 
 import { supabase } from './supabase';
 import { ConversationMessage } from '../types';
+import { decodeAgentMessage } from './tutorDecisionContract';
 
 // Enhanced conversation message with source tracking
 export interface EnhancedConversationMessage extends ConversationMessage {
@@ -91,7 +92,7 @@ export async function getChatMessagesForContext(roomId: string, limit: number = 
                 id,
                 content,
                 user_role,
-                is_ai_generated,
+                response_mode,
                 created_at,
                 parent_message_id
             `)
@@ -111,17 +112,29 @@ export async function getChatMessagesForContext(roomId: string, limit: number = 
         // Convert to enhanced conversation messages, in chronological order
         return messages
             .reverse() // Put in chronological order (oldest first)
-            .map(msg => ({
-                role: msg.is_ai_generated ? 'assistant' : 'user',
-                content: msg.is_ai_generated 
-                    ? `AI suggested: ${msg.content}`
-                    : `${msg.user_role === 'student' ? 'Student' : msg.user_role === 'tutor' ? 'Tutor' : 'Observer'} said: ${msg.content}`,
+            .map(msg => {
+                const agent = decodeAgentMessage(msg);
+                if (agent) {
+                    return {
+                        role: 'assistant' as const,
+                        content: `${agent.character === 'riley' ? 'Simulated AI participant Riley' : 'AI Tutor'}: ${agent.content}`,
+                        source: 'chat_message' as const,
+                        user_role: msg.user_role as 'student' | 'tutor' | 'observer',
+                        timestamp: new Date(msg.created_at).getTime() / 1000,
+                        created_at: msg.created_at,
+                        parent_id: msg.parent_message_id
+                    };
+                }
+                return {
+                role: msg.user_role === 'tutor' ? 'assistant' as const : 'user' as const,
+                content: `${msg.user_role === 'student' ? 'Student' : msg.user_role === 'tutor' ? 'Tutor' : 'Observer'} said: ${msg.content}`,
                 source: 'chat_message' as const,
                 user_role: msg.user_role as 'student' | 'tutor' | 'observer',
                 timestamp: new Date(msg.created_at).getTime() / 1000,
                 created_at: msg.created_at,
                 parent_id: msg.parent_message_id
-            }));
+                };
+            });
     } catch (error) {
         console.warn('Error getting chat messages for context:', error);
         return [];

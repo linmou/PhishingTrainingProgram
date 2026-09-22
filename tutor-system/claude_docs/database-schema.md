@@ -1,5 +1,7 @@
 # database.ts - Database Schema Definition
 
+Intent: document the generated TypeScript database contract used by the current Supabase schema.
+
 ## Purpose
 Complete TypeScript interface definitions for the PostgreSQL database schema. Provides full type safety for all database operations through Supabase client integration.
 
@@ -67,7 +69,7 @@ Row: {
 - **Password protection**: Optional room access control
 
 ### Messages Table (Lines 100-137)
-**Purpose**: Real-time conversation storage with AI metadata
+**Purpose**: Real-time conversation storage with role, tutor-turn mode, and model diagnostics
 ```typescript
 Row: {
     id: string;
@@ -75,24 +77,27 @@ Row: {
     user_id: string;               // Foreign key to users
     content: string;               // Message text
     user_role: 'student' | 'tutor' | 'observer';
-    is_ai_generated: boolean;      // AI response tracking
     ai_model_used: string | null;  // Model identification
     ai_response_time_ms: number | null; // Performance metrics
     parent_message_id: string | null;   // Conversation threading
-    response_mode: 'tutoring' | 'guard' | null; // Historical tutor response identity
+    response_mode: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null;
     created_at: string;
 }
 ```
 
 **AI Integration Features**:
-- **AI metadata**: Tracks which messages are AI-generated
-- **Performance tracking**: Response time measurement
+- **Role identity**: `user_role` determines whether context treats a row as a user or assistant turn
+- **Tutor-turn identity**: `response_mode` controls tutoring, Guard, assessment, and Multi-agent presentation
+- **Model diagnostics**: Model and response time remain available for storage and exports
 - **Conversation threading**: Parent-child message relationships
-- **Model identification**: Which AI model generated responses
-- **Historical Guard identity**: Rendering uses the message's persisted response mode, never the room's current mode
+- **Multi-agent identity**: Only tutor rows in `multiagent` mode interpret a valid leading Riley or Tutor tag
+
+Null message mode is presented as ordinary tutoring. Room participation remains limited to `tutoring | guard`; `assessment` and `multiagent` are message-level tutor-turn modes only.
 
 ### Guard Mode Persistence and Atomic Send
 Migration `supabase/migrations/023_guard_mode.sql` adds the room and message mode fields, extends (or recreates) `ai_suggestion_feedback` with raw/final mode metadata, and defines `send_reviewed_tutor_response`. The RPC inserts the reviewed tutor message and feedback and updates the room mode in one transaction. The same migration adds database triggers that reject checklist progression mutations, deletions, and direct completion-field changes while `rooms.active_response_mode = 'guard'`; ordinary corrective chat remains available.
+
+Migration `supabase/migrations/046_refactor_message_representation.sql` adds `multiagent` to `tutor_turn_mode`, removes the legacy AI-generation column and index, and recreates the affected reviewed-send RPCs against the new message shape. Existing tagged tutoring rows are not backfilled or decoded as Multi-agent messages.
 
 ## Educational System Tables
 

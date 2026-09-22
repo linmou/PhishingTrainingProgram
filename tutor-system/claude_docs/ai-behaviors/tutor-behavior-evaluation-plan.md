@@ -5,7 +5,7 @@ Intent: define specification-derived checks, frozen experiments and comparable a
 Plan ID: `tutor_behavior_v1`
 Status: canonical v2 evaluator remains the legacy evaluator; transfer assessment v3 deterministic implementation checks are present, while semantic, database, and browser acceptance remain pending.
 Prepared: 2026-09-07
-Updated: 2026-09-11
+Updated: 2026-09-14
 Current behavior specification: [tutor-behavior-specification.md](tutor-behavior-specification.md). Prior frozen snapshot SHA-256 `013c2e27b2c5897a0ab906893515e6d56d49c8ce3cbf6ee740fdfa0218df74c0`
 Current response contract: [tutor-response-contract.md](tutor-response-contract.md). Prior frozen snapshot SHA-256 `b4669fbde41f856b40114d762b227f058a625b30538e20542e4d465925654ad6`
 Constitution: human-adopted `phishing_tutor_constitution 1.0`, SHA-256 `8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e`; the existing T01–T08 and G01–G03 grounding review is reused for T09, which introduces no constitutional priority or exception; supervision remains a response-contract responsibility.
@@ -17,11 +17,13 @@ The transfer implementation adds deterministic checks for the progress reducer, 
 
 The intended v3 semantic evaluation remains separate: transfer trigger/target selection, medium-transfer quality, assessment validity, feedback-first follow-up, and evidence-grounded verification require calibrated model/human judgments on frozen cases. No live model evaluation or independent holdout run was performed in this implementation turn. The development fixtures in `tutor-system/src/services/__tests__/` are not holdouts and must not be reported as release performance.
 
-Database and authorization acceptance are also pending. Migration `025_transfer_assessment_storage.sql` is authored but has not been applied to an isolated or hosted database in this environment; `supabase db lint --local` could not connect because no local Postgres instance was listening. Browser scenarios requiring verified Supabase principals, public/private payload inspection, retries, races, and rollback remain unrun. The backend capability therefore stays disabled by default.
+Live Supabase schema and lifecycle constraints must be inspected through MCP for database acceptance. The browser research build does not claim authorization or answer-key secrecy. Browser scenarios for retries, competing sends, stale drafts, feedback sequencing, and failed writes remain release evidence requirements.
 
 ## T09 preparation contract
 
 This section is the W0 preparation boundary for the numbered transfer requirement. It defines what will be measured; it does not claim that the semantic judge, Promptfoo run, database checks, or browser release checks have run.
+
+The transfer Promptfoo target evaluates the single v3 provider request. Its output contains both `learning_evidence` for T02 and the resulting tutoring, Guard, or assessment decision, so trigger/target and response behavior are scored from the same preserved model output. Deterministic browser tests evaluate delivery, grading, progress, and feedback sequencing separately.
 
 | Requirement | Metric or supporting check | Method | Checked field/state | Expected evidence | Applicability and threshold |
 | --- | --- | --- | --- | --- | --- |

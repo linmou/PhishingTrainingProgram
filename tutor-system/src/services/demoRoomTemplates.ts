@@ -431,6 +431,52 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
   ];
 }
 
+/** Dedicated Test Rooms seed for exercising the Multi-agent response contract. */
+export function getMultiAgentTestRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
+  const baseConfig = buildCasualPeerAIConfig('Account Security Alert');
+  const prompt_config: SystemPromptConfig = {
+    ...baseConfig.prompt_config,
+    interaction_mode: 'multi_agent'
+  };
+
+  return [{
+    case_id: 'multiagent_test_room',
+    template_name: 'Demo: Multi-agent Response Room',
+    template_description: 'Dedicated test room for Multi-agent Riley and Tutor responses.',
+    title_template: 'Demo: Multi-agent Response Room',
+    description_template: 'Multi-agent test thread: compare Riley\'s challenge with the Tutor\'s guidance on a suspicious account alert.',
+    image_url: '/images/room-presets/phishing_2.png',
+    pre_populated_dialogue: [
+      {
+        user_name: 'Socail Media Testdrive',
+        role: 'others',
+        message: 'YOUR ACCOUNT IS AT RISK. Verify now: http://testdrive.info/youraccount'
+      },
+      {
+        user_name: 'Maya R.',
+        role: 'others',
+        message: 'This looks urgent, but I am not sure the link is really from the service.'
+      },
+      {
+        user_name: 'Tutor',
+        role: 'tutor',
+        message: 'What evidence would you check before deciding whether this alert is trustworthy?'
+      },
+      {
+        user_name: 'Jordan',
+        role: 'student',
+        message: 'I would check the exact address and open the real app instead of clicking this link.'
+      }
+    ],
+    ai_config_template: {
+      ...baseConfig,
+      system_prompt: generateSystemPrompt(prompt_config),
+      prompt_config
+    },
+    test_only: true
+  }];
+}
+
 type ComparisonSource = {
   pairId: PromptComparisonPairId;
   sourceCaseId: string;

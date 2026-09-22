@@ -66,19 +66,16 @@ describe('AI Context Integration', () => {
                 {
                   content: 'Is this message legitimate?',
                   user_role: 'student',
-                  is_ai_generated: false,
                   created_at: '2024-01-15T14:05:00Z'
                 },
                 {
                   content: 'What warning signs do you notice in this message?',
                   user_role: 'tutor',
-                  is_ai_generated: false,
                   created_at: '2024-01-15T14:06:00Z'
                 },
                 {
                   content: 'The urgency and suspicious URL are major red flags',
                   user_role: 'student',
-                  is_ai_generated: false,
                   created_at: '2024-01-15T14:07:00Z'
                 }
               ],
@@ -119,7 +116,7 @@ describe('AI Context Integration', () => {
     expect(studentQuestion.content).toContain('Student: Is this message legitimate?');
 
     const tutorQuestion = context[4];
-    expect(tutorQuestion.role).toBe('user');
+    expect(tutorQuestion.role).toBe('assistant');
     expect(tutorQuestion.content).toContain('Tutor: What warning signs');
 
     const studentResponse = context[5];
@@ -215,25 +212,21 @@ describe('Context Message Formatting', () => {
                 {
                   content: 'Student question about phishing',
                   user_role: 'student',
-                  is_ai_generated: false,
                   created_at: '2024-01-15T15:01:00Z'
                 },
                 {
                   content: 'Tutor explanation of the concept',
                   user_role: 'tutor',
-                  is_ai_generated: false,
                   created_at: '2024-01-15T15:02:00Z'
                 },
                 {
                   content: 'Observer noting interesting point',
                   user_role: 'observer',
-                  is_ai_generated: false,
                   created_at: '2024-01-15T15:03:00Z'
                 },
                 {
                   content: 'AI-generated educational response',
                   user_role: 'tutor',
-                  is_ai_generated: true,
                   created_at: '2024-01-15T15:04:00Z'
                 }
               ],
@@ -248,9 +241,13 @@ describe('Context Message Formatting', () => {
 
     // Check message formatting
     expect(context[1].content).toContain('Student: Student question about phishing');
+    expect(context[1].role).toBe('user');
     expect(context[2].content).toContain('Tutor: Tutor explanation of the concept');
+    expect(context[2].role).toBe('assistant');
     expect(context[3].content).toContain('Observer: Observer noting interesting point');
-    expect(context[4].content).toContain('AI suggested: AI-generated educational response');
+    expect(context[3].role).toBe('user');
+    expect(context[4].content).toContain('Tutor: AI-generated educational response');
+    expect(context[4].role).toBe('assistant');
 
     console.log('✅ Message Formatting Verified:');
     context.slice(1).forEach((msg, i) => {

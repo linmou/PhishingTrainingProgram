@@ -1,6 +1,6 @@
 /**
- * Student opt-in control for AI role (peer vs adult).
- * Purpose: "Choose AI role?" → dropdown; 1:1 AI-enabled rooms only.
+ * Student opt-in control for the AI interaction choice (Peer / Adult / Multi-agent).
+ * Purpose: "Choose AI role?" → dropdown; single-student AI-enabled rooms only.
  */
 
 import React, { useMemo, useState } from 'react';
@@ -10,9 +10,9 @@ import {
   countStudentParticipants,
   isStudentToneFeatureAvailable,
   isTutorRoleLocked,
-  roleIntensityToTone,
-  STUDENT_TONE_OPTIONS,
-  type StudentToneValue,
+  resolveStudentAIChoice,
+  STUDENT_AI_OPTIONS,
+  type StudentAIChoice,
 } from '../utils/studentAITone';
 
 const StudentAIToneControl: React.FC = () => {
@@ -37,16 +37,16 @@ const StudentAIToneControl: React.FC = () => {
   }
 
   const showDropdown = optedIn || locked;
-  const selectedTone: StudentToneValue | '' = locked
-    ? roleIntensityToTone(aiConfig?.prompt_config?.role?.role)
+  const selectedChoice: StudentAIChoice | '' = locked
+    ? resolveStudentAIChoice(aiConfig?.prompt_config)
     : '';
 
-  const handleSelect = async (tone: StudentToneValue | '') => {
-    if (!tone) return;
+  const handleSelect = async (choice: StudentAIChoice | '') => {
+    if (!choice) return;
     setError(null);
     setSaving(true);
     try {
-      await setStudentAITone(tone);
+      await setStudentAITone(choice);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to set AI role';
       setError(message);
@@ -71,15 +71,15 @@ const StudentAIToneControl: React.FC = () => {
           <span className="student-ai-tone-label-text">AI role</span>
           <select
             aria-label="AI role"
-            value={selectedTone}
+            value={selectedChoice}
             disabled={loadingAI || saving}
-            onChange={(e) => handleSelect(e.target.value as StudentToneValue)}
+            onChange={(e) => handleSelect(e.target.value as StudentAIChoice)}
             className="ai-setting-select"
           >
             <option value="" disabled>
               Select role
             </option>
-            {STUDENT_TONE_OPTIONS.map((opt) => (
+            {STUDENT_AI_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>

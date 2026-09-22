@@ -1,6 +1,7 @@
 // Purpose: let an authorized tutor review and confirm a structured transfer-assessment draft before delivery.
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { Check, Send, X } from 'lucide-react';
 import { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
 import { renderAssessment, validateAssessmentRendering } from '../services/assessmentRendering';
 import { parseTutorDecisionV3 } from '../services/tutorDecisionContract';
@@ -29,12 +30,12 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 }) => {
   const initialAssessment = decision.assessment;
   const [stem, setStem] = useState(initialAssessment?.stem || decision.response);
+  // The model decides whether this is single or multiple selection. Tutors only edit its key.
   const [selectionType, setSelectionType] = useState(initialAssessment?.selection_type || 'single');
   const [options, setOptions] = useState(initialAssessment?.options || []);
   const [correctOptionIds, setCorrectOptionIds] = useState<AssessmentOptionId[]>(
     initialAssessment?.correct_option_ids || []
   );
-  const [contentConfirmed, setContentConfirmed] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     setSelectionType(assessment?.selection_type || 'single');
     setOptions(assessment?.options || []);
     setCorrectOptionIds(assessment?.correct_option_ids || []);
-    setContentConfirmed(false);
     setDirty(false);
     setError(null);
   }, [decision]);
@@ -62,7 +62,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   const setOptionText = (id: AssessmentOptionId, text: string) => {
     setOptions((current) => current.map((option) => option.id === id ? { ...option, text } : option));
-    setContentConfirmed(false);
     setDirty(true);
   };
 
@@ -71,18 +70,11 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       if (selectionType === 'single') return checked ? [id] : [];
       return checked ? uniqueSelections([...current, id]) : current.filter((value) => value !== id);
     });
-    setContentConfirmed(false);
-    setDirty(true);
-  };
-
-  const handleSelectionTypeChange = (value: 'single' | 'multiple') => {
-    setSelectionType(value);
-    setCorrectOptionIds((current) => value === 'single' ? current.slice(0, 1) : uniqueSelections(current));
-    setContentConfirmed(false);
     setDirty(true);
   };
 
   const handleSubmit = async () => {
+    if (saving) return;
     setError(null);
     const validation = validateAssessmentRendering({ stem, selection_type: selectionType, options });
     const expectedKeys = selectionType === 'single'
@@ -98,11 +90,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         : 'Choose two or three correct options.');
       return;
     }
-    if (!contentConfirmed) {
-      setError('Confirm that the concept, changed context, and answer key are appropriate.');
-      return;
-    }
-
     const nextDecision: TutorDecisionV3 = {
       ...decision,
       response: stem.trim(),
@@ -130,6 +117,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       });
       setSaving(true);
       await onSubmit(nextDecision);
+      setDirty(false);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Assessment could not be confirmed.');
     } finally {
@@ -138,56 +126,90 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   };
 
   return (
-    <section aria-label="Transfer assessment review">
-      <h3>Review transfer assessment</h3>
-      {itemLabel && <p>Target: {itemLabel}</p>}
-      <label>
-        Question
-        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); }} rows={3} />
-      </label>
-      <label>
-        Answer type
-        <select value={selectionType} onChange={(event) => handleSelectionTypeChange(event.target.value as 'single' | 'multiple')}>
-          <option value="single">Choose one</option>
-          <option value="multiple">Select all that apply</option>
-        </select>
-      </label>
-      <fieldset>
-        <legend>Options and correct answer</legend>
-        {options.map((option) => (
-          <label key={option.id}>
-            <input
-              type={selectionType === 'single' ? 'radio' : 'checkbox'}
-              name="assessment-correct-option"
-              checked={correctOptionIds.includes(option.id)}
-              onChange={(event) => setSelection(option.id, event.target.checked)}
-            />
-            <span>{option.id}.</span>
-            <input value={option.text} onChange={(event) => setOptionText(option.id, event.target.value)} />
-          </label>
-        ))}
-      </fieldset>
-      <p aria-live="polite">Learner-visible preview:</p>
-      <pre>{renderedText}</pre>
-      <label>
-        <input type="checkbox" checked={contentConfirmed} onChange={(event) => setContentConfirmed(event.target.checked)} />
-        I confirm the concept, changed context, and answer key are appropriate.
-      </label>
-      {/* Local review state only: there is no draft row, so this never reports a server status. */}
-      <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
-        {reviewStatus === 'saving'
-          ? 'Sending the confirmed assessment…'
-          : reviewStatus === 'dirty'
-            ? 'Unsaved edits — the previous confirmation was cleared.'
-            : 'Ready to send once you confirm.'}
-      </p>
-      {error && <p role="alert">{error}</p>}
-      <div>
-        <button type="button" onClick={handleSubmit} disabled={saving}>
-          {saving ? 'Saving…' : 'Confirm assessment'}
-        </button>
-        {onCancel && <button type="button" onClick={onCancel} disabled={saving}>Discard candidate</button>}
+    <section className="assessment-draft-editor" aria-labelledby="assessment-draft-editor-title">
+      <header className="assessment-draft-editor__header">
+        <div>
+          <h3 id="assessment-draft-editor-title">Review transfer assessment</h3>
+          {itemLabel && <p className="assessment-draft-editor__target">Target: {itemLabel}</p>}
+        </div>
+        <span className="assessment-draft-editor__badge">Draft</span>
+      </header>
+
+      <div className="assessment-draft-editor__body">
+        <label className="assessment-draft-editor__field">
+          <span>Question</span>
+          <textarea
+            aria-label="Question"
+            value={stem}
+            onChange={(event) => { setStem(event.target.value); setDirty(true); }}
+            rows={3}
+            disabled={saving}
+          />
+        </label>
+
+        <fieldset className="assessment-draft-editor__choices">
+          <legend>Answer choices</legend>
+          <div className="assessment-draft-editor__options">
+            {options.map((option) => (
+              <label
+                className={`assessment-draft-editor__option${correctOptionIds.includes(option.id) ? ' assessment-draft-editor__option--selected' : ''}`}
+                key={option.id}
+              >
+                <input
+                  aria-label={`Correct answer ${option.id}`}
+                  type={selectionType === 'single' ? 'radio' : 'checkbox'}
+                  name="assessment-correct-option"
+                  checked={correctOptionIds.includes(option.id)}
+                  onChange={(event) => setSelection(option.id, event.target.checked)}
+                  disabled={saving}
+                />
+                <span className="assessment-draft-editor__letter" aria-hidden="true">{option.id}</span>
+                <textarea
+                  aria-label={`Option ${option.id}`}
+                  value={option.text}
+                  onChange={(event) => setOptionText(option.id, event.target.value)}
+                  rows={2}
+                  disabled={saving}
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="assessment-draft-editor__answer-key" data-testid="assessment-answer-key" aria-live="polite">
+          <span className="assessment-draft-editor__answer-key-mark" aria-hidden="true"><Check size={16} strokeWidth={3} /></span>
+          <div>
+            <span className="assessment-draft-editor__answer-key-label">Correct answer{selectionType === 'multiple' ? 's' : ''}</span>
+            <p>
+              {options
+                .filter((option) => correctOptionIds.includes(option.id))
+                .map((option) => `${option.id} \u2014 ${option.text.trim()}`)
+                .join(' | ') || 'No correct answer selected.'}
+            </p>
+          </div>
+        </div>
       </div>
+
+      <footer className="assessment-draft-editor__footer">
+        <div>
+          <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
+            {reviewStatus === 'saving' ? 'Sending assessment...' : reviewStatus === 'dirty' ? 'Unsaved edits' : 'Ready to send'}
+          </p>
+          {error && <p className="assessment-draft-editor__error" role="alert">{error}</p>}
+        </div>
+        <div className="assessment-draft-editor__actions">
+          {onCancel && (
+            <button className="assessment-draft-editor__discard" type="button" onClick={onCancel} disabled={saving}>
+              <X size={16} aria-hidden="true" />
+              Discard
+            </button>
+          )}
+          <button className="assessment-draft-editor__send" type="button" onClick={handleSubmit} disabled={saving}>
+            <Send size={16} aria-hidden="true" />
+            {saving ? 'Sending...' : 'Send assessment'}
+          </button>
+        </div>
+      </footer>
     </section>
   );
 };

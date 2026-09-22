@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
 import { Message, MessageFeedbackStats } from '../types';
+import { resolveMessagePresentation } from '../utils/messagePresentation';
 import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
@@ -73,28 +74,6 @@ const PostComment: React.FC<PostCommentProps> = ({
         }
     };
 
-    const getRoleColor = (role: string, isAI: boolean) => {
-        if (isAI) return '#8b5cf6'; // Purple for AI
-        switch (role) {
-            case 'tutor': return '#3b82f6'; // Blue
-            case 'student': return '#10b981'; // Green
-            case 'observer': return '#6b7280'; // Gray
-            default: return '#6b7280';
-        }
-    };
-
-    const getRoleIcon = (role: string, isAI: boolean) => {
-        if (isAI) return '🤖';
-        switch (role) {
-            case 'tutor': return '👨‍🏫';
-            case 'student': return '👨‍🎓';
-            case 'observer': return '👁️';
-            default: return '👤';
-        }
-    };
-
-    const getRoleLabel = (role: string) => role === 'tutor' ? 'AI chatbot' : role;
-
     const isOwnComment = currentUserId === message.user_id;
 
     // Feedback handling functions
@@ -138,17 +117,16 @@ const PostComment: React.FC<PostCommentProps> = ({
     const hasUserLiked = userFeedback?.feedback_type === 'like';
     const hasUserDisliked = userFeedback?.feedback_type === 'dislike';
 
-    const isGuardMessage = message.response_mode === 'guard';
-    const displayName = isGuardMessage ? 'Security Supervisor' : (message.display_name || message.user_role);
+    const presentation = resolveMessagePresentation(message, currentUserRole);
 
     return (
-        <div className={`post-comment ${message.is_ai_generated ? 'post-comment-ai' : ''} ${isGuardMessage ? 'post-comment-guard' : ''} ${className}`}>
+        <div className={`post-comment ${presentation.isGuard ? 'post-comment-guard' : ''} ${presentation.isMultiagent ? 'post-comment-character' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
                     <AvatarDisplay
-                        avatarUrl={isGuardMessage ? null : message.avatar_url || null}
-                        displayName={displayName}
+                        avatarUrl={presentation.avatarUrl}
+                        displayName={presentation.avatarName}
                         size="small"
                         className="comment-avatar"
                     />
@@ -161,34 +139,25 @@ const PostComment: React.FC<PostCommentProps> = ({
                         <div className="comment-author-info">
                             <span 
                                 className="comment-author-name"
-                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated) }}
+                                style={{ color: presentation.roleColor }}
                             >
-                                {!isGuardMessage && message.is_ai_generated && getRoleIcon(message.user_role, message.is_ai_generated)}
-                                {isGuardMessage ? displayName : message.is_ai_generated ? 'AI Assistant' : displayName}
+                                {presentation.displayName}
                             </span>
                             
-                            {!message.is_ai_generated && currentUserRole !== 'student' && (
-                                <span className={`comment-role-badge ${message.user_role === 'tutor' ? 'comment-role-badge--tutor' : ''}`}>
-                                    {getRoleIcon(message.user_role, false)} {getRoleLabel(message.user_role)}
+                            {/* Model diagnostics stay in storage and exports, not in the message header. */}
+                            {presentation.roleBadge && (
+                                <span className={`comment-role-badge${message.user_role === 'tutor' ? ' comment-role-badge--tutor' : ''}`}>
+                                    {presentation.roleBadge}
                                 </span>
                             )}
-                            
-                            {message.is_ai_generated && (
-                                <span className="comment-ai-badge">
-                                    AI · {message.ai_model_used}
-                                </span>
-                            )}
+
                         </div>
                         
                         <div className="comment-meta">
                             <span className="comment-timestamp">
                                 {formatTime(message.created_at)}
                             </span>
-                            {message.is_ai_generated && message.ai_response_time_ms && (
-                                <span className="comment-response-time">
-                                    · {message.ai_response_time_ms}ms
-                                </span>
-                            )}
+                            {/* Stored response timing is intentionally not rendered. */}
                         </div>
                     </div>
 
@@ -196,7 +165,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                     <div className="comment-text">
                         {publicQuestion
                             ? <PublicAssessmentQuestion question={publicQuestion} />
-                            : message.content}
+                            : presentation.body}
                         {answerLifecycle?.state === 'clarification' && (
                             <p className="answer-clarification" role="status">
                                 Tell me which option you mean, for example B or B, D.

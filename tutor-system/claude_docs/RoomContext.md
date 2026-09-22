@@ -128,7 +128,8 @@ Guard review records also preserve `raw_mode`, `mode_reason`, `final_mode`, and 
 - User-specific feedback tracking
 
 **Student reply gate**:
-- Before sending, students must rate the latest AI-generated or Tutor response if they have not personally rated it yet.
+- Before sending, students must rate the latest persisted AI-generated or Tutor response if they have not personally rated it yet.
+- Pre-populated dialogue is materialized in memory as `prepop-<roomId>-<index>` and has no `messages` row, so the gate skips those ids: a student can answer when the only tutor-role turn in the room is a pre-populated line, and when a pre-populated line sits beside a persisted unrated turn the gate still fires on the persisted turn.
 - The mandatory animated dialog preserves the draft and cannot be dismissed with Escape or the backdrop.
 - Sending remains blocked until feedback persistence succeeds; Tutors and rooms without a qualifying response are unaffected.
 

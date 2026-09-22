@@ -163,7 +163,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useParams, Routes, Route } from 'react-router-dom';
-import RoomPage from '../pages/RoomPage';
 import RoomPagePost from '../pages/RoomPagePost';
 import { useAuth, AuthProvider } from '../contexts/AuthContext';
 import { RoomProvider, useRoom } from '../contexts/RoomContext';
@@ -260,7 +259,7 @@ describe('Real-time Chat System BDD Tests', () => {
     return render(
       <MemoryRouter initialEntries={[`/room/${roomId}`]}>
         <RoomProvider>
-          <RoomPage />
+          <RoomPagePost />
         </RoomProvider>
       </MemoryRouter>
     );
@@ -631,7 +630,6 @@ describe('Real-time Chat System BDD Tests', () => {
           user_id: mockTutor.id,
           content: 'Welcome to the room.',
           user_role: 'tutor' as const,
-          is_ai_generated: false,
           ai_model_used: null,
           ai_response_time_ms: null,
           parent_message_id: null,
@@ -647,7 +645,6 @@ describe('Real-time Chat System BDD Tests', () => {
         user_id: mockStudent.id,
         content: 'I can see the update without refreshing.',
         user_role: 'student' as const,
-        is_ai_generated: false,
         ai_model_used: null,
         ai_response_time_ms: null,
         parent_message_id: null,
@@ -697,7 +694,6 @@ describe('Real-time Chat System BDD Tests', () => {
         user_id: mockTutor.id,
         content: 'Please inspect the sender address carefully.',
         user_role: 'tutor' as const,
-        is_ai_generated: false,
         ai_model_used: null,
         ai_response_time_ms: null,
         parent_message_id: null,

@@ -120,6 +120,6 @@ These examples show how the existing specs work together; they do not add requir
 
 Intent: identify implementation ownership and release state without duplicating T09.1–T09.6 or claiming unmeasured model conformance.
 
-The [response contract](tutor-response-contract.md) owns the v3 JSON shape and field validation. The browser's `transferAssessmentService` is a facade; the pure reducer/parser/grader own deterministic logic, The browser service is now the whole path: the research build runs the transfer flow locally rather than through a server boundary.
+The [response contract](tutor-response-contract.md) owns the v3 JSON shape and field validation. One browser-side v3 call classifies T02 learner evidence and chooses the tutoring, Guard, or assessment turn. The browser service persists accepted evidence and runs deterministic parsing, grading, and progress transitions for this research build.
 
-`TRANSFER_ASSESSMENT_ENABLED` remains disabled by default. Enabling transfer generation or delivery still requires the separately recorded database, authorization, provider, evaluation, and browser release gates.
+Transfer generation still requires provider configuration, semantic evaluation, and browser acceptance. Authentication and server-side answer-key privacy are outside the research-build boundary.

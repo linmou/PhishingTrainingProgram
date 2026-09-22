@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import HomePage from '../pages/HomePage';
 import ObserverView from '../pages/ObserverView';
-import RoomPage from '../pages/RoomPage';
+import RoomPagePost from '../pages/RoomPagePost';
 import { User, UserRole } from '../types';
 
 const feature = loadFeature('./features/observer_view.feature', { tagFilter: '@observer-ui' });
@@ -65,7 +65,7 @@ const TestApp = () => (
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/observer" element={<ObserverView />} />
-                <Route path="/room/:roomId" element={<RoomPage />} />
+                <Route path="/room/:roomId" element={<RoomPagePost />} />
             </Routes>
             <LocationDisplay />
         </RoomProvider>
@@ -921,7 +921,7 @@ defineFeature(feature, test => {
         });
 
         and('the participant list should show their name with "(Observer)" label', () => {
-            // Since we added fallback logic in RoomPage to show current user if they're an observer
+            // RoomPagePost shows the current user when they join as an observer.
             // the observer should appear either in participants list or as fallback
             expect(screen.getByText('Test Observer')).toBeInTheDocument();
             expect(screen.getByText(/\(observer\)/i)).toBeInTheDocument();

@@ -53,10 +53,10 @@ const buildMessage = (
   user_id: `${role}-${id}`,
   content,
   user_role: role,
-  is_ai_generated: isAI,
   ai_model_used: isAI ? 'test-model' : null,
   ai_response_time_ms: isAI ? 250 : null,
   parent_message_id: null,
+  response_mode: null,
   created_at: createdAt,
   display_name: role === 'tutor' ? 'Tutor' : 'Student',
 });
@@ -258,7 +258,7 @@ describe('student Tutor-response rating gate', () => {
 
     fireEvent.click(screen.getByTitle('Send comment'));
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith('My preserved reply');
+      expect(sendMessage).toHaveBeenCalledWith('My preserved reply', { replyToMessageId: undefined });
     });
   });
 
@@ -271,20 +271,22 @@ describe('student Tutor-response rating gate', () => {
     enterReplyAndSubmit('Tutor follow-up');
 
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith('Tutor follow-up');
+      expect(sendMessage).toHaveBeenCalledWith('Tutor follow-up', { replyToMessageId: undefined });
     });
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
-  it('gates an AI-generated response independently of its stored author role', () => {
-    messages = [buildMessage('ai-only', 'student', 'AI-only response', true)];
+  it('does not gate a student-authored row based on model diagnostics', async () => {
+    messages = [buildMessage('ai-only', 'student', 'Student-authored response with diagnostics', true)];
     messageFeedbackStats = { 'ai-only': feedbackStats('ai-only', null) };
 
     renderRoom();
-    enterReplyAndSubmit('Student reply to AI');
+    enterReplyAndSubmit('Student reply');
 
-    expect(sendMessage).not.toHaveBeenCalled();
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('AI-only response');
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledWith('Student reply', { replyToMessageId: undefined });
+    });
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
   it('lets a student send when that student already rated the latest response', async () => {
@@ -300,7 +302,7 @@ describe('student Tutor-response rating gate', () => {
     enterReplyAndSubmit('Reply after stored rating');
 
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith('Reply after stored rating');
+      expect(sendMessage).toHaveBeenCalledWith('Reply after stored rating', { replyToMessageId: undefined });
     });
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
@@ -312,8 +314,39 @@ describe('student Tutor-response rating gate', () => {
     enterReplyAndSubmit('Another student message');
 
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith('Another student message');
+      expect(sendMessage).toHaveBeenCalledWith('Another student message', { replyToMessageId: undefined });
     });
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it('lets a student send when the only Tutor turn is a pre-populated transcript line', async () => {
+    messages = [buildMessage('prepop-room-1-1', 'tutor', 'Pre-populated Tutor line')];
+
+    renderRoom();
+    enterReplyAndSubmit('Student answer to the seeded discussion');
+
+    await waitFor(() => {
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+    });
+    expect(sendMessage.mock.calls[0][0]).toBe('Student answer to the seeded discussion');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it('still gates on the latest persisted response when a pre-populated line coexists', () => {
+    messages = [
+      buildMessage('prepop-room-1-1', 'tutor', 'Pre-populated Tutor line', false, '2026-01-01T00:00:30.000Z'),
+      buildMessage('tutor-persisted', 'tutor', 'Persisted Tutor response', false, '2026-01-01T00:03:00.000Z'),
+    ];
+    messageFeedbackStats = {
+      'tutor-persisted': feedbackStats('tutor-persisted', null),
+    };
+
+    renderRoom();
+    enterReplyAndSubmit('Student reply after the persisted turn');
+
+    expect(sendMessage).not.toHaveBeenCalled();
+    const dialog = screen.getByRole('alertdialog', { name: /rate the previous response/i });
+    expect(within(dialog).getByText('Persisted Tutor response')).toBeInTheDocument();
+    expect(within(dialog).queryByText('Pre-populated Tutor line')).not.toBeInTheDocument();
   });
 });

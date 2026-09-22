@@ -46,6 +46,7 @@ loadEnv();
 
 const {
   getDemoRoomTemplateSeeds,
+  getMultiAgentTestRoomTemplateSeeds,
   getPromptComparisonTemplateSeeds,
   toRoomTemplateInsertRow,
   GLOBAL_TEMPLATE_TUTOR_ID
@@ -62,7 +63,11 @@ async function main() {
   const requestedCaseIds = process.argv
     .filter((arg) => arg.startsWith('--case-id='))
     .map((arg) => arg.slice('--case-id='.length));
-  const allSeeds = [...getDemoRoomTemplateSeeds(), ...getPromptComparisonTemplateSeeds()];
+  const allSeeds = [
+    ...getDemoRoomTemplateSeeds(),
+    ...getMultiAgentTestRoomTemplateSeeds(),
+    ...getPromptComparisonTemplateSeeds()
+  ];
   const seeds = requestedCaseIds.length === 0
     ? allSeeds
     : allSeeds.filter((seed) => requestedCaseIds.includes(seed.case_id));

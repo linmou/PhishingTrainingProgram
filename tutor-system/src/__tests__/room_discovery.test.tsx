@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from '../App';
 import StudentView from '../pages/StudentView';
 import ObserverView from '../pages/ObserverView';
-import RoomPage from '../pages/RoomPage';
+import RoomPagePost from '../pages/RoomPagePost';
 import { supabase } from '../services/supabase';
 
 // Mock Supabase
@@ -467,7 +467,6 @@ describe('Feature: Room Discovery and Joining', () => {
             user_id: 'jane-student-id',
             room_id: '4',
             user_role: 'student' as const,
-            is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: null,
@@ -479,7 +478,6 @@ describe('Feature: Room Discovery and Joining', () => {
             user_id: 'tutor-123',
             room_id: '4',
             user_role: 'tutor' as const,
-            is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: null,
@@ -495,7 +493,7 @@ describe('Feature: Room Discovery and Joining', () => {
         // When I view the room page directly (simulating navigation after clicking "Observe Room")
         render(
           <BrowserRouter>
-            <RoomPage />
+            <RoomPagePost />
           </BrowserRouter>
         );
 
@@ -624,7 +622,7 @@ describe('Feature: Room Discovery and Joining', () => {
         // Render the room page to check observer count display
         render(
           <BrowserRouter>
-            <RoomPage />
+            <RoomPagePost />
           </BrowserRouter>
         );
 
