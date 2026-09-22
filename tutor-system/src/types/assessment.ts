@@ -36,7 +36,87 @@ export interface PublicAssessment {
 
 export interface PrivateAssessment extends PublicAssessment {
   correct_option_ids: AssessmentOptionId[];
+  learner_safe_explanation: string;
 }
+
+export interface TransferAttemptSnapshot {
+  assessment_id: string;
+  accepted_attempt_count: 0 | 1 | 2;
+  resolution: 'open' | 'passed' | 'failed';
+  processed_answer_message_ids: ReadonlyArray<string>;
+}
+
+export interface TransferTerminalFeedback {
+  correct_option_ids: ReadonlyArray<AssessmentOptionId>;
+  learner_safe_explanation: string;
+}
+
+export type TransferAttemptResultNextAction =
+  | 'await_learner_answer'
+  | 'await_tutor_feedback'
+  | 'await_tutor_repair'
+  | 'await_learner_evidence'
+  | 'cancel_question'
+  | 'defer_to_protective_response'
+  | 'none';
+
+export interface TransferAttemptResultBase {
+  progress: TransferProgress;
+  feedback_required: boolean;
+  next_action: TransferAttemptResultNextAction;
+  assessment_id: string | null;
+  applied_transition: 'assessment_pass' | 'assessment_fail' | null;
+  clarification_code?: string;
+  attempt_snapshot: TransferAttemptSnapshot;
+  remaining_attempts: 0 | 1 | 2;
+}
+
+export interface TransferRetryResult extends TransferAttemptResultBase {
+  disposition: 'retryable';
+  progress: TransferProgress;
+  feedback_required: false;
+  next_action: 'await_learner_answer';
+  applied_transition: null;
+  remaining_attempts: 1;
+}
+
+export interface TransferPassedResult extends TransferAttemptResultBase {
+  disposition: 'passed';
+  feedback_required: true;
+  applied_transition: 'assessment_pass';
+  remaining_attempts: 0;
+  terminal_feedback: TransferTerminalFeedback;
+  learner_feedback_authorized: false;
+}
+
+export interface TransferFailedResult extends TransferAttemptResultBase {
+  disposition: 'failed';
+  feedback_required: true;
+  applied_transition: 'assessment_fail';
+  remaining_attempts: 0;
+  terminal_feedback: TransferTerminalFeedback;
+  learner_feedback_authorized: true;
+}
+
+export type TransferNonConsumingDisposition =
+  | 'not_delivered'
+  | 'unresolved'
+  | 'assisted'
+  | 'duplicate'
+  | 'stale'
+  | 'guard_deferred';
+
+export interface TransferNonConsumingResult extends TransferAttemptResultBase {
+  disposition: TransferNonConsumingDisposition;
+  learner_feedback_authorized?: never;
+  terminal_feedback?: never;
+}
+
+export type TransferAttemptResult =
+  | TransferRetryResult
+  | TransferPassedResult
+  | TransferFailedResult
+  | TransferNonConsumingResult;
 
 export type TransferEvidenceSignal = 'initial' | 'contradiction' | 'spontaneous_transfer';
 
