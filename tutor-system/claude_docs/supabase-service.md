@@ -3,7 +3,7 @@
 Intent: document browser and trusted Supabase service boundaries.
 
 Updated: 2026-09-22
-Implementation commit: `419f785`
+Implementation commit: `de3777b`
 
 ## Purpose
 Core database client configuration and service abstraction layer. Provides type-safe database operations, authentication helpers, and comprehensive logging for the educational platform.

@@ -6,7 +6,7 @@
 **Branch**: `102-transfer-backend`  
 **Baseline before implementation**: `2248000`  
 **Promoted component-101 prerequisite**: `87118a3` (contains implementation `91d8036`)  
-**Implementation commit**: `419f785`
+**Implementation commits**: `419f785`, hardened by `de3777b`
 
 ## Environment And Migration Inventory
 
@@ -22,8 +22,7 @@
 |---|---|---|
 | Baseline | `CI=true npm test -- --watchAll=false --runInBand --runTestsByPath ...five focused files...` | Exit 1: four suites passed (45 tests); migration suite failed because it opened archived `025_transfer_assessment_storage.sql`. |
 | New contract failures | Same focused command after adding Packet V2 assertions | Exit 1: 18 expected failures; request parity remained green. Failures were missing exact target DTO, transport facade, canonical processed DTO, private-field stripping, and forward migration. |
-| Implemented contracts | Same focused command | Exit 0: 5 suites, 32 tests passed. |
-| Component-101 regression | `CI=true npm test -- --watchAll=false --runInBand --runTestsByPath transferAssessmentOrchestrator.test.ts transferAssessmentGoldenFixtures.test.ts assessmentGrading.test.ts assessmentAnswerParser.test.ts` | Exit 0: 4 suites, 170 tests passed. |
+| Implemented contracts and component-101 regression | One focused `--runTestsByPath` command over all nine component-102/101 files | Exit 0: 9 suites, 202 tests passed after replay-scope hardening. |
 | Edge syntax | TypeScript `transpileModule` over `index.ts` and `index.test.ts` after stripping executable shebang | Exit 0: both files parsed. |
 | Migration static | Focused migration suite | Exit 0: 5 checks passed. |
 | Production build | `npm run build` | Exit 1 at `src/test-support/transferRoomFixtures.ts:146`: component-103 fixture still supplies removed `rendered_text` and does not supply required `student_id`. No component-102 compile error was reported before this owned handoff mismatch. |

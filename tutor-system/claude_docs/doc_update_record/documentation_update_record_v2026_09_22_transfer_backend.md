@@ -3,7 +3,7 @@
 Intent: record the documentation changes and verification evidence for component 102.
 
 **Date**: 2026-09-22  
-**Implementation commit**: `419f785`  
+**Implementation commits**: `419f785`, hardened by `de3777b`  
 **Documentation commit**: pending this record's commit
 
 ## Change
@@ -15,8 +15,7 @@ Intent: record the documentation changes and verification evidence for component
 
 ## Verification
 
-- Focused component-102 Jest: 5 suites, 32 tests passed.
-- Component-101 resolver regression: 4 suites, 170 tests passed.
+- Combined component-102 and component-101 focused Jest: 9 suites, 202 tests passed.
 - Edge TypeScript syntax parse: passed for handler and Deno test.
 - Migration static assertions: 5 passed.
 - Deno, hosted Supabase, and live provider execution: blocked by unavailable tools/credentials and recorded in `specs/102-transfer-backend/implementation-evidence.md`.
