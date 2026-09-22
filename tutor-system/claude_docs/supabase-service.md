@@ -3,7 +3,7 @@
 Intent: document browser and trusted Supabase service boundaries.
 
 Updated: 2026-09-22
-Implementation commit: `de3777b`
+Implementation commit: `c23fc9e`
 
 ## Purpose
 Core database client configuration and service abstraction layer. Provides type-safe database operations, authentication helpers, and comprehensive logging for the educational platform.
@@ -11,6 +11,8 @@ Core database client configuration and service abstraction layer. Provides type-
 ## Transfer Assessment Boundary
 
 `transferAssessmentService.ts` is a transport-only browser facade. It invokes the `assessment-api` Edge Function using exactly six operation names and allowlists returned DTO fields. It contains no direct table access, browser provider call, answer parser, grader, progress mutation, local attempt counter, or fallback model.
+
+The same trusted boundary preserves ordinary room messages and reviewed tutoring or Guard turns. Those branches create no private assessment row; private key and attempt state exist only for an assessment turn.
 
 The Edge Function verifies the caller, checks room and role scope, and calls service-role-only RPCs. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution. Missing verifier configuration, feature activation, or required provider settings fails closed.
 

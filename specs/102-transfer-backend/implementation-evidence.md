@@ -6,7 +6,7 @@
 **Branch**: `102-transfer-backend`  
 **Baseline before implementation**: `2248000`  
 **Promoted component-101 prerequisite**: `87118a3` (contains implementation `91d8036`)  
-**Implementation commits**: `419f785`, hardened by `de3777b`
+**Implementation commits**: `419f785`, hardened by `de3777b`, trusted non-assessment paths completed by `c23fc9e`
 
 ## Environment And Migration Inventory
 
@@ -30,6 +30,7 @@
 ## Implemented Boundary
 
 - Browser service invokes only the six trusted operations and has no direct table access, provider transport, grading, progress mutation, browser identity authority, local attempt count, or model fallback.
+- The trusted `post_message` and `send_reviewed` operations preserve ordinary room messages and reviewed tutoring/Guard turns; only assessment branches create private grading authority.
 - Public assessment projection is exactly `{id, student_id, selection_type, stem, options}` at runtime. `student_id` is routing metadata only.
 - Edge processing reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and submits the result to a row-locked expected-count/expected-resolution RPC. `CONCURRENT_MODIFICATION` causes a bounded reread and re-resolution.
 - `tutor-system/deno.json` enables Deno sloppy-import resolution for the existing CRA domain graph, so the Edge boundary can import the one component-101 resolver rather than copy its lifecycle rules.

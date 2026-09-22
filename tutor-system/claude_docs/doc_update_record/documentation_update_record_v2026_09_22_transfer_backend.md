@@ -3,7 +3,7 @@
 Intent: record the documentation changes and verification evidence for component 102.
 
 **Date**: 2026-09-22  
-**Implementation commits**: `419f785`, hardened by `de3777b`  
+**Implementation commits**: `419f785`, hardened by `de3777b`, ordinary trusted paths completed by `c23fc9e`  
 **Documentation commit**: pending this record's commit
 
 ## Change
