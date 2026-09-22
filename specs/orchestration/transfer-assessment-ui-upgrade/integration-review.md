@@ -70,3 +70,11 @@ All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. 
 
 - User superseded the strict `fast-multi-agent-tdd` phase controller before any Red or production edit in the replacement run. The fresh `pre_red` snapshot at `refs/tdd/transfer_domain_two_attempt_luna/pre_red` is preserved as setup evidence but does not gate implementation.
 - Component owners now execute their approved `tasks.md` files in dependency order, writing focused tests before their corresponding code and running normal verification. The Spec Kit implementation, component ownership, serial integration, and promotion gates remain unchanged.
+
+### Wave 1 - 101 Integration Sync
+
+- Merged component commits `91d8036` and `56bfbe6` into integration with merge commit `6a23803c7a70eea06abafa4485fe6deafe416ad7`.
+- Initial focused-suite run failed before execution because this integration worktree lacked `react-scripts`. Corrective environment action: `npm ci` in `tutor-system/` completed successfully; it changed no tracked files.
+- Retest command: `CI=true npm test -- --watchAll=false --runInBand --runTestsByPath src/services/__tests__/learningProgressTransitions.test.ts src/services/__tests__/assessmentAnswerParser.test.ts src/services/__tests__/assessmentGrading.test.ts src/services/__tests__/assessmentRendering.test.ts src/services/__tests__/tutorDecisionContract.transfer.test.ts src/services/__tests__/transferAssessmentOrchestrator.test.ts src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
+- Retest result: exit 0; 7 suites and 208 tests passed on `6a23803c7a70eea06abafa4485fe6deafe416ad7`.
+- E01 cannot be executed until component 102 implements the trusted persistence consumer. Under the user-directed task-based execution method, this audited integration state is synced to 102 as its implementation prerequisite; no component is yet marked fully promoted and no coverage manifest is claimed.
