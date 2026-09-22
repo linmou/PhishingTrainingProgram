@@ -1,7 +1,8 @@
 # Research: W2 Deterministic Transfer Behavior and Golden Fixtures
 
 **Intent**: Record the evidence-backed design decisions needed to plan W2 without introducing new product behavior.
-**Date**: 2026-09-11
+**Date**: 2026-09-11  
+**Revised**: 2026-09-22
 
 ## Decision 1: Keep W2 in the existing TypeScript/Jest service boundary
 
@@ -16,7 +17,7 @@
 
 ## Decision 2: Treat the existing behavior contract and decomposed plan as normative
 
-**Decision**: Use T09.1-T09.6, D01-D07, D11-D15, the response contract, and the source SHA `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2` as the planning baseline.
+**Decision**: Use T09.1-T09.6, D01-D07, D11-D15, the response contract, and source SHA `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2` as the retained baseline except where the approved 2026-09-22 policy replaces first-valid failure with two server-authoritative attempts.
 
 **Rationale**: The source package already resolves target selection, assessment lifecycle, exact grading, feedback sequencing, privacy, legacy handling, and release boundaries. W2 must make those decisions executable and inspectable rather than reinterpret them.
 
@@ -27,7 +28,7 @@
 
 ## Decision 3: Expose pure public contracts to the component 102 projection owner
 
-**Decision**: Validate private `TutorDecisionV3` assessment fields and define pure public assessment/lifecycle-result contracts containing only the assessment ID, stem, selection instruction/rendered text, A-D options, and deterministic outcome fields. Component 102 owns the API/private-to-public projection implementation and tests.
+**Decision**: Validate private `TutorDecisionV3` assessment fields and define an unresolved public assessment without key/explanation plus discriminated retry and terminal lifecycle results. Terminal feedback contains the key and learner-safe explanation as private domain output; pass fixes learner authorization false and only second-incorrect failure fixes it true. Component 102 owns persistence, role enforcement, and API/private-to-public projection tests.
 
 **Rationale**: The response contract and T09.3 require the answer key, transfer basis, rationale, and raw model output to remain private. Component 101 owns the pure types and domain outputs that make the boundary explicit; the declared component 102 owner must integrate and verify those contracts in `TransferAssessmentService` without 101 becoming a second facade writer.
 
@@ -67,3 +68,36 @@
 **Alternatives considered**:
 
 - Run the context update anyway: rejected because it could modify an integration-owned file and violate the worktree boundary.
+
+## Decision 7: Model attempts as a server-owned immutable snapshot
+
+**Decision**: Define `TransferAttemptSnapshot` with assessment identity, accepted-attempt count `0 | 1 | 2`, resolution `open | passed | failed`, and processed answer-message identities. The pure resolver consumes one snapshot and returns the next; component 102 persists and locks it.
+
+**Rationale**: The approved policy requires attempts to survive reloads and tabs. A page-local counter can render remaining attempts but cannot decide whether failure is terminal or whether feedback may be disclosed.
+
+**Alternatives considered**:
+
+- Keep the attempt counter in React: rejected because reloads and tabs reset it and make the browser a lifecycle authority.
+- Add attempt count to `TransferProgress`: rejected because attempts belong to one question lifecycle, not durable mastery, and would create a second progress model.
+
+## Decision 8: Use discriminated retry and terminal results
+
+**Decision**: Keep `TransferResolvedAssessment` as the public domain result name but make it a discriminated union. First incorrect is `retryable` and structurally has no terminal feedback. Correct on either attempt is terminal `passed` with literal `learner_feedback_authorized: false`; second incorrect is terminal `failed` with literal `true`. Both terminal variants retain `TransferTerminalFeedback` privately, but only failed authorizes learner projection.
+
+**Rationale**: A discriminated union makes retry disclosure a type error and makes the pass/fail learner-projection policy explicit for 102/103 without optional authorization semantics.
+
+**Alternatives considered**:
+
+- Put optional `correct_option_ids` and `learner_safe_explanation` on every result: rejected because callers could accidentally expose them on retry.
+- Introduce separate grading and feedback calls: rejected because it adds lifecycle coordination without a requirement and weakens atomic terminal outcomes.
+
+## Decision 9: Validate explanation structure here and semantics in evaluation
+
+**Decision**: Require `PrivateAssessment.learner_safe_explanation` to be a trimmed, non-empty string. Component 101 tests presence and privacy; component 104 evaluates correctness and safety, while component 102 owns generation, storage, teacher edits, and role-safe projection.
+
+**Rationale**: The domain needs a stable field and deterministic disclosure rule, but semantic quality is not decidable by a pure structural validator. This preserves component ownership without substituting string heuristics for evaluation.
+
+**Alternatives considered**:
+
+- Add keyword or pattern-based safety scoring to component 101: rejected because it would be an unreliable semantic evaluator.
+- Make the explanation optional: rejected because teacher review and terminal feedback require it for every assessment.

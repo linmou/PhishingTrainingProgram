@@ -2,6 +2,9 @@
 
 Intent: document the generated TypeScript database contract used by the current Supabase schema.
 
+Updated: 2026-09-22
+Implementation commit: `de3777b`
+
 ## Purpose
 Complete TypeScript interface definitions for the PostgreSQL database schema. Provides full type safety for all database operations through Supabase client integration.
 
@@ -14,6 +17,18 @@ Complete TypeScript interface definitions for the PostgreSQL database schema. Pr
 - **Function signatures**: Database function parameters and returns
 
 ## Core Tables
+
+## Transfer Assessment Authority
+
+Migration `20260922000000_transfer_assessment_server_authority.sql` restores the trusted boundary without reactivating archived migrations. Public `messages` stores only the stem, ordered options, selection type, lifecycle, and immutable target `assessment_student_id`. The target is UI routing metadata and never authorizes an answer. The former public `assessment_key` column is removed.
+
+The `private` schema owns three unexposed tables:
+
+- `transfer_assessments`: immutable key, learner-safe explanation, scope, lifecycle, and authoritative attempt count.
+- `transfer_assessment_attempts`: append-only answer identity, request identity, ordinal 1 or 2, outcome, and committed response.
+- `transfer_provider_attempts`: credential-free provider request/response audit for the original call and at most one format repair.
+
+`process_assessment_message_v2` locks the room, checklist item, and private assessment, then compares the expected attempt count and lifecycle before committing. A stale caller receives `CONCURRENT_MODIFICATION`; the Edge Function rereads state and reruns component 101's pure resolver. First wrong stores only attempt 1. Pass or second failure applies the existing learning event in the same transaction as the terminal attempt and lifecycle update.
 
 ### Users Table (Lines 12-43)
 **Purpose**: User identity and role management

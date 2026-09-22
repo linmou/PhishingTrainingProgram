@@ -185,6 +185,7 @@ export const preparedCandidate: TutorDecisionV3 = {
     selection_type: 'single',
     options: deliveredQuestionRow.assessment_options as NonNullable<TutorDecisionV3['assessment']>['options'],
     correct_option_ids: ['B'],
+    learner_safe_explanation: 'Verify an unexpected payment request through an official channel before paying.',
     transfer_basis: {
       concept_rule: 'Verify unexpected payment requests through an official channel.',
       source_context: 'Gift-card payment request',
