@@ -28,7 +28,7 @@
 
 ## Decision 3: Expose pure public contracts to the component 102 projection owner
 
-**Decision**: Validate private `TutorDecisionV3` assessment fields and define an unresolved public assessment without key/explanation plus discriminated retry and terminal lifecycle results. Terminal feedback contains the key and learner-safe explanation as private domain output. Component 102 owns persistence, authorization, and API/private-to-public projection tests.
+**Decision**: Validate private `TutorDecisionV3` assessment fields and define an unresolved public assessment without key/explanation plus discriminated retry and terminal lifecycle results. Terminal feedback contains the key and learner-safe explanation as private domain output; pass fixes learner authorization false and only second-incorrect failure fixes it true. Component 102 owns persistence, role enforcement, and API/private-to-public projection tests.
 
 **Rationale**: The response contract and T09.3 require the answer key, transfer basis, rationale, and raw model output to remain private. Component 101 owns the pure types and domain outputs that make the boundary explicit; the declared component 102 owner must integrate and verify those contracts in `TransferAssessmentService` without 101 becoming a second facade writer.
 
@@ -82,9 +82,9 @@
 
 ## Decision 8: Use discriminated retry and terminal results
 
-**Decision**: Keep `TransferResolvedAssessment` as the public domain result name but make it a discriminated union. First incorrect is `retryable` and structurally has no terminal feedback. Correct on either attempt is terminal `passed`; second incorrect is terminal `failed`. Terminal variants alone carry `TransferTerminalFeedback`.
+**Decision**: Keep `TransferResolvedAssessment` as the public domain result name but make it a discriminated union. First incorrect is `retryable` and structurally has no terminal feedback. Correct on either attempt is terminal `passed` with literal `learner_feedback_authorized: false`; second incorrect is terminal `failed` with literal `true`. Both terminal variants retain `TransferTerminalFeedback` privately, but only failed authorizes learner projection.
 
-**Rationale**: A discriminated union makes premature key/explanation disclosure a type error and lets 102/103 consume one canonical result without optional private fields scattered across non-terminal outcomes.
+**Rationale**: A discriminated union makes retry disclosure a type error and makes the pass/fail learner-projection policy explicit for 102/103 without optional authorization semantics.
 
 **Alternatives considered**:
 

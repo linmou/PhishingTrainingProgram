@@ -5,7 +5,7 @@
 
 ## Summary
 
-Upgrade the existing deterministic transfer domain so one delivered assessment has a server-owned snapshot with at most two consumed valid selections. Add the private `learner_safe_explanation` contract, retry and terminal result discriminants, terminal-feedback privacy, shared barrel exports, and golden fixtures. Reuse the existing parser, exact-set grader, progress reducer, and pure orchestrator. Keep persistence/concurrency, authorization/projection, React, prompt generation, semantic evaluation, and browser evidence downstream.
+Upgrade the existing deterministic transfer domain so one delivered assessment has a server-owned snapshot with at most two consumed valid selections. Add the private `learner_safe_explanation` contract, retry and terminal result discriminants, failure-only learner-disclosure policy, shared barrel exports, and golden fixtures. Reuse the existing parser, exact-set grader, progress reducer, and pure orchestrator. Keep persistence/concurrency, role projection, React, prompt generation, semantic evaluation, and browser evidence downstream.
 
 ## Technical Context
 
@@ -16,7 +16,7 @@ Upgrade the existing deterministic transfer domain so one delivered assessment h
 **Target Platform**: Existing `tutor-system` web application service/type modules  
 **Project Type**: React + TypeScript application with pure service modules  
 **Performance Goals**: Deterministic helper execution should remain local and synchronous; no provider or database latency is in scope  
-**Constraints**: At most two valid selections; first wrong is retryable without progress; correct on either attempt passes; second wrong fails; terminal-only correct-answer/explanation feedback; four fixed options; exact-set grading; unchanged 28-cell progress reducer; no edits to 102-owned facade/storage; no new progress field; no provider/database/UI dependency in pure logic  
+**Constraints**: At most two valid selections; first wrong is retryable without progress; correct on either attempt passes without learner key/explanation disclosure; second wrong fails and alone authorizes learner terminal feedback; four fixed options; exact-set grading; unchanged 28-cell progress reducer; no edits to 102-owned facade/storage; no new progress field; no provider/database/UI dependency in pure logic  
 **Scale/Scope**: One open assessment per focused learner/context; attempt counts `0 | 1 | 2`; resolution `open | passed | failed`; named two-attempt, duplicate, stale, invalid, Guard, reload/tab-equivalent, and third-submission fixtures  
 
 ## Constitution Check
@@ -56,7 +56,7 @@ Ownership remains:
 ### Phase 0: Contract and fixture freeze
 
 1. Read the component spec, data model, contracts, existing source, and normative T09 sections.
-2. Freeze `TransferAttemptSnapshot`, retry/terminal result, and `TransferTerminalFeedback` discriminants in contract tests.
+2. Freeze `TransferAttemptSnapshot`, retry/terminal result, `TransferTerminalFeedback`, and literal pass-false/fail-true learner-disclosure discriminants in contract tests.
 3. Add failing tests for required explanation validation, unresolved-public privacy, and terminal-only feedback before changing implementation.
 4. Preserve unknown downstream results as pending; do not fabricate database, provider, or browser evidence.
 
@@ -71,7 +71,7 @@ Ownership remains:
 
 1. Make the resolver accept the server-owned attempt snapshot and return its next immutable snapshot.
 2. Return `retryable` with unchanged progress and no terminal feedback after the first incorrect valid selection.
-3. Return terminal `passed` for a correct first or second attempt and terminal `failed` only for a second incorrect attempt, applying the reducer exactly once.
+3. Return terminal `passed` with learner disclosure forbidden for a correct first or second attempt, and terminal `failed` with learner disclosure authorized only for a second incorrect attempt, applying the reducer exactly once.
 4. Reject duplicate/terminal/third submissions without consuming attempts; preserve non-consuming behavior for undelivered, stale, malformed, ambiguous, assistance, and Guard-deferred inputs.
 5. Replay correct-first, incorrect-correct, incorrect-incorrect, duplicate-at-each-stage, reload/tab-equivalent snapshot, terminal replay, repair, contradiction, spontaneous-transfer, and no-chain fixtures.
 

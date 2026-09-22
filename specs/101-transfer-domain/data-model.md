@@ -60,11 +60,11 @@ State invariants:
 `TransferResolvedAssessment` is discriminated by `disposition`:
 
 - `retryable`: first incorrect; next snapshot is `open/1`, `remaining_attempts` is 1, progress is unchanged, transition is null, and terminal feedback is absent.
-- `passed`: correct on attempt one or two; next snapshot is terminal, `remaining_attempts` is 0, transition is `assessment_pass`, and terminal feedback is present.
-- `failed`: second incorrect; next snapshot is `failed/2`, `remaining_attempts` is 0, transition is `assessment_fail`, and terminal feedback is present.
+- `passed`: correct on attempt one or two; next snapshot is terminal, `remaining_attempts` is 0, transition is `assessment_pass`, private terminal feedback is retained, and `learner_feedback_authorized` is false.
+- `failed`: second incorrect; next snapshot is `failed/2`, `remaining_attempts` is 0, transition is `assessment_fail`, terminal feedback is present, and `learner_feedback_authorized` is true.
 - `not_delivered`, `unresolved`, `assisted`, `duplicate`, `stale`, or `guard_deferred`: no attempt is consumed and transition is null.
 
-`TransferTerminalFeedback` contains `correct_option_ids` and `learner_safe_explanation`. It exists only on terminal `passed` and `failed` results and remains private until component 102 authorizes its projection.
+`TransferTerminalFeedback` contains `correct_option_ids` and `learner_safe_explanation`. It exists only on terminal `passed` and `failed` results. `TransferPassedResult` fixes `learner_feedback_authorized` to false, so component 102 must keep its feedback private. `TransferFailedResult` fixes the field to true; only that second-incorrect outcome permits learner projection.
 
 ## Progress State Model
 
@@ -99,8 +99,8 @@ The table is the expected deterministic behavior to encode in fixtures and tests
 | `not_delivered` | Matching question is draft/unsent or delivery is false | Preserve current pair; no grade or feedback. |
 | `unresolved` | Ambiguous or format clarification, or no recognized selection | Keep question open; no grade. |
 | `retryable` | First accepted valid selection is not the exact key set | Keep question open at `open/1`; preserve progress; disclose no terminal feedback. |
-| `passed` | First or second accepted valid selection is the exact key set | Apply pass once; close question; require feedback; attach terminal feedback. |
-| `failed` | Second accepted valid selection is not the exact key set | Apply fail once; close question; require repair; attach terminal feedback. |
+| `passed` | First or second accepted valid selection is the exact key set | Apply pass once; close question; require feedback; retain feedback privately and forbid learner projection. |
+| `failed` | Second accepted valid selection is not the exact key set | Apply fail once; close question; require repair; attach feedback and authorize learner projection. |
 | `assisted` | Content help could coach answer | Cancel/close without failing grade; no same-message assessment chain. |
 | `duplicate` / `stale` | Answer identity already processed, question terminal/exhausted, or snapshot/message no longer current | Preserve state; consume no attempt; no second side effect. |
 

@@ -12,7 +12,7 @@ The evidence below records the prior one-attempt implementation and must not be 
 - first incorrect -> `retryable` with unchanged progress and no terminal feedback;
 - correct on either attempt -> terminal `passed`; second incorrect -> terminal `failed`;
 - duplicate, stale, invalid, Guard-deferred, and third submissions -> no additional attempt or transition;
-- terminal-only `TransferTerminalFeedback` containing correct option IDs and learner-safe explanation.
+- terminal-only `TransferTerminalFeedback` containing correct option IDs and learner-safe explanation, with learner disclosure forbidden on pass and authorized only on second-incorrect failure.
 
 No revised implementation command, test count, or commit SHA exists yet. Tasks T001-T031 must replace this historical evidence during implementation.
 
@@ -66,6 +66,6 @@ No revised implementation command, test count, or commit SHA exists yet. Tasks T
 ## Residual Risks for 102 and 104
 
 - The changed-context quality check is a lexical situation-word overlap heuristic, not a semantic judgement. It rejects a restatement of the source context, but it can be satisfied by an unrelated situation that does not exercise the concept. Component 102 and 104 must not treat it as semantic transfer validation, and a stricter rule needs a product decision.
-- `resolveTransferAnswer` returns no assessment payload; component 102 owns projection into its DTOs and must keep the private key and transfer basis out of any learner-facing envelope.
+- In the prior implementation, `resolveTransferAnswer` returns no assessment payload. The upgrade supersedes that boundary only for second-incorrect failure: component 102 must still exclude transfer basis always and key/explanation on retry or pass, while projecting key/explanation only when `learner_feedback_authorized` is true.
 - Duplicate suppression by resolved-answer identity is only partially isolated: the feedback gate can also produce `duplicate`, so 102 must enforce idempotency by persisted answer identity rather than by relying on this pure result alone.
 - The full-suite regression carries 29 pre-existing failing suites unrelated to this component; they are baseline failures, not component defects, but they will also be present in integration.

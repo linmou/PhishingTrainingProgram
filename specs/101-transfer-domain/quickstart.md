@@ -34,6 +34,6 @@ The repository does not define a dedicated mypy check because this component is 
 
 - Record command, exit status, test file set, and observed counts in the implementation handoff.
 - Preserve fixture manifest/version, state/result input-output pairs, and any failure output; do not omit errored cases from a denominator.
-- Record that first-incorrect fixtures have unchanged progress and no terminal feedback, while passed/failed fixtures have one transition and terminal feedback.
+- Record that first-incorrect fixtures have unchanged progress and no terminal feedback, passed fixtures set learner feedback authorization false, and second-incorrect failed fixtures alone set it true.
 - Label these tests as deterministic/mock-only. They do not prove SQL/RLS, authorization, provider configuration, browser privacy, or deployment compatibility.
 - Keep `TRANSFER_ASSESSMENT_ENABLED` disabled.

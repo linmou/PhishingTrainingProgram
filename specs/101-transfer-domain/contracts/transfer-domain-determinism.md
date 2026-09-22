@@ -26,9 +26,9 @@
 
 ## Sequence Expectations
 
-- **Pass first**: signal -> delivered question at `open/0` -> correct labels -> `passed/1` and `covered/good` -> terminal feedback -> tutoring feedback -> no retest.
-- **Retry then pass**: signal -> wrong -> `open/1`, progress unchanged, no terminal feedback -> correct -> `passed/2` and `covered/good` -> terminal feedback.
-- **Fail/recover**: signal -> wrong -> retry -> wrong -> `failed/2` and `needs_review/basic` -> terminal feedback -> repair -> new learner signal -> different context -> pass.
+- **Pass first**: signal -> delivered question at `open/0` -> correct labels -> `passed/1` and `covered/good` -> private feedback retained but learner disclosure forbidden -> tutoring feedback -> no retest.
+- **Retry then pass**: signal -> wrong -> `open/1`, progress unchanged, no terminal feedback -> correct -> `passed/2` and `covered/good` -> private feedback retained but learner disclosure forbidden.
+- **Fail/recover**: signal -> wrong -> retry -> wrong -> `failed/2` and `needs_review/basic` -> learner terminal feedback authorized -> repair -> new learner signal -> different context -> pass.
 - **No repair**: terminal fail -> acknowledgment -> remain `needs_review/basic`.
 - **Clarification**: question -> `B or D?` -> unchanged/open -> format help -> clear labels -> pass.
 - **Assistance**: question -> content help -> assisted/cancelled, no failure -> fresh signal -> different question.
@@ -38,7 +38,7 @@
 - **Multi-target**: three initial signals -> all partial/basic -> one assessment; other targets remain eligible.
 - **Guard**: valid answer under Guard -> no protected progression write; reviewed recovery -> deferred event applies once when still valid.
 - **Races/stale**: duplicate send, duplicate answer at attempt one or two, retry, terminal third answer, stale draft/manual update -> no extra attempt, question, progress, or feedback effect.
-- **Disclosure**: unresolved and retryable results contain neither key nor learner-safe explanation; passed/failed terminal results contain both in `terminal_feedback`.
+- **Disclosure**: unresolved and retryable results contain neither key nor learner-safe explanation; passed results mark learner feedback unauthorized even if private feedback is retained; only second-incorrect failed results authorize learner key/explanation disclosure.
 
 ## Fixture Stability
 

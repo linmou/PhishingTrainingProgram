@@ -19,6 +19,7 @@
 - [x] Success criteria are measurable and tied to requested fixtures/suites.
 - [x] Success criteria avoid claims about provider, database, UI, or browser behavior outside W2.
 - [x] Acceptance scenarios cover both accepted attempts, retry, terminal outcomes, explanation disclosure, and existing deterministic boundaries.
+- [x] Learner key/explanation disclosure is forbidden on pass and authorized only on second-incorrect failure.
 - [x] Edge cases include reload/tab persistence, third submissions, negative, stale, duplicate, assistance, contradiction, and legacy cases.
 - [x] Scope and exclusions are explicit.
 - [x] Dependencies and assumptions identify upstream evidence and downstream gates.

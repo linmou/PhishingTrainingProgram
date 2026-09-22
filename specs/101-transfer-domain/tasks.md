@@ -15,8 +15,8 @@
 **Purpose**: Establish shared state and result discriminants before lifecycle implementation.
 
 - [ ] T002 Add compile/runtime contract tests for valid and invalid `TransferAttemptSnapshot` states and result discriminants in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
-- [ ] T003 Add tests proving `TransferRetryResult` has no terminal feedback and `TransferTerminalResult` requires it in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
-- [ ] T004 Define `TransferAttemptSnapshot`, `TransferTerminalFeedback`, retry/terminal/non-consuming result variants, and their union in `tutor-system/src/types/assessment.ts` without defaults or transport fields.
+- [ ] T003 Add tests proving `TransferRetryResult` has no terminal feedback, `TransferPassedResult` has `learner_feedback_authorized: false`, and `TransferFailedResult` has `learner_feedback_authorized: true` in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
+- [ ] T004 Define `TransferAttemptSnapshot`, `TransferTerminalFeedback`, `TransferRetryResult`, `TransferPassedResult`, `TransferFailedResult`, non-consuming variants, and their union in `tutor-system/src/types/assessment.ts` without defaults or transport fields.
 - [ ] T005 Export all shared attempt/result types through `tutor-system/src/types/index.ts` and keep private fields absent from `PublicAssessment`.
 
 ## Phase 3: User Story 1 - Resolve at Most Two Valid Attempts (Priority: P1)
@@ -29,7 +29,7 @@
 
 - [ ] T006 [US1] Add Red tests for correct-first, incorrect-correct, and incorrect-incorrect snapshots/results in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`.
 - [ ] T007 [US1] Add Red tests for duplicate identities at attempts one/two, persisted reload/tab-equivalent snapshots, terminal third submissions, stale snapshots, malformed input, assistance, and Guard deferral in `tutor-system/src/services/__tests__/transferAssessmentOrchestrator.test.ts`.
-- [ ] T008 [US1] Add versioned attempt-sequence input/output fixtures with disclosure assertions in `tutor-system/src/services/transferAssessmentGoldenFixtures.ts` and schema assertions in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
+- [ ] T008 [US1] Add versioned attempt-sequence input/output fixtures asserting pass feedback remains private and only second-incorrect failure authorizes learner disclosure in `tutor-system/src/services/transferAssessmentGoldenFixtures.ts` and `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
 
 ### Implementation for User Story 1
 
@@ -42,22 +42,22 @@
 
 ## Phase 4: User Story 2 - Author One Learner-Safe Explanation (Priority: P1)
 
-**Goal**: Require the private explanation and make it impossible to expose before a terminal result.
+**Goal**: Require the private explanation and authorize learner disclosure only after second-incorrect terminal failure.
 
-**Independent Test**: Validate present/missing/blank/non-string explanations and inspect unresolved, retryable, passed, and failed shapes for exact disclosure.
+**Independent Test**: Validate present/missing/blank/non-string explanations and prove unresolved/retryable/pass withhold learner feedback while second-incorrect failure authorizes it.
 
 ### Tests for User Story 2
 
 - [ ] T013 [P] [US2] Add Red private-assessment tests for present, missing, blank, and non-string `learner_safe_explanation` in `tutor-system/src/services/__tests__/tutorDecisionContract.transfer.test.ts`.
-- [ ] T014 [P] [US2] Add Red privacy tests proving unresolved and retryable shapes exclude key/explanation while passed/failed terminal feedback contains both in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
+- [ ] T014 [P] [US2] Add Red privacy tests proving unresolved/retryable shapes exclude key/explanation, passed feedback remains private with authorization false, and only failed feedback is learner-authorized in `tutor-system/src/services/__tests__/transferAssessmentGoldenFixtures.test.ts`.
 
 ### Implementation for User Story 2
 
 - [ ] T015 [US2] Add required `learner_safe_explanation` to `PrivateAssessment` in `tutor-system/src/types/assessment.ts` without adding it to `PublicAssessment`.
 - [ ] T016 [US2] Validate the explanation as a trimmed non-empty string with a stable error category in `tutor-system/src/services/assessmentValidation.ts` and `tutor-system/src/services/tutorDecisionContract.ts`.
-- [ ] T017 [US2] Populate `TransferTerminalFeedback` only for terminal pass/fail variants in `tutor-system/src/services/transferAssessmentOrchestrator.ts`.
+- [ ] T017 [US2] Populate private `TransferTerminalFeedback` on terminal variants and set literal `learner_feedback_authorized: false` for pass and `true` only for second-incorrect failure in `tutor-system/src/services/transferAssessmentOrchestrator.ts`.
 
-**Checkpoint**: US2 is complete when every assessment requires an explanation, no unresolved/retryable output contains it, and every terminal result contains the typed feedback.
+**Checkpoint**: US2 is complete when every assessment requires an explanation, no unresolved/retryable output contains it, passed feedback cannot be learner-projected, and only failed feedback is learner-authorized.
 
 ## Phase 5: User Story 3 - Preserve One Progress Authority (Priority: P1)
 

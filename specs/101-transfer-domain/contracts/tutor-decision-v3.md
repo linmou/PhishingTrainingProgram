@@ -69,10 +69,11 @@ The unresolved component 101 public contract must not contain `correct_option_id
 
 The only valid lifecycle states are `open/0`, `open/1`, `passed/1`, `passed/2`, and `failed/2`. A valid current selection appends its answer-message identity and increments the count. Replayed identities, invalid inputs, and terminal submissions do neither.
 
-The first incorrect result is `retryable`, has one remaining attempt, applies no progress transition, and has no `terminal_feedback` field. Correct on either attempt returns terminal `passed`; a second incorrect returns terminal `failed`. Both terminal variants have zero remaining attempts and carry:
+The first incorrect result is `retryable`, has one remaining attempt, applies no progress transition, and has no `terminal_feedback` field. Correct on either attempt returns terminal `passed`; a second incorrect returns terminal `failed`. Both terminal variants have zero remaining attempts and carry private server/audit feedback:
 
 ```json
 {
+  "learner_feedback_authorized": false,
   "terminal_feedback": {
     "correct_option_ids": ["B"],
     "learner_safe_explanation": "The displayed identity alone does not verify who controls the account."
@@ -80,7 +81,7 @@ The first incorrect result is `retryable`, has one remaining attempt, applies no
 }
 ```
 
-This terminal feedback remains a private domain output. Component 102 must authorize and project it; it must not add it to the unresolved `PublicAssessment`.
+For `passed`, `learner_feedback_authorized` is the literal `false`; component 102 MUST NOT project the retained key or explanation to the learner. For second-incorrect `failed`, the field is the literal `true`; only that result authorizes component 102 to project terminal feedback to the learner. Neither variant adds feedback to the unresolved `PublicAssessment`.
 
 ## Turn Context Contract
 
