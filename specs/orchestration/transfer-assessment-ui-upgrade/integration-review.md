@@ -15,16 +15,17 @@ Intent: Preserve the chronological decisions, Git provenance, verification evide
 - `101-transfer-domain`, `102-transfer-backend`, and `104-transfer-evaluation` fast-forwarded from `732dbcdeb54796593d2e50e8e38d46258952ffa8` to the baseline.
 - `103-transfer-room-ui` preserved `94f0dce` and merged the baseline as `81e404c2e416b022caf3d6ff46e24f045e361d96`.
 - Existing `105-transfer-release` untracked files were not changed.
-- Planning state: ready to assign the four stable component owners for `specify -> clarify -> plan -> tasks -> analyze`.
+- Allocation control commit: `8a8da66`.
+- Planning owners activated for `specify -> clarify -> plan -> tasks -> analyze`: `/root/owner_101_domain`, `/root/owner_102_backend`, `/root/owner_103_ui`, and `/root/owner_104_evaluation`.
 
 ## Planning Status
 
 | Component | Owner | Artifacts | Analysis | Commit |
 |---|---|---|---|---|
-| 101 | `owner-101-domain` | Pending | Pending | Pending |
-| 102 | `owner-102-backend` | Pending; deleted package must be restored | Pending | Pending |
-| 103 | `owner-103-ui` | Revised spec committed; remaining package pending | Pending | `94f0dce` input, `81e404c` allocation head |
-| 104 | `owner-104-evaluation` | Pending | Pending | Pending |
+| 101 | `/root/owner_101_domain` | In progress | Pending | Pending |
+| 102 | `/root/owner_102_backend` | In progress; deleted package must be restored | Pending | Pending |
+| 103 | `/root/owner_103_ui` | In progress from revised spec | Pending | `94f0dce` input, `81e404c` allocation head |
+| 104 | `/root/owner_104_evaluation` | In progress | Pending | Pending |
 
 ## Reconciliation
 
