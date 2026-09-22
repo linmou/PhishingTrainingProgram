@@ -1,6 +1,7 @@
-#!/usr/bin/env node
 // Test responsible for the canonical v3 transfer tutor request contract: version fields, deterministic byte-equivalent serialization, order and duplicate independence, and the boundary that keeps private assessment material out of the production provider request.
 
+import fs from 'fs';
+import path from 'path';
 import {
   buildTransferTutorRequestContextV3,
   buildTransferTutorRequestV3,
@@ -156,5 +157,17 @@ describe('v3 transfer request contract', () => {
     buildTransferTutorRequestContextV3(input);
 
     expect(JSON.stringify(input)).toBe(before);
+  });
+
+  it('uses the canonical builders in production and requires learner-safe explanation output', () => {
+    const source = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/functions/assessment-api/index.ts'),
+      'utf8'
+    );
+    expect(source).toContain('buildTransferTutorRequestContextV3');
+    expect(source).toContain('buildTransferTutorRequestV3');
+    expect(source).toContain('buildTransferTutorUserMessageV3');
+    expect(source).toContain('learner_safe_explanation must be concise');
+    expect(source).toContain('max_tokens: PROVIDER_MAX_TOKENS');
   });
 });
