@@ -7,7 +7,7 @@
 
 ## Summary
 
-Replace the browser-only transfer service with a thin trusted-API facade. Restore the `assessment-api` Edge Function, move generation and grading behind its verified-principal boundary, and add one forward migration that creates private delivered-assessment, append-only attempt, and provider-attempt audit rows. Public tutor messages retain only the stem, ordered options, selection type, and lifecycle identity. A row-locked versioned grading RPC enforces two attempts, atomically applies the component-101 terminal transition, and releases key/explanation only for terminal second failure.
+Replace the browser-only transfer service with a thin trusted-API facade. Restore the `assessment-api` Edge Function, move generation and grading behind its verified-principal boundary, and add one forward migration that creates private delivered-assessment, append-only attempt, and provider-attempt audit rows. Public tutor messages retain only the assessment identity, target `student_id`, stem, ordered options, selection type, and lifecycle identity. A row-locked versioned grading RPC enforces two attempts, atomically applies the component-101 terminal transition, and releases key/explanation only for terminal second failure.
 
 ## Technical Context
 
@@ -117,7 +117,7 @@ tutor-system/
 ## Component Boundaries
 
 - **Consumes from 101**: `PrivateAssessment.learner_safe_explanation`, exact-set grading semantics, two-attempt lifecycle outcome names, progress transition contract, and validation rules.
-- **Supplies to 103**: `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, error envelope, authoritative attempt counts, and terminal failure feedback.
+- **Supplies to 103**: exact public assessment `{id, student_id, selection_type, stem, options}`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, canonical unchanged `ProcessedMessageDTO`, error envelope, authoritative attempt counts, and terminal failure feedback. Public `student_id` is routing metadata only; 102 remains authorization authority.
 - **Supplies to 104**: shared `TransferTutorRequestV3`/context builders and provider response contract; 104 owns semantic rubric behavior rather than provider or grading logic.
 - **Integration-owned**: real 101-to-102 domain handoff, 102-to-103 UI handoff, 102-to-104 evaluation handoff, browser E2E, coverage manifest, and release promotion evidence.
 

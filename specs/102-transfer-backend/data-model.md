@@ -18,12 +18,13 @@ The delivered question remains an ordinary tutor message. New deliveries use:
 | `content` | Exact assessment `stem`; never option-bearing `rendered_text` |
 | `response_mode` | `assessment` for the tutor turn; room participation remains `tutoring` |
 | `assessment_id` | Stable link to the private assessment |
+| `assessment_student_id` | Immutable public target learner identity derived from the owner-scoped checklist; used for UI routing, never authorization |
 | `assessment_options` | Ordered A-D public option objects |
 | `assessment_selection_type` | `single` or `multiple` |
 | `assessment_lifecycle` | Public summary: `delivered`, `passed`, `failed`, `cancelled`, or `legacy_incomplete` |
 | `assessment_selected_option_ids` | On learner answer messages only, normalized displayed option IDs |
 
-`assessment_key` is removed from public authority. Existing recoverable values are moved private before the public column is cleared/dropped. Public rows never contain the learner-safe explanation, transfer basis, rationale, reviewed private payload, raw provider output, or attempt ledger.
+`assessment_key` is removed from public authority. Existing recoverable values are moved private before the public column is cleared/dropped. `assessment_student_id` must equal the private assessment `student_id` and the owner of its `transfer_v1` checklist at delivery. It allows room consumers to route controls but never authorizes submission. Public rows never contain `rendered_text`, the learner-safe explanation, transfer basis, rationale, reviewed private payload, raw provider output, or attempt ledger.
 
 ## Private Entities
 
@@ -116,6 +117,7 @@ passed|failed|cancelled|legacy_incomplete + submission -> no mutation
 
 - Inspect hosted schema and archived migration state before applying the forward migration.
 - Move any existing `messages.assessment_key` into a private `legacy_incomplete` record tied to the message, then clear/drop the public key field.
+- Backfill `assessment_student_id` only when `assessment_checklist_id` resolves to exactly one owner-scoped `transfer_v1` checklist. Leave an ambiguous or missing target null, retain `legacy_incomplete`, and make its public assessment projection unavailable.
 - Do not invent `learner_safe_explanation`, attempt rows, or valid terminal evidence for legacy browser-only data.
 - Preserve public messages and existing evidence. Legacy-incomplete assessments cannot be processed by the new grading RPC.
 - Revoke untrusted transfer RPC/table access and regenerate `src/types/database.ts` from the resulting hosted schema.

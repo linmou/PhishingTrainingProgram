@@ -33,7 +33,7 @@ For assessment mode it must:
 1. Validate mode/instruction/target and the full component-101 private assessment, including learner-safe explanation.
 2. Lock the room before checking for an existing open assessment for the learner.
 3. Revalidate teacher, learner, checklist, item, focus message, and room relationships.
-4. Insert one tutor message whose `content` is exactly `assessment.stem`, whose structured public assessment has A-D options and selection type, and whose turn mode is assessment.
+4. Insert one tutor message whose `content` is exactly `assessment.stem`, whose immutable `assessment_student_id` equals the validated checklist/private target learner, whose structured public assessment has A-D options and selection type, and whose turn mode is assessment.
 5. Insert one linked private assessment with reviewed key, explanation, transfer basis, scope, lifecycle `open`, attempt count 0, and unique delivery request ID.
 6. Preserve room participation as tutoring.
 7. Return only `ReviewedDeliveryDTO`; retry returns the same result.

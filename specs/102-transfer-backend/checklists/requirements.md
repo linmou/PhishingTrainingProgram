@@ -23,12 +23,14 @@
 - [x] Upstream dependencies and deployment assumptions are identified.
 - [x] Private feedback timing is explicit for first incorrect, correct, second incorrect, duplicate, and rejected submissions.
 - [x] Persistent backend attempt authority supersedes page-local attempt reset behavior.
+- [x] The public assessment has exact shape `{id, student_id, selection_type, stem, options}`; target `student_id` is stable routing metadata, never authorization, and `rendered_text` remains excluded.
 
 ## Security And Reliability
 
 - [x] Keys, explanations, transfer basis, rationale, raw provider output, and credentials are absent from public storage and projections.
 - [x] Trusted identity, room scope, teacher review permission, and learner ownership are server-derived.
 - [x] Attempt counting, terminal transitions, progress, and idempotency remain server-authoritative.
+- [x] Missing or mismatched public target identity fails closed instead of falling back to browser identity, message author, or latest learner.
 - [x] Hosted transaction, authorization, concurrency, privacy, and rollback evidence are required separately.
 - [x] Missing verifier or provider configuration fails closed without a fallback.
 - [x] Feature activation remains disabled until every initiative release gate passes.

@@ -34,7 +34,7 @@ An authorized teacher prepares a transfer assessment, reviews and may edit its s
 1. **Given** an authorized teacher and an eligible learner-owned checklist, **When** the teacher prepares a turn, **Then** the teacher receives one structurally valid candidate including a learner-safe explanation and nothing is persisted as a delivered assessment.
 2. **Given** the teacher edits any assessment field, **When** the teacher submits the reviewed candidate, **Then** the backend revalidates the complete candidate and persists the reviewed values rather than the original provider values.
 3. **Given** a valid reviewed candidate, **When** it is sent, **Then** one public tutor message and one linked private assessment record commit atomically while room participation remains tutoring.
-4. **Given** a delivered question, **When** a learner reads room messages or reconnect payloads, **Then** message content contains only the stem, options appear exactly once through structured public fields, and no key, explanation, transfer basis, rationale, or raw provider output is present.
+4. **Given** a delivered question, **When** a room participant reads room messages or reconnect payloads, **Then** the public assessment contains the intended `student_id`, message content contains only the stem, options appear exactly once through structured public fields, and no key, explanation, transfer basis, rationale, or raw provider output is present.
 5. **Given** an unsent, invalid, stale-scope, or duplicate reviewed candidate, **When** delivery is attempted, **Then** no partial public or private record is created.
 
 ---
@@ -131,7 +131,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 - **FR-004**: `prepare_turn` MUST return a structurally validated candidate only to an authorized teacher and MUST persist no delivered assessment or grading authority.
 - **FR-005**: A reviewed assessment MUST contain the component-101 private assessment contract, including a valid learner-safe explanation, and MUST be revalidated after teacher edits.
 - **FR-006**: `send_reviewed` MUST atomically persist one learner-visible tutor message and one linked private assessment record; the public message content MUST be the stem rather than rendered text containing options.
-- **FR-007**: Public assessment projections MUST include only stable identity, selection type, stem, and ordered options; public message rows and projections MUST exclude correct option IDs, learner-safe explanation, transfer basis, rationale, raw provider output, and private generation metadata.
+- **FR-007**: Every delivered public assessment MUST have exactly `{id, student_id, selection_type, stem, options}`. `student_id` MUST be derived from and match the persisted target learner/checklist scope, MUST be used only to route controls to the intended learner, and MUST NOT establish answer authorization; public message rows and projections MUST exclude `rendered_text`, correct option IDs, learner-safe explanation, transfer basis, rationale, raw provider output, and private generation metadata.
 - **FR-008**: Delivered correct option IDs, learner-safe explanation, transfer basis, and reviewed private payload MUST remain server-private and immutable.
 - **FR-009**: The backend MUST persist at most two scored attempts per delivered assessment and MUST treat persisted state as authoritative across reloads, remounts, reconnects, retries, and tabs.
 - **FR-010**: Grading MUST use deterministic normalized exact-set equality against the private key and MUST never delegate correctness or attempt counting to the browser or provider.
@@ -153,7 +153,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 
 - **Private assessment**: The immutable delivered grading authority linked one-to-one to a public tutor message, containing scope, key, learner-safe explanation, transfer basis, lifecycle, and authoritative attempt count.
 - **Assessment attempt**: One append-only scored submission linked to an assessment and learner answer message, with ordinal, normalized selection, result, request identity, and timestamp.
-- **Public assessment projection**: Learner-visible identity, selection type, stem, and ordered options with no private grading material.
+- **Public assessment projection**: Room-visible `{id, student_id, selection_type, stem, options}`. `student_id` routes answer controls to the intended learner but grants no authority; no private grading material or `rendered_text` is present.
 - **Processed message result**: Role-safe server outcome containing lifecycle, attempts used/remaining, transition status, and terminal failure feedback only when allowed.
 - **Verified principal**: Server-derived identity plus room and teacher-review capabilities.
 - **Learning event**: The causal terminal event that atomically applies the component-101 progress transition and history.
@@ -168,7 +168,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 - **SC-003**: 100% of first-incorrect outcomes report one remaining attempt and contain zero correct option IDs, learner-safe explanation text, or progress changes.
 - **SC-004**: 100% of correct outcomes terminate without private feedback; 100% of second-incorrect outcomes return the persisted key and teacher-reviewed learner-safe explanation to only the authorized learner response.
 - **SC-005**: Public rows, realtime payloads, learner fetches, ordinary exports, browser bundles, logs, and safe errors contain zero private keys, explanations, transfer bases, rationales, raw model output, or credentials.
-- **SC-006**: 100% of delivered assessment messages store the stem as message content and expose one structured option set, so downstream rendering has no duplicated options.
+- **SC-006**: 100% of delivered assessment messages expose the persisted target `student_id`, store the stem as message content, and expose one structured option set, so controls route only to the intended learner and downstream rendering has no duplicated options.
 - **SC-007**: 100% of forced failures leave no partial attempt, terminal state, evidence, progress, history, or private feedback disclosure.
 - **SC-008**: The complete unauthorized and cross-scope matrix causes zero transfer mutations and zero private-field disclosures.
 - **SC-009**: Provider contract tests observe the configured endpoint/model and output budget, no more than two provider attempts, and zero dummy assessments or progress writes on error.
