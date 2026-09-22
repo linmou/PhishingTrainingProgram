@@ -65,3 +65,8 @@ All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. 
 - The first 101 Red attempt used delegation without explicit model provenance. Its preserved start snapshot `refs/tdd/transfer_domain_two_attempt_upgrade/pre_red` at `4ace40d97b4157f7b9c9f17a8fce00499982a4a3` and ignored reviewer records remain historical evidence only; they are not valid for this implementation run.
 - No production file was modified in that attempt. The three agent-created Red test edits were restored exactly to the preserved pre-Red snapshot with the user's explicit authorization.
 - Replacement owner: a newly delegated 101 owner using `gpt-5.6-luna` / `xhigh`, feature ID `transfer_domain_two_attempt_luna`. The owner must delegate its monitor and all reviewer roles with the same explicit model and reasoning settings.
+
+### Wave 1 Execution Method Change
+
+- User superseded the strict `fast-multi-agent-tdd` phase controller before any Red or production edit in the replacement run. The fresh `pre_red` snapshot at `refs/tdd/transfer_domain_two_attempt_luna/pre_red` is preserved as setup evidence but does not gate implementation.
+- Component owners now execute their approved `tasks.md` files in dependency order, writing focused tests before their corresponding code and running normal verification. The Spec Kit implementation, component ownership, serial integration, and promotion gates remain unchanged.
