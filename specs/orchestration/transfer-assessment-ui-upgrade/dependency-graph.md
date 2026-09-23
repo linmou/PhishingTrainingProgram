@@ -139,3 +139,10 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 ## Integration Ownership
 
 The main integration agent owns reconciliation, the authoritative post-planning DAG, edge work packets, integration glue, `tests/integration/**`, `tests/e2e/**`, coverage manifests, serial merges, and promotion records. The dirty `105-transfer-release` worktree is outside this initiative and remains untouched.
+
+## Current Wave Status
+
+- Waves 101 and 102 are integrated prerequisites.
+- Wave 103 is integrated and its focused UI suite passes 14/14 suites and 81/81 tests.
+- Wave 104 is integrated; deterministic evaluation passes 125/125 tests, with no live provider run claimed.
+- The integration coverage manifest records the real E01, E03, and E04 handoffs plus the transfer E2E aggregate. The separate release component 105 is outside this UI-upgrade initiative.

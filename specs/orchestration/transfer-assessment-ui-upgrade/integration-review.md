@@ -88,3 +88,14 @@ All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. 
 - Deno execution, hosted Supabase migration/RLS/RPC race checks, generated hosted types, and live provider evaluation remain unrun because the executable/runtime or disposable credentials were unavailable. They are blocked external verification lanes, not passing evidence.
 - The resulting audited integration state is now the prerequisite sync for components 103 and 104. E01/E03/E04/E05 integration-owned handoff tests and the coverage manifest remain outstanding; no final promotion is claimed.
 - Follow-up merge: component head `3a47029` adds only `tutor-system/deno.json` sloppy-import configuration so the Edge Function reuses the existing extensionless component-101 resolver import graph. Its component-local 9-suite/202-test evidence and Edge syntax parse passed; Deno remains unavailable for handler execution. Build and external-lane status are unchanged.
+
+### Wave 3 - 103 and 104 integration completion
+
+- Merged `103-transfer-room-ui` with merge commit `8470406`; merged `104-transfer-evaluation` with merge commit `a439059`.
+- Corrected integration-owned handoff assertions for the current `prepareTurn` server boundary and canonical public DTO. The correction commit is `dce60d1`; the final E04 assertion adjustment is included in `0079e585c18c5e4fc672d7882e90b7bc630b8e41`.
+- UI verification on the integrated branch: 14 suites and 81 tests passed with `CI=true` and process-local Supabase test configuration.
+- Integration handoffs and E2E on the same integrated state: 25 tests passed across E01, E03, E04, and the transfer E2E aggregate.
+- Deterministic evaluation: 125 tests passed; manifest validation reported 13 cases with zero case or manifest errors; fixture gate matched 15/15 fixtures.
+- Production build completed successfully with existing ESLint warnings only. The only fixture type mismatch was corrected by removing `is_ai_generated` from the canonical `PublicMessageDTO` fixture.
+- Coverage manifest: `specs/orchestration/transfer-assessment-ui-upgrade/coverage-manifest.json`. The machine validator accepted `integration_coverage_passed` from `integrating` to `integration_coverage_ready` for tested SHA `0079e585c18c5e4fc672d7882e90b7bc630b8e41`.
+- Live provider generation, hosted Supabase verification, and browser release evidence remain external gates; no mock or fallback result is recorded as a pass.
