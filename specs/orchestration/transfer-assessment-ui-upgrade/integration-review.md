@@ -99,3 +99,12 @@ All reanalyzed packages report zero CRITICAL/HIGH findings and clean worktrees. 
 - Production build completed successfully with existing ESLint warnings only. The only fixture type mismatch was corrected by removing `is_ai_generated` from the canonical `PublicMessageDTO` fixture.
 - Coverage manifest: `specs/orchestration/transfer-assessment-ui-upgrade/coverage-manifest.json`. The machine validator accepted `integration_coverage_passed` from `integrating` to `integration_coverage_ready` for tested SHA `0079e585c18c5e4fc672d7882e90b7bc630b8e41`.
 - Live provider generation, hosted Supabase verification, and browser release evidence remain external gates; no mock or fallback result is recorded as a pass.
+
+### Promotion and final verification
+
+- Integration coverage transition accepted by `validate_orchestration_state.py` for the tested code SHA `0079e585c18c5e4fc672d7882e90b7bc630b8e41`.
+- Integration verification transition accepted after the coverage manifest passed structural validation.
+- Promotion candidate: `8029b4a`, the audit commit recording the complete integrated state. Promotion smoke passed: transfer E2E **3/3** and learner question smoke **3/3**.
+- No downstream component exists inside this UI-upgrade package. Component 105 release work is explicitly outside this initiative and was left untouched.
+- Final verification evidence: UI **14 suites / 81 tests**, integration handoffs plus E2E **25/25**, deterministic evaluation **125/125**, manifest validation **13 cases with zero errors**, fixture gate **15/15**, and production build completed with existing ESLint warnings.
+- Residual external gates: live provider generation, hosted Supabase/RLS/RPC verification, and browser release evidence. These remain recorded as unrun rather than inferred from local substitutes.
