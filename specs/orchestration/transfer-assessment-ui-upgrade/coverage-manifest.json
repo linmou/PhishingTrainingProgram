@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "status": "passed",
+  "tested_integration_sha": "0079e58",
+  "edge_handoffs": [
+    {
+      "edge_id": "101->102",
+      "producer": "101-transfer-domain",
+      "consumer": "102-transfer-backend",
+      "test_path": "tests/integration/transfer-domain-backend.test.mjs",
+      "passed": true,
+      "upstream_output_consumed": true,
+      "synthetic_boundary_replacement": false
+    },
+    {
+      "edge_id": "102->103",
+      "producer": "102-transfer-backend",
+      "consumer": "103-transfer-room-ui",
+      "test_path": "tests/integration/transfer-backend-room-ui.test.mjs",
+      "passed": true,
+      "upstream_output_consumed": true,
+      "synthetic_boundary_replacement": false
+    },
+    {
+      "edge_id": "102->104",
+      "producer": "102-transfer-backend",
+      "consumer": "104-transfer-evaluation",
+      "test_path": "tests/integration/transfer-backend-evaluation.test.mjs",
+      "passed": true,
+      "upstream_output_consumed": true,
+      "synthetic_boundary_replacement": false
+    }
+  ],
+  "integration": {
+    "tests": [
+      { "path": "tests/integration/transfer-domain-backend.test.mjs", "added": true, "passed": true },
+      { "path": "tests/integration/transfer-backend-room-ui.test.mjs", "added": true, "passed": true },
+      { "path": "tests/integration/transfer-backend-evaluation.test.mjs", "added": true, "passed": true }
+    ],
+    "command": "REACT_APP_SUPABASE_URL=http://localhost:54321 REACT_APP_SUPABASE_ANON_KEY=test-anon-key node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs tests/integration/transfer-backend-room-ui.test.mjs tests/integration/transfer-backend-evaluation.test.mjs",
+    "exit_code": 0
+  },
+  "e2e": {
+    "tests": [
+      { "path": "tests/e2e/transfer-assessment.test.mjs", "added": true, "passed": true }
+    ],
+    "command": "REACT_APP_SUPABASE_URL=http://localhost:54321 REACT_APP_SUPABASE_ANON_KEY=test-anon-key node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs",
+    "exit_code": 0
+  }
+}
