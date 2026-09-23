@@ -205,7 +205,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                                 onSubmit={onSubmitAssessment ? (ids) => onSubmitAssessment(message.id, ids) : undefined}
                               />
                             : message.content}
-                        {answerLifecycle?.state === 'rejected' && (
+                        {answerLifecycle?.state === 'rejected' && answerLifecycle.code === 'ANSWER_FORMAT_UNRESOLVED' && (
                             <p className="answer-clarification" role="status">
                                 Choose one of the displayed options and submit again.
                             </p>
