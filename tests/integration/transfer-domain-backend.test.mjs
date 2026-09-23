@@ -47,6 +47,7 @@ const VALID_PROGRESS_PAIRS = [
 function publicAssessment() {
   return {
     id: 'assessment-1',
+    student_id: 'student-1',
     selection_type: 'single',
     stem: 'A familiar teammate sends a prize link.',
     rendered_text: 'A familiar teammate sends a prize link.\nChoose one.',
@@ -199,6 +200,7 @@ test('E01: component 102 projects the real assessment without the private key or
   // and transfer basis, so the edge must prove that 102 strips them.
   const privateAssessment = {
     id: 'assessment-1',
+    student_id: 'student-1',
     selection_type: 'single',
     stem: 'A familiar teammate sends a prize link.',
     rendered_text: 'A familiar teammate sends a prize link.\nChoose one.',
@@ -221,9 +223,9 @@ test('E01: component 102 projects the real assessment without the private key or
   assert.deepEqual(Object.keys(projected).sort(), [
     'id',
     'options',
-    'rendered_text',
     'selection_type',
     'stem',
+    'student_id',
   ]);
   for (const field of ['correct_option_ids', 'transfer_basis', 'concept_rule', 'changed_context']) {
     assert.equal(serialized.includes(field), false, `${field} leaked through 102's projection`);

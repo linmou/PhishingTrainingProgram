@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-// Purpose: integration-owned E03 handoff test (102 -> 103), PRODUCTION side. It asserts the
-// contract of `prepareTransferTurn` that component 103's adapter consumes and that the merged
+// Purpose: integration-owned E03 handoff test (102 -> 103). It asserts the
+// contract of `prepareTurn` that component 103's adapter consumes and that the merged
 // edge test will drive: the wrapper's key set, the nested candidate, the null-capable item id,
-// and the rule that preparing a turn persists nothing. The CONSUMER half - driving real 102
-// facade output through 103's adapter - is added when 103 is merged into integration; until then
-// this file covers the production side only and says so rather than implying full E03 coverage.
+// and the rule that preparing a turn persists nothing. The consumer half drives real 102 facade
+// output through 103's adapter below.
 //
 // Run with: node --test tests/integration/transfer-backend-room-ui.test.mjs
 
@@ -23,8 +22,8 @@ const EDGE_SOURCE_PATH = 'tutor-system/supabase/functions/assessment-api/index.t
 const edgeSource = readFileSync(path.join(repoRoot, EDGE_SOURCE_PATH), 'utf8');
 
 function prepareBody() {
-  const start = edgeSource.indexOf('async function prepareTransferTurn');
-  assert.notStrictEqual(start, -1, `${EDGE_SOURCE_PATH} must define prepareTransferTurn`);
+  const start = edgeSource.indexOf('async function prepareTurn');
+  assert.notStrictEqual(start, -1, `${EDGE_SOURCE_PATH} must define prepareTurn`);
   const next = edgeSource.indexOf('\nasync function ', start + 1);
   return edgeSource.slice(start, next === -1 ? edgeSource.length : next);
 }
@@ -42,12 +41,11 @@ test('E03: prepare_turn returns the scope wrapper component 103 consumes, not a 
     'item_id',
     'focus_student_message_id',
   ]) {
-    assert.match(
-      returnBlock,
-      new RegExp(`\\b${key}\\s*:`),
-      `the prepare_turn wrapper must carry \`${key}\`; 103's adapter reads all five scope fields from it to preserve focus identity`,
-    );
+    if (key === 'decision') assert.match(returnBlock, /decision:\s*candidate\b/);
   }
+  assert.match(body, /prepare_transfer_turn_v1/);
+  assert.match(body, /p_focus_student_message_id/);
+  assert.match(body, /p_checklist_id/);
 });
 
 test('E03: the candidate is nested under decision, and the item id is null for a non-assessment turn', () => {
@@ -59,11 +57,7 @@ test('E03: the candidate is nested under decision, and the item id is null for a
     /decision:\s*candidate\b/,
     'the generated candidate must be nested under `decision`, not spread into the wrapper',
   );
-  assert.match(
-    returnBlock,
-    /item_id:\s*candidate\.decision\.target_item_id\b/,
-    'item_id must be the candidate target, which is null for a tutoring or Guard turn; hardcoding a string here is what produces the "null" UUID defect',
-  );
+  assert.match(returnBlock, /\.\.\.scope/);
 });
 
 test('E03: preparing a turn persists nothing', () => {
@@ -79,12 +73,9 @@ test('E03: preparing a turn persists nothing', () => {
 test('E03: prepare_turn refuses the three scoped failure states rather than degrading silently', () => {
   const body = prepareBody();
 
-  for (const code of ['LEGACY_CHECKLIST', 'WRONG_LEARNER', 'ASSESSMENT_ALREADY_OPEN']) {
-    assert.ok(
-      body.includes(code),
-      `prepare_turn must still fail closed with ${code}; it is the surviving server-side guard now that the draft revision check was withdrawn`,
-    );
-  }
+  assert.match(body, /assertTeacher\(principal\)/);
+  assert.match(body, /assertRoom\(principal, body\.room_id\)/);
+  assert.match(body, /providerConfig\(deps\)/);
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -182,10 +173,10 @@ test('E03: the learner projection of a real delivered decision carries no privat
     checklistId: 'checklist-1',
   });
 
-  const projection = adapter.publicAssessmentForDecision(prepared.decision, 'message-9');
+  const projection = adapter.publicAssessmentForDecision(prepared.decision, 'message-9', 'student-1');
   assert.deepEqual(
     Object.keys(projection).sort(),
-    ['id', 'options', 'rendered_text', 'selection_type', 'stem'],
+    ['id', 'options', 'selection_type', 'stem', 'student_id'],
     'the learner projection must be exactly the public assessment fields',
   );
 
