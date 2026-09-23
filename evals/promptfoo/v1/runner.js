@@ -33,7 +33,11 @@ async function limitedCall(messages, kind, settings) {
 }
 function configuration() {
   const dotenv = require(path.join(root, 'tutor-system/node_modules/dotenv'));
-  const env = { ...dotenv.parse(fs.readFileSync(path.join(root, 'tutor-system/.env'))), ...process.env };
+  const envPath = path.join(root, 'tutor-system/.env');
+  const fileEnv = fs.existsSync(envPath)
+    ? dotenv.parse(fs.readFileSync(envPath))
+    : {};
+  const env = { ...fileEnv, ...process.env };
   if (!env.REACT_APP_OAI_API_KEY || !env.REACT_APP_OAI_BASE_URL) throw new Error('Missing project API configuration.');
   return { key: env.REACT_APP_OAI_API_KEY, endpoint: env.REACT_APP_OAI_BASE_URL.replace(/\/+$/, '') };
 }
