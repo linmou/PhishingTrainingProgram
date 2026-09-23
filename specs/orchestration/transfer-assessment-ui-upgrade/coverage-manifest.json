@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "status": "passed",
-  "tested_integration_sha": "0079e58",
+  "tested_integration_sha": "0079e585c18c5e4fc672d7882e90b7bc630b8e41",
   "edge_handoffs": [
     {
       "edge_id": "101->102",
