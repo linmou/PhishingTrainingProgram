@@ -37,15 +37,12 @@ const EDGE_SOURCE_PATH = 'tutor-system/supabase/functions/assessment-api/index.t
 const edgeSource = readFileSync(path.join(repoRoot, EDGE_SOURCE_PATH), 'utf8');
 
 /**
- * The body of `prepareTurn`. Scoped deliberately: the Edge Function also contains a
- * legacy ecological call with a different budget, so asserting against the whole file would
- * accept the wrong literal.
+ * The Edge Function owns the provider constants and `prepareTurn`; inspect that source directly
+ * so the test follows the current server boundary rather than a removed browser call site.
  */
 function transferRequestCallSite() {
-  const start = edgeSource.indexOf('async function prepareTurn');
-  assert.notStrictEqual(start, -1, `${EDGE_SOURCE_PATH} must define prepareTurn`);
-  const next = edgeSource.indexOf('\nasync function ', start + 1);
-  return edgeSource.slice(start, next === -1 ? edgeSource.length : next);
+  assert.notStrictEqual(edgeSource.indexOf('async function prepareTurn'), -1, `${EDGE_SOURCE_PATH} must define prepareTurn`);
+  return edgeSource;
 }
 
 test('E04: the production transfer request declares the sampling parameters the evaluation must match', () => {
@@ -53,7 +50,7 @@ test('E04: the production transfer request declares the sampling parameters the 
 
   assert.match(
     callSite,
-    /max_tokens:\s*1200\b/,
+    /PROVIDER_MAX_TOKENS\s*=\s*1200\b/,
     'production caps the transfer turn at 1200 completion tokens; R14 records that settings.json declares 8000 and that the transfer path must not inherit it',
   );
   assert.match(

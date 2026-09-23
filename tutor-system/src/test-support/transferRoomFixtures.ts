@@ -167,7 +167,6 @@ export const deliveredPublicMessage: PublicMessageDTO = {
   user_id: TUTOR_ID,
   content: deliveredQuestionRow.content,
   user_role: 'tutor',
-  is_ai_generated: true,
   parent_message_id: LEARNER_A_MESSAGE_ID,
   response_mode: 'assessment',
   assessment: deliveredPublicAssessment,
