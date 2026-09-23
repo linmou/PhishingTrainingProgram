@@ -1,6 +1,6 @@
 # Transfer Rubric Registry Contract
 
-**Intent**: pin the five public T09 rubric IDs and the deterministic supporting check without merging independent evidence.
+**Intent**: pin the six public T09 rubric IDs and two deterministic supporting checks without merging independent evidence.
 
 ## Public metric registry
 
@@ -9,10 +9,11 @@
 | `transfer_trigger_target` | `llm_rubric` | learner evidence, selected target, and decision | Eligibility follows learner-owned evidence without strong prior proof; at most one current relevant target is selected; other newly signaled concepts remain represented. | 80% overall and each required partition; declared hard constraints remain 100%. |
 | `medium_transfer_quality` | `llm_rubric` | source context, changed context, assessment/spontaneous-transfer result | The meaning-bearing situation changes while the tested concept remains the same; cosmetic brand/name substitutions fail. | 80% applicable partitions; 100% for every declared semantic pair. |
 | `assessment_item_validity` | `llm_rubric` | assessment stem, options, key/basis, and rendered item | Accurate, self-contained, target-relevant item with plausible options, no invented organization facts, no answer leakage, and consistent selection type/key. | 80%; safety-critical factual validity is 100%. |
-| `assessment_followup` | `deterministic` | delivered-question lifecycle and ordered tutor turns | Delivery precedes grading; first valid answer resolves once; clarification remains open; assistance cancels without failure; feedback precedes another assessment; wrong answer alone does not trigger Guard. | 100%. |
+| `assessment_followup` | `deterministic` | delivered-question lifecycle and ordered tutor turns | Delivery precedes grading; first wrong remains open; correct on either of two attempts passes; second wrong fails; non-consuming/replay cases preserve state; feedback precedes another assessment. | 100%. |
 | `verification_evidence` | `llm_rubric` | reason, transfer basis, source evidence references, original/changed contexts | The decision basis cites observable learner evidence and distinguishes original and changed contexts without invented facts. | 80%; H1/H4 violations are 100% hard failures. |
+| `learner_explanation_quality` | `llm_rubric` | reviewed learner-safe explanation, correct option, concept rule, and changed context | The reviewed explanation accurately connects the correct answer to the tested concept and scenario, does not contradict the key, and remains learner-appropriate without exposing private reasoning or unrelated learner data. | 80% overall and each required partition; declared factual/privacy hard cases are 100%. |
 
-These five IDs are the only public T09 rubric IDs in this component. Four are semantic and `assessment_followup` is deterministic. Supporting contract validity, response length, exact grading, state-pair, ID, rendering, and privacy checks remain typed supporting evidence and must not be averaged into semantic scores.
+These six IDs are the public T09 rubric IDs in this upgrade. Five are semantic and `assessment_followup` is deterministic. Supporting contract validity, disclosure, response length, exact grading, state-pair, ID, rendering, and privacy checks remain typed supporting evidence and must not be averaged into semantic scores.
 
 ## Deterministic supporting check
 
@@ -24,9 +25,22 @@ These five IDs are the only public T09 rubric IDs in this component. Four are se
 - assessment rendering and stem limits;
 - progress pair validity and no parallel mastery field;
 - assessment as a tutor turn rather than a room mode;
-- delivery-before-grading and first-resolution-only lifecycle invariants where the evaluator fixture supplies state.
+- delivery-before-grading and the promoted two-attempt lifecycle where the evaluator fixture supplies authoritative state.
+- promoted 101/102 two-attempt outcome/state compatibility and exactly one terminal progress transition.
 
 It returns typed per-case results with `pass`, `fail`, `missing`, or `error`. It cannot be used to claim semantic medium transfer or evidence quality.
+
+`learner_explanation_disclosure` MUST cover:
+
+- exact `PublicAssessmentDTO {id, student_id, selection_type, stem, options}` and rejection of `rendered_text` or any extra field;
+- no `correct_option_ids` or `learner_safe_explanation` in delivery, first-incorrect, or pass projections;
+- both fields in the authorized learner's second-incorrect terminal projection;
+- no transfer basis, model rationale, raw output, credentials, unrelated learner data, or other private fields in learner projections;
+- generated/reviewed explanation provenance and equality between the reviewed value and terminal learner value;
+- explicit fail/missing/error evidence for leakage, partial terminal feedback, or missing provenance.
+- canonical `ProcessedMessageDTO.processing_state`, `answer_outcome`, and `terminal_failure_feedback` field names rather than evaluator aliases.
+
+The check compares explicit DTO allowlists, stage, identity, and source provenance. It does not use keyword matching as a semantic-quality substitute.
 
 ## Rubric input and output contract
 
@@ -36,7 +50,7 @@ Every check scores the same preserved generation built through the pinned compon
 
 ## Calibration contract
 
-Before baseline acceptance, each of the four semantic rubrics is calibrated with annotated positive, negative, boundary, and contradictory outputs. Calibration records judge model/settings, rubric version, examples, human labels, judge labels, disagreements, adjudication, and unresolved errors. `assessment_followup` is covered by deterministic lifecycle fixtures rather than judge calibration. Calibration examples are not eligible holdouts.
+Before baseline acceptance, each of the five semantic rubrics is calibrated with annotated positive, negative, boundary, and contradictory outputs. `learner_explanation_quality` additionally includes missing, irrelevant, key-inconsistent, privacy-unsafe, and teacher-edited examples. Calibration records target/judge model (`qwen3.5-flash`), DashScope-compatible provider settings, rubric version, examples, human labels, judge labels, disagreements, adjudication, and unresolved errors. `assessment_followup` and supporting checks use deterministic fixtures. Calibration examples are not eligible holdouts.
 
 ## Joint and pair rules
 
