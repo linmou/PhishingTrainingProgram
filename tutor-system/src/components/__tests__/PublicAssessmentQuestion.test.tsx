@@ -3,9 +3,8 @@
  * Test responsible for src/components/PublicAssessmentQuestion.tsx as rendered inside the learner
  * message surface: the public question projection and nothing else.
  *
- * Responsibility: prove that a delivered question renders its stem, its instruction and options
- * A-D in order, that an unrecorded selection type is shown as unavailable rather than invented,
- * and that no private assessment material reaches the DOM.
+ * Responsibility: prove that a delivered question renders its public controls and options without
+ * exposing private assessment material.
  */
 
 import React from 'react';
@@ -13,7 +12,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PublicAssessmentQuestion from '../PublicAssessmentQuestion';
 import { projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
-import { deliveredPublicAssessment, deliveredQuestionRow, deliveredQuestionRowWithoutSelectionType } from '../../test-support/transferRoomFixtures';
+import { deliveredPublicAssessment, deliveredQuestionRow } from '../../test-support/transferRoomFixtures';
 import { expectNoPrivateAssessmentFields } from '../../test-support/transferPrivacyAssertions';
 
 describe('PublicAssessmentQuestion', () => {
@@ -32,15 +31,13 @@ describe('PublicAssessmentQuestion', () => {
     ]);
   });
 
-  it('shows an explicit unavailable instruction instead of inventing a selection type', () => {
-    const view = projectRoomMessage(deliveredQuestionRowWithoutSelectionType);
+  it('renders radio controls for the canonical single-selection DTO', () => {
+    const view = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
 
-    render(<PublicAssessmentQuestion question={view.publicQuestion!} />);
+    render(<PublicAssessmentQuestion question={view.publicQuestion!} canAnswer />);
 
-    expect(view.publicQuestion!.selectionType).toBeNull();
-    expect(screen.getByText(/Answer type not recorded/)).toBeInTheDocument();
-    expect(screen.queryByText('Choose one.')).not.toBeInTheDocument();
-    expect(screen.queryByText('Select all that apply.')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
   });
 
   it('renders only public material even when the stored row carried private fields', () => {

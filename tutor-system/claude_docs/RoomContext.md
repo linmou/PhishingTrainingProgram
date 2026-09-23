@@ -81,6 +81,19 @@ channel.on('postgres_changes', { event: 'INSERT', table: 'messages' })
 
 Guard review records also preserve `raw_mode`, `mode_reason`, `final_mode`, and `mode_rectified`. Manual room overrides update only current room state and never rewrite historical messages.
 
+### Transfer Assessment Review and Answer Flow
+
+Transfer assessment delivery uses the reviewed `TutorDecisionV3` candidate and the typed service
+facade. `RoomContext` keeps the prepared scope until delivery succeeds, sends assessment content
+through the reviewed delivery operation, and projects the returned public message before storing it
+in room state. The projection includes only the learner-safe question DTO; private answer keys and
+transfer basis fields are discarded at the UI boundary.
+
+Learner answers send `selectedOptionIds` with the assessment message identity. The context stores
+the server's `ProcessedMessageDTO` lifecycle result, and `PublicAssessmentQuestion` renders retry,
+passed, rejected, deferred, duplicate, and terminal-failure states from that result. The browser
+does not grade answers or construct terminal feedback.
+
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification
 **Integration**: Connects to modular prompt system for dynamic personality changes

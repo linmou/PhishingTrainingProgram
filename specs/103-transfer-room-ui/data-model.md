@@ -30,6 +30,7 @@ The React-only review, public-question, and lifecycle state wrappers described b
 - `focus`: selected `student_id`, `focus_student_message_id`, `checklist_id`, and `target_item_id` when a teacher is reviewing a transfer turn.
 - `review`: the nullable UI-local `TeacherReviewCandidateView` (see below) with local UI status (`idle`, `preparing`, `ready`, `dirty`, `sending`, `delivered`, `superseded`, `validation`, `unavailable`, `retryable`). Local status is view state only and is not a progress state.
 - `publicQuestion`: nullable `PublicAssessmentDTO` attached to a delivered message.
+- `answerPresentation`: component 102's canonical `ProcessedMessageDTO` mapped into read-only React presentation state. The adapter preserves the upstream `message_id`, `assessment_id`, `processing_state`, `answer_outcome`, attempt fields, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback`; React may add only local selected option IDs, submission/loading error, and disclosure state.
 - `catchUp`: loading/error cursor state for initial fetch, realtime reconnect, and retry; it does not replace persisted lifecycle status.
 
 ### TeacherReviewCandidateView (component-103 UI state)
@@ -47,23 +48,40 @@ It carries no draft id, no revision, and no expected snapshot hash, and it has n
 Learner-visible allowlist:
 
 - `id`: assessment question identity. In the one-table design the delivered tutor message is the question, so its own message id is the assessment identity.
+- `student_id`: persisted target learner identity used to make answer controls interactive only for that learner; every other role sees a read-only question.
 - `selection_type`: `single` or `multiple`.
-- `stem` and canonical `rendered_text`.
+- `stem`.
 - `options`: exactly four ordered entries with only `id` (`A`-`D`) and `text`.
 
 Explicitly excluded: `correct_option_ids`, `transfer_basis`, private reason/rationale, model response metadata, `assessment_key`, and teacher-only lifecycle metadata.
 
-Persisted-state limitation: the delivered message stores `content` (the stem), `assessment_options`, and `assessment_lifecycle`. It does not store `selection_type` or `rendered_text`, and `PublicMessageDTO` does not carry them. A reload therefore renders the stem and ordered options plus an explicit unavailable-instruction state instead of guessing a selection type from the key.
+The canonical public DTO is exactly `{ id, student_id, selection_type, stem, options }`. It persists enough public data to reconstruct the same question after reload. Message content equals the stem and options exist only in the structured DTO, preventing a second embedded option list.
 
-### LearnerAnswerSubmission
+### LearnerAnswerSubmission (component 102 request consumed unchanged)
 
 - `room_id`: room boundary.
 - `message_id`: persisted learner message identity.
 - `parent_message_id`: actual delivered question/source parent when present.
 - `assessment_id`: delivered question identity; null for ordinary messages.
-- `content`: original chat content; parser and grader remain server/domain-owned.
+- canonical selected option IDs serialized through component 102's request contract; the assessment surface provides no free-text value.
 
-The UI sends this projection through component 102's trusted service facade and does not redefine its request mapping or add a grade, progress pair, or answer key.
+The UI sends this projection through component 102's trusted service facade and does not redefine its request mapping or add a grade, attempt, terminal state, disclosure decision, progress pair, or answer key.
+
+### AssessmentAnswerPresentation (component-103 UI state)
+
+- `selectedOptionIds`: participant-local ordered option IDs chosen in the currently mounted control.
+- `submitting` and `submissionError`: participant-local request presentation.
+- `displayState`: component-owned mapping of canonical `processing_state`, `answer_outcome`, `terminal`, `code`, and `already_processed`; it does not rename or replace the stored upstream fields.
+- `attemptNumber`, `attemptsUsed`, and `attemptsRemaining`: read-only presentation of upstream `attempt_number`, `attempts_used`, and `attempts_remaining`; never incremented, reset, or inferred in React.
+- `terminalFailureFeedback`: direct presentation mapping of upstream `terminal_failure_feedback`; null unless the authorized learner receives terminal `answer_outcome: failed`, then exposes only its `correct_option_ids` and `learner_safe_explanation`.
+
+Reload, reconnect, remount, and another tab may reset `selectedOptionIds`, `submitting`, and `submissionError`. They must re-read and preserve the authoritative attempt and terminal fields.
+
+### AssessmentDisclosureState (component-103 UI state)
+
+- `expanded`: participant-local boolean, initialized to `true` for every transfer-assessment message.
+- It is not stored in room state or sent through component 102.
+- Collapsing hides the question body visually but does not unmount or clear selected options, answer presentation, attempts, or results.
 
 ### ProgressView
 
@@ -101,4 +119,7 @@ This is a UI view of the teacher's own screen plus authoritative server results.
 - Assessment delivery does not change room participation mode to `assessment`.
 - Learner projections contain no private assessment fields, and `assessment_key` is never retained in UI state, exports, or error surfaces.
 - UI state changes cannot update progress pairs.
+- UI state changes cannot update, reset, or decide attempts used/remaining, terminal outcome, or answer/explanation disclosure.
+- Reloads and tabs converge on the same persisted attempt lifecycle; only unsubmitted option selection and disclosure state are participant-local.
+- A public question renders its structured stem once and its four structured options once.
 - Legacy and transfer-policy checklist projections are not merged into one semantic state.

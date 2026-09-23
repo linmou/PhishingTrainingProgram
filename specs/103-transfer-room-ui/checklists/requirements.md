@@ -14,8 +14,8 @@
 ## Requirement Completeness
 
 - [x] No `[NEEDS CLARIFICATION]` markers remain; the normative plan and component assignment resolve the material decisions.
-- [x] Requirements are testable and unambiguous; FR-001 through FR-018 use observable MUST statements.
-- [x] Success criteria are measurable; SC-001 through SC-007 specify counts, percentages, or observable completion outcomes.
+- [x] Requirements are testable and unambiguous; FR-001 through FR-020 use observable MUST statements.
+- [x] Success criteria are measurable; SC-001 through SC-009 specify counts, percentages, or observable completion outcomes.
 - [x] Success criteria are technology-agnostic; metrics describe user-visible behavior and boundary properties.
 - [x] All acceptance scenarios are defined for four prioritized user journeys.
 - [x] Edge cases are identified for identity, lifecycle conflicts, modes, privacy, reload, retry, and malformed answers.
@@ -31,5 +31,6 @@
 
 ## Notes
 
-- Clarify phase result: no material questions remain after applying the normative W7/W8 ownership, public/private boundary, and existing repository evidence.
+- Clarify phase result (2026-09-22): the approved backend-authoritative attempt decision replaces the earlier page-local counter. Reloads, remounts, reconnects, and duplicate tabs render the same persisted attempt lifecycle. No material question remains.
+- The revised UI requirements for radio/checkbox selection, explicit submission, teacher-editable learner-safe explanation, exact-once options, and participant-local folding are each covered by acceptance scenarios, FRs, success criteria, and tasks.
 - Root agent-context update is intentionally deferred to the integration owner per the component assignment.

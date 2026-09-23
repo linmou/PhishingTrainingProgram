@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TutorDecisionV3 } from '../types';
+import type { AssessmentOptionId } from '../types/assessment';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -551,7 +552,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const sendMessage = async (
         content: string,
-        options?: { replyToMessageId?: string; assessmentId?: string }
+        options?: { replyToMessageId?: string; assessmentId?: string; selectedOptionIds?: AssessmentOptionId[] }
     ): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
@@ -603,6 +604,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 content,
                 replyToMessageId: options?.replyToMessageId,
                 assessmentId: options?.assessmentId,
+                selectedOptionIds: options?.selectedOptionIds,
             });
             const storedRow = result.message as Record<string, unknown> | undefined;
             if (!storedRow) {
@@ -1420,7 +1422,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const deliveredView = addDisplayNameToMessage(
                     projectRoomMessage(
                         storedRow,
-                        publicAssessmentForDecision(decision, String(storedRow.id ?? ''))
+                        publicAssessmentForDecision(decision, String(storedRow.id ?? ''), scope.studentId)
                     ),
                     participants
                 );

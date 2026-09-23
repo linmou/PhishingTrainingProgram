@@ -257,16 +257,22 @@ describe('RoomContext learner answer path', () => {
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
   });
 
-  it('surfaces the server clarification request instead of inventing a selection or a failure', async () => {
+  it('surfaces a server rejection instead of inventing a selection or a failure', async () => {
     processMessage.mockResolvedValue({
       message_id: DELIVERED_QUESTION_ID,
-      result: null,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'rejected',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 1,
+      attempts_remaining: 1,
       selected_option_ids: null,
       transition: null,
       feedback_required: false,
       code: 'ANSWER_FORMAT_UNRESOLVED',
-      clarification_required: true,
       already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
     });
     await mountRoom();
 
@@ -280,7 +286,7 @@ describe('RoomContext learner answer path', () => {
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
       answerLifecycle?: { state?: string; code?: string | null };
     };
-    expect(answer.answerLifecycle?.state).toBe('clarification');
+    expect(answer.answerLifecycle?.state).toBe('rejected');
     expect(answer.answerLifecycle?.code).toBe('ANSWER_FORMAT_UNRESOLVED');
   });
 
