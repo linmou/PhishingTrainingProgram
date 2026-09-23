@@ -5,6 +5,7 @@ import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
 import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import type { AssessmentOptionId } from '../types/assessment';
 import './PostComment.css';
 
 interface PostCommentProps {
@@ -25,6 +26,7 @@ interface PostCommentProps {
     // New feedback props
     onSubmitFeedback?: (messageId: string, feedbackType: 'like' | 'dislike', rating: number) => void;
     feedbackStats?: MessageFeedbackStats;
+    onSubmitAssessment?: (messageId: string, selectedOptionIds: AssessmentOptionId[]) => Promise<void> | void;
 }
 
 const PostComment: React.FC<PostCommentProps> = ({
@@ -43,7 +45,8 @@ const PostComment: React.FC<PostCommentProps> = ({
     currentUserRole,
     className = '',
     onSubmitFeedback,
-    feedbackStats
+    feedbackStats,
+    onSubmitAssessment
 }) => {
     // A delivered assessment message renders its public question; every other message renders
     // its plain content.
@@ -161,7 +164,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                         <div className="comment-author-info">
                             <span 
                                 className="comment-author-name"
-                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated) }}
+                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated === true) }}
                             >
                                 {!isGuardMessage && message.is_ai_generated && getRoleIcon(message.user_role, message.is_ai_generated)}
                                 {isGuardMessage ? displayName : message.is_ai_generated ? 'AI Assistant' : displayName}
@@ -195,11 +198,16 @@ const PostComment: React.FC<PostCommentProps> = ({
                     {/* Comment Text */}
                     <div className="comment-text">
                         {publicQuestion
-                            ? <PublicAssessmentQuestion question={publicQuestion} />
+                            ? <PublicAssessmentQuestion
+                                question={publicQuestion}
+                                answerLifecycle={answerLifecycle}
+                                canAnswer={currentUserRole === 'student' && currentUserId === publicQuestion.studentId}
+                                onSubmit={onSubmitAssessment ? (ids) => onSubmitAssessment(message.id, ids) : undefined}
+                              />
                             : message.content}
-                        {answerLifecycle?.state === 'clarification' && (
+                        {answerLifecycle?.state === 'rejected' && (
                             <p className="answer-clarification" role="status">
-                                Tell me which option you mean, for example B or B, D.
+                                Choose one of the displayed options and submit again.
                             </p>
                         )}
                     </div>

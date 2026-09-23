@@ -133,6 +133,18 @@ export const deliveredQuestionRow = {
   assessment_item_id: CHECKLIST_ITEM_ID,
   // Persisted by migration 045. Null on rows delivered before it ran.
   assessment_selection_type: 'single',
+  assessment: {
+    id: DELIVERED_QUESTION_ID,
+    student_id: LEARNER_A_ID,
+    selection_type: 'single',
+    stem: 'A stranger asks you to pay a fee to release a prize. What is the safest first step?',
+    options: [
+      { id: 'A', text: 'Pay the fee quickly.' },
+      { id: 'B', text: 'Stop and verify the offer through an official channel.' },
+      { id: 'C', text: 'Forward the offer to a friend.' },
+      { id: 'D', text: 'Reply with your bank details.' },
+    ],
+  } satisfies PublicAssessmentDTO,
 };
 
 /** The same delivered row as a pre-045 assessment: the selection type column is null. */
@@ -143,16 +155,9 @@ export const deliveredQuestionRowWithoutSelectionType = {
 
 export const deliveredPublicAssessment: PublicAssessmentDTO = {
   id: DELIVERED_QUESTION_ID,
+  student_id: LEARNER_A_ID,
   selection_type: 'single',
   stem: deliveredQuestionRow.content,
-  rendered_text: [
-    deliveredQuestionRow.content,
-    'Choose one.',
-    'A. Pay the fee quickly.',
-    'B. Stop and verify the offer through an official channel.',
-    'C. Forward the offer to a friend.',
-    'D. Reply with your bank details.',
-  ].join('\n'),
   options: deliveredQuestionRow.assessment_options as PublicAssessmentDTO['options'],
 };
 
@@ -165,6 +170,7 @@ export const deliveredPublicMessage: PublicMessageDTO = {
   is_ai_generated: true,
   parent_message_id: LEARNER_A_MESSAGE_ID,
   response_mode: 'assessment',
+  assessment: deliveredPublicAssessment,
   created_at: deliveredQuestionRow.created_at,
 };
 
@@ -184,10 +190,18 @@ export const preparedCandidate: TutorDecisionV3 = {
   response: deliveredQuestionRow.content,
   assessment: {
     stem: deliveredQuestionRow.content,
-    rendered_text: deliveredPublicAssessment.rendered_text,
+    rendered_text: [
+      deliveredQuestionRow.content,
+      'Choose one.',
+      'A. Pay the fee quickly.',
+      'B. Stop and verify the offer through an official channel.',
+      'C. Forward the offer to a friend.',
+      'D. Reply with your bank details.',
+    ].join('\n'),
     selection_type: 'single',
     options: deliveredQuestionRow.assessment_options as NonNullable<TutorDecisionV3['assessment']>['options'],
     correct_option_ids: ['B'],
+    learner_safe_explanation: 'Pause and verify the request through an official channel before paying or sharing information.',
     transfer_basis: {
       concept_rule: 'Verify unexpected payment requests through an official channel.',
       source_context: 'Gift-card payment request',

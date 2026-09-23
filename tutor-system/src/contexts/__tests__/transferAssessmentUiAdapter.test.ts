@@ -22,7 +22,6 @@ import {
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
   deliveredQuestionRow,
-  deliveredQuestionRowWithoutSelectionType,
   learnerAMessageRow,
   learnerBMessageRow,
   preparedCandidate,
@@ -72,18 +71,12 @@ describe('transferAssessmentUiAdapter projections', () => {
     expect(view.publicQuestion!.selectionType).toBe('single');
   });
 
-  it('does not invent a selection type for a row delivered before the column existed', () => {
-    const view = projectRoomMessage(deliveredQuestionRowWithoutSelectionType);
-
-    expect(view.publicQuestion!.selectionType).toBeNull();
-  });
-
   it('prefers the explicit public projection on the delivery path over the persisted column', () => {
     const view = projectRoomMessage(deliveredQuestionRow, {
       id: DELIVERED_QUESTION_ID,
+      student_id: LEARNER_A_ID,
       selection_type: 'multiple',
       stem: deliveredQuestionRow.content,
-      rendered_text: 'rendered',
       options: deliveredQuestionRow.assessment_options as never,
     });
 
@@ -93,7 +86,7 @@ describe('transferAssessmentUiAdapter projections', () => {
   it('fails closed instead of returning a partial question for a malformed option set', () => {
     const view = projectRoomMessage({
       ...deliveredQuestionRow,
-      assessment_options: [{ id: 'A', text: 'only one' }],
+      assessment: { ...(deliveredQuestionRow.assessment as object), options: [{ id: 'A', text: 'only one' }] },
     });
 
     expect(view.publicQuestion).toBeNull();
@@ -124,10 +117,12 @@ describe('transferAssessmentUiAdapter projections', () => {
   });
 
   it('projection of the reviewed decision is public-only and carries no key', () => {
-    const projection = publicAssessmentForDecision(preparedCandidate, DELIVERED_QUESTION_ID);
+    const projection = publicAssessmentForDecision(preparedCandidate, DELIVERED_QUESTION_ID, LEARNER_A_ID);
 
     expect(projection).not.toBeNull();
     expect(projection!.id).toBe(DELIVERED_QUESTION_ID);
+    expect(projection!.student_id).toBe(LEARNER_A_ID);
+    expect(projection).not.toHaveProperty('rendered_text');
     expect(projection!.options).toHaveLength(4);
     expectNoPrivateAssessmentFields(projection);
   });

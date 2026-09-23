@@ -2,12 +2,18 @@
 // retaining private assessment material or inventing operation mapping.
 
 import type { Message, RoomParticipationMode } from '../types';
-import type { AssessmentOption, AssessmentSelectionType, TutorDecisionV3 } from '../types/assessment';
+import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, TutorDecisionV3 } from '../types/assessment';
 import {
   PUBLIC_MESSAGE_DTO_KEYS,
   TransferAssessmentService,
 } from '../services/transferAssessmentService';
-import type { PublicAssessmentDTO } from '../services/transferAssessmentService';
+import type {
+  AssessmentAnswerOutcome,
+  AssessmentProcessingState,
+  ProcessedMessageDTO,
+  PublicAssessmentDTO,
+  TerminalFailureFeedbackDTO,
+} from '../services/transferAssessmentService';
 
 /** UI-local review status. View state only; never a progress state and never a server record. */
 export type ReviewStatus =
@@ -26,10 +32,10 @@ export type ReviewStatus =
 /** The learner-visible question, rebuilt only from fields that are public. */
 export interface PublicQuestionView {
   id: string;
+  studentId: string;
   stem: string;
   options: AssessmentOption[];
-  /** Null when the persisted row does not record the selection type. Never inferred from the key. */
-  selectionType: AssessmentSelectionType | null;
+  selectionType: AssessmentSelectionType;
 }
 
 /**
@@ -47,11 +53,21 @@ export interface RoomMessageView extends Message {
  * server result, never a local grade: the browser does not decide pass, fail, or format.
  */
 export interface AnswerLifecycleView {
-  state: 'graded' | 'clarification' | 'already_processed' | 'unresolved';
-  /** The delivered question this answer belongs to, as the server reports it. */
-  messageId: string | null;
+  state: 'retry' | 'passed' | 'failed' | 'duplicate' | 'rejected' | 'deferred' | 'unresolved';
+  messageId: string;
+  assessmentId: string;
+  processingState: AssessmentProcessingState;
+  answerOutcome: AssessmentAnswerOutcome | null;
+  attemptNumber: 1 | 2 | null;
+  attemptsUsed: 0 | 1 | 2;
+  attemptsRemaining: 0 | 1 | 2;
+  selectedOptionIds: AssessmentOptionId[] | null;
+  terminal: boolean;
+  transition: Record<string, unknown> | null;
   code: string | null;
   feedbackRequired: boolean;
+  alreadyProcessed: boolean;
+  terminalFailureFeedback: TerminalFailureFeedbackDTO | null;
 }
 
 /** The prepared scope identity from `prepareTurn`. */
@@ -126,6 +142,7 @@ function isCompletePublicAssessment(value: unknown): value is PublicAssessmentDT
   const record = asRecord(value);
   return (
     Boolean(asNonEmptyString(record.id)) &&
+    Boolean(asNonEmptyString(record.student_id)) &&
     (record.selection_type === 'single' || record.selection_type === 'multiple') &&
     Boolean(asNonEmptyString(record.stem)) &&
     orderedOptions(record.options) !== null
@@ -133,31 +150,21 @@ function isCompletePublicAssessment(value: unknown): value is PublicAssessmentDT
 }
 
 /**
- * Build the learner question from a stored message row. Only `content`, `assessment_options`, and
- * `assessment_selection_type` are read, and only when the row records a delivered assessment
- * lifecycle. Rows delivered before migration 045 have no selection type; it stays null then and
- * is never inferred from the private answer key.
+ * Build the learner question only from component 102's nested public assessment projection.
  */
 export function publicQuestionFromStoredRow(
   row: Record<string, unknown>,
   explicit?: PublicAssessmentDTO | null
 ): PublicQuestionView | null {
-  const source = asRecord(row);
-  if (source.assessment_lifecycle !== 'delivered' && source.assessment_lifecycle !== 'answered') return null;
-  const options = orderedOptions(source.assessment_options);
-  const id = asNonEmptyString(source.id);
-  const stem = asNonEmptyString(source.content);
-  if (!options || !id || !stem) return null;
-
-  const persistedSelectionType = source.assessment_selection_type;
-  const selectionType: AssessmentSelectionType | null =
-    explicit && isCompletePublicAssessment(explicit)
-      ? explicit.selection_type
-      : persistedSelectionType === 'single' || persistedSelectionType === 'multiple'
-        ? persistedSelectionType
-        : null;
-
-  return { id, stem, options, selectionType };
+  const assessment = explicit ?? asRecord(row).assessment;
+  if (!isCompletePublicAssessment(assessment)) return null;
+  return {
+    id: assessment.id,
+    studentId: assessment.student_id,
+    stem: assessment.stem,
+    options: orderedOptions(assessment.options) as AssessmentOption[],
+    selectionType: assessment.selection_type,
+  };
 }
 
 /** Project one stored message row into React state, keeping only allowlisted public fields. */
@@ -195,27 +202,37 @@ export function projectRoomMessage(
 }
 
 /**
- * Read the trusted processing result for a learner answer. Component 102 returns `message_id` for
- * the delivered question plus `code`, `clarification_required`, and `already_processed`; the older
- * `question_id` key is still accepted so a not-yet-promoted facade cannot break the learner view.
+ * Map component 102's canonical result into component-owned presentation state.
  */
-export function answerLifecycleFromProcessed(processed: unknown): AnswerLifecycleView {
-  const result = asRecord(processed);
-  const messageId =
-    asNonEmptyString(result.message_id) ?? asNonEmptyString(result.question_id) ?? null;
-  const code = asNonEmptyString(result.code) ?? null;
-  const feedbackRequired = result.feedback_required === true;
+export function answerLifecycleFromProcessed(processed: ProcessedMessageDTO): AnswerLifecycleView {
+  let state: AnswerLifecycleView['state'] = 'unresolved';
+  if (processed.answer_outcome === 'retry') state = 'retry';
+  else if (processed.answer_outcome === 'passed') state = 'passed';
+  else if (processed.answer_outcome === 'failed') state = 'failed';
+  else if (processed.processing_state === 'duplicate') state = 'duplicate';
+  else if (processed.processing_state === 'rejected') state = 'rejected';
+  else if (processed.processing_state === 'deferred') state = 'deferred';
 
-  if (result.clarification_required === true || code === 'ANSWER_FORMAT_UNRESOLVED') {
-    return { state: 'clarification', messageId, code, feedbackRequired };
-  }
-  if (result.already_processed === true) {
-    return { state: 'already_processed', messageId, code, feedbackRequired };
-  }
-  if (result.result != null) {
-    return { state: 'graded', messageId, code, feedbackRequired };
-  }
-  return { state: 'unresolved', messageId, code, feedbackRequired };
+  return {
+    state,
+    messageId: processed.message_id,
+    assessmentId: processed.assessment_id,
+    processingState: processed.processing_state,
+    answerOutcome: processed.answer_outcome,
+    attemptNumber: processed.attempt_number,
+    attemptsUsed: processed.attempts_used,
+    attemptsRemaining: processed.attempts_remaining,
+    selectedOptionIds: processed.selected_option_ids,
+    terminal: processed.terminal,
+    transition: processed.transition,
+    code: processed.code,
+    feedbackRequired: processed.feedback_required,
+    alreadyProcessed: processed.already_processed,
+    terminalFailureFeedback:
+      processed.answer_outcome === 'failed' && processed.terminal
+        ? processed.terminal_failure_feedback
+        : null,
+  };
 }
 
 /** Attach a lifecycle result to a projected message without touching any other field. */
@@ -281,12 +298,14 @@ export function createReviewCandidate(
  */
 export function publicAssessmentForDecision(
   decision: TutorDecisionV3 | null | undefined,
-  messageId: string
+  messageId: string,
+  studentId: string
 ): PublicAssessmentDTO | null {
-  if (!decision || !decision.assessment || !asNonEmptyString(messageId)) return null;
+  if (!decision || !decision.assessment || !asNonEmptyString(messageId) || !asNonEmptyString(studentId)) return null;
   try {
     const projection = TransferAssessmentService.toPublicAssessment({
       id: messageId,
+      student_id: studentId,
       ...decision.assessment,
     });
     return isCompletePublicAssessment(projection) ? projection : null;
@@ -332,6 +351,7 @@ export function assertDeliverableReview(
   if (!scope.itemId) return refuse('An assessment turn must name the checklist item it assesses.');
   if (!decision.assessment || !isCompletePublicAssessment({
     id: 'pending',
+    student_id: scope.studentId,
     selection_type: decision.assessment.selection_type,
     stem: decision.assessment.stem,
     options: decision.assessment.options,

@@ -15,6 +15,7 @@ import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
+import type { AssessmentOptionId } from '../types/assessment';
 
 const getAIResponseErrorMessage = (error: unknown): string => {
     if (!(error instanceof Error)) {
@@ -396,6 +397,14 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    const handleAssessmentSubmit = async (messageId: string, selectedOptionIds: AssessmentOptionId[]) => {
+        await sendMessage(selectedOptionIds.join(','), {
+            replyToMessageId: messageId,
+            assessmentId: messageId,
+            selectedOptionIds,
+        });
+    };
+
     const handleCopyAISuggestion = async (suggestion: string) => {
         setMessageText(suggestion);
         // Don't clear or record yet - wait for actual send
@@ -687,6 +696,7 @@ const RoomPagePost: React.FC = () => {
                                         currentUserRole={user?.current_role}
                                         onSubmitFeedback={submitMessageFeedback}
                                         feedbackStats={messageFeedbackStats[message.id]}
+                                        onSubmitAssessment={handleAssessmentSubmit}
                                     />
                                 );
                             })

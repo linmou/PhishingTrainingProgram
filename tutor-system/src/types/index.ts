@@ -1,7 +1,7 @@
 // Supabase uses ISO string dates instead of Firestore Timestamps
 
 import { SystemPromptConfig } from '../services/prompts/types';
-import type { TutorDecisionV3 } from './assessment';
+import type { AssessmentOptionId, TutorDecisionV3 } from './assessment';
 
 // User types
 export type UserRole = 'student' | 'tutor' | 'observer';
@@ -82,6 +82,7 @@ export interface Message {
     ai_response_time_ms: number | null;
     parent_message_id: string | null;
     created_at: string;
+    is_ai_generated?: boolean;
     display_name?: string; // Added for UI display
     avatar_url?: string | null; // Added for avatar display
     response_mode?: TutorTurnMode | null;
@@ -256,7 +257,7 @@ export interface RoomContextType {
     createRoom: (title: string, description?: string, imageFile?: File) => Promise<void>;
     joinRoom: (roomId: string, password?: string) => Promise<void>;
     leaveRoom: () => Promise<void>;
-    sendMessage: (content: string, options?: { replyToMessageId?: string; assessmentId?: string }) => Promise<void>;
+    sendMessage: (content: string, options?: { replyToMessageId?: string; assessmentId?: string; selectedOptionIds?: AssessmentOptionId[] }) => Promise<void>;
     setResponseMode: (mode: TutorResponseMode) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;

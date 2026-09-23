@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, TutorActionDecision, TutorResponseMode, TutorDecisionV3 } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TutorDecisionV3 } from '../types';
+import type { AssessmentOptionId } from '../types/assessment';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -10,6 +11,12 @@ import {
     DEFAULT_AI_MODEL
 } from '../services/aiService';
 import { setStudentAITone as persistStudentAITone } from '../services/studentAIToneService';
+import {
+    decodeMultiAgentResponse,
+    formatAgentTaggedContent,
+    MULTI_AGENT_PLAYBACK_DELAY_MS,
+    toRoomParticipationMode
+} from '../services/tutorDecisionContract';
 import { 
     validateRoomPassword,
     submitMessageFeedback,
@@ -53,6 +60,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
+    const [multiAgentDraft, setMultiAgentDraft] = useState<MultiAgentDraft | null>(null);
     const [transferDraft, setTransferDraft] = useState<{
         decision: TutorDecisionV3;
         progressSnapshotHash: string;
@@ -486,7 +494,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         user_id: 'system', // Use system as user_id for pre-populated messages
                         content: item.message,
                         user_role: item.role as UserRole,
-                        is_ai_generated: false,
                         ai_model_used: null,
                         ai_response_time_ms: null,
                         parent_message_id: null,
@@ -545,7 +552,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const sendMessage = async (
         content: string,
-        options?: { replyToMessageId?: string; assessmentId?: string }
+        options?: { replyToMessageId?: string; assessmentId?: string; selectedOptionIds?: AssessmentOptionId[] }
     ): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
@@ -570,11 +577,34 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
         }
         if (!currentSuggestionContext && transferChecklist?.progress_policy_version === 'transfer_v1') {
+            if (user.current_role === 'tutor' && transferDraft && transferDraft.decision.decision.mode !== 'assessment') {
+                const reviewedDecision: TutorDecisionV3 = {
+                    ...transferDraft.decision,
+                    response: content,
+                };
+                const sent = await transferAssessmentService.sendReviewed({
+                    reviewedPayload: reviewedDecision,
+                    roomId: transferDraft.roomId,
+                    studentId: transferDraft.studentId,
+                    checklistId: transferDraft.checklistId,
+                    itemId: null,
+                    focusStudentMessageId: transferDraft.focusStudentMessageId,
+                });
+                const deliveredView = addDisplayNameToMessage(
+                    projectRoomMessage(sent.message as unknown as Record<string, unknown>),
+                    participants
+                );
+                setMessages(prev => mergeRoomMessages(prev, [deliveredView]));
+                setCurrentRoom(sent.room);
+                clearAISuggestion();
+                return;
+            }
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,
                 replyToMessageId: options?.replyToMessageId,
                 assessmentId: options?.assessmentId,
+                selectedOptionIds: options?.selectedOptionIds,
             });
             const storedRow = result.message as Record<string, unknown> | undefined;
             if (!storedRow) {
@@ -667,7 +697,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user_id: user.id,
             content,
             user_role: user.current_role as UserRole,
-            is_ai_generated: false,
             ai_model_used: null,
             ai_response_time_ms: null,
             parent_message_id: parentMessageId,
@@ -712,6 +741,53 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    /** Store one ordinary single-Tutor (tutoring or Guard) suggestion for human review. */
+    const applySingleAgentSuggestion = (
+        decision: TutorActionDecision,
+        suggestion: string,
+        parentMessageId: string,
+        parentMessageContent: string,
+        result: { contextMessages: string[]; appliedConfig?: AIAssistantConfigSnapshot }
+    ) => {
+        const finalMode = toRoomParticipationMode(decision.mode);
+        setMultiAgentDraft(null);
+        setAiSuggestion(suggestion);
+        setAiDecision(decision);
+        setFinalMode(finalMode);
+        setCurrentSuggestionContext({
+            rawDecision: decision,
+            finalMode,
+            finalResponse: decision.suggested_response,
+            parentMessageId,
+            parentMessageContent,
+            startTime: Date.now(),
+            contextMessages: result.contextMessages,
+            aiConfigSnapshot: result.appliedConfig
+        });
+    };
+
+    /** Store one-or-two-character Multi-agent decision for human review. */
+    const applyMultiAgentDraft = (
+        decision: TutorActionDecision,
+        parentMessageId: string,
+        parentMessageContent: string,
+        result: { contextMessages: string[]; appliedConfig?: AIAssistantConfigSnapshot }
+    ) => {
+        setMultiAgentDraft({
+            rawDecision: decision,
+            parentMessageId,
+            parentMessageContent,
+            generatedMessages: decodeMultiAgentResponse(decision.suggested_response),
+            startTime: Date.now(),
+            contextMessages: result.contextMessages,
+            aiConfigSnapshot: result.appliedConfig
+        });
+        setAiSuggestion(null);
+        setAiDecision(null);
+        setFinalMode('tutoring');
+        setCurrentSuggestionContext(null);
+    };
+
     const generateAIResponse = async (prompt?: string): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
@@ -732,13 +808,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await recordAIFeedback('ignored');
                 clearAISuggestion();
             }
+            if (multiAgentDraft) {
+                clearAISuggestion();
+            }
 
             // Get the latest student message if no prompt provided
             let parentMessageId: string | undefined;
             let parentMessageContent: string = '';
             if (!prompt) {
                 const latestMessage = messages
-                    .filter(m => m.user_role === 'student' && !m.is_ai_generated)
+                    .filter(m => m.user_role === 'student')
                     .slice(-1)[0];
 
                 if (latestMessage) {
@@ -752,7 +831,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('No student message found to respond to');
             }
 
-            let transferChecklist = null;
+            let transferChecklist: Awaited<ReturnType<typeof ChecklistService.getActiveTransferChecklistForRoom>> | null = null;
             try {
                 const checklistService = ChecklistService as typeof ChecklistService & {
                     getActiveTransferChecklistForRoom?: typeof ChecklistService.getActiveTransferChecklistForRoom;
@@ -762,6 +841,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn('Transfer preparation unavailable; keeping legacy AI generation:', transferError);
             }
             if (transferChecklist?.progress_policy_version === 'transfer_v1') {
+                const checklistOwnerId = transferChecklist.student_id;
+                const checklistOwnerMessage = messages
+                    .filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId)
+                    .slice(-1)[0];
+                if (!checklistOwnerMessage) {
+                    throw new Error('No learner message found for the transfer checklist owner');
+                }
+                parentMessageId = checklistOwnerMessage.id;
+                parentMessageContent = checklistOwnerMessage.content;
                 const prepared = await transferAssessmentService.prepareTurn({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
@@ -803,28 +891,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error(result.error || 'Failed to generate AI response');
             }
 
+            if (!result.decision) {
+                throw new Error('AI response did not contain a structured tutor decision');
+            }
+
+            if (result.decision.mode === 'multiagent') {
+                applyMultiAgentDraft(result.decision, parentMessageId, parentMessageContent, result);
+                return;
+            }
+
             // Store the AI suggestion for the tutor
             if (result.suggestion) {
-                setAiSuggestion(result.suggestion);
-                if (result.decision) {
-                    setAiDecision(result.decision);
-                    setFinalMode(result.decision.mode);
-                }
-
-                // Store context for tracking
-                if (!result.decision) {
-                    throw new Error('AI response did not contain a structured tutor decision');
-                }
-                setCurrentSuggestionContext({
-                    rawDecision: result.decision,
-                    finalMode: result.decision.mode,
-                    finalResponse: result.decision.suggested_response,
-                    parentMessageId,
-                    parentMessageContent,
-                    startTime: Date.now(),
-                    contextMessages: result.contextMessages,
-                    aiConfigSnapshot: result.appliedConfig
-                });
+                applySingleAgentSuggestion(result.decision, result.suggestion, parentMessageId, parentMessageContent, result);
             }
         } catch (error) {
             console.error('Failed to generate AI response:', error);
@@ -901,25 +979,34 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // Update the AI suggestion
             if (result.suggestion) {
-                setAiSuggestion(result.suggestion);
-                if (result.decision) {
-                    setAiDecision(result.decision);
-                    setFinalMode(result.decision.mode);
-                }
                 if (!result.decision) {
                     throw new Error('AI response did not contain a structured tutor decision');
                 }
 
-                // Update context with new generation time
-                setCurrentSuggestionContext({
-                    ...currentSuggestionContext,
-                    rawDecision: result.decision,
-                    finalMode: result.decision.mode,
-                    finalResponse: result.decision.suggested_response,
-                    startTime: Date.now(),
-                    contextMessages: result.contextMessages,
-                    aiConfigSnapshot: result.appliedConfig
-                });
+                if (result.decision.mode === 'multiagent') {
+                    applyMultiAgentDraft(
+                        result.decision,
+                        currentSuggestionContext.parentMessageId,
+                        currentSuggestionContext.parentMessageContent,
+                        result
+                    );
+                } else {
+                    const finalMode = toRoomParticipationMode(result.decision.mode);
+                    setAiSuggestion(result.suggestion);
+                    setAiDecision(result.decision);
+                    setFinalMode(finalMode);
+
+                    // Update context with new generation time
+                    setCurrentSuggestionContext({
+                        ...currentSuggestionContext,
+                        rawDecision: result.decision,
+                        finalMode,
+                        finalResponse: result.decision.suggested_response,
+                        startTime: Date.now(),
+                        contextMessages: result.contextMessages,
+                        aiConfigSnapshot: result.appliedConfig
+                    });
+                }
             }
         } catch (error) {
             console.error('Failed to regenerate AI response:', error);
@@ -929,7 +1016,130 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const setStudentAITone = async (tone: 'peer' | 'adult'): Promise<void> => {
+    /**
+     * Regenerate the current Multi-agent draft through the ordinary generation path.
+     * The regenerated turn may come back as a single-Tutor decision; whichever decision
+     * returns decides which reviewer UI is shown. A failed attempt keeps the edited draft.
+     */
+    const regenerateMultiAgentDraft = async (): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('No user or room available');
+        }
+        if (user.current_role !== 'tutor') {
+            throw new Error('Only tutors can regenerate AI responses');
+        }
+        if (!multiAgentDraft) {
+            throw new Error('No Multi-agent draft to regenerate');
+        }
+
+        const draft = multiAgentDraft;
+        // Regeneration answers the learner's latest turn, which may have moved on during review.
+        const latestLearnerMessage = messages
+            .filter(message => message.user_role === 'student')
+            .slice(-1)[0];
+        const parentMessageId = latestLearnerMessage?.id || draft.parentMessageId;
+        const parentMessageContent = latestLearnerMessage?.content || draft.parentMessageContent;
+
+        setLoadingAI(true);
+        try {
+            const result = await generateTutorSuggestion(
+                currentRoom.id,
+                user.id,
+                undefined,
+                { focusStudentMessage: parentMessageContent }
+            );
+
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to regenerate AI response');
+            }
+            if (!result.decision) {
+                throw new Error('AI response did not contain a structured tutor decision');
+            }
+
+            if (result.decision.mode === 'multiagent') {
+                applyMultiAgentDraft(result.decision, parentMessageId, parentMessageContent, result);
+                return;
+            }
+
+            applySingleAgentSuggestion(
+                result.decision,
+                result.suggestion,
+                parentMessageId,
+                parentMessageContent,
+                result
+            );
+        } catch (error) {
+            console.error('Failed to regenerate Multi-agent response:', error);
+            throw error;
+        } finally {
+            setLoadingAI(false);
+        }
+    };
+
+    const rejectMultiAgentDraft = async (): Promise<void> => {
+        if (!multiAgentDraft) return;
+        clearAISuggestion();
+    };
+
+    /**
+     * Persist an approved one-or-two-character response as ordinary AI-generated tutor messages.
+     * Row 1 keeps the approval time; a second row is future-dated by the playback delay.
+     */
+    const approveMultiAgentDraft = async (editedMessages: string[]): Promise<void> => {
+        if (!user || !currentRoom) {
+            throw new Error('No user or room available');
+        }
+        if (user.current_role !== 'tutor') {
+            throw new Error('Only tutors can approve AI responses');
+        }
+        const draft = multiAgentDraft;
+        if (!draft) {
+            throw new Error('No Multi-agent draft to approve');
+        }
+        if (editedMessages.some((content) => !content.trim())) {
+            throw new Error('Every character message is required');
+        }
+
+        // Stale draft: the learner moved the conversation forward while the tutor reviewed.
+        const latestLearnerMessage = messages
+            .filter(message => message.user_role === 'student')
+            .slice(-1)[0];
+        if (!latestLearnerMessage || latestLearnerMessage.id !== draft.parentMessageId) {
+            throw new Error('The learner sent a newer message, so this draft is stale. Regenerate before approving.');
+        }
+
+        const approvalTime = Date.now();
+        const rows = draft.generatedMessages.map((generated, index) => ({
+            room_id: currentRoom.id,
+            user_id: user.id,
+            user_role: 'tutor' as UserRole,
+            ai_model_used: draft.aiConfigSnapshot?.model_name || currentRoom.ai_assistant_model || DEFAULT_AI_MODEL,
+            ai_response_time_ms: approvalTime - draft.startTime,
+            parent_message_id: draft.parentMessageId.startsWith('prepop-') ? null : draft.parentMessageId,
+            response_mode: 'multiagent' as const,
+            content: formatAgentTaggedContent(generated.character, editedMessages[index]),
+            created_at: new Date(approvalTime + index * MULTI_AGENT_PLAYBACK_DELAY_MS).toISOString()
+        }));
+
+        const { data, error } = await supabase.from('messages').insert(rows).select();
+        if (error) {
+            throw new Error(`Failed to store the approved Multi-agent response: ${error.message}`);
+        }
+        if (!data || data.length !== rows.length) {
+            throw new Error('Approved Multi-agent response was not stored completely');
+        }
+
+        const stored = [...(data as Message[])].sort(
+            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        setMessages(prev => [
+            ...prev,
+            ...stored.map(message => addDisplayNameToMessage(message, participants))
+        ]);
+        clearAISuggestion();
+    };
+
+    const setStudentAITone = async (choice: StudentAIChoice): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
         }
@@ -942,7 +1152,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const savedConfig = await persistStudentAITone({
                 roomId: currentRoom.id,
                 userId: user.id,
-                tone,
+                tone: choice,
                 participants,
                 aiEnabled: Boolean(currentRoom.ai_assistant_enabled),
             });
@@ -1172,6 +1382,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAiSuggestion(null);
         setAiDecision(null);
         setTransferDraft(null);
+        setMultiAgentDraft(null);
         setFinalMode('tutoring');
         setCurrentSuggestionContext(null);
     };
@@ -1211,7 +1422,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const deliveredView = addDisplayNameToMessage(
                     projectRoomMessage(
                         storedRow,
-                        publicAssessmentForDecision(decision, String(storedRow.id ?? ''))
+                        publicAssessmentForDecision(decision, String(storedRow.id ?? ''), scope.studentId)
                     ),
                     participants
                 );
@@ -1365,6 +1576,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateFinalResponse,
         updateFinalMode,
         clearAISuggestion,
+        multiAgentDraft,
+        approveMultiAgentDraft,
+        regenerateMultiAgentDraft,
+        rejectMultiAgentDraft,
         aiInteractions,
         currentSuggestionContext,
         recordAIFeedback,
