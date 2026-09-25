@@ -4,7 +4,7 @@ Intent: record the documentation changes for the transfer release runner and its
 
 Date: 2026-09-25
 
-Working-tree HEAD: `732dbcdeb54796593d2e50e8e38d46258952ffa8`
+Working-tree HEAD: `79120fd003b81fe4a7ec4224d64d7f12ea1a4e59`
 
 ## Changes
 

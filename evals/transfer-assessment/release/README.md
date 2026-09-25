@@ -1,4 +1,4 @@
-<!-- Updated: 2026-09-25; HEAD: 732dbcdeb54796593d2e50e8e38d46258952ffa8 -->
+<!-- Updated: 2026-09-25; HEAD: 79120fd003b81fe4a7ec4224d64d7f12ea1a4e59 -->
 
 Intent: explain how the transfer release evidence bundle is produced and how incomplete release prerequisites remain visible.
 
