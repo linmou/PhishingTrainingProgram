@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "output_root": "../evals/transfer-assessment/release",
+  "environment": {
+    "app_origin": "http://127.0.0.1:3001",
+    "supabase_origin": "https://zgbufaxooqxeabewktzd.supabase.co",
+    "isolated": false,
+    "note": "No isolated migrated target with a deployed assessment-api and verified principals was available in this session; the observed capability state is recorded as disabled and every lane is recorded blocked rather than substituted."
+  },
+  "principals": {
+    "teacher": {
+      "application_user_id": "not-provisioned-teacher",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL"
+    },
+    "learner": {
+      "application_user_id": "not-provisioned-learner",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL"
+    }
+  },
+  "capability": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "expected_state": "disabled"
+  },
+  "upstream_evidence": [
+    { "gate_id": "backend_boundary", "required": true, "path": "../evals/transfer-assessment/upstream/backend-boundary.json" },
+    { "gate_id": "room_ui", "required": true, "path": "../evals/transfer-assessment/upstream/room-ui.json" },
+    { "gate_id": "evaluation", "required": true, "path": "../evals/transfer-assessment/upstream/evaluation.json" }
+  ],
+  "scenarios": {
+    "manifest": "transfer-assessment-release-attack-matrix.json",
+    "required": true
+  }
+}

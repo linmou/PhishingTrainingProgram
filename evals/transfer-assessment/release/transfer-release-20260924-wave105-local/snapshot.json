@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "run_id": "transfer-release-20260924-wave105-local",
+  "branch": "105-transfer-release",
+  "start_commit": "732dbcdeb54796593d2e50e8e38d46258952ffa8",
+  "dirty_tree_hash": "f09af53d2af5cad2c8eee359a42338aa3689e02124610d0596943ff6eb150aca",
+  "config_sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36",
+  "application_origin": "http://127.0.0.1:3001",
+  "supabase_origin": "https://your-isolated-project.supabase.co",
+  "isolated": true,
+  "verified_principals": {
+    "teacher": {
+      "application_user_id": "replace-with-verified-teacher-id",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL",
+      "credential_present": false
+    },
+    "learner": {
+      "application_user_id": "replace-with-verified-learner-id",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL",
+      "credential_present": false
+    }
+  },
+  "feature_flag_state": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "state": "disabled",
+    "authorization_source": "backend",
+    "enabled_by_runner": false,
+    "expected_state": "disabled"
+  },
+  "linked_ai_run_ids": [],
+  "artifact_hashes": [
+    {
+      "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+      "sha256": "5b4e5a0ce80dad030e10c28f7c1b132e4a58bec794f65e2aadd76b7dfcc45e71"
+    }
+  ],
+  "bundle_hashes": {
+    "run-record.json": "56cadbbfd4a5fbe47989ba5ca1d780f8713675f7a0b99324f8bdbf070372bb18",
+    "report.json": "15dfd045b86a9202e6ec5c0ee0682c928ee17fd106a2ea9df02684c3b84a9cc4",
+    "verdict.json": "907a80d58f727f5062d7cc4c64e26b1a1224958e56062e768c6d5bcdf648e96b"
+  }
+}
