@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "run_id": "transfer-release-20260924-wave105-local",
+  "start_commit": "732dbcdeb54796593d2e50e8e38d46258952ffa8",
+  "end_commit": "732dbcdeb54796593d2e50e8e38d46258952ffa8",
+  "branch": "105-transfer-release",
+  "changed_files": [
+    "tutor-system/package.json",
+    "evals/transfer-assessment/",
+    "tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_24_transfer_release_runner.md",
+    "tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+    "tutor-system/scripts/transfer-assessment-release.config.example.json",
+    "tutor-system/scripts/transfer-assessment-release.config.json",
+    "tutor-system/scripts/transfer-assessment-release.js",
+    "tutor-system/scripts/transfer-assessment-release.test.js"
+  ],
+  "migration_status": {
+    "authored": {
+      "status": "not_applicable",
+      "reason": "migration authorship is an upstream component responsibility"
+    },
+    "exercised": {
+      "status": "not_applicable",
+      "reason": "hosted migration exercise is recorded by the backend gate"
+    },
+    "deployed": {
+      "status": "not_applicable",
+      "reason": "deployment state is recorded by the hosted backend evidence"
+    }
+  },
+  "verified_principals": {
+    "teacher": {
+      "application_user_id": "replace-with-verified-teacher-id",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL",
+      "credential_present": false
+    },
+    "learner": {
+      "application_user_id": "replace-with-verified-learner-id",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL",
+      "credential_present": false
+    }
+  },
+  "key_protection": {
+    "status": "blocked",
+    "reason": "dedicated learner privacy lane did not run; key protection is not inferred from local projections"
+  },
+  "commands": [
+    {
+      "command": "node tutor-system/scripts/transfer-assessment-release.js --config /Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json --evidence /Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/evals/transfer-assessment/upstream --output /Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/evals/transfer-assessment/release --run-id transfer-release-20260924-wave105-local",
+      "exit_status": 1,
+      "verified_at": "2026-09-24T06:30:47.043Z"
+    }
+  ],
+  "linked_runs": [],
+  "feature_flag_state": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "state": "disabled",
+    "authorization_source": "backend",
+    "enabled_by_runner": false,
+    "expected_state": "disabled"
+  },
+  "capability": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "state": "disabled",
+    "enabled_by_runner": false,
+    "authorization_source": "backend"
+  },
+  "rollback_path": {
+    "status": "blocked",
+    "steps": [
+      "disable the backend-controlled transfer capability",
+      "verify existing assessment tables, evidence, and history remain present",
+      "record delivered-question resolution without deleting evidence"
+    ],
+    "reason": "rollback driver did not run"
+  },
+  "lane_results": [
+    {
+      "lane_id": "activation",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:activation",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "attacks",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:attacks",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "browser",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:browser",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "privacy",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:privacy",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "rollback",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:rollback",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    }
+  ],
+  "remaining_gaps": [
+    "scenario US1-S1: dedicated browser scenario driver did not run",
+    "scenario US1-S2: dedicated browser scenario driver did not run",
+    "scenario US1-S3: dedicated browser scenario driver did not run",
+    "scenario US1-S4: dedicated browser scenario driver did not run",
+    "scenario US1-S5: dedicated browser scenario driver did not run",
+    "scenario US1-S6: dedicated browser scenario driver did not run",
+    "scenario US2-S1: dedicated browser scenario driver did not run",
+    "scenario US2-S2: dedicated browser scenario driver did not run",
+    "scenario US2-S3: dedicated browser scenario driver did not run",
+    "scenario US3-S1: dedicated browser scenario driver did not run",
+    "scenario US3-S2: dedicated browser scenario driver did not run",
+    "activation: live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+    "attacks: live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+    "browser: live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+    "privacy: live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+    "rollback: live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+    "backend_boundary: required upstream evidence is absent",
+    "room_ui: required upstream evidence is absent",
+    "evaluation: required upstream evidence is absent"
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "run_id": "transfer-release-20260912T113611Z",
+  "decision": "release_not_approved",
+  "activation_eligible": false,
+  "blocking_gates": [
+    "evaluation"
+  ],
+  "incomplete_lanes": [
+    "browser",
+    "privacy",
+    "attacks",
+    "activation",
+    "rollback"
+  ],
+  "incomplete_scenarios": [
+    "US1-S1",
+    "US1-S2",
+    "US1-S3",
+    "US1-S4",
+    "US1-S5",
+    "US1-S6",
+    "US2-S1",
+    "US2-S2",
+    "US2-S3",
+    "US3-S1",
+    "US3-S2"
+  ],
+  "gate_rows": [
+    {
+      "required": true,
+      "gate_id": "backend_boundary",
+      "required_evidence": "upstream evidence link for backend_boundary",
+      "linked_runs": [
+        "transfer-assessment-promotion-9bab1e1"
+      ],
+      "principal_context": "upstream:backend_boundary",
+      "evidence": [
+        {
+          "kind": "upstream_record",
+          "path": "../evals/transfer-assessment/upstream/backend-boundary.json",
+          "sha256": "a1e9c9d85dfef39f8e39f1487aa7ce7d3385292a929db42f4cc9057ce60ae44d"
+        }
+      ],
+      "verified_at": "2026-09-12T12:10:58.805Z",
+      "status": "pass",
+      "source_status": "pass",
+      "source_status_reason": "Integration owner recorded E05 as satisfied: migration 045 applied, T009 PART 1 re-run at 17/17 with FAILING_CHECKS=0, and PART 2 run by the owner from the SQL editor with A1-A11 ok=true. Source caveat retained verbatim: the W3/W4 hosted behavioural lane is owner-reported rather than machine-verified by component 105, and answer-key confidentiality is a recorded owner decision (public.messages stays participant-readable) rather than a guarantee."
+    },
+    {
+      "required": true,
+      "gate_id": "room_ui",
+      "required_evidence": "upstream evidence link for room_ui",
+      "linked_runs": [
+        "103-transfer-room-ui-4d92cdf"
+      ],
+      "principal_context": "upstream:room_ui",
+      "evidence": [
+        {
+          "kind": "upstream_record",
+          "path": "../evals/transfer-assessment/upstream/room-ui.json",
+          "sha256": "17eaabd92bfe0c4499a8de4ea817505db1db071121dee0202c024b0e3ad3b457"
+        }
+      ],
+      "verified_at": "2026-09-12T12:10:58.808Z",
+      "status": "pass",
+      "source_status": "pass",
+      "source_status_reason": "Component 103 was promoted at 4d92cdf after the E03 handoff drove the real adapter over component 102's facade, and its gate runs as written at 16 suites / 100 tests. The room/UI handoff and browser-facing integration tests are recorded as passing."
+    },
+    {
+      "required": true,
+      "gate_id": "evaluation",
+      "required_evidence": "upstream evidence link for evaluation",
+      "linked_runs": [
+        "transfer-eval-frozen-development-v1"
+      ],
+      "principal_context": "upstream:evaluation",
+      "evidence": [
+        {
+          "kind": "upstream_record",
+          "path": "../evals/transfer-assessment/upstream/evaluation.json",
+          "sha256": "3b1d2956af4857ab30cf37a339f7ad5f2bb84d56cecb8e85e13ead05e2de049e"
+        }
+      ],
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "status": "blocked",
+      "source_status": "pending",
+      "source_status_reason": "The frozen transfer evaluation manifest records no live execution: execution.commands is empty and started_at / completed_at are null, so baseline, candidate, holdout, pair, and quality-gate results do not exist yet. The deterministic evaluation checks pass, but a Promptfoo pass alone would not satisfy product, privacy, attack, or rollback gates either.",
+      "blocking_reason": "upstream evaluation reports pending: The frozen transfer evaluation manifest records no live execution: execution.commands is empty and started_at / completed_at are null, so baseline, candidate, holdout, pair, and quality-gate results do not exist yet. The deterministic evaluation checks pass, but a Promptfoo pass alone would not satisfy product, privacy, attack, or rollback gates either."
+    }
+  ],
+  "lane_rows": [
+    {
+      "lane_id": "browser",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:browser",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "privacy",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:privacy",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "attacks",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:attacks",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "activation",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:activation",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "rollback",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:rollback",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    }
+  ],
+  "verified_at": "2026-09-12T12:10:59.313Z"
+}

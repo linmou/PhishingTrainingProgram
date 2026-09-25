@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "decision": "release_not_approved",
+  "activation_eligible": false,
+  "blocking_gates": [
+    "backend_boundary",
+    "room_ui",
+    "evaluation"
+  ],
+  "incomplete_scenarios": [
+    "US1-S1",
+    "US1-S2",
+    "US1-S3",
+    "US1-S4",
+    "US1-S5",
+    "US1-S6",
+    "US2-S1",
+    "US2-S2",
+    "US2-S3",
+    "US3-S1",
+    "US3-S2"
+  ],
+  "incomplete_lanes": [
+    "activation",
+    "attacks",
+    "browser",
+    "privacy",
+    "rollback"
+  ],
+  "gate_rows": [
+    {
+      "gate_id": "backend_boundary",
+      "required": true,
+      "status": "missing",
+      "source_status": null,
+      "source_status_reason": "no upstream evidence record was available",
+      "blocking_reason": "required upstream evidence is absent",
+      "linked_runs": [],
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:backend_boundary",
+      "evidence": []
+    },
+    {
+      "gate_id": "room_ui",
+      "required": true,
+      "status": "missing",
+      "source_status": null,
+      "source_status_reason": "no upstream evidence record was available",
+      "blocking_reason": "required upstream evidence is absent",
+      "linked_runs": [],
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:room_ui",
+      "evidence": []
+    },
+    {
+      "gate_id": "evaluation",
+      "required": true,
+      "status": "missing",
+      "source_status": null,
+      "source_status_reason": "no upstream evidence record was available",
+      "blocking_reason": "required upstream evidence is absent",
+      "linked_runs": [],
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:evaluation",
+      "evidence": []
+    }
+  ],
+  "lane_rows": [
+    {
+      "lane_id": "activation",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:activation",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "attacks",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:attacks",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "browser",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:browser",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "privacy",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:privacy",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "rollback",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:rollback",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    }
+  ],
+  "run_id": "transfer-release-20260924-wave105-local"
+}

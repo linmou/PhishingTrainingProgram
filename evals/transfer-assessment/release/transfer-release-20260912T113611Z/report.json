@@ -1,0 +1,257 @@
+{
+  "run_id": "transfer-release-20260912T113611Z",
+  "start_commit": "f45dd805e6ac659251209d31998d77d7366be4e8",
+  "end_commit": "f45dd805e6ac659251209d31998d77d7366be4e8",
+  "changed_files": [],
+  "verified_principals": {
+    "teacher": {
+      "application_user_id": "not-provisioned-teacher",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL"
+    },
+    "learner": {
+      "application_user_id": "not-provisioned-learner",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL"
+    }
+  },
+  "migration_status": {
+    "status": "not_applicable",
+    "reason": "this component authors, exercises, and deploys no migration",
+    "authored": {
+      "status": "not_applicable",
+      "reason": "no migration is authored by component 105"
+    },
+    "exercised": {
+      "status": "not_applicable",
+      "reason": "no migration is exercised by component 105"
+    },
+    "deployed": {
+      "status": "not_applicable",
+      "reason": "no migration is deployed by component 105"
+    }
+  },
+  "key_protection": {
+    "status": "blocked",
+    "reason": "the privacy lane has no driver in this build, so answer-key confidentiality is not verified here"
+  },
+  "commands": [
+    {
+      "command": "node tutor-system/scripts/transfer-assessment-release.js --config scripts/transfer-assessment-release.config.json --evidence ../evals/transfer-assessment/upstream --output ../evals/transfer-assessment/release --run-id transfer-release-20260912T113611Z",
+      "exit_status": 1
+    }
+  ],
+  "linked_runs": [
+    "transfer-assessment-promotion-9bab1e1",
+    "103-transfer-room-ui-4d92cdf",
+    "transfer-eval-frozen-development-v1"
+  ],
+  "feature_flag_state": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "state": "disabled"
+  },
+  "capability": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "state": "disabled",
+    "authorization_source": "backend",
+    "enabled_by_runner": false
+  },
+  "rollback_path": {
+    "status": "blocked",
+    "reason": "the rollback lane has no driver in this build",
+    "steps": [
+      "disable new assessment generation and delivery by setting TRANSFER_ASSESSMENT_ENABLED to false",
+      "leave every assessment table, history row, and evidence artifact in place",
+      "let already-delivered questions resolve or be explicitly cancelled by the existing contract"
+    ]
+  },
+  "lane_results": [
+    {
+      "lane_id": "browser",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:browser",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "privacy",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:privacy",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "attacks",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:attacks",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "activation",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:activation",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    },
+    {
+      "lane_id": "rollback",
+      "required": true,
+      "status": "blocked",
+      "reason": "no lane driver is available in this build",
+      "blocking_reason": "no lane driver is available in this build",
+      "principal_context": "release-verifier:rollback",
+      "verified_at": "2026-09-12T12:10:58.809Z",
+      "evidence": [
+        {
+          "kind": "lane_manifest",
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+          "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+        }
+      ]
+    }
+  ],
+  "scenario_results": [
+    {
+      "scenario_id": "US1-S1",
+      "title": "new learner-owned checklist, unchanged legacy data, one structured draft for the teacher",
+      "requirement": "FR-001",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US1-S2",
+      "title": "teacher review, edit, reconfirm, and send delivers one four-option assessment while the room stays in tutoring mode",
+      "requirement": "FR-003",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US1-S3",
+      "title": "correct labels resolve exactly once, survive reload, and are followed by tutoring feedback rather than a second assessment",
+      "requirement": "FR-004",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US1-S4",
+      "title": "wrong answer records needs-review, offers repair, waits for new learner evidence, and uses a different context before a later pass",
+      "requirement": "FR-002",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US1-S5",
+      "title": "Guard active defers protected progression and applies the deferred event at most once on recovery",
+      "requirement": "FR-002",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US1-S6",
+      "title": "dirty or stale draft, reconnect catch-up, commit retry, second teacher tab, and duplicate learner answer create no phantom, stale, or duplicate effect",
+      "requirement": "FR-002",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US2-S1",
+      "title": "learner network, realtime, export, storage, and error surfaces carry no private material",
+      "requirement": "FR-005",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US2-S2",
+      "title": "forged identity, cross-learner, cross-room, stale-question, direct-write, and legacy-RPC operations are rejected with protected state unchanged",
+      "requirement": "FR-006",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US2-S3",
+      "title": "legacy checklist values stay legacy and are never presented as transfer-verified",
+      "requirement": "FR-007",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US3-S1",
+      "title": "release verdict stays not approved while any required gate or lane is not pass, and activation eligibility is recorded separately",
+      "requirement": "FR-010",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    },
+    {
+      "scenario_id": "US3-S2",
+      "title": "rollback disables new generation and delivery without dropping tables, deleting evidence, or erasing history",
+      "requirement": "FR-012",
+      "status": "blocked",
+      "observed": null,
+      "evidence": [],
+      "error": "no scenario driver is available in this build (no lane driver is available in this build)"
+    }
+  ],
+  "remaining_gaps": [
+    "gate evaluation is not pass",
+    "lane browser is blocked: no lane driver is available in this build",
+    "lane privacy is blocked: no lane driver is available in this build",
+    "lane attacks is blocked: no lane driver is available in this build",
+    "lane activation is blocked: no lane driver is available in this build",
+    "lane rollback is blocked: no lane driver is available in this build"
+  ]
+}

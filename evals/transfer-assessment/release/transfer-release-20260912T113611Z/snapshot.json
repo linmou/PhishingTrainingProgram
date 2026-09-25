@@ -1,0 +1,80 @@
+{
+  "run_id": "transfer-release-20260912T113611Z",
+  "generated_at": "2026-09-12T12:10:58.999Z",
+  "branch": "105-transfer-release",
+  "start_commit": "f45dd805e6ac659251209d31998d77d7366be4e8",
+  "end_commit": "f45dd805e6ac659251209d31998d77d7366be4e8",
+  "dirty_tree_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "config_sha256": "75d0f73e1a4efd894d9395f6153b76afb11f468e1eecf82401fc57f2bca136ca",
+  "configuration": {
+    "environment": {
+      "app_origin": "http://127.0.0.1:3001",
+      "supabase_origin": "https://zgbufaxooqxeabewktzd.supabase.co",
+      "isolated": false,
+      "note": "No isolated migrated target with a deployed assessment-api and verified principals was available in this session; the observed capability state is recorded as disabled and every lane is recorded blocked rather than substituted."
+    },
+    "capability": {
+      "flag": "TRANSFER_ASSESSMENT_ENABLED",
+      "expected_state": "disabled"
+    },
+    "principals": {
+      "teacher": {
+        "application_user_id": "not-provisioned-teacher",
+        "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL"
+      },
+      "learner": {
+        "application_user_id": "not-provisioned-learner",
+        "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL"
+      }
+    }
+  },
+  "verified_principals": {
+    "teacher": {
+      "application_user_id": "not-provisioned-teacher",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL",
+      "credential_present": false
+    },
+    "learner": {
+      "application_user_id": "not-provisioned-learner",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL",
+      "credential_present": false
+    }
+  },
+  "application_origin": "http://127.0.0.1:3001",
+  "supabase_origin": "https://zgbufaxooqxeabewktzd.supabase.co",
+  "feature_flag_state": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "state": "disabled",
+    "authorization_source": "backend"
+  },
+  "linked_ai_run_ids": [
+    "transfer-assessment-promotion-9bab1e1",
+    "103-transfer-room-ui-4d92cdf",
+    "transfer-eval-frozen-development-v1"
+  ],
+  "lane_ids": [
+    "browser",
+    "privacy",
+    "attacks",
+    "activation",
+    "rollback"
+  ],
+  "artifact_hashes": [
+    {
+      "path": "../evals/transfer-assessment/upstream/backend-boundary.json",
+      "sha256": "a1e9c9d85dfef39f8e39f1487aa7ce7d3385292a929db42f4cc9057ce60ae44d"
+    },
+    {
+      "path": "../evals/transfer-assessment/upstream/room-ui.json",
+      "sha256": "17eaabd92bfe0c4499a8de4ea817505db1db071121dee0202c024b0e3ad3b457"
+    },
+    {
+      "path": "../evals/transfer-assessment/upstream/evaluation.json",
+      "sha256": "3b1d2956af4857ab30cf37a339f7ad5f2bb84d56cecb8e85e13ead05e2de049e"
+    },
+    {
+      "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
+      "sha256": "15d38326b22ce0272907890055708e221e329633bea70969f8f2309e0bcd929a"
+    }
+  ]
+}

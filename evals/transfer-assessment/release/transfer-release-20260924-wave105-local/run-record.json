@@ -1,0 +1,301 @@
+{
+  "schema": 1,
+  "run_id": "transfer-release-20260924-wave105-local",
+  "started_at": "2026-09-24T06:30:46.999Z",
+  "completed_at": "2026-09-24T06:30:46.999Z",
+  "scenario_results": [
+    {
+      "scenario_id": "US1-S1",
+      "title": "eligible evidence produces one teacher-reviewable assessment",
+      "requirement": "FR-003",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US1-S1",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US1-S2",
+      "title": "teacher review sends one public four-option assessment",
+      "requirement": "FR-003",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US1-S2",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US1-S3",
+      "title": "correct answer resolves once and survives reload",
+      "requirement": "FR-004",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US1-S3",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US1-S4",
+      "title": "wrong answer repairs after new evidence and changed context",
+      "requirement": "FR-004",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US1-S4",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US1-S5",
+      "title": "Guard defers and recovers without duplicate progress",
+      "requirement": "FR-004",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US1-S5",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US1-S6",
+      "title": "stale, retry, reconnect, and duplicate flows stay idempotent",
+      "requirement": "FR-004",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US1-S6",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US2-S1",
+      "title": "learner surfaces contain no private assessment material",
+      "requirement": "FR-005",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US2-S1",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US2-S2",
+      "title": "forged and cross-scope requests are rejected",
+      "requirement": "FR-006",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US2-S2",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US2-S3",
+      "title": "stale, direct-write, and legacy operations do not mutate state",
+      "requirement": "FR-006",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US2-S3",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US3-S1",
+      "title": "non-pass gates keep capability disabled",
+      "requirement": "FR-010",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US3-S1",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "scenario_id": "US3-S2",
+      "title": "rollback disables new work without deleting evidence",
+      "requirement": "FR-012",
+      "status": "blocked",
+      "observed": null,
+      "error": "dedicated browser scenario driver did not run",
+      "reason": "dedicated browser scenario driver did not run",
+      "verified_at": "2026-09-24T06:30:46.999Z",
+      "principal_context": "release-verifier:scenario:US3-S2",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    }
+  ],
+  "lane_results": [
+    {
+      "lane_id": "activation",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:activation",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "attacks",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:attacks",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "browser",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:browser",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "privacy",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:privacy",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    },
+    {
+      "lane_id": "rollback",
+      "status": "blocked",
+      "reason": "live release lane driver is unavailable in this build; no browser, privacy, attack, activation, or rollback result was substituted",
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:rollback",
+      "evidence": [
+        {
+          "path": "/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-release/tutor-system/scripts/transfer-assessment-release.config.example.json",
+          "sha256": "01ecf5fd7fc9502f59b9d3a39d8674506c30baddc27cb7d05b959b7d20ddee36"
+        }
+      ]
+    }
+  ],
+  "upstream_gate_rows": [
+    {
+      "gate_id": "backend_boundary",
+      "required": true,
+      "status": "missing",
+      "source_status": null,
+      "source_status_reason": "no upstream evidence record was available",
+      "blocking_reason": "required upstream evidence is absent",
+      "linked_runs": [],
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:backend_boundary",
+      "evidence": []
+    },
+    {
+      "gate_id": "room_ui",
+      "required": true,
+      "status": "missing",
+      "source_status": null,
+      "source_status_reason": "no upstream evidence record was available",
+      "blocking_reason": "required upstream evidence is absent",
+      "linked_runs": [],
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:room_ui",
+      "evidence": []
+    },
+    {
+      "gate_id": "evaluation",
+      "required": true,
+      "status": "missing",
+      "source_status": null,
+      "source_status_reason": "no upstream evidence record was available",
+      "blocking_reason": "required upstream evidence is absent",
+      "linked_runs": [],
+      "verified_at": "2026-09-24T06:30:46.998Z",
+      "principal_context": "release-verifier:evaluation",
+      "evidence": []
+    }
+  ],
+  "completion": "incomplete"
+}
