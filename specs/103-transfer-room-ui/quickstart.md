@@ -31,6 +31,7 @@ CI=true npx react-scripts test --watchAll=false --runInBand --runTestsByPath \
   src/components/__tests__/AssessmentDraftEditor.test.tsx \
   src/components/__tests__/PublicAssessmentQuestion.test.tsx \
   src/components/__tests__/PostComment.transfer.test.tsx \
+  src/components/__tests__/ChatMessage.transfer.test.tsx \
   src/components/__tests__/ChecklistPanel.transfer.test.tsx \
   src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx \
   src/contexts/__tests__/RoomContext.transferAnswer.test.tsx \
@@ -48,6 +49,9 @@ CI=true npm run test:regression -- --runInBand
 npx tsc --noEmit
 npm run build
 ```
+
+`ChatMessage.transfer.test.tsx` retains its historical filename for the earlier gate, but tests
+`PostComment`, the component mounted by `RoomPagePost`.
 
 ## Required focused scenarios
 
