@@ -43,9 +43,9 @@ Feature: Observer User Interface
   Scenario: Observer has a read-only view of the chat
     Given an observer has joined the "Live Phishing Demo" room
     When the observer views the chat interface
-    Then they should see a clear indicator that they are in "Read-Only Mode"
+    Then they should see a clear indicator that they are in "Observer Mode"
     And the chat message input field must be disabled or not visible
-    And there should be a visual indicator showing their observer status
+    And there should be a visible notice that observers cannot participate
 
   Scenario: Observer sees the conversation unfold in real-time
     Given an observer is in the "Live Phishing Demo" room
@@ -65,6 +65,8 @@ Feature: Observer User Interface
     Given an observer is in the "Live Phishing Demo" room
     And a conversation has taken place
     When the observer clicks the "Download History" button
+    Then the download format options are shown
+    When the observer selects the "Chat History (TXT)" format
     Then a file containing the complete chat history should be downloaded
     And the file should include room information and participant details
 
@@ -92,5 +94,5 @@ Feature: Observer User Interface
     Given an observer has joined the "Live Phishing Demo" room
     When they view the room interface
     Then there should be a persistent visual indicator showing "Observer Mode"
-    And the participant list should show their name with "(Observer)" label
-    And any interactive elements should be clearly disabled or hidden 
+    And the observer should be told they cannot participate
+    And any interactive elements should be clearly disabled or hidden

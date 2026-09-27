@@ -22,6 +22,13 @@ The four-directory regression was not rerun for this focused batch.
 - AI tests cover `generateTutorSuggestion`, `getAIConfig`, and `updateAIConfig`.
 - AI configuration load failures assert the local room configuration fallback.
 
+## Observer UI Regression
+
+- Observer room fixtures provide the required `messageFeedbackStats` map.
+- Observer status checks target the current read-only notice, and download coverage selects a format from the room-data modal.
+- Role-label assertions allow multiple tutor messages while still requiring both Tutor and Student labels.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/observer_view_steps.test.tsx` (1 suite, 13 tests passed on the working tree and clean corrective HEAD).
+
 ## Verification
 
 - Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`

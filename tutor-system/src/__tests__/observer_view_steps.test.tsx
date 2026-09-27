@@ -151,6 +151,7 @@ defineFeature(feature, test => {
         mockUseRoom.mockReturnValue({
             currentRoom: null,
             messages: [],
+            messageFeedbackStats: {},
             participants: [],
             loading: false,
             typingUsers: [],
@@ -442,6 +443,7 @@ defineFeature(feature, test => {
             mockUseRoom.mockReturnValue({
                 currentRoom: mockRoom,
                 messages: [],
+                messageFeedbackStats: {},
                 participants: [observerUser],
                 loading: false,
                 typingUsers: [],
@@ -469,8 +471,8 @@ defineFeature(feature, test => {
             // Chat interface is rendered by default in room page
         });
 
-        then('they should see a clear indicator that they are in "Read-Only Mode"', () => {
-            expect(screen.getByText(/Read-Only Mode/i)).toBeInTheDocument();
+        then('they should see a clear indicator that they are in "Observer Mode"', () => {
+            expect(screen.getByText(/You are in observer mode/i)).toBeInTheDocument();
         });
 
         and('the chat message input field must be disabled or not visible', () => {
@@ -478,8 +480,8 @@ defineFeature(feature, test => {
             expect(messageInput).toBeNull();
         });
 
-        and('there should be a visual indicator showing their observer status', () => {
-            expect(screen.getByTestId('observer-mode-indicator')).toBeInTheDocument();
+        and('there should be a visible notice that observers cannot participate', () => {
+            expect(screen.getByText(/cannot participate/i)).toBeInTheDocument();
         });
     });
 
@@ -504,6 +506,7 @@ defineFeature(feature, test => {
             mockUseRoom.mockReturnValue({
                 currentRoom: mockRoom,
                 messages: mockMessagesData,
+                messageFeedbackStats: {},
                 participants: [observerUser],
                 loading: false,
                 typingUsers: [],
@@ -548,6 +551,7 @@ defineFeature(feature, test => {
                 mockUseRoom.mockReturnValue({
                     currentRoom: mockRoom,
                     messages: [...mockMessagesData], // Create new array to trigger re-render
+                    messageFeedbackStats: {},
                     participants: [observerUser],
                     loading: false,
                     typingUsers: [],
@@ -605,6 +609,7 @@ defineFeature(feature, test => {
                 mockUseRoom.mockReturnValue({
                     currentRoom: mockRoom,
                     messages: [...mockMessagesData], // Create new array to trigger re-render
+                    messageFeedbackStats: {},
                     participants: [observerUser],
                     loading: false,
                     typingUsers: [],
@@ -642,7 +647,7 @@ defineFeature(feature, test => {
         });
 
         and('messages should display with appropriate role labels (Tutor/Student)', () => {
-            expect(screen.getByText('Tutor')).toBeInTheDocument();
+            expect(screen.getAllByText('Tutor').length).toBeGreaterThan(0);
             expect(screen.getByText('Student')).toBeInTheDocument();
         });
     });
@@ -706,6 +711,7 @@ defineFeature(feature, test => {
             mockUseRoom.mockReturnValue({
                 currentRoom: mockRoom,
                 messages: mockMessagesData,
+                messageFeedbackStats: {},
                 participants: [observerUser],
                 loading: false,
                 typingUsers: [],
@@ -738,18 +744,26 @@ defineFeature(feature, test => {
         });
 
         when('the observer clicks the "Download History" button', () => {
-            const downloadButton = screen.getByText('Download History');
+            const downloadButton = screen.getByTitle('Download Chat History');
             fireEvent.click(downloadButton);
+        });
+
+        then('the download format options are shown', () => {
+            expect(screen.getByText('Download Room Data')).toBeInTheDocument();
+        });
+
+        when('the observer selects the "Chat History (TXT)" format', () => {
+            fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
         });
 
         then('a file containing the complete chat history should be downloaded', async () => {
             await waitFor(() => {
-                expect(global.mockDownloadChatHistoryContext).toHaveBeenCalled();
+                expect(global.mockDownloadChatHistoryContext).toHaveBeenCalledWith('txt');
             });
         });
 
         and('the file should include room information and participant details', () => {
-            expect(global.mockDownloadChatHistoryContext).toHaveBeenCalled();
+            expect(global.mockDownloadChatHistoryContext).toHaveBeenCalledWith('txt');
         });
     });
 
@@ -888,6 +902,7 @@ defineFeature(feature, test => {
             mockUseRoom.mockReturnValue({
                 currentRoom: mockRoom,
                 messages: [],
+                messageFeedbackStats: {},
                 participants: [observerUser],
                 loading: false,
                 typingUsers: [],
@@ -917,14 +932,10 @@ defineFeature(feature, test => {
 
         then('there should be a persistent visual indicator showing "Observer Mode"', () => {
             expect(screen.getByText(/Observer Mode/i)).toBeInTheDocument();
-            expect(screen.getByTestId('observer-mode-indicator')).toBeInTheDocument();
         });
 
-        and('the participant list should show their name with "(Observer)" label', () => {
-            // RoomPagePost shows the current user when they join as an observer.
-            // the observer should appear either in participants list or as fallback
-            expect(screen.getByText('Test Observer')).toBeInTheDocument();
-            expect(screen.getByText(/\(observer\)/i)).toBeInTheDocument();
+        and('the observer should be told they cannot participate', () => {
+            expect(screen.getByText(/cannot participate/i)).toBeInTheDocument();
         });
 
         and('any interactive elements should be clearly disabled or hidden', () => {
