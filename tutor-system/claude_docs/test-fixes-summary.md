@@ -29,6 +29,12 @@ The four-directory regression was not rerun for this focused batch.
 - Role-label assertions allow multiple tutor messages while still requiring both Tutor and Student labels.
 - Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/observer_view_steps.test.tsx` (1 suite, 13 tests passed on the working tree and clean corrective HEAD).
 
+## Tutor Persistence Regression
+
+- Mock `getRoomTemplatesByTutor` as an empty result so TutorView's template load follows the current service contract.
+- Check the rendered `🟢 Active` status element instead of combining the separate `Status:` label with the value.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_room_persistence.test.tsx` (1 suite, 4 tests passed).
+
 ## Verification
 
 - Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`
