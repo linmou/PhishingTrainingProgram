@@ -130,6 +130,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Handoff test: `tests/integration/transfer-backend-evaluation-two-attempt.test.mjs` uses 102 output from the same run as 104 input.
 - E2E/smoke: parity, deterministic disclosure, and manifest validation; live calibration remains a separately recorded gate.
 - Producer gate (102): production request, provider configuration, and disclosure contracts pass. Consumer gate (104): real-output handoff and deterministic evaluation tests pass; missing live evidence remains blocking rather than passed.
+- Runtime dependency incident (2026-09-27): isolated combined checkout `7c1dcea` found that 104's pinned full Edge Function source hash predates the latest integrated 102 source. The 104 offline gate stops at request parity despite an unchanged builder hash and no diff in the prompt constant. Reconcile the pinned source identity with the actual integrated 102 revision, then rerun the offline gate and real E05 handler-result handoff before 104 merge or promotion. The historical failure and ownership are in `integration-review.md`.
 
 ## Integration Test Plan
 
