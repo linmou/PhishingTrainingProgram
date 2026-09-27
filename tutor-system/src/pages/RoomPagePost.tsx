@@ -302,6 +302,32 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    const catchUpRoom = async (reason: 'stale' | 'retryable' = 'retryable') => {
+        if (!roomId) return;
+
+        setTransferTurnStatus({
+            status: 'catching-up',
+            message: reason === 'stale'
+                ? 'A transfer turn changed in another tab. Refreshing saved room state…'
+                : 'Refreshing saved room state…'
+        });
+        try {
+            await joinRoom(roomId);
+            setTransferTurnStatus({
+                status: reason === 'stale' ? 'stale' : 'caught-up',
+                message: reason === 'stale'
+                    ? 'The room has been refreshed after a transfer conflict. Review the saved conversation before preparing again.'
+                    : 'Saved room state refreshed.'
+            });
+        } catch (error) {
+            const detail = error instanceof Error ? error.message : 'The room could not be refreshed.';
+            setTransferTurnStatus({
+                status: 'retryable',
+                message: `Saved room state could not be refreshed. ${detail}`
+            });
+        }
+    };
+
     const handleGenerateAIResponse = async (parentMessageId?: string) => {
         setTransferTurnStatus(null);
         try {
@@ -311,7 +337,11 @@ const RoomPagePost: React.FC = () => {
             // A refused preparation is a named state on the page, not only a transient alert:
             // the capability can be unavailable, the payload invalid, or the learner superseded.
             const classified = classifyReviewFailure(error);
-            setTransferTurnStatus(classified);
+            if (classified.status === 'superseded') {
+                await catchUpRoom('stale');
+            } else {
+                setTransferTurnStatus(classified);
+            }
             alert(getAIResponseErrorMessage(error));
         }
     };
@@ -543,7 +573,13 @@ const RoomPagePost: React.FC = () => {
         return (
             <div className="room-post-layout">
                 <div className="room-post-container">
-                    <div className="loading">Loading room...</div>
+                    {transferTurnStatus?.status === 'catching-up' ? (
+                        <p role="status" data-transfer-status="catching-up" className="transfer-turn-status">
+                            {transferTurnStatus.message}
+                        </p>
+                    ) : (
+                        <div className="loading">Loading room...</div>
+                    )}
                 </div>
             </div>
         );
@@ -749,9 +785,14 @@ const RoomPagePost: React.FC = () => {
                     </p>
                 )}
                 {user?.current_role === 'tutor' && canUseAI && !transferDraft && transferTurnStatus && (
-                    <p role="status" data-transfer-status={transferTurnStatus.status} className="transfer-turn-status">
-                        {transferTurnStatus.message}
-                    </p>
+                    <div data-transfer-status={transferTurnStatus.status} className="transfer-turn-status">
+                        <p role="status">{transferTurnStatus.message}</p>
+                        {transferTurnStatus.status === 'retryable' && (
+                            <button type="button" onClick={() => void catchUpRoom()}>
+                                Refresh room state
+                            </button>
+                        )}
+                    </div>
                 )}
 
                 {/* Legacy AI Suggestion Box for tutors */}

@@ -102,11 +102,22 @@ retain the projected question and server lifecycle when polling replaces a local
 database row. Student messages without an assessment identity use evidence analysis directly. The
 browser does not grade answers or write progress.
 
+Message ingress uses one stable-ID merge for the initial room fetch, realtime inserts, polling,
+reviewed sends, optimistic replacement, and catch-up. The page refreshes persisted room state after a
+stale transfer conflict; if that refresh fails, it keeps a retry action available. The active
+transfer checklist remains owner-scoped, so refresh uses the same selected learner and prepared
+focus identity.
+
 Checklist loading uses the owner-scoped transfer projection for a signed-in student and the
 server-selected active projection for a tutor. The returned transfer owner is checked on both the
 scoped lookup and the legacy read fallback before progress reaches the UI; a missing or mismatched
 owner clears the view. Transfer lifecycle and progress controls stay limited to their authorized
 learner/tutor views, while ordinary legacy checklist reads and room text exports remain available.
+
+Room participation remains `tutoring` or `guard`; assessment is only a turn decision. Manual Guard
+changes use the room-mode service directly. Recovering from a Guard suggestion requires the tutor to
+review and send a tutoring response, and the room adopts tutoring only after that send succeeds.
+Assessment candidates stay outside the legacy suggestion mode toggle.
 
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification

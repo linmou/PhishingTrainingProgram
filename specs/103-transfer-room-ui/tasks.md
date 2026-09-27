@@ -89,17 +89,17 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 - [X] T028 [P] [US3] Add RoomContext ingress tests for realtime-before-fetch, duplicate realtime insert, polling/realtime overlap, reconnect catch-up, reload persistence, authoritative remaining-chance restoration, and stable chronological merge in `tutor-system/src/contexts/__tests__/RoomContext.transferIngress.test.tsx`.
 - [X] T029 [P] [US3] Add concurrency tests for simultaneous second submissions, already-terminal replay, exactly one accepted terminal transition, timeout retry, and identical reread state across tabs in `tutor-system/src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx`.
-- [ ] T030 [P] [US3] Add mode compatibility tests for tutoring, Guard, assessment turn delivery, manual Guard change, Guard recovery, invalid mode/instruction pairs, and no assessment room mode in `tutor-system/src/contexts/__tests__/RoomContext.transferModes.test.tsx`.
+- [X] T030 [P] [US3] Add mode compatibility tests for tutoring, Guard, assessment turn delivery, manual Guard change, Guard recovery, invalid mode/instruction pairs, and no assessment room mode in `tutor-system/src/contexts/__tests__/RoomContext.transferModes.test.tsx`.
 - [X] T031 [P] [US3] Add message tests for expanded-by-default state, accessible collapse/expand controls for every role, participant-local toggles, and selection/result preservation in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
-- [ ] T032 [P] [US3] Add page tests for reload/catch-up UI states, persisted remaining chances, unavailable capability, stale conflict messaging, and preserving the current selected learner in `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`.
+- [X] T032 [P] [US3] Add page tests for reload/catch-up UI states, persisted remaining chances, unavailable capability, stale conflict messaging, and preserving the current selected learner in `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`.
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to route initial fetch, realtime, polling, optimistic replacement, and reconnect catch-up through the stable-ID merge helper and to restore component 102's persisted attempt and terminal state without any reset path.
+- [X] T033 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to route initial fetch, realtime, polling, optimistic replacement, and reconnect catch-up through the stable-ID merge helper and to restore component 102's persisted attempt and terminal state without any reset path.
 - [X] T034 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to use upstream idempotency and stale/terminal outcomes for retry rather than appending another local answer or reprocessing a resolved question.
 - [X] T035 [US3] Update `tutor-system/src/components/PostComment.tsx` and `tutor-system/src/components/PostComment.css` to keep expanded state participant-local and true by default, expose an accessible icon control, and preserve mounted answer selection/result state while collapsed.
-- [ ] T036 [US3] Update `tutor-system/src/pages/RoomPagePost.tsx` to render explicit loading, unavailable, stale, retryable, and catch-up states without switching legacy rooms to transfer behavior.
-- [ ] T037 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` and `tutor-system/src/components/AISuggestionBox.tsx` so assessment turn decisions cannot be coerced into `RoomParticipationMode`, and Guard recovery remains a reviewed tutoring action.
+- [X] T036 [US3] Update `tutor-system/src/pages/RoomPagePost.tsx` to render explicit loading, unavailable, stale, retryable, and catch-up states without switching legacy rooms to transfer behavior.
+- [X] T037 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` and `tutor-system/src/components/AISuggestionBox.tsx` so assessment turn decisions cannot be coerced into `RoomParticipationMode`, and Guard recovery remains a reviewed tutoring action.
 
 **Checkpoint**: A reload, reconnect, retry, or duplicate tab converges to one persisted lifecycle view with correct focus and mode semantics.
 

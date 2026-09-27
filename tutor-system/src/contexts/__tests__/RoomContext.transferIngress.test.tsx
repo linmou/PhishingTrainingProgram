@@ -3,8 +3,8 @@
  * Test responsible for src/contexts/RoomContext.tsx room ingress on the transfer path: realtime
  * inserts, polling, reconnect catch-up, and the room participation mode.
  *
- * Responsibility: prove one visible record per persisted identity across every ingress source and
- * that an unrecognized room participation value is never adopted as a room mode.
+ * Responsibility: prove one visible record per persisted identity across every ingress source,
+ * including an optimistic send whose realtime row arrives before its insert response.
  */
 
 import React from 'react';
@@ -73,6 +73,7 @@ describe('RoomContext transfer ingress', () => {
   let fetchedMessages: unknown[];
   let messageReadCount: number;
   let deferredMessageFetch: (() => Promise<{ data: unknown[]; error: null }>) | null;
+  let resolveMessageInsert: ((value: { data: unknown; error: null }) => void) | null;
   let realtimeHandlers: Record<string, RealtimeHandler>;
   let roomsUpdateHandler: RealtimeHandler;
 
@@ -82,6 +83,7 @@ describe('RoomContext transfer ingress', () => {
     fetchedMessages = [learnerBMessageRow];
     messageReadCount = 0;
     deferredMessageFetch = null;
+    resolveMessageInsert = null;
     realtimeHandlers = {};
 
     (useAuth as jest.Mock).mockReturnValue({
@@ -136,9 +138,16 @@ describe('RoomContext transfer ingress', () => {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockImplementation(() => deferredFetch
+          order: jest.fn().mockImplementation(() => deferredFetch
                 ? deferredFetch()
                 : Promise.resolve({ data: fetchedMessages, error: null })),
+            }),
+          }),
+          insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockImplementation(() => new Promise<{ data: unknown; error: null }>((resolve) => {
+                resolveMessageInsert = resolve;
+              })),
             }),
           }),
         };
@@ -242,6 +251,42 @@ describe('RoomContext transfer ingress', () => {
     expect(ids).toContain(LEARNER_A_MESSAGE_ID);
     expect(ids).toContain(LEARNER_B_MESSAGE_ID);
     expect(ids).toEqual([LEARNER_B_MESSAGE_ID, LEARNER_A_MESSAGE_ID]);
+  });
+
+  it('merges the realtime row with its optimistic send replacement', async () => {
+    await mountRoom();
+    (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(null);
+    const storedTutorMessage = {
+      id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+      room_id: TRANSFER_ROOM_ID,
+      user_id: 'tutor-1',
+      content: 'Reviewed response',
+      user_role: 'tutor',
+      ai_model_used: null,
+      ai_response_time_ms: null,
+      parent_message_id: null,
+      response_mode: 'tutoring',
+      created_at: '2026-09-12T08:31:00Z',
+    };
+    let send: Promise<void>;
+
+    await act(async () => {
+      send = room!.sendMessage('Reviewed response');
+      await waitFor(() => expect(resolveMessageInsert).not.toBeNull());
+    });
+    expect(room!.messages.filter((message) => message.content === 'Reviewed response')).toHaveLength(1);
+    expect(room!.messages.find((message) => message.content === 'Reviewed response')!.id).toMatch(/^temp-/);
+
+    await realtimeInsert(storedTutorMessage);
+    await act(async () => {
+      resolveMessageInsert!({ data: storedTutorMessage, error: null });
+      await send;
+    });
+
+    const matching = room!.messages.filter((message) => message.content === 'Reviewed response');
+    expect(matching).toHaveLength(1);
+    expect(matching[0].id).toBe(storedTutorMessage.id);
+    expect(matching[0].response_mode).toBe('tutoring');
   });
 
   it('keeps an already-processed terminal answer when polling replaces projections with stored rows', async () => {

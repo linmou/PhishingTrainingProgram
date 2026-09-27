@@ -749,7 +749,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 contextMessages: currentSuggestionContext.contextMessages
             });
 
-            setMessages(prev => [...prev, addDisplayNameToMessage(reviewedResult.message, participants)]);
+            setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(reviewedResult.message, participants)]));
             setCurrentRoom(normalizeRoom(reviewedResult.room));
             setAIInteractions(prev => [...prev, {
                 timestamp: new Date().toISOString(),
@@ -796,7 +796,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         // Add message optimistically
-        setMessages(prev => [...prev, optimisticMessage]);
+        setMessages(prev => mergeRoomMessages(prev, [optimisticMessage]));
 
         const { data, error } = await supabase
             .from('messages')
@@ -822,10 +822,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Replace optimistic message with real message
         if (data) {
-            setMessages(prev => prev.map(msg => 
-                msg.id === optimisticMessage.id 
-                    ? { ...data, display_name: user.display_name || 'User', avatar_url: user.avatar_url }
-                    : msg
+            const persistedMessage = addDisplayNameToMessage(
+                projectRoomMessage(data as Record<string, unknown>),
+                participants
+            );
+            setMessages(prev => mergeRoomMessages(
+                prev.filter(message => message.id !== optimisticMessage.id),
+                [persistedMessage]
             ));
         }
     };
@@ -1221,10 +1224,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const stored = [...(data as Message[])].sort(
             (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
-        setMessages(prev => [
-            ...prev,
-            ...stored.map(message => addDisplayNameToMessage(message, participants))
-        ]);
+        setMessages(prev => mergeRoomMessages(
+            prev,
+            stored.map(message => addDisplayNameToMessage(message, participants))
+        ));
         clearAISuggestion();
     };
 

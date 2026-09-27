@@ -64,18 +64,22 @@ describe('AISuggestionBox Guard Mode display', () => {
     });
 
     it('labels the card control Deactivate Guard when Guard is active', () => {
+        const onToggleGuard = jest.fn();
         render(
             <AISuggestionBox
                 suggestion="Stop and verify the destination."
                 onCopy={jest.fn()}
                 onReject={jest.fn()}
-                onToggleGuard={jest.fn()}
+                onToggleGuard={onToggleGuard}
                 isGuardMode={true}
                 isVisible={true}
             />
         );
 
-        expect(screen.getByRole('button', { name: 'Deactivate Guard' })).toBeInTheDocument();
+        const deactivate = screen.getByRole('button', { name: 'Deactivate Guard' });
+        expect(deactivate).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: 'Activate Guard' })).not.toBeInTheDocument();
+        fireEvent.click(deactivate);
+        expect(onToggleGuard).toHaveBeenCalledTimes(1);
     });
 });
