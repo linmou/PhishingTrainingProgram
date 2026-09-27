@@ -2,7 +2,7 @@
 
 Intent: reconcile each task against the current branch's source, focused tests, and local gates. An unchecked task may have useful partial implementation; it is not accepted until every clause in its task text has evidence.
 
-Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`. Focused command in `quickstart.md`: 17 suites/168 tests passed. Browser and hosted behavior were not run.
+Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`. Focused command in `quickstart.md`: 17 suites/179 tests passed. Browser and hosted behavior were not run.
 
 | Task | State | Specific evidence or missing clause |
 |---|---|---|
@@ -13,8 +13,8 @@ Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`.
 | T005 | Complete | `transferAssessmentUiAdapter.test.ts` imports component 102's `PublicAssessmentDTO`, checks the exact public keys/no `rendered_text`, verifies matching learner controls, missing/mismatched target fail-closed behavior, read-only tutor/observer views, and confirms `student_id` is not sent as request authority. |
 | T006 | Complete | The contract and lifecycle adapter suites use typed canonical `ProcessedMessageDTO` fixtures and assert all mapped fields, unchanged source values, failed-only disclosure, deferred terminal failure, and replayed terminal attempt continuity. |
 | T007 | Complete | `transferAssessmentUiAdapter.ts` imports 101/102 types and defines UI-only `ReviewStatus`, `PublicQuestionView`, `AnswerLifecycleView`, and `TeacherReviewCandidateView`; no local mutation authority is exposed. |
-| T008 | Open | `mergeRoomMessages` now retains public-question and answer-lifecycle view state when polling replaces a projected message; optimistic replacement and legacy pre-populated ordering are not fully demonstrated at every ingress. |
-| T009 | Open | Adapter maps public/processed DTOs but no complete typed-envelope-to-view-state test covers all required read-only outcomes. |
+| T008 | Complete | `mergeRoomMessages` is used for initial fetch, realtime, polling, reviewed and optimistic sends, and reconnect catch-up. `RoomContext.transferIngress.test.tsx` verifies two pre-populated legacy messages remain first, stable, and duplicate-free through the initial fetch, realtime insertion, and reconnect while persisted messages stay chronological. |
+| T009 | Complete | `transferAssessmentUiAdapter.ts` maps the service's canonical public/processed projections into allowlisted review, question, and lifecycle view states. `transferAssessmentUiAdapter.lifecycle.test.ts` passes a typed success envelope through the component-102 service and verifies unwrapped `ProcessedMessageDTO` attempts, terminal failure disclosure, and source immutability. Envelope parsing and operation mapping remain owned by component 102. |
 | T010 | Complete | `AssessmentDraftEditor.test.tsx` passes 36 cases covering ordered options, key cardinality, explanation, every edit/reconfirmation, review status, and no progress control. |
 | T011 | Open | `RoomContext.transferDraftLifecycle.test.tsx` covers prepared scope and one send; explicit review-then-send ordering and all focus identities need stronger assertions. |
 | T012 | Open | `RoomPagePost.transferDraft.test.tsx` has three cases; dirty candidate and retryable-send/no-phantom combinations are not all covered there. |
@@ -55,4 +55,4 @@ Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`.
 | T047 | Complete | Reviewed `tutor-system/README.md`, `claude_docs/README.md`, and `claude_docs/RoomContext.md`; updated the nearest room doc and added dated records for lifecycle/owner, mode, and catch-up changes. |
 | T048 | Open | Ownership audit of `0c4dfb6..HEAD` found `tutor-system/src/types/index.ts` changed by 103 commit `21915f4`, despite the task boundary assigning that shared barrel to component 101. No other prohibited 101/102/104, SQL/RLS, provider/auth, Promptfoo, or release-browser path appears in that 103 range. The earlier `2fcd0b4..HEAD` tree also includes separate 101/102/104 and orchestration commits, which are not attributed to component 103. |
 
-Thirty-five tasks are checked, 13 remain unchecked. A passing local focused suite does not substitute for the missing clauses above or for a browser/hosted gate.
+Thirty-seven tasks are checked, 11 remain unchecked. A passing local focused suite does not substitute for the missing clauses above or for a browser/hosted gate.

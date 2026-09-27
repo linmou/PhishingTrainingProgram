@@ -26,6 +26,11 @@ import {
   deliveredQuestionRow,
 } from '../../test-support/transferRoomFixtures';
 import { expectNoPrivateAssessmentFields } from '../../test-support/transferPrivacyAssertions';
+import {
+  TransferAssessmentService,
+  type AssessmentApiEnvelope,
+  type TransferAssessmentApi,
+} from '../../services/transferAssessmentService';
 import type { Message } from '../../types';
 
 describe('transferAssessmentUiAdapter answer lifecycle', () => {
@@ -104,6 +109,51 @@ describe('transferAssessmentUiAdapter answer lifecycle', () => {
         learner_safe_explanation: 'Verify the request through an official channel.',
       },
     });
+  });
+
+  it('maps a service-unwrapped envelope result into read-only persisted lifecycle view state', async () => {
+    const envelope: AssessmentApiEnvelope<unknown> = {
+      ok: true,
+      data: processedSecondIncorrectTerminal,
+    };
+    const api: TransferAssessmentApi = {
+      invoke: jest.fn(async () => ({ data: envelope, error: null })),
+    };
+    const service = new TransferAssessmentService({ api, requestId: () => 'adapter-envelope-test' });
+    const sourceBefore = JSON.stringify(processedSecondIncorrectTerminal);
+
+    const processed = await service.processMessage(
+      processedSecondIncorrectTerminal.message_id,
+      processedSecondIncorrectTerminal.assessment_id
+    );
+    const lifecycle = answerLifecycleFromProcessed(processed);
+
+    expect(processed).toEqual(processedSecondIncorrectTerminal);
+    expect(processed).toMatchObject({
+      message_id: processedSecondIncorrectTerminal.message_id,
+      assessment_id: processedSecondIncorrectTerminal.assessment_id,
+      attempts_used: 2,
+      attempts_remaining: 0,
+      terminal: true,
+      terminal_failure_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+    expect(lifecycle).toMatchObject({
+      state: 'failed',
+      messageId: processedSecondIncorrectTerminal.message_id,
+      assessmentId: processedSecondIncorrectTerminal.assessment_id,
+      attemptNumber: 2,
+      attemptsUsed: 2,
+      attemptsRemaining: 0,
+      terminal: true,
+      terminalFailureFeedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+    expect(JSON.stringify(processedSecondIncorrectTerminal)).toBe(sourceBefore);
   });
 
   it('keeps deferred processing distinct from a completed answer outcome', () => {

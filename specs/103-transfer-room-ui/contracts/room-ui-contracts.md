@@ -19,7 +19,7 @@ Component 102's browser facade exports exactly these six typed methods. This tab
 
 There is no `capabilities`, no `review_draft`, no `reject_draft`, and no `regenerate_draft` operation. Teacher confirmation is UI-local review state; the only persistence call on the review path is `sendReviewed`. `sendReviewed` carries no expected draft revision and no expected content hash, because no draft row exists.
 
-Component 102 types the successful and failed envelopes (`AssessmentApiEnvelope<T>`, `AssessmentApiError`, `TransferAssessmentServiceOptions`) and owns API compatibility logic and the injectable transport used by tests. Component 103's React adapter consumes only those exported envelopes and maps them into UI states; it must not recreate API operation mapping or treat raw provider output as a DTO.
+Component 102 types and unwraps the successful and failed envelopes (`AssessmentApiEnvelope<T>`, `AssessmentApiError`) and owns API compatibility logic, operation mapping, and the injectable transport used by tests. Component 103's React adapter receives the service's canonical DTO projections and thrown service errors, then maps those into UI states. It does not parse envelopes or recreate API operation mapping, and it never treats raw provider output as a DTO.
 
 ## Private teacher review allowlist
 

@@ -70,6 +70,7 @@ const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void 
 
 describe('RoomContext transfer ingress', () => {
   let room: ReturnType<typeof useRoom> | null;
+  let roomRecord: typeof transferRoom;
   let fetchedMessages: unknown[];
   let messageReadCount: number;
   let deferredMessageFetch: (() => Promise<{ data: unknown[]; error: null }>) | null;
@@ -80,6 +81,7 @@ describe('RoomContext transfer ingress', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     room = null;
+    roomRecord = { ...transferRoom };
     fetchedMessages = [learnerBMessageRow];
     messageReadCount = 0;
     deferredMessageFetch = null;
@@ -125,7 +127,7 @@ describe('RoomContext transfer ingress', () => {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockImplementation(async () => ({ data: { ...transferRoom }, error: null })),
+                single: jest.fn().mockImplementation(async () => ({ data: { ...roomRecord }, error: null })),
               }),
             }),
           }),
@@ -251,6 +253,37 @@ describe('RoomContext transfer ingress', () => {
     expect(ids).toContain(LEARNER_A_MESSAGE_ID);
     expect(ids).toContain(LEARNER_B_MESSAGE_ID);
     expect(ids).toEqual([LEARNER_B_MESSAGE_ID, LEARNER_A_MESSAGE_ID]);
+  });
+
+  it('keeps pre-populated legacy dialogue first through realtime and reconnect merges', async () => {
+    roomRecord = {
+      ...transferRoom,
+      created_at: '2026-09-12T08:00:00.000Z',
+      pre_populated_dialogue: [
+        { message: 'Legacy prompt', role: 'tutor', user_name: 'Tutor' },
+        { message: 'Legacy response', role: 'student', user_name: 'Learner' },
+      ],
+    };
+    await mountRoom();
+
+    await realtimeInsert(learnerAMessageRow);
+    await act(async () => {
+      await room!.joinRoom(TRANSFER_ROOM_ID);
+    });
+
+    expect(room!.messages.map((message) => message.id)).toEqual([
+      `prepop-${TRANSFER_ROOM_ID}-0`,
+      `prepop-${TRANSFER_ROOM_ID}-1`,
+      LEARNER_B_MESSAGE_ID,
+      LEARNER_A_MESSAGE_ID,
+    ]);
+    expect(room!.messages.map((message) => message.content)).toEqual([
+      'Legacy prompt',
+      'Legacy response',
+      learnerBMessageRow.content,
+      learnerAMessageRow.content,
+    ]);
+    expect(new Set(room!.messages.map((message) => message.id)).size).toBe(room!.messages.length);
   });
 
   it('merges the realtime row with its optimistic send replacement', async () => {
