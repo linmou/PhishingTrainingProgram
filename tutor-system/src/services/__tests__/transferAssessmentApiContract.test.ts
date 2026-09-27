@@ -2,6 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import ts from 'typescript';
 import {
   ASSESSMENT_API_ERROR_STATUS,
   ASSESSMENT_API_OPERATIONS,
@@ -14,7 +15,117 @@ import {
 } from '../../types/assessmentApi';
 import { TransferAssessmentService, type ProcessedMessageDTO } from '../transferAssessmentService';
 
+function configuredRpcForwardsResult(source: string): boolean {
+  const file = ts.createSourceFile('index.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const factory = file.statements.find((statement): statement is ts.FunctionDeclaration =>
+    ts.isFunctionDeclaration(statement) && statement.name?.text === 'createDefaultDependencies');
+  const body = factory?.body;
+  if (!body) return false;
+  const guards = body.statements.filter(ts.isIfStatement);
+  if (guards.length !== 1 || guards[0].elseStatement || !ts.isBlock(guards[0].thenStatement) ||
+      guards[0].thenStatement.statements.length !== 1 ||
+      !ts.isReturnStatement(guards[0].thenStatement.statements[0])) return false;
+  const condition = guards[0].expression;
+  const negates = (value: ts.Expression, name: string): boolean =>
+    ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.ExclamationToken &&
+    ts.isIdentifier(value.operand) && value.operand.text === name;
+  if (!ts.isBinaryExpression(condition) || condition.operatorToken.kind !== ts.SyntaxKind.BarBarToken ||
+      !negates(condition.left, 'url') || !negates(condition.right, 'serviceKey')) return false;
+
+  const returns: ts.ReturnStatement[] = [];
+  const collectReturns = (node: ts.Node): void => {
+    if (ts.isArrowFunction(node) || ts.isFunctionExpression(node) ||
+        ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node)) return;
+    if (ts.isReturnStatement(node)) returns.push(node);
+    ts.forEachChild(node, collectReturns);
+  };
+  body.statements.forEach(collectReturns);
+  const lastStatement = body.statements[body.statements.length - 1];
+  if (returns.length !== 2 || returns[0] !== guards[0].thenStatement.statements[0] ||
+      returns[1] !== lastStatement) return false;
+  if (!lastStatement || !ts.isReturnStatement(lastStatement) ||
+      !lastStatement.expression || !ts.isObjectLiteralExpression(lastStatement.expression)) return false;
+  let adminBinding: ts.VariableDeclaration | undefined;
+  for (let index = 0; index < body.statements.length; index += 1) {
+    const statement = body.statements[index];
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (!ts.isIdentifier(declaration.name) || declaration.name.text !== 'admin') continue;
+      if (adminBinding || index <= body.statements.indexOf(guards[0]) ||
+          index >= body.statements.length - 1 ||
+          !(statement.declarationList.flags & ts.NodeFlags.Const)) return false;
+      adminBinding = declaration;
+    }
+  }
+  if (!adminBinding?.initializer || !ts.isCallExpression(adminBinding.initializer)) return false;
+  const clientCall = adminBinding.initializer;
+  if (!ts.isIdentifier(clientCall.expression) || clientCall.expression.text !== 'createClient' ||
+      clientCall.arguments.length < 2 ||
+      !ts.isIdentifier(clientCall.arguments[0]) || clientCall.arguments[0].text !== 'url' ||
+      !ts.isIdentifier(clientCall.arguments[1]) || clientCall.arguments[1].text !== 'serviceKey') return false;
+  const rpc = lastStatement.expression.properties.find((property): property is ts.PropertyAssignment =>
+    ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.text === 'rpc');
+  if (!rpc || !ts.isArrowFunction(rpc.initializer) ||
+      rpc.initializer.parameters.length !== 2 ||
+      rpc.initializer.parameters[0].name.getText(file) !== 'name' ||
+      rpc.initializer.parameters[1].name.getText(file) !== 'args' ||
+      !ts.isBlock(rpc.initializer.body) || rpc.initializer.body.statements.length !== 2) return false;
+
+  const [callStatement, returnStatement] = rpc.initializer.body.statements;
+  if (!ts.isVariableStatement(callStatement) ||
+      !(callStatement.declarationList.flags & ts.NodeFlags.Const) ||
+      callStatement.declarationList.declarations.length !== 1 ||
+      !ts.isReturnStatement(returnStatement) || !returnStatement.expression ||
+      !ts.isObjectLiteralExpression(returnStatement.expression)) return false;
+  const declaration = callStatement.declarationList.declarations[0];
+  if (!ts.isIdentifier(declaration.name) || !declaration.initializer ||
+      !ts.isAwaitExpression(declaration.initializer) ||
+      !ts.isCallExpression(declaration.initializer.expression)) return false;
+  const call = declaration.initializer.expression;
+  if (!ts.isPropertyAccessExpression(call.expression) ||
+      !ts.isIdentifier(call.expression.expression) ||
+      call.expression.expression.text !== 'admin' || call.expression.name.text !== 'rpc' ||
+      call.arguments.length !== 2 ||
+      !ts.isIdentifier(call.arguments[0]) || call.arguments[0].text !== 'name' ||
+      !ts.isIdentifier(call.arguments[1]) || call.arguments[1].text !== 'args') return false;
+
+  const resultName = declaration.name.text;
+  const fields = returnStatement.expression.properties;
+  return fields.length === 2 && ['data', 'error'].every((field, index) => {
+    const property = fields[index];
+    return ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) &&
+      property.name.text === field && ts.isPropertyAccessExpression(property.initializer) &&
+      ts.isIdentifier(property.initializer.expression) &&
+      property.initializer.expression.text === resultName &&
+      property.initializer.name.text === field;
+  });
+}
+
 describe('assessment API contract', () => {
+  it('configured default RPC adapter awaits and returns admin RPC result', () => {
+    const source = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/functions/assessment-api/index.ts'), 'utf8'
+    );
+    const fixture = (adapterBody: string, alternateReturn = '', adminSource = 'createClient(url, serviceKey)') =>
+      `function createDefaultDependencies() {
+      const env = (name) => undefined;
+      const url = 'url';
+      const serviceKey = 'key';
+      if (!url || !serviceKey) { return { featureEnabled: false }; }
+      ${alternateReturn}
+      const admin = ${adminSource};
+      return { rpc: async (name, args) => { ${adapterBody} }, env };
+    }`;
+    const forwards = 'const result = await admin.rpc(name, args); return { data: result.data, error: result.error };';
+    expect(configuredRpcForwardsResult(fixture(forwards))).toBe(true);
+    expect(configuredRpcForwardsResult(fixture(`// ${forwards}\nreturn { data: null, error: null };`))).toBe(false);
+    expect(configuredRpcForwardsResult(fixture(forwards,
+      "if (env('RPC_NOOP')) return { rpc: async () => ({ data: null, error: null }) };"))).toBe(false);
+    expect(configuredRpcForwardsResult(fixture(forwards, '',
+      "env('RPC_NOOP') ? { rpc: async () => ({ data: null, error: null }) } : createClient(url, serviceKey)"))).toBe(false);
+    expect(configuredRpcForwardsResult(source)).toBe(true);
+  });
+
   it('keeps exactly six stable operations and versioned envelopes', () => {
     expect(ASSESSMENT_API_OPERATIONS).toEqual([
       'initialize_checklist', 'post_message', 'analyze_message',

@@ -364,6 +364,7 @@ DECLARE
   v_assessment_id UUID := gen_random_uuid();
   v_key TEXT[];
   v_selection_type TEXT;
+  v_mode TEXT;
 BEGIN
   IF current_user NOT IN ('service_role', 'postgres') THEN
     RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501';
@@ -395,10 +396,72 @@ BEGIN
     );
   END IF;
 
+  SELECT * INTO v_message FROM public.messages
+  WHERE assessment_request_id = p_request_id AND room_id = p_room_id AND user_id = p_actor_id;
+  IF FOUND THEN
+    SELECT * INTO v_room FROM public.rooms WHERE id = p_room_id;
+    RETURN jsonb_build_object(
+      'message', jsonb_build_object(
+        'id', v_message.id, 'room_id', v_message.room_id, 'user_id', v_message.user_id,
+        'content', v_message.content, 'user_role', v_message.user_role,
+        'ai_model_used', v_message.ai_model_used, 'ai_response_time_ms', v_message.ai_response_time_ms,
+        'parent_message_id', v_message.parent_message_id, 'response_mode', v_message.response_mode,
+        'assessment', NULL, 'created_at', v_message.created_at
+      ), 'room', to_jsonb(v_room)
+    );
+  END IF;
+
   SELECT * INTO v_room FROM public.rooms WHERE id = p_room_id FOR UPDATE;
   IF NOT FOUND OR v_room.tutor_id IS DISTINCT FROM p_actor_id THEN
     RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501';
   END IF;
+  v_mode := p_reviewed_payload->'decision'->>'mode';
+  IF v_mode NOT IN ('tutoring', 'guard', 'assessment')
+     OR NULLIF(btrim(p_reviewed_payload->>'response'), '') IS NULL THEN
+    RAISE EXCEPTION 'ITEM_VALIDATION_FAILED' USING ERRCODE = 'P0001';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.session_checklists sc
+    WHERE sc.id = p_checklist_id AND sc.room_id = p_room_id
+      AND sc.student_id = p_student_id AND sc.progress_policy_version = 'transfer_v1'
+      AND sc.is_active = TRUE
+  ) OR NOT EXISTS (
+    SELECT 1 FROM public.messages
+    WHERE id = p_focus_student_message_id AND room_id = p_room_id
+      AND user_id = p_student_id AND user_role = 'student'
+  ) THEN
+    RAISE EXCEPTION 'INVALID_SCOPE' USING ERRCODE = 'P0001';
+  END IF;
+  IF v_mode <> 'assessment' THEN
+    IF p_reviewed_payload->'assessment' IS DISTINCT FROM 'null'::JSONB
+       OR p_reviewed_payload->'decision'->'target_item_id' IS DISTINCT FROM 'null'::JSONB
+       OR p_reviewed_payload->'decision'->>'instruction' = 'transfer_assess' THEN
+      RAISE EXCEPTION 'ITEM_VALIDATION_FAILED' USING ERRCODE = 'P0001';
+    END IF;
+    INSERT INTO public.messages (
+      room_id, user_id, content, user_role, parent_message_id, response_mode, assessment_request_id
+    ) VALUES (
+      p_room_id, p_actor_id, btrim(p_reviewed_payload->>'response'), 'tutor',
+      p_focus_student_message_id, v_mode::tutor_turn_mode, p_request_id
+    ) RETURNING * INTO v_message;
+    UPDATE public.rooms
+    SET active_response_mode = CASE
+          WHEN v_mode = 'guard' THEN 'guard'::tutor_response_mode
+          ELSE 'tutoring'::tutor_response_mode
+        END,
+        mode_changed_at = NOW(), mode_change_source = 'reviewed_response'
+    WHERE id = p_room_id RETURNING * INTO v_room;
+    RETURN jsonb_build_object(
+      'message', jsonb_build_object(
+        'id', v_message.id, 'room_id', v_message.room_id, 'user_id', v_message.user_id,
+        'content', v_message.content, 'user_role', v_message.user_role,
+        'ai_model_used', v_message.ai_model_used, 'ai_response_time_ms', v_message.ai_response_time_ms,
+        'parent_message_id', v_message.parent_message_id, 'response_mode', v_message.response_mode,
+        'assessment', NULL, 'created_at', v_message.created_at
+      ), 'room', to_jsonb(v_room)
+    );
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM public.session_checklists sc
     JOIN public.checklist_items ci ON ci.checklist_id = sc.id
@@ -419,8 +482,7 @@ BEGIN
     RAISE EXCEPTION 'ASSESSMENT_ALREADY_OPEN' USING ERRCODE = 'P0001';
   END IF;
 
-  IF p_reviewed_payload->'decision'->>'mode' <> 'assessment'
-     OR p_reviewed_payload->'decision'->>'instruction' <> 'transfer_assess'
+  IF p_reviewed_payload->'decision'->>'instruction' <> 'transfer_assess'
      OR p_reviewed_payload->'decision'->>'target_item_id' IS DISTINCT FROM p_item_id::TEXT
      OR jsonb_typeof(p_reviewed_payload->'assessment') <> 'object' THEN
     RAISE EXCEPTION 'ITEM_VALIDATION_FAILED' USING ERRCODE = 'P0001';
@@ -438,11 +500,11 @@ BEGIN
 
   INSERT INTO public.messages (
     room_id, user_id, content, user_role, parent_message_id, response_mode,
-    assessment_id, assessment_student_id, assessment_options,
+    assessment_id, assessment_student_id, assessment_request_id, assessment_options,
     assessment_selection_type, assessment_lifecycle
   ) VALUES (
     p_room_id, p_actor_id, btrim(v_assessment->>'stem'), 'tutor',
-    p_focus_student_message_id, 'assessment', v_assessment_id, p_student_id,
+    p_focus_student_message_id, 'assessment', v_assessment_id, p_student_id, p_request_id,
     v_assessment->'options', v_selection_type, 'delivered'
   ) RETURNING * INTO v_message;
 
@@ -497,6 +559,7 @@ SET search_path = public, private
 AS $$
 DECLARE
   v_existing public.messages%ROWTYPE;
+  v_user public.users%ROWTYPE;
   v_assessment private.transfer_assessments%ROWTYPE;
   v_question public.messages%ROWTYPE;
   v_message public.messages%ROWTYPE;
@@ -510,6 +573,31 @@ BEGIN
   IF FOUND THEN
     RETURN jsonb_build_object('message', to_jsonb(v_existing), 'analysis_pending', TRUE, 'request_id', p_request_id);
   END IF;
+  SELECT * INTO v_user FROM public.users WHERE id = p_actor_id;
+  IF v_user.id IS NULL OR v_user.current_role IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.rooms WHERE id = p_room_id AND tutor_id = p_actor_id
+    UNION ALL
+    SELECT 1 FROM public.sessions
+    WHERE room_id = p_room_id AND student_id = p_actor_id AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'FORBIDDEN' USING ERRCODE = '42501';
+  END IF;
+  IF p_assessment_id IS NULL THEN
+    IF NULLIF(btrim(p_content), '') IS NULL THEN
+      RAISE EXCEPTION 'ITEM_VALIDATION_FAILED' USING ERRCODE = 'P0001';
+    END IF;
+    INSERT INTO public.messages (
+      room_id, user_id, content, user_role, parent_message_id, assessment_request_id
+    ) VALUES (
+      p_room_id, p_actor_id, btrim(p_content), v_user.current_role,
+      p_parent_message_id, p_request_id
+    ) RETURNING * INTO v_message;
+    RETURN jsonb_build_object(
+      'message', to_jsonb(v_message),
+      'analysis_pending', v_user.current_role = 'student',
+      'request_id', p_request_id
+    );
+  END IF;
   SELECT * INTO v_assessment FROM private.transfer_assessments WHERE id = p_assessment_id;
   SELECT * INTO v_question FROM public.messages WHERE id = v_assessment.question_message_id;
   IF NOT FOUND OR v_assessment.lifecycle <> 'open' OR v_assessment.room_id <> p_room_id
@@ -518,7 +606,7 @@ BEGIN
   END IF;
   SELECT ARRAY(SELECT DISTINCT upper(value) FROM unnest(p_selected_option_ids) value ORDER BY upper(value))
     INTO v_selected;
-  IF cardinality(v_selected) = 0
+  IF p_selected_option_ids IS NULL OR cardinality(v_selected) = 0
      OR EXISTS (SELECT 1 FROM unnest(v_selected) value WHERE value NOT IN ('A', 'B', 'C', 'D'))
      OR EXISTS (
        SELECT 1 FROM unnest(v_selected) value

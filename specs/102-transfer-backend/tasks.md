@@ -154,7 +154,7 @@
 - [ ] T044 Compare hosted generated `tutor-system/src/types/database.ts` with `specs/102-transfer-backend/contracts/rpc-contract.md`; record any mismatch as blocked rather than adapting silently (FR-021, FR-023).
 - [ ] T045 Verify `TRANSFER_ASSESSMENT_ENABLED=false`, missing verifier/model fail closed, rollback preserves evidence, and no browser grader/provider fallback remains; record evidence in `specs/102-transfer-backend/implementation-evidence.md` (FR-003, FR-019, FR-022-FR-023).
 - [x] T046 Review and update `tutor-system/README.md`, `tutor-system/claude_docs/database-schema.md`, `tutor-system/claude_docs/supabase-service.md`, and `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md`; add `tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_22_transfer_backend.md` with intent, date, commands, results, and commit reference (FR-023).
-- [ ] T047 Provide the integration owner with the clean component commit, exact verification commands/results/logs, changed public contracts, hosted/provider prerequisites, and 101->102 / 102->103 / 102->104 handoff risks; do not edit `specs/orchestration/**` (SC-010).
+- [x] T047 Provide the integration owner with the clean component commit, exact verification commands/results/logs, changed public contracts, hosted/provider prerequisites, and 101->102 / 102->103 / 102->104 handoff risks; do not edit `specs/orchestration/**` (SC-010).
 
 ## Dependencies and Execution Order
 
