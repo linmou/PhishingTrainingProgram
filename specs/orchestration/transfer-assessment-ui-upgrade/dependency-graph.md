@@ -133,7 +133,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 ## Integration Test Plan
 
 - Integration tests are integration-owned under `tests/integration/`; each handoff must create upstream output and pass that exact object to the consumer without a synthetic replacement. The E01 Deno handler test uses `npx --yes deno test --config tutor-system/deno.json --cached-only --allow-env --allow-net --allow-read --allow-run --unstable-sloppy-imports tests/integration/transfer-domain-backend-handler.test.ts`.
-- End-to-end coverage is integration-owned under `tests/e2e/transfer-assessment-two-attempt.test.mjs` and drives teacher review, both learner attempt paths, reload, replay, and target routing through the integrated application.
+- The current local service E2E aggregate includes `tests/e2e/transfer-assessment.test.mjs`; it uses mock transport and does not establish hosted or browser behavior. The planned two-attempt reload/replay browser flow remains an open release gate.
 - Smoke command and exact test commands will be added after the component quickstarts are promoted; all results, exit codes, paths, and tested SHAs are recorded in `integration-review.md`.
 
 ## Integration Ownership
@@ -142,6 +142,6 @@ The main integration agent owns reconciliation, the authoritative post-planning 
 
 ## Current Wave Status
 
-- Historical waves 101-104 are integrated at `c84743b`; component 102 has two later unmerged commits. The 2026-09-26 correction cycle and its owner-routed queue are in `integration-review.md`.
-- The current schema-v2 manifest records only three of five declared edges. Its synthetic boundaries and the missing 101->103 and 101->104 handoffs prevent a new green promotion claim. The expanded 103 quickstart gate currently fails one stale test import. No new downstream broadcast is authorized until the reopened gates pass.
+- Latest tested code SHA: `4b8cf5457c16849fc2abb168c3d269c3e6e874ed`. E01 now has a handler-level handoff test that uses the real 101 resolver through the real 102 Edge handler and captures the actual persistence RPC arguments. Five Deno cases pass; the RPC response is simulated, so hosted SQL behavior remains a separate gate.
+- The coverage manifest is explicitly `blocked`: E01 is the only completed handoff and E02-E05 remain open. It is not eligible for the machine coverage transition or promotion. The UI branch has two unmerged correction commits; evaluation has one unmerged correction commit. Current heads and evidence are in `integration-review.md`.
 - Component 105 remains outside this initiative.

@@ -1,50 +1,39 @@
 {
   "schema_version": 2,
-  "status": "passed",
-  "tested_integration_sha": "0079e585c18c5e4fc672d7882e90b7bc630b8e41",
+  "status": "blocked",
+  "tested_integration_sha": "4b8cf5457c16849fc2abb168c3d269c3e6e874ed",
   "edge_handoffs": [
     {
       "edge_id": "101->102",
       "producer": "101-transfer-domain",
       "consumer": "102-transfer-backend",
-      "test_path": "tests/integration/transfer-domain-backend.test.mjs",
-      "passed": true,
-      "upstream_output_consumed": true,
-      "synthetic_boundary_replacement": false
-    },
-    {
-      "edge_id": "102->103",
-      "producer": "102-transfer-backend",
-      "consumer": "103-transfer-room-ui",
-      "test_path": "tests/integration/transfer-backend-room-ui.test.mjs",
-      "passed": true,
-      "upstream_output_consumed": true,
-      "synthetic_boundary_replacement": false
-    },
-    {
-      "edge_id": "102->104",
-      "producer": "102-transfer-backend",
-      "consumer": "104-transfer-evaluation",
-      "test_path": "tests/integration/transfer-backend-evaluation.test.mjs",
+      "test_path": "tests/integration/transfer-domain-backend-handler.test.ts",
       "passed": true,
       "upstream_output_consumed": true,
       "synthetic_boundary_replacement": false
     }
   ],
+  "open_edges": [
+    { "edge_id": "101->103", "producer": "101-transfer-domain", "consumer": "103-transfer-room-ui", "reason": "No test passes a real 101 lifecycle result through the 102 handler into the 103 view mapping." },
+    { "edge_id": "102->103", "producer": "102-transfer-backend", "consumer": "103-transfer-room-ui", "reason": "Current test supplies a hand-authored transport payload and does not run the Edge handler or rendered room." },
+    { "edge_id": "101->104", "producer": "101-transfer-domain", "consumer": "104-transfer-evaluation", "reason": "No integration test sends a real 101 attempt sequence to the 104 checker." },
+    { "edge_id": "102->104", "producer": "102-transfer-backend", "consumer": "104-transfer-evaluation", "reason": "Current test does not consume the real 102 handler result or terminal disclosure projection." }
+  ],
   "integration": {
     "tests": [
       { "path": "tests/integration/transfer-domain-backend.test.mjs", "added": true, "passed": true },
+      { "path": "tests/integration/transfer-domain-backend-handler.test.ts", "added": true, "passed": true },
       { "path": "tests/integration/transfer-backend-room-ui.test.mjs", "added": true, "passed": true },
       { "path": "tests/integration/transfer-backend-evaluation.test.mjs", "added": true, "passed": true }
     ],
-    "command": "REACT_APP_SUPABASE_URL=http://localhost:54321 REACT_APP_SUPABASE_ANON_KEY=test-anon-key node --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs tests/integration/transfer-backend-room-ui.test.mjs tests/integration/transfer-backend-evaluation.test.mjs",
+    "command": "npx --yes deno test --config tutor-system/deno.json --cached-only --allow-env --allow-net --allow-read --allow-run --unstable-sloppy-imports tests/integration/transfer-domain-backend-handler.test.ts\nenv REACT_APP_SUPABASE_URL=http://localhost:54321 REACT_APP_SUPABASE_ANON_KEY=test-anon-key node --experimental-strip-types --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs tests/integration/transfer-backend-room-ui.test.mjs tests/integration/transfer-backend-evaluation.test.mjs tests/e2e/transfer-assessment.test.mjs",
     "exit_code": 0
   },
   "e2e": {
     "tests": [
       { "path": "tests/e2e/transfer-assessment.test.mjs", "added": true, "passed": true }
     ],
-    "command": "REACT_APP_SUPABASE_URL=http://localhost:54321 REACT_APP_SUPABASE_ANON_KEY=test-anon-key node --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs",
+    "command": "env REACT_APP_SUPABASE_URL=http://localhost:54321 REACT_APP_SUPABASE_ANON_KEY=test-anon-key node --experimental-strip-types --import ./tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs tests/integration/transfer-backend-room-ui.test.mjs tests/integration/transfer-backend-evaluation.test.mjs tests/e2e/transfer-assessment.test.mjs",
     "exit_code": 0
   }
 }
