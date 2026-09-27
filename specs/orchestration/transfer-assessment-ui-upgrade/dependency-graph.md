@@ -39,7 +39,7 @@ Intent: Control component ownership, contracts, dependencies, integration edges,
 ### 103 Transfer Room UI
 
 - Branch/worktree: `103-transfer-room-ui`; `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-room-ui`
-- Stable owner: `owner-103-ui`
+- Stable owner: `/root/owner_103_luna` (replacement handoff recorded in `integration-review.md`).
 - Responsibility: radio/checkbox submission, disabled submit state, server-result feedback, teacher explanation editor, exact-once option rendering, and participant-local folding.
 - Public contracts: consume 101/102 exports unchanged; emit selected option IDs and assessment identity; retain only presentation state locally.
 - Shared ownership: transfer React components, room UI adapter/context/pages, UI fixtures and React tests.
@@ -73,7 +73,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Planning wave: all four stable owners may plan concurrently; no implementation is allowed.
 - Implementation wave 1: 101.
 - Implementation wave 2: 102 after a green 101 promotion SHA.
-- Implementation wave 3: 103 and 104 after green 101 and 102 promotion SHAs, scheduled within TDD monitor/reviewer capacity.
+- Implementation wave 3: 103 and 104 after green 101 and 102 promotion SHAs, scheduled within owner capacity. The user's current instruction excludes the strict TDD skill.
 
 ## Reconciled Contracts
 
@@ -138,12 +138,12 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 
 ## Integration Ownership
 
-The main integration agent owns reconciliation, the authoritative post-planning DAG, edge work packets, integration glue, `tests/integration/**`, `tests/e2e/**`, coverage manifests, serial merges, and promotion records. The dirty `105-transfer-release` worktree is outside this initiative and remains untouched.
+The main integration agent owns reconciliation, the authoritative post-planning DAG, edge work packets, integration glue, `tests/integration/**`, `tests/e2e/**`, coverage manifests, serial merges, and promotion records. The `105-transfer-release` worktree is outside this initiative and remains untouched.
 
 ## Current Wave Status
 
-- Latest tested code SHA: `9e00b1f210dcef94024e483143f4e705b3f32dc3`. E01-E03 have real local handoff coverage. The 103 correction passes the delivered assessment ID into answer processing and routes ordinary student chat directly to evidence analysis.
+- Latest tested integrated code SHA: `ba22486aa722260410fd62392714859dd45e3e05`. E01-E03 local handoffs passed there. Component 103 head `68a4b5410b1e1bcea9402b4a3dcfd866cc10a842` contains this 102-integrated state plus its own unmerged UI correction, and passed its focused UI, E01-E03, Node integration/mock E2E, and build checks.
 - The schema-v2 coverage manifest remains `blocked`: E01-E03 are completed handoffs; E04 and E05 remain open. Component 104's correction `d821333` is still unmerged; 105 remains outside this initiative.
-- At component branch `089288d`, 102 has 47/47 checked tasks under the revised local PostgreSQL 17 gate. Its committed artifacts have not been merged into integration. Deployed Supabase authorization, generated-type parity, live provider, browser bundle privacy, and release acceptance remain pending; the checked component tasks do not satisfy those gates.
+- Component 102 `089288d` is merged into integration at `ba22486`; its 47/47 local PostgreSQL 17 tasks are checked. Component 103 has 19/48 checked tasks at `68a4b54` and 29 open. Deployed Supabase authorization, generated-type parity, live provider, browser bundle privacy, and release acceptance remain pending; checked component tasks do not satisfy those gates.
 - Merged-SHA verification: real 101/102/103 Deno handoffs passed 7/7; the existing integration and mock E2E aggregate passed 25/25; the production build completed with existing ESLint warnings. The RPC responses are simulated, so hosted SQL/RLS/transaction behavior remains unverified. Deterministic evaluation remains 94/106 due to the recorded production prompt-hash mismatch; live evaluation and browser release evidence are also open.
 - The last fully compliant green promotion SHA remains unknown. Component 105 remains outside this initiative.
