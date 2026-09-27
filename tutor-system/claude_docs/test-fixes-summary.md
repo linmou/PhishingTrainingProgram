@@ -1,8 +1,17 @@
-# RoomContext Test Fixes Summary
+# Legacy UI Test Fixes Summary
 
-Intent: Document the current RoomContext test fixtures and the contracts they verify.
+Intent: Document current test fixtures for legacy UI suites and the contracts they verify.
 
-Updated: 2026-09-27 (test commit `5c9ce6c`)
+Updated: 2026-09-27
+
+## ImageUpload Fixture
+
+- Query the hidden file input from the upload component instead of expecting it to be a button.
+- Use the installed `user-event` v13 API to upload files and activate controls.
+- Reinitialize `URL.createObjectURL` and `URL.revokeObjectURL` after mock resets so preview and cancellation checks exercise the component reliably.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/components/__tests__/ImageUpload.test.tsx` (1 suite, 16 tests passed).
+
+The four-directory regression was not rerun for this focused batch.
 
 ## Current Contract
 

@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-// Note: Using fireEvent instead of userEvent for compatibility
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import ImageUpload from '../ImageUpload';
 import { validateImageFile, uploadAvatarImage, uploadTutorImage } from '../../services/imageUpload';
 
@@ -29,9 +29,22 @@ describe('ImageUpload Component', () => {
     const mockFile = new File(['fake content'], 'test.jpg', { type: 'image/jpeg' });
     const mockOnUploadSuccess = jest.fn();
     const mockOnUploadError = jest.fn();
+    const getFileInput = () => {
+        const fileInput = screen.getByText(/Click to select (avatar|image)/).closest('.image-upload')
+            ?.querySelector<HTMLInputElement>('input[type="file"]');
+        if (!fileInput) throw new Error('ImageUpload should render a file input');
+        return fileInput;
+    };
+    const getDropZone = () => {
+        const dropZone = screen.getByText(/Click to select avatar/).parentElement;
+        if (!dropZone) throw new Error('ImageUpload should render a drop zone');
+        return dropZone;
+    };
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (URL.createObjectURL as jest.Mock).mockReturnValue('blob:mock-url');
+        (URL.revokeObjectURL as jest.Mock).mockImplementation(() => undefined);
         
         // Default successful validation
         mockValidateImageFile.mockResolvedValue({
@@ -83,17 +96,14 @@ describe('ImageUpload Component', () => {
             );
 
             // Find and interact with file input
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            expect(fileInput).toBeInTheDocument();
+            const fileInput = getFileInput();
 
-            if (fileInput) {
-                // Simulate file selection
-                Object.defineProperty(fileInput, 'files', {
-                    value: [mockFile],
-                    writable: false,
-                });
-                fireEvent.change(fileInput);
-            }
+            // Simulate file selection
+            Object.defineProperty(fileInput, 'files', {
+                value: [mockFile],
+                writable: false,
+            });
+            fireEvent.change(fileInput);
 
             await waitFor(() => {
                 expect(mockValidateImageFile).toHaveBeenCalledWith(mockFile, undefined);
@@ -106,8 +116,6 @@ describe('ImageUpload Component', () => {
         });
 
         it('should handle successful avatar upload', async () => {
-            const user = userEvent.setup();
-            
             mockUploadAvatarImage.mockResolvedValue({
                 success: true,
                 avatarUrl: 'https://example.com/new-avatar.jpg'
@@ -122,10 +130,8 @@ describe('ImageUpload Component', () => {
             );
 
             // Select file
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await userEvent.upload(fileInput, mockFile);
 
             // Wait for validation and upload button
             await waitFor(() => {
@@ -134,7 +140,7 @@ describe('ImageUpload Component', () => {
 
             // Click upload
             const uploadButton = screen.getByText('Upload Avatar');
-            await user.click(uploadButton);
+            await userEvent.click(uploadButton);
 
             await waitFor(() => {
                 expect(mockUploadAvatarImage).toHaveBeenCalledWith(mockFile);
@@ -172,7 +178,6 @@ describe('ImageUpload Component', () => {
         });
 
         it('should handle successful tutor image upload', async () => {
-            const user = userEvent.setup();
             const mockTutorImage = {
                 id: 'image-id',
                 tutor_id: 'tutor-id',
@@ -198,10 +203,8 @@ describe('ImageUpload Component', () => {
             );
 
             // Select file
-            const fileInput = screen.getByRole('button', { name: /Click to select image/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await userEvent.upload(fileInput, mockFile);
 
             // Wait for upload button
             await waitFor(() => {
@@ -210,7 +213,7 @@ describe('ImageUpload Component', () => {
 
             // Click upload
             const uploadButton = screen.getByText('Upload Image');
-            await user.click(uploadButton);
+            await userEvent.click(uploadButton);
 
             await waitFor(() => {
                 expect(mockUploadTutorImage).toHaveBeenCalledWith(mockFile, 'test-room-id');
@@ -224,8 +227,6 @@ describe('ImageUpload Component', () => {
 
     describe('File Validation', () => {
         it('should display validation errors', async () => {
-            const user = userEvent.setup();
-            
             mockValidateImageFile.mockResolvedValue({
                 isValid: false,
                 errors: ['File size must be less than 5MB', 'File must be an image'],
@@ -242,10 +243,8 @@ describe('ImageUpload Component', () => {
             );
 
             // Select file
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await userEvent.upload(fileInput, mockFile);
 
             await waitFor(() => {
                 expect(screen.getByText('Please fix the following issues:')).toBeInTheDocument();
@@ -258,7 +257,6 @@ describe('ImageUpload Component', () => {
         });
 
         it('should validate with dimension constraints', async () => {
-            const user = userEvent.setup();
             const dimensionConstraints = { maxWidth: 1920, maxHeight: 1080 };
 
             render(
@@ -269,10 +267,8 @@ describe('ImageUpload Component', () => {
                 />
             );
 
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await userEvent.upload(fileInput, mockFile);
 
             await waitFor(() => {
                 expect(mockValidateImageFile).toHaveBeenCalledWith(mockFile, dimensionConstraints);
@@ -289,7 +285,7 @@ describe('ImageUpload Component', () => {
                 />
             );
 
-            const dropZone = screen.getByRole('button', { name: /Click to select avatar/ });
+            const dropZone = getDropZone();
 
             // Test drag over
             fireEvent.dragOver(dropZone);
@@ -307,7 +303,7 @@ describe('ImageUpload Component', () => {
                 />
             );
 
-            const dropZone = screen.getByRole('button', { name: /Click to select avatar/ });
+            const dropZone = getDropZone();
 
             // Create drag event with files
             const files = [mockFile];
@@ -326,8 +322,6 @@ describe('ImageUpload Component', () => {
 
     describe('Upload Progress and States', () => {
         it('should show upload progress during upload', async () => {
-            const user = userEvent.setup();
-            
             // Mock slow upload to test progress
             mockUploadAvatarImage.mockImplementation(() => 
                 new Promise(resolve => 
@@ -343,17 +337,15 @@ describe('ImageUpload Component', () => {
             );
 
             // Select file and upload
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await userEvent.upload(fileInput, mockFile);
 
             await waitFor(() => {
                 expect(screen.getByText('Upload Avatar')).toBeInTheDocument();
             });
 
             const uploadButton = screen.getByText('Upload Avatar');
-            await user.click(uploadButton);
+            await userEvent.click(uploadButton);
 
             // Should show uploading state
             await waitFor(() => {
@@ -362,8 +354,6 @@ describe('ImageUpload Component', () => {
         });
 
         it('should handle upload errors', async () => {
-            const user = userEvent.setup();
-            
             mockUploadAvatarImage.mockResolvedValue({
                 success: false,
                 error: 'Upload failed: Network error'
@@ -378,17 +368,15 @@ describe('ImageUpload Component', () => {
             );
 
             // Select file and upload
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await userEvent.upload(fileInput, mockFile);
 
             await waitFor(() => {
                 expect(screen.getByText('Upload Avatar')).toBeInTheDocument();
             });
 
             const uploadButton = screen.getByText('Upload Avatar');
-            await user.click(uploadButton);
+            await userEvent.click(uploadButton);
 
             await waitFor(() => {
                 expect(screen.getByText('Upload failed: Upload failed: Network error')).toBeInTheDocument();
@@ -407,13 +395,11 @@ describe('ImageUpload Component', () => {
                 />
             );
 
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
+            const fileInput = getFileInput();
             expect(fileInput).toBeDisabled();
         });
 
         it('should handle cancel action', async () => {
-            const user = userEvent.setup();
-
             render(
                 <ImageUpload
                     uploadType="avatar"
@@ -423,18 +409,21 @@ describe('ImageUpload Component', () => {
             );
 
             // Select file
-            const fileInput = screen.getByRole('button', { name: /Click to select avatar/ }).parentElement?.querySelector('input[type="file"]');
-            if (fileInput) {
-                await user.upload(fileInput as HTMLInputElement, mockFile);
-            }
+            const fileInput = getFileInput();
+            await act(async () => {
+                await userEvent.upload(fileInput, mockFile);
+                await Promise.resolve();
+            });
 
             await waitFor(() => {
                 expect(screen.getByText('Cancel')).toBeInTheDocument();
+                expect(URL.createObjectURL).toHaveBeenCalledWith(mockFile);
+                expect(screen.getByAltText('Preview')).toBeInTheDocument();
             });
 
             // Click cancel
             const cancelButton = screen.getByText('Cancel');
-            await user.click(cancelButton);
+            await userEvent.click(cancelButton);
 
             // Should reset to initial state
             await waitFor(() => {
