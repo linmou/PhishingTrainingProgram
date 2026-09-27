@@ -127,10 +127,11 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Producer output / consumer input: 102's request-builder identity, provider configuration reference, DTO projection, and reviewed explanation provenance feed 104 parity, disclosure, and quality checks.
 - Invariants: no copied prompt or provider secret; target/judge configuration matches the approved required values; only failed second-attempt projection has key/explanation.
 - Integration glue: 104's thin adapter consumes the real 102 export and records hashes.
-- Handoff test: `tests/integration/transfer-backend-evaluation-two-attempt.test.mjs` uses 102 output from the same run as 104 input.
+- Handoff test: `tests/integration/transfer-backend-room-ui-handler.test.ts` sends real 102 handler/service retry and terminal-failure DTOs, with 102's public assessment projection, into 104's `checkProcessedMessageContract` in the same run. The older `transfer-backend-evaluation.test.mjs` separately checks E05 request parity and does not replace this DTO handoff.
 - E2E/smoke: parity, deterministic disclosure, and manifest validation; live calibration remains a separately recorded gate.
 - Producer gate (102): production request, provider configuration, and disclosure contracts pass. Consumer gate (104): real-output handoff and deterministic evaluation tests pass; missing live evidence remains blocking rather than passed.
 - Runtime dependency incident (2026-09-27): isolated combined checkout `7c1dcea` found that 104's pinned full Edge Function source hash predates the latest integrated 102 source. The 104 offline gate stops at request parity despite an unchanged builder hash and no diff in the prompt constant. Reconcile the pinned source identity with the actual integrated 102 revision, then rerun the offline gate and real E05 handler-result handoff before 104 merge or promotion. The historical failure and ownership are in `integration-review.md`.
+- Isolated recovery candidate `6c169d5` pins the current full Edge source hash, retains the strict parity blocker, and records the unchanged prompt-text hash. Its E04 and E05 handoffs and offline gate pass; the source component branch and integration coverage manifest remain blocked pending normal merge prerequisites and live evidence.
 
 ## Integration Test Plan
 
