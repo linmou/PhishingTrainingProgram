@@ -44,7 +44,8 @@ CI=true npx react-scripts test --watchAll=false --runInBand --runTestsByPath \
   src/contexts/__tests__/roomExportBuilder.transfer.test.ts \
   src/pages/__tests__/RoomPagePost.transferDraft.test.tsx \
   src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx \
-  src/pages/__tests__/RoomPagePost.transferDecision.test.tsx
+  src/pages/__tests__/RoomPagePost.transferDecision.test.tsx \
+  src/__tests__/multi_agent_room_playback.e2e.test.tsx
 CI=true npm run test:regression -- --runInBand
 npx tsc --noEmit
 npm run build
@@ -69,6 +70,7 @@ The focused tests must cover:
 - stem and options rendered exactly once, expanded-by-default messages, accessible participant-local folding, and preserved selection/result state while collapsed;
 - owner-scoped progress views, legacy/transfer separation, and public/private exports;
 - structured downstream decision consumption rather than copied suggestion text.
+- legacy Multi-agent draft review, scheduled message playback, delayed pair reveal, and send gating until playback completes.
 
 ## Deferred gates
 
