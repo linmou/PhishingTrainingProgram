@@ -106,11 +106,11 @@ passed|failed|cancelled|legacy_incomplete + submission -> no mutation
 ## Lock and Transaction Order
 
 1. Resolve verified principal and authorize room/learner outside the RPC body in the Edge Function.
-2. Inside the service-role RPC, lock room, transfer checklist/item, and private assessment in that order.
-3. Check request and answer-message idempotency.
-4. Validate public answer scope and normalized selected IDs against public options.
-5. Insert the next attempt and grade against the private key.
-6. For terminal outcomes, apply the learning event, evidence, progress, and actual history before marking the assessment terminal.
+2. Read the private processing context and resolve the stored answer with component 101 inside the trusted Edge handler.
+3. The commit RPC checks request and answer-message idempotency, then locks room, transfer checklist/item, and private assessment in that order.
+4. Compare the expected count/resolution with the locked state and validate the stored answer scope and selected IDs.
+5. Allocate the next attempt from the trusted resolver outcome, bounded to two; on a stale snapshot, reread and rerun the resolver.
+6. For terminal outcomes, apply the learning event, evidence, progress, and actual history before marking the assessment terminal. A rejected transition rolls back the whole call.
 7. Return an allowlisted result only after commit. A committed second failure may disclose terminal feedback even when its learning event is explicitly `deferred` by Guard; rollback exposes no terminal feedback.
 
 ## Migration Reconciliation

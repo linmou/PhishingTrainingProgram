@@ -7,7 +7,7 @@
 
 ## Summary
 
-Replace the browser-only transfer service with a thin trusted-API facade. Restore the `assessment-api` Edge Function, move generation and grading behind its verified-principal boundary, and add one forward migration that creates private delivered-assessment, append-only attempt, and provider-attempt audit rows. Public tutor messages retain only the assessment identity, target `student_id`, stem, ordered options, selection type, and lifecycle identity. A row-locked versioned grading RPC enforces two attempts, atomically applies the component-101 terminal transition, and releases key/explanation only for terminal second failure.
+Replace the browser-only transfer service with a thin trusted-API facade. Restore the `assessment-api` Edge Function, move generation and component-101 answer resolution behind its verified-principal boundary, and add one forward migration that creates private delivered-assessment, append-only attempt, and provider-attempt audit rows. Public tutor messages retain only the assessment identity, target `student_id`, stem, ordered options, selection type, and lifecycle identity. A row-locked versioned commit RPC enforces two attempts, atomically applies the resolved terminal transition, and releases key/explanation only for terminal second failure.
 
 ## Technical Context
 
@@ -128,7 +128,7 @@ tutor-system/
 | Existing public `assessment_key` values leak | Forward migration moves any recoverable key into a private legacy-incomplete row, clears/drops the public key column, and never fabricates an explanation |
 | Two tabs spend both attempts | Row-lock the private assessment; serialize distinct answer messages and expose the resulting authoritative count |
 | Duplicate transport consumes attempts | Unique request and answer-message identities return the stored result |
-| Domain and SQL grading drift | Execute the same component-101 golden matrix against pure domain and hosted RPC results |
+| Resolver and persisted outcome drift | Run the real component-101 resolver through the Edge handler into the commit RPC, including a stale-snapshot reread; compare stored attempt, event, progress, and history with the resolver result |
 | Private feedback leaks through generic projection | Allowlist DTOs and scan public rows, realtime, logs, errors, exports, and build artifacts |
 | Missing verifier/provider makes an unsafe fallback attractive | Return stable disabled/configuration errors; no browser grader, dummy provider output, or default model |
 | Archived migration state differs from hosted schema | Inspect hosted schema first, apply one forward reconciliation migration, regenerate types, and record mismatch as blocked |

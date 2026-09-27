@@ -19,10 +19,12 @@ FROM private.transfer_assessments a
 JOIN public.messages m ON m.assessment_id = a.id
 WHERE a.delivery_request_id = CASE :'scenario'
     WHEN 'wrong_wrong' THEN 'f1020000-0000-4000-8000-000000000115'::UUID
-    WHEN 'correct_wrong' THEN 'f1020000-0000-4000-8000-000000000125'::UUID END
+    WHEN 'correct_wrong' THEN 'f1020000-0000-4000-8000-000000000125'::UUID
+    WHEN 'wrong_correct' THEN 'f1020000-0000-4000-8000-000000000135'::UUID END
   AND m.assessment_request_id = CASE :'scenario'
     WHEN 'wrong_wrong' THEN 'f1020000-0000-4000-8000-000000000116'::UUID
-    WHEN 'correct_wrong' THEN 'f1020000-0000-4000-8000-000000000126'::UUID END
+    WHEN 'correct_wrong' THEN 'f1020000-0000-4000-8000-000000000126'::UUID
+    WHEN 'wrong_correct' THEN 'f1020000-0000-4000-8000-000000000136'::UUID END
 \gset
 
 \if :first_ok

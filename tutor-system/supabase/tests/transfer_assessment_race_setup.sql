@@ -34,7 +34,15 @@ BEGIN
         'f1020000-0000-4000-8000-000000000124'::UUID,
         'f1020000-0000-4000-8000-000000000125'::UUID,
         'f1020000-0000-4000-8000-000000000126'::UUID,
-        'f1020000-0000-4000-8000-000000000127'::UUID)
+        'f1020000-0000-4000-8000-000000000127'::UUID),
+      ('wrong_correct',
+        'f1020000-0000-4000-8000-000000000131'::UUID,
+        'f1020000-0000-4000-8000-000000000132'::UUID,
+        'f1020000-0000-4000-8000-000000000133'::UUID,
+        'f1020000-0000-4000-8000-000000000134'::UUID,
+        'f1020000-0000-4000-8000-000000000135'::UUID,
+        'f1020000-0000-4000-8000-000000000136'::UUID,
+        'f1020000-0000-4000-8000-000000000137'::UUID)
     ) AS cases(name, room_id, checklist_id, item_id, focus_id, delivery_id, answer_a_id, answer_b_id)
   LOOP
     INSERT INTO public.rooms(id, tutor_id, title)
@@ -96,7 +104,9 @@ BEGIN
       'f1020000-0000-4000-8000-000000000102', v_case.answer_a_id
     );
     PERFORM public.post_assessment_message_v2(
-      v_case.room_id, 'A', v_question, v_assessment, ARRAY['A'],
+      v_case.room_id, CASE WHEN v_case.name = 'wrong_correct' THEN 'B' ELSE 'A' END,
+      v_question, v_assessment,
+      CASE WHEN v_case.name = 'wrong_correct' THEN ARRAY['B'] ELSE ARRAY['A'] END,
       'f1020000-0000-4000-8000-000000000102', v_case.answer_b_id
     );
   END LOOP;
