@@ -935,6 +935,7 @@
     color: #647181;
     font-size: 14px;
     line-height: 1.45;
+    overflow-wrap: anywhere;
 }
 
 .assessment-draft-editor__badge {
@@ -952,6 +953,7 @@
     display: grid;
     gap: 22px;
     padding: 20px;
+    min-width: 0;
 }
 
 .assessment-draft-editor__field {

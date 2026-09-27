@@ -51,7 +51,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - [X] T014 [US1] Update `tutor-system/src/contexts/transferAssessmentUiAdapter.ts` to map component 102's `prepareTurn` projection and thrown `sendReviewed` failures into ready, dirty, superseded, validation, unavailable, unauthorized, and retryable review states without recreating operation mapping or exposing raw provider output. Duplicate processing remains an answer-lifecycle state.
 - [X] T015 [US1] Update `tutor-system/src/contexts/RoomContext.tsx` to retain selected learner/message/checklist/item focus (with `itemId` kept `string | null`), send the confirmed decision with its scope identity, merge persisted send results once, and keep progress untouched.
 - [X] T016 [US1] Update `tutor-system/src/pages/RoomPagePost.tsx` to show the structured teacher editor only for a tutor with an authorized transfer candidate, route reconfirm/send/discard actions, and preserve the legacy `AISuggestionBox` path for legacy rooms.
-- [ ] T017 [US1] Update `tutor-system/src/components/AISuggestionBox.tsx` only where needed to avoid treating a structured transfer candidate as copy-only text or as a room-mode toggle; preserve existing non-transfer quick-adjust behavior.
+- [X] T017 [US1] Update `tutor-system/src/components/AISuggestionBox.tsx` only where needed to avoid treating a structured transfer candidate as copy-only text or as a room-mode toggle; preserve existing non-transfer quick-adjust behavior.
 
 **Checkpoint**: A teacher can review and send one confirmed structured candidate; edited, discarded, or server-refused candidates remain unsent.
 
@@ -67,7 +67,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - [X] T019 [P] [US2] Add component tests proving `PublicAssessmentDTO.stem` and each structured option render exactly once, the DTO and DOM contain no `rendered_text`, and no free-text assessment input exists in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
 - [X] T020 [P] [US2] Add feedback tests mapping `answer_outcome: retry` without disclosure, terminal `passed` with null feedback, terminal `failed` with `terminal_failure_feedback` for both applied and deferred processing, rejected/null outcomes, and already-processed render in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
 - [X] T021 [P] [US2] Add message integration tests for learner-only controls, teacher/observer read-only views, exact-once options, ordinary tutoring and Guard display, and private-field absence in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
-- [ ] T022 [P] [US2] Add context tests for canonical option-ID serialization, canonical `message_id`/`assessment_id`, persisted `parent_message_id`, every `processing_state`/`answer_outcome` combination used by the UI, failed-only `terminal_failure_feedback`, duplicate request handling, and zero direct progress writes in `tutor-system/src/contexts/__tests__/RoomContext.transferAnswer.test.tsx`.
+- [X] T022 [P] [US2] Add context tests for canonical option-ID serialization, canonical `message_id`/`assessment_id`, persisted `parent_message_id`, every `processing_state`/`answer_outcome` combination used by the UI, failed-only `terminal_failure_feedback`, duplicate request handling, and zero direct progress writes in `tutor-system/src/contexts/__tests__/RoomContext.transferAnswer.test.tsx`.
 
 ### Implementation for User Story 2
 
@@ -75,7 +75,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - [X] T024 [US2] Update `tutor-system/src/components/PostComment.tsx` to render the interactive question only for its target learner, pass submit/result state without duplicating stem or options, and keep teacher/observer views read-only.
 - [X] T025 [US2] Update `tutor-system/src/pages/RoomPagePost.tsx` to route assessment selection submission separately from the free-text composer and call the existing room path with canonical option IDs, assessment identity, and persisted parent ID.
 - [X] T026 [US2] Update `tutor-system/src/contexts/RoomContext.tsx` to submit the canonical selection, process the persisted answer once, merge component 102's authoritative retry/terminal state, and never fall back to evidence analysis for an explicit assessment submission.
-- [ ] T027 [US2] Update `tutor-system/src/components/RoomPagePost.css` and `tutor-system/src/components/PostComment.css` for stable control dimensions, focus states, feedback layout, and responsive text without changing surrounding message geometry.
+- [X] T027 [US2] Update `tutor-system/src/components/RoomPagePost.css` and `tutor-system/src/components/PostComment.css` for stable control dimensions, focus states, feedback layout, and responsive text without changing surrounding message geometry.
 
 **Checkpoint**: Learners can submit displayed choices only; component 102 decides attempts, terminal state, disclosure, and progress.
 
@@ -113,7 +113,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 - [X] T038 [P] [US4] Add checklist view tests for owner-scoped transfer progress, legacy/transfer separation, Guard lock display, and absence of cross-learner progress in `tutor-system/src/components/__tests__/ChecklistPanel.transfer.test.tsx`.
 - [X] T039 [P] [US4] Add export projection tests for learner, observer, and teacher downloads, including pre-terminal explanation absence, terminal learner-safe explanation presence, and absence of key/basis/rationale/raw decision/private interaction fields in `tutor-system/src/contexts/__tests__/roomExportBuilder.transfer.test.ts`.
-- [ ] T040 [P] [US4] Add page/context tests proving structured decisions and public projections are consumed downstream rather than flattened into copied suggestion text in `tutor-system/src/pages/__tests__/RoomPagePost.transferDecision.test.tsx`.
+- [X] T040 [P] [US4] Add page/context tests proving structured decisions and public projections are consumed downstream rather than flattened into copied suggestion text in `tutor-system/src/pages/__tests__/RoomPagePost.transferDecision.test.tsx`.
 
 ### Implementation for User Story 4
 

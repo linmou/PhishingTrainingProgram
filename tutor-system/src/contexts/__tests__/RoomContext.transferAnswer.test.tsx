@@ -27,6 +27,12 @@ import {
   deliveredAnswerRow,
   deliveredQuestionRow,
   learnerAMessageRow,
+  multipleSelectionOptionIds,
+  processedAlreadyTerminalReplay,
+  processedCorrectTerminal,
+  processedDeferredTerminalFailure,
+  processedFirstIncorrectRetry,
+  processedSecondIncorrectTerminal,
   transferChecklist,
   transferRoom,
 } from '../../test-support/transferRoomFixtures';
@@ -214,6 +220,29 @@ describe('RoomContext learner answer path', () => {
     expect(answer!.parent_message_id).toBe(DELIVERED_QUESTION_ID);
   });
 
+  it('posts canonical multiple option IDs with the delivered assessment and parent identities', async () => {
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B,D', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: multipleSelectionOptionIds,
+      });
+    });
+
+    expect(postMessage).toHaveBeenCalledWith({
+      roomId: TRANSFER_ROOM_ID,
+      content: 'B,D',
+      replyToMessageId: DELIVERED_QUESTION_ID,
+      assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: ['B', 'D'],
+    });
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
+    expect(answer?.parent_message_id).toBe(DELIVERED_QUESTION_ID);
+  });
+
   it('never retains the private assessment key the stored row carried', async () => {
     await mountRoom();
 
@@ -282,6 +311,122 @@ describe('RoomContext learner answer path', () => {
     expect(answer!.content).toBe('B or D');
     expect(analyzeMessage).not.toHaveBeenCalled();
     expect(JSON.stringify(room!.messages)).not.toContain('selected_option_ids');
+  });
+
+  it.each([
+    {
+      name: 'applied retry',
+      result: { ...processedFirstIncorrectRetry },
+      expectedState: 'retry',
+    },
+    {
+      name: 'applied pass',
+      result: { ...processedCorrectTerminal },
+      expectedState: 'passed',
+    },
+    {
+      name: 'applied terminal failure',
+      result: { ...processedSecondIncorrectTerminal, message_id: DELIVERED_ANSWER_ID },
+      expectedState: 'failed',
+    },
+    {
+      name: 'deferred terminal failure',
+      result: { ...processedDeferredTerminalFailure, message_id: DELIVERED_ANSWER_ID },
+      expectedState: 'failed',
+    },
+    {
+      name: 'duplicate terminal failure',
+      result: { ...processedAlreadyTerminalReplay, message_id: DELIVERED_ANSWER_ID },
+      expectedState: 'failed',
+    },
+    {
+      name: 'duplicate unresolved result',
+      result: {
+        ...processedAlreadyTerminalReplay,
+        message_id: DELIVERED_ANSWER_ID,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 0 as const,
+        attempts_remaining: 2 as const,
+        selected_option_ids: null,
+        terminal: false,
+        transition: null,
+        feedback_required: false,
+        terminal_failure_feedback: null,
+      },
+      expectedState: 'duplicate',
+    },
+    {
+      name: 'deferred unresolved result',
+      result: {
+        ...processedFirstIncorrectRetry,
+        processing_state: 'deferred' as const,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 0 as const,
+        attempts_remaining: 2 as const,
+        selected_option_ids: null,
+      },
+      expectedState: 'deferred',
+    },
+    {
+      name: 'rejected unresolved result',
+      result: {
+        ...processedFirstIncorrectRetry,
+        processing_state: 'rejected' as const,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 0 as const,
+        attempts_remaining: 2 as const,
+        selected_option_ids: null,
+        code: 'ANSWER_FORMAT_UNRESOLVED',
+      },
+      expectedState: 'rejected',
+    },
+  ])('attaches the canonical $name lifecycle to the answer and its question', async ({ result, expectedState }) => {
+    processMessage.mockResolvedValue(result);
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
+    });
+
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
+      answerLifecycle?: {
+        state?: string;
+        processingState?: string;
+        answerOutcome?: string | null;
+        terminalFailureFeedback?: unknown;
+        alreadyProcessed?: boolean;
+      };
+    };
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: {
+        state?: string;
+        processingState?: string;
+        answerOutcome?: string | null;
+        terminalFailureFeedback?: unknown;
+        alreadyProcessed?: boolean;
+      };
+    };
+
+    expect(answer.answerLifecycle?.state).toBe(expectedState);
+    expect(question.answerLifecycle).toMatchObject({
+      state: expectedState,
+      processingState: result.processing_state,
+      answerOutcome: result.answer_outcome,
+      alreadyProcessed: result.already_processed,
+    });
+    expect(answer.answerLifecycle?.terminalFailureFeedback).toEqual(
+      result.answer_outcome === 'failed' && result.terminal
+        ? result.terminal_failure_feedback
+        : null
+    );
+    expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
+    expect(processMessage).toHaveBeenCalledTimes(1);
   });
 
   it('attaches the trusted result to the matching assessment question for learner feedback', async () => {

@@ -173,6 +173,118 @@
     margin-bottom: 0;
 }
 
+.public-assessment {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    color: #1d2733;
+}
+
+.public-assessment p {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.public-assessment-stem {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.public-assessment-instruction {
+    color: #526171;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.public-assessment-options {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.public-assessment-options li {
+    min-width: 0;
+}
+
+.public-assessment-options label {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid #d9dee5;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.public-assessment-options input {
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0;
+    accent-color: #2563eb;
+}
+
+.public-assessment-options input:focus-visible,
+.public-assessment > button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.public-assessment-options span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.public-assessment > button {
+    justify-self: start;
+    min-width: 132px;
+    min-height: 42px;
+    padding: 0 14px;
+    border: 1px solid #1d4ed8;
+    border-radius: 6px;
+    background: #2563eb;
+    color: #ffffff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.public-assessment > button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.public-assessment [role='status'],
+.public-assessment [role='alert'] {
+    margin: 0;
+    padding: 10px 12px;
+    border-left: 3px solid #2563eb;
+    background: #eff6ff;
+    color: #1e3a5f;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.public-assessment [role='status'] p + p {
+    margin-top: 6px;
+}
+
+.public-assessment [role='alert'] {
+    border-left-color: #b42318;
+    background: #fef3f2;
+    color: #912018;
+}
+
 /* Comment Actions */
 .comment-actions {
     display: flex;
