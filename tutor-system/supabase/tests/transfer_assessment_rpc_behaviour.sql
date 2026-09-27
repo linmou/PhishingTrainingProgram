@@ -187,4 +187,12 @@ $test$;
 SELECT * FROM transfer_v2_results ORDER BY case_id;
 SELECT count(*) AS failing_cases FROM transfer_v2_results WHERE NOT ok;
 
+DO $test$
+BEGIN
+  IF EXISTS (SELECT 1 FROM transfer_v2_results WHERE NOT ok OR ok IS NULL) THEN
+    RAISE EXCEPTION 'transfer assessment RPC behavior checks failed';
+  END IF;
+END;
+$test$;
+
 ROLLBACK;

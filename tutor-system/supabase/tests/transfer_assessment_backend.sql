@@ -1,5 +1,8 @@
 -- Purpose: verify the deployed transfer-assessment schema, privacy grants, and versioned RPC boundary.
 
+BEGIN;
+
+CREATE TEMP TABLE transfer_v2_schema_checks ON COMMIT DROP AS
 WITH checks(check_name, pass, detail) AS (
   SELECT 'private assessment tables exist',
     (SELECT count(*) FROM information_schema.tables
@@ -69,6 +72,16 @@ WITH checks(check_name, pass, detail) AS (
       OR position('private' in current_setting('pgrst.db_schemas', true)) = 0,
     'PostgREST exposed schema list excludes private'
 )
-SELECT check_name, pass, detail FROM checks
-UNION ALL
-SELECT 'FAILING_CHECKS', bool_and(pass), count(*) FILTER (WHERE NOT pass)::text FROM checks;
+SELECT check_name, pass, detail FROM checks;
+
+SELECT check_name, pass, detail FROM transfer_v2_schema_checks ORDER BY check_name;
+
+DO $test$
+BEGIN
+  IF EXISTS (SELECT 1 FROM transfer_v2_schema_checks WHERE NOT pass OR pass IS NULL) THEN
+    RAISE EXCEPTION 'transfer assessment schema checks failed';
+  END IF;
+END;
+$test$;
+
+ROLLBACK;

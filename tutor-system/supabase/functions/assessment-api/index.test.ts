@@ -95,6 +95,39 @@ Deno.test('fails closed before data access when no principal verifier is wired',
   assertEquals(calls, 0);
 });
 
+Deno.test('disabled feature makes no storage call', async () => {
+  let calls = 0;
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: false,
+    rpc: async () => { calls += 1; return { data: {}, error: null }; },
+  }));
+  const response = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
+  const payload = await response.json();
+  assertEquals(response.status, 503);
+  assertEquals(payload.error.code, 'ASSESSMENT_FEATURE_DISABLED');
+  assertEquals(calls, 0);
+});
+
+Deno.test('forged actor and cross-room request cannot bypass verified scope', async () => {
+  const calls: Record<string, unknown>[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    rpc: async (_name, args) => {
+      calls.push(args);
+      return { data: { message: { id: 'message-1' } }, error: null };
+    },
+  }));
+  const forged = await handler(request('post_message', {
+    room_id: 'room-1', content: 'Hello', actor_id: 'other-user',
+  }));
+  assertEquals(forged.status, 200);
+  assertEquals(calls[0].p_actor_id, 'teacher-1');
+  const crossRoom = await handler(request('post_message', {
+    room_id: 'other-room', content: 'Hello', actor_id: 'teacher-1',
+  }));
+  assertEquals(crossRoom.status, 403);
+  assertEquals(calls.length, 1);
+});
+
 Deno.test('returns the exact public assessment target and strips private fields', async () => {
   const handler = createAssessmentApiHandler(dependencies({
     rpc: async (name) => {

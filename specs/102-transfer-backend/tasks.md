@@ -27,7 +27,7 @@
 - [x] T006 [P] Update `tutor-system/src/services/__tests__/transferAssessmentMigration.test.ts` with a beginning purpose comment and failing static assertions for the new private tables, immutable public `assessment_student_id`, public-key removal, versioned RPCs, grants, constraints, indexes, and stem-only delivery (FR-006-FR-009, FR-021).
 - [x] T007 Update `tutor-system/src/services/__tests__/transferAssessmentLocalService.test.ts` with a beginning purpose comment and failing assertions that the browser facade invokes the trusted six-operation transport and contains no Supabase-table grading, private key reads, provider call, local attempt counter, or fallback model (FR-001-FR-003, FR-009-FR-010, FR-019).
 - [x] T008 Restore `tutor-system/supabase/functions/assessment-api/index.test.ts` with a Deno shebang and beginning purpose comment; add failing handler tests for injected verifier, missing configuration, request envelopes, scope checks, exact public target projection, target mismatch failure, and private-field/`rendered_text` exclusion (FR-002-FR-007).
-- [x] T009 [P] Extend `tutor-system/supabase/tests/transfer_assessment_backend.sql` and `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` with beginning purpose comments and failing hosted cases for private assessment/attempt storage, untrusted denial, delivery, two attempts, races, rollback, and legacy reconciliation (FR-006-FR-018, FR-021).
+- [ ] T009 [P] Extend `tutor-system/supabase/tests/transfer_assessment_backend.sql` and `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` with beginning purpose comments and failing hosted cases for private assessment/attempt storage, untrusted denial, delivery, two attempts, races, rollback, and legacy reconciliation (FR-006-FR-018, FR-021).
 
 **Checkpoint**: Contract failures identify only missing component-102 behavior, not an unmerged component-101 contract or unavailable test dependency.
 
@@ -42,7 +42,7 @@
 ### Tests for User Story 1
 
 - [x] T010 [US1] Extend the failing delivery/projection cases in `tutor-system/supabase/functions/assessment-api/index.test.ts` for teacher edits, explanation validation, stale scope, duplicate request, one-open-per-learner, and rollback (FR-004-FR-008).
-- [x] T011 [P] [US1] Extend failing hosted delivery cases in `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` for room lock, private/public atomicity, immutable/matching `assessment_student_id`, immutable key/explanation, stem-only content, exact-once options, and delivery retry (FR-006-FR-008, FR-015-FR-016).
+- [ ] T011 [P] [US1] Extend failing hosted delivery cases in `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` for room lock, private/public atomicity, immutable/matching `assessment_student_id`, immutable key/explanation, stem-only content, exact-once options, and delivery retry (FR-006-FR-008, FR-015-FR-016).
 - [x] T012 [P] [US1] Extend `tutor-system/src/services/__tests__/transferAssessmentService.test.ts` with a beginning purpose comment and failing facade DTO tests for prepare/send success, required target `student_id`, missing/mismatched target failure, safe errors, exact field set, and no private learner projection or `rendered_text` (FR-001, FR-004-FR-007).
 
 ### Implementation for User Story 1
@@ -67,7 +67,7 @@
 
 - [x] T018 [US2] Add failing two-attempt facade/DTO cases to `tutor-system/src/services/__tests__/transferAssessmentService.test.ts`, including authoritative counts, duplicate projection, first-wrong privacy, pass privacy, second-wrong feedback, and third-submission terminal state (FR-009-FR-017).
 - [x] T019 [P] [US2] Add failing Edge handler cases to `tutor-system/supabase/functions/assessment-api/index.test.ts` for structured selected IDs, target learner/scope validation, duplicate request/message, reload-equivalent reread, and role-safe terminal feedback (FR-009-FR-017).
-- [x] T020 [P] [US2] Add the component-101 golden answer/lifecycle matrix as failing hosted expectations in `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql`, including two distinct wrong answers racing and correct/wrong races (FR-009-FR-018, SC-001-SC-004).
+- [ ] T020 [P] [US2] Add the component-101 golden answer/lifecycle matrix as failing hosted expectations in `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql`, including two distinct wrong answers racing and correct/wrong races (FR-009-FR-018, SC-001-SC-004).
 
 ### Implementation for User Story 2
 
@@ -90,7 +90,7 @@
 ### Tests for User Story 3
 
 - [x] T026 [US3] Add failing verifier/authorization attack cases to `tutor-system/supabase/functions/assessment-api/index.test.ts`, including absent production adapter, forged body IDs, cross-room/learner access, teacher-only review, and learner-only terminal feedback (FR-002-FR-003, FR-017).
-- [x] T027 [P] [US3] Add failing grant/RLS/direct-write/legacy-RPC cases to `tutor-system/supabase/tests/transfer_assessment_backend.sql`, asserting zero private reads, attempts, progress effects, or leaked fields (FR-002-FR-003, FR-007-FR-008, FR-021).
+- [ ] T027 [P] [US3] Add failing grant/RLS/direct-write/legacy-RPC cases to `tutor-system/supabase/tests/transfer_assessment_backend.sql`, asserting zero private reads, attempts, progress effects, or leaked fields (FR-002-FR-003, FR-007-FR-008, FR-021).
 - [x] T028 [P] [US3] Add failing public-projection and source/build import scans to `tutor-system/src/services/__tests__/transferAssessmentApiContract.test.ts` for exact target routing, private values, `rendered_text`, transfer basis, rationale, raw provider output, credentials, and the browser production-prompt copy; permit `student_id` only as routing metadata and explanation field names/types only in teacher candidate and terminal-failure contracts (FR-007-FR-008, SC-005-SC-006).
 
 ### Implementation for User Story 3
@@ -112,7 +112,7 @@
 
 ### Tests for User Story 4
 
-- [x] T033 [US4] Add failing atomicity and actual-before/after cases to `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` for every terminal event, forced rollback point, stale snapshot, invalid pair, duplicate, and Guard path (FR-018, SC-007).
+- [ ] T033 [US4] Add failing atomicity and actual-before/after cases to `tutor-system/supabase/tests/transfer_assessment_rpc_behaviour.sql` for every terminal event, forced rollback point, stale snapshot, invalid pair, duplicate, and Guard path (FR-018, SC-007).
 - [x] T034 [P] [US4] Extend `tutor-system/src/services/__tests__/transferAssessmentMigration.test.ts` with failing static checks that first wrong cannot call the terminal event path and that pass/fail functions share one transaction boundary (FR-011-FR-013, FR-018).
 
 ### Implementation for User Story 4

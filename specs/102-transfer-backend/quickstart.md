@@ -68,7 +68,7 @@ Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`,
 3. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, concurrent distinct submissions, third submission, wrong scope, Guard behavior, evidence/history, and forced rollback. It writes test fixtures inside a transaction; do not run it on PhishingTutor.
 4. Regenerate `src/types/database.ts` from that schema and compare the exact private/public/RPC signatures to `contracts/rpc-contract.md`.
 
-Record exact commands, timestamp, tested migration/SHA, exit code, test count, and immutable log path. Static SQL/Jest checks do not substitute for hosted execution.
+Invoke each SQL script with `psql -X -v ON_ERROR_STOP=1 "$DISPOSABLE_DATABASE_URL" -f <script>` so a raised assertion stops the run with a nonzero exit. The current scripts do not yet cover the full matrix in steps 2-3; keep T009, T011, T020, T027, and T033 open until those cases are encoded and executed. Record exact commands, timestamp, tested migration/SHA, exit code, test count, and immutable log path. Static SQL/Jest checks do not substitute for hosted execution.
 
 ## Authorization and Provider Evidence
 
