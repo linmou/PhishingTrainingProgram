@@ -51,6 +51,18 @@ describe('server-authoritative transfer assessment migration', () => {
     expect(preflight).toMatch(/sc\.progress_policy_version = 'transfer_v1'/i);
   });
 
+  it('backfills a valid legacy target before installing public target immutability', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    const copy = sql.indexOf('INSERT INTO private.transfer_assessments');
+    const backfill = sql.indexOf('SET assessment_id = a.id');
+    const trigger = sql.indexOf('CREATE TRIGGER guard_public_transfer_columns');
+    expect(copy).toBeGreaterThan(0);
+    expect(backfill).toBeGreaterThan(copy);
+    expect(trigger).toBeGreaterThan(backfill);
+    expect(sql.slice(copy, backfill)).toMatch(/'legacy_incomplete'/);
+    expect(sql.slice(backfill, trigger)).toMatch(/assessment_student_id = a\.student_id/);
+  });
+
   it('defines service-role-only versioned RPCs with expected-snapshot compare-and-swap', () => {
     const sql = fs.readFileSync(migrationPath, 'utf8');
     for (const name of [

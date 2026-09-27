@@ -127,8 +127,8 @@ BEGIN
        OR v_event.checklist_id IS DISTINCT FROM v_assessment.checklist_id
        OR v_event.item_id IS DISTINCT FROM v_assessment.item_id
        OR v_event.source_message_id IS DISTINCT FROM v_attempt.answer_message_id
-       OR v_assessment.lifecycle IS DISTINCT FROM CASE
-         WHEN v_event.event_kind = 'assessment_pass' THEN 'passed' ELSE 'failed' END
+       OR (v_event.event_kind = 'assessment_pass' AND v_assessment.lifecycle IS DISTINCT FROM 'passed')
+       OR (v_event.event_kind = 'assessment_fail' AND v_assessment.lifecycle IS DISTINCT FROM 'failed')
        OR v_item.status IS DISTINCT FROM 'partially_covered'
        OR v_item.checklist_id IS DISTINCT FROM v_event.checklist_id
        OR NOT EXISTS (
@@ -271,11 +271,6 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS guard_public_transfer_columns ON public.messages;
-CREATE TRIGGER guard_public_transfer_columns
-BEFORE INSERT OR UPDATE ON public.messages
-FOR EACH ROW EXECUTE FUNCTION private.guard_public_transfer_columns();
-
 DO $legacy_scope$
 BEGIN
   IF EXISTS (
@@ -351,6 +346,11 @@ WHERE a.question_message_id = m.id
 
 DROP INDEX IF EXISTS public.one_open_assessment_per_student;
 ALTER TABLE public.messages DROP COLUMN IF EXISTS assessment_key;
+
+DROP TRIGGER IF EXISTS guard_public_transfer_columns ON public.messages;
+CREATE TRIGGER guard_public_transfer_columns
+BEFORE INSERT OR UPDATE ON public.messages
+FOR EACH ROW EXECUTE FUNCTION private.guard_public_transfer_columns();
 
 CREATE UNIQUE INDEX IF NOT EXISTS transfer_answer_request_id_unique
   ON public.messages(assessment_request_id)
