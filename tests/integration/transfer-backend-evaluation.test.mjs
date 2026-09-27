@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-// Purpose: integration-owned E04 handoff test (102 -> 104). This file covers the PRODUCTION side
-// of the edge: it reads the real Edge Function source and asserts the sampling parameters of the
-// transfer request that the evaluation is required to match. R14 records why this check exists:
-// `evals/promptfoo/v1/settings.json` declares target_max_tokens 8000 and target_enable_thinking
-// true, while production sends 1200 and false, so a parity check that compares only prompt and
-// builder hashes would pass while the evaluation measured a different request than the one that
-// ships. The CONSUMER half - driving real 102 builder output through 104's adapter - is added once
-// component 104's adapter exists; until then this file covers the production side only, and that
-// limit is stated here rather than implied by the filename.
+// Purpose: check E05 request parity (102 -> 104) against the production Edge Function
+// and the real component-102 request builder consumed by component 104's adapter.
+// The separate handler-result and disclosure handoff remains pending.
 //
 // Run with: node --test tests/integration/transfer-backend-evaluation.test.mjs
 
@@ -45,7 +39,7 @@ function transferRequestCallSite() {
   return edgeSource;
 }
 
-test('E04: the production transfer request declares the sampling parameters the evaluation must match', () => {
+test('E05: the production transfer request declares the sampling parameters the evaluation must match', () => {
   const callSite = transferRequestCallSite();
 
   assert.match(
@@ -70,14 +64,14 @@ test('E04: the production transfer request declares the sampling parameters the 
   );
 });
 
-test('E04: the production transfer model is resolved from configuration with a declared default', () => {
+test('E05: the production transfer model is resolved from configuration with a declared default', () => {
   const callSite = transferRequestCallSite();
 
   assert.match(callSite, /OAI_MODEL/, 'the transfer model must be configuration-driven, not hardcoded');
   assert.match(callSite, /PROVIDER_MODEL/, 'the provider model must be pinned to the approved target model');
 });
 
-test('E04: the production transfer system prompt is the shared v3 prompt, not an evaluation-local copy', () => {
+test('E05: the production transfer system prompt is the shared v3 prompt, not an evaluation-local copy', () => {
   const callSite = transferRequestCallSite();
 
   assert.match(
@@ -93,12 +87,12 @@ test('E04: the production transfer system prompt is the shared v3 prompt, not an
 });
 
 // ---------------------------------------------------------------------------------------------
-// Consumer half of E04. These tests obtain the request through component 104's real adapter, which
+// Consumer half of the E05 request-parity check. These tests obtain the request through component 104's real adapter, which
 // in turn calls component 102's real builder, so the edge is exercised in one run rather than
 // reconstructed on either side.
 // ---------------------------------------------------------------------------------------------
 
-test('E04: the evaluation adapter consumes the real component-102 builder output', () => {
+test('E05: the evaluation adapter consumes the real component-102 builder output', () => {
   const built = adapter.buildTransferTargetRequest(CASE, frozenManifest);
 
   assert.equal(
@@ -119,7 +113,7 @@ test('E04: the evaluation adapter consumes the real component-102 builder output
   );
 });
 
-test('E04: reordered and duplicated upstream input still yields a byte-identical target request', () => {
+test('E05: reordered and duplicated upstream input still yields a byte-identical target request', () => {
   const base = adapter.buildTransferTargetRequest(CASE, frozenManifest);
 
   const scrambled = structuredClone(CASE);
@@ -141,7 +135,7 @@ test('E04: reordered and duplicated upstream input still yields a byte-identical
   assert.deepEqual(again.request, base.request);
 });
 
-test('E04: evaluator-only metadata never enters the target request, and its presence is refused', () => {
+test('E05: evaluator-only metadata never enters the target request, and its presence is refused', () => {
   const built = adapter.buildTransferTargetRequest(CASE, frozenManifest);
   const serialized = `${JSON.stringify(built.request)}${built.user_message}`;
 
@@ -161,7 +155,7 @@ test('E04: evaluator-only metadata never enters the target request, and its pres
   );
 });
 
-test('E04: the adapter refuses a manifest whose sampling differs from the production source', () => {
+test('E05: the adapter refuses a manifest whose sampling differs from the production source', () => {
   const wrongBudget = structuredClone(frozenManifest);
   wrongBudget.shared_request_contract.evaluation_effective_completion_token_budget = 8000;
   assert.throws(
