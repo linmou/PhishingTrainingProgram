@@ -1,4 +1,76 @@
-# RoomContext Test Fixes Summary
+# Legacy UI Test Fixes Summary
+
+Intent: Document current test fixtures for legacy UI suites and the contracts they verify.
+
+Updated: 2026-09-27
+
+## ImageUpload Fixture
+
+- Query the hidden file input from the upload component instead of expecting it to be a button.
+- Use the installed `user-event` v13 API to upload files and activate controls.
+- Reinitialize `URL.createObjectURL` and `URL.revokeObjectURL` after mock resets so preview and cancellation checks exercise the component reliably.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/components/__tests__/ImageUpload.test.tsx` (1 suite, 16 tests passed).
+
+The four-directory regression was not rerun for this focused batch.
+
+## Current Contract
+
+- Realtime channel mocks implement `on`, `subscribe`, and `unsubscribe` on the same channel object.
+- Successful room joins mock room, message, and participant queries by table, including polling reads.
+- Message assertions cover projected identity, content, and participant display name.
+- Message insertion follows `insert(...).select().single()` and asserts response mode.
+- AI tests cover `generateTutorSuggestion`, `getAIConfig`, and `updateAIConfig`.
+- AI configuration load failures assert the local room configuration fallback.
+
+## Observer UI Regression
+
+- Observer room fixtures provide the required `messageFeedbackStats` map.
+- Observer status checks target the current read-only notice, and download coverage selects a format from the room-data modal.
+- Role-label assertions allow multiple tutor messages while still requiring both Tutor and Student labels.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/observer_view_steps.test.tsx` (1 suite, 13 tests passed on the working tree and clean corrective HEAD).
+
+## Tutor Persistence Regression
+
+- Mock `getRoomTemplatesByTutor` as an empty result so TutorView's template load follows the current service contract.
+- Check the rendered `🟢 Active` status element instead of combining the separate `Status:` label with the value.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_room_persistence.test.tsx` (1 suite, 4 tests passed).
+
+## Room OP Configuration Regression
+
+- Use button-role queries for the icon-prefixed create-room control and interact with the visible OP options.
+- Mock the current authenticated tutor through `useAuth` and return an empty room-template list.
+- Preserve the default profile OP, custom OP creation, and required-name validation checks against current rendered markup.
+- Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/room_op_configuration.test.tsx` (1 suite, 11 tests passed).
+
+## Tutor View Regression
+
+- Assert the room's visible participant count rather than a named participant list.
+- Supply the required feedback-stat map and use the current comment composer, message metadata, and download-format flow.
+- Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_view.test.tsx` (1 suite, 5 tests passed).
+
+## Room Password Protection Regression
+
+- Mock the authenticated user through the current `useAuth` contract and provide table-aware room reads plus the realtime channel methods used by `RoomContext`.
+- Query the create-room control by its button role and interact with the visible password-protection option.
+- Focused run before Feature 103: 6 tests passed and 1 retry-path test failed after room lookup returned `Room not found`.
+- Combined verification candidate `9493750`, which includes Feature 103, passed the focused password suite (7/7), the four-directory regression (66 suites and 589 tests passed; 7 suites and 107 tests skipped; 13 checklist todos), build, and Node handoff/E2E checks (25/25).
+
+## Checklist Management Contract
+
+- Replaced calls to removed `ChecklistService` methods with tests for the current template, read, progress, tutor update, custom area, transfer ownership, AI coverage, and fallback APIs.
+- Retained the 13 unsupported feature requirements as named `it.todo` cases; the BDD feature file remains unchanged.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/checklist_management.test.ts` (13 implemented tests passed, 13 feature cases pending).
+- The exact pending clauses and type-check result are recorded in `doc_update_record/documentation_update_record_v2026_09_27_checklist_management_tests.md`.
+
+## Verification
+
+- Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`
+- Result: 1 suite passed, 26 tests passed.
+- The four-directory regression was not rerun for this focused batch.
+
+## Historical Repair Notes
+
+The following notes describe an earlier fixture shape. Their query examples and AI method names are superseded by the current contract above.
 
 ## Issues Identified
 
@@ -188,4 +260,4 @@ await act(async () => {
 });
 ```
 
-This ensures all RoomContext tests follow a consistent, reliable pattern. 
+This ensures all RoomContext tests follow a consistent, reliable pattern.

@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import UserProfile from '../UserProfile';
 import { useAuth } from '../../contexts/AuthContext';
@@ -59,6 +59,7 @@ describe('UserProfile Page', () => {
 
     const mockSignOut = jest.fn();
     const mockSetUserRole = jest.fn();
+    const mockUpdateUserProfile = jest.fn().mockResolvedValue(undefined);
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -68,7 +69,8 @@ describe('UserProfile Page', () => {
             loading: false,
             joinWithNameAndRole: jest.fn(),
             signOut: mockSignOut,
-            setUserRole: mockSetUserRole
+            setUserRole: mockSetUserRole,
+            updateUserProfile: mockUpdateUserProfile
         });
     });
 
@@ -158,14 +160,17 @@ describe('UserProfile Page', () => {
     });
 
     describe('Preset Avatar Selection', () => {
-        it('should allow selecting preset avatars', () => {
+        it('should update the profile when selecting a preset avatar', async () => {
             renderWithRouter(<UserProfile />);
             
             const avatarImage = screen.getByAltText('Cute Avatar');
             fireEvent.click(avatarImage.parentElement!);
             
-            // Should call supabase update function
-            expect(require('../../services/supabase').supabase.from).toHaveBeenCalledWith('users');
+            await waitFor(() => {
+                expect(mockUpdateUserProfile).toHaveBeenCalledWith({
+                    avatar_url: '/images/avatars/cute_avatar_0.jpeg'
+                });
+            });
         });
     });
 

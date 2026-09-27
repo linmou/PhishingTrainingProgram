@@ -46,10 +46,10 @@ jest.mock('../../services/supabase', () => ({
 }));
 
 jest.mock('../../services/aiService', () => ({
-    initializeAIAssistant: jest.fn(),
+    DEFAULT_AI_MODEL: 'gpt-4o-mini',
+    generateTutorSuggestion: jest.fn(),
     getAIConfig: jest.fn(),
-    updateAIConfig: jest.fn(),
-    generateAndSaveAIResponse: jest.fn()
+    updateAIConfig: jest.fn()
 }));
 
 jest.mock('../AuthContext', () => ({
@@ -204,7 +204,10 @@ describe('RoomContext - Room Management Tests', () => {
         };
 
         mockSubscription = {
-            unsubscribe: jest.fn()
+            on: jest.fn().mockReturnThis(),
+            subscribe: jest.fn().mockReturnThis(),
+            unsubscribe: jest.fn(),
+            send: jest.fn()
         };
 
         (submitMessageFeedback as jest.Mock).mockResolvedValue({
@@ -241,11 +244,53 @@ describe('RoomContext - Room Management Tests', () => {
         });
 
         // Setup default supabase channel mock
-        (supabase.channel as jest.Mock).mockReturnValue({
-            on: jest.fn().mockReturnThis(),
-            subscribe: jest.fn().mockReturnValue(mockSubscription)
-        });
+        (supabase.channel as jest.Mock).mockReturnValue(mockSubscription);
     });
+
+    const mockJoinedRoomQueries = (
+        messagesData: Message[] = [],
+        roomData: Room = mockRoom,
+        insertError: Error | null = null
+    ) => {
+        const supabaseFrom = supabase.from as jest.Mock;
+        supabaseFrom.mockReset();
+
+        const roomQuery: any = {};
+        roomQuery.select = jest.fn(() => roomQuery);
+        roomQuery.eq = jest.fn(() => roomQuery);
+        roomQuery.single = jest.fn().mockResolvedValue({ data: roomData, error: null });
+
+        const insertResult = jest.fn().mockResolvedValue({
+            data: insertError ? null : mockMessage,
+            error: insertError
+        });
+        const insertMessage = jest.fn(() => ({
+            select: jest.fn(() => ({ single: insertResult }))
+        }));
+        const messagesQuery: any = {};
+        messagesQuery.select = jest.fn(() => messagesQuery);
+        messagesQuery.eq = jest.fn(() => messagesQuery);
+        messagesQuery.order = jest.fn().mockResolvedValue({ data: messagesData, error: null });
+        messagesQuery.insert = insertMessage;
+
+        const participantsQuery: any = {};
+        participantsQuery.select = jest.fn(() => participantsQuery);
+        participantsQuery.in = jest.fn().mockResolvedValue({ data: [mockUser], error: null });
+
+        const emptyQuery: any = {};
+        emptyQuery.select = jest.fn(() => emptyQuery);
+        emptyQuery.eq = jest.fn(() => emptyQuery);
+        emptyQuery.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+
+        supabaseFrom.mockImplementation((table: string) => {
+            if (table === 'rooms') return roomQuery;
+            if (table === 'messages') return messagesQuery;
+            if (table === 'users') return participantsQuery;
+            return emptyQuery;
+        });
+
+        return { roomQuery, messagesQuery, participantsQuery, insertMessage };
+    };
 
     describe('RoomProvider Initialization', () => {
         it('should initialize with default state', () => {
@@ -282,6 +327,11 @@ describe('RoomContext - Room Management Tests', () => {
                             data: mockRoom,
                             error: null
                         })
+                    }))
+                })),
+                select: jest.fn(() => ({
+                    eq: jest.fn(() => ({
+                        order: jest.fn().mockResolvedValue({ data: [], error: null })
                     }))
                 }))
             };
@@ -396,38 +446,7 @@ describe('RoomContext - Room Management Tests', () => {
 
     describe('Room Joining and Leaving', () => {
         it('should join room successfully', async () => {
-            const mockFromChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        })),
-                        order: jest.fn(() => ({
-                            mockResolvedValue: jest.fn().mockResolvedValue({
-                                data: [mockMessage],
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            // Mock both room and messages queries
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [mockMessage],
-                                error: null
-                            })
-                        }))
-                    }))
-                });
+            mockJoinedRoomQueries([mockMessage]);
 
             render(
                 <RoomProvider>
@@ -441,37 +460,17 @@ describe('RoomContext - Room Management Tests', () => {
 
             await waitFor(() => {
                 expect(screen.getByTestId('current-room')).toHaveTextContent(JSON.stringify(mockRoom));
-                expect(screen.getByTestId('messages')).toHaveTextContent(JSON.stringify([mockMessage]));
+                const messages = JSON.parse(screen.getByTestId('messages').textContent || '[]');
+                expect(messages).toMatchObject([{
+                    id: mockMessage.id,
+                    content: mockMessage.content,
+                    display_name: mockUser.display_name
+                }]);
             });
         });
 
         it('should leave room and clear state', async () => {
-            // First join a room
-            const mockFromChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [mockMessage],
-                                error: null
-                            })
-                        }))
-                    }))
-                });
+            mockJoinedRoomQueries([mockMessage]);
 
             render(
                 <RoomProvider>
@@ -534,73 +533,8 @@ describe('RoomContext - Room Management Tests', () => {
     });
 
     describe('Message Sending', () => {
-        beforeEach(async () => {
-            // Setup room as joined
-            const mockFromChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [],
-                                error: null
-                            })
-                        }))
-                    }))
-                });
-        });
-
         it('should send message successfully', async () => {
-            // Setup mocks for joinRoom first
-            const mockJoinChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            const mockMessagesChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        order: jest.fn().mockResolvedValue({
-                            data: [],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            const mockInsertResult = jest.fn().mockResolvedValue({
-                error: null
-            });
-
-            const mockInsertChain = {
-                insert: mockInsertResult
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockJoinChain) // For joinRoom (rooms)
-                .mockReturnValueOnce(mockMessagesChain) // For joinRoom (messages)
-                .mockReturnValueOnce(mockInsertChain); // For sendMessage
+            const { insertMessage } = mockJoinedRoomQueries();
 
             let roomFunctions: any;
             render(
@@ -624,11 +558,13 @@ describe('RoomContext - Room Management Tests', () => {
                 await roomFunctions.sendMessage('Test message');
             });
 
-            expect(mockInsertResult).toHaveBeenCalledWith({
+            expect(insertMessage).toHaveBeenCalledWith({
                 room_id: mockRoom.id,
                 user_id: mockUser.id,
                 content: 'Test message',
-                user_role: 'tutor'
+                user_role: 'tutor',
+                parent_message_id: null,
+                response_mode: 'tutoring'
             });
         });
 
@@ -639,34 +575,7 @@ describe('RoomContext - Room Management Tests', () => {
                 loading: false
             });
 
-            // Setup mocks for joinRoom
-            const mockJoinChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            const mockMessagesChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        order: jest.fn().mockResolvedValue({
-                            data: [],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockJoinChain)
-                .mockReturnValueOnce(mockMessagesChain);
+            mockJoinedRoomQueries();
 
             let roomFunctions: any;
             render(
@@ -691,44 +600,7 @@ describe('RoomContext - Room Management Tests', () => {
 
         it('should handle message sending errors', async () => {
             const mockError = new Error('Database error');
-
-            // Setup mocks for joinRoom first
-            const mockJoinChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            const mockMessagesChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        order: jest.fn().mockResolvedValue({
-                            data: [],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            const mockInsertResult = jest.fn().mockResolvedValue({
-                error: mockError
-            });
-
-            const mockInsertChain = {
-                insert: mockInsertResult
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockJoinChain) // For joinRoom (rooms)
-                .mockReturnValueOnce(mockMessagesChain) // For joinRoom (messages)
-                .mockReturnValueOnce(mockInsertChain); // For sendMessage
+            const { insertMessage } = mockJoinedRoomQueries([], mockRoom, mockError);
 
             let roomFunctions: any;
             render(
@@ -749,11 +621,12 @@ describe('RoomContext - Room Management Tests', () => {
 
             // Now try to send message - should fail with database error
             await expect(roomFunctions.sendMessage('Test')).rejects.toThrow('Database error');
+            expect(insertMessage).toHaveBeenCalled();
         });
     });
 
     describe('AI Assistant Integration', () => {
-        const { initializeAIAssistant, getAIConfig, updateAIConfig, generateAndSaveAIResponse } = require('../../services/aiService');
+        const { generateTutorSuggestion, getAIConfig, updateAIConfig } = require('../../services/aiService');
 
         beforeEach(() => {
             jest.clearAllMocks();
@@ -761,32 +634,7 @@ describe('RoomContext - Room Management Tests', () => {
 
         it('should load AI config when room changes', async () => {
             (getAIConfig as jest.Mock).mockResolvedValue(mockAIConfig);
-
-            const mockFromChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [],
-                                error: null
-                            })
-                        }))
-                    }))
-                });
+            mockJoinedRoomQueries([], { ...mockRoom, ai_assistant_enabled: true });
 
             render(
                 <RoomProvider>
@@ -806,38 +654,19 @@ describe('RoomContext - Room Management Tests', () => {
 
         it('should generate AI response successfully', async () => {
             const roomWithAI = { ...mockRoom, ai_assistant_enabled: true };
-            const studentMessage = { ...mockMessage, user_role: 'student' };
-
-            (generateAndSaveAIResponse as jest.Mock).mockResolvedValue('ai-message-id');
-
-            // Setup mocks for joinRoom
-            const mockJoinChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: roomWithAI,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            const mockMessagesChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        order: jest.fn().mockResolvedValue({
-                            data: [studentMessage],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockJoinChain)
-                .mockReturnValueOnce(mockMessagesChain);
+            const studentMessage = { ...mockMessage, user_role: 'student' as const };
+            (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+                success: true,
+                suggestion: 'Check the sender address before you open it.',
+                decision: {
+                    mode: 'tutoring',
+                    instruction: 'scaffolding',
+                    mode_reason: 'Help the learner inspect evidence.',
+                    suggested_response: 'What does the sender address tell you?'
+                },
+                contextMessages: []
+            });
+            mockJoinedRoomQueries([studentMessage], roomWithAI);
 
             let roomFunctions: any;
             render(
@@ -851,20 +680,19 @@ describe('RoomContext - Room Management Tests', () => {
                 expect(roomFunctions).toBeDefined();
             });
 
-            // First join the room to set up the context state with AI-enabled room and messages
             await act(async () => {
                 await roomFunctions.joinRoom(roomWithAI.id);
             });
 
             await act(async () => {
-                await roomFunctions.generateAIResponse('Custom prompt');
+                await roomFunctions.generateAIResponse();
             });
 
-            expect(generateAndSaveAIResponse).toHaveBeenCalledWith(
+            expect(generateTutorSuggestion).toHaveBeenCalledWith(
                 roomWithAI.id,
                 mockUser.id,
-                'Custom prompt',
-                undefined
+                undefined,
+                { focusStudentMessage: studentMessage.content }
             );
         });
 
@@ -874,35 +702,7 @@ describe('RoomContext - Room Management Tests', () => {
                 user: studentUser,
                 loading: false
             });
-
-            // Setup mocks for joinRoom
-            const mockJoinChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            const mockMessagesChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        order: jest.fn().mockResolvedValue({
-                            data: [],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockJoinChain)
-                .mockReturnValueOnce(mockMessagesChain);
+            mockJoinedRoomQueries([], { ...mockRoom, ai_assistant_enabled: true });
 
             let roomFunctions: any;
             render(
@@ -925,52 +725,13 @@ describe('RoomContext - Room Management Tests', () => {
         });
 
         it('should toggle AI assistant successfully', async () => {
-            (initializeAIAssistant as jest.Mock).mockResolvedValue('config-id');
-            // Mock getAIConfig to return null initially (no existing config)
-            (getAIConfig as jest.Mock).mockResolvedValue(null);
-
-            // Setup mocks for joinRoom first
-            const mockJoinChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            const mockMessagesChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        order: jest.fn().mockResolvedValue({
-                            data: [],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            const mockUpdateChain = {
-                update: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        select: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: { ...mockRoom, ai_assistant_enabled: true },
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockJoinChain) // For joinRoom
-                .mockReturnValueOnce(mockMessagesChain) // For joinRoom messages
-                .mockReturnValueOnce(mockUpdateChain); // For toggleAIAssistant
+            (updateAIConfig as jest.Mock).mockResolvedValue(mockAIConfig);
+            (getAIConfig as jest.Mock).mockResolvedValue(mockAIConfig);
+            const updatedRoom = { ...mockRoom, ai_assistant_enabled: true };
+            const { roomQuery } = mockJoinedRoomQueries();
+            roomQuery.single
+                .mockResolvedValueOnce({ data: mockRoom, error: null })
+                .mockResolvedValueOnce({ data: updatedRoom, error: null });
 
             let roomFunctions: any;
             render(
@@ -989,21 +750,16 @@ describe('RoomContext - Room Management Tests', () => {
                 await roomFunctions.joinRoom(mockRoom.id);
             });
 
-            // Mock getAIConfig again for the second call after initializeAIAssistant
-            (getAIConfig as jest.Mock).mockResolvedValue(mockAIConfig);
-
             await act(async () => {
                 await roomFunctions.toggleAIAssistant(true, { model_name: 'gpt-4' });
             });
 
-            expect(initializeAIAssistant).toHaveBeenCalledWith(
+            expect(updateAIConfig).toHaveBeenCalledWith(
                 mockRoom.id,
-                'gpt-4',
-                undefined
+                expect.objectContaining({ model_name: 'gpt-4', is_active: true }),
+                mockUser.id,
+                'settings_enable'
             );
-            // getAIConfig should be called twice: once when joining room, once after initialization
-            expect(getAIConfig).toHaveBeenCalledTimes(2);
-            expect(getAIConfig).toHaveBeenCalledWith(mockRoom.id);
         });
     });
 
@@ -1603,32 +1359,7 @@ describe('RoomContext - Room Management Tests', () => {
             (getAIConfig as jest.Mock).mockRejectedValue(new Error('Config load failed'));
 
             const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-            const mockFromChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            single: jest.fn().mockResolvedValue({
-                                data: mockRoom,
-                                error: null
-                            })
-                        }))
-                    }))
-                }))
-            };
-
-            (supabase.from as jest.Mock)
-                .mockReturnValueOnce(mockFromChain) // Room query
-                .mockReturnValueOnce({ // Messages query
-                    select: jest.fn(() => ({
-                        eq: jest.fn(() => ({
-                            order: jest.fn().mockResolvedValue({
-                                data: [],
-                                error: null
-                            })
-                        }))
-                    }))
-                });
+            mockJoinedRoomQueries([], { ...mockRoom, ai_assistant_enabled: true });
 
             render(
                 <RoomProvider>
@@ -1642,7 +1373,8 @@ describe('RoomContext - Room Management Tests', () => {
 
             await waitFor(() => {
                 expect(consoleSpy).toHaveBeenCalledWith('Failed to load AI config:', expect.any(Error));
-                expect(screen.getByTestId('ai-config')).toHaveTextContent('no-ai-config');
+                expect(screen.getByTestId('ai-config')).toHaveTextContent('"room_id":"test-room-id"');
+                expect(screen.getByTestId('ai-config')).toHaveTextContent('"model_name":"gpt-4o-mini"');
             });
 
             consoleSpy.mockRestore();

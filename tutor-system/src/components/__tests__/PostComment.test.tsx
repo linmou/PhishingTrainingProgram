@@ -86,6 +86,22 @@ describe('PostComment role badges', () => {
         expect(screen.getByText('👨‍🏫 AI chatbot', { exact: true })).toBeInTheDocument();
     });
 
+    it('preserves generated-message styling and response-time display', () => {
+        render(
+            <PostComment
+                message={buildMessage({
+                    is_ai_generated: true,
+                    ai_response_time_ms: 1250,
+                })}
+                currentUserId="tutor-1"
+                currentUserRole="tutor"
+            />
+        );
+
+        expect(document.querySelector('.post-comment')).toHaveClass('post-comment-ai');
+        expect(screen.getByText('· 1250ms')).toHaveClass('comment-response-time');
+    });
+
     it('uses the tagged Riley profile only for an explicit Multi-agent tutor message', () => {
         const tutorAvatarUrl = 'https://example.test/tutor-avatar.png';
 

@@ -34,7 +34,7 @@ Feature: Tutor User Interface
     And their room "Advanced Phishing" has a student waiting
     When the tutor clicks "Enter Room" for "Advanced Phishing"
     Then the tutor is navigated to the room page
-    And they can see the student in the participant list
+    And the room should show two participants
     When the tutor sends the message "Hello, welcome to the training!"
     Then the message "Hello, welcome to the training!" from the tutor should be visible in the chat
 
@@ -42,4 +42,6 @@ Feature: Tutor User Interface
     Given a tutor is in the "Advanced Phishing" room
     And the chat contains a conversation with a student
     When the tutor clicks the "Download History" button
+    Then the download format options are shown
+    When the tutor selects the "Chat History (TXT)" format
     Then a file containing the chat history and room details should be downloaded

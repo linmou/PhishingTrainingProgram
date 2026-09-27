@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { RoomProvider, useRoom } from '../RoomContext';
-import { AuthProvider } from '../AuthContext';
+import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { User, Message } from '../../types';
 
@@ -16,12 +16,19 @@ jest.mock('../../services/supabase', () => ({
     }
 }));
 
+jest.mock('../AuthContext', () => ({
+    useAuth: jest.fn()
+}));
+
+const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+
 // Test component that displays messages with avatars
 const TestComponent = () => {
-    const { messages } = useRoom();
+    const { messages, joinRoom } = useRoom();
     
     return (
         <div>
+            <button onClick={() => void joinRoom('room1')}>Join Room</button>
             {messages.map(message => (
                 <div key={message.id} data-testid={`message-${message.id}`}>
                     <span data-testid={`display-name-${message.id}`}>{message.display_name}</span>
@@ -83,6 +90,14 @@ describe('RoomContext - Avatar Display', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockUseAuth.mockReturnValue({
+            user: mockUser,
+            loading: false,
+            joinWithNameAndRole: jest.fn(),
+            signOut: jest.fn(),
+            setUserRole: jest.fn(),
+            updateUserProfile: jest.fn()
+        });
         
         // Mock channel subscription
         const mockChannel = {
@@ -139,34 +154,13 @@ describe('RoomContext - Avatar Display', () => {
     });
 
     it('should enrich messages with avatar URLs from participants', async () => {
-        const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
-            const mockAuthContext = {
-                user: mockUser,
-                loading: false,
-                joinWithNameAndRole: jest.fn(),
-                signOut: jest.fn(),
-                setUserRole: jest.fn(),
-                updateUserProfile: jest.fn()
-            };
-            
-            return (
-                <AuthProvider value={mockAuthContext}>
-                    {children}
-                </AuthProvider>
-            );
-        };
-
         render(
-            <MockAuthProvider>
-                <RoomProvider>
-                    <TestComponent />
-                </RoomProvider>
-            </MockAuthProvider>
+            <RoomProvider>
+                <TestComponent />
+            </RoomProvider>
         );
 
-        // Join room to load messages
-        const { joinRoom } = require('../RoomContext');
-        await joinRoom('room1');
+        fireEvent.click(screen.getByRole('button', { name: 'Join Room' }));
 
         // Wait for messages to be enriched with avatar URLs
         await waitFor(() => {

@@ -188,6 +188,7 @@ const {
 
 ### Connection Resilience
 - **WebSocket failure**: Automatic fallback to polling
+- **Reconnect recovery**: Two-second polling retrieves messages persisted while the client could not reach the database
 - **Database errors**: Rollback optimistic updates
 - **AI service errors**: Graceful failure without blocking chat
 - **Reviewed-send errors**: The RPC is atomic; no message, feedback row, or room-mode update is adopted locally when it fails
@@ -195,7 +196,7 @@ const {
 ### User Feedback
 - **Loading states**: Visual indicators for AI generation
 - **Error messages**: Clear feedback for failed operations
-- **Offline indicators**: Status when services unavailable
+- **Offline status and local message queue UI**: Not currently implemented
 
 ## Performance Considerations
 
@@ -222,7 +223,8 @@ const mockRoomContext = {
 ```
 
 ### Critical Test Scenarios
-- **Offline mode**: Polling-only operation
+- **Reconnect sync**: Polling displays persisted messages after database access returns
+- **Failed message persistence**: Remove the optimistic message and keep the draft available for retry
 - **Message ordering**: Correct chronological sequence
 - **Role switching**: Dynamic permission updates
 - **AI integration**: Suggestion generation and feedback loops

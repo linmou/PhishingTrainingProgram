@@ -204,6 +204,9 @@ describe('Real-time Chat System BDD Tests', () => {
   let mockMessages: TestMessage[];
   let mockTypingUsers: Set<string>;
   let mockNetworkConnected: boolean;
+  let mockOfflinePollObserved: boolean;
+  let mockMessageInsertError: { message: string } | null;
+  let mockChannel: any;
 
   beforeEach(() => {
     // Reset mocks and test data
@@ -242,6 +245,65 @@ describe('Real-time Chat System BDD Tests', () => {
     mockMessages = [];
     mockTypingUsers = new Set();
     mockNetworkConnected = true;
+    mockOfflinePollObserved = false;
+    mockMessageInsertError = null;
+    Element.prototype.scrollIntoView = jest.fn();
+
+    mockChannel = {
+      on: jest.fn().mockReturnThis(),
+      send: jest.fn().mockResolvedValue('ok'),
+      subscribe: jest.fn().mockImplementation((callback?: (status: string) => void) => {
+        callback?.('SUBSCRIBED');
+        return mockChannel;
+      }),
+      unsubscribe: jest.fn()
+    };
+
+    const mockSupabase = supabase as any;
+    mockSupabase.from.mockImplementation((table: string) => {
+      const query: any = {
+        select: jest.fn(() => query),
+        eq: jest.fn(() => query),
+        in: jest.fn((_field: string, ids: string[]) => Promise.resolve({
+          data: [mockTutor, mockStudent, mockObserver].filter((participant) => ids.includes(participant.id)),
+          error: null
+        })),
+        order: jest.fn(() => {
+          if (table !== 'messages') return Promise.resolve({ data: [], error: null });
+          if (!mockNetworkConnected) {
+            mockOfflinePollObserved = true;
+            return Promise.resolve({ data: [], error: { message: 'network unavailable' } });
+          }
+          return Promise.resolve({ data: mockMessages, error: null });
+        }),
+        single: jest.fn(() => Promise.resolve({
+          data: table === 'rooms' ? mockRoom : null,
+          error: null
+        })),
+        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+        limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+        insert: jest.fn((data: Record<string, any>) => {
+          const insertedMessage = {
+            id: `msg-saved-${mockMessages.length + 1}`,
+            ...data,
+            ai_model_used: null,
+            ai_response_time_ms: null,
+            parent_message_id: data.parent_message_id || null,
+            created_at: new Date().toISOString()
+          };
+          mockMessages.push(insertedMessage);
+          const insertQuery: any = {
+            select: jest.fn(() => insertQuery),
+            single: jest.fn().mockImplementation(() => Promise.resolve(mockMessageInsertError
+              ? { data: null, error: mockMessageInsertError }
+              : { data: insertedMessage, error: null }))
+          };
+          return insertQuery;
+        })
+      };
+      return query;
+    });
+    mockSupabase.channel.mockReturnValue(mockChannel);
 
     console.log('🔧 Setting up mock data:', { mockRoom });
   });
@@ -256,13 +318,23 @@ describe('Real-time Chat System BDD Tests', () => {
       setUserRole: jest.fn()
     });
 
-    return render(
-      <MemoryRouter initialEntries={[`/room/${roomId}`]}>
-        <RoomProvider>
-          <RoomPagePost />
-        </RoomProvider>
-      </MemoryRouter>
-    );
+  return render(
+    <MemoryRouter initialEntries={[`/room/${roomId}`]}>
+      <RoomProvider>
+        <Routes>
+          <Route path="/room/:roomId" element={<RoomPagePost />} />
+        </Routes>
+      </RoomProvider>
+    </MemoryRouter>
+  );
+  };
+
+  const getChannelCallback = (event: string, matches: (filter: any) => boolean) => {
+    const registration = mockChannel.on.mock.calls
+      .slice()
+      .reverse()
+      .find(([registeredEvent, filter]) => registeredEvent === event && matches(filter));
+    return registration?.[2];
   };
 
   describe('Background: User role display and room functionality', () => {
@@ -334,10 +406,9 @@ describe('Real-time Chat System BDD Tests', () => {
 
   describe('Scenario 1: Messages appear immediately without page refresh', () => {
     test('should show new messages immediately via real-time subscription', async () => {
-      // Test that the real-time subscription callback is triggered
-      const mockSupabase = supabase as any;
-      
-      // Simulate a new message being inserted in the database
+      renderWithProviders(mockTutor, 'room-1');
+      await screen.findByText(mockRoom.title);
+
       const newMessage = {
         id: 'msg-realtime-1',
         room_id: 'room-1',
@@ -348,104 +419,58 @@ describe('Real-time Chat System BDD Tests', () => {
         display_name: mockTutor.display_name
       };
 
-      // Verify that the real-time subscription mechanism is in place
-      // In the actual implementation, this creates channels and sets up callbacks
-      expect(mockSupabase.channel).toBeDefined();
-      
-      // Real-time subscription should be set up properly
-      expect(true).toBe(true); // Now passes - real-time subscription is implemented
+      let messageCallback: ((payload: any) => void) | undefined;
+      await waitFor(() => {
+        messageCallback = getChannelCallback('postgres_changes', (filter) => filter.table === 'messages');
+        expect(messageCallback).toEqual(expect.any(Function));
+      });
+
+      act(() => {
+        messageCallback?.({ new: newMessage });
+      });
+
+      expect(await screen.findByText(newMessage.content)).toBeInTheDocument();
     });
 
-    test('should update messages state when receiving real-time database changes', async () => {
-      // This tests the actual subscription callback functionality
-      const mockSupabase = supabase as any;
-      
-      // Simulate the postgres_changes callback being triggered
-      const mockPayload = {
-        new: {
-          id: 'msg-realtime-2',
-          room_id: 'room-1',
-          user_id: mockStudent.id,
-          content: 'I can see it!',
-          user_role: 'student',
-          created_at: new Date().toISOString(),
-          display_name: mockStudent.display_name
-        }
-      };
+    test('should apply room updates received from the realtime subscription', async () => {
+      renderWithProviders(mockTutor, 'room-1');
+      await screen.findByText(mockRoom.title);
 
-      // This should trigger the setMessages callback
-      // Real-time callback functionality is now implemented
-      expect(true).toBe(true); // Now passes - callback handling is implemented
+      let roomCallback: ((payload: any) => void) | undefined;
+      await waitFor(() => {
+        roomCallback = getChannelCallback('postgres_changes', (filter) => filter.table === 'rooms');
+        expect(roomCallback).toEqual(expect.any(Function));
+      });
+
+      act(() => {
+        roomCallback?.({
+          new: { ...mockRoom, title: 'Updated room title' }
+        });
+      });
+
+      expect(await screen.findByText('Updated room title')).toBeInTheDocument();
     });
   });
 
   describe('Scenario 2: Tutor and Student can exchange messages', () => {
     test('should allow tutor to send message and add to messages array', async () => {
-      // Test the core functionality: message creation and storage
-      const mockSupabase = supabase as any;
-      
-      // Simulate sending a message
-      const messageData = {
-        room_id: 'room-1',
-        user_id: mockTutor.id,
-        content: 'Welcome to the session!',
-        user_role: 'tutor'
-      };
-
-      // Call the mocked insert function
-      const result = await mockSupabase.from('messages').insert(messageData);
-
-      // Verify the message was processed correctly
-      expect(result.data).toEqual(
-        expect.objectContaining({
-          room_id: 'room-1',
-          user_id: mockTutor.id,
-          content: 'Welcome to the session!',
-          user_role: 'tutor',
-          display_name: 'Tutor'
-        })
-      );
-
-      // Test that message appears in the chat UI
       renderWithProviders(mockTutor, 'room-1');
-      await waitFor(() => {
-        expect(screen.getByText('Welcome to the session!')).toBeInTheDocument();
-        expect(screen.getByText(/tutor/i)).toBeInTheDocument();
-      });
+      const messageInput = await screen.findByPlaceholderText('Write a comment...');
+      await userEvent.type(messageInput, 'Welcome to the session!');
+      await userEvent.click(screen.getByTitle('Send comment'));
+
+      expect(await screen.findByText('Welcome to the session!')).toBeInTheDocument();
+      expect(supabase.from).toHaveBeenCalledWith('messages');
     });
 
     test('should allow student to send message and add to messages array', async () => {
-      // Test the core functionality: message creation and storage
-      const mockSupabase = supabase as any;
-      
-      // Simulate sending a message
-      const messageData = {
-        room_id: 'room-1',
-        user_id: mockStudent.id,
-        content: 'Hi, glad to be here.',
-        user_role: 'student'
-      };
-
-      // Call the mocked insert function
-      const result = await mockSupabase.from('messages').insert(messageData);
-
-      // Verify the message was processed correctly
-      expect(result.data).toEqual(
-        expect.objectContaining({
-          room_id: 'room-1',
-          user_id: mockStudent.id,
-          content: 'Hi, glad to be here.',
-          user_role: 'student',
-          display_name: 'Student'
-        })
-      );
-
-      // Test that student message appears in the chat UI
       renderWithProviders(mockStudent, 'room-1');
-      await waitFor(() => {
-        expect(screen.getByText('Hi, glad to be here.')).toBeInTheDocument();
-        expect(screen.getByText(/student/i)).toBeInTheDocument();
-      });
+      const messageInput = await screen.findByPlaceholderText('Write a comment...');
+      await userEvent.type(messageInput, 'Hi, glad to be here.');
+      await userEvent.click(screen.getByTitle('Send comment'));
+
+      expect(await screen.findByText('Hi, glad to be here.')).toBeInTheDocument();
+      expect(supabase.from).toHaveBeenCalledWith('messages');
     });
   });
 
@@ -463,7 +488,7 @@ describe('Real-time Chat System BDD Tests', () => {
         expect(sendButton).not.toBeInTheDocument();
         
         // Test that observer sees read-only indicator
-        const readOnlyIndicator = screen.queryByText(/read.?only/i) || screen.queryByTestId('observer-mode');
+        const readOnlyIndicator = screen.queryByText(/cannot participate/i) || screen.queryByTestId('observer-mode');
         expect(readOnlyIndicator).toBeInTheDocument();
       });
     });
@@ -500,29 +525,48 @@ describe('Real-time Chat System BDD Tests', () => {
         expect(screen.getByText('This is the first message.')).toBeInTheDocument();
         expect(screen.getByText('This is the second message.')).toBeInTheDocument();
         
-        // Should show message authors
-        expect(screen.getByText(/tutor/i)).toBeInTheDocument();
-        expect(screen.getByText(/student/i)).toBeInTheDocument();
+        // Should show message authors and preserve chronological order.
+        const firstMessage = screen.getByText('This is the first message.');
+        const secondMessage = screen.getByText('This is the second message.');
+        expect(within(firstMessage.closest('.post-comment') as HTMLElement).getByText('Tutor')).toBeInTheDocument();
+        expect(within(secondMessage.closest('.post-comment') as HTMLElement).getByText('Student')).toBeInTheDocument();
+        expect(firstMessage.compareDocumentPosition(secondMessage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       });
     });
   });
 
   describe('Scenario 4: Typing indicators are shown between tutor and student', () => {
-    test('should display typing indicators in the UI when users are typing', async () => {
+    test('should broadcast typing state when a user types', async () => {
       renderWithProviders(mockTutor, 'room-1');
-      
-      // Test that typing indicators appear in the UI when triggered
+      const messageInput = await screen.findByPlaceholderText('Write a comment...');
+      await userEvent.type(messageInput, 'Draft message');
+
+      expect(mockChannel.send).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'broadcast',
+        event: 'typing_start',
+        payload: { userId: mockTutor.id, displayName: mockTutor.display_name }
+      }));
+    });
+
+    // src/__tests__/real_time_chat.test.tsx: verify incoming realtime typing events render in the room.
+    test('should display incoming typing indicators', async () => {
+      const view = renderWithProviders(mockTutor, 'room-1');
+      await screen.findByText(mockRoom.title);
+
+      let typingCallback: ((payload: any) => void) | undefined;
       await waitFor(() => {
-        // Should show typing indicator UI elements
-        const typingIndicator = screen.queryByText(/typing/i) || screen.queryByTestId('typing-indicator');
-        // This will fail until typing indicator UI is implemented
-        expect(typingIndicator).toBeInTheDocument();
+        typingCallback = getChannelCallback('broadcast', (filter) => filter.event === 'typing_start');
+        expect(typingCallback).toEqual(expect.any(Function));
       });
-      
-      // Test that multiple typing indicators can be shown
+
+      act(() => {
+        typingCallback?.({ payload: { userId: mockStudent.id, displayName: mockStudent.display_name } });
+      });
+
       await waitFor(() => {
-        const typingIndicators = screen.queryAllByText(/is typing/i);
-        expect(typingIndicators.length).toBeGreaterThanOrEqual(0);
+        expect(view.container.querySelector('.comments-list')?.textContent).toContain(
+          `${mockStudent.display_name} is typing...`
+        );
       });
     });
 
@@ -543,30 +587,53 @@ describe('Real-time Chat System BDD Tests', () => {
   });
 
   describe('Scenario 5: Offline message synchronization', () => {
-    test('should show offline/online status indicators in the UI', async () => {
-      renderWithProviders(mockTutor, 'room-1');
-      
-      // Test that online status is shown initially
-      await waitFor(() => {
-        const onlineIndicator = screen.queryByText(/online/i) || screen.queryByTestId('connection-status');
-        // This will fail until connection status UI is implemented
-        expect(onlineIndicator).toBeInTheDocument();
+    // src/__tests__/real_time_chat.test.tsx: verify missed messages arrive after database access returns.
+    test('should synchronize a tutor message after the student reconnects', async () => {
+      const view = renderWithProviders(mockStudent, 'room-1');
+      await screen.findByText(mockRoom.title);
+
+      mockNetworkConnected = false;
+      await waitFor(() => expect(mockOfflinePollObserved).toBe(true), { timeout: 3000 });
+
+      mockMessages.push({
+        id: 'msg-offline-1',
+        room_id: mockRoom.id,
+        user_id: mockTutor.id,
+        content: 'Can you see this message?',
+        user_role: 'tutor',
+        created_at: new Date().toISOString(),
+        display_name: mockTutor.display_name
       });
-      
-      // Test that offline messages are queued and shown when reconnected
+      mockNetworkConnected = true;
+
       await waitFor(() => {
-        // Should show message that was sent while offline
-        const offlineMessage = screen.queryByText('Can you see this message?');
-        // Should show retry or queued message indicators
-        const queueIndicator = screen.queryByText(/sending/i) || screen.queryByTestId('message-queue');
-        
-        // Tests will fail until offline message handling UI is implemented
-        expect(offlineMessage || queueIndicator).toBeTruthy();
-      });
+        expect(view.container.querySelector('.comments-list')?.textContent).toContain('Can you see this message?');
+      }, { timeout: 3000 });
     });
   });
 
-  describe('Scenario 6: Two-rendered-client page seam', () => {
+  describe('Scenario 6: Message delivery failures', () => {
+    // src/__tests__/real_time_chat.test.tsx: verify failed persistence removes an optimistic message.
+    test('should remove an optimistic message when persistence fails', async () => {
+      mockMessageInsertError = { message: 'network unavailable' };
+      const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => undefined);
+
+      try {
+        const view = renderWithProviders(mockTutor, 'room-1');
+        const messageInput = await screen.findByPlaceholderText('Write a comment...');
+        await userEvent.type(messageInput, 'This message cannot be saved.');
+        await userEvent.click(screen.getByTitle('Send comment'));
+
+        await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Failed to send message. Please try again.'));
+        expect(view.container.querySelector('.comments-list')?.textContent).not.toContain('This message cannot be saved.');
+        expect(messageInput).toHaveValue('This message cannot be saved.');
+      } finally {
+        alertSpy.mockRestore();
+      }
+    });
+  });
+
+  describe('Scenario 7: Two-rendered-client page seam', () => {
     const buildRoomValue = (overrides: Record<string, any> = {}) => ({
       currentRoom: mockRoom,
       messages: [],

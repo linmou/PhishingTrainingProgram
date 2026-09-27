@@ -26,6 +26,7 @@ jest.mock('../services/supabase', () => ({
     },
     getRoomsByTutor: jest.fn(),
     createRoom: jest.fn(),
+    getRoomTemplatesByTutor: jest.fn(),
     getUserProfile: jest.fn(),
     updateUserProfile: jest.fn(),
 }));
@@ -41,10 +42,11 @@ jest.mock('../contexts/RoomContext', () => ({
 }));
 
 // Import mocked functions
-import { getRoomsByTutor, createRoom, getUserProfile, updateUserProfile } from '../services/supabase';
+import { getRoomsByTutor, createRoom, getRoomTemplatesByTutor, getUserProfile, updateUserProfile } from '../services/supabase';
 
 const mockGetRoomsByTutor = getRoomsByTutor as jest.Mock;
 const mockCreateRoom = createRoom as jest.Mock;
+const mockGetRoomTemplatesByTutor = getRoomTemplatesByTutor as jest.Mock;
 const mockGetUserProfile = getUserProfile as jest.Mock;
 const mockUpdateUserProfile = updateUserProfile as jest.Mock;
 const mockUseAuth = useAuth as jest.Mock;
@@ -80,6 +82,7 @@ defineFeature(feature, test => {
         jest.clearAllMocks();
         createdRooms = [];
         mockUser = null;
+        mockGetRoomTemplatesByTutor.mockResolvedValue([]);
 
         // Default room context
         mockRoomContextState = {
@@ -208,7 +211,7 @@ defineFeature(feature, test => {
         });
 
         and('the room should show as "Active"', () => {
-            expect(screen.getByText('Status: Active')).toBeInTheDocument();
+            expect(screen.getByText('🟢 Active')).toBeInTheDocument();
         });
     });
 
@@ -333,7 +336,7 @@ defineFeature(feature, test => {
 
                 expect(screen.getByText(expectedDetails.title || 'Phishing Defense Workshop')).toBeInTheDocument();
                 expect(screen.getByText(expectedDetails.description || 'Learn to identify phishing attacks')).toBeInTheDocument();
-                expect(screen.getByText(`Status: ${expectedDetails.status || 'Active'}`)).toBeInTheDocument();
+                expect(screen.getByText('🟢 Active')).toBeInTheDocument();
             });
         });
     });

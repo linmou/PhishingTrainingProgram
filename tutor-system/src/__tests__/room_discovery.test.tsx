@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { act } from 'react';
 import '@testing-library/jest-dom';
@@ -8,7 +8,7 @@ import App from '../App';
 import StudentView from '../pages/StudentView';
 import ObserverView from '../pages/ObserverView';
 import RoomPagePost from '../pages/RoomPagePost';
-import { supabase } from '../services/supabase';
+import { getRoomsByObserver, joinRoomAsObserver, supabase } from '../services/supabase';
 
 // Mock Supabase
 jest.mock('../services/supabase', () => ({
@@ -22,6 +22,8 @@ jest.mock('../services/supabase', () => ({
     from: jest.fn(),
     channel: jest.fn(),
   },
+  getRoomsByObserver: jest.fn(),
+  joinRoomAsObserver: jest.fn(),
 }));
 
 // Mock navigation
@@ -54,6 +56,7 @@ let mockRoomContextValue: any = {
   currentRoom: null,
   messages: [],
   participants: [],
+  messageFeedbackStats: {},
   loading: false,
   typingUsers: [],
   createRoom: jest.fn(),
@@ -106,9 +109,17 @@ const createMockTutor = (overrides = {}) => ({
   ...overrides,
 });
 
+type MockRoomRow = {
+  id: string;
+  title: string;
+  [column: string]: unknown;
+};
+
 // Helper functions
-const setupSupabaseMocks = (rooms = [], sessions = null) => {
+const setupSupabaseMocks = (rooms: MockRoomRow[] = [], sessions = null) => {
   const mockSupabase = supabase as any;
+  (getRoomsByObserver as jest.Mock).mockResolvedValue(rooms);
+  (joinRoomAsObserver as jest.Mock).mockResolvedValue({ success: true });
   
   mockSupabase.from.mockImplementation((table: string) => {
     if (table === 'rooms') {
@@ -125,6 +136,7 @@ const setupSupabaseMocks = (rooms = [], sessions = null) => {
       return {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        not: jest.fn().mockReturnThis(),
         insert: jest.fn(() => ({
           select: jest.fn().mockResolvedValue({
             data: [{ id: 'session-123', room_id: '2', student_id: 'jane-student-id' }],
@@ -135,6 +147,9 @@ const setupSupabaseMocks = (rooms = [], sessions = null) => {
           data: sessions,
           error: sessions ? null : { code: 'PGRST116' },
         }),
+        maybeSingle: jest.fn().mockResolvedValue({ data: sessions, error: null }),
+        then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+          Promise.resolve({ data: sessions ? [sessions] : [], error: null }).then(resolve, reject),
       };
     }
     if (table === 'users') {
@@ -189,6 +204,8 @@ describe('Feature: Room Discovery and Joining', () => {
       subscribe: jest.fn().mockReturnThis(),
       unsubscribe: jest.fn(),
     });
+    (getRoomsByObserver as jest.Mock).mockResolvedValue([]);
+    (joinRoomAsObserver as jest.Mock).mockResolvedValue({ success: true });
     
     // Mock scrollIntoView for JSDOM
     Element.prototype.scrollIntoView = jest.fn();
@@ -252,7 +269,7 @@ describe('Feature: Room Discovery and Joining', () => {
           expect(screen.getByText('Math Basics')).toBeInTheDocument();
           expect(screen.getByText('John Tutor')).toBeInTheDocument();
           expect(screen.getByText('Introduction to algebra')).toBeInTheDocument();
-          expect(screen.getByText('Available')).toBeInTheDocument();
+          expect(within(screen.getByTestId('room-card-1')).getByText(/Available/)).toBeInTheDocument();
         });
       });
 
@@ -361,16 +378,16 @@ describe('Feature: Room Discovery and Joining', () => {
             };
           }
           if (table === 'sessions') {
-            return {
+            const sessionsQuery: any = {
               select: jest.fn().mockReturnThis(),
-              eq: jest.fn().mockImplementation((field: string, value: any) => ({
-                eq: jest.fn().mockReturnThis(),
-                single: jest.fn().mockResolvedValue({
-                  data: mockSession,
-                  error: null,
-                }),
-              })),
+              eq: jest.fn().mockReturnThis(),
+              not: jest.fn().mockReturnThis(),
+              maybeSingle: jest.fn().mockResolvedValue({ data: mockSession, error: null }),
+              single: jest.fn().mockResolvedValue({ data: mockSession, error: null }),
+              then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+                Promise.resolve({ data: [mockSession], error: null }).then(resolve, reject),
             };
+            return sessionsQuery;
           }
           return mockSupabase.from();
         });
@@ -388,11 +405,12 @@ describe('Feature: Room Discovery and Joining', () => {
           expect(screen.getByText('John Tutor')).toBeInTheDocument();
         });
 
-        // And the room card should show "Room Full" status
-        expect(screen.getByText('Room Full')).toBeInTheDocument();
+        // And the room card should show the current full-room status label
+        const fullRoomCard = screen.getByTestId('room-card-3');
+        expect(within(fullRoomCard).getByText(/Room Full/)).toBeInTheDocument();
 
         // And the "Join Room" button should be disabled
-        const joinButton = screen.getByRole('button', { name: /join room/i });
+        const joinButton = within(fullRoomCard).getByRole('button', { name: /join room/i });
         expect(joinButton).toBeDisabled();
       });
     });
@@ -512,8 +530,8 @@ describe('Feature: Room Discovery and Joining', () => {
         expect(screen.queryByRole('button', { name: /send/i })).not.toBeInTheDocument();
 
         // And I should see "Observer Mode - Read Only" indicator
-        expect(screen.getByText(/you are observing this session/i)).toBeInTheDocument();
-        expect(screen.getByText(/you cannot send messages/i)).toBeInTheDocument();
+        expect(screen.getByText(/you are in observer mode/i)).toBeInTheDocument();
+        expect(screen.getByText(/cannot participate/i)).toBeInTheDocument();
       });
     });
 
@@ -603,13 +621,14 @@ describe('Feature: Room Discovery and Joining', () => {
           expect(screen.getByText('Science Lab')).toBeInTheDocument();
         });
         
-        const observeButton = screen.getByRole('button', { name: /observe room/i });
+        const observeButton = screen.getByRole('button', { name: /join/i });
         await userEvent.click(observeButton);
 
         // Then I should successfully join the room as an observer
         await waitFor(() => {
           expect(mockNavigate).toHaveBeenCalledWith('/room/5');
         });
+        expect(joinRoomAsObserver).toHaveBeenCalledWith('5', 'alice-observer-id');
 
         // Simulate joining the room and updating observer count
         mockRoomContextValue.currentRoom = {
@@ -642,10 +661,10 @@ describe('Feature: Room Discovery and Joining', () => {
           unsubscribe: jest.fn(),
         };
         
-        let realtimeCallback: any;
+        const realtimeCallbacks: Record<string, any> = {};
         mockChannel.on.mockImplementation((event: string, filter: any, callback: any) => {
-          if (event === 'postgres_changes') {
-            realtimeCallback = callback;
+          if (event === 'postgres_changes' && callback) {
+            realtimeCallbacks[filter.table] = callback;
           }
           return mockChannel;
         });
@@ -670,6 +689,10 @@ describe('Feature: Room Discovery and Joining', () => {
             return {
               select: jest.fn().mockReturnThis(),
               eq: jest.fn().mockReturnThis(),
+              not: jest.fn().mockReturnThis(),
+              maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+              then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+                Promise.resolve({ data: [], error: null }).then(resolve, reject),
               single: jest.fn().mockResolvedValue({
                 data: null,
                 error: { code: 'PGRST116' },
@@ -698,6 +721,10 @@ describe('Feature: Room Discovery and Joining', () => {
           expect(screen.getByText('No rooms available')).toBeInTheDocument();
         });
 
+        await waitFor(() => {
+          expect(realtimeCallbacks.rooms).toEqual(expect.any(Function));
+        }, { timeout: 4000 });
+
         // When a new room is created (simulate realtime event)
         const newRoom = {
           id: '5',
@@ -725,7 +752,7 @@ describe('Feature: Room Discovery and Joining', () => {
           // Update the rooms array when real-time event occurs
           currentRooms.push(newRoom);
           
-          realtimeCallback({
+          realtimeCallbacks.rooms({
             eventType: 'INSERT',
             new: newRoom,
           });
@@ -734,7 +761,7 @@ describe('Feature: Room Discovery and Joining', () => {
         // Then the new room should appear
         await waitFor(() => {
           expect(screen.getByText('Calculus Help')).toBeInTheDocument();
-          expect(screen.getByText('Available')).toBeInTheDocument();
+          expect(within(screen.getByTestId('room-card-5')).getByText(/Available/)).toBeInTheDocument();
         });
       });
     });
@@ -748,10 +775,10 @@ describe('Feature: Room Discovery and Joining', () => {
           unsubscribe: jest.fn(),
         };
         
-        let realtimeCallback: any;
+        const realtimeCallbacks: Record<string, any> = {};
         mockChannel.on.mockImplementation((event: string, filter: any, callback: any) => {
-          if (event === 'postgres_changes') {
-            realtimeCallback = callback;
+          if (event === 'postgres_changes' && callback) {
+            realtimeCallbacks[filter.table] = callback;
           }
           return mockChannel;
         });
@@ -806,6 +833,10 @@ describe('Feature: Room Discovery and Joining', () => {
             return {
               select: jest.fn().mockReturnThis(),
               eq: jest.fn().mockReturnThis(),
+              not: jest.fn().mockReturnThis(),
+              maybeSingle: jest.fn().mockResolvedValue({ data: currentSessionData, error: null }),
+              then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+                Promise.resolve({ data: currentSessionData ? [currentSessionData] : [], error: null }).then(resolve, reject),
               single: jest.fn().mockResolvedValue({
                 data: currentSessionData,
                 error: currentSessionData ? null : { code: 'PGRST116' },
@@ -825,8 +856,12 @@ describe('Feature: Room Discovery and Joining', () => {
         // Verify room is initially available
         await waitFor(() => {
           expect(screen.getByText('Programming 101')).toBeInTheDocument();
-          expect(screen.getByText('Available')).toBeInTheDocument();
+          expect(within(screen.getByTestId('room-card-7')).getByText(/Available/)).toBeInTheDocument();
         });
+
+        await waitFor(() => {
+          expect(realtimeCallbacks.sessions).toEqual(expect.any(Function));
+        }, { timeout: 4000 });
 
         // Verify join button is initially enabled
         const joinButton = screen.getByRole('button', { name: /join room/i });
@@ -846,7 +881,7 @@ describe('Feature: Room Discovery and Joining', () => {
           };
           
           // Trigger real-time event (session created)
-          realtimeCallback({
+          realtimeCallbacks.sessions({
             eventType: 'INSERT',
             new: currentSessionData,
             table: 'sessions',
@@ -855,7 +890,7 @@ describe('Feature: Room Discovery and Joining', () => {
 
         // Then I should see the room status change to "Room Full"
         await waitFor(() => {
-          expect(screen.getByText('Room Full')).toBeInTheDocument();
+          expect(within(screen.getByTestId('room-card-7')).getByText(/Room Full/)).toBeInTheDocument();
         });
 
         // And the "Join Room" button should become disabled

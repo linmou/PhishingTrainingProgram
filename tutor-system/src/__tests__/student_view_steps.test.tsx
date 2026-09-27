@@ -44,11 +44,15 @@ const TestApp = () => (
 );
 
 // Helper for mocking the query chain
-const mockQuery = (data: any[] | null, error: any = null) => ({
+const mockQuery = (data: any[] | null, error: any = null): any => ({
     select: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
+    not: jest.fn().mockReturnThis(),
     order: jest.fn().mockResolvedValue({ data, error }),
     single: jest.fn().mockResolvedValue({ data, error }),
+    maybeSingle: jest.fn().mockResolvedValue({ data: data?.[0] || null, error: null }),
+    then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+        Promise.resolve({ data: data || [], error: null }).then(resolve, reject),
 });
 
 defineFeature(feature, test => {
@@ -76,7 +80,7 @@ defineFeature(feature, test => {
             return mockQuery([]);
         });
 
-        const mockSubscription = {
+        const mockSubscription: any = {
             on: jest.fn().mockImplementation((event, config, callback) => {
                 if (config.table === 'rooms' || config.table === 'sessions') {
                     realtimeCallback = callback;
@@ -176,7 +180,7 @@ defineFeature(feature, test => {
             renderStudentView();
         });
         when('a tutor creates a new room with title "Live Hacking Demo"', async () => {
-            expect(realtimeCallback).toBeDefined();
+            await waitFor(() => expect(realtimeCallback).toEqual(expect.any(Function)), { timeout: 4000 });
             mockRoomsData = [{ id: 'r-2', title: 'Live Hacking Demo', is_active: true }];
             await act(async () => realtimeCallback!({ eventType: 'INSERT', new: mockRoomsData[0] }));
         });
@@ -197,8 +201,7 @@ defineFeature(feature, test => {
         and('the "Phishing 101" room is full', () => {
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
             mockSessionsData = [
-                { user_id: 'tutor-1', role: 'tutor' },
-                { user_id: 'student-2', role: 'student' }
+                { room_id: 'r-1', student_id: 'student-2', status: 'active' }
             ];
             mockSupabaseClient.from.mockImplementation((tableName: string) => {
                 if (tableName === 'rooms') return mockQuery(mockRoomsData);
@@ -220,7 +223,7 @@ defineFeature(feature, test => {
 
         and('the student should see a "Room Full" status indicator for that room', async () => {
             await waitFor(() => {
-                expect(screen.getByText('Full')).toBeInTheDocument();
+                expect(screen.getByText(/Room Full/)).toBeInTheDocument();
             });
         });
     });
@@ -234,7 +237,9 @@ defineFeature(feature, test => {
         });
         and('the system will produce an error when they try to join "Phishing 101"', () => {
             mockRoomsData = [{ id: 'r-1', title: 'Phishing 101', is_active: true }];
-            const mockInsert = jest.fn().mockResolvedValue({ error: { message: 'Insert failed' } });
+            const mockInsert = jest.fn(() => ({
+                select: jest.fn().mockResolvedValue({ data: null, error: { message: 'Insert failed' } })
+            }));
 
             mockSupabaseClient.from.mockImplementation((tableName: string) => {
                 if (tableName === 'rooms') return mockQuery(mockRoomsData);
@@ -252,9 +257,9 @@ defineFeature(feature, test => {
             fireEvent.click(screen.getByRole('button', { name: /join/i }));
         });
 
-        then('the student should see an error message "Failed to join the room. Please try again."', async () => {
+        then('the student should see an error message "Failed to join the room: Insert failed"', async () => {
             await waitFor(() => {
-                expect(screen.getByText("Failed to join the room. Please try again.")).toBeInTheDocument();
+                expect(screen.getByText("Failed to join the room: Insert failed")).toBeInTheDocument();
             });
         });
     });
@@ -271,7 +276,9 @@ defineFeature(feature, test => {
             mockSessionsData = null;
             
             // Mock successful insert for joining
-            const mockInsert = jest.fn().mockResolvedValue({ error: null });
+            const mockInsert = jest.fn(() => ({
+                select: jest.fn().mockResolvedValue({ data: [{ id: 'session-1' }], error: null })
+            }));
             mockSupabaseClient.from.mockImplementation((tableName: string) => {
                 if (tableName === 'rooms') return mockQuery(mockRoomsData);
                 if (tableName === 'sessions') {
@@ -432,11 +439,11 @@ defineFeature(feature, test => {
     test('Student still sees real classic teaching rooms from normal tutors', ({ given, and, when, then }) => {
         given('a user is authenticated', () => {});
         given('the user is logged in as a "Student"', () => {});
-        and('an active room titled "Account Security Alert Scam" is owned by tutor "Adele"', () => {
+        and('an active room titled "Secure Email Basics" is owned by tutor "Adele"', () => {
             mockRoomsData = [
                 {
                     id: 'real-1',
-                    title: 'Account Security Alert Scam',
+                    title: 'Secure Email Basics',
                     description: 'class period 4',
                     is_active: true,
                     tutor: { id: 'a', display_name: 'Adele' },
@@ -446,9 +453,9 @@ defineFeature(feature, test => {
         when('the student is on the dashboard', () => {
             renderStudentView();
         });
-        then('the student should see the room "Account Security Alert Scam" in the list', async () => {
+        then('the student should see the room "Secure Email Basics" in the list', async () => {
             await waitFor(() => {
-                expect(screen.getByText('Account Security Alert Scam')).toBeInTheDocument();
+                expect(screen.getByText('Secure Email Basics')).toBeInTheDocument();
             });
         });
         and('the student should see tutor "Adele" on the dashboard', async () => {

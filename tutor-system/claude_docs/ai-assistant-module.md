@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-14 (Multi-agent Tutor profile surface correction; commit 1fb2e9b)
+Last updated: 2026-09-27 (AI comment tint and inline response timing restored; commit adac01b)
 
 ## Overview
 
@@ -67,7 +67,7 @@ Runtime source of truth:
 - `ai_response_time_ms`: Generation time metrics
 - `parent_message_id`: Reference to responded message
 
-Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
+Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Rows marked `is_ai_generated` keep the AI-tinted background and show positive `ai_response_time_ms` values inline. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
 
 `RoomContext.approveMultiAgentDraft` persists every approved Riley or Tutor-tagged row with `response_mode='multiagent'`, preserving the character tag for the presentation resolver to decode.
 

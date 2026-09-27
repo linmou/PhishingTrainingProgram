@@ -135,6 +135,8 @@ sessions: {
 
 **Purpose**: Track formal learning sessions with timing data
 
+Migration `20260927000000_one_active_student_per_room.sql` limits each room to one active session with a non-null `student_id`. Observer sessions remain outside this capacity rule. Before adding the partial unique index, the migration reports duplicate room IDs and counts and aborts without modifying session rows; those duplicates must be resolved before retrying it.
+
 ### AI Assistant Configuration (Lines 167-201)
 ```typescript
 ai_assistant_configs: {

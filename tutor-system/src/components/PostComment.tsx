@@ -5,6 +5,7 @@ import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
 import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import { resolveMessagePresentation } from '../utils/messagePresentation';
 import type { AssessmentOptionId } from '../types/assessment';
 import './PostComment.css';
 
@@ -76,28 +77,6 @@ const PostComment: React.FC<PostCommentProps> = ({
         }
     };
 
-    const getRoleColor = (role: string, isAI: boolean) => {
-        if (isAI) return '#8b5cf6'; // Purple for AI
-        switch (role) {
-            case 'tutor': return '#3b82f6'; // Blue
-            case 'student': return '#10b981'; // Green
-            case 'observer': return '#6b7280'; // Gray
-            default: return '#6b7280';
-        }
-    };
-
-    const getRoleIcon = (role: string, isAI: boolean) => {
-        if (isAI) return '🤖';
-        switch (role) {
-            case 'tutor': return '👨‍🏫';
-            case 'student': return '👨‍🎓';
-            case 'observer': return '👁️';
-            default: return '👤';
-        }
-    };
-
-    const getRoleLabel = (role: string) => role === 'tutor' ? 'AI chatbot' : role;
-
     const isOwnComment = currentUserId === message.user_id;
 
     // Feedback handling functions
@@ -140,18 +119,18 @@ const PostComment: React.FC<PostCommentProps> = ({
     const dislikeCountFromStats = feedbackStats?.dislike_count || 0;
     const hasUserLiked = userFeedback?.feedback_type === 'like';
     const hasUserDisliked = userFeedback?.feedback_type === 'dislike';
+    const isAIGenerated = message.is_ai_generated === true;
 
-    const isGuardMessage = message.response_mode === 'guard';
-    const displayName = isGuardMessage ? 'Security Supervisor' : (message.display_name || message.user_role);
+    const presentation = resolveMessagePresentation(message, currentUserRole);
 
     return (
-        <div className={`post-comment ${message.is_ai_generated ? 'post-comment-ai' : ''} ${isGuardMessage ? 'post-comment-guard' : ''} ${className}`}>
+        <div className={`post-comment ${isAIGenerated ? 'post-comment-ai' : ''} ${presentation.isGuard ? 'post-comment-guard' : ''} ${presentation.isMultiagent ? 'post-comment-character' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
                     <AvatarDisplay
-                        avatarUrl={isGuardMessage ? null : message.avatar_url || null}
-                        displayName={displayName}
+                        avatarUrl={presentation.avatarUrl}
+                        displayName={presentation.avatarName}
                         size="small"
                         className="comment-avatar"
                     />
@@ -164,21 +143,14 @@ const PostComment: React.FC<PostCommentProps> = ({
                         <div className="comment-author-info">
                             <span 
                                 className="comment-author-name"
-                                style={{ color: isGuardMessage ? '#b91c1c' : getRoleColor(message.user_role, message.is_ai_generated === true) }}
+                                style={{ color: presentation.roleColor }}
                             >
-                                {!isGuardMessage && message.is_ai_generated && getRoleIcon(message.user_role, message.is_ai_generated)}
-                                {isGuardMessage ? displayName : message.is_ai_generated ? 'AI Assistant' : displayName}
+                                {presentation.displayName}
                             </span>
                             
-                            {!message.is_ai_generated && currentUserRole !== 'student' && (
-                                <span className={`comment-role-badge ${message.user_role === 'tutor' ? 'comment-role-badge--tutor' : ''}`}>
-                                    {getRoleIcon(message.user_role, false)} {getRoleLabel(message.user_role)}
-                                </span>
-                            )}
-                            
-                            {message.is_ai_generated && (
-                                <span className="comment-ai-badge">
-                                    AI · {message.ai_model_used}
+                            {presentation.roleBadge && (
+                                <span className={`comment-role-badge${message.user_role === 'tutor' ? ' comment-role-badge--tutor' : ''}`}>
+                                    {presentation.roleBadge}
                                 </span>
                             )}
                         </div>
@@ -187,7 +159,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                             <span className="comment-timestamp">
                                 {formatTime(message.created_at)}
                             </span>
-                            {message.is_ai_generated && message.ai_response_time_ms && (
+                            {isAIGenerated && message.ai_response_time_ms && (
                                 <span className="comment-response-time">
                                     · {message.ai_response_time_ms}ms
                                 </span>
@@ -204,7 +176,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                                 canAnswer={currentUserRole === 'student' && currentUserId === publicQuestion.studentId}
                                 onSubmit={onSubmitAssessment ? (ids) => onSubmitAssessment(message.id, ids) : undefined}
                               />
-                            : message.content}
+                            : presentation.body}
                         {answerLifecycle?.state === 'rejected' && answerLifecycle.code === 'ANSWER_FORMAT_UNRESOLVED' && (
                             <p className="answer-clarification" role="status">
                                 Choose one of the displayed options and submit again.
