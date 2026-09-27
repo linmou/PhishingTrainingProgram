@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-27 (Multi-agent mode deprecated)
+Last updated: 2026-09-27 (Multi-agent mode deprecated; AI comment presentation restored in commit adac01b)
 
 ## Overview
 
@@ -66,7 +66,7 @@ Runtime source of truth:
 - `ai_response_time_ms`: Generation time metrics
 - `parent_message_id`: Reference to responded message
 
-Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
+Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Rows marked `is_ai_generated` keep the AI-tinted background and show positive `ai_response_time_ms` values inline. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
 
 Multi-agent generation is deprecated. The student selector and dedicated Test Rooms template are hidden, and AI requests normalize saved `interaction_mode` values to `single_agent`. The stored `multiagent` response mode and message-tag decoder remain for historical rows.
 

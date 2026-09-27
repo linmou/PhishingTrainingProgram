@@ -27,6 +27,12 @@ import {
   deliveredAnswerRow,
   deliveredQuestionRow,
   learnerAMessageRow,
+  multipleSelectionOptionIds,
+  processedAlreadyTerminalReplay,
+  processedCorrectTerminal,
+  processedDeferredTerminalFailure,
+  processedFirstIncorrectRetry,
+  processedSecondIncorrectTerminal,
   transferChecklist,
   transferRoom,
 } from '../../test-support/transferRoomFixtures';
@@ -72,10 +78,12 @@ describe('RoomContext learner answer path', () => {
   let processMessage: jest.SpyInstance;
   let analyzeMessage: jest.SpyInstance;
   let room: ReturnType<typeof useRoom> | null;
+  let initialMessages: Array<Record<string, unknown>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     room = null;
+    initialMessages = [learnerAMessageRow, deliveredQuestionRow];
 
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -112,9 +120,9 @@ describe('RoomContext learner answer path', () => {
       if (table === 'messages') {
         return {
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({
-                data: [learnerAMessageRow, deliveredQuestionRow],
+              eq: jest.fn().mockReturnValue({
+                order: jest.fn().mockResolvedValue({
+                data: initialMessages,
                 error: null,
               }),
             }),
@@ -145,14 +153,28 @@ describe('RoomContext learner answer path', () => {
     // The trusted boundary returns the stored row; it carries the private key, as a crafted
     // request could observe, so the browser must project it.
     postMessage = jest.spyOn(transferAssessmentService, 'postMessage').mockImplementation(async (input) => ({
-      message: { ...deliveredAnswerRow, content: input.content, assessment_key: PRIVATE_ASSESSMENT_KEY },
+      message: {
+        ...deliveredAnswerRow,
+        content: input.content,
+        parent_message_id: input.replyToMessageId ?? null,
+        assessment_key: PRIVATE_ASSESSMENT_KEY,
+      },
     } as unknown as Record<string, unknown>));
     processMessage = jest.spyOn(transferAssessmentService, 'processMessage').mockResolvedValue({
-      question_id: DELIVERED_QUESTION_ID,
-      result: { verdict: 'pass' },
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'passed',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
       selected_option_ids: ['B'],
       transition: { status: 'covered' },
-      feedback_required: true,
+      feedback_required: false,
+      code: null,
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
     });
     analyzeMessage = jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
   });
@@ -180,6 +202,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B', {
         replyToMessageId: DELIVERED_QUESTION_ID,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -188,11 +211,36 @@ describe('RoomContext learner answer path', () => {
       content: 'B',
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: ['B'],
     });
-    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID);
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    expect(analyzeMessage).not.toHaveBeenCalled();
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
     expect(answer).toBeDefined();
     expect(answer!.parent_message_id).toBe(DELIVERED_QUESTION_ID);
+  });
+
+  it('posts canonical multiple option IDs with the delivered assessment and parent identities', async () => {
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B,D', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: multipleSelectionOptionIds,
+      });
+    });
+
+    expect(postMessage).toHaveBeenCalledWith({
+      roomId: TRANSFER_ROOM_ID,
+      content: 'B,D',
+      replyToMessageId: DELIVERED_QUESTION_ID,
+      assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: ['B', 'D'],
+    });
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
+    expect(answer?.parent_message_id).toBe(DELIVERED_QUESTION_ID);
   });
 
   it('never retains the private assessment key the stored row carried', async () => {
@@ -222,13 +270,33 @@ describe('RoomContext learner answer path', () => {
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
   });
 
+  it('sends ordinary student messages through evidence analysis without calling assessment processing', async () => {
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('Just chatting');
+    });
+
+    expect(processMessage).not.toHaveBeenCalled();
+    expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
+  });
+
   it('keeps an unresolved answer server-authoritative instead of inventing a selection', async () => {
     processMessage.mockResolvedValue({
-      question_id: '',
-      result: null,
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'rejected',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
       selected_option_ids: null,
       transition: null,
       feedback_required: false,
+      code: 'ANSWER_FORMAT_UNRESOLVED',
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
     });
     await mountRoom();
 
@@ -245,28 +313,398 @@ describe('RoomContext learner answer path', () => {
     expect(JSON.stringify(room!.messages)).not.toContain('selected_option_ids');
   });
 
-  it('falls back to evidence analysis when no assessment is open, without duplicating the answer', async () => {
-    processMessage.mockRejectedValue(new Error('ASSESSMENT_NOT_OPEN: no open assessment'));
+  it.each([
+    {
+      name: 'applied retry',
+      result: { ...processedFirstIncorrectRetry },
+      expectedState: 'retry',
+    },
+    {
+      name: 'applied pass',
+      result: { ...processedCorrectTerminal },
+      expectedState: 'passed',
+    },
+    {
+      name: 'applied terminal failure',
+      result: { ...processedSecondIncorrectTerminal, message_id: DELIVERED_ANSWER_ID },
+      expectedState: 'failed',
+    },
+    {
+      name: 'deferred terminal failure',
+      result: { ...processedDeferredTerminalFailure, message_id: DELIVERED_ANSWER_ID },
+      expectedState: 'failed',
+    },
+    {
+      name: 'duplicate terminal failure',
+      result: { ...processedAlreadyTerminalReplay, message_id: DELIVERED_ANSWER_ID },
+      expectedState: 'failed',
+    },
+    {
+      name: 'duplicate unresolved result',
+      result: {
+        ...processedAlreadyTerminalReplay,
+        message_id: DELIVERED_ANSWER_ID,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 0 as const,
+        attempts_remaining: 2 as const,
+        selected_option_ids: null,
+        terminal: false,
+        transition: null,
+        feedback_required: false,
+        terminal_failure_feedback: null,
+      },
+      expectedState: 'duplicate',
+    },
+    {
+      name: 'deferred unresolved result',
+      result: {
+        ...processedFirstIncorrectRetry,
+        processing_state: 'deferred' as const,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 0 as const,
+        attempts_remaining: 2 as const,
+        selected_option_ids: null,
+      },
+      expectedState: 'deferred',
+    },
+    {
+      name: 'rejected unresolved result',
+      result: {
+        ...processedFirstIncorrectRetry,
+        processing_state: 'rejected' as const,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 0 as const,
+        attempts_remaining: 2 as const,
+        selected_option_ids: null,
+        code: 'ANSWER_FORMAT_UNRESOLVED',
+      },
+      expectedState: 'rejected',
+    },
+  ])('attaches the canonical $name lifecycle to the answer and its question', async ({ result, expectedState }) => {
+    processMessage.mockResolvedValue(result);
     await mountRoom();
 
     await act(async () => {
-      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID });
+      await room!.sendMessage('B', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
     });
 
-    expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
+      answerLifecycle?: {
+        state?: string;
+        processingState?: string;
+        answerOutcome?: string | null;
+        terminalFailureFeedback?: unknown;
+        alreadyProcessed?: boolean;
+      };
+    };
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: {
+        state?: string;
+        processingState?: string;
+        answerOutcome?: string | null;
+        terminalFailureFeedback?: unknown;
+        alreadyProcessed?: boolean;
+      };
+    };
+
+    expect(answer.answerLifecycle?.state).toBe(expectedState);
+    expect(question.answerLifecycle).toMatchObject({
+      state: expectedState,
+      processingState: result.processing_state,
+      answerOutcome: result.answer_outcome,
+      alreadyProcessed: result.already_processed,
+    });
+    expect(answer.answerLifecycle?.terminalFailureFeedback).toEqual(
+      result.answer_outcome === 'failed' && result.terminal
+        ? result.terminal_failure_feedback
+        : null
+    );
+    expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
+    expect(processMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('attaches the trusted result to the matching assessment question for learner feedback', async () => {
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['B'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
+    });
+
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: { state?: string; assessmentId?: string; attemptsRemaining?: number };
+    };
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptsRemaining: 1,
+    });
+    expect(processMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('matches the trusted assessment ID to its question message and preserves the distinct parent ID', async () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    initialMessages = [learnerAMessageRow, { ...deliveredQuestionRow, id: questionMessageId }];
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['B'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B', {
+        replyToMessageId: questionMessageId,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
+    });
+
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      replyToMessageId: questionMessageId,
+      assessmentId: DELIVERED_QUESTION_ID,
+    }));
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
+    expect(answer?.parent_message_id).toBe(questionMessageId);
+    const question = room!.messages.find((message) => message.id === questionMessageId) as unknown as {
+      publicQuestion?: { id?: string };
+      answerLifecycle?: { state?: string; assessmentId?: string };
+    };
+    expect(question.publicQuestion?.id).toBe(DELIVERED_QUESTION_ID);
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+    });
+  });
+
+  it('restores persisted learner answer feedback after joining through the idempotent processor', async () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    initialMessages = [
+      {
+        ...deliveredQuestionRow,
+        assessment: undefined,
+        id: questionMessageId,
+        assessment_id: DELIVERED_QUESTION_ID,
+        assessment_student_id: LEARNER_A_ID,
+      },
+      { ...deliveredAnswerRow, parent_message_id: questionMessageId },
+      {
+        ...deliveredAnswerRow,
+        id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+        user_id: '44444444-4444-4444-8444-444444444444',
+        parent_message_id: questionMessageId,
+      },
+    ];
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['B'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: true,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
+
+    await mountRoom();
+
+    expect(processMessage).toHaveBeenCalledTimes(1);
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
+      answerLifecycle?: { state?: string; assessmentId?: string; attemptsRemaining?: number };
+    };
+    const question = room!.messages.find((message) => message.id === questionMessageId) as unknown as {
+      publicQuestion?: { id?: string };
+      answerLifecycle?: { state?: string; assessmentId?: string; attemptsRemaining?: number };
+    };
+    expect(answer.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptsRemaining: 1,
+    });
+    expect(question.publicQuestion?.id).toBe(DELIVERED_QUESTION_ID);
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptsRemaining: 1,
+    });
+  });
+
+  it('keeps the accepted terminal lifecycle when reload also re-reads a rejected concurrent answer', async () => {
+    const rejectedAnswerId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+    let secondRoom: ReturnType<typeof useRoom> | null = null;
+    const rejectedAnswerRow = {
+      ...deliveredAnswerRow,
+      id: rejectedAnswerId,
+      content: 'C',
+    };
+    initialMessages = [
+      deliveredQuestionRow,
+      { ...deliveredAnswerRow, parent_message_id: DELIVERED_QUESTION_ID },
+      { ...rejectedAnswerRow, parent_message_id: DELIVERED_QUESTION_ID },
+    ];
+    processMessage.mockImplementation(async (messageId) => messageId === DELIVERED_ANSWER_ID
+      ? {
+        message_id: DELIVERED_ANSWER_ID,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied',
+        answer_outcome: 'failed',
+        attempt_number: 2,
+        attempts_used: 2,
+        attempts_remaining: 0,
+        selected_option_ids: ['A'],
+        transition: { status: 'needs_review' },
+        feedback_required: true,
+        code: null,
+        already_processed: true,
+        terminal: true,
+        terminal_failure_feedback: {
+          correct_option_ids: ['B'],
+          learner_safe_explanation: 'Verify the request through an official channel.',
+        },
+      }
+      : {
+        message_id: rejectedAnswerId,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'rejected',
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 2,
+        attempts_remaining: 0,
+        selected_option_ids: null,
+        transition: null,
+        feedback_required: false,
+        code: 'ASSESSMENT_ALREADY_TERMINAL',
+        already_processed: false,
+        terminal: true,
+        terminal_failure_feedback: null,
+      });
+
+    render(
+      <>
+        <RoomProvider>
+          <RoomProbe onReady={(api) => { room = api; }} />
+        </RoomProvider>
+        <RoomProvider>
+          <RoomProbe onReady={(api) => { secondRoom = api; }} />
+        </RoomProvider>
+      </>
+    );
+    await waitFor(() => {
+      expect(room).not.toBeNull();
+      expect(secondRoom).not.toBeNull();
+    });
+    await act(async () => {
+      await Promise.all([
+        room!.joinRoom(TRANSFER_ROOM_ID),
+        secondRoom!.joinRoom(TRANSFER_ROOM_ID),
+      ]);
+    });
+
+    expect(processMessage).toHaveBeenCalledTimes(4);
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: {
+        state?: string;
+        answerOutcome?: string | null;
+        attemptsUsed?: number;
+        terminal?: boolean;
+        terminalFailureFeedback?: { learner_safe_explanation?: string } | null;
+      };
+    };
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'failed',
+      answerOutcome: 'failed',
+      attemptsUsed: 2,
+      terminal: true,
+      terminalFailureFeedback: {
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+    const secondQuestion = secondRoom!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: unknown;
+    };
+    expect(secondQuestion.answerLifecycle).toEqual(question.answerLifecycle);
+  });
+
+  it('does not route an explicit assessment answer through evidence analysis when processing rejects it', async () => {
+    processMessage.mockRejectedValue(new Error('ASSESSMENT_NOT_OPEN: no open assessment'));
+    await mountRoom();
+
+    let processingError: unknown;
+    await act(async () => {
+      try {
+        await room!.sendMessage('B', {
+          replyToMessageId: DELIVERED_QUESTION_ID,
+          assessmentId: DELIVERED_QUESTION_ID,
+        });
+      } catch (error) {
+        processingError = error;
+      }
+    });
+
+    expect(processingError).toEqual(expect.objectContaining({
+      message: expect.stringContaining('ASSESSMENT_NOT_OPEN'),
+    }));
+    expect(analyzeMessage).not.toHaveBeenCalled();
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
   });
 
-  it('surfaces the server clarification request instead of inventing a selection or a failure', async () => {
+  it('surfaces a server rejection instead of inventing a selection or a failure', async () => {
     processMessage.mockResolvedValue({
-      message_id: DELIVERED_QUESTION_ID,
-      result: null,
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'rejected',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
       selected_option_ids: null,
       transition: null,
       feedback_required: false,
       code: 'ANSWER_FORMAT_UNRESOLVED',
-      clarification_required: true,
       already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
     });
     await mountRoom();
 
@@ -280,7 +718,7 @@ describe('RoomContext learner answer path', () => {
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
       answerLifecycle?: { state?: string; code?: string | null };
     };
-    expect(answer.answerLifecycle?.state).toBe('clarification');
+    expect(answer.answerLifecycle?.state).toBe('rejected');
     expect(answer.answerLifecycle?.code).toBe('ANSWER_FORMAT_UNRESOLVED');
   });
 

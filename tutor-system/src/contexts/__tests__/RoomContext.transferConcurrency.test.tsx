@@ -17,6 +17,7 @@ import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
+import type { ProcessedMessageDTO } from '../../services/transferAssessmentService';
 import {
   CHECKLIST_ID,
   CHECKLIST_ITEM_ID,
@@ -25,6 +26,7 @@ import {
   LEARNER_A_ID,
   TRANSFER_ROOM_ID,
   deliveredAnswerRow,
+  deliveredQuestionRow,
   learnerAMessageRow,
   learnerBMessageRow,
   preparedCandidate,
@@ -83,10 +85,12 @@ const learnerUser = { ...tutorUser, id: LEARNER_A_ID, display_name: 'Learner A',
 describe('RoomContext transfer concurrency', () => {
   let sendReviewed: jest.SpyInstance;
   let room: ReturnType<typeof useRoom> | null;
+  let messagesForJoin: Array<Record<string, unknown>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     room = null;
+    messagesForJoin = [learnerBMessageRow, learnerAMessageRow];
     (useAuth as jest.Mock).mockReturnValue({ user: tutorUser, loading: false });
 
     (getAIConfig as jest.Mock).mockResolvedValue(null);
@@ -109,9 +113,9 @@ describe('RoomContext transfer concurrency', () => {
       if (table === 'messages') {
         return {
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({ data: [learnerBMessageRow, learnerAMessageRow], error: null }),
-            }),
+              eq: jest.fn().mockReturnValue({
+                order: jest.fn().mockResolvedValue({ data: messagesForJoin, error: null }),
+              }),
           }),
         };
       }
@@ -127,11 +131,20 @@ describe('RoomContext transfer concurrency', () => {
     jest.spyOn(transferAssessmentService, 'prepareTurn').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
     jest.spyOn(transferAssessmentService, 'processMessage').mockResolvedValue({
-      question_id: DELIVERED_QUESTION_ID,
-      result: { verdict: 'pass' },
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'duplicate',
+      answer_outcome: 'passed',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
       selected_option_ids: ['B'],
+      terminal: false,
       transition: null,
-      feedback_required: true,
+      feedback_required: false,
+      code: null,
+      already_processed: true,
+      terminal_failure_feedback: null,
     });
     jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
   });
@@ -152,6 +165,19 @@ describe('RoomContext transfer concurrency', () => {
     });
     await act(async () => {
       await room!.generateAIResponse();
+    });
+  };
+
+  const mountAsLearner = async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerUser, loading: false });
+    render(
+      <RoomProvider>
+        <RoomProbe onReady={(api) => { room = api; }} />
+      </RoomProvider>
+    );
+    await waitFor(() => expect(room).not.toBeNull());
+    await act(async () => {
+      await room!.joinRoom(TRANSFER_ROOM_ID);
     });
   };
 
@@ -253,4 +279,129 @@ describe('RoomContext transfer concurrency', () => {
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
     expect(room!.messages.filter((message) => message.content === 'B')).toHaveLength(1);
   });
+
+  it.each(['accepted-first', 'rejected-first'] as const)(
+    'retains the accepted terminal result when concurrent final submissions resolve %s',
+    async (responseOrder) => {
+      messagesForJoin = [learnerAMessageRow, deliveredQuestionRow];
+
+      const acceptedAnswerId = DELIVERED_ANSWER_ID;
+      const rejectedAnswerId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+      const postMessage = jest.spyOn(transferAssessmentService, 'postMessage').mockImplementation(async (input) => ({
+        message: {
+          ...deliveredAnswerRow,
+          id: input.content === 'A' ? acceptedAnswerId : rejectedAnswerId,
+          content: input.content,
+          parent_message_id: input.replyToMessageId ?? null,
+        },
+      } as unknown as Record<string, unknown>));
+
+      const acceptedResult: ProcessedMessageDTO = {
+        message_id: acceptedAnswerId,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied' as const,
+        answer_outcome: 'failed' as const,
+        attempt_number: 2 as const,
+        attempts_used: 2 as const,
+        attempts_remaining: 0 as const,
+        selected_option_ids: ['A'],
+        terminal: true,
+        transition: { status: 'needs_review' },
+        feedback_required: true,
+        code: null,
+        already_processed: false,
+        terminal_failure_feedback: {
+          correct_option_ids: ['B'],
+          learner_safe_explanation: 'Verify the request through an official channel.',
+        },
+      };
+      const rejectedResult: ProcessedMessageDTO = {
+        message_id: rejectedAnswerId,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'rejected' as const,
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 2 as const,
+        attempts_remaining: 0 as const,
+        selected_option_ids: null,
+        terminal: true,
+        transition: null,
+        feedback_required: false,
+        code: 'ASSESSMENT_ALREADY_TERMINAL',
+        already_processed: false,
+        terminal_failure_feedback: null,
+      };
+      const pendingResults = new Map<string, (value: ProcessedMessageDTO) => void>();
+      const processMessage = jest.spyOn(transferAssessmentService, 'processMessage').mockImplementation(
+        (messageId) => new Promise((resolve) => {
+          pendingResults.set(messageId, resolve);
+        })
+      );
+
+      await mountAsLearner();
+
+      let submissions: Promise<void>[] = [];
+      await act(async () => {
+        submissions = [
+          room!.sendMessage('A', {
+            replyToMessageId: DELIVERED_QUESTION_ID,
+            assessmentId: DELIVERED_QUESTION_ID,
+            selectedOptionIds: ['A'],
+          }),
+          room!.sendMessage('C', {
+            replyToMessageId: DELIVERED_QUESTION_ID,
+            assessmentId: DELIVERED_QUESTION_ID,
+            selectedOptionIds: ['C'],
+          }),
+        ];
+        await waitFor(() => expect(processMessage).toHaveBeenCalledTimes(2));
+      });
+
+      await act(async () => {
+        const ids = responseOrder === 'accepted-first'
+          ? [acceptedAnswerId, rejectedAnswerId]
+          : [rejectedAnswerId, acceptedAnswerId];
+        ids.forEach((id) => {
+          const result = id === acceptedAnswerId ? acceptedResult : rejectedResult;
+          pendingResults.get(id)!(result);
+        });
+        await Promise.all(submissions);
+      });
+
+      expect(postMessage).toHaveBeenCalledTimes(2);
+      expect(processMessage).toHaveBeenCalledTimes(2);
+      expect(room!.messages.filter((message) => message.id === acceptedAnswerId || message.id === rejectedAnswerId))
+        .toHaveLength(2);
+      const acceptedAnswer = room!.messages.find((message) => message.id === acceptedAnswerId) as unknown as {
+        answerLifecycle?: { state?: string; terminal?: boolean };
+      };
+      expect(acceptedAnswer.answerLifecycle).toMatchObject({ state: 'failed', terminal: true });
+      const rejectedAnswer = room!.messages.find((message) => message.id === rejectedAnswerId) as unknown as {
+        answerLifecycle?: { state?: string; attemptNumber?: number | null; terminalFailureFeedback?: unknown };
+      };
+      expect(rejectedAnswer.answerLifecycle).toMatchObject({
+        state: 'rejected',
+        attemptNumber: null,
+        terminalFailureFeedback: null,
+      });
+      const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+        answerLifecycle?: {
+          state?: string;
+          answerOutcome?: string | null;
+          attemptsUsed?: number;
+          terminal?: boolean;
+          terminalFailureFeedback?: { learner_safe_explanation?: string } | null;
+        };
+      };
+      expect(question.answerLifecycle).toMatchObject({
+        state: 'failed',
+        answerOutcome: 'failed',
+        attemptsUsed: 2,
+        terminal: true,
+        terminalFailureFeedback: {
+          learner_safe_explanation: 'Verify the request through an official channel.',
+        },
+      });
+    }
+  );
 });

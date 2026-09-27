@@ -5,6 +5,8 @@ import type {
   AssessmentOption,
   AssessmentOptionId,
   AssessmentSelectionType,
+  TransferAttemptSnapshot,
+  TransferTerminalFeedback,
 } from '../types/assessment';
 import type { TransferProgress } from '../types/learningProgress';
 
@@ -20,7 +22,8 @@ export type TransferFixtureSuite =
   | 'contract'
   | 'orchestrator'
   | 'validation'
-  | 'lifecycle';
+  | 'lifecycle'
+  | 'attempt_sequence';
 
 export type TransferFixtureDisposition =
   | 'selection'
@@ -36,6 +39,7 @@ export type TransferFixtureDisposition =
   | 'duplicate'
   | 'stale'
   | 'guard_deferred'
+  | 'retryable'
   | 'applied'
   | 'no_change'
   | 'valid'
@@ -109,6 +113,32 @@ export interface LifecycleFixtureRecord extends GoldenFixtureRecord {
   steps: LifecycleFixtureStep[];
 }
 
+export interface AttemptSequenceFixtureStep {
+  step_id: string;
+  answer_message_id: string;
+  learner_message: string;
+  input_snapshot: TransferAttemptSnapshot;
+  input_progress: TransferProgress;
+  delivered: boolean;
+  assessment_snapshot_hash: string;
+  participation_mode: 'tutoring' | 'guard';
+  expected_disposition: Extract<TransferFixtureDisposition, 'retryable' | 'passed' | 'failed' | 'duplicate' | 'stale' | 'guard_deferred' | 'assisted'>;
+  expected_progress: TransferProgress;
+  expected_feedback_required: boolean;
+  expected_next_action: TransferFixtureNextAction;
+  expected_applied_transition: 'assessment_pass' | 'assessment_fail' | null;
+  expected_remaining_attempts: 0 | 1 | 2;
+  expected_snapshot: TransferAttemptSnapshot;
+  expected_terminal_feedback: TransferTerminalFeedback | null;
+  expected_learner_feedback_authorized: boolean | null;
+}
+
+export interface AttemptSequenceFixtureRecord extends GoldenFixtureRecord {
+  suite: 'attempt_sequence';
+  sequence_id: string;
+  steps: AttemptSequenceFixtureStep[];
+}
+
 export interface ValidationFixtureRecord extends GoldenFixtureRecord {
   suite: 'validation';
   case_kind:
@@ -135,6 +165,8 @@ export interface TransferFixtureManifest {
   reducer_fixture_ids: string[];
   lifecycle_fixture_ids: string[];
   lifecycle_ids: string[];
+  attempt_sequence_fixture_ids: string[];
+  attempt_sequence_ids: string[];
 }
 
 export const TRANSFER_ASSESSMENT_OPTIONS: AssessmentOption[] = [
@@ -149,6 +181,9 @@ export const TRANSFER_CORRECT_OPTION_IDS: AssessmentOptionId[] = ['B'];
 export const TRANSFER_FIXTURE_SOURCE_EVIDENCE_MESSAGE_ID = '22222222-2222-4222-8222-222222222222';
 export const TRANSFER_FIXTURE_TARGET_ITEM_ID = '11111111-1111-4111-8111-111111111111';
 export const TRANSFER_FIXTURE_ASSESSMENT_ID = '33333333-3333-4333-8333-333333333333';
+export const TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH = 'transfer-attempt-fixture-snapshot';
+export const TRANSFER_ATTEMPT_FIXTURE_STALE_HASH = 'transfer-attempt-fixture-stale';
+export const TRANSFER_ATTEMPT_FIXTURE_EXPLANATION = 'A familiar displayed identity does not verify who controls the account.';
 
 export const PENDING: TransferProgress = { status: 'pending', understanding_level: 'none' };
 export const PARTIALLY_COVERED: TransferProgress = { status: 'partially_covered', understanding_level: 'basic' };
@@ -462,6 +497,344 @@ function lifecycle(
   };
 }
 
+function attemptSnapshot(
+  accepted_attempt_count: TransferAttemptSnapshot['accepted_attempt_count'],
+  resolution: TransferAttemptSnapshot['resolution'],
+  processed_answer_message_ids: string[]
+): TransferAttemptSnapshot {
+  return {
+    assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID,
+    accepted_attempt_count,
+    resolution,
+    processed_answer_message_ids,
+  };
+}
+
+function attemptTerminalFeedback(): TransferTerminalFeedback {
+  return {
+    correct_option_ids: [...TRANSFER_CORRECT_OPTION_IDS],
+    learner_safe_explanation: TRANSFER_ATTEMPT_FIXTURE_EXPLANATION,
+  };
+}
+
+function attemptSequence(
+  sequence_id: string,
+  requirement_ref: string,
+  evidence_note: string,
+  steps: AttemptSequenceFixtureStep[]
+): AttemptSequenceFixtureRecord {
+  const last = steps[steps.length - 1];
+  return {
+    ...golden(
+      `attempt_sequence_${sequence_id}`,
+      'attempt_sequence',
+      requirement_ref,
+      evidence_note,
+      sequence_id,
+      last.expected_disposition,
+      last.expected_progress,
+      last.expected_next_action
+    ),
+    suite: 'attempt_sequence',
+    sequence_id,
+    steps,
+  };
+}
+
+const attemptFeedback = attemptTerminalFeedback();
+const emptyAttemptSnapshot = attemptSnapshot(0, 'open', []);
+const firstIncorrectSnapshot = attemptSnapshot(1, 'open', ['answer-incorrect-1']);
+const firstReloadSnapshot = attemptSnapshot(1, 'open', ['answer-reload-1']);
+const firstDuplicateSnapshot = attemptSnapshot(1, 'open', ['answer-duplicate-1']);
+const firstPassedSnapshot = attemptSnapshot(1, 'passed', ['answer-terminal-1']);
+
+export const TRANSFER_ATTEMPT_SEQUENCE_FIXTURES: AttemptSequenceFixtureRecord[] = [
+  attemptSequence('correct_first', 'FR-012', 'A correct first selection passes once and retains private feedback with disclosure disabled.', [
+    {
+      step_id: 'correct',
+      answer_message_id: 'answer-correct-1',
+      learner_message: 'B',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'passed',
+      expected_progress: COVERED,
+      expected_feedback_required: true,
+      expected_next_action: 'await_tutor_feedback',
+      expected_applied_transition: 'assessment_pass',
+      expected_remaining_attempts: 0,
+      expected_snapshot: attemptSnapshot(1, 'passed', ['answer-correct-1']),
+      expected_terminal_feedback: attemptFeedback,
+      expected_learner_feedback_authorized: false,
+    },
+  ]),
+  attemptSequence('incorrect_correct', 'FR-012', 'A first incorrect selection remains retryable; a correct second selection passes.', [
+    {
+      step_id: 'first_incorrect',
+      answer_message_id: 'answer-incorrect-1',
+      learner_message: 'A',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'retryable',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'await_learner_answer',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 1,
+      expected_snapshot: firstIncorrectSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+    {
+      step_id: 'second_correct',
+      answer_message_id: 'answer-incorrect-2',
+      learner_message: 'B',
+      input_snapshot: firstIncorrectSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'passed',
+      expected_progress: COVERED,
+      expected_feedback_required: true,
+      expected_next_action: 'await_tutor_feedback',
+      expected_applied_transition: 'assessment_pass',
+      expected_remaining_attempts: 0,
+      expected_snapshot: attemptSnapshot(2, 'passed', ['answer-incorrect-1', 'answer-incorrect-2']),
+      expected_terminal_feedback: attemptFeedback,
+      expected_learner_feedback_authorized: false,
+    },
+  ]),
+  attemptSequence('incorrect_incorrect', 'FR-013', 'Only a second incorrect selection fails and authorizes learner-safe terminal feedback.', [
+    {
+      step_id: 'first_incorrect',
+      answer_message_id: 'answer-fail-1',
+      learner_message: 'A',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'retryable',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'await_learner_answer',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 1,
+      expected_snapshot: attemptSnapshot(1, 'open', ['answer-fail-1']),
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+    {
+      step_id: 'second_incorrect',
+      answer_message_id: 'answer-fail-2',
+      learner_message: 'C',
+      input_snapshot: attemptSnapshot(1, 'open', ['answer-fail-1']),
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'failed',
+      expected_progress: NEEDS_REVIEW,
+      expected_feedback_required: true,
+      expected_next_action: 'await_tutor_repair',
+      expected_applied_transition: 'assessment_fail',
+      expected_remaining_attempts: 0,
+      expected_snapshot: attemptSnapshot(2, 'failed', ['answer-fail-1', 'answer-fail-2']),
+      expected_terminal_feedback: attemptFeedback,
+      expected_learner_feedback_authorized: true,
+    },
+  ]),
+  attemptSequence('duplicate', 'FR-014', 'Replaying an accepted answer identity leaves the persisted open snapshot unchanged.', [
+    {
+      step_id: 'first_incorrect',
+      answer_message_id: 'answer-duplicate-1',
+      learner_message: 'A',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'retryable',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'await_learner_answer',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 1,
+      expected_snapshot: firstDuplicateSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+    {
+      step_id: 'replay',
+      answer_message_id: 'answer-duplicate-1',
+      learner_message: 'A',
+      input_snapshot: firstDuplicateSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'duplicate',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'await_learner_answer',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 1,
+      expected_snapshot: firstDuplicateSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+  ]),
+  attemptSequence('reload_tab_equivalent', 'FR-009', 'A persisted retry snapshot produces the same second-attempt result after a reload or separate tab.', [
+    {
+      step_id: 'first_incorrect',
+      answer_message_id: 'answer-reload-1',
+      learner_message: 'A',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'retryable',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'await_learner_answer',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 1,
+      expected_snapshot: firstReloadSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+    {
+      step_id: 'reloaded_second_correct',
+      answer_message_id: 'answer-reload-2',
+      learner_message: 'B',
+      input_snapshot: firstReloadSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'passed',
+      expected_progress: COVERED,
+      expected_feedback_required: true,
+      expected_next_action: 'await_tutor_feedback',
+      expected_applied_transition: 'assessment_pass',
+      expected_remaining_attempts: 0,
+      expected_snapshot: attemptSnapshot(2, 'passed', ['answer-reload-1', 'answer-reload-2']),
+      expected_terminal_feedback: attemptFeedback,
+      expected_learner_feedback_authorized: false,
+    },
+  ]),
+  attemptSequence('terminal_third_submission', 'FR-014', 'A submission after terminal pass is duplicate and cannot create a third attempt or transition.', [
+    {
+      step_id: 'first_correct',
+      answer_message_id: 'answer-terminal-1',
+      learner_message: 'B',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'passed',
+      expected_progress: COVERED,
+      expected_feedback_required: true,
+      expected_next_action: 'await_tutor_feedback',
+      expected_applied_transition: 'assessment_pass',
+      expected_remaining_attempts: 0,
+      expected_snapshot: firstPassedSnapshot,
+      expected_terminal_feedback: attemptFeedback,
+      expected_learner_feedback_authorized: false,
+    },
+    {
+      step_id: 'third_submission',
+      answer_message_id: 'answer-terminal-3',
+      learner_message: 'B',
+      input_snapshot: firstPassedSnapshot,
+      input_progress: COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'duplicate',
+      expected_progress: COVERED,
+      expected_feedback_required: true,
+      expected_next_action: 'await_tutor_feedback',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 0,
+      expected_snapshot: firstPassedSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+  ]),
+  attemptSequence('stale_snapshot', 'FR-010', 'A stale assessment snapshot cannot consume an attempt.', [
+    {
+      step_id: 'stale',
+      answer_message_id: 'answer-stale-1',
+      learner_message: 'B',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_STALE_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'stale',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'await_learner_answer',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 2,
+      expected_snapshot: emptyAttemptSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+  ]),
+  attemptSequence('guard_deferred', 'FR-010', 'Guard priority defers a valid selection without consuming an attempt.', [
+    {
+      step_id: 'guard',
+      answer_message_id: 'answer-guard-1',
+      learner_message: 'B',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'guard',
+      expected_disposition: 'guard_deferred',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'defer_to_protective_response',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 2,
+      expected_snapshot: emptyAttemptSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+  ]),
+  attemptSequence('assistance', 'FR-010', 'A content question cancels the assessment without consuming an attempt.', [
+    {
+      step_id: 'help',
+      answer_message_id: 'answer-assistance-1',
+      learner_message: 'What does compromised mean?',
+      input_snapshot: emptyAttemptSnapshot,
+      input_progress: PARTIALLY_COVERED,
+      delivered: true,
+      assessment_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+      participation_mode: 'tutoring',
+      expected_disposition: 'assisted',
+      expected_progress: PARTIALLY_COVERED,
+      expected_feedback_required: false,
+      expected_next_action: 'cancel_question',
+      expected_applied_transition: null,
+      expected_remaining_attempts: 2,
+      expected_snapshot: emptyAttemptSnapshot,
+      expected_terminal_feedback: null,
+      expected_learner_feedback_authorized: null,
+    },
+  ]),
+];
+
 export const TRANSFER_LIFECYCLE_FIXTURES: LifecycleFixtureRecord[] = [
   lifecycle('pass_then_feedback', 'Feedback-first sequencing', 'A pass requires tutoring feedback before another assessment.', 'baseline', [
     { step_id: 'answer', learner_message: 'B', expected_disposition: 'passed', expected_progress: COVERED, expected_feedback_required: true, expected_next_action: 'await_tutor_feedback' },
@@ -494,6 +867,7 @@ export const TRANSFER_GOLDEN_FIXTURES: GoldenFixtureRecord[] = [
   ...TRANSFER_RENDERING_FIXTURES,
   ...TRANSFER_REDUCER_FIXTURES,
   ...TRANSFER_LIFECYCLE_FIXTURES,
+  ...TRANSFER_ATTEMPT_SEQUENCE_FIXTURES,
   ...TRANSFER_VALIDATION_FIXTURES,
 ];
 
@@ -507,5 +881,7 @@ export function transferFixtureManifest(): TransferFixtureManifest {
     reducer_fixture_ids: TRANSFER_REDUCER_FIXTURES.map((fixture) => fixture.fixture_id),
     lifecycle_fixture_ids: TRANSFER_LIFECYCLE_FIXTURES.map((fixture) => fixture.fixture_id),
     lifecycle_ids: TRANSFER_LIFECYCLE_FIXTURES.map((fixture) => fixture.lifecycle_id),
+    attempt_sequence_fixture_ids: TRANSFER_ATTEMPT_SEQUENCE_FIXTURES.map((fixture) => fixture.fixture_id),
+    attempt_sequence_ids: TRANSFER_ATTEMPT_SEQUENCE_FIXTURES.map((fixture) => fixture.sequence_id),
   };
 }

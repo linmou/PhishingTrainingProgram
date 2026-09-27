@@ -1,10 +1,10 @@
 // Purpose: let an authorized tutor review and confirm a structured transfer-assessment draft before delivery.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, Send, X } from 'lucide-react';
 import { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
 import { renderAssessment, validateAssessmentRendering } from '../services/assessmentRendering';
 import { parseTutorDecisionV3 } from '../services/tutorDecisionContract';
+import { classifyAssessmentFailure, type ReviewStatus } from '../contexts/transferAssessmentUiAdapter';
 
 export interface AssessmentDraftEditorProps {
   decision: TutorDecisionV3;
@@ -30,15 +30,17 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 }) => {
   const initialAssessment = decision.assessment;
   const [stem, setStem] = useState(initialAssessment?.stem || decision.response);
-  // The model decides whether this is single or multiple selection. Tutors only edit its key.
   const [selectionType, setSelectionType] = useState(initialAssessment?.selection_type || 'single');
   const [options, setOptions] = useState(initialAssessment?.options || []);
   const [correctOptionIds, setCorrectOptionIds] = useState<AssessmentOptionId[]>(
     initialAssessment?.correct_option_ids || []
   );
+  const [explanation, setExplanation] = useState(initialAssessment?.learner_safe_explanation || '');
+  const [contentConfirmed, setContentConfirmed] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<'validating' | ReviewStatus | null>(null);
 
   useEffect(() => {
     const assessment = decision.assessment;
@@ -46,8 +48,11 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     setSelectionType(assessment?.selection_type || 'single');
     setOptions(assessment?.options || []);
     setCorrectOptionIds(assessment?.correct_option_ids || []);
+    setExplanation(assessment?.learner_safe_explanation || '');
+    setContentConfirmed(false);
     setDirty(false);
     setError(null);
+    setErrorKind(null);
   }, [decision]);
 
   const renderedText = useMemo(() => renderAssessment({
@@ -58,11 +63,20 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   if (!initialAssessment) return null;
 
-  const reviewStatus = saving ? 'saving' : dirty ? 'dirty' : 'ready';
+  const reviewStatus = saving ? 'saving' : errorKind || (contentConfirmed ? 'confirmed' : dirty ? 'dirty' : 'ready');
+
+  const clearServerFailure = () => {
+    if (errorKind && errorKind !== 'validating') {
+      setError(null);
+      setErrorKind(null);
+    }
+  };
 
   const setOptionText = (id: AssessmentOptionId, text: string) => {
     setOptions((current) => current.map((option) => option.id === id ? { ...option, text } : option));
+    setContentConfirmed(false);
     setDirty(true);
+    clearServerFailure();
   };
 
   const setSelection = (id: AssessmentOptionId, checked: boolean) => {
@@ -70,26 +84,49 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       if (selectionType === 'single') return checked ? [id] : [];
       return checked ? uniqueSelections([...current, id]) : current.filter((value) => value !== id);
     });
+    setContentConfirmed(false);
     setDirty(true);
+    clearServerFailure();
+  };
+
+  const handleSelectionTypeChange = (value: 'single' | 'multiple') => {
+    setSelectionType(value);
+    setCorrectOptionIds((current) => value === 'single' ? current.slice(0, 1) : uniqueSelections(current));
+    setContentConfirmed(false);
+    setDirty(true);
+    clearServerFailure();
   };
 
   const handleSubmit = async () => {
-    if (saving) return;
     setError(null);
+    setErrorKind(null);
     const validation = validateAssessmentRendering({ stem, selection_type: selectionType, options });
     const expectedKeys = selectionType === 'single'
       ? correctOptionIds.length === 1
       : correctOptionIds.length >= 2 && correctOptionIds.length <= 3;
     if (!validation.valid) {
       setError(validation.errors.join('. '));
+      setErrorKind('validating');
       return;
     }
     if (!expectedKeys) {
       setError(selectionType === 'single'
         ? 'Choose exactly one correct option.'
         : 'Choose two or three correct options.');
+      setErrorKind('validating');
       return;
     }
+    if (!explanation.trim()) {
+      setError('Enter a learner-safe explanation.');
+      setErrorKind('validating');
+      return;
+    }
+    if (!contentConfirmed) {
+      setError('Confirm that the concept, changed context, and answer key are appropriate.');
+      setErrorKind('validating');
+      return;
+    }
+
     const nextDecision: TutorDecisionV3 = {
       ...decision,
       response: stem.trim(),
@@ -105,6 +142,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         selection_type: selectionType,
         options: options.map((option) => ({ id: option.id, text: option.text.trim() })),
         correct_option_ids: uniqueSelections(correctOptionIds),
+        learner_safe_explanation: explanation.trim(),
       },
     };
 
@@ -115,101 +153,92 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         knownItemIds: knownItemIds || [decision.decision.target_item_id || ''],
         knownMessageIds: knownMessageIds || initialAssessment.transfer_basis?.source_evidence_message_ids || [],
       });
-      setSaving(true);
+    } catch (validationError) {
+      setError(validationError instanceof Error ? validationError.message : 'Assessment could not be validated.');
+      setErrorKind('validating');
+      return;
+    }
+    setSaving(true);
+    try {
       await onSubmit(nextDecision);
-      setDirty(false);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Assessment could not be confirmed.');
+      const classified = classifyAssessmentFailure(submitError);
+      setError(classified.message);
+      setErrorKind(classified.status);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <section className="assessment-draft-editor" aria-labelledby="assessment-draft-editor-title">
-      <header className="assessment-draft-editor__header">
-        <div>
-          <h3 id="assessment-draft-editor-title">Review transfer assessment</h3>
-          {itemLabel && <p className="assessment-draft-editor__target">Target: {itemLabel}</p>}
-        </div>
-        <span className="assessment-draft-editor__badge">Draft</span>
-      </header>
-
-      <div className="assessment-draft-editor__body">
-        <label className="assessment-draft-editor__field">
-          <span>Question</span>
-          <textarea
-            aria-label="Question"
-            value={stem}
-            onChange={(event) => { setStem(event.target.value); setDirty(true); }}
-            rows={3}
-            disabled={saving}
-          />
-        </label>
-
-        <fieldset className="assessment-draft-editor__choices">
-          <legend>Answer choices</legend>
-          <div className="assessment-draft-editor__options">
-            {options.map((option) => (
-              <label
-                className={`assessment-draft-editor__option${correctOptionIds.includes(option.id) ? ' assessment-draft-editor__option--selected' : ''}`}
-                key={option.id}
-              >
-                <input
-                  aria-label={`Correct answer ${option.id}`}
-                  type={selectionType === 'single' ? 'radio' : 'checkbox'}
-                  name="assessment-correct-option"
-                  checked={correctOptionIds.includes(option.id)}
-                  onChange={(event) => setSelection(option.id, event.target.checked)}
-                  disabled={saving}
-                />
-                <span className="assessment-draft-editor__letter" aria-hidden="true">{option.id}</span>
-                <textarea
-                  aria-label={`Option ${option.id}`}
-                  value={option.text}
-                  onChange={(event) => setOptionText(option.id, event.target.value)}
-                  rows={2}
-                  disabled={saving}
-                />
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="assessment-draft-editor__answer-key" data-testid="assessment-answer-key" aria-live="polite">
-          <span className="assessment-draft-editor__answer-key-mark" aria-hidden="true"><Check size={16} strokeWidth={3} /></span>
-          <div>
-            <span className="assessment-draft-editor__answer-key-label">Correct answer{selectionType === 'multiple' ? 's' : ''}</span>
-            <p>
-              {options
-                .filter((option) => correctOptionIds.includes(option.id))
-                .map((option) => `${option.id} \u2014 ${option.text.trim()}`)
-                .join(' | ') || 'No correct answer selected.'}
-            </p>
-          </div>
-        </div>
+    <section aria-label="Transfer assessment review">
+      <h3>Review transfer assessment</h3>
+      {itemLabel && <p>Target: {itemLabel}</p>}
+      <label>
+        Question
+        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }} rows={3} />
+      </label>
+      <label>
+        Answer type
+        <select value={selectionType} onChange={(event) => handleSelectionTypeChange(event.target.value as 'single' | 'multiple')}>
+          <option value="single">Choose one</option>
+          <option value="multiple">Select all that apply</option>
+        </select>
+      </label>
+      <fieldset>
+        <legend>Options and correct answer</legend>
+        {options.map((option) => (
+          <label key={option.id}>
+            <input
+              type={selectionType === 'single' ? 'radio' : 'checkbox'}
+              name="assessment-correct-option"
+              checked={correctOptionIds.includes(option.id)}
+              onChange={(event) => setSelection(option.id, event.target.checked)}
+            />
+            <span>{option.id}.</span>
+            <input value={option.text} onChange={(event) => setOptionText(option.id, event.target.value)} />
+          </label>
+        ))}
+      </fieldset>
+      <label>
+        Learner-safe explanation
+        <textarea value={explanation} onChange={(event) => { setExplanation(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }} rows={3} />
+      </label>
+      <p aria-live="polite">Learner-visible preview:</p>
+      <pre>{renderedText}</pre>
+      <label>
+        <input type="checkbox" checked={contentConfirmed} onChange={(event) => { setContentConfirmed(event.target.checked); clearServerFailure(); }} />
+        I confirm the concept, changed context, and answer key are appropriate.
+      </label>
+      {/* Local review state only: there is no draft row, so this never reports a server status. */}
+      <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
+        {reviewStatus === 'saving'
+          ? 'Sending the confirmed assessment…'
+          : reviewStatus === 'validating'
+            ? 'Review the highlighted validation error.'
+          : reviewStatus === 'superseded'
+            ? 'This candidate is no longer current.'
+          : reviewStatus === 'unavailable'
+            ? 'Transfer assessments are unavailable.'
+          : reviewStatus === 'unauthorized'
+            ? 'This account cannot send this assessment.'
+          : reviewStatus === 'retryable'
+            ? 'The request can be retried.'
+          : reviewStatus === 'validation'
+            ? 'The candidate needs correction before it can be sent.'
+          : reviewStatus === 'confirmed'
+            ? 'Confirmed and ready to send.'
+          : reviewStatus === 'dirty'
+            ? 'Unsaved edits — the previous confirmation was cleared.'
+            : 'Ready to send once you confirm.'}
+      </p>
+      {error && <p role="alert">{error}</p>}
+      <div>
+        <button type="button" onClick={handleSubmit} disabled={saving}>
+          {saving ? 'Saving…' : 'Confirm assessment'}
+        </button>
+        {onCancel && <button type="button" onClick={onCancel} disabled={saving}>Discard candidate</button>}
       </div>
-
-      <footer className="assessment-draft-editor__footer">
-        <div>
-          <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
-            {reviewStatus === 'saving' ? 'Sending assessment...' : reviewStatus === 'dirty' ? 'Unsaved edits' : 'Ready to send'}
-          </p>
-          {error && <p className="assessment-draft-editor__error" role="alert">{error}</p>}
-        </div>
-        <div className="assessment-draft-editor__actions">
-          {onCancel && (
-            <button className="assessment-draft-editor__discard" type="button" onClick={onCancel} disabled={saving}>
-              <X size={16} aria-hidden="true" />
-              Discard
-            </button>
-          )}
-          <button className="assessment-draft-editor__send" type="button" onClick={handleSubmit} disabled={saving}>
-            <Send size={16} aria-hidden="true" />
-            {saving ? 'Sending...' : 'Send assessment'}
-          </button>
-        </div>
-      </footer>
     </section>
   );
 };

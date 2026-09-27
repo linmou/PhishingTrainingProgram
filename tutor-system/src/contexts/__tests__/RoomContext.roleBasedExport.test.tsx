@@ -1,26 +1,43 @@
-import React from 'react';
-import { renderHook } from '@testing-library/react-hooks';
+/** Test responsible for RoomContext export role filtering using state reached through public provider actions. */
+
+import React, { act } from 'react';
+import { renderHook } from '@testing-library/react';
 import { RoomProvider, useRoom } from '../RoomContext';
-import { AuthContext } from '../AuthContext';
 import { User, UserRole } from '../../types';
+import { generateTutorSuggestion, recordAISuggestionFeedback } from '../../services/aiService';
+import {
+    getMessageFeedbackStats,
+    getRoomFeedbackSummary,
+    getUserMessageFeedback,
+    supabase,
+} from '../../services/supabase';
+
+let mockAuthUser: User | null = null;
+let mockRoomResponse: any;
+let mockMessagesResponse: any[] = [];
+let mockParticipantsResponse: User[] = [];
+
+jest.mock('../AuthContext', () => ({
+    useAuth: () => ({ user: mockAuthUser, loading: false }),
+}));
 
 // Mock supabase
 jest.mock('../../services/supabase', () => ({
     supabase: {
-        from: jest.fn(() => ({
-            select: jest.fn().mockReturnThis(),
-            eq: jest.fn().mockReturnThis(),
-            single: jest.fn(),
-            insert: jest.fn().mockReturnThis(),
-            update: jest.fn().mockReturnThis(),
-            order: jest.fn().mockReturnThis(),
-        })),
-        channel: jest.fn(() => ({
-            on: jest.fn().mockReturnThis(),
-            subscribe: jest.fn(),
-            unsubscribe: jest.fn(),
-        })),
+        from: jest.fn(),
+        channel: jest.fn(),
     },
+    validateRoomPassword: jest.fn(),
+    submitMessageFeedback: jest.fn(),
+    getMessageFeedbackStats: jest.fn().mockResolvedValue({
+        like_count: 0,
+        dislike_count: 0,
+        overall_average_rating: 0,
+        total_feedback_count: 0,
+    }),
+    getUserMessageFeedback: jest.fn().mockResolvedValue(null),
+    getRoomFeedbackSummary: jest.fn().mockResolvedValue(null),
+    clearChatHistory: jest.fn(),
 }));
 
 // Mock AI service
@@ -38,15 +55,18 @@ global.URL.revokeObjectURL = jest.fn();
 
 // Mock document methods
 const mockClick = jest.fn();
-const mockRemove = jest.fn();
-document.createElement = jest.fn(() => ({
-    href: '',
-    download: '',
-    click: mockClick,
-    remove: mockRemove,
-}));
-document.body.appendChild = jest.fn();
-document.body.removeChild = jest.fn();
+const createElement = document.createElement.bind(document);
+const mockDownloadDom = () => {
+    jest.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+        const element = createElement(tagName);
+        if (tagName.toLowerCase() === 'a') {
+            element.click = mockClick;
+        }
+        return element;
+    });
+    jest.spyOn(document.body, 'appendChild').mockImplementation((element: Node) => element);
+    jest.spyOn(document.body, 'removeChild').mockImplementation((element: Node) => element);
+};
 
 describe('RoomContext - Role-based Export Filtering', () => {
     const mockRoom = {
@@ -90,37 +110,89 @@ describe('RoomContext - Role-based Export Filtering', () => {
         },
     ];
 
-    const mockAIInteractions = [
-        {
-            timestamp: '2024-01-01T00:01:30Z',
-            parent_message_id: 'msg-1',
-            parent_message_content: 'What is phishing?',
-            ai_suggestion: 'Phishing is a type of cyber attack where...',
-            tutor_action: 'modified' as const,
-            tutor_final_response: 'Phishing is a cybercrime...',
-            response_time_ms: 5000,
-        },
-    ];
-
     const createWrapper = (user: User | null) => {
+        mockAuthUser = user;
         return ({ children }: { children: React.ReactNode }) => (
-            <AuthContext.Provider
-                value={{
-                    user,
-                    loading: false,
-                    joinWithNameAndRole: jest.fn(),
-                    signOut: jest.fn(),
-                    setUserRole: jest.fn(),
-                    updateUserProfile: jest.fn(),
-                }}
-            >
-                <RoomProvider>{children}</RoomProvider>
-            </AuthContext.Provider>
+            <RoomProvider>{children}</RoomProvider>
         );
+    };
+
+    const renderJoinedRoom = async (user: User, createAIInteraction = false) => {
+        mockRoomResponse = mockRoom;
+        mockMessagesResponse = mockMessages;
+        const student: User = {
+            id: 'student-123',
+            display_name: 'Student',
+            current_role: 'student',
+            status: 'active',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+        };
+        mockParticipantsResponse = user.id === student.id ? [user] : [user, student];
+
+        const hook = renderHook(() => useRoom(), { wrapper: createWrapper(user) });
+        await act(async () => {
+            await hook.result.current.joinRoom(mockRoom.id);
+        });
+
+        if (createAIInteraction) {
+            await act(async () => {
+                await hook.result.current.generateAIResponse();
+            });
+            await act(async () => {
+                await hook.result.current.recordAIFeedback('modified', 'Phishing is a cybercrime...');
+            });
+        }
+
+        return hook;
     };
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockAuthUser = null;
+        mockRoomResponse = null;
+        mockMessagesResponse = [];
+        mockParticipantsResponse = [];
+        (supabase.from as jest.Mock).mockImplementation((table: string) => {
+            const query: any = {};
+            query.select = jest.fn().mockReturnValue(query);
+            query.eq = jest.fn().mockReturnValue(query);
+            query.single = jest.fn().mockResolvedValue({ data: mockRoomResponse, error: null });
+            query.order = jest.fn().mockResolvedValue({
+                data: table === 'messages' ? mockMessagesResponse : [],
+                error: null,
+            });
+            query.in = jest.fn().mockResolvedValue({ data: mockParticipantsResponse, error: null });
+            query.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+            query.insert = jest.fn().mockReturnValue(query);
+            query.update = jest.fn().mockReturnValue(query);
+            return query;
+        });
+        (supabase.channel as jest.Mock).mockImplementation(() => ({
+            on: jest.fn().mockReturnThis(),
+            subscribe: jest.fn(),
+            unsubscribe: jest.fn(),
+        }));
+        (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+            success: true,
+            suggestion: 'Phishing is a type of cyber attack where...',
+            decision: {
+                mode: 'tutoring',
+                instruction: 'explanation',
+                mode_reason: 'A direct explanation is appropriate.',
+                suggested_response: 'Phishing is a type of cyber attack where...',
+            },
+            contextMessages: ['What is phishing?'],
+        });
+        (recordAISuggestionFeedback as jest.Mock).mockResolvedValue(undefined);
+        (getMessageFeedbackStats as jest.Mock).mockResolvedValue({
+            like_count: 0,
+            dislike_count: 0,
+            overall_average_rating: 0,
+            total_feedback_count: 0,
+        });
+        (getUserMessageFeedback as jest.Mock).mockResolvedValue(null);
+        (getRoomFeedbackSummary as jest.Mock).mockResolvedValue(null);
         // Reset Blob mock to capture content
         global.Blob = jest.fn((content, options) => ({
             content: content[0],
@@ -128,8 +200,12 @@ describe('RoomContext - Role-based Export Filtering', () => {
         })) as any;
     });
 
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
     describe('JSON Export', () => {
-        it('should include AI data for tutors', () => {
+        it('should include AI data for tutors', async () => {
             const tutorUser: User = {
                 id: 'tutor-123',
                 display_name: 'Test Tutor',
@@ -139,17 +215,14 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 updated_at: '2024-01-01T00:00:00Z',
             };
 
-            const { result } = renderHook(() => useRoom(), {
-                wrapper: createWrapper(tutorUser),
-            });
+            const { result } = await renderJoinedRoom(tutorUser, true);
 
-            // Set up test data
-            (result.current as any).currentRoom = mockRoom;
-            (result.current as any).messages = mockMessages;
-            (result.current as any).aiInteractions = mockAIInteractions;
+            mockDownloadDom();
 
             // Call downloadChatHistory
-            result.current.downloadChatHistory('json');
+            await act(async () => {
+                await result.current.downloadChatHistory('json');
+            });
 
             // Get the blob content
             const blobCall = (global.Blob as jest.Mock).mock.calls[0];
@@ -158,7 +231,12 @@ describe('RoomContext - Role-based Export Filtering', () => {
             // Verify AI data is included
             expect(exportedData.room.ai_enabled).toBe(true);
             expect(exportedData.room.ai_model).toBe('GPT-3.5 Turbo');
-            expect(exportedData.ai_interactions).toEqual(mockAIInteractions);
+            expect(exportedData.ai_interactions).toHaveLength(1);
+            expect(exportedData.ai_interactions[0]).toMatchObject({
+                ai_suggestion: 'Phishing is a type of cyber attack where...',
+                tutor_action: 'modified',
+                tutor_final_response: 'Phishing is a cybercrime...',
+            });
             expect(exportedData.export_metadata.total_ai_interactions).toBe(1);
             expect(exportedData.export_metadata.interaction_summary).toEqual({
                 accepted: 0,
@@ -168,7 +246,7 @@ describe('RoomContext - Role-based Export Filtering', () => {
             });
         });
 
-        it('should exclude AI data for students', () => {
+        it('should exclude AI data for students', async () => {
             const studentUser: User = {
                 id: 'student-123',
                 display_name: 'Test Student',
@@ -178,17 +256,14 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 updated_at: '2024-01-01T00:00:00Z',
             };
 
-            const { result } = renderHook(() => useRoom(), {
-                wrapper: createWrapper(studentUser),
-            });
+            const { result } = await renderJoinedRoom(studentUser);
 
-            // Set up test data
-            (result.current as any).currentRoom = mockRoom;
-            (result.current as any).messages = mockMessages;
-            (result.current as any).aiInteractions = mockAIInteractions;
+            mockDownloadDom();
 
             // Call downloadChatHistory
-            result.current.downloadChatHistory('json');
+            await act(async () => {
+                await result.current.downloadChatHistory('json');
+            });
 
             // Get the blob content
             const blobCall = (global.Blob as jest.Mock).mock.calls[0];
@@ -206,7 +281,7 @@ describe('RoomContext - Role-based Export Filtering', () => {
             expect(exportedData.messages).toHaveLength(2);
         });
 
-        it('should exclude AI data for observers', () => {
+        it('should exclude AI data for observers', async () => {
             const observerUser: User = {
                 id: 'observer-123',
                 display_name: 'Test Observer',
@@ -216,17 +291,14 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 updated_at: '2024-01-01T00:00:00Z',
             };
 
-            const { result } = renderHook(() => useRoom(), {
-                wrapper: createWrapper(observerUser),
-            });
+            const { result } = await renderJoinedRoom(observerUser);
 
-            // Set up test data
-            (result.current as any).currentRoom = mockRoom;
-            (result.current as any).messages = mockMessages;
-            (result.current as any).aiInteractions = mockAIInteractions;
+            mockDownloadDom();
 
             // Call downloadChatHistory
-            result.current.downloadChatHistory('json');
+            await act(async () => {
+                await result.current.downloadChatHistory('json');
+            });
 
             // Get the blob content
             const blobCall = (global.Blob as jest.Mock).mock.calls[0];
@@ -240,7 +312,7 @@ describe('RoomContext - Role-based Export Filtering', () => {
     });
 
     describe('TXT Export', () => {
-        it('should include AI summary for tutors', () => {
+        it('should include AI summary for tutors', async () => {
             const tutorUser: User = {
                 id: 'tutor-123',
                 display_name: 'Test Tutor',
@@ -250,21 +322,18 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 updated_at: '2024-01-01T00:00:00Z',
             };
 
-            const { result } = renderHook(() => useRoom(), {
-                wrapper: createWrapper(tutorUser),
-            });
+            const { result } = await renderJoinedRoom(tutorUser, true);
 
-            // Set up test data
-            (result.current as any).currentRoom = mockRoom;
-            (result.current as any).messages = mockMessages;
-            (result.current as any).aiInteractions = mockAIInteractions;
+            mockDownloadDom();
 
             // Call downloadChatHistory
-            result.current.downloadChatHistory('txt');
+            await act(async () => {
+                await result.current.downloadChatHistory('txt');
+            });
 
             // Get the blob content
             const blobCall = (global.Blob as jest.Mock).mock.calls[0];
-            const exportedContent = blobCall[0];
+            const exportedContent = blobCall[0][0];
 
             // Verify AI data is included
             expect(exportedContent).toContain('AI Assistant: Enabled');
@@ -275,7 +344,7 @@ describe('RoomContext - Role-based Export Filtering', () => {
             expect(exportedContent).toContain('AI Suggestion: "Phishing is a type of cyber attack where..."');
         });
 
-        it('should exclude AI summary for students', () => {
+        it('should exclude AI summary for students', async () => {
             const studentUser: User = {
                 id: 'student-123',
                 display_name: 'Test Student',
@@ -285,21 +354,18 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 updated_at: '2024-01-01T00:00:00Z',
             };
 
-            const { result } = renderHook(() => useRoom(), {
-                wrapper: createWrapper(studentUser),
-            });
+            const { result } = await renderJoinedRoom(studentUser);
 
-            // Set up test data
-            (result.current as any).currentRoom = mockRoom;
-            (result.current as any).messages = mockMessages;
-            (result.current as any).aiInteractions = mockAIInteractions;
+            mockDownloadDom();
 
             // Call downloadChatHistory
-            result.current.downloadChatHistory('txt');
+            await act(async () => {
+                await result.current.downloadChatHistory('txt');
+            });
 
             // Get the blob content
             const blobCall = (global.Blob as jest.Mock).mock.calls[0];
-            const exportedContent = blobCall[0];
+            const exportedContent = blobCall[0][0];
 
             // Verify AI data is excluded
             expect(exportedContent).not.toContain('AI Assistant:');

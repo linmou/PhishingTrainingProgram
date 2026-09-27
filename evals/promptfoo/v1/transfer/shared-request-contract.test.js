@@ -80,7 +80,7 @@ test('the transfer target settings declare their own budget and thinking flag an
 
 test('a drifted budget or a drifted thinking flag on either side fails the parity assertion', () => {
   const source = fs.readFileSync(path.join(root, PRODUCTION_PROMPT_SOURCE), 'utf8');
-  const drifted = source.replace('max_tokens: 1200', 'max_tokens: 8000');
+  const drifted = source.replace('const PROVIDER_MAX_TOKENS = 1200', 'const PROVIDER_MAX_TOKENS = 8000');
   assert.notEqual(drifted, source);
   assert.notEqual(extractTransferCallSettings(drifted).max_tokens, transferTargetSettings().target_max_tokens);
   const thinkingDrift = source.replace('enable_thinking: false', 'enable_thinking: true');
@@ -92,9 +92,9 @@ test('the evaluation side resolves the production prompt without copying its tex
   assert.equal(shared.production_prompt.reference, `${PRODUCTION_PROMPT_SOURCE}#TRANSFER_V3_SYSTEM_PROMPT`);
   assert.equal(shared.production_prompt.sha256, sha256(fs.readFileSync(path.join(root, PRODUCTION_PROMPT_SOURCE))));
   assert.equal(shared.production_prompt.text, undefined);
-  const promptSource = 'tutor-system/src/services/prompts/transferV3Prompt.ts';
+  const promptSource = PRODUCTION_PROMPT_SOURCE;
   const promptFile = fs.readFileSync(path.join(root, promptSource), 'utf8');
-  const promptBody = promptFile.slice(promptFile.indexOf('export const TRANSFER_V3_SYSTEM_PROMPT'), promptFile.indexOf('].join'));
+  const promptBody = promptFile.slice(promptFile.indexOf('const TRANSFER_V3_SYSTEM_PROMPT'), promptFile.indexOf('].join'));
   const promptLines = promptBody.split('\n').map(line => line.trim().replace(/^'|',?$|^\+ |^\]$/g, '').trim()).filter(line => line.length > 40);
   assert.ok(promptLines.length > 0);
   for (const name of fs.readdirSync(__dirname).filter(item => item.endsWith('.js'))) {

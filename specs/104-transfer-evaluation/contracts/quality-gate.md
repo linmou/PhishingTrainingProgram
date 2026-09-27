@@ -13,13 +13,17 @@ Return `accepted` only when all of the following hold:
 1. Every required case/check/metric/partition/repetition/turn row has evidence.
 2. No required row has `missing` or `error` status; provider, parser, judge, and harness errors are resolved or the verdict is blocking.
 3. Every applicable semantic rubric reaches at least 80% overall and in every required applicable partition, unless the frozen manifest declares a stricter threshold.
-4. `t09_contract_and_progress`, `assessment_followup`, required validity checks, safety-critical/hard constraints, and every declared semantic pair meet 100% requirements.
+4. `t09_contract_and_progress`, `assessment_followup`, `learner_explanation_disclosure`, required validity checks, safety-critical/hard constraints, and every declared semantic pair meet 100% requirements.
 5. Zero-applicable partitions are reported as zero coverage and block acceptance.
 6. Candidate does not decline against the unchanged comparable baseline on the same case/version, metric version, partition, target generation, settings, and repetition policy. A 95% to 81% decline fails non-regression even though 81% exceeds 80%.
 7. Every pair member passes its applicable required checks in every repetition.
 8. Calibration and grounding prerequisites are recorded as complete for the relevant run; calibration is not silently replaced by an uncalibrated judge.
 9. The manifest pins the component-102-owned shared v3 builder version/hash and backend production prompt reference/hash, both target adapters report an effective 1,200 completion-token budget, and normalized product/evaluation requests match for every parity fixture.
 10. Target requests/evidence contain no evaluator-only metadata, copied production prompt artifact, provider credential, or secret value.
+11. The manifest pins promoted component 101/102 contract identities and every attempt sequence enforces the two-attempt lifecycle with exactly one terminal transition.
+12. `learner_explanation_quality` is calibrated and meets its frozen semantic thresholds; missing, incorrect, contradictory, irrelevant, or privacy-unsafe reviewed explanations remain blocking.
+13. Target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider recorded at integration commit `df40f32`; missing/mismatched settings block with no fallback.
+14. Every `PublicAssessmentDTO` contains exactly `id`, `student_id`, `selection_type`, `stem`, and `options` with no `rendered_text`, and every result projection uses the canonical `ProcessedMessageDTO` field names.
 
 Return `failed` for an observed behavior/threshold/pair/regression failure with complete evidence. Return `incomplete` for missing or errored execution/judge/manifest evidence. Both outcomes block acceptance.
 
@@ -57,6 +61,17 @@ The later implementation must include explicit tests for at least:
 | Product/evaluation normalized request mismatch | incomplete | parity failure blocks before semantic scoring |
 | Either v3 adapter budget differs from 1,200 | incomplete | effective-budget mismatch is identified |
 | Evaluator metadata or provider secret leaks into target evidence | incomplete | offending field/path is identified and acceptance blocks |
+| First incorrect answer resolves or exposes terminal feedback | failed | attempt remains open; no key/explanation or progress transition |
+| Correct on first or second attempt does not pass exactly once | failed | terminal pass and one transition are required |
+| Second incorrect answer is non-terminal or a third attempt is consumed | failed | terminal fail occurs once at accepted attempt two |
+| Duplicate/replay/concurrent loser consumes an attempt | failed | authoritative before/after snapshot is unchanged |
+| Missing or incorrect reviewed explanation judgment | incomplete/failed | quality result and exact evidence path are retained |
+| Key/explanation leaks before terminal failure | failed | disclosure check identifies role, stage, and offending field |
+| Terminal failure omits answer or explanation | incomplete | both role-safe feedback fields are required together |
+| Missing/mismatched 101/102 contract identity | incomplete | upgraded evidence cannot run against an unknown producer contract |
+| Target/judge model or provider mismatch | incomplete | required `qwen3.5-flash` DashScope-compatible configuration is named |
+| Public assessment omits `student_id` or contains `rendered_text` | incomplete | exact canonical allowlist and offending field are reported |
+| Result uses noncanonical processing/outcome/feedback fields | incomplete | expected `processing_state`, `answer_outcome`, and `terminal_failure_feedback` are reported |
 
 ## Non-substitution boundary
 

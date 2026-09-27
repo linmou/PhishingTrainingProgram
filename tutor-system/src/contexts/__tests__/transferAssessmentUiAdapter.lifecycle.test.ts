@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Test responsible for the learner answer lifecycle projection in
+ * Test responsible for the canonical learner-answer lifecycle projection in
  * src/contexts/transferAssessmentUiAdapter.ts.
  *
- * Responsibility: prove the trusted processing result is consumed as the server reports it —
- * graded, clarification, already processed, or unresolved — that the delivered question is still
- * projected from an answered row, and that the projection never carries private material.
+ * Responsibility: prove the UI consumes the trusted processed-message DTO, preserves attempt
+ * metadata, exposes terminal feedback only when the server marks a terminal failure, and never
+ * carries private assessment material into the projected room state.
  */
 
 import {
@@ -15,106 +15,241 @@ import {
   withAnswerLifecycle,
 } from '../transferAssessmentUiAdapter';
 import {
+  processedAlreadyTerminalReplay,
+  processedCorrectTerminal,
+  processedDeferredTerminalFailure,
+  processedFirstIncorrectRetry,
+  processedSecondIncorrectTerminal,
+  reloadedFirstIncorrectState,
+  DELIVERED_ANSWER_ID,
   DELIVERED_QUESTION_ID,
   deliveredQuestionRow,
-  deliveredQuestionRowWithoutSelectionType,
 } from '../../test-support/transferRoomFixtures';
 import { expectNoPrivateAssessmentFields } from '../../test-support/transferPrivacyAssertions';
+import {
+  TransferAssessmentService,
+  type AssessmentApiEnvelope,
+  type TransferAssessmentApi,
+} from '../../services/transferAssessmentService';
 import type { Message } from '../../types';
 
 describe('transferAssessmentUiAdapter answer lifecycle', () => {
-  it('reports a graded answer from the key the RPC actually returns', () => {
-    const lifecycle = answerLifecycleFromProcessed({
-      message_id: DELIVERED_QUESTION_ID,
-      result: 'pass',
-      selected_option_ids: ['B'],
-      transition: { status: 'covered' },
-      feedback_required: true,
-      code: null,
-      clarification_required: false,
-      already_processed: false,
-    });
+  it('projects a passed answer with the server attempt and transition metadata', () => {
+    const original = JSON.stringify(processedCorrectTerminal);
+    const lifecycle = answerLifecycleFromProcessed(processedCorrectTerminal);
 
+    expect(JSON.stringify(processedCorrectTerminal)).toBe(original);
     expect(lifecycle).toEqual({
-      state: 'graded',
-      messageId: DELIVERED_QUESTION_ID,
+      state: 'passed',
+      messageId: DELIVERED_ANSWER_ID,
+      assessmentId: DELIVERED_QUESTION_ID,
+      processingState: 'applied',
+      answerOutcome: 'passed',
+      attemptNumber: 1,
+      attemptsUsed: 1,
+      attemptsRemaining: 0,
+      selectedOptionIds: ['B'],
+      terminal: true,
+      transition: { status: 'covered' },
       code: null,
-      feedbackRequired: true,
+      feedbackRequired: false,
+      alreadyProcessed: false,
+      terminalFailureFeedback: null,
     });
   });
 
-  it('reports the server clarification request instead of a grade or a failure', () => {
+  it('reports a retry without inventing terminal feedback', () => {
     const lifecycle = answerLifecycleFromProcessed({
-      message_id: DELIVERED_QUESTION_ID,
-      result: null,
+      ...processedFirstIncorrectRetry,
+      feedback_required: true,
+      terminal_failure_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Use an official channel to verify the request.',
+      },
+    });
+
+    expect(lifecycle.state).toBe('retry');
+    expect(lifecycle.attemptNumber).toBe(1);
+    expect(lifecycle.attemptsUsed).toBe(1);
+    expect(lifecycle.attemptsRemaining).toBe(1);
+    expect(lifecycle.feedbackRequired).toBe(true);
+    expect(lifecycle.terminalFailureFeedback).toBeNull();
+  });
+
+  it('exposes the learner-safe explanation only for a terminal failed answer', () => {
+    const lifecycle = answerLifecycleFromProcessed(processedSecondIncorrectTerminal);
+
+    expect(lifecycle.state).toBe('failed');
+    expect(lifecycle.processingState).toBe('applied');
+    expect(lifecycle.attemptNumber).toBe(2);
+    expect(lifecycle.attemptsUsed).toBe(2);
+    expect(lifecycle.attemptsRemaining).toBe(0);
+    expect(lifecycle.terminal).toBe(true);
+    expect(lifecycle.terminalFailureFeedback).toEqual({
+      correct_option_ids: ['B'],
+      learner_safe_explanation: 'Verify the request through an official channel.',
+    });
+  });
+
+  it('preserves terminal failure feedback when progress processing is deferred', () => {
+    const lifecycle = answerLifecycleFromProcessed(processedDeferredTerminalFailure);
+
+    expect(lifecycle).toMatchObject({
+      state: 'failed',
+      processingState: 'deferred',
+      answerOutcome: 'failed',
+      attemptNumber: 2,
+      attemptsUsed: 2,
+      attemptsRemaining: 0,
+      terminal: true,
+      transition: null,
+      feedbackRequired: true,
+      terminalFailureFeedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+  });
+
+  it('maps a service-unwrapped envelope result into read-only persisted lifecycle view state', async () => {
+    const envelope: AssessmentApiEnvelope<unknown> = {
+      ok: true,
+      data: processedSecondIncorrectTerminal,
+    };
+    const api: TransferAssessmentApi = {
+      invoke: jest.fn(async () => ({ data: envelope, error: null })),
+    };
+    const service = new TransferAssessmentService({ api, requestId: () => 'adapter-envelope-test' });
+    const sourceBefore = JSON.stringify(processedSecondIncorrectTerminal);
+
+    const processed = await service.processMessage(
+      processedSecondIncorrectTerminal.message_id,
+      processedSecondIncorrectTerminal.assessment_id
+    );
+    const lifecycle = answerLifecycleFromProcessed(processed);
+
+    expect(processed).toEqual(processedSecondIncorrectTerminal);
+    expect(processed).toMatchObject({
+      message_id: processedSecondIncorrectTerminal.message_id,
+      assessment_id: processedSecondIncorrectTerminal.assessment_id,
+      attempts_used: 2,
+      attempts_remaining: 0,
+      terminal: true,
+      terminal_failure_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+    expect(lifecycle).toMatchObject({
+      state: 'failed',
+      messageId: processedSecondIncorrectTerminal.message_id,
+      assessmentId: processedSecondIncorrectTerminal.assessment_id,
+      attemptNumber: 2,
+      attemptsUsed: 2,
+      attemptsRemaining: 0,
+      terminal: true,
+      terminalFailureFeedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+    expect(JSON.stringify(processedSecondIncorrectTerminal)).toBe(sourceBefore);
+  });
+
+  it('keeps deferred processing distinct from a completed answer outcome', () => {
+    const lifecycle = answerLifecycleFromProcessed({
+      ...processedFirstIncorrectRetry,
+      processing_state: 'deferred',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
       selected_option_ids: null,
+      terminal: false,
+      transition: null,
+      code: 'AI_PROVIDER_NOT_CONFIGURED',
+    });
+
+    expect(lifecycle.state).toBe('deferred');
+    expect(lifecycle.processingState).toBe('deferred');
+    expect(lifecycle.answerOutcome).toBeNull();
+  });
+
+  it('reports duplicate and rejected server processing states', () => {
+    expect(answerLifecycleFromProcessed({
+      ...processedAlreadyTerminalReplay,
+      processing_state: 'duplicate',
+      answer_outcome: null,
+      already_processed: true,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
+      terminal: false,
+      transition: null,
+      feedback_required: false,
+      terminal_failure_feedback: null,
+    }).state).toBe('duplicate');
+
+    expect(answerLifecycleFromProcessed({
+      ...processedFirstIncorrectRetry,
+      processing_state: 'rejected',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
+      selected_option_ids: null,
+      terminal: false,
       transition: null,
       feedback_required: false,
       code: 'ANSWER_FORMAT_UNRESOLVED',
-      clarification_required: true,
-      already_processed: false,
+    }).state).toBe('rejected');
+  });
+
+  it('restores the persisted retry lifecycle from a reload fixture', () => {
+    const lifecycle = answerLifecycleFromProcessed(reloadedFirstIncorrectState.processed);
+    const view = withAnswerLifecycle(
+      projectRoomMessage({ ...reloadedFirstIncorrectState.answer }),
+      lifecycle
+    );
+
+    expect(view.id).toBe(DELIVERED_ANSWER_ID);
+    expect(view.parent_message_id).toBe(DELIVERED_QUESTION_ID);
+    expect(readAnswerLifecycle(view as unknown as Message)).toMatchObject({
+      state: 'retry',
+      messageId: DELIVERED_ANSWER_ID,
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptNumber: 1,
+      attemptsUsed: 1,
+      attemptsRemaining: 1,
+      terminal: false,
     });
-
-    expect(lifecycle.state).toBe('clarification');
-    expect(lifecycle.code).toBe('ANSWER_FORMAT_UNRESOLVED');
   });
 
-  it('treats a clarification flag as clarification even without the code', () => {
-    expect(answerLifecycleFromProcessed({ message_id: DELIVERED_QUESTION_ID, clarification_required: true }).state)
-      .toBe('clarification');
-  });
-
-  it('reports an idempotent replay as already processed', () => {
-    const lifecycle = answerLifecycleFromProcessed({
-      message_id: DELIVERED_QUESTION_ID,
-      result: 'pass',
-      already_processed: true,
-    });
-
-    expect(lifecycle.state).toBe('already_processed');
-  });
-
-  it('stays unresolved when the server returned no verdict at all', () => {
-    expect(answerLifecycleFromProcessed({}).state).toBe('unresolved');
-    expect(answerLifecycleFromProcessed(undefined).state).toBe('unresolved');
-  });
-
-  it('still accepts the older question_id key so a not-yet-promoted facade cannot break the view', () => {
-    expect(answerLifecycleFromProcessed({ question_id: DELIVERED_QUESTION_ID, result: 'fail' }).messageId)
-      .toBe(DELIVERED_QUESTION_ID);
-  });
-
-  it('attaches the lifecycle to a projected answer without inventing a grade', () => {
+  it('attaches the canonical lifecycle to a projected answer without exposing private fields', () => {
     const view = withAnswerLifecycle(
       projectRoomMessage({
-        id: 'answer-1',
+        id: DELIVERED_ANSWER_ID,
         room_id: deliveredQuestionRow.room_id,
         user_id: deliveredQuestionRow.user_id,
-        content: 'B or D',
+        content: 'B',
         user_role: 'student',
         created_at: '2026-09-12T09:15:00Z',
       }),
-      answerLifecycleFromProcessed({ message_id: DELIVERED_QUESTION_ID, clarification_required: true })
+      answerLifecycleFromProcessed(processedCorrectTerminal)
     );
 
-    expect(readAnswerLifecycle(view as unknown as Message)!.state).toBe('clarification');
+    expect(readAnswerLifecycle(view as unknown as Message)!.state).toBe('passed');
     expect(view.publicQuestion).toBeNull();
     expectNoPrivateAssessmentFields(view);
   });
 
-  it('projects an answered question row without the private key', () => {
-    const view = projectRoomMessage({ ...deliveredQuestionRow, assessment_lifecycle: 'answered' });
+  it('projects a delivered question with its public selection type and no private key', () => {
+    const view = projectRoomMessage(deliveredQuestionRow);
 
     expect(view.publicQuestion!.id).toBe(DELIVERED_QUESTION_ID);
+    expect(view.publicQuestion!.studentId).toBe(deliveredQuestionRow.assessment.student_id);
     expect(view.publicQuestion!.selectionType).toBe('single');
     expect(view.answerLifecycle).toBeNull();
-    expectNoPrivateAssessmentFields(view);
-  });
-
-  it('keeps the pre-migration row honest about an unrecorded selection type', () => {
-    const view = projectRoomMessage(deliveredQuestionRowWithoutSelectionType);
-
-    expect(view.publicQuestion!.selectionType).toBeNull();
     expectNoPrivateAssessmentFields(view);
   });
 });

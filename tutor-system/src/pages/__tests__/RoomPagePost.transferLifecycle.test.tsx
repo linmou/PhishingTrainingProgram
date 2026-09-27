@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * Test responsible for the page-level transfer lifecycle states in src/pages/RoomPagePost.tsx:
- * preparing, unavailable capability, superseded delivery, and retention of the reviewed candidate.
+ * Test responsible for the page-level transfer lifecycle states and download controls in
+ * src/pages/RoomPagePost.tsx: preparation and delivery outcomes, plus TXT/JSON export selection.
  *
- * Responsibility: prove a teacher sees a named state instead of a silent no-op when preparation is
- * running or refused, and that no state is invented for a legacy suggestion.
+ * Responsibility: prove a teacher sees preparation, stale, retryable, and unavailable states,
+ * catches up from persisted messages after a stale conflict, and a learner sees server-reported
+ * remaining chances after the room page is mounted from persisted lifecycle state.
  */
 
 import React from 'react';
@@ -15,8 +16,18 @@ import RoomPagePost from '../RoomPagePost';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
 import {
+  answerLifecycleFromProcessed,
+  projectRoomMessage,
+  withAnswerLifecycle,
+} from '../../contexts/transferAssessmentUiAdapter';
+import {
+  DELIVERED_ANSWER_ID,
+  DELIVERED_QUESTION_ID,
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
+  deliveredPublicAssessment,
+  deliveredQuestionRow,
+  learnerAUser,
   learnerAMessageRow,
   preparedCandidate,
   transferRoom,
@@ -50,7 +61,7 @@ const learnerMessage: Message = {
   user_id: 'learner-a',
   content: learnerAMessageRow.content,
   user_role: 'student',
-  response_mode: 'tutoring',
+  is_ai_generated: false,
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: null,
@@ -70,6 +81,7 @@ const transferDraft = {
 
 describe('RoomPagePost transfer lifecycle states', () => {
   let generateAIResponse: jest.Mock;
+  let downloadChatHistory: jest.Mock;
   let alertSpy: jest.SpyInstance;
 
   const mount = (overrides: Record<string, unknown> = {}) => {
@@ -88,7 +100,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
       startTyping: jest.fn(),
       stopTyping: jest.fn(),
       aiConfig: { model_name: 'qwen3.5-flash', prompt_config: null },
-      downloadChatHistory: jest.fn(),
+      downloadChatHistory,
       clearChatHistory: jest.fn(),
       transferDraft: null,
       confirmTransferDraft: jest.fn().mockResolvedValue(undefined),
@@ -114,6 +126,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
     generateAIResponse = jest.fn().mockResolvedValue(undefined);
+    downloadChatHistory = jest.fn();
     // The generate control is the room's AI button; it is enabled for a tutor in an AI room.
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -150,25 +163,65 @@ describe('RoomPagePost transfer lifecycle states', () => {
     });
   });
 
-  it('shows a superseded state when the learner already has a delivered assessment', async () => {
+  it('catches up from persisted room state when a transfer turn is stale', async () => {
     generateAIResponse.mockRejectedValue(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered'));
-    mount();
+    let finishCatchUp: (() => void) | null = null;
+    const joinRoom = jest.fn()
+      .mockResolvedValueOnce(undefined)
+      .mockImplementationOnce(() => new Promise<void>((resolve) => {
+        finishCatchUp = () => resolve();
+      }));
+    mount({ joinRoom });
 
     fireEvent.click(screen.getByTitle(/Generate AI Response/));
 
     await waitFor(() => {
-      expect(document.querySelector('[data-transfer-status="superseded"]')).not.toBeNull();
+      expect(document.querySelector('[data-transfer-status="catching-up"]')).not.toBeNull();
     });
+    await act(async () => {
+      finishCatchUp?.();
+    });
+    await waitFor(() => {
+      expect(document.querySelector('[data-transfer-status="stale"]')).not.toBeNull();
+    });
+    expect(screen.getByText(/refreshed after a transfer conflict/)).toBeInTheDocument();
+    expect(joinRoom).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
   });
 
-  it('shows a validation state for a refused preparation without turning the room mode', async () => {
+  it('keeps room catch-up retryable until persisted state can be refreshed', async () => {
+    const joinRoom = jest.fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('temporary network failure'))
+      .mockResolvedValueOnce(undefined);
+    generateAIResponse.mockRejectedValue(new Error('temporary transfer service failure'));
+    mount({ joinRoom });
+
+    fireEvent.click(screen.getByTitle(/Generate AI Response/));
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-transfer-status="retryable"]')).not.toBeNull();
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh room state' }));
+    await waitFor(() => {
+      expect(document.querySelector('[data-transfer-status="retryable"]')).not.toBeNull();
+      expect(joinRoom).toHaveBeenCalledTimes(2);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh room state' }));
+    await waitFor(() => {
+      expect(document.querySelector('[data-transfer-status="caught-up"]')).not.toBeNull();
+    });
+    expect(joinRoom).toHaveBeenCalledTimes(3);
+  });
+
+  it('refreshes saved room state when preparation is superseded by another learner focus', async () => {
     generateAIResponse.mockRejectedValue(new Error('WRONG_LEARNER: focus message belongs to another learner'));
     mount();
 
     fireEvent.click(screen.getByTitle(/Generate AI Response/));
 
     await waitFor(() => {
-      expect(document.querySelector('[data-transfer-status="validation"]')).not.toBeNull();
+      expect(document.querySelector('[data-transfer-status="stale"]')).not.toBeNull();
     });
     expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
   });
@@ -180,6 +233,55 @@ describe('RoomPagePost transfer lifecycle states', () => {
     expect(document.querySelector('[data-transfer-status]')).toBeNull();
   });
 
+  it('submits the public question parent ID and assessment ID separately', async () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const question = projectRoomMessage(
+      { ...deliveredQuestionRow, id: questionMessageId },
+      deliveredPublicAssessment
+    );
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    mount({ messages: [question], sendMessage });
+
+    fireEvent.click(screen.getByRole('radio', { name: /A\./ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
+    });
+
+    expect(sendMessage).toHaveBeenCalledWith('A', {
+      replyToMessageId: questionMessageId,
+      assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: ['A'],
+    });
+  });
+
+  it('renders persisted remaining chances after the page is mounted from saved messages', () => {
+    const question = withAnswerLifecycle(
+      projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment),
+      answerLifecycleFromProcessed({
+        message_id: DELIVERED_ANSWER_ID,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied',
+        answer_outcome: 'retry',
+        attempt_number: 1,
+        attempts_used: 1,
+        attempts_remaining: 1,
+        selected_option_ids: ['A'],
+        terminal: false,
+        transition: null,
+        code: null,
+        feedback_required: false,
+        already_processed: true,
+        terminal_failure_feedback: null,
+      })
+    );
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    mount({ messages: [question] });
+
+    expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+  });
+
   it('clears a previous lifecycle state when a new preparation starts and succeeds', async () => {
     generateAIResponse
       .mockRejectedValueOnce(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered'))
@@ -188,7 +290,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
 
     fireEvent.click(screen.getByTitle(/Generate AI Response/));
     await waitFor(() => {
-      expect(document.querySelector('[data-transfer-status="superseded"]')).not.toBeNull();
+      expect(document.querySelector('[data-transfer-status="stale"]')).not.toBeNull();
     });
 
     await act(async () => {
@@ -198,5 +300,36 @@ describe('RoomPagePost transfer lifecycle states', () => {
     await waitFor(() => {
       expect(document.querySelector('[data-transfer-status]')).toBeNull();
     });
+  });
+
+  it('offers TXT and JSON downloads without offering PDF', () => {
+    mount();
+
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+
+    expect(screen.getByRole('heading', { name: 'Download Room Data' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Chat History (TXT)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Complete Data (JSON)' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'PDF' })).not.toBeInTheDocument();
+  });
+
+  it('requests a TXT export when the chat-history option is selected', () => {
+    mount();
+
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
+
+    expect(downloadChatHistory).toHaveBeenCalledWith('txt');
+    expect(screen.queryByRole('heading', { name: 'Download Room Data' })).not.toBeInTheDocument();
+  });
+
+  it('requests a JSON export when the complete-data option is selected', () => {
+    mount();
+
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Complete Data (JSON)' }));
+
+    expect(downloadChatHistory).toHaveBeenCalledWith('json');
+    expect(screen.queryByRole('heading', { name: 'Download Room Data' })).not.toBeInTheDocument();
   });
 });

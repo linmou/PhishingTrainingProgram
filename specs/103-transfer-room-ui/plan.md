@@ -5,7 +5,7 @@
 
 ## Summary
 
-Extend the existing React room flow so it consumes component 102's exported transfer-assessment DTOs and typed envelopes without changing the shared service or becoming a second authority for identity, grading, or progress. The plan covers React-specific state adaptation, stable learner/message/checklist focus, deduplicated initial/realtime/reconnect ingress, teacher candidate review/edit/reconfirm/send, learner public question rendering and chat answer linkage, binary tutoring/Guard room state with assessment turn state, and role-scoped progress/export projections.
+Extend the existing React room flow so component 102 owns transfer-assessment envelope parsing and the UI consumes its canonical service projections without changing the shared service or becoming a second authority for identity, grading, attempts, terminal state, disclosure, or progress. The plan covers React-specific state adaptation, stable learner/message/checklist focus, deduplicated initial/realtime/reconnect ingress, teacher review/edit/reconfirm/send including a learner-safe explanation, learner radio/checkbox selection and explicit submission, server retry/terminal feedback, exact-once question rendering, participant-local folding, binary tutoring/Guard room state, and role-scoped progress/export projections.
 
 The implementation stays within the existing `RoomContext` and room page/component composition. SQL/RLS, trusted principal and provider behavior, model prompts, Promptfoo, and release-browser execution remain upstream or downstream gates. The original plan is preserved at SHA-256 `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2`.
 
@@ -18,7 +18,7 @@ The implementation stays within the existing `RoomContext` and room page/compone
 **Target Platform**: Existing web application browsers supported by the repository's CRA browserslist  
 **Project Type**: React web application with room context, pages, and reusable message components  
 **Performance Goals**: A reconnect or reload must converge to one visible record per persisted lifecycle identity without requiring a second manual send; normal room rendering remains responsive for the existing message volume  
-**Constraints**: No direct progress writes; no private key/rationale/raw-model data in learner DTOs, exports, realtime payloads, or browser state; no assessment room mode; no new authentication; feature capability remains disabled unless the backend reports it available  
+**Constraints**: No direct grade, attempt, terminal, disclosure, or progress decisions in React; no private key/rationale/raw-model data in learner DTOs, exports, realtime payloads, or browser state; no assessment room mode; no new authentication; feature capability remains disabled unless the backend reports it available  
 **Scale/Scope**: One selected learner per transfer room review flow, one focus message per prepared turn, one unresolved delivered assessment per room/learner as enforced upstream, and the existing room message list  
 
 ## Constitution Check
@@ -26,7 +26,7 @@ The implementation stays within the existing `RoomContext` and room page/compone
 The pre-design gate passes:
 
 - **I. Preserve Requirements and Evidence**: Every FR/SC maps to a story and task; the normative original-plan SHA and W7/W8 work package are recorded. Initiative status remains in `milestone_ledger.md` rather than this branch package.
-- **II. Keep Authority Server-Side**: UI consumes allowlisted DTOs, forwards identities, never grades or writes progress, and keeps private fields out of learner projections.
+- **II. Keep Authority Server-Side**: UI consumes allowlisted DTOs, forwards identities and canonical selections, never grades, counts or resets attempts, decides terminal disclosure, or writes progress, and keeps private fields out of learner projections.
 - **III. Test First and Verify the Real Boundary**: Tasks put focused React integration tests before implementation and include reconnect, duplicate-tab, privacy, and structured-contract cases. Hosted SQL/auth gates are explicitly deferred to their owners.
 - **IV. Use Stable, Explicit Contracts**: Component 103 consumes component 102's exported six-operation facade, `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and `AssessmentApiEnvelope`; React-only state adaptation, message identities, server-conflict handling, and role-scoped projections are recorded in `contracts/room-ui-contracts.md`.
 - **V. Prefer the Smallest Coherent Design**: Existing context, service, pages, editor, message components, and export builder are reused; no second room provider or assessment application is proposed.
@@ -57,7 +57,7 @@ Root `AGENTS.md` and agent context are integration-owned. Running `.specify/scri
 
 Consume component 101's shared assessment/progress domain exports and component 102's exported `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed operation envelopes for preparation, delivery, persisted messages, and lifecycle results. The React-only review, public-question, and lifecycle view-state types are defined with their mappings in `src/contexts/transferAssessmentUiAdapter.ts` before entering `RoomContext`; the adapter imports 101/102 types unchanged and does not redeclare DTOs, edit shared type barrels, or map API operation names. Components receive the candidate `TutorDecisionV3` only on the teacher review path and `PublicAssessmentDTO` only on learner/public message paths.
 
-The learner projection contains assessment identity, selection type, stem/rendered text, and ordered A-D options. It excludes key IDs, transfer basis, private reason/rationale, raw model output, and teacher action. Unknown fields are not spread into public component props or exports.
+The learner question projection consumes component 102's exact `PublicAssessmentDTO { id, student_id, selection_type, stem, options }`. The adapter maps the canonical `ProcessedMessageDTO` fields into component-owned presentation states without redefining or renaming the shared DTO. Learner feedback reads only `terminal_failure_feedback`, and only when `answer_outcome` is terminal `failed`; retry and passed results keep it null. Unknown fields are not spread into public component props or exports.
 
 ### 2. Identity and focus
 
@@ -69,11 +69,11 @@ The context owns one focus/review-candidate view state. Pages pass IDs and struc
 
 Create one merge path for initial join fetch, reconnect/catch-up, polling, optimistic replacement, and realtime inserts. Deduplicate by persisted identity, replace temporary optimistic IDs with the returned record, retain stable ordering, and preserve pre-populated legacy messages. A reconnect or duplicate tab must produce the same visible message/lifecycle set as a clean reload.
 
-Persisted lifecycle records and server idempotency outcomes are authoritative. Local status may represent loading, dirty, stale, or error, but it cannot create a delivered state or progress transition.
+Persisted lifecycle records and server idempotency outcomes are authoritative. Local status may represent loading, dirty, stale, error, unsubmitted option selection, or expanded/collapsed presentation, but it cannot create or reset an attempt, delivered/terminal state, disclosure, or progress transition.
 
 ### 4. Teacher review lifecycle
 
-The review surface uses structured decision data. Editing stem, selection type, options, or key clears confirmation and marks the candidate dirty. Confirmation is UI-local review state, not a server write. Send consumes component 102's typed `sendReviewed` method with the confirmed `TutorDecisionV3` and the prepared scope identity. There is no draft row, so there is nothing to reject, regenerate, or re-revise on the server: discarding or replacing an unconfirmed candidate is a local action that persists nothing, and no operation is invented for it. Server validation, scope, and conflict outcomes (`ITEM_VALIDATION_FAILED`, `INVALID_SCOPE`, `WRONG_LEARNER`, `ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_FEATURE_DISABLED`, `FORBIDDEN`) are explicit and leave no phantom learner message.
+The review surface uses structured decision data. Editing stem, selection type, options, key, or learner-safe explanation clears confirmation and marks the candidate dirty. Confirmation is UI-local review state, not a server write. Send consumes component 102's typed `sendReviewed` method with the confirmed `TutorDecisionV3` and the prepared scope identity. There is no draft row, so there is nothing to reject, regenerate, or re-revise on the server: discarding or replacing an unconfirmed candidate is a local action that persists nothing, and no operation is invented for it. Server validation, scope, and conflict outcomes (`ITEM_VALIDATION_FAILED`, `INVALID_SCOPE`, `WRONG_LEARNER`, `ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_FEATURE_DISABLED`, `FORBIDDEN`) are explicit and leave no phantom learner message.
 
 `itemId` stays `string | null` end to end: a tutoring or Guard turn has no checklist item and must pass `null`, never the text `"null"`.
 
@@ -81,7 +81,11 @@ The editor may edit answer content within the structured review flow, but it has
 
 ### 5. Learner question and answer path
 
-Render `PublicAssessmentDTO` in the existing room message experience with canonical instruction and options. The learner submits through ordinary chat, carrying the delivered `assessment_id` and actual parent question ID. The UI does not parse labels for grading, compare against keys, update progress, or create a local pass/fail state. It displays the structured result returned by the trusted path and preserves duplicate/ambiguous/assisted/stale outcomes.
+Render `PublicAssessmentDTO` through the existing `PublicAssessmentQuestion` inside `PostComment`. Single-answer questions use a radio group; multiple-answer questions use checkboxes. The explicit Submit answer button is disabled until a displayed selection exists, while submission is pending, and after terminal resolution. The assessment surface has no free-text input. It serializes canonical option IDs through the existing room message path with the delivered `assessment_id` and actual parent question ID.
+
+`RoomContext` maps component 102's result onto the delivered question. A first incorrect result displays only retry feedback and the persisted remaining count. Correct on either attempt and second incorrect are terminal; only an authorized terminal result can disclose the correct answer and learner-safe explanation. Reloads, remounts, reconnects, retries, and duplicate tabs re-read the same persisted attempt lifecycle. React never grades, increments or resets attempts, decides terminal state, or updates progress.
+
+Question rendering uses `PublicAssessmentDTO.stem` once and `PublicAssessmentDTO.options` once. The public DTO has no `rendered_text`, so no option-bearing string reaches the learner renderer. Every assessment message starts expanded; `PostComment` owns a participant-local disclosure toggle that does not unmount or change answer selection/result state and is never written to room state.
 
 ### 6. Room and turn modes
 
@@ -107,9 +111,10 @@ Read transfer progress for the selected learner through the existing owner-scope
 
 ### Phase 3: Learner public flow (US2)
 
-- Render public assessment fields in `ChatMessage`/`PostComment` or a narrowly scoped assessment child component.
-- Link learner chat submission to delivered assessment and parent IDs.
-- Verify no answer key, basis, rationale, or local progress mutation crosses the learner boundary.
+- Extend `PublicAssessmentQuestion` inside `PostComment` with radio/checkbox selection, explicit submission, authoritative retry/terminal feedback, and exact-once rendering.
+- Link canonical option selection to delivered assessment and parent IDs through `RoomPagePost` and `RoomContext` without exposing the free-text composer as an assessment answer path.
+- Add participant-local expanded-by-default folding and verify it changes no selection, attempt, result, shared room state, or another participant's view.
+- Verify no pre-terminal answer/explanation disclosure, private key, basis, rationale, local attempt mutation, or progress mutation crosses the learner boundary.
 
 ### Phase 4: Room convergence and role projections (US3-US4)
 
@@ -133,7 +138,9 @@ Read transfer progress for the selected learner through the existing owner-scope
 | Public/private boundary | React adapter, learner rendering, export, and browser-state assertions for forbidden fields while consuming component 102 DTOs unchanged |
 | Mode split | Contract and context tests for tutoring/Guard room state versus assessment turn state and mismatch rejection |
 | Catch-up/reconnect | Context tests for initial fetch, realtime-before-fetch, duplicate realtime, reconnect, reload, and optimistic replacement |
-| Answer submission | Chat integration tests assert assessment identity is forwarded and progress APIs are never called from the UI |
+| Answer submission | Component, page, and context tests assert radio/checkbox semantics, explicit disabled submission, canonical IDs, assessment/parent identity, and zero browser grade/attempt/progress decisions |
+| Attempt continuity | Context/page tests assert first-incorrect, correct-terminal, second-incorrect-terminal, reload, reconnect, retry, and duplicate-tab clients render the same persisted lifecycle and reject a third submission |
+| Rendering/folding | Component tests assert stem/options render exactly once, messages start expanded, toggles are accessible and participant-local, and collapsing preserves selection/results |
 | Downstream decision use | Page tests provide structured decisions and verify editor/rendering consume fields, not copied suggestion text |
 | Regression | Existing room/component regression suite plus production build |
 
@@ -141,13 +148,14 @@ The focused test file set is declared in `quickstart.md` and tasks. Hosted SQL/R
 
 ## Integration Risks
 
-- **DTO drift from component 102**: React adapter tests must compile against and consume component 102's exported envelope variants. Incompatible upstream changes block integration; component 103 must not patch or duplicate the service contract or silently fall back to text-only rendering.
+- **DTO drift from component 102**: React adapter tests must compile against the promoted persisted attempt and disclosure fields. Missing attempts used/remaining, terminal state, role-safe terminal feedback, selection type after reload, or stem-only content blocks integration; component 103 must not patch or duplicate the service contract or silently fall back to local counting or text parsing.
 - **Shared type drift from component 101**: Adapter and room tests must compile against component 101's assessment/progress exports. Incompatible changes block integration; component 103 must not patch `src/types/assessment.ts`, `src/types/learningProgress.ts`, or `src/types/index.ts`.
 - **Existing simplified auth**: this component cannot elevate local role/name values into authorization. If the backend capability is unavailable, render unavailable and keep legacy behavior.
 - **Realtime visibility and private fields**: public assessment projections must be built before React state, export, or broadcast handling; never pass raw private response objects through context.
 - **Legacy mode enum consumers**: assessment must not be cast into room mode. Run legacy room and Guard tests after mode/type changes.
 - **Optimistic state**: temporary messages require explicit replacement by persisted ID and must not be used as evidence or answer parents.
 - **Cross-component sequencing**: W7/W8 cannot close until 101 contracts and 102 DTO/auth/idempotency behavior are available; local mocks prove UI behavior only.
+- **Concurrent answer submissions**: duplicate tabs can race on the final chance. Tests must consume component 102's idempotent result and show one terminal state; disabling one browser button is not concurrency control.
 
 ## Complexity Tracking
 

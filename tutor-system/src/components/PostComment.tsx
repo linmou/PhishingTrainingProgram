@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Reply, MoreHorizontal } from 'lucide-react';
 import { Message, MessageFeedbackStats } from '../types';
-import { resolveMessagePresentation } from '../utils/messagePresentation';
 import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
 import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import { resolveMessagePresentation } from '../utils/messagePresentation';
+import type { AssessmentOptionId } from '../types/assessment';
 import './PostComment.css';
 
 interface PostCommentProps {
@@ -26,6 +27,11 @@ interface PostCommentProps {
     // New feedback props
     onSubmitFeedback?: (messageId: string, feedbackType: 'like' | 'dislike', rating: number) => void;
     feedbackStats?: MessageFeedbackStats;
+    onSubmitAssessment?: (
+        messageId: string,
+        assessmentId: string,
+        selectedOptionIds: AssessmentOptionId[]
+    ) => Promise<void> | void;
 }
 
 const PostComment: React.FC<PostCommentProps> = ({
@@ -44,13 +50,21 @@ const PostComment: React.FC<PostCommentProps> = ({
     currentUserRole,
     className = '',
     onSubmitFeedback,
-    feedbackStats
+    feedbackStats,
+    onSubmitAssessment
 }) => {
     // A delivered assessment message renders its public question; every other message renders
     // its plain content.
     const publicQuestion = readPublicQuestion(message);
-    // The server asks for a clarifying label when an answer cannot be resolved to an option.
-    const answerLifecycle = readAnswerLifecycle(message);
+    // Answer lifecycle and disclosure belong only to the target learner's view.
+    const persistedLifecycle = readAnswerLifecycle(message);
+    const lifecycleOwnerId = publicQuestion?.studentId ?? message.user_id;
+    const answerLifecycle = currentUserRole === 'student' && currentUserId === lifecycleOwnerId
+        ? persistedLifecycle
+        : null;
+    const hasTransferAssessment = Boolean(publicQuestion || answerLifecycle);
+    const [assessmentExpanded, setAssessmentExpanded] = useState(true);
+    const assessmentContentId = `assessment-content-${message.id}`;
     // State for two-step feedback system
     const [showRating, setShowRating] = useState<'like' | 'dislike' | null>(null);
     const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
@@ -116,11 +130,12 @@ const PostComment: React.FC<PostCommentProps> = ({
     const dislikeCountFromStats = feedbackStats?.dislike_count || 0;
     const hasUserLiked = userFeedback?.feedback_type === 'like';
     const hasUserDisliked = userFeedback?.feedback_type === 'dislike';
+    const isAIGenerated = message.is_ai_generated === true;
 
     const presentation = resolveMessagePresentation(message, currentUserRole);
 
     return (
-        <div className={`post-comment ${presentation.isGuard ? 'post-comment-guard' : ''} ${presentation.isMultiagent ? 'post-comment-character' : ''} ${className}`}>
+        <div className={`post-comment ${isAIGenerated ? 'post-comment-ai' : ''} ${presentation.isGuard ? 'post-comment-guard' : ''} ${presentation.isMultiagent ? 'post-comment-character' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
@@ -144,33 +159,61 @@ const PostComment: React.FC<PostCommentProps> = ({
                                 {presentation.displayName}
                             </span>
                             
-                            {/* Model diagnostics stay in storage and exports, not in the message header. */}
                             {presentation.roleBadge && (
                                 <span className={`comment-role-badge${message.user_role === 'tutor' ? ' comment-role-badge--tutor' : ''}`}>
                                     {presentation.roleBadge}
                                 </span>
                             )}
-
                         </div>
                         
                         <div className="comment-meta">
                             <span className="comment-timestamp">
                                 {formatTime(message.created_at)}
                             </span>
-                            {/* Stored response timing is intentionally not rendered. */}
+                            {isAIGenerated && message.ai_response_time_ms && (
+                                <span className="comment-response-time">
+                                    · {message.ai_response_time_ms}ms
+                                </span>
+                            )}
+                            {hasTransferAssessment && (
+                                <button
+                                    type="button"
+                                    className="assessment-disclosure-button"
+                                    aria-label={`${assessmentExpanded ? 'Collapse' : 'Expand'} assessment ${publicQuestion ? 'question' : 'message'}`}
+                                    aria-expanded={assessmentExpanded}
+                                    aria-controls={assessmentContentId}
+                                    title={`${assessmentExpanded ? 'Collapse' : 'Expand'} assessment ${publicQuestion ? 'question' : 'message'}`}
+                                    onClick={() => setAssessmentExpanded((expanded) => !expanded)}
+                                >
+                                    {assessmentExpanded
+                                        ? <ChevronDown aria-hidden="true" className="assessment-disclosure-icon" />
+                                        : <ChevronRight aria-hidden="true" className="assessment-disclosure-icon" />}
+                                </button>
+                            )}
                         </div>
                     </div>
 
                     {/* Comment Text */}
                     <div className="comment-text">
-                        {publicQuestion
-                            ? <PublicAssessmentQuestion question={publicQuestion} />
-                            : presentation.body}
-                        {answerLifecycle?.state === 'clarification' && (
-                            <p className="answer-clarification" role="status">
-                                Tell me which option you mean, for example B or B, D.
-                            </p>
-                        )}
+                        {hasTransferAssessment ? (
+                            <div id={assessmentContentId} hidden={!assessmentExpanded}>
+                                {publicQuestion
+                                    ? <PublicAssessmentQuestion
+                                        question={publicQuestion}
+                                        answerLifecycle={answerLifecycle}
+                                        canAnswer={currentUserRole === 'student' && currentUserId === publicQuestion.studentId}
+                                        onSubmit={onSubmitAssessment
+                                            ? (ids) => onSubmitAssessment(message.id, publicQuestion.id, ids)
+                                            : undefined}
+                                      />
+                                    : presentation.body}
+                                {answerLifecycle?.state === 'rejected' && answerLifecycle.code === 'ANSWER_FORMAT_UNRESOLVED' && (
+                                    <p className="answer-clarification" role="status">
+                                        Choose one of the displayed options and submit again.
+                                    </p>
+                                )}
+                            </div>
+                        ) : presentation.body}
                     </div>
 
                     {/* Comment Actions */}

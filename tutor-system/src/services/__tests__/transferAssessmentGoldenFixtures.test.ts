@@ -7,13 +7,22 @@ import { renderAssessment, validateAssessmentRendering } from '../assessmentRend
 import { applyLearningEvent } from '../learningProgressTransitions';
 import { parseTutorDecisionV3 } from '../tutorDecisionContract';
 import { validateAssessmentDraft } from '../assessmentValidation';
+import { resolveTransferAnswer } from '../transferAssessmentOrchestrator';
 import { PublicAssessment } from '../../types/assessment';
+import type {
+  TransferAttemptResult,
+  TransferAttemptSnapshot,
+  TransferFailedResult,
+  TransferPassedResult,
+  TransferRetryResult,
+} from '../../types';
 import {
   PENDING,
   PARTIALLY_COVERED,
   NEEDS_REVIEW,
   COVERED,
   TRANSFER_ASSESSMENT_OPTIONS,
+  TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
   TRANSFER_CORRECT_OPTION_IDS,
   TRANSFER_FIXTURE_ASSESSMENT_ID,
   TRANSFER_FIXTURE_CONTRACT_VERSION,
@@ -22,6 +31,7 @@ import {
   TRANSFER_FIXTURE_SOURCE_EVIDENCE_MESSAGE_ID,
   TRANSFER_FIXTURE_TARGET_ITEM_ID,
   TRANSFER_GOLDEN_FIXTURES,
+  TRANSFER_ATTEMPT_SEQUENCE_FIXTURES,
   TRANSFER_GRADER_FIXTURES,
   TRANSFER_LIFECYCLE_FIXTURES,
   TRANSFER_PARSER_FIXTURES,
@@ -79,6 +89,89 @@ describe('golden fixture schema', () => {
       'stale_snapshot',
       'feedback_required_blocks',
     ]);
+    expect(manifest.attempt_sequence_fixture_ids.length).toBe(TRANSFER_ATTEMPT_SEQUENCE_FIXTURES.length);
+    expect(manifest.attempt_sequence_ids).toEqual([
+      'correct_first',
+      'incorrect_correct',
+      'incorrect_incorrect',
+      'duplicate',
+      'reload_tab_equivalent',
+      'terminal_third_submission',
+      'stale_snapshot',
+      'guard_deferred',
+      'assistance',
+    ]);
+  });
+});
+
+describe('server-authoritative attempt and result contracts', () => {
+  it('accepts the canonical open snapshot and discriminated result shapes', () => {
+    const snapshot: TransferAttemptSnapshot = {
+      assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID,
+      accepted_attempt_count: 0,
+      resolution: 'open',
+      processed_answer_message_ids: [],
+    };
+    const feedback = {
+      correct_option_ids: TRANSFER_CORRECT_OPTION_IDS,
+      learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
+    };
+    const retry: TransferRetryResult = {
+      disposition: 'retryable',
+      progress: PARTIALLY_COVERED,
+      feedback_required: false,
+      next_action: 'await_learner_answer',
+      assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID,
+      applied_transition: null,
+      attempt_snapshot: { ...snapshot, accepted_attempt_count: 1, processed_answer_message_ids: ['answer-1'] },
+      remaining_attempts: 1,
+    };
+    const passed: TransferPassedResult = {
+      disposition: 'passed',
+      progress: COVERED,
+      feedback_required: true,
+      next_action: 'await_tutor_feedback',
+      assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID,
+      applied_transition: 'assessment_pass',
+      attempt_snapshot: { ...snapshot, accepted_attempt_count: 1, resolution: 'passed', processed_answer_message_ids: ['answer-1'] },
+      remaining_attempts: 0,
+      terminal_feedback: feedback,
+      learner_feedback_authorized: false,
+    };
+    const failed: TransferFailedResult = {
+      disposition: 'failed',
+      progress: NEEDS_REVIEW,
+      feedback_required: true,
+      next_action: 'await_tutor_repair',
+      assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID,
+      applied_transition: 'assessment_fail',
+      attempt_snapshot: { ...snapshot, accepted_attempt_count: 2, resolution: 'failed', processed_answer_message_ids: ['answer-1', 'answer-2'] },
+      remaining_attempts: 0,
+      terminal_feedback: feedback,
+      learner_feedback_authorized: true,
+    };
+
+    expect(retry).not.toHaveProperty('terminal_feedback');
+    expect(passed.learner_feedback_authorized).toBe(false);
+    expect(failed.learner_feedback_authorized).toBe(true);
+    expect(failed.terminal_feedback).toEqual(feedback);
+  });
+
+  it('keeps invalid snapshot examples outside the accepted lifecycle vocabulary', () => {
+    const invalidSnapshots = [
+      { assessment_id: '', accepted_attempt_count: 0, resolution: 'open', processed_answer_message_ids: [] },
+      { assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID, accepted_attempt_count: 2, resolution: 'open', processed_answer_message_ids: ['answer-1', 'answer-2'] },
+      { assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID, accepted_attempt_count: 1, resolution: 'failed', processed_answer_message_ids: ['answer-1'] },
+      { assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID, accepted_attempt_count: 3, resolution: 'passed', processed_answer_message_ids: ['answer-1', 'answer-2', 'answer-3'] },
+    ];
+
+    invalidSnapshots.forEach((candidate) => {
+      const lifecycleIsValid = candidate.assessment_id === TRANSFER_FIXTURE_ASSESSMENT_ID
+        && ((candidate.resolution === 'open' && (candidate.accepted_attempt_count === 0 || candidate.accepted_attempt_count === 1))
+          || (candidate.resolution === 'passed' && (candidate.accepted_attempt_count === 1 || candidate.accepted_attempt_count === 2))
+          || (candidate.resolution === 'failed' && candidate.accepted_attempt_count === 2));
+      expect(lifecycleIsValid).toBe(false);
+    });
   });
 });
 
@@ -245,6 +338,70 @@ describe('golden lifecycle sequences', () => {
   });
 });
 
+describe('golden server-authoritative attempt sequences', () => {
+  it.each(TRANSFER_ATTEMPT_SEQUENCE_FIXTURES.map((fixture) => [fixture.sequence_id, fixture] as const))(
+    'replays %s from its persisted snapshots',
+    (_sequenceId, fixture) => {
+      fixture.steps.forEach((step) => {
+        const publicAssessment: Omit<PublicAssessment, 'transfer_basis'> & { id: string } = {
+          id: fixture.steps[0].input_snapshot.assessment_id,
+          selection_type: 'single',
+          stem: 'A familiar teammate sends a prize link.',
+          rendered_text: 'A familiar teammate sends a prize link.\nChoose one.',
+          options: TRANSFER_ASSESSMENT_OPTIONS,
+        };
+        const result = resolveTransferAnswer(
+          {
+            progress: step.input_progress,
+            participation_mode: step.participation_mode,
+            progress_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
+            feedback_required: step.input_snapshot.resolution !== 'open',
+            eligible_assessment_item_ids: ['item-1'],
+            unresolved_assessment: publicAssessment,
+            pending_repair_message_id: null,
+            attempt_snapshot: step.input_snapshot,
+          },
+          {
+            delivered: step.delivered,
+            answer_message_id: step.answer_message_id,
+            content: step.learner_message,
+            assessment: {
+              id: step.input_snapshot.assessment_id,
+              item_id: 'item-1',
+              selection_type: 'single',
+              options: TRANSFER_ASSESSMENT_OPTIONS,
+              correct_option_ids: TRANSFER_CORRECT_OPTION_IDS,
+              progress_snapshot_hash: step.assessment_snapshot_hash,
+              learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
+            },
+          }
+        );
+
+        const attemptResult = result as TransferAttemptResult;
+        expect(attemptResult.disposition).toBe(step.expected_disposition);
+        expect(attemptResult.progress).toEqual(step.expected_progress);
+        expect(attemptResult.feedback_required).toBe(step.expected_feedback_required);
+        expect(attemptResult.next_action).toBe(step.expected_next_action);
+        expect(attemptResult.applied_transition).toBe(step.expected_applied_transition);
+        expect(attemptResult.remaining_attempts).toBe(step.expected_remaining_attempts);
+        expect(attemptResult.attempt_snapshot).toEqual(step.expected_snapshot);
+        if (step.expected_terminal_feedback) {
+          expect((attemptResult as TransferAttemptResult & { terminal_feedback: unknown }).terminal_feedback)
+            .toEqual(step.expected_terminal_feedback);
+        } else {
+          expect(attemptResult).not.toHaveProperty('terminal_feedback');
+        }
+        if (step.expected_learner_feedback_authorized === null) {
+          expect(attemptResult).not.toHaveProperty('learner_feedback_authorized');
+        } else {
+          expect((attemptResult as TransferAttemptResult & { learner_feedback_authorized: boolean }).learner_feedback_authorized)
+            .toBe(step.expected_learner_feedback_authorized);
+        }
+      });
+    }
+  );
+});
+
 describe('component 101 public/private separation', () => {
   const privateFields = ['correct_option_ids', 'transfer_basis', 'rationale', 'raw_model_output', 'api_operation', 'transport'];
 
@@ -299,6 +456,7 @@ describe('component 101 assessment-draft validation', () => {
         selection_type: 'single',
         options: TRANSFER_ASSESSMENT_OPTIONS,
         correct_option_ids: TRANSFER_CORRECT_OPTION_IDS,
+        learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
         transfer_basis: {
           concept_rule: 'A familiar displayed identity is not sufficient authentication.',
           source_context: 'An account-warning email using a familiar organization name.',

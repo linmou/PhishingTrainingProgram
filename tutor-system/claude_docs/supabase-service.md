@@ -1,7 +1,26 @@
 # supabase.ts - Database Service Layer
 
+Intent: document browser and trusted Supabase service boundaries.
+
+Updated: 2026-09-22
+Implementation commit: `c23fc9e`
+
 ## Purpose
 Core database client configuration and service abstraction layer. Provides type-safe database operations, authentication helpers, and comprehensive logging for the educational platform.
+
+## Transfer Assessment Boundary
+
+`transferAssessmentService.ts` is a transport-only browser facade. It invokes the `assessment-api` Edge Function using exactly six operation names and allowlists returned DTO fields. It contains no direct table access, browser provider call, answer parser, grader, progress mutation, local attempt counter, or fallback model.
+
+The same trusted boundary preserves ordinary room messages and reviewed tutoring or Guard turns. Those branches create no private assessment row; private key and attempt state exist only for an assessment turn.
+
+The database applies a deferred terminal assessment event when a reviewed or manual room mode change clears Guard. That room update is the recovery trigger; the browser does not resubmit the answer or write progress. The original inbox event and dedupe identity remain the causal record.
+
+The Edge Function verifies the caller, checks room and role scope, and calls service-role-only RPCs. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution. Missing verifier configuration, feature activation, or required provider settings fails closed.
+
+The Edge Function imports the existing CRA resolver directly. `deno.json` enables sloppy relative-import resolution for that established module graph; there is no copied Edge lifecycle implementation.
+
+Production generation requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`. `TRANSFER_ASSESSMENT_ENABLED` remains `false` until hosted schema, provider, downstream UI, and initiative integration gates pass.
 
 ## Client Configuration
 

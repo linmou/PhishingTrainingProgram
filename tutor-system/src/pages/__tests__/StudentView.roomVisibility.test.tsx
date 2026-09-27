@@ -94,7 +94,11 @@ function mockRoomsFetch(rooms: unknown[]) {
     return {
       select: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
+      not: jest.fn().mockReturnThis(),
       insert: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+      then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+        Promise.resolve({ data: [], error: null }).then(resolve, reject),
       single: jest.fn().mockResolvedValue({ data: null, error: null })
     } as any;
   });
@@ -128,7 +132,7 @@ describe('StudentView room visibility (Available Rooms)', () => {
       }),
       roomRow({
         id: 'real-classic',
-        title: 'Account Security Alert Scam',
+        title: 'Secure Email Basics',
         description: 'class period 4 with Adele',
         tutor: { id: 'a', display_name: 'Adele' }
       }),

@@ -14,36 +14,17 @@ import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/
 import ChecklistPanel from '../components/ChecklistPanel';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
-import { isTutorRoleLocked } from '../utils/studentAITone';
 import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
 import { getRatingLabel } from '../components/feedbackRatingLabels';
+import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
+import type { AssessmentOptionId } from '../types/assessment';
 
 const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
 
-const getAIResponseErrorMessage = (error: unknown): string => {
-    if (!(error instanceof Error)) {
-        return 'Failed to generate AI response.';
-    }
-
-    if (error.message.includes('401')) {
-        return 'Failed to generate AI response.\n\nAI backend authentication failed (401). The configured API token or gateway token is invalid.';
-    }
-
-    return `Failed to generate AI response.\n\n${error.message}`;
-};
-
-const COMPARISON_PAIR_LABELS = {
-    lock_icon: 'Lock Icon Myth',
-    click_impulse: 'Click Impulse',
-    personal_story: 'Personal Story'
-} as const;
-
-/** Scheduled reveal time of a stored character message, or null for ordinary messages. */
-const agentMessageTime = (message: { content: string; response_mode?: string | null; user_role?: string | null; created_at: string }): number | null =>
+const agentMessageTime = (message: { content: string; is_ai_generated?: boolean | null; user_role?: string | null; response_mode?: string | null; created_at: string }): number | null =>
     decodeAgentMessage(message) ? new Date(message.created_at).getTime() : null;
 
-/** Two character rows belong to one pair when they share a parent, or when they were written together. */
 const isSameMultiAgentPair = (
     message: { parent_message_id?: string | null; created_at: string },
     other: { parent_message_id?: string | null; created_at: string }
@@ -51,8 +32,7 @@ const isSameMultiAgentPair = (
     ? message.parent_message_id === other.parent_message_id
     : Math.abs(new Date(other.created_at).getTime() - new Date(message.created_at).getTime()) <= MULTI_AGENT_PAIR_WINDOW_MS);
 
-/** The earlier member of this message's pair, when it is present and already due. */
-const earlierPairMember = <T extends { id: string; content: string; response_mode?: string | null; user_role?: string | null; created_at: string; parent_message_id?: string | null }>(
+const earlierPairMember = <T extends { id: string; content: string; is_ai_generated?: boolean | null; user_role?: string | null; response_mode?: string | null; created_at: string; parent_message_id?: string | null }>(
     message: T,
     candidates: T[]
 ): T | null => {
@@ -63,6 +43,12 @@ const earlierPairMember = <T extends { id: string; content: string; response_mod
         && new Date(candidate.created_at).getTime() < revealAt
         && isSameMultiAgentPair(message, candidate)) || null;
 };
+
+const COMPARISON_PAIR_LABELS = {
+    lock_icon: 'Lock Icon Myth',
+    click_impulse: 'Click Impulse',
+    personal_story: 'Personal Story'
+} as const;
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -154,11 +140,6 @@ const RoomPagePost: React.FC = () => {
         userDisliked: boolean;
     }>>({});
 
-    // Staged Multi-agent playback. Two rules, in order:
-    // 1. a character row whose own timestamp is still in the future stays hidden (reload/join case);
-    // 2. the later member of a pair waits the playback gap measured from when the earlier member
-    //    first appeared here, because the 2s message poll can deliver both rows in one batch after
-    //    T+2 has already passed. Pairs approved before this page opened are shown at once.
     const [playbackAnchors, setPlaybackAnchors] = useState<Record<string, number>>({});
     const mountedAtRef = useRef(Date.now());
 
@@ -174,8 +155,6 @@ const RoomPagePost: React.FC = () => {
             return revealAt !== null && revealAt <= Math.max(now, currentTime);
         });
 
-        // A poll can deliver a character row whose timestamp has already passed; move the reveal
-        // clock forward first, otherwise the row stays behind a stale `now` until the next tick.
         if (due.length > 0 && currentTime > now) {
             setNow(currentTime);
             return;
@@ -224,7 +203,6 @@ const RoomPagePost: React.FC = () => {
         const timer = setTimeout(() => setNow(Date.now()), Math.min(...deadlines) - currentTime + 50);
         return () => clearTimeout(timer);
     }, [messages, now, playbackAnchors]);
-
 
     // Join room on component mount
     useEffect(() => {
@@ -301,11 +279,12 @@ const RoomPagePost: React.FC = () => {
         }
     }, [visibleMessages.length, userHasScrolledUp, scrollToBottom]);
 
-    const attemptJoinRoom = async (password?: string) => {
+    const attemptJoinRoom = async (password?: string): Promise<boolean> => {
         try {
             setJoinError('');
             setPasswordError('');
             await joinRoom(roomId!, password);
+            return true;
         } catch (error: any) {
             console.error('Failed to join room:', error);
             if (error.message.includes('password protected')) {
@@ -317,6 +296,7 @@ const RoomPagePost: React.FC = () => {
             } else {
                 setJoinError(error.message || 'Failed to join room');
             }
+            return false;
         }
     };
 
@@ -326,8 +306,8 @@ const RoomPagePost: React.FC = () => {
             setPasswordError('Please enter a password');
             return;
         }
-        await attemptJoinRoom(roomPassword);
-        if (!passwordError) {
+        const joined = await attemptJoinRoom(roomPassword);
+        if (joined) {
             setShowPasswordPrompt(false);
             setRoomPassword('');
         }
@@ -341,12 +321,11 @@ const RoomPagePost: React.FC = () => {
 
         const latest = [...visibleMessages]
             .reverse()
-            .find(message => message.user_role === 'tutor'
+            .find(message => (message.is_ai_generated || message.user_role === 'tutor')
                 && !message.id.startsWith('prepop-'));
 
         if (!latest) return null;
 
-        // A completed pair is rated on its Tutor message, whichever character came last.
         const response = decodeAgentMessage(latest)?.character === 'riley'
             ? [...visibleMessages].reverse().find(message => decodeAgentMessage(message)?.character === 'tutor') || latest
             : latest;
@@ -354,7 +333,6 @@ const RoomPagePost: React.FC = () => {
         if (completedRatingMessageId === response.id) return null;
         if (messageFeedbackStats[response.id]?.user_feedback) return null;
 
-        // The rating reminder shows learner-facing text, not the stored character tag.
         const agentBody = decodeAgentMessage(response)?.content;
         return agentBody ? { ...response, content: agentBody } : response;
     };
@@ -364,7 +342,6 @@ const RoomPagePost: React.FC = () => {
 
         if (!messageText.trim() || sendingMessage) return;
 
-        // Staged playback blocks submission before any rating reminder can expose a hidden message.
         if (pendingPlayback) return;
 
         const unratedResponse = getUnratedResponse();
@@ -422,6 +399,32 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    const catchUpRoom = async (reason: 'stale' | 'retryable' = 'retryable') => {
+        if (!roomId) return;
+
+        setTransferTurnStatus({
+            status: 'catching-up',
+            message: reason === 'stale'
+                ? 'A transfer turn changed in another tab. Refreshing saved room state…'
+                : 'Refreshing saved room state…'
+        });
+        try {
+            await joinRoom(roomId);
+            setTransferTurnStatus({
+                status: reason === 'stale' ? 'stale' : 'caught-up',
+                message: reason === 'stale'
+                    ? 'The room has been refreshed after a transfer conflict. Review the saved conversation before preparing again.'
+                    : 'Saved room state refreshed.'
+            });
+        } catch (error) {
+            const detail = error instanceof Error ? error.message : 'The room could not be refreshed.';
+            setTransferTurnStatus({
+                status: 'retryable',
+                message: `Saved room state could not be refreshed. ${detail}`
+            });
+        }
+    };
+
     const handleGenerateAIResponse = async (parentMessageId?: string) => {
         setTransferTurnStatus(null);
         try {
@@ -431,8 +434,12 @@ const RoomPagePost: React.FC = () => {
             // A refused preparation is a named state on the page, not only a transient alert:
             // the capability can be unavailable, the payload invalid, or the learner superseded.
             const classified = classifyReviewFailure(error);
-            setTransferTurnStatus(classified);
-            alert(getAIResponseErrorMessage(error));
+            if (classified.status === 'superseded') {
+                await catchUpRoom('stale');
+            } else {
+                setTransferTurnStatus(classified);
+            }
+            alert(classified.message);
         }
     };
 
@@ -517,14 +524,16 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
-    const handleCopyAISuggestion = async (suggestion: string) => {
-        setMessageText(suggestion);
-        // Don't clear or record yet - wait for actual send
-    };
-
-    const handleRejectAISuggestion = async () => {
-        await recordAIFeedback('rejected');
-        clearAISuggestion();
+    const handleAssessmentSubmit = async (
+        messageId: string,
+        assessmentId: string,
+        selectedOptionIds: AssessmentOptionId[]
+    ) => {
+        await sendMessage(selectedOptionIds.join(','), {
+            replyToMessageId: messageId,
+            assessmentId,
+            selectedOptionIds,
+        });
     };
 
     const handleApproveMultiAgent = async (editedMessages: string[]) => {
@@ -552,6 +561,16 @@ const RoomPagePost: React.FC = () => {
     const handleRejectMultiAgent = () => {
         setMultiAgentError(null);
         void rejectMultiAgentDraft();
+    };
+
+    const handleCopyAISuggestion = async (suggestion: string) => {
+        setMessageText(suggestion);
+        // Don't clear or record yet - wait for actual send
+    };
+
+    const handleRejectAISuggestion = async () => {
+        await recordAIFeedback('rejected');
+        clearAISuggestion();
     };
 
     const handleClearChatHistory = async () => {
@@ -678,7 +697,13 @@ const RoomPagePost: React.FC = () => {
         return (
             <div className="room-post-layout">
                 <div className="room-post-container">
-                    <div className="loading">Loading room...</div>
+                    {transferTurnStatus?.status === 'catching-up' ? (
+                        <p role="status" data-transfer-status="catching-up" className="transfer-turn-status">
+                            {transferTurnStatus.message}
+                        </p>
+                    ) : (
+                        <div className="loading">Loading room...</div>
+                    )}
                 </div>
             </div>
         );
@@ -835,6 +860,7 @@ const RoomPagePost: React.FC = () => {
                                         currentUserRole={user?.current_role}
                                         onSubmitFeedback={submitMessageFeedback}
                                         feedbackStats={messageFeedbackStats[message.id]}
+                                        onSubmitAssessment={handleAssessmentSubmit}
                                     />
                                 );
                             })
@@ -867,7 +893,7 @@ const RoomPagePost: React.FC = () => {
                 </div>
 
                 {/* Structured transfer-assessment review for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && transferDraft?.decision.decision.mode === 'assessment' && (
+                {user?.current_role === 'tutor' && canUseAI && transferDraft && (
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
                         onSubmit={confirmTransferDraft}
@@ -876,11 +902,10 @@ const RoomPagePost: React.FC = () => {
                     />
                 )}
 
-                {/* Multi-agent one-or-two-character review for tutors */}
                 {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
                     <MultiAgentSuggestionEditor
                         messages={multiAgentDraft.generatedMessages}
-                        tutorName={user?.display_name}
+                        tutorName={user.display_name}
                         parentMessage={multiAgentDraft.parentMessageContent}
                         isRegenerating={loadingAI}
                         errorMessage={multiAgentError}
@@ -889,6 +914,7 @@ const RoomPagePost: React.FC = () => {
                         onRegenerate={handleRegenerateMultiAgent}
                     />
                 )}
+
                 {/* Preparing and refused-preparation states for the transfer turn. */}
                 {user?.current_role === 'tutor' && canUseAI && loadingAI && !transferDraft && (
                     <p role="status" data-transfer-status="preparing" className="transfer-turn-status">
@@ -896,25 +922,29 @@ const RoomPagePost: React.FC = () => {
                     </p>
                 )}
                 {user?.current_role === 'tutor' && canUseAI && !transferDraft && transferTurnStatus && (
-                    <p role="status" data-transfer-status={transferTurnStatus.status} className="transfer-turn-status">
-                        {transferTurnStatus.message}
-                    </p>
+                    <div data-transfer-status={transferTurnStatus.status} className="transfer-turn-status">
+                        <p role="status">{transferTurnStatus.message}</p>
+                        {transferTurnStatus.status === 'retryable' && (
+                            <button type="button" onClick={() => void catchUpRoom()}>
+                                Refresh room state
+                            </button>
+                        )}
+                    </div>
                 )}
 
                 {/* Legacy AI Suggestion Box for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && aiSuggestion &&
-                    transferDraft?.decision.decision.mode !== 'assessment' && !multiAgentDraft && (
+                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && !multiAgentDraft && (
                         <AISuggestionBox
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}
-                        onReject={transferDraft ? async () => clearAISuggestion() : handleRejectAISuggestion}
+                        onReject={handleRejectAISuggestion}
                         onRegenerate={regenerateAIResponse}
                         isVisible={true}
                         parentMessage={currentSuggestionContext?.parentMessageContent}
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
                         initialParameters={aiConfig?.prompt_config || undefined}
-                        isGuardMode={transferDraft?.decision.decision.mode === 'guard' || finalMode === 'guard'}
+                        isGuardMode={finalMode === 'guard'}
                         onToggleGuard={handleToggleSuggestionMode}
                         lockedRole={
                             isTutorRoleLocked(aiConfig?.prompt_config)

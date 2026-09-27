@@ -9,8 +9,13 @@
  */
 
 import type { Message, Room, User } from '../types';
-import type { TutorDecisionV3 } from '../types/assessment';
-import type { PublicAssessmentDTO, PublicMessageDTO, ReviewedDeliveryDTO } from '../services/transferAssessmentService';
+import type { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
+import type {
+  ProcessedMessageDTO,
+  PublicAssessmentDTO,
+  PublicMessageDTO,
+  ReviewedDeliveryDTO,
+} from '../services/transferAssessmentService';
 
 export const TRANSFER_ROOM_ID = '11111111-1111-4111-8111-111111111111';
 export const TUTOR_ID = '22222222-2222-4222-8222-222222222222';
@@ -21,6 +26,7 @@ export const LEARNER_A_MESSAGE_ID = '66666666-6666-4666-8666-666666666666';
 export const LEARNER_B_MESSAGE_ID = '77777777-7777-4777-8777-777777777777';
 export const DELIVERED_QUESTION_ID = '88888888-8888-4888-8888-888888888888';
 export const DELIVERED_ANSWER_ID = '99999999-9999-4999-8999-999999999999';
+export const SECOND_DELIVERED_ANSWER_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 export const CHECKLIST_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 export const CHECKLIST_ITEM_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
@@ -91,6 +97,7 @@ export const learnerAMessageRow = {
   user_id: LEARNER_A_ID,
   content: 'Someone asked me to pay with a gift card.',
   user_role: 'student',
+  is_ai_generated: false,
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: null,
@@ -114,6 +121,7 @@ export const deliveredQuestionRow = {
   user_id: TUTOR_ID,
   content: 'A stranger asks you to pay a fee to release a prize. What is the safest first step?',
   user_role: 'tutor',
+  is_ai_generated: true,
   ai_model_used: 'qwen3.5-flash',
   ai_response_time_ms: 1200,
   parent_message_id: LEARNER_A_MESSAGE_ID,
@@ -131,6 +139,18 @@ export const deliveredQuestionRow = {
   assessment_item_id: CHECKLIST_ITEM_ID,
   // Persisted by migration 045. Null on rows delivered before it ran.
   assessment_selection_type: 'single',
+  assessment: {
+    id: DELIVERED_QUESTION_ID,
+    student_id: LEARNER_A_ID,
+    selection_type: 'single',
+    stem: 'A stranger asks you to pay a fee to release a prize. What is the safest first step?',
+    options: [
+      { id: 'A', text: 'Pay the fee quickly.' },
+      { id: 'B', text: 'Stop and verify the offer through an official channel.' },
+      { id: 'C', text: 'Forward the offer to a friend.' },
+      { id: 'D', text: 'Reply with your bank details.' },
+    ],
+  } satisfies PublicAssessmentDTO,
 };
 
 /** The same delivered row as a pre-045 assessment: the selection type column is null. */
@@ -141,17 +161,21 @@ export const deliveredQuestionRowWithoutSelectionType = {
 
 export const deliveredPublicAssessment: PublicAssessmentDTO = {
   id: DELIVERED_QUESTION_ID,
+  student_id: LEARNER_A_ID,
   selection_type: 'single',
   stem: deliveredQuestionRow.content,
-  rendered_text: [
-    deliveredQuestionRow.content,
-    'Choose one.',
-    'A. Pay the fee quickly.',
-    'B. Stop and verify the offer through an official channel.',
-    'C. Forward the offer to a friend.',
-    'D. Reply with your bank details.',
-  ].join('\n'),
   options: deliveredQuestionRow.assessment_options as PublicAssessmentDTO['options'],
+};
+
+export const deliveredMultiplePublicAssessment: PublicAssessmentDTO = {
+  ...deliveredPublicAssessment,
+  selection_type: 'multiple',
+};
+
+export const deliveredMultipleQuestionRow = {
+  ...deliveredQuestionRow,
+  assessment_selection_type: 'multiple',
+  assessment: deliveredMultiplePublicAssessment,
 };
 
 export const deliveredPublicMessage: PublicMessageDTO = {
@@ -162,6 +186,7 @@ export const deliveredPublicMessage: PublicMessageDTO = {
   user_role: 'tutor',
   parent_message_id: LEARNER_A_MESSAGE_ID,
   response_mode: 'assessment',
+  assessment: deliveredPublicAssessment,
   created_at: deliveredQuestionRow.created_at,
 };
 
@@ -181,10 +206,18 @@ export const preparedCandidate: TutorDecisionV3 = {
   response: deliveredQuestionRow.content,
   assessment: {
     stem: deliveredQuestionRow.content,
-    rendered_text: deliveredPublicAssessment.rendered_text,
+    rendered_text: [
+      deliveredQuestionRow.content,
+      'Choose one.',
+      'A. Pay the fee quickly.',
+      'B. Stop and verify the offer through an official channel.',
+      'C. Forward the offer to a friend.',
+      'D. Reply with your bank details.',
+    ].join('\n'),
     selection_type: 'single',
     options: deliveredQuestionRow.assessment_options as NonNullable<TutorDecisionV3['assessment']>['options'],
     correct_option_ids: ['B'],
+    learner_safe_explanation: 'Pause and verify the request through an official channel before paying or sharing information.',
     transfer_basis: {
       concept_rule: 'Verify unexpected payment requests through an official channel.',
       source_context: 'Gift-card payment request',
@@ -246,11 +279,94 @@ export const deliveredAnswerRow: Message = {
   user_id: LEARNER_A_ID,
   content: 'B',
   user_role: 'student',
+  is_ai_generated: false,
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: DELIVERED_QUESTION_ID,
   created_at: '2026-09-12T09:15:00Z',
   response_mode: null,
+};
+
+export const deliveredSecondAnswerRow: Message = {
+  ...deliveredAnswerRow,
+  id: SECOND_DELIVERED_ANSWER_ID,
+  content: 'A',
+};
+
+export const singleSelectionOptionIds: AssessmentOptionId[] = ['B'];
+export const multipleSelectionOptionIds: AssessmentOptionId[] = ['B', 'D'];
+
+/** First incorrect answer: the server leaves one retry and discloses no answer material. */
+export const processedFirstIncorrectRetry: ProcessedMessageDTO = {
+  message_id: DELIVERED_ANSWER_ID,
+  assessment_id: DELIVERED_QUESTION_ID,
+  processing_state: 'applied',
+  answer_outcome: 'retry',
+  attempt_number: 1,
+  attempts_used: 1,
+  attempts_remaining: 1,
+  selected_option_ids: ['A'],
+  terminal: false,
+  transition: null,
+  feedback_required: false,
+  code: null,
+  already_processed: false,
+  terminal_failure_feedback: null,
+};
+
+/** Correct first answer: terminal success comes from the server before both attempts are used. */
+export const processedCorrectTerminal: ProcessedMessageDTO = {
+  ...processedFirstIncorrectRetry,
+  answer_outcome: 'passed',
+  selected_option_ids: singleSelectionOptionIds,
+  attempts_remaining: 0,
+  terminal: true,
+  transition: { status: 'covered' },
+};
+
+/** Second incorrect answer: terminal failure includes the server-authorized learner disclosure. */
+export const processedSecondIncorrectTerminal: ProcessedMessageDTO = {
+  ...processedFirstIncorrectRetry,
+  message_id: SECOND_DELIVERED_ANSWER_ID,
+  answer_outcome: 'failed',
+  attempt_number: 2,
+  attempts_used: 2,
+  attempts_remaining: 0,
+  terminal: true,
+  transition: { status: 'needs_review' },
+  feedback_required: true,
+  terminal_failure_feedback: {
+    correct_option_ids: ['B'],
+    learner_safe_explanation: 'Verify the request through an official channel.',
+  },
+};
+
+/** A committed terminal failure whose progress transition was deferred upstream. */
+export const processedDeferredTerminalFailure: ProcessedMessageDTO = {
+  ...processedSecondIncorrectTerminal,
+  processing_state: 'deferred',
+  transition: null,
+};
+
+/** Duplicate-tab replay returns the same terminal lifecycle without another attempt. */
+export const processedAlreadyTerminalReplay: ProcessedMessageDTO = {
+  ...processedSecondIncorrectTerminal,
+  processing_state: 'duplicate',
+  already_processed: true,
+};
+
+/** State re-read after reload: persisted answer and server lifecycle are restored together. */
+export const reloadedFirstIncorrectState = {
+  question: deliveredQuestionRow,
+  answer: deliveredAnswerRow,
+  processed: processedFirstIncorrectRetry,
+};
+
+/** Two tabs observe the same terminal answer; the second receives the idempotent replay. */
+export const duplicateTabTerminalStates = {
+  answer: deliveredSecondAnswerRow,
+  firstTab: processedSecondIncorrectTerminal,
+  secondTab: processedAlreadyTerminalReplay,
 };
 
 /**

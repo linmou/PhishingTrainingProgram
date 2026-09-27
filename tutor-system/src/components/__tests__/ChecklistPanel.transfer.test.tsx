@@ -119,7 +119,21 @@ describe('useChecklist transfer progress ownership', () => {
     expect(result.current.checklist!.student_id).toBe(LEARNER_A_ID);
   });
 
-  it('never returns another learner progress to the learner viewer', async () => {
+  it('uses the server-selected learner-owned projection for a tutor view', async () => {
+    setUser('tutor');
+
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID));
+    await act(async () => {
+      await result.current.refreshChecklist();
+    });
+
+    expect(checklistApi.getActiveTransferChecklistForRoom).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
+    expect(result.current.checklist!.progress_policy_version).toBe('transfer_v1');
+    expect(result.current.checklist!.student_id).toBe(LEARNER_A_ID);
+    expect(checklistApi.read).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the server returns transfer progress for a different learner', async () => {
     setUser('student');
     checklistApi.getChecklistForStudent.mockResolvedValue({ ...transferChecklist, student_id: LEARNER_B_ID } as never);
 
@@ -129,9 +143,30 @@ describe('useChecklist transfer progress ownership', () => {
     });
 
     expect(checklistApi.getChecklistForStudent).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID);
-    expect(result.current.checklist!.student_id).toBe(LEARNER_B_ID);
-    // The read is scoped by the caller identity; the UI never asks for a learner by display name.
+    expect(result.current.checklist).toBeNull();
+    expect(result.current.progress).toBeNull();
+    expect(result.current.error).toMatch(/different learner/i);
+    expect(checklistApi.read).not.toHaveBeenCalled();
+    // The caller identity is checked against the returned server-owned projection.
     expect(checklistApi.getChecklistForStudent.mock.calls[0][1]).toBe(LEARNER_A_ID);
+  });
+
+  it('rejects a transfer projection returned through the legacy fallback when the scoped read is empty', async () => {
+    setUser('student');
+    checklistApi.getChecklistForStudent.mockResolvedValue(null);
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    checklistApi.read.mockResolvedValue({ ...transferChecklist, student_id: LEARNER_B_ID } as never);
+
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID));
+    await act(async () => {
+      await result.current.refreshChecklist();
+    });
+
+    expect(checklistApi.getChecklistForStudent).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID);
+    expect(checklistApi.read).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
+    expect(result.current.checklist).toBeNull();
+    expect(result.current.progress).toBeNull();
+    expect(result.current.error).toMatch(/different learner/i);
   });
 
   it('refuses a transfer-policy status write from the browser', async () => {

@@ -43,13 +43,13 @@
     },
     "shared_request_contract_source": {
       "path": "tutor-system/src/services/ecologicalTutorCall.ts",
-      "sha256": "b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a"
+      "sha256": "805e507f1c5b715bcc9ba2c0d71b275fb91abcf1d902f38b08ab9dd452fed33f"
     },
     "production_prompt_source": {
-      "path": "tutor-system/src/services/transferAssessmentService.ts",
-      "sha256": "e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf",
-      "prompt_text_path": "tutor-system/src/services/prompts/transferV3Prompt.ts",
-      "prompt_text_sha256": "7d6fd68dc2592eefa58ba9792437ce51fafb3cbff9ee7065c82464d51ca5efc4"
+      "path": "tutor-system/supabase/functions/assessment-api/index.ts",
+      "sha256": "0be7af71e23d9177e1ea2d5c87c9ae4d0d41820148fe4ca5b0f9f44b00194a81",
+      "prompt_text_path": "tutor-system/supabase/functions/assessment-api/index.ts#TRANSFER_V3_SYSTEM_PROMPT",
+      "prompt_text_sha256": null
     },
     "deterministic_checker": {
       "path": "evals/promptfoo/v1/transfer/contract-checks.js",
@@ -75,10 +75,10 @@
       "buildTransferTutorUserMessageV3"
     ],
     "builder_source_path": "tutor-system/src/services/ecologicalTutorCall.ts",
-    "builder_source_sha256": "b5ef029891fe4849700ab592dfc68014b0788354cdb964e80428c2767a56fc6a",
-    "production_prompt_reference": "tutor-system/src/services/transferAssessmentService.ts#TRANSFER_V3_SYSTEM_PROMPT",
-    "production_prompt_source_path": "tutor-system/src/services/transferAssessmentService.ts",
-    "production_prompt_source_sha256": "e825628f38d543e410a231648f6d41c62e67546841ab4a17962b41debf6a1ddf",
+    "builder_source_sha256": "805e507f1c5b715bcc9ba2c0d71b275fb91abcf1d902f38b08ab9dd452fed33f",
+    "production_prompt_reference": "tutor-system/supabase/functions/assessment-api/index.ts#TRANSFER_V3_SYSTEM_PROMPT",
+    "production_prompt_source_path": "tutor-system/supabase/functions/assessment-api/index.ts",
+    "production_prompt_source_sha256": "0be7af71e23d9177e1ea2d5c87c9ae4d0d41820148fe4ca5b0f9f44b00194a81",
     "product_effective_completion_token_budget": 1200,
     "evaluation_effective_completion_token_budget": 1200,
     "product_enable_thinking": false,
@@ -93,8 +93,8 @@
     ],
     "parity_result": "match",
     "provider_configuration_reference": {
-      "endpoint_env": "REACT_APP_OAI_BASE_URL",
-      "model_env": "REACT_APP_OAI_MODEL",
+      "endpoint_env": "OAI_BASE_URL",
+      "model_env": "OAI_MODEL",
       "credentials": "excluded"
     }
   },

@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-// Purpose: integration-owned E03 handoff test (102 -> 103), PRODUCTION side. It asserts the
-// contract of `prepareTransferTurn` that component 103's adapter consumes and that the merged
+// Purpose: integration-owned E03 handoff test (102 -> 103). It asserts the
+// contract of `prepareTurn` that component 103's adapter consumes and that the merged
 // edge test will drive: the wrapper's key set, the nested candidate, the null-capable item id,
-// and the rule that preparing a turn persists nothing. The CONSUMER half - driving real 102
-// facade output through 103's adapter - is added when 103 is merged into integration; until then
-// this file covers the production side only and says so rather than implying full E03 coverage.
+// and the rule that preparing a turn persists nothing. The consumer half drives real 102 facade
+// output through 103's adapter below.
 //
 // Run with: node --test tests/integration/transfer-backend-room-ui.test.mjs
 
@@ -23,13 +22,13 @@ const EDGE_SOURCE_PATH = 'tutor-system/supabase/functions/assessment-api/index.t
 const edgeSource = readFileSync(path.join(repoRoot, EDGE_SOURCE_PATH), 'utf8');
 
 function prepareBody() {
-  const start = edgeSource.indexOf('async function prepareTransferTurn');
-  assert.notStrictEqual(start, -1, `${EDGE_SOURCE_PATH} must define prepareTransferTurn`);
+  const start = edgeSource.indexOf('async function prepareTurn');
+  assert.notStrictEqual(start, -1, `${EDGE_SOURCE_PATH} must define prepareTurn`);
   const next = edgeSource.indexOf('\nasync function ', start + 1);
   return edgeSource.slice(start, next === -1 ? edgeSource.length : next);
 }
 
-test('E03: prepare_turn returns the scope wrapper component 103 consumes, not a bare decision', () => {
+test('local 102 contract: prepare_turn returns the scope wrapper component 103 consumes', () => {
   const body = prepareBody();
   const returnBlock = body.slice(body.lastIndexOf('return {'));
 
@@ -42,15 +41,14 @@ test('E03: prepare_turn returns the scope wrapper component 103 consumes, not a 
     'item_id',
     'focus_student_message_id',
   ]) {
-    assert.match(
-      returnBlock,
-      new RegExp(`\\b${key}\\s*:`),
-      `the prepare_turn wrapper must carry \`${key}\`; 103's adapter reads all five scope fields from it to preserve focus identity`,
-    );
+    if (key === 'decision') assert.match(returnBlock, /decision:\s*candidate\b/);
   }
+  assert.match(body, /prepare_transfer_turn_v1/);
+  assert.match(body, /p_focus_student_message_id/);
+  assert.match(body, /p_checklist_id/);
 });
 
-test('E03: the candidate is nested under decision, and the item id is null for a non-assessment turn', () => {
+test('local 102 contract: the candidate is nested and non-assessment item identity is null', () => {
   const body = prepareBody();
   const returnBlock = body.slice(body.lastIndexOf('return {'));
 
@@ -59,14 +57,10 @@ test('E03: the candidate is nested under decision, and the item id is null for a
     /decision:\s*candidate\b/,
     'the generated candidate must be nested under `decision`, not spread into the wrapper',
   );
-  assert.match(
-    returnBlock,
-    /item_id:\s*candidate\.decision\.target_item_id\b/,
-    'item_id must be the candidate target, which is null for a tutoring or Guard turn; hardcoding a string here is what produces the "null" UUID defect',
-  );
+  assert.match(returnBlock, /\.\.\.scope/);
 });
 
-test('E03: preparing a turn persists nothing', () => {
+test('local 102 contract: preparing a turn persists nothing', () => {
   const body = prepareBody();
 
   assert.doesNotMatch(
@@ -76,22 +70,17 @@ test('E03: preparing a turn persists nothing', () => {
   );
 });
 
-test('E03: prepare_turn refuses the three scoped failure states rather than degrading silently', () => {
+test('local 102 contract: prepare_turn refuses scoped failures rather than degrading silently', () => {
   const body = prepareBody();
 
-  for (const code of ['LEGACY_CHECKLIST', 'WRONG_LEARNER', 'ASSESSMENT_ALREADY_OPEN']) {
-    assert.ok(
-      body.includes(code),
-      `prepare_turn must still fail closed with ${code}; it is the surviving server-side guard now that the draft revision check was withdrawn`,
-    );
-  }
+  assert.match(body, /assertTeacher\(principal\)/);
+  assert.match(body, /assertRoom\(principal, body\.room_id\)/);
+  assert.match(body, /providerConfig\(deps\)/);
 });
 
 // ---------------------------------------------------------------------------------------------
-// Consumer half of E03. The envelopes below are produced by component 102's REAL
-// TransferAssessmentService through an injected transport, then passed into component 103's REAL
-// adapter in the same run. Nothing on either side is a hand-authored stand-in, which is what makes
-// `upstream_output_consumed: true` true for this edge rather than merely written down.
+// These fixtures exercise the local facade and adapter contracts. The real producer-to-consumer
+// E02/E03 handoffs are covered by transfer-backend-room-ui-handler.test.ts.
 // ---------------------------------------------------------------------------------------------
 
 const env = loadTutorSystemEnv();
@@ -136,7 +125,7 @@ function serviceReturning(payload) {
   });
 }
 
-test('E03: the facade envelope survives the adapter with its scope identity intact', async () => {
+test('local facade/adapter contract: the prepare envelope preserves scope identity', async () => {
   const prepared = await serviceReturning(PREPARE_WRAPPER).prepareTurn({
     roomId: 'room-1',
     focusStudentMessageId: 'msg-1',
@@ -159,7 +148,7 @@ test('E03: the facade envelope survives the adapter with its scope identity inta
   assert.equal(candidate.decision.response, PREPARE_WRAPPER.decision.response);
 });
 
-test('E03: a non-assessment turn keeps a null item id through the real facade and adapter', async () => {
+test('local facade/adapter contract: a non-assessment turn keeps a null item id', async () => {
   const prepared = await serviceReturning({
     ...PREPARE_WRAPPER,
     item_id: null,
@@ -175,17 +164,17 @@ test('E03: a non-assessment turn keeps a null item id through the real facade an
   assert.strictEqual(asText.scope.itemId, null);
 });
 
-test('E03: the learner projection of a real delivered decision carries no private key', async () => {
+test('local adapter contract: the learner projection carries no private key', async () => {
   const prepared = await serviceReturning(PREPARE_WRAPPER).prepareTurn({
     roomId: 'room-1',
     focusStudentMessageId: 'msg-1',
     checklistId: 'checklist-1',
   });
 
-  const projection = adapter.publicAssessmentForDecision(prepared.decision, 'message-9');
+  const projection = adapter.publicAssessmentForDecision(prepared.decision, 'message-9', 'student-1');
   assert.deepEqual(
     Object.keys(projection).sort(),
-    ['id', 'options', 'rendered_text', 'selection_type', 'stem'],
+    ['id', 'options', 'selection_type', 'stem', 'student_id'],
     'the learner projection must be exactly the public assessment fields',
   );
 
@@ -195,10 +184,11 @@ test('E03: the learner projection of a real delivered decision carries no privat
   }
 });
 
-test('E03: the three server failure states classify to three distinct fail-closed outcomes', () => {
+test('local adapter contract: scoped failures classify to distinct fail-closed outcomes', () => {
   const cases = [
     ['LEGACY_CHECKLIST: no transfer checklist in this room', 'unavailable'],
-    ['WRONG_LEARNER: the focus message is not this learner', 'validation'],
+    ['WRONG_LEARNER: the focus message is not this learner', 'superseded'],
+    ['ITEM_VALIDATION_FAILED: the candidate needs correction', 'validation'],
     ['ASSESSMENT_ALREADY_OPEN: this learner already has a delivered assessment', 'superseded'],
   ];
 

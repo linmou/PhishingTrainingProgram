@@ -2,12 +2,18 @@
 // retaining private assessment material or inventing operation mapping.
 
 import type { Message, RoomParticipationMode } from '../types';
-import type { AssessmentOption, AssessmentSelectionType, TutorDecisionV3 } from '../types/assessment';
+import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, TutorDecisionV3 } from '../types/assessment';
 import {
   PUBLIC_MESSAGE_DTO_KEYS,
   TransferAssessmentService,
 } from '../services/transferAssessmentService';
-import type { PublicAssessmentDTO } from '../services/transferAssessmentService';
+import type {
+  AssessmentAnswerOutcome,
+  AssessmentProcessingState,
+  ProcessedMessageDTO,
+  PublicAssessmentDTO,
+  TerminalFailureFeedbackDTO,
+} from '../services/transferAssessmentService';
 
 /** UI-local review status. View state only; never a progress state and never a server record. */
 export type ReviewStatus =
@@ -26,10 +32,10 @@ export type ReviewStatus =
 /** The learner-visible question, rebuilt only from fields that are public. */
 export interface PublicQuestionView {
   id: string;
+  studentId: string;
   stem: string;
   options: AssessmentOption[];
-  /** Null when the persisted row does not record the selection type. Never inferred from the key. */
-  selectionType: AssessmentSelectionType | null;
+  selectionType: AssessmentSelectionType;
 }
 
 /**
@@ -47,11 +53,21 @@ export interface RoomMessageView extends Message {
  * server result, never a local grade: the browser does not decide pass, fail, or format.
  */
 export interface AnswerLifecycleView {
-  state: 'graded' | 'clarification' | 'already_processed' | 'unresolved';
-  /** The delivered question this answer belongs to, as the server reports it. */
-  messageId: string | null;
+  state: 'retry' | 'passed' | 'failed' | 'duplicate' | 'rejected' | 'deferred' | 'unresolved';
+  messageId: string;
+  assessmentId: string;
+  processingState: AssessmentProcessingState;
+  answerOutcome: AssessmentAnswerOutcome | null;
+  attemptNumber: 1 | 2 | null;
+  attemptsUsed: 0 | 1 | 2;
+  attemptsRemaining: 0 | 1 | 2;
+  selectedOptionIds: AssessmentOptionId[] | null;
+  terminal: boolean;
+  transition: Record<string, unknown> | null;
   code: string | null;
   feedbackRequired: boolean;
+  alreadyProcessed: boolean;
+  terminalFailureFeedback: TerminalFailureFeedbackDTO | null;
 }
 
 /** The prepared scope identity from `prepareTurn`. */
@@ -78,26 +94,43 @@ export type ReviewCheck = { ok: true } | { ok: false; status: ReviewStatus; mess
 const OPTION_ORDER: ReadonlyArray<AssessmentOption['id']> = ['A', 'B', 'C', 'D'];
 const TURN_MODES: ReadonlyArray<string> = ['tutoring', 'guard', 'assessment'];
 
+type ReviewFailureStatus = 'superseded' | 'validation' | 'unavailable' | 'unauthorized' | 'retryable';
+
 /** Display-only message fields that are safe for every role and are not part of the public DTO. */
 const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_name', 'avatar_url'];
 
-const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewStatus]> = [
+const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['ASSESSMENT_FEATURE_DISABLED', 'unavailable'],
   ['AI_PROVIDER_NOT_CONFIGURED', 'unavailable'],
   ['AUTHORIZATION_NOT_CONFIGURED', 'unavailable'],
   // No transfer checklist in this room: the capability does not apply here at all.
   ['LEGACY_CHECKLIST', 'unavailable'],
+  ['LEGACY_ASSESSMENT_INCOMPLETE', 'unavailable'],
+  ['UNSUPPORTED_ROOM_SCOPE', 'unavailable'],
   // The learner already has a delivered assessment, so this delivery is superseded.
   ['ASSESSMENT_ALREADY_OPEN', 'superseded'],
-  // The prepared focus identity no longer matches the learner: the teacher must prepare again.
-  ['WRONG_LEARNER', 'validation'],
+  ['ASSESSMENT_TERMINAL', 'superseded'],
+  // The prepared focus identity no longer matches the learner: prepare the turn again.
+  ['WRONG_LEARNER', 'superseded'],
   ['ITEM_VALIDATION_FAILED', 'validation'],
   ['AI_OUTPUT_INVALID', 'validation'],
   ['INVALID_SCOPE', 'validation'],
   ['INVALID_REQUEST', 'validation'],
+  ['PROGRESSION_LOCKED', 'validation'],
   ['FORBIDDEN', 'unauthorized'],
   ['UNAUTHORIZED', 'unauthorized'],
+  ['AI_PROVIDER_ERROR', 'retryable'],
+  ['AI_OUTPUT_TRUNCATED', 'retryable'],
+  ['PERSISTENCE_FAILED', 'retryable'],
 ];
+
+const FAILURE_MESSAGES: Record<ReviewFailureStatus, string> = {
+  superseded: 'This candidate is no longer current. Refresh the room before preparing another.',
+  validation: 'The prepared assessment could not be validated.',
+  unavailable: 'Transfer assessments are unavailable for this room.',
+  unauthorized: 'You are not authorized to deliver this assessment.',
+  retryable: 'The transfer request could not be completed. Try again.',
+};
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -126,6 +159,7 @@ function isCompletePublicAssessment(value: unknown): value is PublicAssessmentDT
   const record = asRecord(value);
   return (
     Boolean(asNonEmptyString(record.id)) &&
+    Boolean(asNonEmptyString(record.student_id)) &&
     (record.selection_type === 'single' || record.selection_type === 'multiple') &&
     Boolean(asNonEmptyString(record.stem)) &&
     orderedOptions(record.options) !== null
@@ -133,31 +167,30 @@ function isCompletePublicAssessment(value: unknown): value is PublicAssessmentDT
 }
 
 /**
- * Build the learner question from a stored message row. Only `content`, `assessment_options`, and
- * `assessment_selection_type` are read, and only when the row records a delivered assessment
- * lifecycle. Rows delivered before migration 045 have no selection type; it stays null then and
- * is never inferred from the private answer key.
+ * Build the learner question only from component 102's nested public assessment projection.
  */
 export function publicQuestionFromStoredRow(
   row: Record<string, unknown>,
   explicit?: PublicAssessmentDTO | null
 ): PublicQuestionView | null {
   const source = asRecord(row);
-  if (source.assessment_lifecycle !== 'delivered' && source.assessment_lifecycle !== 'answered') return null;
-  const options = orderedOptions(source.assessment_options);
-  const id = asNonEmptyString(source.id);
-  const stem = asNonEmptyString(source.content);
-  if (!options || !id || !stem) return null;
-
-  const persistedSelectionType = source.assessment_selection_type;
-  const selectionType: AssessmentSelectionType | null =
-    explicit && isCompletePublicAssessment(explicit)
-      ? explicit.selection_type
-      : persistedSelectionType === 'single' || persistedSelectionType === 'multiple'
-        ? persistedSelectionType
-        : null;
-
-  return { id, stem, options, selectionType };
+  const assessment = explicit ?? (source.assessment !== undefined
+    ? source.assessment
+    : {
+      id: source.assessment_id,
+      student_id: source.assessment_student_id,
+      selection_type: source.assessment_selection_type,
+      stem: source.content,
+      options: source.assessment_options,
+    });
+  if (!isCompletePublicAssessment(assessment)) return null;
+  return {
+    id: assessment.id,
+    studentId: assessment.student_id,
+    stem: assessment.stem,
+    options: orderedOptions(assessment.options) as AssessmentOption[],
+    selectionType: assessment.selection_type,
+  };
 }
 
 /** Project one stored message row into React state, keeping only allowlisted public fields. */
@@ -180,6 +213,7 @@ export function projectRoomMessage(
     user_id: String(projected.user_id ?? ''),
     content: typeof projected.content === 'string' ? projected.content : '',
     user_role: (projected.user_role ?? 'student') as Message['user_role'],
+    is_ai_generated: projected.is_ai_generated === true,
     ai_model_used: typeof projected.ai_model_used === 'string' ? projected.ai_model_used : null,
     ai_response_time_ms:
       typeof projected.ai_response_time_ms === 'number' ? projected.ai_response_time_ms : null,
@@ -194,27 +228,37 @@ export function projectRoomMessage(
 }
 
 /**
- * Read the trusted processing result for a learner answer. Component 102 returns `message_id` for
- * the delivered question plus `code`, `clarification_required`, and `already_processed`; the older
- * `question_id` key is still accepted so a not-yet-promoted facade cannot break the learner view.
+ * Map component 102's canonical result into component-owned presentation state.
  */
-export function answerLifecycleFromProcessed(processed: unknown): AnswerLifecycleView {
-  const result = asRecord(processed);
-  const messageId =
-    asNonEmptyString(result.message_id) ?? asNonEmptyString(result.question_id) ?? null;
-  const code = asNonEmptyString(result.code) ?? null;
-  const feedbackRequired = result.feedback_required === true;
+export function answerLifecycleFromProcessed(processed: ProcessedMessageDTO): AnswerLifecycleView {
+  let state: AnswerLifecycleView['state'] = 'unresolved';
+  if (processed.answer_outcome === 'retry') state = 'retry';
+  else if (processed.answer_outcome === 'passed') state = 'passed';
+  else if (processed.answer_outcome === 'failed') state = 'failed';
+  else if (processed.processing_state === 'duplicate') state = 'duplicate';
+  else if (processed.processing_state === 'rejected') state = 'rejected';
+  else if (processed.processing_state === 'deferred') state = 'deferred';
 
-  if (result.clarification_required === true || code === 'ANSWER_FORMAT_UNRESOLVED') {
-    return { state: 'clarification', messageId, code, feedbackRequired };
-  }
-  if (result.already_processed === true) {
-    return { state: 'already_processed', messageId, code, feedbackRequired };
-  }
-  if (result.result != null) {
-    return { state: 'graded', messageId, code, feedbackRequired };
-  }
-  return { state: 'unresolved', messageId, code, feedbackRequired };
+  return {
+    state,
+    messageId: processed.message_id,
+    assessmentId: processed.assessment_id,
+    processingState: processed.processing_state,
+    answerOutcome: processed.answer_outcome,
+    attemptNumber: processed.attempt_number,
+    attemptsUsed: processed.attempts_used,
+    attemptsRemaining: processed.attempts_remaining,
+    selectedOptionIds: processed.selected_option_ids,
+    terminal: processed.terminal,
+    transition: processed.transition,
+    code: processed.code,
+    feedbackRequired: processed.feedback_required,
+    alreadyProcessed: processed.already_processed,
+    terminalFailureFeedback:
+      processed.answer_outcome === 'failed' && processed.terminal
+        ? processed.terminal_failure_feedback
+        : null,
+  };
 }
 
 /** Attach a lifecycle result to a projected message without touching any other field. */
@@ -280,12 +324,14 @@ export function createReviewCandidate(
  */
 export function publicAssessmentForDecision(
   decision: TutorDecisionV3 | null | undefined,
-  messageId: string
+  messageId: string,
+  studentId: string
 ): PublicAssessmentDTO | null {
-  if (!decision || !decision.assessment || !asNonEmptyString(messageId)) return null;
+  if (!decision || !decision.assessment || !asNonEmptyString(messageId) || !asNonEmptyString(studentId)) return null;
   try {
     const projection = TransferAssessmentService.toPublicAssessment({
       id: messageId,
+      student_id: studentId,
       ...decision.assessment,
     });
     return isCompletePublicAssessment(projection) ? projection : null;
@@ -331,6 +377,7 @@ export function assertDeliverableReview(
   if (!scope.itemId) return refuse('An assessment turn must name the checklist item it assesses.');
   if (!decision.assessment || !isCompletePublicAssessment({
     id: 'pending',
+    student_id: scope.studentId,
     selection_type: decision.assessment.selection_type,
     stem: decision.assessment.stem,
     options: decision.assessment.options,
@@ -358,9 +405,16 @@ export function assertDeliverableReview(
 /** Map a failed service call onto a named review state. The server's code stays in the message. */
 export function classifyAssessmentFailure(error: unknown): { status: ReviewStatus; message: string } {
   const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
-  const match = ERROR_STATUS.find(([code]) => raw.includes(code));
-  const message = raw.trim() || 'The transfer assessment request failed and can be retried.';
-  return { status: match ? match[1] : 'retryable', message };
+  const record = asRecord(error);
+  const declaredCode = asNonEmptyString(record.code);
+  const code = ERROR_STATUS.find(([candidate]) => candidate === declaredCode)?.[0] ??
+    ERROR_STATUS.find(([candidate]) => raw === candidate || raw.startsWith(`${candidate}:`))?.[0] ?? null;
+  const mappedStatus = code ? ERROR_STATUS.find(([candidate]) => candidate === code)?.[1] : null;
+  const status = mappedStatus ?? (record.retryable === false ? 'validation' : 'retryable');
+  return {
+    status,
+    message: code ? `${code}: ${FAILURE_MESSAGES[status]}` : FAILURE_MESSAGES[status],
+  };
 }
 
 /** Room participation is binary. An unexpected value is reported as unknown rather than coerced. */
@@ -384,7 +438,17 @@ export function mergeRoomMessages(
   const remember = (message: Message | null | undefined) => {
     if (!message || !message.id) return;
     const current = byId.get(message.id);
-    byId.set(message.id, { message, seen: current ? current.seen : byId.size });
+    const currentView = current?.message as Partial<RoomMessageView> | undefined;
+    const incomingView = message as Partial<RoomMessageView>;
+    const merged = current
+      ? {
+        ...current.message,
+        ...message,
+        publicQuestion: incomingView.publicQuestion ?? currentView?.publicQuestion ?? null,
+        answerLifecycle: incomingView.answerLifecycle ?? currentView?.answerLifecycle ?? null,
+      }
+      : message;
+    byId.set(message.id, { message: merged, seen: current ? current.seen : byId.size });
   };
   existing.forEach(remember);
   incoming.forEach(remember);

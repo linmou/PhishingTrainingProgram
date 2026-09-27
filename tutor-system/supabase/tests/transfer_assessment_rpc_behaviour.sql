@@ -1,371 +1,764 @@
--- Purpose: T009 PART 2, the behavioural RPC lane for the collapsed one-table transfer-assessment
--- backend. It exercises only the six live RPCs, against the assessment columns that now live on
--- public.messages, and proves the delivery and grading path works end to end under service_role.
---
--- HOW TO RUN: paste this whole file into the Supabase SQL editor (project zgbufaxooqxeabewktzd ->
--- SQL Editor -> New query) and Run. The run is one transaction that ends in ROLLBACK, so it
--- creates its own throwaway tutor/learner/room/checklist, asserts against them, and leaves nothing
--- behind. The Dashboard role is privileged, which is required: every RPC here opens with
--- `IF current_user NOT IN ('service_role','postgres')`.
---
--- Read the final grid. Every row must show ok = true. A false row carries the observed sqlstate and
--- message in detail. If the file errors instead of printing a grid, the error is in the fixture and
--- names the line.
+-- Purpose: verify delivery, persisted attempts, privacy, idempotency, CAS conflict, and terminal atomicity.
 
-begin;
+BEGIN;
 
-create temp table p2_results (
-  case_id text,
-  description text,
-  ok boolean,
-  detail text
-) on commit drop;
+CREATE TEMP TABLE transfer_v2_results (
+  case_id TEXT PRIMARY KEY,
+  description TEXT NOT NULL,
+  ok BOOLEAN NOT NULL,
+  detail TEXT NOT NULL
+) ON COMMIT DROP;
 
-do $p2$
-declare
-  v_tutor   uuid := gen_random_uuid();
-  v_student uuid := gen_random_uuid();
-  v_room    uuid := gen_random_uuid();
-  v_check   uuid := gen_random_uuid();
-  v_item    uuid := gen_random_uuid();
-  v_focus   uuid := gen_random_uuid();
-  v_answer  uuid := gen_random_uuid();
-  v_focus2  uuid;
-  v_res     jsonb;
-  v_msg     uuid;
-  v_key     text[];
-  v_result  text;
-begin
-  -- ---------------------------------------------------------------------------------------
-  -- Fixture
-  -- ---------------------------------------------------------------------------------------
-  insert into users(id, email, display_name, "current_role", status)
-  values (v_tutor, 'p2-tutor@example.invalid', 'P2 Tutor', 'tutor', 'active'),
-         (v_student, 'p2-student@example.invalid', 'P2 Student', 'student', 'active');
+DO $test$
+DECLARE
+  v_tutor UUID := gen_random_uuid();
+  v_student UUID := gen_random_uuid();
+  v_room UUID := gen_random_uuid();
+  v_checklist UUID := gen_random_uuid();
+  v_item UUID := gen_random_uuid();
+  v_focus UUID := gen_random_uuid();
+  v_assessment UUID;
+  v_question UUID;
+  v_answer_1 UUID;
+  v_answer_2 UUID;
+  v_delivery_request UUID := gen_random_uuid();
+  v_post_request_1 UUID := gen_random_uuid();
+  v_post_request_2 UUID := gen_random_uuid();
+  v_process_request_1 UUID := gen_random_uuid();
+  v_process_request_2 UUID := gen_random_uuid();
+  v_invalid_request UUID := gen_random_uuid();
+  v_result JSONB;
+  v_reviewed_payload JSONB;
+  v_pass_item UUID;
+  v_pass_assessment UUID;
+  v_pass_question UUID;
+  v_pass_answer UUID;
+  v_deferred_event UUID;
+  v_deferred_assessment UUID;
+  v_deferred_item UUID;
+  v_prior_updates INTEGER;
+  v_before_events INTEGER;
+BEGIN
+  INSERT INTO public.users(id, email, display_name, "current_role", status)
+  VALUES
+    (v_tutor, 'transfer-v2-tutor@example.invalid', 'Transfer V2 Tutor', 'tutor', 'active'),
+    (v_student, 'transfer-v2-student@example.invalid', 'Transfer V2 Student', 'student', 'active');
+  INSERT INTO public.rooms(id, tutor_id, title) VALUES (v_room, v_tutor, 'Transfer V2 room');
+  INSERT INTO public.sessions(tutor_id, student_id, room_id, status)
+  VALUES (v_tutor, v_student, v_room, 'active');
+  PERFORM set_config('app.transfer_operation', 'on', TRUE);
+  INSERT INTO public.session_checklists(
+    id, room_id, student_id, template_name, progress_policy_version, is_active
+  ) VALUES (v_checklist, v_room, v_student, 'Transfer V2', 'transfer_v1', TRUE);
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_item, v_checklist, 'Verify a familiar sender independently',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  INSERT INTO public.messages(id, room_id, user_id, content, user_role)
+  VALUES (v_focus, v_room, v_student, 'The account looked familiar, so I clicked.', 'student');
 
-  insert into rooms(id, tutor_id, title) values (v_room, v_tutor, 'P2 room');
-
-  -- The trusted-operation flag must be set before the transfer_v1 checklist and its item are
-  -- written: private_transfer_checklist_guard and private_transfer_item_guard both raise without it.
-  perform set_config('app.transfer_operation', 'on', true);
-
-  insert into session_checklists(id, room_id, student_id, template_name, progress_policy_version)
-  values (v_check, v_room, v_student, 'P2 template', 'transfer_v1');
-
-  insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
-  values (v_item, v_check, 'Recognise a familiar-sender lure', 'verification_step', 'partially_covered', 'basic');
-
-  insert into messages(id, room_id, user_id, content, user_role)
-  values (v_focus, v_room, v_student, 'My bank emailed a link so it must be safe.', 'student');
-
-  -- =======================================================================================
-  -- A1: send_reviewed delivers and stamps the assessment onto the tutor message
-  -- =======================================================================================
-  v_res := send_reviewed_tutor_response_v3(
-    jsonb_build_object(
-      'decision', jsonb_build_object('mode','assessment','instruction','transfer_assess'),
-      'response', 'Which statement best describes the risk to this account?',
+  v_reviewed_payload := jsonb_build_object(
+      'reason', 'The learner needs transfer evidence.',
+      'decision', jsonb_build_object(
+        'mode', 'assessment', 'instruction', 'transfer_assess', 'target_item_id', v_item::TEXT
+      ),
+      'response', 'Which action is safest?',
       'assessment', jsonb_build_object(
-        'selection_type','single',
-        'stem','Which statement best describes the risk to this account?',
-        'rendered_text','Which statement best describes the risk to this account?',
+        'selection_type', 'single',
+        'stem', 'Which action is safest?',
+        'rendered_text', 'Which action is safest?',
         'options', jsonb_build_array(
-          jsonb_build_object('id','A','text','A familiar account proves the link is safe'),
-          jsonb_build_object('id','B','text','The account could have been compromised'),
-          jsonb_build_object('id','C','text','Every prize message is necessarily a scam'),
-          jsonb_build_object('id','D','text','Opening the link proves the sender identity')),
+          jsonb_build_object('id', 'A', 'text', 'Open the link'),
+          jsonb_build_object('id', 'B', 'text', 'Verify through the official app'),
+          jsonb_build_object('id', 'C', 'text', 'Reply with credentials'),
+          jsonb_build_object('id', 'D', 'text', 'Forward it to a friend')
+        ),
         'correct_option_ids', jsonb_build_array('B'),
+        'learner_safe_explanation', 'Verify through the official app because familiar accounts can be compromised.',
         'transfer_basis', jsonb_build_object(
-          'concept_rule','A familiar sender is not proof of safety.',
-          'source_context','The learner judged a link safe because the sender was familiar.',
-          'changed_context','A bank alert asks the learner to confirm a password after a transfer.',
-          'source_evidence_message_ids', jsonb_build_array(v_focus::text)))),
-    v_room, v_student, v_check, v_item, v_focus, v_tutor, gen_random_uuid());
+          'concept_rule', 'Familiarity is not authentication.',
+          'source_context', 'A familiar account sent a link.',
+          'changed_context', 'A bank notification asks for action.',
+          'source_evidence_message_ids', jsonb_build_array(v_focus::TEXT)
+        )
+      )
+    );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload,
+    v_room, v_student, v_checklist, v_item, v_focus, v_tutor, v_delivery_request
+  );
+  v_question := (v_result->'message'->>'id')::UUID;
+  v_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
 
-  v_msg := (v_res->'message'->>'id')::uuid;
+  INSERT INTO transfer_v2_results VALUES (
+    'delivery', 'public delivery is stem-only and exact while grading material is private',
+    v_result->'message'->>'content' = 'Which action is safest?'
+      AND jsonb_typeof(v_result->'message'->'assessment') = 'object'
+      AND (SELECT count(*) FROM jsonb_object_keys(v_result->'message'->'assessment')) = 5
+      AND jsonb_array_length(v_result->'message'->'assessment'->'options') = 4
+      AND (SELECT string_agg(opt->>'id', ',' ORDER BY opt->>'id')
+        FROM jsonb_array_elements(v_result->'message'->'assessment'->'options') opt) = 'A,B,C,D'
+      AND NOT (v_result->'message'->'assessment' ? 'rendered_text')
+      AND NOT (v_result->'message'->'assessment' ? 'correct_option_ids')
+      AND (v_result->'message'->'assessment'->>'student_id')::UUID = v_student
+      AND (SELECT assessment_student_id FROM public.messages WHERE id = v_question) = v_student
+      AND EXISTS (SELECT 1 FROM private.transfer_assessments
+        WHERE id = v_assessment AND correct_option_ids = ARRAY['B']
+          AND learner_safe_explanation <> ''),
+    v_result::TEXT
+  );
 
-  insert into p2_results
-  values ('A1','send_reviewed writes one tutor message with the assessment stamped on it',
-          v_msg is not null
-          and (select assessment_lifecycle from messages where id = v_msg) = 'delivered'
-          and (select assessment_checklist_id from messages where id = v_msg) = v_check
-          and (select assessment_item_id from messages where id = v_msg) = v_item,
-          format('message_id=%s lifecycle=%s', v_msg,
-                 (select assessment_lifecycle from messages where id = v_msg)));
+  BEGIN
+    PERFORM public.send_reviewed_tutor_response_v4(
+      v_reviewed_payload,
+      v_room, v_student, v_checklist, v_item, v_focus, v_tutor, v_invalid_request
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'open_delivery_rejected', 'second open delivery creates no public or private pair', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'open_delivery_rejected', 'second open delivery creates no public or private pair',
+      SQLERRM = 'ASSESSMENT_ALREADY_OPEN'
+        AND NOT EXISTS (SELECT 1 FROM public.messages WHERE assessment_request_id = v_invalid_request)
+        AND NOT EXISTS (SELECT 1 FROM private.transfer_assessments WHERE delivery_request_id = v_invalid_request),
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-  -- =======================================================================================
-  -- A2: the key is stored on the row, and the normal response does not carry it
-  -- =======================================================================================
-  select assessment_key into v_key from messages where id = v_msg;
-  insert into p2_results
-  values ('A2','the response omits the key while the row stores it',
-          v_key = array['B'] and not ((v_res->'message') ? 'assessment_key'),
-          format('row_key=%s response_has_key=%s', coalesce(array_to_string(v_key,','),'null'),
-                 (v_res->'message') ? 'assessment_key'));
+  BEGIN
+    UPDATE public.messages SET assessment_student_id = v_tutor WHERE id = v_question;
+    INSERT INTO transfer_v2_results VALUES (
+      'immutable_public_target', 'delivered public learner target cannot change', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'immutable_public_target', 'delivered public learner target cannot change',
+      SQLERRM = 'IMMUTABLE_ASSESSMENT_STUDENT_ID'
+        AND (SELECT assessment_student_id FROM public.messages WHERE id = v_question) = v_student,
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-  -- =======================================================================================
-  -- A3: the stored key is readable from the row. This documents the accepted tradeoff rather
-  --     than asserting it is hidden: public.messages is participant-readable.
-  -- =======================================================================================
-  insert into p2_results
-  values ('A3','key confidentiality is a recorded tradeoff, not a guarantee',
-          has_table_privilege('authenticated','public.messages','SELECT'),
-          'authenticated holds SELECT on public.messages, so the key is reachable by a crafted REST request by design');
+  BEGIN
+    UPDATE private.transfer_assessments
+    SET correct_option_ids = ARRAY['C'] WHERE id = v_assessment;
+    INSERT INTO transfer_v2_results VALUES (
+      'immutable_private_key', 'reviewed private answer key cannot change', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'immutable_private_key', 'reviewed private answer key cannot change',
+      SQLERRM = 'IMMUTABLE_ASSESSMENT_PRIVATE_FIELDS'
+        AND (SELECT correct_option_ids FROM private.transfer_assessments WHERE id = v_assessment) = ARRAY['B'],
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-  -- =======================================================================================
-  -- A4: a second delivery for the same learner is refused
-  -- =======================================================================================
-  begin
-    insert into messages(id, room_id, user_id, content, user_role)
-    values (gen_random_uuid(), v_room, v_student, 'Second focus message.', 'student')
-    returning id into v_focus2;
+  BEGIN
+    UPDATE private.transfer_assessments
+    SET learner_safe_explanation = 'Changed explanation' WHERE id = v_assessment;
+    INSERT INTO transfer_v2_results VALUES (
+      'immutable_explanation', 'reviewed learner explanation cannot change', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'immutable_explanation', 'reviewed learner explanation cannot change',
+      SQLERRM = 'IMMUTABLE_ASSESSMENT_PRIVATE_FIELDS'
+        AND (SELECT learner_safe_explanation FROM private.transfer_assessments WHERE id = v_assessment)
+          = 'Verify through the official app because familiar accounts can be compromised.',
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-    v_res := send_reviewed_tutor_response_v3(
-      jsonb_build_object(
-        'decision', jsonb_build_object('mode','assessment','instruction','transfer_assess'),
-        'response', 'Second question?',
-        'assessment', jsonb_build_object(
-          'selection_type','single',
-          'stem','Second question?',
-          'rendered_text','Second question?',
-          'options', jsonb_build_array(
-            jsonb_build_object('id','A','text','one'), jsonb_build_object('id','B','text','two'),
-            jsonb_build_object('id','C','text','three'), jsonb_build_object('id','D','text','four')),
-          'correct_option_ids', jsonb_build_array('A'),
-          'transfer_basis', jsonb_build_object(
-            'concept_rule','r','source_context','s','changed_context','c',
-            'source_evidence_message_ids', jsonb_build_array(v_focus2::text)))),
-      v_room, v_student, v_check, v_item, v_focus2, v_tutor, gen_random_uuid());
-    insert into p2_results values ('A4','second delivery refused', false,
-      'expected ASSESSMENT_ALREADY_OPEN or the one-open index, got ' || v_res::text);
-  exception when others then
-    -- The refusal is what matters, and since migration 043 dropped the mis-scoped partial index
-    -- there is exactly one refuser left: the function's own pre-check. A 23505 here would now mean
-    -- an index 043 was supposed to drop is still present, so it is no longer accepted as an
-    -- equivalent outcome.
-    insert into p2_results values ('A4','second delivery refused as ASSESSMENT_ALREADY_OPEN',
-      sqlerrm = 'ASSESSMENT_ALREADY_OPEN',
-      sqlstate || ': ' || sqlerrm);
-  end;
+  v_result := public.send_reviewed_tutor_response_v4(
+    jsonb_build_object('decision', jsonb_build_object('mode', 'assessment')),
+    v_room, v_student, v_checklist, v_item, v_focus, v_tutor, v_delivery_request
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'delivery_retry', 'delivery request replay returns one stable public/private pair',
+    (v_result->'message'->>'id')::UUID = v_question
+      AND (SELECT count(*) FROM private.transfer_assessments WHERE delivery_request_id = v_delivery_request) = 1,
+    v_result::TEXT
+  );
 
-  -- =======================================================================================
-  -- A5: a malformed payload is refused
-  -- =======================================================================================
-  begin
-    v_res := send_reviewed_tutor_response_v3(
-      jsonb_build_object(
-        'decision', jsonb_build_object('mode','assessment','instruction','transfer_assess'),
-        'response', 'Only three options',
-        'assessment', jsonb_build_object(
-          'selection_type','single',
-          'options', jsonb_build_array(
-            jsonb_build_object('id','A','text','one'), jsonb_build_object('id','B','text','two'),
-            jsonb_build_object('id','C','text','three')),
-          'correct_option_ids', jsonb_build_array('A'),
-          'transfer_basis', jsonb_build_object(
-            'concept_rule','r','source_context','s','changed_context','c',
-            'source_evidence_message_ids', jsonb_build_array(v_focus::text)))),
-      v_room, v_student, v_check, v_item, v_focus, v_tutor, gen_random_uuid());
-    insert into p2_results values ('A5','3-option payload refused', false,
-      'expected ITEM_VALIDATION_FAILED, got ' || v_res::text);
-  exception when others then
-    insert into p2_results values ('A5','3-option payload refused',
-      sqlerrm = 'ITEM_VALIDATION_FAILED', sqlstate || ': ' || sqlerrm);
-  end;
+  v_invalid_request := gen_random_uuid();
+  BEGIN
+    PERFORM public.post_assessment_message_v2(
+      v_room, 'Z', v_question, v_assessment, ARRAY['Z'], v_student, v_invalid_request
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_selection', 'unknown option while open creates no answer', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_selection', 'unknown option while open creates no answer',
+      SQLERRM = 'ITEM_VALIDATION_FAILED'
+        AND NOT EXISTS (SELECT 1 FROM public.messages WHERE assessment_request_id = v_invalid_request),
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-  -- =======================================================================================
-  -- A6: process_message grades from the message row
-  -- =======================================================================================
-  insert into messages(id, room_id, user_id, content, user_role, parent_message_id)
-  values (v_answer, v_room, v_student, 'B', 'student', v_msg);
+  v_result := public.post_assessment_message_v2(
+    v_room, 'A', v_question, v_assessment, ARRAY['A'], v_student, v_post_request_1
+  );
+  v_answer_1 := (v_result->'message'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'A', v_question, v_assessment, ARRAY['A'], v_student, v_post_request_1
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'post_retry', 'answer request replay returns one stored message',
+    (v_result->'message'->>'id')::UUID = v_answer_1
+      AND (SELECT count(*) FROM public.messages WHERE assessment_request_id = v_post_request_1) = 1,
+    v_result::TEXT
+  );
 
-  v_res := process_assessment_message_v1(v_answer, v_student, gen_random_uuid());
-  v_result := (select assessment_result from messages where id = v_msg);
+  BEGIN
+    PERFORM public.process_assessment_message_v2(
+      v_assessment, v_answer_1, v_student, gen_random_uuid(),
+      0, 'open', 'failed', ARRAY['A'],
+      jsonb_build_object('status', 'needs_review', 'understanding_level', 'basic'), 'assessment_fail'
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_first_failure', 'terminal failure cannot consume the first attempt', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_first_failure', 'terminal failure cannot consume the first attempt',
+      SQLERRM = 'INVALID_ATTEMPT_TRANSITION'
+        AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_assessment) = 0
+        AND NOT EXISTS (SELECT 1 FROM private.transfer_assessment_attempts WHERE assessment_id = v_assessment),
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-  insert into p2_results
-  values ('A6','process_message grades the answer and closes the assessment',
-          v_result = 'pass'
-          and (select assessment_lifecycle from messages where id = v_msg) = 'answered'
-          and (select assessment_answer_message_id from messages where id = v_msg) = v_answer,
-          format('result=%s lifecycle=%s', v_result,
-                 (select assessment_lifecycle from messages where id = v_msg)));
+  SELECT count(*) INTO v_before_events FROM private.learning_event_inbox;
+  v_result := public.process_assessment_message_v2(
+    v_assessment, v_answer_1, v_student, v_process_request_1,
+    0, 'open', 'retry', ARRAY['A'],
+    jsonb_build_object('status', 'partially_covered', 'understanding_level', 'basic'), NULL
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'first_wrong', 'first wrong persists attempt one without progress or private feedback',
+    v_result->>'answer_outcome' = 'retry'
+      AND (v_result->>'attempts_remaining')::INTEGER = 1
+      AND v_result->'terminal_failure_feedback' = 'null'::JSONB
+      AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_assessment) = 1
+      AND (SELECT count(*) FROM private.learning_event_inbox) = v_before_events
+      AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_assessment)
+      AND NOT EXISTS (SELECT 1 FROM public.checklist_updates WHERE assessment_id = v_assessment),
+    v_result::TEXT
+  );
 
-  -- =======================================================================================
-  -- A7: the verdict reached the progress pipeline
-  -- =======================================================================================
-  insert into p2_results
-  values ('A7','the assessment_pass event was applied to the checklist item',
-          exists (select 1 from private.learning_event_inbox
-                   where event_kind = 'assessment_pass'
-                     and dedupe_key = 'assessment:' || v_msg::text || ':' || v_answer::text),
-          (select coalesce(string_agg(event_kind || '=' || processing_state, ', '), 'no event')
-             from private.learning_event_inbox where item_id = v_item));
+  BEGIN
+    PERFORM public.process_assessment_message_v2(
+      v_assessment, v_answer_1, v_tutor, gen_random_uuid(),
+      1, 'open', 'retry', ARRAY['A'],
+      jsonb_build_object('status', 'partially_covered', 'understanding_level', 'basic'), NULL
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'wrong_actor', 'non-target actor cannot process a learner answer', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'wrong_actor', 'non-target actor cannot process a learner answer',
+      SQLERRM = 'WRONG_LEARNER'
+        AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_assessment) = 1,
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-  -- =======================================================================================
-  -- A8: a replayed answer returns the recorded result instead of grading twice
-  --
-  -- The function detects that the assessment is already answered by this same message and returns
-  -- the stored outcome with already_processed = true. That is the documented idempotent path, and
-  -- it is the correct behaviour: a retry must not produce a second grade. It does not raise, so this
-  -- case asserts the returned envelope rather than an exception.
-  -- =======================================================================================
-  v_res := process_assessment_message_v1(v_answer, v_student, gen_random_uuid());
-  insert into p2_results
-  values ('A8','replayed answer returns the recorded result without re-grading',
-          (v_res->>'already_processed')::boolean is true
-          and (v_res->>'result') = 'pass'
-          and (select count(*) from private.learning_event_inbox
-                where dedupe_key = 'assessment:' || v_msg::text || ':' || v_answer::text) = 1,
-          coalesce(v_res::text, 'null') || ' | inbox rows for this answer=' ||
-          (select count(*)::text from private.learning_event_inbox
-            where dedupe_key = 'assessment:' || v_msg::text || ':' || v_answer::text));
+  v_result := public.post_assessment_message_v2(
+    v_room, 'A', v_question, v_assessment, ARRAY['A'], v_student, v_post_request_2
+  );
+  v_answer_2 := (v_result->'message'->>'id')::UUID;
+  v_result := public.process_assessment_message_v2(
+    v_assessment, v_answer_2, v_student, gen_random_uuid(),
+    0, 'open', 'failed', ARRAY['A'],
+    jsonb_build_object('status', 'needs_review', 'understanding_level', 'basic'), 'assessment_fail'
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'cas_conflict', 'a stale snapshot cannot allocate the same attempt ordinal',
+    v_result->>'code' = 'CONCURRENT_MODIFICATION'
+      AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_assessment) = 1,
+    v_result::TEXT
+  );
+  v_result := public.process_assessment_message_v2(
+    v_assessment, v_answer_2, v_student, v_process_request_2,
+    1, 'open', 'failed', ARRAY['A'],
+    jsonb_build_object('status', 'needs_review', 'understanding_level', 'basic'), 'assessment_fail'
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'second_wrong', 'second wrong atomically terminates and returns role-safe feedback',
+    v_result->>'answer_outcome' = 'failed'
+      AND (v_result->>'attempts_used')::INTEGER = 2
+      AND v_result->'terminal_failure_feedback'->'correct_option_ids' = jsonb_build_array('B')
+      AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_assessment) = 'failed'
+      AND EXISTS (SELECT 1 FROM private.learning_event_inbox
+        WHERE event_payload->>'assessment_id' = v_assessment::TEXT
+          AND event_kind = 'assessment_fail' AND processing_state = 'applied')
+      AND (SELECT status FROM public.checklist_items WHERE id = v_item) = 'needs_review'
+      AND (SELECT understanding_level FROM public.checklist_items WHERE id = v_item) = 'basic'
+      AND (SELECT attempts_count FROM public.checklist_items WHERE id = v_item) = 1
+      AND (SELECT count(*) FROM public.coverage_evidence WHERE assessment_id = v_assessment) = 1
+      AND (SELECT count(*) FROM public.checklist_updates
+        WHERE assessment_id = v_assessment
+          AND previous_status = 'partially_covered' AND new_status = 'needs_review'
+          AND previous_understanding = 'basic' AND new_understanding = 'basic') = 1,
+    v_result::TEXT
+  );
 
-  -- =======================================================================================
-  -- A9: an unparseable answer returns a clarification instead of a grade. Needs a fresh
-  --     assessment, because the first one is closed and one open assessment per learner is
-  --     enforced.
-  -- =======================================================================================
-  declare
-    v_item2  uuid := gen_random_uuid();
-    v_focus3 uuid := gen_random_uuid();
-    v_junk   uuid := gen_random_uuid();
-  begin
-    insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
-    values (v_item2, v_check, 'Second objective', 'verification_step', 'partially_covered', 'basic');
+  v_result := public.process_assessment_message_v2(
+    v_assessment, v_answer_2, v_student, v_process_request_2,
+    1, 'open', 'failed', ARRAY['A'],
+    jsonb_build_object('status', 'needs_review', 'understanding_level', 'basic'), 'assessment_fail'
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'duplicate', 'duplicate processing returns the original outcome without a third attempt',
+    v_result->>'processing_state' = 'duplicate'
+      AND (v_result->>'already_processed')::BOOLEAN
+      AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_assessment) = 2,
+    v_result::TEXT
+  );
 
-    insert into messages(id, room_id, user_id, content, user_role)
-    values (v_focus3, v_room, v_student, 'Third focus message.', 'student');
+  BEGIN
+    PERFORM public.post_assessment_message_v2(
+      v_room, 'B', v_question, v_assessment, ARRAY['B'], v_student, gen_random_uuid()
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'third_submission', 'closed assessment rejects a third distinct submission', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'third_submission', 'closed assessment rejects a third distinct submission',
+      SQLERRM = 'WRONG_LEARNER'
+        AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_assessment) = 2,
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-    v_res := send_reviewed_tutor_response_v3(
-      jsonb_build_object(
-        'decision', jsonb_build_object('mode','assessment','instruction','transfer_assess'),
-        'response', 'Pick one.',
-        'assessment', jsonb_build_object(
-          'selection_type','single',
-          'stem','Pick one.',
-          'rendered_text','Pick one.',
-          'options', jsonb_build_array(
-            jsonb_build_object('id','A','text','one'), jsonb_build_object('id','B','text','two'),
-            jsonb_build_object('id','C','text','three'), jsonb_build_object('id','D','text','four')),
-          'correct_option_ids', jsonb_build_array('A'),
-          'transfer_basis', jsonb_build_object(
-            'concept_rule','r','source_context','s','changed_context','c',
-            'source_evidence_message_ids', jsonb_build_array(v_focus3::text)))),
-      v_room, v_student, v_check, v_item2, v_focus3, v_tutor, gen_random_uuid());
+  BEGIN
+    PERFORM public.post_assessment_message_v2(
+      v_room, 'Z', v_question, v_assessment, ARRAY['Z'], v_student, gen_random_uuid()
+    );
+    INSERT INTO transfer_v2_results VALUES ('closed_invalid_selection', 'closed assessment rejects an unknown option', FALSE, 'unexpected success');
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'closed_invalid_selection', 'closed assessment rejects an unknown option',
+      SQLERRM = 'WRONG_LEARNER',
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 
-    insert into messages(id, room_id, user_id, content, user_role, parent_message_id)
-    values (v_junk, v_room, v_student, 'I am not sure what you mean', 'student',
-            (v_res->'message'->>'id')::uuid);
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Verify a new sender independently',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  SELECT count(*) INTO v_before_events FROM private.learning_event_inbox;
+  BEGIN
+    PERFORM public.process_assessment_message_v2(
+      v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+      0, 'open', 'passed', ARRAY['B'],
+      jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+    );
+    RAISE EXCEPTION 'ROLLBACK_PROBE';
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'terminal_rollback', 'aborted terminal call leaves no attempt, event, lifecycle, or progress effect',
+      SQLERRM = 'ROLLBACK_PROBE'
+        AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_pass_assessment) = 0
+        AND NOT EXISTS (SELECT 1 FROM private.transfer_assessment_attempts
+          WHERE assessment_id = v_pass_assessment)
+        AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'open'
+        AND (SELECT assessment_lifecycle FROM public.messages WHERE id = v_pass_question) = 'delivered'
+        AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'partially_covered'
+        AND (SELECT count(*) FROM private.learning_event_inbox) = v_before_events,
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
+  v_result := public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    0, 'open', 'passed', ARRAY['B'],
+    jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'pass_first', 'correct first answer commits one terminal attempt without private feedback',
+    v_result->>'answer_outcome' = 'passed'
+      AND (v_result->>'attempts_used')::INTEGER = 1
+      AND v_result->'terminal_failure_feedback' = 'null'::JSONB
+      AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'passed'
+      AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_pass_assessment) = 1
+      AND EXISTS (SELECT 1 FROM private.learning_event_inbox
+        WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT
+          AND event_kind = 'assessment_pass' AND processing_state = 'applied')
+      AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'covered'
+      AND (SELECT understanding_level FROM public.checklist_items WHERE id = v_pass_item) = 'good'
+      AND (SELECT attempts_count FROM public.checklist_items WHERE id = v_pass_item) = 1
+      AND (SELECT count(*) FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment) = 1
+      AND (SELECT count(*) FROM public.checklist_updates
+        WHERE assessment_id = v_pass_assessment
+          AND previous_status = 'partially_covered' AND new_status = 'covered'
+          AND previous_understanding = 'basic' AND new_understanding = 'good') = 1,
+    v_result::TEXT
+  );
 
-    v_res := process_assessment_message_v1(v_junk, v_student, gen_random_uuid());
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Verify a changed sender independently',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'A', v_pass_question, v_pass_assessment, ARRAY['A'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  v_result := public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    0, 'open', 'retry', ARRAY['A'],
+    jsonb_build_object('status', 'partially_covered', 'understanding_level', 'basic'), NULL
+  );
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  v_result := public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    1, 'open', 'passed', ARRAY['B'],
+    jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'pass_second', 'correct second answer commits two attempts and one terminal event',
+    v_result->>'answer_outcome' = 'passed'
+      AND (v_result->>'attempts_used')::INTEGER = 2
+      AND v_result->'terminal_failure_feedback' = 'null'::JSONB
+      AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'passed'
+      AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_pass_assessment) = 2
+      AND (SELECT count(*) FROM private.learning_event_inbox
+        WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT
+          AND event_kind = 'assessment_pass') = 1,
+    v_result::TEXT
+  );
 
-    insert into p2_results
-    values ('A9','unparseable answer asks for clarification instead of grading',
-            (v_res->>'code') = 'ANSWER_FORMAT_UNRESOLVED'
-            and (v_res->>'clarification_required')::boolean
-            and (select assessment_lifecycle from messages
-                  where id = (select parent_message_id from messages where id = v_junk)) = 'delivered',
-            coalesce(v_res::text, 'null'));
-  end;
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Verify when Guard interrupts processing',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = v_room;
+  v_result := public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    0, 'open', 'passed', ARRAY['B'],
+    jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_deferred', 'Guard commits terminal attempt and deferred event without progress',
+    v_result->>'processing_state' = 'deferred'
+      AND v_result->>'code' = 'PROGRESSION_LOCKED'
+      AND (v_result->>'terminal')::BOOLEAN
+      AND v_result->'terminal_failure_feedback' = 'null'::JSONB
+      AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'passed'
+      AND (SELECT processing_state FROM private.transfer_assessment_attempts
+        WHERE assessment_id = v_pass_assessment) = 'deferred'
+      AND (SELECT processing_state FROM private.learning_event_inbox
+        WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT) = 'deferred_guard'
+      AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'partially_covered'
+      AND NOT EXISTS (SELECT 1 FROM public.checklist_updates
+        WHERE assessment_id = v_pass_assessment)
+      AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence
+        WHERE assessment_id = v_pass_assessment),
+    v_result::TEXT
+  );
 
-  -- =======================================================================================
-  -- A10: the guard-mode lock still rejects a protected progress write.
-  --
-  -- Order matters and is the point of this case. The room, checklist, and item are all created
-  -- while the room is still in `tutoring`, because the guard deliberately blocks creation in a
-  -- guarded room too -- setting the room to `guard` first makes the item insert itself raise, which
-  -- is what an earlier version of this case got wrong. Only then does the room enter `guard`, and
-  -- the update below is what must be refused. The trusted-operation flag is turned off for that
-  -- attempt, so the guard function is what raises rather than private_transfer_item_guard.
-  --
-  -- This is the regression guard for migration 041: it drives the guard through its UPDATE path on
-  -- checklist_items, then through the cascade from checklist_items to session_checklists. Those are
-  -- the two branches that were broken.
-  -- =======================================================================================
-  declare
-    v_guard_room  uuid := gen_random_uuid();
-    v_guard_check uuid := gen_random_uuid();
-    v_guard_item  uuid := gen_random_uuid();
-  begin
-    -- Created in tutoring: active_response_mode is omitted so it takes its 'tutoring' default.
-    insert into rooms(id, tutor_id, title) values (v_guard_room, v_tutor, 'P2 guard room');
+  SELECT event_id INTO v_deferred_event FROM private.learning_event_inbox
+  WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT;
+  v_deferred_assessment := v_pass_assessment;
+  v_deferred_item := v_pass_item;
+  PERFORM set_config('app.transfer_operation', '', true);
+  UPDATE public.rooms
+  SET active_response_mode = 'tutoring', mode_changed_at = NOW(), mode_change_source = 'manual_override'
+  WHERE id = v_room;
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_manual_replay', 'manual Guard clearance applies the original event and actual history once',
+    (SELECT status FROM public.checklist_items WHERE id = v_deferred_item) = 'covered'
+      AND (SELECT understanding_level FROM public.checklist_items WHERE id = v_deferred_item) = 'good'
+      AND (SELECT attempts_count FROM public.checklist_items WHERE id = v_deferred_item) = 1
+      AND (SELECT processing_state FROM private.learning_event_inbox WHERE event_id = v_deferred_event) = 'applied'
+      AND (SELECT processing_state FROM private.transfer_assessment_attempts
+        WHERE assessment_id = v_deferred_assessment) = 'applied'
+      AND (SELECT count(*) FROM public.coverage_evidence
+        WHERE assessment_id = v_deferred_assessment AND event_id = v_deferred_event) = 1
+      AND (SELECT count(*) FROM public.checklist_updates
+        WHERE assessment_id = v_deferred_assessment AND event_id = v_deferred_event
+          AND previous_status = 'partially_covered' AND new_status = 'covered') = 1
+      AND (SELECT count(*) FROM private.learning_event_inbox WHERE event_id = v_deferred_event) = 1,
+    v_deferred_event::TEXT
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_replay_setting', 'manual Guard clearance does not leave transfer write authority enabled',
+    current_setting('app.transfer_operation', true) = '',
+    COALESCE(current_setting('app.transfer_operation', true), '<unset>')
+  );
+  PERFORM set_config('app.transfer_operation', 'on', true);
+  SELECT count(*) INTO v_prior_updates FROM public.checklist_updates
+  WHERE assessment_id = v_deferred_assessment;
+  UPDATE public.rooms SET active_response_mode = 'tutoring', mode_changed_at = NOW() WHERE id = v_room;
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_replay_once', 'a second non-Guard mode update creates no second history row',
+    (SELECT count(*) FROM public.checklist_updates WHERE assessment_id = v_deferred_assessment) = v_prior_updates
+      AND (SELECT count(*) FROM public.coverage_evidence WHERE assessment_id = v_deferred_assessment) = 1,
+    v_deferred_event::TEXT
+  );
 
-    perform set_config('app.transfer_operation', 'on', true);
-    insert into session_checklists(id, room_id, student_id, template_name, progress_policy_version)
-    values (v_guard_check, v_guard_room, v_student, 'P2 guard template', 'transfer_v1');
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Verify reviewed Guard clearance',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = v_room;
+  PERFORM public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    0, 'open', 'passed', ARRAY['B'],
+    jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+  );
+  v_deferred_event := (SELECT event_id FROM private.learning_event_inbox
+    WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT);
+  PERFORM public.send_reviewed_tutor_response_v4(
+    jsonb_build_object('decision', jsonb_build_object('mode', 'tutoring',
+      'instruction', 'explain', 'target_item_id', NULL),
+      'response', 'Check the sender through a separate channel.', 'assessment', NULL),
+    v_room, v_student, v_checklist, NULL, v_focus, v_tutor, gen_random_uuid()
+  );
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_reviewed_replay', 'reviewed tutoring clearance applies deferred assessment evidence',
+    (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'covered'
+      AND (SELECT processing_state FROM private.learning_event_inbox WHERE event_id = v_deferred_event) = 'applied'
+      AND (SELECT count(*) FROM public.checklist_updates
+        WHERE assessment_id = v_pass_assessment AND event_id = v_deferred_event) = 1,
+    v_deferred_event::TEXT
+  );
 
-    insert into checklist_items(id, checklist_id, area_text, item_type, status, understanding_level)
-    values (v_guard_item, v_guard_check, 'Guarded objective', 'verification_step', 'pending', 'none');
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Verify an invalidated transition',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = v_room;
+  PERFORM public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    0, 'open', 'passed', ARRAY['B'],
+    jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+  );
+  v_deferred_event := (SELECT event_id FROM private.learning_event_inbox
+    WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT);
+  PERFORM set_config('session_replication_role', 'replica', true);
+  UPDATE public.checklist_items SET status = 'covered', understanding_level = 'good'
+  WHERE id = v_pass_item;
+  PERFORM set_config('session_replication_role', 'origin', true);
+  UPDATE public.rooms SET active_response_mode = 'tutoring' WHERE id = v_room;
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_invalidated_replay', 'invalidated transition is rejected without new history',
+    (SELECT processing_state FROM private.learning_event_inbox WHERE event_id = v_deferred_event) = 'rejected'
+      AND (SELECT error_code FROM private.learning_event_inbox WHERE event_id = v_deferred_event) = 'INVALID_TRANSITION'
+      AND (SELECT processing_state FROM private.transfer_assessment_attempts
+        WHERE assessment_id = v_pass_assessment) = 'rejected'
+      AND NOT EXISTS (SELECT 1 FROM public.checklist_updates WHERE assessment_id = v_pass_assessment)
+      AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment),
+    v_deferred_event::TEXT
+  );
 
-    -- Now arm guard mode, and withdraw the trusted-operation flag for the attempt below.
-    update rooms set active_response_mode = 'guard' where id = v_guard_room;
-    perform set_config('app.transfer_operation', 'off', false);
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Verify a mismatched deferred event',
+    'verification_step', 'critical', 'partially_covered', 'basic'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = v_room;
+  PERFORM public.process_assessment_message_v2(
+    v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+    0, 'open', 'passed', ARRAY['B'],
+    jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+  );
+  v_deferred_event := (SELECT event_id FROM private.learning_event_inbox
+    WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT);
+  UPDATE private.learning_event_inbox
+  SET event_payload = jsonb_set(event_payload, '{assessment_id}', to_jsonb(gen_random_uuid()::TEXT))
+  WHERE event_id = v_deferred_event;
+  UPDATE public.rooms SET active_response_mode = 'tutoring' WHERE id = v_room;
+  INSERT INTO transfer_v2_results VALUES (
+    'guard_mismatched_replay', 'mismatched linked event is rejected instead of stranded',
+    (SELECT processing_state FROM private.learning_event_inbox WHERE event_id = v_deferred_event) = 'rejected'
+      AND (SELECT processing_state FROM private.transfer_assessment_attempts
+        WHERE assessment_id = v_pass_assessment) = 'rejected'
+      AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'partially_covered'
+      AND NOT EXISTS (SELECT 1 FROM public.checklist_updates WHERE assessment_id = v_pass_assessment)
+      AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment),
+    v_deferred_event::TEXT
+  );
 
-    begin
-      update checklist_items set status = 'partially_covered', understanding_level = 'basic'
-      where id = v_guard_item;
-      insert into p2_results values ('A10','guard-mode blocks a progress write', false,
-        'the update succeeded although the room is in guard mode');
-    exception when others then
-      insert into p2_results values ('A10','guard-mode blocks a progress write',
-        sqlerrm like '%Guard Mode is active%', sqlstate || ': ' || sqlerrm);
-    end;
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Reject a stale assessment transition',
+    'verification_step', 'critical', 'covered', 'good'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  BEGIN
+    PERFORM public.process_assessment_message_v2(
+      v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+      0, 'open', 'passed', ARRAY['B'],
+      jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_terminal_transition', 'invalid terminal pair rolls back completely', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_terminal_transition', 'invalid terminal pair rolls back completely',
+      SQLERRM = 'INVALID_TRANSITION'
+        AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'open'
+        AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_pass_assessment) = 0
+        AND NOT EXISTS (SELECT 1 FROM private.transfer_assessment_attempts
+          WHERE assessment_id = v_pass_assessment)
+        AND NOT EXISTS (SELECT 1 FROM private.learning_event_inbox
+          WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT)
+        AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment)
+        AND NOT EXISTS (SELECT 1 FROM public.checklist_updates WHERE assessment_id = v_pass_assessment)
+        AND (SELECT assessment_lifecycle FROM public.messages WHERE id = v_pass_question) = 'delivered'
+        AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'covered',
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
+END;
+$test$;
 
-    -- The set_config above was not local, so restore the flag for the rest of the connection.
-    perform set_config('app.transfer_operation', 'on', false);
-  end;
+SET LOCAL ROLE authenticated;
+DO $test$
+BEGIN
+  BEGIN
+    UPDATE private.learning_event_inbox SET processing_state = 'applied'
+    WHERE processing_state = 'deferred_guard';
+    PERFORM set_config('app.transfer_direct_write_result', 'unexpected_success', true);
+  EXCEPTION WHEN insufficient_privilege THEN
+    PERFORM set_config('app.transfer_direct_write_result', SQLSTATE, true);
+  END;
+END;
+$test$;
+RESET ROLE;
+INSERT INTO transfer_v2_results VALUES (
+  'guard_direct_write_denied', 'authenticated role cannot directly alter replay state',
+  current_setting('app.transfer_direct_write_result', true) = '42501',
+  current_setting('app.transfer_direct_write_result', true)
+);
 
-  -- =======================================================================================
-  -- A11: the learner answer path as the browser actually drives it.
-  --
-  -- Every other case here inserts the learner message directly, which is why migration 038's
-  -- hardcoded user_role='tutor' in post_assessment_message_v1 went unnoticed: the grader refuses a
-  -- non-student author, so a learner message posted through the real RPC could never be graded.
-  -- This case posts through post_assessment_message_v1 and then grades the stored row, which is the
-  -- exact two-call sequence RoomContext sendMessage performs.
-  --
-  -- It answers the still-delivered assessment from A9, so the one-open-assessment rule is not
-  -- triggered, and it passes p_assessment_id as well as the parent link so the translated
-  -- ownership check is exercised too.
-  -- =======================================================================================
-  declare
-    v_open_assessment uuid;
-    v_posted          uuid;
-    v_posted_role     text;
-    v_posted_author   uuid;
-  begin
-    select id into v_open_assessment
-    from messages
-    where assessment_lifecycle = 'delivered'
-      and assessment_checklist_id = v_check
-    order by created_at desc
-    limit 1;
+SELECT * FROM transfer_v2_results ORDER BY case_id;
+SELECT count(*) AS failing_cases FROM transfer_v2_results WHERE NOT ok;
 
-    v_res := post_assessment_message_v1(
-      v_room, 'A', v_open_assessment, v_open_assessment, v_student, gen_random_uuid());
-    v_posted := (v_res->'message'->>'id')::uuid;
-    select user_role, user_id into v_posted_role, v_posted_author from messages where id = v_posted;
+DO $test$
+BEGIN
+  IF EXISTS (SELECT 1 FROM transfer_v2_results WHERE NOT ok OR ok IS NULL) THEN
+    RAISE EXCEPTION 'transfer assessment RPC behavior checks failed';
+  END IF;
+END;
+$test$;
 
-    v_res := process_assessment_message_v1(v_posted, v_student, gen_random_uuid());
-
-    insert into p2_results
-    values ('A11','post_message stores the author role and the answer then grades',
-            v_open_assessment is not null
-            and v_posted_role = 'student'
-            and v_posted_author = v_student
-            and (v_res->>'result') = 'pass'
-            and (select assessment_lifecycle from messages where id = v_open_assessment) = 'answered',
-            format('posted=%s role=%s author_is_student=%s grade=%s lifecycle=%s',
-                   v_posted, coalesce(v_posted_role,'null'), v_posted_author = v_student,
-                   coalesce(v_res->>'result','null'),
-                   coalesce((select assessment_lifecycle from messages where id = v_open_assessment),'null')));
-  exception when others then
-    insert into p2_results values ('A11','post_message stores the author role and the answer then grades',
-      false, sqlstate || ': ' || sqlerrm);
-  end;
-end
-$p2$;
-
-select case_id, ok, description, detail from p2_results order by case_id;
-
-rollback;
+ROLLBACK;

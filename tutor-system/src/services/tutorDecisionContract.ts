@@ -217,6 +217,7 @@ function validateV3Assessment(candidate: any, context: V3ValidationContext): any
   const uniqueKeys = new Set(keys).size === keys.length;
   const validCardinality = candidate.selection_type === 'single' ? keys.length === 1 : keys.length >= 2 && keys.length <= 3;
   if (!validKeys || !uniqueKeys || !validCardinality) throw new Error('assessment correct option IDs have invalid cardinality or IDs');
+  const learnerSafeExplanation = requireNonEmptyString(candidate.learner_safe_explanation, 'assessment learner_safe_explanation');
   if (!candidate.transfer_basis || typeof candidate.transfer_basis !== 'object') throw new Error('assessment transfer_basis is required');
   requireNonEmptyString(candidate.transfer_basis.concept_rule, 'transfer concept_rule');
   requireNonEmptyString(candidate.transfer_basis.source_context, 'transfer source_context');
@@ -236,6 +237,7 @@ function validateV3Assessment(candidate: any, context: V3ValidationContext): any
     selection_type: candidate.selection_type,
     options: candidate.options.map((option: any) => ({ id: option.id, text: option.text.trim() })),
     correct_option_ids: [...keys],
+    learner_safe_explanation: learnerSafeExplanation,
     transfer_basis: {
       concept_rule: candidate.transfer_basis.concept_rule.trim(),
       source_context: candidate.transfer_basis.source_context.trim(),

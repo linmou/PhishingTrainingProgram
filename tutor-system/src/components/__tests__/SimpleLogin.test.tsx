@@ -48,9 +48,9 @@ describe('SimpleLogin Component', () => {
         render(<SimpleLogin />);
 
         expect(screen.getByLabelText(/your name/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/student/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/tutor/i)).toBeInTheDocument();
-        expect(screen.getByLabelText(/observer/i)).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /^student\b/i })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /^tutor\b/i })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /^observer\b/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /join session/i })).toBeInTheDocument();
     });
 
@@ -72,7 +72,7 @@ describe('SimpleLogin Component', () => {
         render(<SimpleLogin />);
 
         const nameInput = screen.getByLabelText(/your name/i);
-        const tutorRadio = screen.getByLabelText(/tutor/i);
+        const tutorRadio = screen.getByRole('radio', { name: /^tutor\b/i });
         const submitButton = screen.getByRole('button', { name: /join session/i });
 
         fireEvent.change(nameInput, { target: { value: 'John Doe' } });
@@ -87,14 +87,14 @@ describe('SimpleLogin Component', () => {
     test('defaults to student role', () => {
         render(<SimpleLogin />);
 
-        const studentRadio = screen.getByLabelText(/student/i) as HTMLInputElement;
+        const studentRadio = screen.getByRole('radio', { name: /^student\b/i }) as HTMLInputElement;
         expect(studentRadio.checked).toBe(true);
     });
 
     test('allows role selection change', () => {
         render(<SimpleLogin />);
 
-        const observerRadio = screen.getByLabelText(/observer/i) as HTMLInputElement;
+        const observerRadio = screen.getByRole('radio', { name: /^observer\b/i }) as HTMLInputElement;
         fireEvent.click(observerRadio);
 
         expect(observerRadio.checked).toBe(true);
@@ -129,7 +129,7 @@ describe('SimpleLogin Component', () => {
         render(<SimpleLogin />);
 
         const nameInput = screen.getByLabelText(/your name/i);
-        const tutorRadio = screen.getByLabelText(/tutor/i);
+        const tutorRadio = screen.getByRole('radio', { name: /^tutor\b/i });
         const submitButton = screen.getByRole('button', { name: /join session/i });
 
         fireEvent.change(nameInput, { target: { value: 'Test User' } });
@@ -155,4 +155,4 @@ describe('SimpleLogin Component', () => {
             expect(mockJoinWithNameAndRole).toHaveBeenCalledWith('John Doe', 'student');
         });
     });
-}); 
+});

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: integration-owned E01 handoff test. It imports component 101's real pure resolver, executes it, and passes that same produced object into a component 102 persistence-contract projection, so the edge is proven on the real upstream artifact rather than a hand-authored fixture.
+// Purpose: verify component 101 lifecycle outcomes and component 102 public DTO projection locally. The handler-level 101-to-102 persistence handoff is covered in transfer-domain-backend-handler.test.ts.
 //
 // Run with: node --import ../tools/ts-resolve.mjs --test tests/integration/transfer-domain-backend.test.mjs
 
@@ -47,6 +47,7 @@ const VALID_PROGRESS_PAIRS = [
 function publicAssessment() {
   return {
     id: 'assessment-1',
+    student_id: 'student-1',
     selection_type: 'single',
     stem: 'A familiar teammate sends a prize link.',
     rendered_text: 'A familiar teammate sends a prize link.\nChoose one.',
@@ -90,11 +91,10 @@ function makeAnswer(content, overrides = {}) {
 }
 
 /**
- * Component 102 persistence-contract projection. It consumes whatever the 101
- * resolver produced and derives its write set from it, so this handoff fails if
- * 101 ever returns a value that 102 could not persist safely.
+ * Test-local summary of a 101 resolver result. This is not component 102 code
+ * and does not exercise its Edge handler or persistence RPC.
  */
-function projectForPersistence(result) {
+function summarizeForLocalAssertions(result) {
   return {
     graded: result.disposition === 'passed' || result.disposition === 'failed',
     write: result.applied_transition !== null,
@@ -109,9 +109,9 @@ function projectForPersistence(result) {
   };
 }
 
-test('E01: a delivered correct answer is graded once and asks for tutor feedback', () => {
+test('101 domain contract: a delivered correct answer is terminal and asks for tutor feedback', () => {
   const produced = resolveTransferAnswer(makeContext(), makeAnswer('B'));
-  const persisted = projectForPersistence(produced);
+  const persisted = summarizeForLocalAssertions(produced);
 
   assert.equal(produced.disposition, 'passed');
   assert.equal(produced.applied_transition, 'assessment_pass');
@@ -122,9 +122,9 @@ test('E01: a delivered correct answer is graded once and asks for tutor feedback
   assert.equal(persisted.applied_transition, 'assessment_pass');
 });
 
-test('E01: a delivered wrong answer forces review and repair', () => {
+test('101 domain contract: a delivered wrong answer forces review and repair', () => {
   const produced = resolveTransferAnswer(makeContext(), makeAnswer('A'));
-  const persisted = projectForPersistence(produced);
+  const persisted = summarizeForLocalAssertions(produced);
 
   assert.equal(produced.disposition, 'failed');
   assert.equal(produced.applied_transition, 'assessment_fail');
@@ -133,7 +133,7 @@ test('E01: a delivered wrong answer forces review and repair', () => {
   assert.equal(persisted.write, true);
 });
 
-test('E01: undelivered, stale, Guard, feedback-pending, and no-open-assessment answers write nothing', () => {
+test('101 domain contract: undelivered, stale, Guard, feedback-pending, and no-open-assessment answers do not transition', () => {
   const cases = [
     ['undelivered', makeContext(), makeAnswer('B', { delivered: false })],
     ['stale', makeContext(), makeAnswer('B', { assessment: makeAssessment({ progress_snapshot_hash: 'other' }) })],
@@ -144,7 +144,7 @@ test('E01: undelivered, stale, Guard, feedback-pending, and no-open-assessment a
 
   for (const [label, turnContext, turnAnswer] of cases) {
     const produced = resolveTransferAnswer(turnContext, turnAnswer);
-    const persisted = projectForPersistence(produced);
+    const persisted = summarizeForLocalAssertions(produced);
 
     assert.equal(persisted.write, false, `${label} must not write`);
     assert.equal(produced.applied_transition, null, `${label} must not apply a transition`);
@@ -155,7 +155,7 @@ test('E01: undelivered, stale, Guard, feedback-pending, and no-open-assessment a
   }
 });
 
-test('E01: no private field name crosses the consumer boundary', () => {
+test('101 domain contract: private field names are absent from the resolver result', () => {
   const produced = resolveTransferAnswer(makeContext(), makeAnswer('B'));
   const serialized = JSON.stringify(produced);
 
@@ -163,12 +163,12 @@ test('E01: no private field name crosses the consumer boundary', () => {
     assert.equal(Object.prototype.hasOwnProperty.call(produced, field), false, `${field} on result`);
     assert.equal(serialized.includes(field), false, `${field} in serialization`);
   }
-  for (const key of Object.keys(projectForPersistence(produced).learner_projection)) {
+  for (const key of Object.keys(summarizeForLocalAssertions(produced).learner_projection)) {
     assert.equal(PRIVATE_FIELD_NAMES.includes(key), false, `${key} in learner projection`);
   }
 });
 
-test('E01: a replayed answer never produces a second transition', () => {
+test('101 domain contract: replayed answers never produce a second transition', () => {
   const first = resolveTransferAnswer(makeContext(), makeAnswer('B'));
   const replayed = resolveTransferAnswer(
     makeContext({ progress: first.progress, feedback_required: first.feedback_required }),
@@ -180,7 +180,7 @@ test('E01: a replayed answer never produces a second transition', () => {
   assert.deepEqual(replayed.progress, first.progress);
 });
 
-test('E01: a repair-pending answer without new evidence writes nothing', () => {
+test('101 domain contract: a repair-pending answer without new evidence does not transition', () => {
   const produced = resolveTransferAnswer(
     makeContext({
       progress: { status: 'needs_review', understanding_level: 'basic' },
@@ -194,11 +194,12 @@ test('E01: a repair-pending answer without new evidence writes nothing', () => {
   assert.equal(produced.applied_transition, null);
 });
 
-test('E01: component 102 projects the real assessment without the private key or basis', () => {
+test('102 public DTO projection: the assessment excludes the private key and basis', () => {
   // The private assessment component 101 hands over still carries the answer key
   // and transfer basis, so the edge must prove that 102 strips them.
   const privateAssessment = {
     id: 'assessment-1',
+    student_id: 'student-1',
     selection_type: 'single',
     stem: 'A familiar teammate sends a prize link.',
     rendered_text: 'A familiar teammate sends a prize link.\nChoose one.',
@@ -221,9 +222,9 @@ test('E01: component 102 projects the real assessment without the private key or
   assert.deepEqual(Object.keys(projected).sort(), [
     'id',
     'options',
-    'rendered_text',
     'selection_type',
     'stem',
+    'student_id',
   ]);
   for (const field of ['correct_option_ids', 'transfer_basis', 'concept_rule', 'changed_context']) {
     assert.equal(serialized.includes(field), false, `${field} leaked through 102's projection`);

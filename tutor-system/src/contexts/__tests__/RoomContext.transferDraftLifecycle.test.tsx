@@ -73,10 +73,13 @@ const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void 
   return null;
 };
 
+type RealtimeHandler = (payload: { new: Record<string, unknown> }) => void;
+
 describe('RoomContext teacher transfer review lifecycle', () => {
   let prepareTurn: jest.SpyInstance;
   let sendReviewed: jest.SpyInstance;
   let room: ReturnType<typeof useRoom> | null;
+  let messageInsertHandler: RealtimeHandler | null;
 
   const roomRow = {
     ...transferRoom,
@@ -122,6 +125,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     room = null;
+    messageInsertHandler = null;
 
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -137,10 +141,20 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     });
 
     (getAIConfig as jest.Mock).mockResolvedValue(null);
-    (supabase.channel as jest.Mock).mockReturnValue({
-      on: jest.fn().mockReturnThis(),
-      subscribe: jest.fn().mockReturnThis(),
-      unsubscribe: jest.fn(),
+    (supabase.channel as jest.Mock).mockImplementation(() => {
+      const channel: {
+        on: jest.Mock;
+        subscribe: jest.Mock;
+        unsubscribe: jest.Mock;
+      } = {
+        on: jest.fn((event: string, filter: { table?: string; event?: string }, handler: RealtimeHandler) => {
+          if (filter?.table === 'messages' && filter.event === 'INSERT') messageInsertHandler = handler;
+          return channel;
+        }),
+        subscribe: jest.fn().mockReturnThis(),
+        unsubscribe: jest.fn(),
+      };
+      return channel;
     });
 
     // Learner A's message is last in the fetched list, so it is the room's latest student message.
@@ -187,19 +201,6 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
   });
 
-  it('uses the checklist owner message when another learner posted later', async () => {
-    mockTables([learnerAMessageRow, learnerBMessageRow]);
-    await mountRoom();
-
-    await act(async () => {
-      await room!.generateAIResponse();
-    });
-
-    expect(prepareTurn).toHaveBeenCalledWith(expect.objectContaining({
-      focusStudentMessageId: LEARNER_A_MESSAGE_ID,
-    }));
-  });
-
   it('keeps the tutoring-turn item id as null rather than the text "null"', async () => {
     prepareTurn.mockResolvedValue(preparedTutoringTurnResult);
     await mountRoom();
@@ -213,9 +214,36 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   });
 
   it('sends the edited decision with the prepared scope exactly once', async () => {
+    const callOrder: string[] = [];
+    prepareTurn.mockImplementation(async () => {
+      callOrder.push('prepare');
+      return preparedTurnResult;
+    });
+    sendReviewed.mockImplementation(async () => {
+      callOrder.push('send');
+      return reviewedDelivery;
+    });
     await mountRoom();
     await act(async () => {
       await room!.generateAIResponse();
+    });
+    expect(callOrder).toEqual(['prepare']);
+    expect(room!.transferDraft).toMatchObject({
+      roomId: TRANSFER_ROOM_ID,
+      studentId: LEARNER_A_ID,
+      checklistId: CHECKLIST_ID,
+      itemId: CHECKLIST_ITEM_ID,
+      focusStudentMessageId: LEARNER_A_MESSAGE_ID,
+    });
+
+    await waitFor(() => expect(messageInsertHandler).not.toBeNull());
+    await act(async () => {
+      messageInsertHandler!({ new: {
+        ...learnerBMessageRow,
+        id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+        content: 'A later message from another learner.',
+        created_at: '2026-09-12T09:45:00Z',
+      } });
     });
 
     const edited: TutorDecisionV3 = {
@@ -229,6 +257,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     });
 
     expect(sendReviewed).toHaveBeenCalledTimes(1);
+    expect(callOrder).toEqual(['prepare', 'send']);
     expect(sendReviewed).toHaveBeenCalledWith({
       reviewedPayload: edited,
       roomId: TRANSFER_ROOM_ID,
@@ -238,7 +267,10 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
     });
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
+    expect(room!.messages.map((message) => message.id)).toContain('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
     expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(Array.from(new Set((supabase.from as jest.Mock).mock.calls.map(([table]) => table))).sort())
+      .toEqual(['messages', 'rooms', 'users']);
   });
 
   it('refuses an assessment turn with no checklist item before calling the service', async () => {

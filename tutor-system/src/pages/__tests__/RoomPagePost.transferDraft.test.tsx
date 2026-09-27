@@ -4,7 +4,7 @@
  * surface is wired to the room context, can be discarded, and surfaces an authoritative refusal
  * without leaving a phantom learner message.
  *
- * Responsibility: prove the page-level review contract for US1 (review, one-click send, discard, send
+ * Responsibility: prove the page-level review contract for US1 (review, reconfirm, discard, send
  * failure) rather than only the editor's internal state.
  */
 
@@ -62,6 +62,7 @@ const learnerMessage: Message = {
 describe('RoomPagePost transfer review surface', () => {
   let confirmTransferDraft: jest.Mock;
   let clearAISuggestion: jest.Mock;
+  let visibleMessages: Message[];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -69,6 +70,7 @@ describe('RoomPagePost transfer review surface', () => {
 
     confirmTransferDraft = jest.fn().mockResolvedValue(undefined);
     clearAISuggestion = jest.fn();
+    visibleMessages = [learnerMessage];
 
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -84,7 +86,7 @@ describe('RoomPagePost transfer review surface', () => {
 
     (useRoom as jest.Mock).mockReturnValue({
       currentRoom: { ...transferRoom, ai_assistant_enabled: true },
-      messages: [learnerMessage],
+      messages: visibleMessages,
       participants: [],
       loading: false,
       loadingAI: false,
@@ -131,10 +133,28 @@ describe('RoomPagePost transfer review surface', () => {
     expect(screen.queryByTestId('ai-suggestion-box')).not.toBeInTheDocument();
   });
 
+  it('keeps a prepared candidate hidden from learner roles', () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: {
+        id: 'learner-a',
+        display_name: 'Learner A',
+        current_role: 'student',
+        status: 'active',
+        created_at: '2026-09-12T08:00:00Z',
+        updated_at: '2026-09-12T08:00:00Z',
+      },
+      loading: false,
+    });
+    renderPage();
+
+    expect(screen.queryByRole('heading', { name: 'Review transfer assessment' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm assessment' })).not.toBeInTheDocument();
+  });
+
   it('discards the candidate through the room context without delivering anything', () => {
     renderPage();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Discard candidate' }));
 
     expect(clearAISuggestion).toHaveBeenCalledTimes(1);
     expect(confirmTransferDraft).not.toHaveBeenCalled();
@@ -144,16 +164,52 @@ describe('RoomPagePost transfer review surface', () => {
     confirmTransferDraft.mockRejectedValue(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered'));
     renderPage();
 
-    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'A caller requests a fee. What is safest?' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
+    const originalMessageIds = visibleMessages.map((message) => message.id);
+
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
     });
-    expect(screen.getByLabelText('Question')).toHaveValue('A caller requests a fee. What is safest?');
-    confirmTransferDraft.mockResolvedValue(undefined);
-    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
+    expect(screen.getByRole('button', { name: 'Confirm assessment' })).toBeInTheDocument();
+    expect(confirmTransferDraft).toHaveBeenCalledTimes(1);
+    expect(visibleMessages.map((message) => message.id)).toEqual(originalMessageIds);
+  });
+
+  it('marks a candidate dirty after an edit and requires confirmation again', () => {
+    renderPage();
+
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    expect(screen.getByLabelText(/I confirm the concept/)).toBeChecked();
+
+    fireEvent.change(screen.getByLabelText('Question'), {
+      target: { value: 'A revised question for the selected learner.' },
+    });
+
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'dirty');
+    expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Confirm that the concept');
+    expect(confirmTransferDraft).not.toHaveBeenCalled();
+  });
+
+  it('keeps the candidate unsent and adds no learner message after a retryable send failure', async () => {
+    const retryableError = new Error('AI_PROVIDER_ERROR: raw provider response should not be rendered');
+    confirmTransferDraft.mockRejectedValueOnce(retryableError).mockResolvedValueOnce(undefined);
+    renderPage();
+    const originalMessageIds = visibleMessages.map((message) => message.id);
+
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('AI_PROVIDER_ERROR');
+    expect(screen.getByRole('alert')).not.toHaveTextContent('raw provider response');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'retryable');
+    expect(screen.getByRole('heading', { name: 'Review transfer assessment' })).toBeInTheDocument();
+    expect(visibleMessages.map((message) => message.id)).toEqual(originalMessageIds);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(2));
-    expect(confirmTransferDraft.mock.calls[1][0]).toEqual(confirmTransferDraft.mock.calls[0][0]);
   });
 });
