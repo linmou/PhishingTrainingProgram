@@ -111,6 +111,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Handoff test: `tests/integration/transfer-backend-room-ui-handler.test.ts` sends a real 102 `send_reviewed` handler response through `TransferAssessmentService` into 103's `projectRoomMessage`, which builds the public question from the allowlisted assessment DTO. The response contains private fields at the simulated RPC seam so the real 102 projection and 103 mapping are both exercised.
 - E2E/smoke: radio/checkbox submission, reload, duplicate tab race, fold persistence, and teacher editor flow.
 - Producer gate (102): trusted public DTO and process-result contract tests pass without 103 code. Consumer gate (103): the handoff, UI focused suite, type check, and browser smoke pass on one integration SHA.
+- Regression recovery placement (2026-09-27): legacy PostComment presentation, password fixture, and room-capacity corrections are verified independently before the 103 merge. Multi-agent playback, password retry, rating target, and the E03 `WRONG_LEARNER` classification require 103's page/adapter and belong to the 103 consumer integration gate. The full four-directory regression runs after both corrections share one integration SHA; the interim producer check uses only independent corrected suites and producer-side Node handoffs.
 
 ### E04: 101 -> 104 Domain Contract To Evaluation
 
