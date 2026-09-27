@@ -1,5 +1,28 @@
 # RoomContext Test Fixes Summary
 
+Intent: Document the current RoomContext test fixtures and the contracts they verify.
+
+Updated: 2026-09-27 (test commit `5c9ce6c`)
+
+## Current Contract
+
+- Realtime channel mocks implement `on`, `subscribe`, and `unsubscribe` on the same channel object.
+- Successful room joins mock room, message, and participant queries by table, including polling reads.
+- Message assertions cover projected identity, content, and participant display name.
+- Message insertion follows `insert(...).select().single()` and asserts response mode.
+- AI tests cover `generateTutorSuggestion`, `getAIConfig`, and `updateAIConfig`.
+- AI configuration load failures assert the local room configuration fallback.
+
+## Verification
+
+- Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`
+- Result: 1 suite passed, 26 tests passed.
+- The four-directory regression was not rerun for this focused batch.
+
+## Historical Repair Notes
+
+The following notes describe an earlier fixture shape. Their query examples and AI method names are superseded by the current contract above.
+
 ## Issues Identified
 
 The RoomContext test suite was failing with the following main issues:
@@ -188,4 +211,4 @@ await act(async () => {
 });
 ```
 
-This ensures all RoomContext tests follow a consistent, reliable pattern. 
+This ensures all RoomContext tests follow a consistent, reliable pattern.
