@@ -189,7 +189,8 @@ describe('RoomContext learner answer path', () => {
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
     });
-    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID);
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    expect(analyzeMessage).not.toHaveBeenCalled();
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
     expect(answer).toBeDefined();
     expect(answer!.parent_message_id).toBe(DELIVERED_QUESTION_ID);
@@ -220,6 +221,17 @@ describe('RoomContext learner answer path', () => {
       'getChecklistForStudent',
     ]);
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
+  });
+
+  it('sends ordinary student messages through evidence analysis without calling assessment processing', async () => {
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('Just chatting');
+    });
+
+    expect(processMessage).not.toHaveBeenCalled();
+    expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
   });
 
   it('keeps an unresolved answer server-authoritative instead of inventing a selection', async () => {

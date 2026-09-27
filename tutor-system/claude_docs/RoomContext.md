@@ -89,10 +89,12 @@ through the reviewed delivery operation, and projects the returned public messag
 in room state. The projection includes only the learner-safe question DTO; private answer keys and
 transfer basis fields are discarded at the UI boundary.
 
-Learner answers send `selectedOptionIds` with the assessment message identity. The context stores
-the server's `ProcessedMessageDTO` lifecycle result, and `PublicAssessmentQuestion` renders retry,
-passed, rejected, deferred, duplicate, and terminal-failure states from that result. The browser
-does not grade answers or construct terminal feedback.
+Learner answers send `selectedOptionIds` with the assessment message identity and pass that same
+identity to the trusted processing operation. Student messages without an assessment identity use
+evidence analysis directly. The context stores the server's `ProcessedMessageDTO` lifecycle result,
+and `PublicAssessmentQuestion` renders retry, passed, rejected, deferred, duplicate, and
+terminal-failure states from that result. The browser does not grade answers or construct terminal
+feedback.
 
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification
