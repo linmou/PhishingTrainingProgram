@@ -34,6 +34,23 @@ describe('server-authoritative transfer assessment migration', () => {
     expect(sql).toMatch(/v_assessment->>'stem'/i);
   });
 
+  it('aborts uncovered legacy key scope before copying or dropping keys', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    const guard = sql.indexOf('LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED');
+    expect(guard).toBeGreaterThan(0);
+    expect(guard).toBeLessThan(sql.indexOf('INSERT INTO private.transfer_assessments'));
+    expect(guard).toBeLessThan(sql.indexOf('DROP COLUMN IF EXISTS assessment_key'));
+    const preflight = sql.slice(sql.indexOf('DO $legacy_scope$'), guard);
+    expect(preflight).toMatch(/cardinality\(m\.assessment_key\) > 0/i);
+    expect(preflight).toMatch(/m\.assessment_selection_type IN \('single', 'multiple'\)/i);
+    expect(preflight).toMatch(/ci\.checklist_id = sc\.id AND ci\.id = m\.assessment_item_id/i);
+    expect(preflight).toMatch(/parent\.room_id = m\.room_id/i);
+    expect(preflight).toMatch(/parent\.user_id = sc\.student_id/i);
+    expect(preflight).toMatch(/parent\.user_role = 'student'/i);
+    expect(preflight).toMatch(/sc\.room_id = m\.room_id/i);
+    expect(preflight).toMatch(/sc\.progress_policy_version = 'transfer_v1'/i);
+  });
+
   it('defines service-role-only versioned RPCs with expected-snapshot compare-and-swap', () => {
     const sql = fs.readFileSync(migrationPath, 'utf8');
     for (const name of [

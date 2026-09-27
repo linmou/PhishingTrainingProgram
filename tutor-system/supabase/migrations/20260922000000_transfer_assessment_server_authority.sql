@@ -170,6 +170,38 @@ CREATE TRIGGER guard_public_transfer_columns
 BEFORE INSERT OR UPDATE ON public.messages
 FOR EACH ROW EXECUTE FUNCTION private.guard_public_transfer_columns();
 
+DO $legacy_scope$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM public.messages m
+    WHERE m.assessment_key IS NOT NULL
+      AND NOT (
+        cardinality(m.assessment_key) > 0
+        AND (m.assessment_selection_type IS NULL
+          OR m.assessment_selection_type IN ('single', 'multiple'))
+        AND EXISTS (
+          SELECT 1
+          FROM public.session_checklists sc
+          JOIN public.checklist_items ci
+            ON ci.checklist_id = sc.id AND ci.id = m.assessment_item_id
+          JOIN public.messages parent
+            ON parent.id = m.parent_message_id
+           AND parent.room_id = m.room_id
+           AND parent.user_id = sc.student_id
+           AND parent.user_role = 'student'
+          WHERE sc.id = m.assessment_checklist_id
+            AND sc.room_id = m.room_id
+            AND sc.progress_policy_version = 'transfer_v1'
+            AND sc.student_id IS NOT NULL
+        )
+      )
+  ) THEN
+    RAISE EXCEPTION 'LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED' USING ERRCODE = '22023';
+  END IF;
+END;
+$legacy_scope$;
+
 INSERT INTO private.transfer_assessments (
   id, question_message_id, room_id, student_id, checklist_id, item_id,
   focus_student_message_id, selection_type, correct_option_ids,

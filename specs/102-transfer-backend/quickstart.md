@@ -61,7 +61,7 @@ SELECT count(*) AS keyed_rows,
 FROM keyed k;
 ```
 
-Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
+Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration also raises `LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED` before copying any key when its own coverage check finds such a row. It copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
 
 1. Apply `20260922000000_transfer_assessment_server_authority.sql` only to the approved disposable scope after the stop conditions pass.
 2. Run `supabase/tests/transfer_assessment_backend.sql` for schema, privacy, grants, direct writes, public key removal, legacy-incomplete reconciliation, and rollback.
