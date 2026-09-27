@@ -35,13 +35,27 @@ import {
     participationModeFromRoom,
     projectRoomMessage,
     publicAssessmentForDecision,
+    readAnswerLifecycle,
     withAnswerLifecycle,
 } from './transferAssessmentUiAdapter';
-import type { RoomMessageView } from './transferAssessmentUiAdapter';
+import type { AnswerLifecycleView, RoomMessageView } from './transferAssessmentUiAdapter';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
+
+function preferredQuestionLifecycle(
+    question: RoomMessageView,
+    incoming: AnswerLifecycleView
+): AnswerLifecycleView {
+    const current = readAnswerLifecycle(question);
+    const currentIsAcceptedTerminal = current?.terminal === true &&
+        (current.answerOutcome === 'passed' || current.answerOutcome === 'failed');
+    const incomingHasNoAcceptedAttempt = incoming.answerOutcome === null ||
+        incoming.attemptNumber === null || !incoming.terminal;
+
+    return currentIsAcceptedTerminal && incomingHasNoAcceptedAttempt ? current : incoming;
+}
 
 export const useRoom = () => {
     const context = useContext(RoomContext);
@@ -570,7 +584,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 lifecycle
                             );
                         }
-                        allMessages[questionIndex] = withAnswerLifecycle(question, lifecycle);
+                        allMessages[questionIndex] = withAnswerLifecycle(
+                            question,
+                            preferredQuestionLifecycle(question, lifecycle)
+                        );
                     } catch (restoreError) {
                         console.warn('Could not restore transfer assessment feedback:', restoreError);
                     }
@@ -697,7 +714,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         }) as RoomMessageView | undefined;
                         const incoming = [answerWithLifecycle];
                         if (question) {
-                            incoming.push(addDisplayNameToMessage(withAnswerLifecycle(question, lifecycle), participants));
+                            incoming.push(addDisplayNameToMessage(
+                                withAnswerLifecycle(question, preferredQuestionLifecycle(question, lifecycle)),
+                                participants
+                            ));
                         }
                         return mergeRoomMessages(prev, incoming);
                     });

@@ -88,7 +88,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 ### Tests for User Story 3
 
 - [X] T028 [P] [US3] Add RoomContext ingress tests for realtime-before-fetch, duplicate realtime insert, polling/realtime overlap, reconnect catch-up, reload persistence, authoritative remaining-chance restoration, and stable chronological merge in `tutor-system/src/contexts/__tests__/RoomContext.transferIngress.test.tsx`.
-- [ ] T029 [P] [US3] Add concurrency tests for simultaneous second submissions, already-terminal replay, exactly one accepted terminal transition, timeout retry, and identical reread state across tabs in `tutor-system/src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx`.
+- [X] T029 [P] [US3] Add concurrency tests for simultaneous second submissions, already-terminal replay, exactly one accepted terminal transition, timeout retry, and identical reread state across tabs in `tutor-system/src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx`.
 - [ ] T030 [P] [US3] Add mode compatibility tests for tutoring, Guard, assessment turn delivery, manual Guard change, Guard recovery, invalid mode/instruction pairs, and no assessment room mode in `tutor-system/src/contexts/__tests__/RoomContext.transferModes.test.tsx`.
 - [X] T031 [P] [US3] Add message tests for expanded-by-default state, accessible collapse/expand controls for every role, participant-local toggles, and selection/result preservation in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
 - [ ] T032 [P] [US3] Add page tests for reload/catch-up UI states, persisted remaining chances, unavailable capability, stale conflict messaging, and preserving the current selected learner in `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`.
@@ -96,7 +96,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 ### Implementation for User Story 3
 
 - [ ] T033 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to route initial fetch, realtime, polling, optimistic replacement, and reconnect catch-up through the stable-ID merge helper and to restore component 102's persisted attempt and terminal state without any reset path.
-- [ ] T034 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to use upstream idempotency and stale/terminal outcomes for retry rather than appending another local answer or reprocessing a resolved question.
+- [X] T034 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to use upstream idempotency and stale/terminal outcomes for retry rather than appending another local answer or reprocessing a resolved question.
 - [X] T035 [US3] Update `tutor-system/src/components/PostComment.tsx` and `tutor-system/src/components/PostComment.css` to keep expanded state participant-local and true by default, expose an accessible icon control, and preserve mounted answer selection/result state while collapsed.
 - [ ] T036 [US3] Update `tutor-system/src/pages/RoomPagePost.tsx` to render explicit loading, unavailable, stale, retryable, and catch-up states without switching legacy rooms to transfer behavior.
 - [ ] T037 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` and `tutor-system/src/components/AISuggestionBox.tsx` so assessment turn decisions cannot be coerced into `RoomParticipationMode`, and Guard recovery remains a reviewed tutoring action.
@@ -111,15 +111,15 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 ### Tests for User Story 4
 
-- [ ] T038 [P] [US4] Add checklist view tests for owner-scoped transfer progress, legacy/transfer separation, Guard lock display, and absence of cross-learner progress in `tutor-system/src/components/__tests__/ChecklistPanel.transfer.test.tsx`.
+- [X] T038 [P] [US4] Add checklist view tests for owner-scoped transfer progress, legacy/transfer separation, Guard lock display, and absence of cross-learner progress in `tutor-system/src/components/__tests__/ChecklistPanel.transfer.test.tsx`.
 - [X] T039 [P] [US4] Add export projection tests for learner, observer, and teacher downloads, including pre-terminal explanation absence, terminal learner-safe explanation presence, and absence of key/basis/rationale/raw decision/private interaction fields in `tutor-system/src/contexts/__tests__/roomExportBuilder.transfer.test.ts`.
 - [ ] T040 [P] [US4] Add page/context tests proving structured decisions and public projections are consumed downstream rather than flattened into copied suggestion text in `tutor-system/src/pages/__tests__/RoomPagePost.transferDecision.test.tsx`.
 
 ### Implementation for User Story 4
 
-- [ ] T041 [US4] Update `tutor-system/src/components/ChecklistPanel.tsx` and `tutor-system/src/hooks/useChecklist.ts` to select the server-provided learner-owned transfer projection and prevent direct status/understanding writes for `transfer_v1`.
+- [X] T041 [US4] Update `tutor-system/src/components/ChecklistPanel.tsx` and `tutor-system/src/hooks/useChecklist.ts` to select the server-provided learner-owned transfer projection and prevent direct status/understanding writes for `transfer_v1`.
 - [X] T042 [US4] Update `tutor-system/src/contexts/roomExportBuilder.ts` and `tutor-system/src/contexts/RoomContext.tsx` to build public and teacher exports from separate allowlisted projections, include learner-safe explanation only when component 102 discloses it terminally, and exclude private assessment fields from learner/observer outputs.
-- [ ] T043 [US4] Update `tutor-system/src/pages/RoomPagePost.tsx` and `tutor-system/src/components/PostComment.tsx` to expose only role-appropriate lifecycle and progress details while retaining existing legacy room exports.
+- [X] T043 [US4] Update `tutor-system/src/pages/RoomPagePost.tsx` and `tutor-system/src/components/PostComment.tsx` to expose only role-appropriate lifecycle and progress details while retaining existing legacy room exports.
 
 **Checkpoint**: Teacher and learner views/exports are role-scoped, transfer progress is read-only, and no private field reaches a learner projection.
 

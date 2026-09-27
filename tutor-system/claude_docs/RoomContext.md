@@ -93,12 +93,20 @@ private answer keys and transfer basis fields are discarded at the UI boundary.
 Assessment submissions send canonical `selectedOptionIds` with the public question message ID as the
 persisted parent and the separate assessment ID for trusted processing. The context validates the
 processor's returned answer and assessment IDs before attaching lifecycle state to the answer and
-its matching question. On student reload or reconnect, it re-reads each matching answer through the
-idempotent `processMessage` facade, only for the signed-in learner's own answers and questions. A
-failed re-read leaves the room visible without inventing feedback. Message merges retain the
-projected question and server lifecycle when polling replaces a local view with a fresh database
-row. Student messages without an assessment identity use evidence analysis directly. The browser
-does not grade answers or write progress.
+its matching question. If concurrent results arrive in either order, an accepted terminal lifecycle
+remains the question state when a later result is rejected or has no accepted attempt; each answer
+retains its own processing result. On student reload or reconnect, the context re-reads each matching
+answer through the idempotent `processMessage` facade, only for the signed-in learner's own answers
+and questions. A failed re-read leaves the room visible without inventing feedback. Message merges
+retain the projected question and server lifecycle when polling replaces a local view with a fresh
+database row. Student messages without an assessment identity use evidence analysis directly. The
+browser does not grade answers or write progress.
+
+Checklist loading uses the owner-scoped transfer projection for a signed-in student and the
+server-selected active projection for a tutor. The returned transfer owner is checked on both the
+scoped lookup and the legacy read fallback before progress reaches the UI; a missing or mismatched
+owner clears the view. Transfer lifecycle and progress controls stay limited to their authorized
+learner/tutor views, while ordinary legacy checklist reads and room text exports remain available.
 
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification

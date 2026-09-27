@@ -20,6 +20,8 @@ import {
 import {
   DELIVERED_ANSWER_ID,
   LEARNER_A_ID,
+  LEARNER_B_ID,
+  deliveredAnswerRow,
   deliveredPublicAssessment,
   deliveredQuestionRow,
   learnerAMessageRow,
@@ -154,5 +156,82 @@ describe('PostComment transfer assessment rendering', () => {
     fireEvent.click(within(firstView).getByRole('button', { name: 'Expand assessment question' }));
     expect(within(firstView).getByRole('radio', { name: /B\./ })).toBeChecked();
     expect(within(firstView).getByText('Incorrect. 1 attempt remaining.')).toBeVisible();
+    expect(within(secondView).queryByText('Incorrect. 1 attempt remaining.')).not.toBeInTheDocument();
+  });
+
+  it('renders terminal feedback only in the target learner question view', () => {
+    const explanation = 'Verify the request through an official channel.';
+    const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    const resolvedQuestion = withAnswerLifecycle(question, answerLifecycleFromProcessed({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: deliveredPublicAssessment.id,
+      processing_state: 'applied',
+      answer_outcome: 'failed',
+      attempt_number: 2,
+      attempts_used: 2,
+      attempts_remaining: 0,
+      selected_option_ids: ['A'],
+      terminal: true,
+      transition: { status: 'needs_review' },
+      feedback_required: true,
+      code: null,
+      already_processed: false,
+      terminal_failure_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: explanation,
+      },
+    }));
+    const { container } = render(
+      <>
+        <PostComment message={resolvedQuestion} currentUserId={LEARNER_A_ID} currentUserRole="student" />
+        <PostComment message={resolvedQuestion} currentUserId={LEARNER_B_ID} currentUserRole="student" />
+        <PostComment message={resolvedQuestion} currentUserId="tutor" currentUserRole="tutor" />
+        <PostComment message={resolvedQuestion} currentUserId="observer" currentUserRole="observer" />
+      </>
+    );
+
+    const views = container.querySelectorAll('.post-comment');
+    expect(within(views[0] as HTMLElement).getByText(explanation)).toBeInTheDocument();
+    for (const view of Array.from(views).slice(1)) {
+      expect(within(view as HTMLElement).queryByText(explanation)).not.toBeInTheDocument();
+      expect(within(view as HTMLElement).queryByText('Correct option(s): B')).not.toBeInTheDocument();
+    }
+  });
+
+  it('shows an answer clarification only to its learner author', () => {
+    const answer = withAnswerLifecycle(projectRoomMessage({
+      ...deliveredAnswerRow,
+      user_id: LEARNER_A_ID,
+    }), answerLifecycleFromProcessed({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: deliveredPublicAssessment.id,
+      processing_state: 'rejected',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
+      selected_option_ids: null,
+      terminal: false,
+      transition: null,
+      feedback_required: false,
+      code: 'ANSWER_FORMAT_UNRESOLVED',
+      already_processed: false,
+      terminal_failure_feedback: null,
+    }));
+    const { container } = render(
+      <>
+        <PostComment message={answer} currentUserId={LEARNER_A_ID} currentUserRole="student" />
+        <PostComment message={answer} currentUserId={LEARNER_B_ID} currentUserRole="student" />
+        <PostComment message={answer} currentUserId="tutor" currentUserRole="tutor" />
+      </>
+    );
+
+    const views = container.querySelectorAll('.post-comment');
+    expect(within(views[0] as HTMLElement).getByText('Choose one of the displayed options and submit again.'))
+      .toBeInTheDocument();
+    for (const view of Array.from(views).slice(1)) {
+      expect(within(view as HTMLElement).queryByText('Choose one of the displayed options and submit again.'))
+        .not.toBeInTheDocument();
+    }
   });
 });

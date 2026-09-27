@@ -425,6 +425,102 @@ describe('RoomContext learner answer path', () => {
     });
   });
 
+  it('keeps the accepted terminal lifecycle when reload also re-reads a rejected concurrent answer', async () => {
+    const rejectedAnswerId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+    let secondRoom: ReturnType<typeof useRoom> | null = null;
+    const rejectedAnswerRow = {
+      ...deliveredAnswerRow,
+      id: rejectedAnswerId,
+      content: 'C',
+    };
+    initialMessages = [
+      deliveredQuestionRow,
+      { ...deliveredAnswerRow, parent_message_id: DELIVERED_QUESTION_ID },
+      { ...rejectedAnswerRow, parent_message_id: DELIVERED_QUESTION_ID },
+    ];
+    processMessage.mockImplementation(async (messageId) => messageId === DELIVERED_ANSWER_ID
+      ? {
+        message_id: DELIVERED_ANSWER_ID,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied',
+        answer_outcome: 'failed',
+        attempt_number: 2,
+        attempts_used: 2,
+        attempts_remaining: 0,
+        selected_option_ids: ['A'],
+        transition: { status: 'needs_review' },
+        feedback_required: true,
+        code: null,
+        already_processed: true,
+        terminal: true,
+        terminal_failure_feedback: {
+          correct_option_ids: ['B'],
+          learner_safe_explanation: 'Verify the request through an official channel.',
+        },
+      }
+      : {
+        message_id: rejectedAnswerId,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'rejected',
+        answer_outcome: null,
+        attempt_number: null,
+        attempts_used: 2,
+        attempts_remaining: 0,
+        selected_option_ids: null,
+        transition: null,
+        feedback_required: false,
+        code: 'ASSESSMENT_ALREADY_TERMINAL',
+        already_processed: false,
+        terminal: true,
+        terminal_failure_feedback: null,
+      });
+
+    render(
+      <>
+        <RoomProvider>
+          <RoomProbe onReady={(api) => { room = api; }} />
+        </RoomProvider>
+        <RoomProvider>
+          <RoomProbe onReady={(api) => { secondRoom = api; }} />
+        </RoomProvider>
+      </>
+    );
+    await waitFor(() => {
+      expect(room).not.toBeNull();
+      expect(secondRoom).not.toBeNull();
+    });
+    await act(async () => {
+      await Promise.all([
+        room!.joinRoom(TRANSFER_ROOM_ID),
+        secondRoom!.joinRoom(TRANSFER_ROOM_ID),
+      ]);
+    });
+
+    expect(processMessage).toHaveBeenCalledTimes(4);
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: {
+        state?: string;
+        answerOutcome?: string | null;
+        attemptsUsed?: number;
+        terminal?: boolean;
+        terminalFailureFeedback?: { learner_safe_explanation?: string } | null;
+      };
+    };
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'failed',
+      answerOutcome: 'failed',
+      attemptsUsed: 2,
+      terminal: true,
+      terminalFailureFeedback: {
+        learner_safe_explanation: 'Verify the request through an official channel.',
+      },
+    });
+    const secondQuestion = secondRoom!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: unknown;
+    };
+    expect(secondQuestion.answerLifecycle).toEqual(question.answerLifecycle);
+  });
+
   it('does not route an explicit assessment answer through evidence analysis when processing rejects it', async () => {
     processMessage.mockRejectedValue(new Error('ASSESSMENT_NOT_OPEN: no open assessment'));
     await mountRoom();

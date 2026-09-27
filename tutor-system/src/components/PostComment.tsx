@@ -55,8 +55,12 @@ const PostComment: React.FC<PostCommentProps> = ({
     // A delivered assessment message renders its public question; every other message renders
     // its plain content.
     const publicQuestion = readPublicQuestion(message);
-    // The server asks for a clarifying label when an answer cannot be resolved to an option.
-    const answerLifecycle = readAnswerLifecycle(message);
+    // Answer lifecycle and disclosure belong only to the target learner's view.
+    const persistedLifecycle = readAnswerLifecycle(message);
+    const lifecycleOwnerId = publicQuestion?.studentId ?? message.user_id;
+    const answerLifecycle = currentUserRole === 'student' && currentUserId === lifecycleOwnerId
+        ? persistedLifecycle
+        : null;
     const hasTransferAssessment = Boolean(publicQuestion || answerLifecycle);
     const [assessmentExpanded, setAssessmentExpanded] = useState(true);
     const assessmentContentId = `assessment-content-${message.id}`;

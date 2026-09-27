@@ -170,4 +170,36 @@ describe('RoomPagePost structured decision consumption', () => {
     expect(screen.getByText('Review transfer assessment')).toBeInTheDocument();
     expect(screen.queryByTestId('ai-suggestion-box')).not.toBeInTheDocument();
   });
+
+  it('keeps the room text export available alongside the tutor progress view', () => {
+    const downloadChatHistory = jest.fn();
+    mount({ downloadChatHistory });
+
+    expect(screen.getByTitle('Learning Progress Checklist')).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
+
+    expect(downloadChatHistory).toHaveBeenCalledWith('txt');
+  });
+
+  it.each(['student', 'observer'] as const)(
+    'keeps the progress checklist control hidden for a %s viewer',
+    (role) => {
+      (useAuth as jest.Mock).mockReturnValue({
+        user: {
+          id: `${role}-1`,
+          display_name: role,
+          current_role: role,
+          status: 'active',
+          created_at: '2026-09-12T08:00:00Z',
+          updated_at: '2026-09-12T08:00:00Z',
+        },
+        loading: false,
+      });
+      mount();
+
+      expect(screen.queryByTitle('Learning Progress Checklist')).not.toBeInTheDocument();
+      expect(screen.getByTitle('Download Chat History')).toBeInTheDocument();
+    }
+  );
 });

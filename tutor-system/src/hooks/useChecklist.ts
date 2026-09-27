@@ -428,6 +428,17 @@ export function useChecklist(roomId: string): UseChecklistReturn {
         ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
         : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
       const updatedChecklist = transferChecklist || await RoomFeaturesService.checklist.read(roomId);
+      if (updatedChecklist?.progress_policy_version === 'transfer_v1' && (
+        !updatedChecklist.student_id ||
+        (user?.current_role === 'student' && updatedChecklist.student_id !== user.id)
+      )) {
+        setChecklist(null);
+        setProgress(null);
+        setError(user?.current_role === 'student' && updatedChecklist.student_id !== user.id
+          ? 'Server returned transfer progress for a different learner.'
+          : 'Server returned transfer progress without a valid learner owner.');
+        return;
+      }
       
       console.log('📊 Checklist refresh result:', {
         found: !!updatedChecklist,
