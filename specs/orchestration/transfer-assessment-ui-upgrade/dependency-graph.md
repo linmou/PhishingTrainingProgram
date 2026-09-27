@@ -90,7 +90,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Producer output / consumer input: real `PrivateAssessment`, `TransferAttemptSnapshot`, and discriminated domain result pass directly to 102's validation and trusted RPC/service boundary.
 - Invariants: only a valid selection consumes an attempt; first wrong is open/1 with no transition; pass is terminal without learner disclosure; second wrong is terminal failed with one transition and eligible terminal feedback.
 - Integration glue: 102 maps the producer result without recreating grading/lifecycle logic and atomically locks/persists the private assessment and append-only attempt.
-- Handoff test: `tests/integration/transfer-domain-backend-two-attempt.test.mjs` creates 101 results and supplies those same values to the 102 test boundary in one run.
+- Handoff test: `tests/integration/transfer-domain-backend-handler.test.ts` runs the real 102 Edge handler with 101's real resolver, captures that result's mapped arguments at `process_assessment_message_v2`, and verifies the committed response projection. It covers first-wrong retry, correct pass, second-wrong failure, and a clarification that must not call the commit RPC. The injected RPC simulates the trusted commit result; hosted SQL/RPC execution remains a separate external gate.
 - E2E/smoke: teacher delivery, wrong-correct, wrong-wrong, duplicate, and third-attempt flow.
 - Producer gate (101): domain lifecycle, explanation, and fixture tests pass without 102 code. Consumer gate (102): actual-output handoff, 101 and 102 focused suites, SQL/RPC contract suite, and smoke pass on one integration SHA.
 
@@ -132,7 +132,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 
 ## Integration Test Plan
 
-- Integration tests are integration-owned under `tests/integration/`; each handoff must create upstream output and pass that exact object to the consumer without a synthetic replacement.
+- Integration tests are integration-owned under `tests/integration/`; each handoff must create upstream output and pass that exact object to the consumer without a synthetic replacement. The E01 Deno handler test uses `npx --yes deno test --config tutor-system/deno.json --cached-only --allow-env --allow-net --allow-read --allow-run --unstable-sloppy-imports tests/integration/transfer-domain-backend-handler.test.ts`.
 - End-to-end coverage is integration-owned under `tests/e2e/transfer-assessment-two-attempt.test.mjs` and drives teacher review, both learner attempt paths, reload, replay, and target routing through the integrated application.
 - Smoke command and exact test commands will be added after the component quickstarts are promoted; all results, exit codes, paths, and tested SHAs are recorded in `integration-review.md`.
 
