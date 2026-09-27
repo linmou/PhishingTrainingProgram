@@ -94,26 +94,43 @@ export type ReviewCheck = { ok: true } | { ok: false; status: ReviewStatus; mess
 const OPTION_ORDER: ReadonlyArray<AssessmentOption['id']> = ['A', 'B', 'C', 'D'];
 const TURN_MODES: ReadonlyArray<string> = ['tutoring', 'guard', 'assessment'];
 
+type ReviewFailureStatus = 'superseded' | 'validation' | 'unavailable' | 'unauthorized' | 'retryable';
+
 /** Display-only message fields that are safe for every role and are not part of the public DTO. */
 const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_name', 'avatar_url'];
 
-const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewStatus]> = [
+const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['ASSESSMENT_FEATURE_DISABLED', 'unavailable'],
   ['AI_PROVIDER_NOT_CONFIGURED', 'unavailable'],
   ['AUTHORIZATION_NOT_CONFIGURED', 'unavailable'],
   // No transfer checklist in this room: the capability does not apply here at all.
   ['LEGACY_CHECKLIST', 'unavailable'],
+  ['LEGACY_ASSESSMENT_INCOMPLETE', 'unavailable'],
+  ['UNSUPPORTED_ROOM_SCOPE', 'unavailable'],
   // The learner already has a delivered assessment, so this delivery is superseded.
   ['ASSESSMENT_ALREADY_OPEN', 'superseded'],
-  // The prepared focus identity no longer matches the learner: the teacher must prepare again.
-  ['WRONG_LEARNER', 'validation'],
+  ['ASSESSMENT_TERMINAL', 'superseded'],
+  // The prepared focus identity no longer matches the learner: prepare the turn again.
+  ['WRONG_LEARNER', 'superseded'],
   ['ITEM_VALIDATION_FAILED', 'validation'],
   ['AI_OUTPUT_INVALID', 'validation'],
   ['INVALID_SCOPE', 'validation'],
   ['INVALID_REQUEST', 'validation'],
+  ['PROGRESSION_LOCKED', 'validation'],
   ['FORBIDDEN', 'unauthorized'],
   ['UNAUTHORIZED', 'unauthorized'],
+  ['AI_PROVIDER_ERROR', 'retryable'],
+  ['AI_OUTPUT_TRUNCATED', 'retryable'],
+  ['PERSISTENCE_FAILED', 'retryable'],
 ];
+
+const FAILURE_MESSAGES: Record<ReviewFailureStatus, string> = {
+  superseded: 'This candidate is no longer current. Refresh the room before preparing another.',
+  validation: 'The prepared assessment could not be validated.',
+  unavailable: 'Transfer assessments are unavailable for this room.',
+  unauthorized: 'You are not authorized to deliver this assessment.',
+  retryable: 'The transfer request could not be completed. Try again.',
+};
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -388,9 +405,16 @@ export function assertDeliverableReview(
 /** Map a failed service call onto a named review state. The server's code stays in the message. */
 export function classifyAssessmentFailure(error: unknown): { status: ReviewStatus; message: string } {
   const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : '';
-  const match = ERROR_STATUS.find(([code]) => raw.includes(code));
-  const message = raw.trim() || 'The transfer assessment request failed and can be retried.';
-  return { status: match ? match[1] : 'retryable', message };
+  const record = asRecord(error);
+  const declaredCode = asNonEmptyString(record.code);
+  const code = ERROR_STATUS.find(([candidate]) => candidate === declaredCode)?.[0] ??
+    ERROR_STATUS.find(([candidate]) => raw === candidate || raw.startsWith(`${candidate}:`))?.[0] ?? null;
+  const mappedStatus = code ? ERROR_STATUS.find(([candidate]) => candidate === code)?.[1] : null;
+  const status = mappedStatus ?? (record.retryable === false ? 'validation' : 'retryable');
+  return {
+    status,
+    message: code ? `${code}: ${FAILURE_MESSAGES[status]}` : FAILURE_MESSAGES[status],
+  };
 }
 
 /** Room participation is binary. An unexpected value is reported as unknown rather than coerced. */

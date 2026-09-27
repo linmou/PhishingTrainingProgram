@@ -27,6 +27,7 @@ import {
   preparedCandidate,
 } from '../../test-support/transferRoomFixtures';
 import type { ProcessedMessageDTO } from '../../services/transferAssessmentService';
+import { AssessmentApiRequestError } from '../../services/transferAssessmentService';
 
 const scope = {
   roomId: TRANSFER_ROOM_ID,
@@ -166,9 +167,9 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
     // The learner already has a delivered assessment: this delivery is superseded, not retried.
     expect(classifyAssessmentFailure(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered')).status)
       .toBe('superseded');
-    // The focus message is no longer this learner's: the teacher must prepare the turn again.
+    // The prepared focus identity no longer matches, so the previous review is superseded.
     expect(classifyAssessmentFailure(new Error('WRONG_LEARNER: focus message belongs to another learner')).status)
-      .toBe('validation');
+      .toBe('superseded');
     // There is no transfer checklist in this room, so the capability does not apply.
     expect(classifyAssessmentFailure(new Error('LEGACY_CHECKLIST: no transfer checklist')).status)
       .toBe('unavailable');
@@ -190,5 +191,19 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
 
     expect(classified.message).toContain('ASSESSMENT_ALREADY_OPEN');
     expect(classified.message).not.toContain('correct_option_ids');
+  });
+
+  it('uses typed service error codes and hides raw provider details from review state', () => {
+    const error = new AssessmentApiRequestError({
+      code: 'AI_PROVIDER_ERROR',
+      message: 'raw provider response includes a private payload',
+      retryable: true,
+    });
+    const classified = classifyAssessmentFailure(error);
+
+    expect(classified.status).toBe('retryable');
+    expect(classified.message).toContain('AI_PROVIDER_ERROR');
+    expect(classified.message).not.toContain('raw provider response');
+    expect(classified.message).not.toContain('private payload');
   });
 });

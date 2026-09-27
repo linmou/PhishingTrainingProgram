@@ -88,7 +88,10 @@ facade. `RoomContext` keeps the prepared scope until delivery succeeds, sends as
 through the reviewed delivery operation, and projects the returned public message before storing it
 in room state. On reload, the public question can be rebuilt from the persisted assessment ID,
 student ID, selection type, stem, and options columns. Malformed or incomplete rows fail closed;
-private answer keys and transfer basis fields are discarded at the UI boundary.
+private answer keys and transfer basis fields are discarded at the UI boundary. Known service error
+codes map to fixed review states and safe messages; raw provider details are not surfaced. A stale
+learner/message focus is treated as superseded and refreshes persisted room state before another
+candidate can be prepared.
 
 Assessment submissions send canonical `selectedOptionIds` with the public question message ID as the
 persisted parent and the separate assessment ID for trusted processing. The context validates the

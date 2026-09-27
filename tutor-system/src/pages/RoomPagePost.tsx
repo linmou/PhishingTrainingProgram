@@ -17,18 +17,6 @@ import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
 import type { AssessmentOptionId } from '../types/assessment';
 
-const getAIResponseErrorMessage = (error: unknown): string => {
-    if (!(error instanceof Error)) {
-        return 'Failed to generate AI response.';
-    }
-
-    if (error.message.includes('401')) {
-        return 'Failed to generate AI response.\n\nAI backend authentication failed (401). The configured API token or gateway token is invalid.';
-    }
-
-    return `Failed to generate AI response.\n\n${error.message}`;
-};
-
 const COMPARISON_PAIR_LABELS = {
     lock_icon: 'Lock Icon Myth',
     click_impulse: 'Click Impulse',
@@ -342,7 +330,7 @@ const RoomPagePost: React.FC = () => {
             } else {
                 setTransferTurnStatus(classified);
             }
-            alert(getAIResponseErrorMessage(error));
+            alert(classified.message);
         }
     };
 

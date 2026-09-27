@@ -212,14 +212,14 @@ describe('RoomPagePost transfer lifecycle states', () => {
     expect(joinRoom).toHaveBeenCalledTimes(3);
   });
 
-  it('shows a validation state for a refused preparation without turning the room mode', async () => {
+  it('refreshes saved room state when preparation is superseded by another learner focus', async () => {
     generateAIResponse.mockRejectedValue(new Error('WRONG_LEARNER: focus message belongs to another learner'));
     mount();
 
     fireEvent.click(screen.getByTitle(/Generate AI Response/));
 
     await waitFor(() => {
-      expect(document.querySelector('[data-transfer-status="validation"]')).not.toBeNull();
+      expect(document.querySelector('[data-transfer-status="stale"]')).not.toBeNull();
     });
     expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
   });

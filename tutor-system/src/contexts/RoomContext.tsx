@@ -29,9 +29,10 @@ import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guar
 import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import {
-    answerLifecycleFromProcessed,
-    assertDeliverableReview,
-    mergeRoomMessages,
+  answerLifecycleFromProcessed,
+  assertDeliverableReview,
+  createReviewCandidate,
+  mergeRoomMessages,
     participationModeFromRoom,
     projectRoomMessage,
     publicAssessmentForDecision,
@@ -945,24 +946,22 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const prepared = await transferAssessmentService.prepareTurn({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
-                    checklistId: transferChecklist.id,
+                  checklistId: transferChecklist.id,
                 });
-                const preparedDecision = prepared.decision as TutorDecisionV3 | undefined;
-                if (!preparedDecision) {
-                    throw new Error('Transfer preparation did not return a structured tutor decision');
+                const candidate = createReviewCandidate(prepared);
+                if (!candidate) {
+                    throw new Error('Transfer preparation did not return a valid review candidate');
                 }
                 setTransferDraft({
-                    decision: preparedDecision,
+                    decision: candidate.decision,
                     progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
-                    roomId: String(prepared.room_id),
-                    studentId: String(prepared.student_id),
-                    checklistId: String(prepared.checklist_id),
-                    // Keep null as null. String(null) is the text "null", which the RPC would
-                    // reject as an invalid UUID on every tutoring and Guard turn.
-                    itemId: prepared.item_id == null ? null : String(prepared.item_id),
-                    focusStudentMessageId: String(prepared.focus_student_message_id),
+                    roomId: candidate.scope.roomId,
+                    studentId: candidate.scope.studentId,
+                    checklistId: candidate.scope.checklistId,
+                    itemId: candidate.scope.itemId,
+                    focusStudentMessageId: candidate.scope.focusStudentMessageId,
                 });
-                setAiSuggestion(preparedDecision.assessment?.rendered_text || preparedDecision.response);
+                setAiSuggestion(candidate.decision.assessment?.rendered_text || candidate.decision.response);
                 setAiDecision(null);
                 setFinalMode('tutoring');
                 setCurrentSuggestionContext(null);
