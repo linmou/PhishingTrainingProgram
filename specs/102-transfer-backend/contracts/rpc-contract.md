@@ -8,7 +8,7 @@
 - Transfer mutation RPCs accept the server-derived actor and request ID, execute only for `service_role`/`postgres`, and revoke `PUBLIC`, `anon`, and `authenticated` execution.
 - Scope IDs are revalidated against stored relationships inside each RPC.
 - Results are allowlisted JSON. Private rows are never returned wholesale.
-- Existing public tables are not a grading authority. The private assessment row is locked before attempt count or lifecycle changes.
+- Existing public tables are not a grading authority. The trusted Edge handler obtains the private processing context, runs component 101's pure answer resolver, and sends its result to the service-role commit RPC. The private assessment row is locked before attempt count or lifecycle changes.
 
 ## Operations
 
@@ -18,7 +18,7 @@
 | `post_assessment_message_v2` | new | store ordinary messages or a target learner's normalized structured assessment selection; never grade or expose key |
 | `prepare_transfer_turn_v1` | retain/harden | return a scope-checked canonical provider context snapshot; provider call remains outside the DB transaction |
 | `send_reviewed_tutor_response_v4` | new | atomically insert stem-only public tutor message and immutable private assessment, enforce one open assessment per learner, return only public projection |
-| `process_assessment_message_v2` | new | row-lock assessment, dedupe, validate learner answer, append attempt, grade, apply terminal event atomically, and return role-safe DTO |
+| `process_assessment_message_v2` | new | row-lock assessment, dedupe, validate stored answer and expected snapshot, commit the trusted resolver outcome and terminal event atomically, and return role-safe DTO |
 | `apply_learning_event_v1` | retain/harden | validate causal scope and atomically record evidence, progress, actual history, and event state |
 | `record_transfer_provider_attempt_v1` | new internal | append one credential-free private provider request/response/error audit row; service-role-only and never browser callable |
 
@@ -48,20 +48,18 @@ Malformed, cross-scope, unknown-option, terminal, or legacy-incomplete submissio
 
 ## `process_assessment_message_v2`
 
-Inputs: assessment ID, stored learner answer message ID, server-derived actor, request ID.
+Inputs: assessment ID, stored learner answer message ID, server-derived actor, request ID, expected attempt count, expected resolution, resolver answer outcome, stored selected option IDs, resolver next progress, and resolver applied transition. Only the trusted Edge handler may call this service-role RPC.
 
-Lock order: room -> transfer checklist/item -> private assessment. Then:
+The Edge handler first calls `get_transfer_assessment_processing_context_v1`, runs component 101's `resolveTransferAnswer` on that private snapshot, and passes its result to this RPC. If the RPC returns `CONCURRENT_MODIFICATION`, the handler rereads and reruns the resolver before retrying. The RPC checks duplicate request/answer identity, then locks room -> transfer checklist/item -> private assessment. It then:
 
-1. Return an existing attempt for duplicate request or answer-message identity.
-2. Reject non-open or legacy-incomplete state without mutation.
-3. Validate answer author, room, assessment/parent link, and selected IDs.
-4. Allocate ordinal `attempt_count + 1`, bounded to 1 or 2.
-5. Grade normalized exact-set equality against private `correct_option_ids`.
-6. First wrong: insert attempt, increment count to 1, leave lifecycle/progress open, return retry with no feedback.
-7. Correct: insert attempt, apply one `assessment_pass` event, close passed, return no private feedback.
-8. Second wrong: insert attempt, apply one `assessment_fail` event, close failed, return key/explanation only after commit.
+1. Reject stale count/resolution with `CONCURRENT_MODIFICATION` without mutation.
+2. Validate the stored answer author, assessment link, and selected IDs against the trusted call.
+3. Validate outcome/ordinal shape and allocate at most two attempts.
+4. First wrong: insert attempt, increment count to 1, leave lifecycle/progress open, return retry with no feedback.
+5. Correct: apply one `assessment_pass` event, close passed, insert attempt, return no private feedback.
+6. Second wrong: apply one `assessment_fail` event, close failed, insert attempt, return key/explanation only after commit.
 
-The function returns stored authoritative counts. A third distinct submission cannot allocate an ordinal. If Guard defers a progress event, the transaction commits the terminal attempt/lifecycle plus explicit deferred learning event without changing protected progress. An authorized second-failure response may then receive terminal feedback; rollback or an unrecorded event receives none.
+The RPC does not regrade the key. It serializes and validates the trusted resolver result against current persisted state, then returns stored authoritative counts. A third distinct submission cannot allocate an ordinal. An invalid terminal progress transition raises `INVALID_TRANSITION` and rolls back the whole call. If Guard defers a progress event, the transaction commits the terminal attempt/lifecycle plus explicit deferred learning event without changing protected progress. An authorized second-failure response may then receive terminal feedback; rollback or an unrecorded event receives none.
 
 ## Constraints and Indexes
 
@@ -73,6 +71,6 @@ The function returns stored authoritative counts. A third distinct submission ca
 - Check lifecycle/result/terminal-answer consistency.
 - Check new open/passed/failed records have non-empty key and learner-safe explanation; `legacy_incomplete` is exempt but ungradable.
 
-## Hosted Evidence
+## Component And Hosted Evidence
 
-Static SQL tests verify declarations. Hosted tests must prove grants, direct-write denial, key privacy, delivery idempotency, first-wrong persistence, pass on either attempt, second-wrong terminal disclosure, duplicate retries, two-tab races, third-attempt rejection, wrong-scope rejection, rollback, actual history, Guard behavior, and legacy preservation.
+Native tests on a disposable PostgreSQL 17 restored copy with Supabase-like roles verify grants, direct-write denial, key privacy, delivery idempotency, first-wrong persistence, pass on either attempt, second-wrong terminal disclosure, duplicate retries, two-session races, third-attempt rejection, wrong-scope rejection, rollback, actual history, Guard behavior, and synthetic legacy preservation. The local catalog comparison verifies RPC identities and private columns. Deployed Supabase grants/RLS, PostgREST and Edge authentication, and generated hosted types require separate integration evidence.

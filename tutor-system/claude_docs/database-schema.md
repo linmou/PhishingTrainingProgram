@@ -2,8 +2,8 @@
 
 Intent: document the generated TypeScript database contract used by the current Supabase schema.
 
-Updated: 2026-09-22
-Implementation commit: `c23fc9e`
+Updated: 2026-09-27
+Implementation commit: `12fb743`
 
 ## Purpose
 Complete TypeScript interface definitions for the PostgreSQL database schema. Provides full type safety for all database operations through Supabase client integration.
@@ -22,6 +22,8 @@ Complete TypeScript interface definitions for the PostgreSQL database schema. Pr
 
 Migration `20260922000000_transfer_assessment_server_authority.sql` restores the trusted boundary without reactivating archived migrations. Public `messages` stores only the stem, ordered options, selection type, lifecycle, and immutable target `assessment_student_id`. The target is UI routing metadata and never authorizes an answer. The former public `assessment_key` column is removed.
 
+Before moving any legacy key, the migration checks that every keyed row has a valid transfer checklist/item and a parent student message whose room and learner match that checklist. An uncovered row raises `LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED` inside the migration transaction, preserving the existing rows and column for investigation. The source project preflight currently finds two uncovered rows, so migration execution remains stopped until a disposable restored scope and data decision are available.
+
 The `private` schema owns three unexposed tables:
 
 - `transfer_assessments`: immutable key, learner-safe explanation, scope, lifecycle, and authoritative attempt count.
@@ -29,6 +31,8 @@ The `private` schema owns three unexposed tables:
 - `transfer_provider_attempts`: credential-free provider request/response audit for the original call and at most one format repair.
 
 `process_assessment_message_v2` locks the room, checklist item, and private assessment, then compares the expected attempt count and lifecycle before committing. A stale caller receives `CONCURRENT_MODIFICATION`; the Edge Function rereads state and reruns component 101's pure resolver. First wrong stores only attempt 1. Pass or second failure applies the existing learning event in the same transaction as the terminal attempt and lifecycle update.
+
+If Guard activates between resolution and commit, a terminal assessment stores its attempt and causal inbox event with deferred processing and leaves progress unchanged. Leaving Guard through a reviewed or manual room mode update replays linked deferred assessment events in order. The original event ID and dedupe key remain intact; a still-valid transition writes one coverage evidence row, one checklist update, and the same item state as `apply_learning_event_v1`. An item that is no longer partially covered produces an explicit rejected event without progress or history mutation.
 
 ### Users Table (Lines 12-43)
 **Purpose**: User identity and role management

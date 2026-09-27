@@ -5,8 +5,8 @@
 ## Preconditions
 
 - Component 101's promoted SHA is merged into this branch before implementation.
-- Use a disposable supported hosted Supabase scope. Do not reset or mutate a production project.
-- Configure a trusted `AssessmentPrincipalVerifier` adapter and server-only `OAI_API_KEY`, `OAI_BASE_URL`, `OAI_MODEL=qwen3.5-flash`.
+- Use a disposable PostgreSQL 17 restored copy with Supabase-like roles for the component SQL gate. Deployed Supabase verification remains an integration gate.
+- The local handler tests use an injected verifier and controlled fake provider. Deployed verification later requires a trusted `AssessmentPrincipalVerifier` adapter and server-only `OAI_API_KEY`, `OAI_BASE_URL`, `OAI_MODEL=qwen3.5-flash`.
 - Keep `TRANSFER_ASSESSMENT_ENABLED=false` until all initiative gates pass.
 
 ## Planning Gate
@@ -24,11 +24,11 @@ rtk proxy sh -c 'cd tutor-system && /Users/admin/.npm/_npx/05b6ef7b13673c57/node
 rtk proxy sh -c 'cd tutor-system && npm run build'
 ```
 
-The test-first record must show the relevant tests failing before implementation and passing afterward. CRA tests begin with purpose comments and no shebang because imported CRA TypeScript cannot parse one; the executable Deno test uses both a shebang and purpose comment.
+Record each command's exit code and tested SHA. CRA tests begin with purpose comments and no shebang because imported CRA TypeScript cannot parse one; the executable Deno test uses both a shebang and purpose comment. A build failure in a downstream-owned file is recorded as this branch's build outcome; the integration build is tracked at its combined SHA.
 
-## Hosted Schema and Transaction Evidence
+## Local Restored-Copy Database Evidence
 
-The owner of the disposable hosted scope, not this component run, executes this lane. Before applying the migration, record the scope identifier, schema revision, migration list, relevant table/column/function/grant/policy inventory, and this read-only legacy-key count on the exact database to be migrated:
+Use a disposable PostgreSQL 17 restored copy for the component gate. Record its identity, source schema snapshot, migration and script blobs, role fixtures, exact commands, exit codes, assertion counts, and rollback state. Before deployment, the integration owner inventories the actual Supabase target, confirms a restorable backup, and runs this read-only legacy-key count on that exact database:
 
 ```sql
 WITH keyed AS (
@@ -61,16 +61,61 @@ SELECT count(*) AS keyed_rows,
 FROM keyed k;
 ```
 
-Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
+When `uncovered_rows > 0`, inspect the relationships with this read-only query. It returns identifiers and scope checks, never answer-key values:
 
-1. Apply `20260922000000_transfer_assessment_server_authority.sql` only to the approved disposable scope after the stop conditions pass.
+```sql
+SELECT m.id AS question_message_id,
+       m.room_id AS question_room_id,
+       m.assessment_checklist_id,
+       m.assessment_item_id,
+       m.parent_message_id,
+       sc.student_id AS checklist_student_id,
+       sc.room_id AS checklist_room_id,
+       sc.progress_policy_version,
+       ci.id IS NOT NULL AS item_belongs_to_checklist,
+       parent.room_id AS parent_room_id,
+       parent.user_id AS parent_student_id,
+       parent.user_role AS parent_role,
+       parent.room_id = m.room_id AS parent_room_matches,
+       parent.user_id = sc.student_id AS parent_learner_matches
+FROM public.messages m
+LEFT JOIN public.session_checklists sc ON sc.id = m.assessment_checklist_id
+LEFT JOIN public.checklist_items ci
+  ON ci.checklist_id = sc.id AND ci.id = m.assessment_item_id
+LEFT JOIN public.messages parent ON parent.id = m.parent_message_id
+WHERE m.assessment_key IS NOT NULL
+ORDER BY m.id;
+```
+
+Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration also raises `LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED` before copying any key when its own coverage check finds such a row. It copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
+
+1. Apply `20260922000000_transfer_assessment_server_authority.sql` to the approved disposable restored copy after the stop conditions pass.
 2. Run `supabase/tests/transfer_assessment_backend.sql` for schema, privacy, grants, direct writes, public key removal, legacy-incomplete reconciliation, and rollback.
-3. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, concurrent distinct submissions, third submission, wrong scope, Guard behavior, evidence/history, and forced rollback. It writes test fixtures inside a transaction; do not run it on PhishingTutor.
-4. Regenerate `src/types/database.ts` from that schema and compare the exact private/public/RPC signatures to `contracts/rpc-contract.md`.
+3. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, stale submissions, third submission, wrong scope, Guard behavior, evidence/history, and rollback. It writes test fixtures inside a transaction; do not run it on PhishingTutor. Separate scripts below cover actual two-session races and eight injected write failures.
+4. Run `supabase/tests/transfer_assessment_catalog_contract.sql` and compare local RPC identities and private columns with `contracts/rpc-contract.md` and `src/types/database.ts`. Record missing generated private types for the hosted integration gate.
 
-Record exact commands, timestamp, tested migration/SHA, exit code, test count, and immutable log path. Static SQL/Jest checks do not substitute for hosted execution.
+Invoke each SQL script with `psql -X -v ON_ERROR_STOP=1 "$DISPOSABLE_DATABASE_URL" -f <script>` so a raised assertion stops the run with a nonzero exit. Also run the two-session race, direct-role, delivery-race, and eight-stage terminal-fault scripts below. Record exact commands, timestamp, tested migration/SHA, exit code, test count, and available transcript paths. Native SQL checks close the component database gate only; deployed Supabase and generated-type checks remain separate.
 
-## Authorization and Provider Evidence
+For valid legacy-key reconciliation, use a separate disposable pre-migration restore with no keyed rows. Run `supabase/tests/transfer_assessment_legacy_fixture_before.sql`, apply the same forward migration, then run `supabase/tests/transfer_assessment_legacy_fixture_after.sql`, all with the `psql` flags above. The first script commits one synthetic keyed question with matching room, checklist learner, item, and parent student message; the second asserts a private `legacy_incomplete` row and removal of the public key column. Do not run this fixture on the source project or the cleaned rehearsal clone. Record its restore identity, migration blob, script blobs, exit codes, and rollback/cleanup separately.
+
+### Two-Session Race Lane
+
+Use two independent `psql` connections to the same disposable restored scope. Create an isolated room, learner, transfer checklist/item, and delivered assessment through the versioned RPCs; post two distinct wrong answer messages and retain the assessment, answer, learner, and request UUIDs. Do not reuse the rollback-only fixtures in `transfer_assessment_rpc_behaviour.sql`.
+
+The reproducible SQL lane seeds three separate rooms with `supabase/tests/transfer_assessment_race_setup.sql` on a disposable migrated clone. For each `scenario` value, `wrong_wrong`, `correct_wrong`, then `wrong_correct`, run `transfer_assessment_race_a.sql` in interactive session A using `psql -X -v ON_ERROR_STOP=1 -v scenario=wrong_wrong "$DISPOSABLE_DATABASE_URL" -f <script>`. It pauses at `\prompt` with its transaction open. Start `transfer_assessment_race_b.sql` with the same `-v scenario` in session B. From a third connection, run `transfer_assessment_race_observer.sql` and require its Lock assertion to pass before pressing Enter in A. Once both sessions exit 0, run `transfer_assessment_race_assert.sql` with the same scenario. In `wrong_correct`, B retries its stale correct answer at expected count 1. The A/B scripts check the first outcome and B's `CONCURRENT_MODIFICATION`; the final script checks actual attempts, events, evidence, history, and item state. Run `transfer_assessment_direct_roles.sql` on the same disposable clone for anon/authenticated v2 RPC, legacy v1 RPC, private table, and progress zero-mutation checks. Dispose of the clone after recording evidence; these persistent race fixtures are not part of the rollback-only SQL suite.
+
+For delivery concurrency, run `transfer_assessment_delivery_setup.sql` on a separate disposable migrated clone. It asserts target mismatch and invalid explanation create no pair. Run `transfer_assessment_delivery_a.sql` in interactive session A, then `transfer_assessment_delivery_b.sql` in session B; use `transfer_assessment_race_observer.sql` in a third connection to confirm B waits on a lock before releasing A. Run `transfer_assessment_delivery_assert.sql` after both exit. The losing request must leave zero public/private rows. Run `transfer_assessment_catalog_contract.sql` on a migrated clone to list local RPC signatures and private columns; this local check does not replace hosted generated types.
+
+1. Connection A: `BEGIN;` then call `process_assessment_message_v2` for wrong answer A with expected count `0`, resolution `open`, outcome `retry`, `ARRAY['A']`, the unchanged progress snapshot, and NULL transition. Keep the transaction open after its attempt-one result.
+2. Connection B: call the same RPC for wrong answer B with expected count `0`, resolution `open`, outcome `retry` and a distinct request UUID. It must wait on A's row lock. Commit A; B must return `CONCURRENT_MODIFICATION` and leave exactly one attempt, zero learning events, and lifecycle `open`.
+3. In B, reread the processing context and call the RPC for answer B with expected count `1`, resolution `open`, outcome `failed`, `ARRAY['A']`, the component-101 failure progress, and `assessment_fail`. Verify two distinct attempt rows, lifecycle `failed`, exactly one terminal learning event, and feedback only in the committed terminal response.
+4. Repeat with a fresh assessment and one correct plus one wrong posted answer. Let the correct call hold A's transaction open; B must return `CONCURRENT_MODIFICATION` after A commits, and retry must see the terminal pass without allocating an attempt. Reverse commit order on another fresh assessment: wrong first produces attempt one, then the correct retry passes on attempt two. Compare actual progress/history and event counts before and after each run.
+
+Capture both connection transcripts and the final row-count query with the tested migration SHA. A single sequential call that passes a stale expected count checks CAS behavior but does not prove the two-session race.
+
+Run `supabase/tests/transfer_assessment_terminal_faults.sql` with `psql -X -v ON_ERROR_STOP=1` on a disposable migrated clone for eight write-stage failure injections. It creates and removes test triggers inside one transaction, asserts zero partial effects after every injected failure, verifies a normal terminal pass after trigger removal, and ends `ROLLBACK`. Record its script blob, eight results, normal recovery, exit code, and absence of fixture rows/triggers afterward.
+
+## External Authorization and Provider Evidence
 
 1. Exercise absent verifier, invalid proof, forged body IDs, valid teacher, target learner, other learner, observer, cross-room, direct RPC, and legacy operation cases.
 2. Capture the provider request using a controlled fake endpoint and assert exact configured URL/model, `max_tokens=1200`, canonical v3 request serialization, required explanation instruction, and absence of grading labels/keys.

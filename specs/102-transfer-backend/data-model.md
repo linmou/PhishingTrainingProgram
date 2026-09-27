@@ -60,7 +60,7 @@ New delivered rows require key, explanation, scope, public message, and lifecycl
 | `ordinal` | 1 or 2; unique per assessment |
 | `selected_option_ids` | Canonical deduplicated option IDs |
 | `result` | `correct` or `incorrect` |
-| `processing_state` | `applied`, `deferred`, or `error`; retries read the existing row |
+| `processing_state` | `applied`, `deferred`, or `rejected`; retries read the committed response |
 | `learning_event_id` | Nullable terminal causal event link |
 | `created_at` | Audit timestamp |
 
@@ -85,7 +85,7 @@ The Edge Function records each provider attempt through service-role-only storag
 
 ### Existing `private.learning_event_inbox`
 
-Terminal pass/fail uses the existing causal learning-event ledger. The event key includes assessment and terminal answer identities. First incorrect attempts create no learning event. Guard-deferred and error states remain visible.
+Terminal pass/fail uses the existing causal learning-event ledger. The event key includes assessment and terminal answer identities. First incorrect attempts create no learning event. If Guard becomes active after answer resolution, the terminal attempt and original inbox event commit as deferred without progress. A room transition from Guard to tutoring replays deferred terminal assessment events in creation order through a database trigger, whether the mode change is reviewed or manual. Replay retains each event ID and dedupe key, writes one evidence and history row if the item remains partially covered, and rejects an invalidated transition without changing progress. Repeated mode updates do not reapply the event.
 
 ## Lifecycle
 
@@ -106,11 +106,11 @@ passed|failed|cancelled|legacy_incomplete + submission -> no mutation
 ## Lock and Transaction Order
 
 1. Resolve verified principal and authorize room/learner outside the RPC body in the Edge Function.
-2. Inside the service-role RPC, lock room, transfer checklist/item, and private assessment in that order.
-3. Check request and answer-message idempotency.
-4. Validate public answer scope and normalized selected IDs against public options.
-5. Insert the next attempt and grade against the private key.
-6. For terminal outcomes, apply the learning event, evidence, progress, and actual history before marking the assessment terminal.
+2. Read the private processing context and resolve the stored answer with component 101 inside the trusted Edge handler.
+3. The commit RPC checks request and answer-message idempotency, then locks room, transfer checklist/item, and private assessment in that order.
+4. Compare the expected count/resolution with the locked state and validate the stored answer scope and selected IDs.
+5. Allocate the next attempt from the trusted resolver outcome, bounded to two; on a stale snapshot, reread and rerun the resolver.
+6. For terminal outcomes, apply the learning event, evidence, progress, and actual history before marking the assessment terminal. A rejected transition rolls back the whole call.
 7. Return an allowlisted result only after commit. A committed second failure may disclose terminal feedback even when its learning event is explicitly `deferred` by Guard; rollback exposes no terminal feedback.
 
 ## Migration Reconciliation
