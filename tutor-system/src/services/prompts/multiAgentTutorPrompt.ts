@@ -3,6 +3,7 @@
 // Student AI choice. It is appended after the active tutor policy only for interaction_mode
 // = multi_agent, so the evaluated single-Tutor policy stays untouched.
 
+/** @deprecated Retained to document and read legacy multi-agent behavior; not used for generation. */
 export const MULTI_AGENT_TUTOR_PROMPT = String.raw`
 MULTI-AGENT MODE (interaction_mode = multi_agent)
 This section applies only to this turn, and it extends the contract above. It adds one decision: mode "multiagent" with instruction "multiagent". Its response contains one tagged message from Riley or the AI Tutor, or a two-message contrast containing one of each. The speaker count and character identity never change the decision fields.

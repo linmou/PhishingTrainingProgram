@@ -3,7 +3,7 @@
 Intent: define the structured decisions, their shared supervisor-facing rationale, learner-facing response, and consumer/validation boundary.
 
 Updated: 2026-09-13
-Status: candidate 11's legacy v2 prompt contract remains implemented verbatim and is extended by the one-or-two-message Multi-agent decision for ordinary Multi-agent turns; transfer assessment v3 is a browser-local research flow. Live semantic evaluation and browser acceptance for transfer v3 and for Multi-agent remain pending.
+Status: candidate 11's legacy v2 prompt contract remains implemented. Multi-agent generation is deprecated: production requests normalize stored settings to `single_agent`, and the dedicated Test Rooms template is hidden. The legacy decision grammar and stored-message decoder are retained for compatibility. Transfer assessment v3 is a browser-local research flow. Live semantic evaluation and browser acceptance for transfer v3 remain pending.
 Behavior specification: [canonical working specification](tutor-behavior-specification.md), SHA-256 `06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e` (the candidate 11 run snapshot pins the same content).
 Production source: [activeTutorAgentPrompt.ts](../../src/services/prompts/activeTutorAgentPrompt.ts), [ecologicalTutorCall.ts](../../src/services/ecologicalTutorCall.ts), [tutorDecisionContract.ts](../../src/services/tutorDecisionContract.ts), [aiService.ts](../../src/services/aiService.ts), and [guardModeService.ts](../../src/services/guardModeService.ts); [human review and persistence workflow](../ai-suggestion-tracking.md).
 
@@ -91,11 +91,11 @@ Migration `024_raw_instruction.sql` adds the nullable, constrained audit column 
 
 Preserve frozen runs under their original contract snapshots. Contract changes require a new contract/evaluation version and fresh comparable baseline before acceptance; updating this template does not migrate production or reinterpret historical evidence.
 
-## Multi-agent extension (v2)
+## Multi-agent extension (deprecated legacy v2)
 
-Intent: define the one-or-two-character decision for ordinary tutoring turns when the learner selects Multi-agent, while keeping the v2 envelope above unchanged.
+Intent: document the historical one-or-two-character decision contract while keeping the v2 envelope above unchanged.
 
-The learner's Student AI choice is persisted in `prompt_config` and sent as the request's `interaction_mode` (`single_agent` by default; old callers keep the old behavior). The Test Rooms page ships a dedicated `Demo: Multi-agent Response Room` template that sets this value directly, so its rooms exercise Multi-agent behavior without a learner-side selector. Under `multi_agent`, an ordinary tutoring turn returns:
+Older configurations may contain `interaction_mode=multi_agent`, and historical test rooms used a dedicated `Demo: Multi-agent Response Room` template. The current request builder ignores this value, sends `interaction_mode=single_agent`, and does not append the Multi-agent prompt. The following fields and grammar describe stored legacy behavior, not new production output:
 
 | Field | Value | Boundary |
 | --- | --- | --- |
@@ -103,17 +103,17 @@ The learner's Student AI choice is persisted in `prompt_config` and sent as the 
 | `decision.instruction` | `multiagent` | Required with `mode=multiagent`; invalid in every other mode. |
 | `response` | one or two tagged messages | One `[agent:riley] …` or one `[agent:tutor] …`, or one of each in either order. No untagged text may precede the first tag; no body may be empty; a third, duplicate, or unknown tag is invalid. Agent tags are invalid outside `multiagent`. |
 
-Riley is a simulated AI participant who voices one plausible but incorrect recommendation from supplied facts only; the AI Tutor stays accurate and may name the flaw in Riley's reasoning. Guard turns (active or recovering) and transfer-assessment turns never use `multiagent`. `decodeMultiAgentResponse` validates generated drafts; `decodeAgentMessage` recovers character identity only from tutor rows persisted with `response_mode=multiagent`, so a learner or an out-of-mode row containing the same literal tag text keeps its ordinary identity and text.
+Riley was a simulated AI participant who voiced one plausible but incorrect recommendation from supplied facts only; the AI Tutor stayed accurate and could name the flaw in Riley's reasoning. `decodeMultiAgentResponse` remains deprecated compatibility code; `decodeAgentMessage` recovers character identity only from tutor rows persisted with `response_mode=multiagent`, so a learner or an out-of-mode row containing the same literal tag text keeps its ordinary identity and text.
 
-The mode has its own prompt: `src/services/prompts/multiAgentTutorPrompt.ts` is appended after the active tutor policy only when the request's `interaction_mode` is `multi_agent`, so the evaluated candidate 11 policy is sent byte-identical in every other case. That block owns the one-or-two-tag output contract, the permitted fallbacks, the Riley and AI Tutor role boundaries, and worked decisions.
+The legacy mode prompt remains in `src/services/prompts/multiAgentTutorPrompt.ts` for reference but is no longer appended to production requests.
 
-With the mode enabled an ordinary tutoring turn — including a greeting, small talk, a topic preference, or a bare question — returns `mode=multiagent` and `instruction=multiagent` with one or two tagged messages. Only three single-Tutor answers are permitted instead: `protective_instruction` when the learner is about to act unsafely, `explanation` when the learner asks to be taught or asks to stop the role-play, and `guard` when participation is deliberately disrupted. `scaffolding`, `correction` and `consolidation` are rejected on every attempt; the service repairs once and then fails generation rather than accepting a forbidden retry response. Guard and transfer-assessment turns keep the single-Tutor path unchanged.
+Historically, ordinary tutoring turns returned `mode=multiagent` and `instruction=multiagent` with one or two tagged messages, subject to the grammar above. Production now always uses the standard single-agent decision and repair path, including for rooms with a saved multi-agent setting.
 
-Human review shows one or two decoded messages in model order, without speaker selection. Approval requires the draft's parent learner message to still be the latest learner message, then inserts one or two `messages` rows with `user_role=tutor`, a shared `parent_message_id`, and `response_mode=multiagent`. For a two-message response, rows are timestamped at T and T+2s; the later row stays hidden until its timestamp, and submission is blocked during that window.
+The deprecated review code persisted approved rows with `user_role=tutor`, a shared `parent_message_id`, and `response_mode=multiagent`. Historical tagged rows remain readable through the message presentation resolver.
 
-A multiagent turn uses its own completion budget (`MULTI_AGENT_MAX_TOKENS`) because the envelope can carry a reason plus two tagged messages. A response that stops on the length limit is reported as a truncated decision instead of being parsed as a partial envelope, and the repair retry preserves the one-or-two-message Multi-agent contract or an allowed exception.
+The former multi-agent path used a separate completion budget and repair instruction; production now uses the standard single-response token limit and repair instruction.
 
-Known limitation: a Multi-agent response is stored through the ordinary messages path, so the reviewed-send audit record (`ai_suggestion_feedback`) is not written for it. Multi-agent human-edit provenance would be a separate requirement.
+Historical Multi-agent responses were stored through the ordinary messages path, so the reviewed-send audit record (`ai_suggestion_feedback`) was not written for them. Multi-agent human-edit provenance remains unavailable for those records.
 
 ## Transfer assessment v3 contract
 

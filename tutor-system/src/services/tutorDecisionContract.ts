@@ -13,7 +13,7 @@ const ANY_AGENT_TAG = new RegExp(AGENT_TAG_PATTERN, 'i');
 const ALL_AGENT_TAGS = new RegExp(AGENT_TAG_PATTERN, 'gi');
 
 export interface TutorDecisionParseOptions {
-  /** Multi-agent decisions are rejected unless the turn is multi-agent enabled. */
+  /** @deprecated Production requests no longer enable multi-agent decisions. */
   allowMultiagent?: boolean;
 }
 
@@ -50,7 +50,10 @@ export function decodeAgentMessage(message: {
   return { character: tag.character as 'riley' | 'tutor', content: body };
 }
 
-/** Serialize one character message for storage in the existing messages table. */
+/**
+ * @deprecated Retained for compatibility with legacy reviewed drafts.
+ * Serialize one character message for storage in the existing messages table.
+ */
 export function formatAgentTaggedContent(character: 'riley' | 'tutor', content: string): string {
   return `[agent:${character}] ${content.trim()}`;
 }
@@ -63,6 +66,7 @@ export function containsAgentTag(response: string): boolean {
  * Decode one or two tagged character messages of a multiagent response in model-generated order.
  * Rejects duplicate/unknown tags, empty bodies and untagged text before the first tag.
  */
+/** @deprecated Retained for compatibility with legacy decisions and tests. */
 export function decodeMultiAgentResponse(
   response: string
 ): DecodedAgentMessage[] {

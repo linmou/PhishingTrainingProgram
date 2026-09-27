@@ -764,7 +764,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    /** Store one-or-two-character Multi-agent decision for human review. */
+    /** @deprecated Production AI requests no longer generate Multi-agent drafts. */
     const applyMultiAgentDraft = (
         decision: TutorActionDecision,
         parentMessageId: string,
@@ -1019,6 +1019,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
      * The regenerated turn may come back as a single-Tutor decision; whichever decision
      * returns decides which reviewer UI is shown. A failed attempt keeps the edited draft.
      */
+    /** @deprecated Production AI requests no longer generate Multi-agent drafts. */
     const regenerateMultiAgentDraft = async (): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
@@ -1074,12 +1075,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    /** @deprecated Production AI requests no longer generate Multi-agent drafts. */
     const rejectMultiAgentDraft = async (): Promise<void> => {
         if (!multiAgentDraft) return;
         clearAISuggestion();
     };
 
     /**
+     * @deprecated Production AI requests no longer generate Multi-agent drafts.
      * Persist an approved one-or-two-character response as ordinary AI-generated tutor messages.
      * Row 1 keeps the approval time; a second row is future-dated by the playback delay.
      */

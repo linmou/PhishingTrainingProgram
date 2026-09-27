@@ -278,6 +278,7 @@ defineFeature(feature, (test) => {
     and(/^the role options should include "Peer" and "Adult"$/, () => {
       expect(screen.getByRole('option', { name: 'Peer' })).toBeInTheDocument();
       expect(screen.getByRole('option', { name: 'Adult' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Multi-agent' })).not.toBeInTheDocument();
     });
   });
 

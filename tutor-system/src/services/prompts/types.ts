@@ -45,7 +45,7 @@ export interface SystemPromptConfig {
   };
   detection_areas: string[];
   verification_steps: string[];
-  /** Learner-selected AI interaction mode. Absent means single_agent. */
+  /** @deprecated Retained for legacy configs; production requests use single_agent. */
   interaction_mode?: InteractionMode;
   /** Present when a student claimed an AI choice (single-student rooms). Ignored by prompt text generation. */
   student_tone_lock?: StudentToneLock | null;

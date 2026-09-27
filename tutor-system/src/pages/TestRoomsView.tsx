@@ -66,7 +66,10 @@ const TestRoomsView: React.FC = () => {
   const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
 
   const behaviorTemplates = useMemo(
-    () => templates.filter((t) => isBehaviorDemoTemplateName(t.template_name)),
+    () => templates.filter((t) =>
+      isBehaviorDemoTemplateName(t.template_name) &&
+      t.template_name !== 'Demo: Multi-agent Response Room'
+    ),
     [templates]
   );
 

@@ -25,6 +25,7 @@ interface MultiAgentSuggestionEditorProps {
   onRegenerate: () => void | Promise<void>;
 }
 
+/** @deprecated Production AI requests no longer generate multi-agent drafts. */
 const MultiAgentSuggestionEditor: React.FC<MultiAgentSuggestionEditorProps> = ({
   messages,
   tutorName,

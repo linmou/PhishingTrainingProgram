@@ -72,16 +72,7 @@ const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
 /** Appended to the last user turn when the model returns an unparsable tutor decision. */
 export const TUTOR_DECISION_REPAIR_INSTRUCTION =
     'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"tutoring","instruction":"scaffolding"},"response":"learner-facing message"}. Do not emit legacy fields, markdown, code fences, or text outside the object.';
-/** A multiagent reply carries a reason plus one or two tagged messages, so it needs a larger completion budget. */
-const MULTI_AGENT_MAX_TOKENS = 240;
-/**
- * Single-Tutor instructions that may not answer a Multi-agent-enabled turn. A discretionary hint,
- * correction or wrap-up is sent back once as a repair instead of being shown as the suggestion.
- * protective_instruction, explanation and Guard stay allowed: they cover imminent unsafe action,
- * an explicit request to explain, and participation correction.
- */
-const MULTI_AGENT_FORBIDDEN_INSTRUCTIONS: Array<TutorInstruction | null> = ['scaffolding', 'correction', 'consolidation'];
-/** Repair instruction for a multiagent-enabled turn: preserve the tagged response shape or a valid exception. */
+/** @deprecated Retained for compatibility; production generation uses the single-agent contract. */
 export const MULTI_AGENT_REPAIR_INSTRUCTION =
     'The learner enabled Multi-agent, so return a tagged Multi-agent response unless the learner is about to act unsafely, asks you to explain or stop, or participation is deliberately disrupted. Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"multiagent","instruction":"multiagent"},"response":"[agent:riley] one short wrong recommendation"}. Response must contain one tagged Riley or AI Tutor message, or one message from each character, with no duplicate tag. Keep every message under 35 words, and do not emit markdown, code fences, or text outside the object.';
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
@@ -659,13 +650,7 @@ export class TutorSuggestionService {
             const phase0HistoryText = historyWithoutLastStudent
                 .map((message) => `${message.role}: ${message.content}`)
                 .join('\n');
-            // Phase 0 comparison rooms keep the historical single-agent contract.
-            const interactionMode: InteractionMode =
-                comparison?.version !== 'phase0' && config.prompt_config?.interaction_mode === 'multi_agent'
-                    ? 'multi_agent'
-                    : 'single_agent';
-            const allowMultiagent =
-                interactionMode === 'multi_agent' && (options?.priorMode || 'unknown') !== 'guard';
+            const interactionMode: InteractionMode = 'single_agent';
             const messages = comparison?.version === 'phase0'
                 ? buildPhase0ChatCompletionMessages(
                     systemPrompt,
@@ -681,11 +666,9 @@ export class TutorSuggestionService {
 
             const temperature =
                 typeof config.temperature === 'number' ? config.temperature : 0.3;
-            // A multiagent envelope carries a reason plus one or two tagged messages, so it gets its own budget;
-            // the room's single-response max_tokens cannot fit it (a 100-token room truncates the JSON).
-            const maxTokens = interactionMode === 'multi_agent'
-                ? MULTI_AGENT_MAX_TOKENS
-                : typeof config.max_tokens === 'number' ? Math.min(config.max_tokens, 120) : 100;
+            const maxTokens = typeof config.max_tokens === 'number'
+                ? Math.min(config.max_tokens, 120)
+                : 100;
 
             let requestMessages = messages;
             let lastError: unknown;
@@ -719,18 +702,7 @@ export class TutorSuggestionService {
                         // A truncated decision is unparsable; retry rather than presenting a partial envelope.
                         throw new Error('AI response was truncated before the tutor decision JSON was complete');
                     }
-                    const decision = parseTutorActionDecision(
-                        choice?.message?.content || '',
-                        { allowMultiagent }
-                    );
-
-                    // Safety, explanation, and Guard are the only single-Tutor exceptions in this
-                    // interaction mode. Apply the same check on both attempts so retry cannot
-                    // weaken the selected response contract.
-                    if (allowMultiagent
-                        && MULTI_AGENT_FORBIDDEN_INSTRUCTIONS.includes(decision.instruction)) {
-                        throw new Error('AI tutor decision must use a multiagent response for this Multi-agent turn');
-                    }
+                    const decision = parseTutorActionDecision(choice?.message?.content || '');
 
                     return {
                         suggestion: decision.suggested_response,
@@ -746,7 +718,7 @@ export class TutorSuggestionService {
 
                     requestMessages = appendTutorDecisionRepairInstruction(
                         requestMessages,
-                        allowMultiagent ? MULTI_AGENT_REPAIR_INSTRUCTION : TUTOR_DECISION_REPAIR_INSTRUCTION
+                        TUTOR_DECISION_REPAIR_INSTRUCTION
                     );
                 }
             }

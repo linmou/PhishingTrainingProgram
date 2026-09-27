@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Test responsible for src/services/aiService.ts Multi-agent enforcement: with the learner's
- * Multi-agent choice active, a discretionary single-Tutor decision is repaired once into the
- * two-character pair, while protective_instruction, explanation and Guard pass through untouched.
+ * Test responsible for src/services/aiService.ts legacy-mode deprecation: saved Multi-agent configs
+ * use the single-agent request path and model-produced Multi-agent decisions are rejected.
  */
+
+export {};
 
 jest.mock('../simplifiedAIContext', () => ({
   buildAIContextFromExistingData: jest.fn().mockResolvedValue([
@@ -34,7 +35,7 @@ const decision = (mode: string, instruction: string | null, response: string) =>
 const PAIR = decision('multiagent', 'multiagent',
   '[agent:riley] Just click the link, the account closes today.\n[agent:tutor] That is pressure, not proof. What is trying to rush you?');
 
-describe('aiService Multi-agent enforcement', () => {
+describe('aiService deprecated Multi-agent mode', () => {
   const originalEnvironment = process.env.REACT_APP_ENVIRONMENT;
   const originalApiKey = process.env.REACT_APP_OAI_API_KEY;
   const originalBaseUrl = process.env.REACT_APP_OAI_BASE_URL;
@@ -134,27 +135,22 @@ describe('aiService Multi-agent enforcement', () => {
   const systemAndUserTurns = (fetchMock: jest.Mock) =>
     (fetchMock.mock.calls[0][0] as any, JSON.parse(fetchMock.mock.calls[0][1].body));
 
-  it('repairs a discretionary single-Tutor decision into the pair and uses the multiagent budget', async () => {
+  it('uses the single-agent request contract for a room with a saved multi-agent config', async () => {
     await mockSupabaseFor('multi_agent');
-    const fetchMock = mockModel([
-      decision('tutoring', 'scaffolding', 'Hello. What stands out to you about the alert?'),
-      PAIR
-    ]);
+    const fetchMock = mockModel([decision('tutoring', 'scaffolding', 'Hello. What stands out to you about the alert?')]);
 
     const { generateTutorSuggestion } = await import('../aiService');
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
-    expect(result.decision).toMatchObject({ mode: 'multiagent', instruction: 'multiagent' });
-    expect(result.suggestion).toContain('[agent:riley]');
+    expect(result.decision).toMatchObject({ mode: 'tutoring', instruction: 'scaffolding' });
+    expect(result.suggestion).not.toContain('[agent:riley]');
 
     const firstRequest = JSON.parse(fetchMock.mock.calls[0][1].body);
-    const repairRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
-    expect(firstRequest.max_tokens).toBe(240);
-    expect(firstRequest.messages[1].content).toContain('"interaction_mode":"multi_agent"');
-    expect(firstRequest.messages[0].content).toContain('MULTI-AGENT MODE (interaction_mode = multi_agent)');
-    expect(repairRequest.messages[1].content).toContain('The learner enabled Multi-agent');
+    expect(firstRequest.max_tokens).toBe(100);
+    expect(firstRequest.messages[1].content).toContain('"interaction_mode":"single_agent"');
+    expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
   });
 
   it.each([
@@ -173,10 +169,10 @@ describe('aiService Multi-agent enforcement', () => {
     expect(result.decision).toMatchObject(expectedDecision);
   });
 
-  it('rejects a discretionary single-Tutor decision on the repair attempt too', async () => {
+  it('rejects a model-produced Multi-agent decision and repairs with the single-agent contract', async () => {
     await mockSupabaseFor('multi_agent');
     const fetchMock = mockModel([
-      decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.'),
+      PAIR,
       decision('tutoring', 'correction', 'A copied logo does not prove the sender.')
     ]);
 
@@ -184,24 +180,25 @@ describe('aiService Multi-agent enforcement', () => {
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(result).toMatchObject({ success: false });
-    expect(result.error).toContain('must use a multiagent response');
+    expect(result).toMatchObject({ success: true, decision: { mode: 'tutoring', instruction: 'correction' } });
+    const firstRequest = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const repairRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
+    expect(firstRequest.messages[1].content).toContain('"interaction_mode":"single_agent"');
+    expect(repairRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
+    expect(repairRequest.messages[1].content).toContain('Return exactly one valid JSON object');
+    expect(repairRequest.messages[1].content).not.toContain('The learner enabled Multi-agent');
   });
 
-  it('keeps Guard available after a repaired Multi-agent attempt', async () => {
+  it('accepts ordinary corrections for a room with a saved multi-agent config', async () => {
     await mockSupabaseFor('multi_agent');
-    const fetchMock = mockModel([
-      decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.'),
-      decision('guard', null, 'That disrupts the practice. Pause and make a task attempt.')
-    ]);
+    const fetchMock = mockModel([decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.')]);
 
     const { generateTutorSuggestion } = await import('../aiService');
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(result).toMatchObject({ success: true, decision: { mode: 'guard', instruction: null } });
-    const repairRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
-    expect(repairRequest.messages[1].content).toContain('participation is deliberately disrupted');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ success: true, decision: { mode: 'tutoring', instruction: 'correction' } });
   });
 
   it('keeps the single-agent path untouched: no patch prompt, no multiagent decision allowed', async () => {

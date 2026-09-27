@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-14 (Multi-agent Tutor profile surface correction; commit 1fb2e9b)
+Last updated: 2026-09-27 (Multi-agent mode deprecated)
 
 ## Overview
 
@@ -22,16 +22,15 @@ The AI Assistant module adds intelligent response generation capabilities to the
    - Model selection and parameter tuning
 
 3. **Message Presentation** (`src/components/PostComment.tsx`, `src/utils/messagePresentation.ts`)
-   - Resolves display identity from message role, response mode, and Multi-agent tags
-   - Renders Guard, assessment, and Multi-agent turns on the active room route
+   - Resolves display identity from message role, response mode, and legacy Multi-agent tags
+   - Renders Guard, assessment, and historical Multi-agent turns on the active room route
 
 4. **Room Context Integration**
    - AI functionality integrated into room management
    - Real-time AI response handling
 
 5. **Multi-agent Suggestion Editor** (`src/components/MultiAgentSuggestionEditor.tsx`)
-   - Tutor review cards use the active tutor profile display name
-   - Missing tutor names fall back to `Tutor`; Riley remains the simulated `Riley` profile
+   - Deprecated and retained for legacy draft compatibility; production no longer generates these drafts
 
 ### Database Schema Extensions
 
@@ -69,7 +68,7 @@ Runtime source of truth:
 
 Model and timing fields are retained for persistence and exports, but are not rendered as message chips. Multi-agent tags are decoded only for tutor rows whose `response_mode` is `multiagent`.
 
-`RoomContext.approveMultiAgentDraft` persists every approved Riley or Tutor-tagged row with `response_mode='multiagent'`, preserving the character tag for the presentation resolver to decode.
+Multi-agent generation is deprecated. The student selector and dedicated Test Rooms template are hidden, and AI requests normalize saved `interaction_mode` values to `single_agent`. The stored `multiagent` response mode and message-tag decoder remain for historical rows.
 
 ## Features
 
@@ -116,7 +115,7 @@ Maintains chat history for:
 - Consistent conversation flow
 - Educational continuity
 
-Tutor rows become assistant turns. Student and observer rows become user turns. Valid Multi-agent tutor tags are stripped and preserved as Riley or the stored tutor profile; tags outside Multi-agent mode remain ordinary text.
+Tutor rows become assistant turns. Student and observer rows become user turns. Valid historical Multi-agent tutor tags are stripped and preserved as Riley or the stored tutor profile; tags outside Multi-agent mode remain ordinary text.
 
 ## Usage
 
@@ -137,9 +136,7 @@ Tutor rows become assistant turns. Student and observer rows become user turns. 
    - Adjust temperature for creativity level
    - Control response length with max tokens
 
-4. **Review Multi-agent Drafts**
-   - Review each character response before approval
-   - Tutor cards use the active tutor profile name, while Riley remains simulated
+Multi-agent draft generation and review are deprecated; saved historical messages remain readable.
 
 ### For Students and Observers
 

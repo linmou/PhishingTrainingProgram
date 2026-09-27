@@ -114,7 +114,7 @@ describe('ecologicalTutorCall', () => {
     expect(ACTIVE_TUTOR_AGENT_PROMPT).not.toContain('MULTI-AGENT');
   });
 
-  it('adds the multi-agent prompt only for multi_agent turns', () => {
+  it('normalizes a legacy multi-agent request to the single-agent contract', () => {
     const base = {
       scenario_context: 'room',
       conversation_history: 'history',
@@ -130,15 +130,13 @@ describe('ecologicalTutorCall', () => {
     expect(singleAgent[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
     expect(singleAgent[1].content).toContain('"interaction_mode":"single_agent"');
 
-    const multiAgent = buildEcologicalChatCompletionMessages('SYSTEM', {
+    const legacyMultiAgent = buildEcologicalChatCompletionMessages('SYSTEM', {
       ...base,
       interaction_mode: 'multi_agent'
     });
-    expect(multiAgent[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
-    expect(multiAgent[0].content).toContain(MULTI_AGENT_TUTOR_PROMPT);
-    expect(multiAgent[0].content.indexOf(ACTIVE_TUTOR_AGENT_PROMPT))
-      .toBeLessThan(multiAgent[0].content.indexOf(MULTI_AGENT_TUTOR_PROMPT));
-    expect(multiAgent[1].content).toContain('"interaction_mode":"multi_agent"');
+    expect(legacyMultiAgent[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
+    expect(legacyMultiAgent[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
+    expect(legacyMultiAgent[1].content).toContain('"interaction_mode":"single_agent"');
 
     // Old callers that omit the field keep the single-agent request.
     const legacy = buildEcologicalChatCompletionMessages('SYSTEM', base);

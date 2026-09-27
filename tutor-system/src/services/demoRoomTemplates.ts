@@ -431,7 +431,7 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
   ];
 }
 
-/** Dedicated Test Rooms seed for exercising the Multi-agent response contract. */
+/** @deprecated Hidden from Test Rooms; retained for existing template compatibility. */
 export function getMultiAgentTestRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
   const baseConfig = buildCasualPeerAIConfig('Account Security Alert');
   const prompt_config: SystemPromptConfig = {

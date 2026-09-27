@@ -1,6 +1,6 @@
 /**
  * Student AI choice policy helpers.
- * Purpose: single-student-room gate, Peer/Adult/Multi-agent apply, tutor lock metadata.
+ * Purpose: single-student-room gate, Peer/Adult apply, tutor lock metadata.
  */
 
 import type { InteractionMode, StudentAIChoice, User } from '../types';
@@ -15,7 +15,6 @@ export const STUDENT_AI_OPTIONS: ReadonlyArray<{
 }> = [
   { value: 'peer', label: 'Peer' },
   { value: 'adult', label: 'Adult' },
-  { value: 'multi_agent', label: 'Multi-agent' },
 ];
 
 export function countStudentParticipants(
@@ -40,22 +39,25 @@ export function roleIntensityToTone(role: 'low' | 'high' | undefined): StudentAI
 }
 
 export function interactionModeForChoice(choice: StudentAIChoice): InteractionMode {
+  // Older direct callers may still persist this value; production requests normalize it.
   return choice === 'multi_agent' ? 'multi_agent' : 'single_agent';
 }
 
 export function isTutorRoleLocked(
   promptConfig: SystemPromptConfig | null | undefined
 ): boolean {
-  return Boolean(promptConfig?.student_tone_lock?.locked);
+  const lock = promptConfig?.student_tone_lock;
+  return Boolean(
+    lock?.locked &&
+    lock.chosen_choice !== 'multi_agent' &&
+    promptConfig?.interaction_mode !== 'multi_agent'
+  );
 }
 
-/** Current selector value: Multi-agent when enabled, else the configured Peer/Adult role. */
+/** Current selector value from the configured Peer/Adult role. */
 export function resolveStudentAIChoice(
   promptConfig: SystemPromptConfig | null | undefined
 ): StudentAIChoice {
-  if (promptConfig?.interaction_mode === 'multi_agent') {
-    return 'multi_agent';
-  }
   return roleIntensityToTone(promptConfig?.role?.role);
 }
 

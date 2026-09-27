@@ -87,28 +87,27 @@ describe('studentAITone policy (features/student_ai_tone.feature)', () => {
   });
 
   describe('STUDENT_AI_OPTIONS', () => {
-    it('exposes Peer, Adult and Multi-agent', () => {
+    it('exposes only the supported single-agent choices', () => {
       expect(STUDENT_AI_OPTIONS).toEqual([
         { value: 'peer', label: 'Peer' },
         { value: 'adult', label: 'Adult' },
-        { value: 'multi_agent', label: 'Multi-agent' },
       ]);
     });
   });
 
   describe('resolveStudentAIChoice', () => {
-    it('derives Peer/Adult from the role when Multi-agent is not enabled', () => {
+    it('derives Peer/Adult from the configured role', () => {
       const base = basePromptConfig();
       expect(resolveStudentAIChoice(base)).toBe('adult');
       expect(resolveStudentAIChoice({ ...base, role: { role: 'low' } })).toBe('peer');
       expect(resolveStudentAIChoice(null)).toBe('adult');
     });
 
-    it('reports Multi-agent whenever interaction_mode is multi_agent', () => {
+    it('maps a legacy multi-agent config to its retained Peer/Adult role', () => {
       const base = basePromptConfig();
       expect(
-        resolveStudentAIChoice({ ...base, interaction_mode: 'multi_agent' })
-      ).toBe('multi_agent');
+        resolveStudentAIChoice({ ...base, role: { role: 'low' }, interaction_mode: 'multi_agent' })
+      ).toBe('peer');
     });
   });
 
@@ -190,6 +189,15 @@ describe('studentAITone policy (features/student_ai_tone.feature)', () => {
         'student-1'
       );
       expect(isTutorRoleLocked(locked)).toBe(true);
+    });
+
+    it('releases the legacy multi-agent tone lock', () => {
+      const legacy = applyStudentAIChoiceToPromptConfig(
+        basePromptConfig(),
+        'multi_agent',
+        'student-1'
+      );
+      expect(isTutorRoleLocked(legacy)).toBe(false);
     });
   });
 });
