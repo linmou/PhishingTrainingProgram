@@ -92,7 +92,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Integration glue: 102 maps the producer result without recreating grading/lifecycle logic and atomically locks/persists the private assessment and append-only attempt.
 - Handoff test: `tests/integration/transfer-domain-backend-handler.test.ts` runs the real 102 Edge handler with 101's real resolver, captures that result's mapped arguments at `process_assessment_message_v2`, and verifies the committed response projection. It covers first-wrong retry, correct pass, second-wrong failure, and a clarification that must not call the commit RPC. The injected RPC simulates the trusted commit result; hosted SQL/RPC execution remains a separate external gate.
 - E2E/smoke: teacher delivery, wrong-correct, wrong-wrong, duplicate, and third-attempt flow.
-- Producer gate (101): domain lifecycle, explanation, and fixture tests pass without 102 code. Consumer gate (102): actual-output handoff, 101 and 102 focused suites, SQL/RPC contract suite, and smoke pass on one integration SHA.
+- Producer gate (101): domain lifecycle, explanation, and fixture tests pass without 102 code. Consumer gate (102): actual-output handoff, 101 and 102 focused suites, native PostgreSQL 17 restored-copy SQL/RPC, race, authorization, and rollback evidence, and smoke pass on one integration SHA. Deployed Supabase authorization and generated-type parity remain separate integration gates.
 
 ### E02: 101 -> 103 Domain Contract To UI Mapping
 
@@ -142,6 +142,8 @@ The main integration agent owns reconciliation, the authoritative post-planning 
 
 ## Current Wave Status
 
-- Latest tested code SHA: `4b8cf5457c16849fc2abb168c3d269c3e6e874ed`. E01 now has a handler-level handoff test that uses the real 101 resolver through the real 102 Edge handler and captures the actual persistence RPC arguments. Five Deno cases pass; the RPC response is simulated, so hosted SQL behavior remains a separate gate.
-- The coverage manifest is explicitly `blocked`: E01 is the only completed handoff and E02-E05 remain open. It is not eligible for the machine coverage transition or promotion. The UI branch has two unmerged correction commits; evaluation has one unmerged correction commit. Current heads and evidence are in `integration-review.md`.
-- Component 105 remains outside this initiative.
+- Latest tested code SHA: `9e00b1f210dcef94024e483143f4e705b3f32dc3`. E01-E03 have real local handoff coverage. The 103 correction passes the delivered assessment ID into answer processing and routes ordinary student chat directly to evidence analysis.
+- The schema-v2 coverage manifest remains `blocked`: E01-E03 are completed handoffs; E04 and E05 remain open. Component 104's correction `d821333` is still unmerged; 105 remains outside this initiative.
+- At component branch `089288d`, 102 has 47/47 checked tasks under the revised local PostgreSQL 17 gate. Its committed artifacts have not been merged into integration. Deployed Supabase authorization, generated-type parity, live provider, browser bundle privacy, and release acceptance remain pending; the checked component tasks do not satisfy those gates.
+- Merged-SHA verification: real 101/102/103 Deno handoffs passed 7/7; the existing integration and mock E2E aggregate passed 25/25; the production build completed with existing ESLint warnings. The RPC responses are simulated, so hosted SQL/RLS/transaction behavior remains unverified. Deterministic evaluation remains 94/106 due to the recorded production prompt-hash mismatch; live evaluation and browser release evidence are also open.
+- The last fully compliant green promotion SHA remains unknown. Component 105 remains outside this initiative.
