@@ -22,5 +22,7 @@ Intent: record why component 102 documentation changed and the evidence availabl
 - Current-migration native races passed both scenarios with observed lock waits. The rollback-only fault fixture passed eight injected write stages and a normal terminal call after trigger removal; no test rows or triggers remained.
 - A third local race passed with wrong first, correct second: stale CAS then expected-count-one retry, yielding two attempts and one terminal event/evidence/history effect.
 - Reconciled the RPC contract and data model with the implemented trusted Edge resolver and ten-argument commit RPC; SQL remains the atomic persistence authority.
+- Native delivery race passed with an observed room lock, one matching public/private winner, and no losing pair; target mismatch and invalid reviewed content produced no pair.
+- Local catalog comparison matched eight RPC signatures and listed 50 private columns. Hosted generated types and a component-branch build asset scan remain unavailable.
 - Component branch build: exit 1 at the component-103-owned `transferRoomFixtures.ts:146` public DTO mismatch.
 - Hosted Supabase, two-session races, and hosted generated types remain open in `specs/102-transfer-backend/implementation-evidence.md`.
