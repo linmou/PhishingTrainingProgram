@@ -50,7 +50,7 @@ Intent: Control component ownership, contracts, dependencies, integration edges,
 ### 104 Transfer Evaluation
 
 - Branch/worktree: `104-transfer-evaluation`; `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-evaluation`
-- Stable owner: `owner-104-evaluation`
+- Stable owner: `/root/owner_104_resume` (replacement handoff recorded in `integration-review.md`).
 - Responsibility: two-attempt deterministic cases and learner-explanation correctness/safety evaluation.
 - Public contracts: consume the promoted domain lifecycle and backend request/explanation contract without copying product logic.
 - Shared ownership: `evals/promptfoo/v1/transfer/**` and transfer rubrics.
