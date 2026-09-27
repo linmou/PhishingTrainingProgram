@@ -19,5 +19,6 @@ Intent: record why component 102 documentation changed and the evidence availabl
 - Native local two-session races: wrong/wrong and correct/wrong both observed a blocked competing session and passed final persisted state assertions.
 - Native direct-role checks: anon and authenticated each denied for v2 RPC, legacy v1 RPC, and private table update; six SQLSTATE `42501` results and zero mutations.
 - Corrected invalid terminal transition on a new local clone: migration passed, backend 8/8, RPC 28/28 including rollback and actual history checks; expanded direct-role matrix 10/10 denied with zero mutations.
+- Current-migration native races passed both scenarios with observed lock waits. The rollback-only fault fixture passed eight injected write stages and a normal terminal call after trigger removal; no test rows or triggers remained.
 - Component branch build: exit 1 at the component-103-owned `transferRoomFixtures.ts:146` public DTO mismatch.
 - Hosted Supabase, two-session races, and hosted generated types remain open in `specs/102-transfer-backend/implementation-evidence.md`.

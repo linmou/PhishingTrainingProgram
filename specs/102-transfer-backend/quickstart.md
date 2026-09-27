@@ -111,6 +111,8 @@ The reproducible SQL lane seeds two separate rooms with `supabase/tests/transfer
 
 Capture both connection transcripts and the final row-count query with the tested migration SHA. A single sequential call that passes a stale expected count checks CAS behavior but does not prove the two-session race.
 
+Run `supabase/tests/transfer_assessment_terminal_faults.sql` with `psql -X -v ON_ERROR_STOP=1` on a disposable migrated clone for eight write-stage failure injections. It creates and removes test triggers inside one transaction, asserts zero partial effects after every injected failure, verifies a normal terminal pass after trigger removal, and ends `ROLLBACK`. Record its script blob, eight results, normal recovery, exit code, and absence of fixture rows/triggers afterward.
+
 ## Authorization and Provider Evidence
 
 1. Exercise absent verifier, invalid proof, forged body IDs, valid teacher, target learner, other learner, observer, cross-room, direct RPC, and legacy operation cases.
