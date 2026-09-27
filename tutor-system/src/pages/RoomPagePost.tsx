@@ -277,11 +277,12 @@ const RoomPagePost: React.FC = () => {
         }
     }, [visibleMessages.length, userHasScrolledUp, scrollToBottom]);
 
-    const attemptJoinRoom = async (password?: string) => {
+    const attemptJoinRoom = async (password?: string): Promise<boolean> => {
         try {
             setJoinError('');
             setPasswordError('');
             await joinRoom(roomId!, password);
+            return true;
         } catch (error: any) {
             console.error('Failed to join room:', error);
             if (error.message.includes('password protected')) {
@@ -293,6 +294,7 @@ const RoomPagePost: React.FC = () => {
             } else {
                 setJoinError(error.message || 'Failed to join room');
             }
+            return false;
         }
     };
 
@@ -302,8 +304,8 @@ const RoomPagePost: React.FC = () => {
             setPasswordError('Please enter a password');
             return;
         }
-        await attemptJoinRoom(roomPassword);
-        if (!passwordError) {
+        const joined = await attemptJoinRoom(roomPassword);
+        if (joined) {
             setShowPasswordPrompt(false);
             setRoomPassword('');
         }

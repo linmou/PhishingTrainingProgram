@@ -45,6 +45,7 @@ CI=true npx react-scripts test --watchAll=false --runInBand --runTestsByPath \
   src/pages/__tests__/RoomPagePost.transferDraft.test.tsx \
   src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx \
   src/pages/__tests__/RoomPagePost.transferDecision.test.tsx \
+  src/pages/__tests__/RoomPagePost.password.test.tsx \
   src/__tests__/multi_agent_room_playback.e2e.test.tsx
 CI=true npm run test:regression -- --runInBand
 npx tsc --noEmit
@@ -71,6 +72,7 @@ The focused tests must cover:
 - owner-scoped progress views, legacy/transfer separation, and public/private exports;
 - structured downstream decision consumption rather than copied suggestion text.
 - legacy Multi-agent draft review, scheduled message playback, delayed pair reveal, and send gating until playback completes.
+- legacy password retry keeps the prompt open after rejection and does not attempt a join for an empty password.
 
 ## Deferred gates
 
