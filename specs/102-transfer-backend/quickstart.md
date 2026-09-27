@@ -20,7 +20,7 @@ rtk proxy sh .specify/scripts/bash/check-prerequisites.sh --json --require-tasks
 
 ```bash
 rtk proxy sh -c 'cd tutor-system && CI=true npm test -- --watchAll=false --runInBand --runTestsByPath src/services/__tests__/transferAssessmentApiContract.test.ts src/services/__tests__/transferAssessmentLocalService.test.ts src/services/__tests__/transferAssessmentMigration.test.ts src/services/__tests__/transferAssessmentService.test.ts src/services/__tests__/transferTutorRequestV3.test.ts'
-rtk proxy sh -c 'cd tutor-system && deno test --allow-env --allow-net --unstable-sloppy-imports supabase/functions/assessment-api/index.test.ts'
+rtk proxy sh -c 'cd tutor-system && /Users/admin/.npm/_npx/05b6ef7b13673c57/node_modules/deno/deno test --cached-only --allow-env --allow-read --allow-run --unstable-sloppy-imports supabase/functions/assessment-api/index.test.ts'
 rtk proxy sh -c 'cd tutor-system && npm run build'
 ```
 
@@ -28,11 +28,45 @@ The test-first record must show the relevant tests failing before implementation
 
 ## Hosted Schema and Transaction Evidence
 
-1. Record hosted scope identifier, pre-migration schema revision, migration list, transfer table/column/function/grant/policy inventory, and existing assessment row counts without secrets.
-2. Apply `20260922000000_transfer_assessment_server_authority.sql` only to the disposable scope.
-3. Run `supabase/tests/transfer_assessment_backend.sql` for schema, privacy, grants, direct writes, public key removal, legacy-incomplete reconciliation, and rollback.
-4. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, concurrent distinct submissions, third submission, wrong scope, Guard behavior, evidence/history, and forced rollback.
-5. Regenerate `src/types/database.ts` from that schema and compare the exact private/public/RPC signatures to `contracts/rpc-contract.md`.
+The owner of the disposable hosted scope, not this component run, executes this lane. Before applying the migration, record the scope identifier, schema revision, migration list, relevant table/column/function/grant/policy inventory, and this read-only legacy-key count on the exact database to be migrated:
+
+```sql
+WITH keyed AS (
+  SELECT id, room_id, assessment_key, assessment_checklist_id,
+         assessment_item_id, parent_message_id, assessment_selection_type
+  FROM public.messages
+  WHERE assessment_key IS NOT NULL
+)
+SELECT count(*) AS keyed_rows,
+       count(*) FILTER (WHERE NOT (
+         cardinality(k.assessment_key) > 0
+         AND (k.assessment_selection_type IS NULL
+              OR k.assessment_selection_type IN ('single', 'multiple'))
+         AND EXISTS (
+           SELECT 1
+           FROM public.session_checklists sc
+           JOIN public.checklist_items ci
+             ON ci.checklist_id = sc.id AND ci.id = k.assessment_item_id
+           JOIN public.messages parent
+             ON parent.id = k.parent_message_id
+            AND parent.room_id = k.room_id
+            AND parent.user_id = sc.student_id
+            AND parent.user_role = 'student'
+           WHERE sc.id = k.assessment_checklist_id
+             AND sc.room_id = k.room_id
+             AND sc.progress_policy_version = 'transfer_v1'
+             AND sc.student_id IS NOT NULL
+         )
+       )) AS uncovered_rows
+FROM keyed k;
+```
+
+Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
+
+1. Apply `20260922000000_transfer_assessment_server_authority.sql` only to the approved disposable scope after the stop conditions pass.
+2. Run `supabase/tests/transfer_assessment_backend.sql` for schema, privacy, grants, direct writes, public key removal, legacy-incomplete reconciliation, and rollback.
+3. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, concurrent distinct submissions, third submission, wrong scope, Guard behavior, evidence/history, and forced rollback. It writes test fixtures inside a transaction; do not run it on PhishingTutor.
+4. Regenerate `src/types/database.ts` from that schema and compare the exact private/public/RPC signatures to `contracts/rpc-contract.md`.
 
 Record exact commands, timestamp, tested migration/SHA, exit code, test count, and immutable log path. Static SQL/Jest checks do not substitute for hosted execution.
 

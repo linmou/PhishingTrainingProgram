@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-09-22
-Commit: de3777b (server-authoritative transfer assessment backend with scoped replay hardening)
+Commit: c23fc9e (server-authoritative transfer backend with scoped replay and trusted ordinary-turn paths)
 -->
 
 # Tutor System - 1v1 Online Training Platform

@@ -195,11 +195,18 @@ async function rpc(deps: AssessmentApiDependencies, name: string, args: Record<s
   return result.data;
 }
 
-function assertReviewedCandidate(value: unknown, itemId: string): void {
+function assertReviewedCandidate(value: unknown, itemId: string | null): void {
   const candidate = asRecord(value);
   const decision = asRecord(candidate.decision);
   const assessment = asRecord(candidate.assessment);
-  if (decision.mode !== 'assessment' || decision.instruction !== 'transfer_assess' ||
+  if (decision.mode !== 'assessment') {
+    if (!['tutoring', 'guard'].includes(decision.mode) || candidate.assessment !== null ||
+        decision.target_item_id !== null || decision.instruction === 'transfer_assess') {
+      throw new Error('ITEM_VALIDATION_FAILED');
+    }
+    return;
+  }
+  if (!itemId || decision.instruction !== 'transfer_assess' ||
       decision.target_item_id !== itemId || assessment.selection_type !== 'single' && assessment.selection_type !== 'multiple' ||
       !Array.isArray(assessment.options) || assessment.options.length !== 4 ||
       !Array.isArray(assessment.correct_option_ids) || assessment.correct_option_ids.length === 0 ||
@@ -326,17 +333,19 @@ async function prepareTurn(
         payload, finishReason, 'truncated', 'AI_OUTPUT_TRUNCATED');
       throw new Error('AI_OUTPUT_TRUNCATED');
     }
+    let candidate: Record<string, unknown>;
     try {
       const content = requiredString(asRecord(choice.message).content, 'AI_OUTPUT_INVALID');
-      const candidate = validateProviderCandidate(JSON.parse(content));
-      await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
-        payload, finishReason, 'valid', null);
-      return { ...scope, decision: candidate };
+      candidate = validateProviderCandidate(JSON.parse(content));
     } catch {
       await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
         payload, finishReason, 'invalid', 'AI_OUTPUT_INVALID');
       if (ordinal === 2) throw new Error('AI_OUTPUT_INVALID');
+      continue;
     }
+    await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
+      payload, finishReason, 'valid', null);
+    return { ...scope, decision: candidate };
   }
   throw new Error('AI_OUTPUT_INVALID');
 }
@@ -466,7 +475,7 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
         case 'send_reviewed': {
           assertTeacher(principal);
           const roomId = assertRoom(principal, body.room_id);
-          const itemId = requiredString(body.item_id, 'ITEM_VALIDATION_FAILED');
+          const itemId = body.item_id == null ? null : requiredString(body.item_id, 'ITEM_VALIDATION_FAILED');
           assertReviewedCandidate(body.reviewed_payload, itemId);
           data = projectDelivery(await rpc(deps, 'send_reviewed_tutor_response_v4', {
             p_reviewed_payload: body.reviewed_payload,
@@ -536,7 +545,10 @@ function createDefaultDependencies(): AssessmentApiDependencies {
   return {
     featureEnabled: env('TRANSFER_ASSESSMENT_ENABLED') === 'true',
     verifier,
-    rpc: async (name, args) => admin.rpc(name, args) as Promise<RpcResult>,
+    rpc: async (name, args) => {
+      const result = await admin.rpc(name, args);
+      return { data: result.data, error: result.error };
+    },
     env,
     fetch,
     resolveAnswer: resolveTransferAnswer,

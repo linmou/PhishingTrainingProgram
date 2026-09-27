@@ -8,7 +8,7 @@ const { execFileSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '../../../..');
 const PRODUCTION_SOURCE = 'tutor-system/src/services/ecologicalTutorCall.ts';
-const PRODUCTION_PROMPT_SOURCE = 'tutor-system/src/services/transferAssessmentService.ts';
+const PRODUCTION_PROMPT_SOURCE = 'tutor-system/supabase/functions/assessment-api/index.ts';
 /**
  * The normative plan lives outside every worktree: `plan/` is git-excluded and exists only in the
  * main checkout (specs/104-transfer-evaluation/research.md Decision 7). Resolve the main working
@@ -70,9 +70,9 @@ function sourceIdentity() {
  * TRANSFER_V3_SYSTEM_PROMPT marker so a whole-file match can never stand in for parity.
  */
 function extractTransferCallSettings(source) {
+  if (!source.includes(TRANSFER_CALL_MARKER)) throw new Error('Transfer v3 call site with the production prompt marker was not found.');
+  const callsite = source.slice(source.indexOf(TRANSFER_CALL_MARKER));
   const calls = source.split('await fetch(');
-  const callsite = calls.find(chunk => chunk.includes(TRANSFER_CALL_MARKER) && chunk.includes('max_tokens'));
-  if (!callsite) throw new Error('Transfer v3 call site with the production prompt marker was not found.');
   const number = key => {
     const match = callsite.match(new RegExp(`${key}:\\s*(\\d+(?:\\.\\d+)?)`));
     return match ? Number(match[1]) : null;
@@ -86,8 +86,10 @@ function extractTransferCallSettings(source) {
     const match = chunk.match(/max_tokens:\s*(\d+)/);
     if (match && !chunk.includes(TRANSFER_CALL_MARKER)) others.push(Number(match[1]));
   }
+  const providerBudget = source.match(/const\s+PROVIDER_MAX_TOKENS\s*=\s*(\d+)/);
+  const maxTokens = providerBudget ? Number(providerBudget[1]) : number('max_tokens');
   return {
-    max_tokens: number('max_tokens'),
+    max_tokens: maxTokens,
     enable_thinking: flag('enable_thinking'),
     temperature: number('temperature'),
     model_expression: /model,/.test(callsite) || /model:\s*\w+/.test(callsite),

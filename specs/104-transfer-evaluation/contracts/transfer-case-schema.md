@@ -1,4 +1,4 @@
-# Transfer Case Schema Contract
+# Two-Attempt Transfer Case Schema Contract
 
 **Intent**: define the stable public evaluator input/expected-outcome contract for W9-W10 transfer cases.
 
@@ -16,6 +16,8 @@
   "evaluator": {},
   "pair": null,
   "transition": null,
+  "attempt_sequence": null,
+  "explanation": null,
   "holdout_eligibility": {}
 }
 ```
@@ -65,6 +67,23 @@ Expected labels are outside the target projection but are passed to the evaluato
 
 `transition` is null for single-turn cases. Otherwise it contains ordered turns, prior state, expected decision/state after each step, and the causal evidence reference. Do not flatten a recovery, assistance, clarification, contradiction, Guard, or follow-up sequence into a final-only assertion.
 
+### Attempt sequence metadata
+
+`attempt_sequence` is required for lifecycle cases. It contains one `assessment_id`, one `sequence_id`, and ordered steps. Each step records:
+
+- the message/request identity and client context (`same_page`, `reload`, `separate_tab`, or `concurrent`);
+- promoted component 101 `TransferAttemptSnapshot` projections before and after processing;
+- exact promoted component 102 `ProcessedMessageDTO` fields: `message_id`, `assessment_id`, `processing_state`, `answer_outcome`, `attempt_number`, `attempts_used`, `attempts_remaining`, `selected_option_ids`, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback`;
+- expected consuming/non-consuming disposition and exact allowed role-safe projection fields.
+
+Every public assessment projection is exactly `id`, `student_id`, `selection_type`, `stem`, and `options`. `rendered_text`, key, explanation, transfer basis, rationale, and raw output are prohibited from `PublicAssessmentDTO`.
+
+Valid sequences enforce: first wrong is retryable with one attempt remaining and no transition; correct on attempt one or two passes once; second wrong fails once; no third attempt or second terminal transition is consumed. Duplicate, stale, malformed, unauthorized, assistance, Guard, and post-terminal steps remain non-consuming according to the promoted contracts.
+
+### Explanation metadata
+
+`explanation` is required for assessment-generation or terminal-disclosure cases. It contains generated and reviewed values, edit/confirmation provenance, evaluator-only correct answer and concept/context references, learner projection stage, and applicable quality/disclosure checks. The target does not receive expected quality labels or disclosure expectations.
+
 ### Holdout eligibility
 
 `holdout_eligibility` records author identity or authorized agent, creation version, target-prompt/development exposure, exposure date, eligible flag, and replacement/retirement link. An exposed holdout remains useful regression evidence but is not eligible unseen coverage.
@@ -77,4 +96,7 @@ Expected labels are outside the target projection but are passed to the evaluato
 - Reject a pair without exactly two members or without one declared meaning-bearing change.
 - Reject an eligible holdout with prompt/development exposure.
 - Reject a changed contract/case version from a baseline/candidate comparison unless a new manifest and comparable baseline are created.
+- Reject a lifecycle case that resolves the first valid incorrect answer, consumes more than two valid attempts, applies more than one terminal progress transition, or exposes terminal feedback outside an authorized second-incorrect failure.
+- Reject a public assessment projection missing `student_id`, containing `rendered_text`, or differing from the canonical five-field allowlist.
+- Reject an explanation case that omits generated/reviewed provenance, judges the wrong value, or places evaluator annotations in target inputs.
 - Preserve all historical case versions; do not edit a frozen case in place.

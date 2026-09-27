@@ -1,7 +1,8 @@
-# Specification Quality Checklist: Frozen Transfer Behavior Evaluation
+# Specification Quality Checklist: Two-Attempt Transfer Behavior Evaluation
 
 **Purpose**: Validate that the W9-W10 evaluator contract is complete, testable, and bounded to Promptfoo evidence.
-**Created**: 2026-09-11
+**Created**: 2026-09-11  
+**Updated**: 2026-09-22
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -23,6 +24,8 @@
 - [x] Dependencies and assumptions identify canonical artifacts, configuration authority, component 102, and downstream gates.
 - [x] Shared-contract ownership is explicit: component 102 implements `ecologicalTutorCall.ts`, production prompt/provider handling, and product budget; component 104 consumes and tests it.
 - [x] Product/evaluation request parity, prompt and builder hashes, the 1,200-token budget, evaluator metadata isolation, and secret non-duplication have blocking acceptance paths.
+- [x] The approved server-authoritative two-attempt lifecycle is explicit across reload, tab, replay, concurrency, and terminal paths.
+- [x] Explanation omission, leakage, incorrectness, edit provenance, and terminal disclosure each have an observable evaluation path.
 
 ## Feature Readiness
 
@@ -30,8 +33,10 @@
 - [x] User stories cover the primary contract, deterministic, semantic, and evidence-review journeys.
 - [x] Success criteria define the evidence needed to demonstrate each story.
 - [x] No production implementation is claimed or requested in this planning-only component.
+- [x] Historical first-valid-resolution evidence is not accepted as evidence for the upgraded lifecycle.
 
 ## Notes
 
 - The five public rubric IDs, deterministic supporting check, T09 lifecycle mapping, partition policy, immutable run evidence, and non-substitution rules are carried forward from the canonical T09 evaluation plan and evaluation contract.
 - Live calibration and evaluation remain pending until later execution work has the required model/judge configuration and component 102 integration artifacts.
+- No new clarification question was required: the user explicitly approved server-authoritative attempts across reloads and tabs.
