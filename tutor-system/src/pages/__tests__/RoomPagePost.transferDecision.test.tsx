@@ -17,11 +17,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
 import {
   LEARNER_A_MESSAGE_ID,
+  LEARNER_A_ID,
   TRANSFER_ROOM_ID,
+  deliveredQuestionRow,
   learnerAMessageRow,
   preparedCandidate,
   transferRoom,
 } from '../../test-support/transferRoomFixtures';
+import { projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
 import type { Message } from '../../types';
 import type { TutorDecisionV3 } from '../../types/assessment';
 
@@ -164,10 +167,75 @@ describe('RoomPagePost structured decision consumption', () => {
     expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
   });
 
+  it('renders and submits a public assessment projection through the page message list', async () => {
+    const projectedQuestion = projectRoomMessage({
+      ...deliveredQuestionRow,
+      content: 'Legacy copy-only text must not replace the public projection.',
+    });
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    (useAuth as jest.Mock).mockReturnValue({
+      user: {
+        id: LEARNER_A_ID,
+        display_name: 'Learner A',
+        current_role: 'student',
+        status: 'active',
+        created_at: '2026-09-12T08:00:00Z',
+        updated_at: '2026-09-12T08:00:00Z',
+      },
+      loading: false,
+    });
+    mount({ messages: [projectedQuestion as unknown as Message], sendMessage });
+
+    expect(screen.getByText(deliveredQuestionRow.assessment.stem)).toBeInTheDocument();
+    expect(screen.getAllByText(/^(A|B|C|D)\./)).toHaveLength(4);
+    expect(screen.queryByText('Legacy copy-only text must not replace the public projection.')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: /B\. Stop and verify/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
+
+    await waitFor(() => expect(sendMessage).toHaveBeenCalledWith('B', {
+      replyToMessageId: deliveredQuestionRow.id,
+      assessmentId: deliveredQuestionRow.assessment.id,
+      selectedOptionIds: ['B'],
+    }));
+  });
+
   it('does not render the copy-only suggestion box while a candidate is under review', () => {
     mount({ transferDraft: candidateDraft, aiSuggestion: 'Try asking about the sender address.' });
 
     expect(screen.getByText('Review transfer assessment')).toBeInTheDocument();
     expect(screen.queryByTestId('ai-suggestion-box')).not.toBeInTheDocument();
   });
+
+  it('keeps the room text export available alongside the tutor progress view', () => {
+    const downloadChatHistory = jest.fn();
+    mount({ downloadChatHistory });
+
+    expect(screen.getByTitle('Learning Progress Checklist')).toBeInTheDocument();
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
+
+    expect(downloadChatHistory).toHaveBeenCalledWith('txt');
+  });
+
+  it.each(['student', 'observer'] as const)(
+    'keeps the progress checklist control hidden for a %s viewer',
+    (role) => {
+      (useAuth as jest.Mock).mockReturnValue({
+        user: {
+          id: `${role}-1`,
+          display_name: role,
+          current_role: role,
+          status: 'active',
+          created_at: '2026-09-12T08:00:00Z',
+          updated_at: '2026-09-12T08:00:00Z',
+        },
+        loading: false,
+      });
+      mount();
+
+      expect(screen.queryByTitle('Learning Progress Checklist')).not.toBeInTheDocument();
+      expect(screen.getByTitle('Download Chat History')).toBeInTheDocument();
+    }
+  );
 });

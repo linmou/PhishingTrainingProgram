@@ -86,15 +86,41 @@ Guard review records also preserve `raw_mode`, `mode_reason`, `final_mode`, and 
 Transfer assessment delivery uses the reviewed `TutorDecisionV3` candidate and the typed service
 facade. `RoomContext` keeps the prepared scope until delivery succeeds, sends assessment content
 through the reviewed delivery operation, and projects the returned public message before storing it
-in room state. The projection includes only the learner-safe question DTO; private answer keys and
-transfer basis fields are discarded at the UI boundary.
+in room state. On reload, the public question can be rebuilt from the persisted assessment ID,
+student ID, selection type, stem, and options columns. Malformed or incomplete rows fail closed;
+private answer keys and transfer basis fields are discarded at the UI boundary. Known service error
+codes map to fixed review states and safe messages; raw provider details are not surfaced. A stale
+learner/message focus is treated as superseded and refreshes persisted room state before another
+candidate can be prepared.
 
-Learner answers send `selectedOptionIds` with the assessment message identity and pass that same
-identity to the trusted processing operation. Student messages without an assessment identity use
-evidence analysis directly. The context stores the server's `ProcessedMessageDTO` lifecycle result,
-and `PublicAssessmentQuestion` renders retry, passed, rejected, deferred, duplicate, and
-terminal-failure states from that result. The browser does not grade answers or construct terminal
-feedback.
+Assessment submissions send canonical `selectedOptionIds` with the public question message ID as the
+persisted parent and the separate assessment ID for trusted processing. The context validates the
+processor's returned answer and assessment IDs before attaching lifecycle state to the answer and
+its matching question. If concurrent results arrive in either order, an accepted terminal lifecycle
+remains the question state when a later result is rejected or has no accepted attempt; each answer
+retains its own processing result. On student reload or reconnect, the context re-reads each matching
+answer through the idempotent `processMessage` facade, only for the signed-in learner's own answers
+and questions. A failed re-read leaves the room visible without inventing feedback. Message merges
+retain the projected question and server lifecycle when polling replaces a local view with a fresh
+database row. Student messages without an assessment identity use evidence analysis directly. The
+browser does not grade answers or write progress.
+
+Message ingress uses one stable-ID merge for the initial room fetch, realtime inserts, polling,
+reviewed sends, optimistic replacement, and catch-up. The page refreshes persisted room state after a
+stale transfer conflict; if that refresh fails, it keeps a retry action available. The active
+transfer checklist remains owner-scoped, so refresh uses the same selected learner and prepared
+focus identity.
+
+Checklist loading uses the owner-scoped transfer projection for a signed-in student and the
+server-selected active projection for a tutor. The returned transfer owner is checked on both the
+scoped lookup and the legacy read fallback before progress reaches the UI; a missing or mismatched
+owner clears the view. Transfer lifecycle and progress controls stay limited to their authorized
+learner/tutor views, while ordinary legacy checklist reads and room text exports remain available.
+
+Room participation remains `tutoring` or `guard`; assessment is only a turn decision. Manual Guard
+changes use the room-mode service directly. Recovering from a Guard suggestion requires the tutor to
+review and send a tutoring response, and the room adopts tutoring only after that send succeeds.
+Assessment candidates stay outside the legacy suggestion mode toggle.
 
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification
@@ -128,6 +154,7 @@ feedback.
 **Role-based Data**:
 - **Tutors**: JSON export includes merged chat + feedback data, AI suggestion analytics, and per-interaction `ai_config_snapshot` data
 - **Students/Observers**: Export excludes tutor-only AI analytics and config snapshots
+- Transfer exports include the public question for room participants, but include answer lifecycle and terminal explanation only for the signed-in target learner. Teacher progress remains sourced from the trusted checklist projection.
 
 **Export Design**:
 - JSON export is built through a single export builder so one message shape is used for both feedback and chat data

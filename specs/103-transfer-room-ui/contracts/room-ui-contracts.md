@@ -19,7 +19,7 @@ Component 102's browser facade exports exactly these six typed methods. This tab
 
 There is no `capabilities`, no `review_draft`, no `reject_draft`, and no `regenerate_draft` operation. Teacher confirmation is UI-local review state; the only persistence call on the review path is `sendReviewed`. `sendReviewed` carries no expected draft revision and no expected content hash, because no draft row exists.
 
-Component 102 types the successful and failed envelopes (`AssessmentApiEnvelope<T>`, `AssessmentApiError`, `TransferAssessmentServiceOptions`) and owns API compatibility logic and the injectable transport used by tests. Component 103's React adapter consumes only those exported envelopes and maps them into UI states; it must not recreate API operation mapping or treat raw provider output as a DTO.
+Component 102 types and unwraps the successful and failed envelopes (`AssessmentApiEnvelope<T>`, `AssessmentApiError`) and owns API compatibility logic, operation mapping, and the injectable transport used by tests. Component 103's React adapter receives the service's canonical DTO projections and thrown service errors, then maps those into UI states. It does not parse envelopes or recreate API operation mapping, and it never treats raw provider output as a DTO.
 
 ## Private teacher review allowlist
 
@@ -104,9 +104,9 @@ The UI rejects missing instructions, `assessment` without `transfer_assess`, tut
 
 The component-103 adapter imports component 101/102 exports unchanged and defines its React-only review, public-question, and lifecycle view-state types alongside their mappings in `src/contexts/transferAssessmentUiAdapter.ts`. It maps component 102's thrown service errors and returned projections into these states without exposing raw provider output:
 
-- `unavailable`: the capability is disabled or the trusted operation is not configured (`ASSESSMENT_FEATURE_DISABLED`, `AI_PROVIDER_NOT_CONFIGURED`, `AUTHORIZATION_NOT_CONFIGURED`);
-- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, local `parseTutorDecisionV3` rejection);
-- `superseded`: the server reports that persisted state already covers this delivery or the identity no longer matches (`ASSESSMENT_ALREADY_OPEN`, `WRONG_LEARNER`, `LEGACY_CHECKLIST`); nothing is rendered as delivered;
+- `unavailable`: the capability is disabled, the trusted operation is not configured, or the transfer checklist does not apply to the room (`ASSESSMENT_FEATURE_DISABLED`, `AI_PROVIDER_NOT_CONFIGURED`, `AUTHORIZATION_NOT_CONFIGURED`, `LEGACY_CHECKLIST`, `LEGACY_ASSESSMENT_INCOMPLETE`, `UNSUPPORTED_ROOM_SCOPE`);
+- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, `INVALID_REQUEST`, `PROGRESSION_LOCKED`, local `parseTutorDecisionV3` rejection);
+- `superseded`: the server reports that persisted state already covers this delivery or the identity no longer matches (`ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_TERMINAL`, `WRONG_LEARNER`); nothing is rendered as delivered;
 - `duplicate`: an idempotent replay whose persisted result can be shown once;
 - `unauthorized`: no data or action is rendered (`FORBIDDEN`, `UNAUTHORIZED`);
 - `retryable`: transient transport or provider failure with a safe retry action;

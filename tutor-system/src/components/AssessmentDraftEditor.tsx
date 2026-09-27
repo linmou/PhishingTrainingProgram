@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
 import { renderAssessment, validateAssessmentRendering } from '../services/assessmentRendering';
 import { parseTutorDecisionV3 } from '../services/tutorDecisionContract';
+import { classifyAssessmentFailure, type ReviewStatus } from '../contexts/transferAssessmentUiAdapter';
 
 export interface AssessmentDraftEditorProps {
   decision: TutorDecisionV3;
@@ -39,7 +40,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorKind, setErrorKind] = useState<'validating' | 'server-failure' | null>(null);
+  const [errorKind, setErrorKind] = useState<'validating' | ReviewStatus | null>(null);
 
   useEffect(() => {
     const assessment = decision.assessment;
@@ -65,7 +66,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   const reviewStatus = saving ? 'saving' : errorKind || (contentConfirmed ? 'confirmed' : dirty ? 'dirty' : 'ready');
 
   const clearServerFailure = () => {
-    if (errorKind === 'server-failure') {
+    if (errorKind && errorKind !== 'validating') {
       setError(null);
       setErrorKind(null);
     }
@@ -161,8 +162,9 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     try {
       await onSubmit(nextDecision);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Assessment could not be confirmed.');
-      setErrorKind('server-failure');
+      const classified = classifyAssessmentFailure(submitError);
+      setError(classified.message);
+      setErrorKind(classified.status);
     } finally {
       setSaving(false);
     }
@@ -212,10 +214,18 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
         {reviewStatus === 'saving'
           ? 'Sending the confirmed assessment…'
-          : reviewStatus === 'server-failure'
-            ? 'The assessment was not sent.'
           : reviewStatus === 'validating'
             ? 'Review the highlighted validation error.'
+          : reviewStatus === 'superseded'
+            ? 'This candidate is no longer current.'
+          : reviewStatus === 'unavailable'
+            ? 'Transfer assessments are unavailable.'
+          : reviewStatus === 'unauthorized'
+            ? 'This account cannot send this assessment.'
+          : reviewStatus === 'retryable'
+            ? 'The request can be retried.'
+          : reviewStatus === 'validation'
+            ? 'The candidate needs correction before it can be sent.'
           : reviewStatus === 'confirmed'
             ? 'Confirmed and ready to send.'
           : reviewStatus === 'dirty'

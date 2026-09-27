@@ -27,8 +27,8 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
 }) => {
   const [selected, setSelected] = useState<AssessmentOptionId[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const terminal = answerLifecycle?.terminal === true;
-  const disabled = !canAnswer || submitting || terminal;
+  const resolved = answerLifecycle?.answerOutcome === 'passed' || answerLifecycle?.answerOutcome === 'failed';
+  const disabled = !canAnswer || submitting || answerLifecycle?.terminal === true || resolved;
 
   const toggle = (id: AssessmentOptionId) => {
     if (disabled) return;
@@ -39,9 +39,14 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
 
   const submit = async () => {
     if (!onSubmit || disabled || selected.length === 0) return;
+    const selectedInOptionOrder = question.options
+      .filter((option) => selected.includes(option.id))
+      .map((option) => option.id);
+    if (selectedInOptionOrder.length === 0) return;
+
     setSubmitting(true);
     try {
-      await onSubmit(selected);
+      await onSubmit(selectedInOptionOrder);
     } finally {
       setSubmitting(false);
     }
@@ -79,7 +84,11 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
           {submitting ? 'Submitting answer…' : 'Submit answer'}
         </button>
       )}
-      {answerLifecycle?.answerOutcome === 'retry' && <p role="status">Try again. {answerLifecycle.attemptsRemaining} attempt(s) remaining.</p>}
+      {answerLifecycle?.answerOutcome === 'retry' && (
+        <p role="status">
+          Incorrect. {answerLifecycle.attemptsRemaining} {answerLifecycle.attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining.
+        </p>
+      )}
       {answerLifecycle?.answerOutcome === 'passed' && <p role="status">Correct.</p>}
       {answerLifecycle?.answerOutcome === 'failed' && answerLifecycle.terminalFailureFeedback && (
         <div role="status">
@@ -87,8 +96,12 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
           <p>Correct option(s): {answerLifecycle.terminalFailureFeedback.correct_option_ids.join(', ')}</p>
         </div>
       )}
-      {answerLifecycle?.processingState === 'deferred' && <p role="status">Your answer is still processing.</p>}
-      {answerLifecycle?.processingState === 'rejected' && <p role="alert">This answer was rejected. Please try again.</p>}
+      {answerLifecycle?.processingState === 'deferred' && answerLifecycle.answerOutcome === null && (
+        <p role="status">Your answer is still processing.</p>
+      )}
+      {answerLifecycle?.processingState === 'rejected' && answerLifecycle.answerOutcome === null && (
+        <p role="alert">This answer was rejected. Please try again.</p>
+      )}
     </div>
   );
 };

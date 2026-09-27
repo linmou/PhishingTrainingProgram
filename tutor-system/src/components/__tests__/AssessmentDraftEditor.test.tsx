@@ -279,7 +279,7 @@ describe('AssessmentDraftEditor', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('shows saving while the request is pending and server failure after rejection', async () => {
+  it('shows saving while the request is pending and the classified failure after rejection', async () => {
     let rejectSend: (error: Error) => void = () => undefined;
     const onSubmit = jest.fn().mockImplementation(() => new Promise<void>((_, reject) => {
       rejectSend = reject;
@@ -291,7 +291,7 @@ describe('AssessmentDraftEditor', () => {
     expect(await screen.findByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'saving');
     rejectSend(new Error('ASSESSMENT_ALREADY_OPEN'));
     expect(await screen.findByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
-    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'server-failure');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'superseded');
   });
 
   it.each(['question', 'option A', 'option B', 'option C', 'option D', 'selection', 'key', 'explanation'] as const)(
@@ -309,7 +309,7 @@ describe('AssessmentDraftEditor', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
       });
       expect(screen.getByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
-      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'server-failure');
+      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'superseded');
 
       if (field === 'question') {
         fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'What should you verify before paying?' } });

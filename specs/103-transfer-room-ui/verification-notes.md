@@ -6,7 +6,28 @@ Record the commands actually run on branch `103-transfer-room-ui`, their exit co
 counts, every failure with its cause, and every gate that is deferred. Nothing here is a projected
 result: each number was read from the command output recorded in the run logs.
 
-## Current Local Gate (2026-09-26)
+## Current Local Gate (2026-09-27, T017/T022/T027/T040/T045/T048)
+
+The dated [task audit](task-audit-2026-09-26.md) reconciles all 48 task clauses against the current tree. T045 was run and inspected with a red result; T048 records the accepted historical ownership exception. Historical sections below preserve earlier runs and do not replace this gate.
+
+- The exact 17-path command in `quickstart.md`, run from `tutor-system/` with `CI=true` and `--runInBand`, exited **0**: **17 suites, 193 tests passed**. It includes the T022 canonical payload/lifecycle matrix and T040 page projection/submission tests, along with teacher review and send lifecycle tests, typed error classification, safe error text, and learner-role editor hiding.
+- T045's original four-directory run reported **20 failed, 5 skipped, 44 passed suites; 91 failed, 105 skipped, 468 passed tests**. Full output: `/tmp/transfer-room-ui-T045-2026-09-27-full.log`; captured summary: `/tmp/transfer-room-ui-T045-2026-09-27.log`.
+- The exact directory-pattern command was replayed from `tutor-system/` as `env CI=true npm run test:regression -- --runInBand src/__tests__ src/components/__tests__ src/contexts/__tests__ src/pages/__tests__`. It exited **1** with **20 failed, 7 skipped, 44 passed suites; 91 failed, 107 skipped, 468 passed tests**. The replay retained the same failed and passed counts, while two additional suites and tests were reported skipped. Captured output: `~/Library/Application Support/rtk/tee/1790511443_test.log`.
+- All 20 failing suite names in the original T045 run also appear in the prior broad regression log `/tmp/transfer-room-ui-regression-2026-09-27-final.log`; the original run added zero failing suite identities relative to that post-103 run. This establishes stability against that run, not pre-103 attribution.
+- Representative clean-baseline checks distinguish the inspected cases. At `2fcd0b4`, the selected `RoomContext.test.tsx`, `RoomContext.avatar.test.tsx`, and `RoomContext.roleBasedExport.test.tsx` failed (3 suites; 13 failed and 20 passed tests), while the older `PostComment.test.tsx` passed (1 suite; 20 passed tests). At merge-base `ebee033`, after the existing agent-tag tests from `1fb2e9b` were present, `PostComment.test.tsx` failed the same two `[agent:riley]`/`[agent:tutor]` cases (1 suite; 2 failed and 7 passed tests). Those failures therefore predate the 103 continuation. `RoomContext.test.tsx` still has incomplete Supabase mocks (`channel.unsubscribe` and `.select().in`) and AI-config expectations; the avatar suite calls `joinRoom` as a module export although it is provided by context; `RoomContext.roleBasedExport.test.tsx` cannot load `@testing-library/react-hooks`; and `checklist_management.test.ts` cannot load `../services/supabaseClient`.
+- The T045 run passed `guardModeComposerIdentity.e2e.test.tsx`, `AISuggestionBox.guardMode.test.tsx`, `PostComment.guardMode.test.tsx`, and `RoomContext.transferModes.test.tsx`. No 103-attributable production regression was demonstrated by these representative comparisons. The remaining failing suites were not individually replayed at a clean pre-103 baseline; the four-directory result remains red and does not clear the component or integration promotion gates.
+- The last recorded unscoped `CI=true npm run test:regression -- --runInBand` run exited **1**: **35 failed, 9 skipped, 90 passed suites; 151 failed, 141 skipped, 982 passed tests**. The full unscoped suite was not rerun after the focused follow-up, so its current-tree result remains unverified. Final captured output: `/tmp/transfer-room-ui-regression-2026-09-27-final.log`; the earlier RTK log was truncated at its 1 MiB output limit.
+- `npx tsc --noEmit` exited **2** with **506 errors in 41 files** on the final test tree. No diagnostic names either changed test file. Full output: `/tmp/transfer-room-ui-tsc-2026-09-27-final.log`.
+- `npm run build` exited **0** after the T027 stylesheet changes. CRA compiled with dependency source-map, ESLint, and Browserslist warnings, including hook-dependency warnings in `RoomContext.tsx` and `RoomPagePost.tsx`.
+- The four directly targeted US1 suites passed **4 suites/60 tests** before the final learner-role assertion was added. That assertion is included in the passing 17-suite quickstart run above.
+- `git diff --check` is recorded after the documentation edits and before commit.
+- `tutor-system/claude_docs/RoomContext.md`, `specs/103-transfer-room-ui/tasks.md`, `task-audit-2026-09-26.md`, and `quickstart.md` were reviewed. The room doc and dated documentation record now describe the safe classified failure path; the task and audit records capture the verified US1 clauses.
+- T017 is satisfied by the existing Quick Adjust behavior tests and page-level candidate/legacy separation; no production AISuggestionBox change was needed. T022 adds direct context coverage for canonical multiple-option IDs, applied retry/pass/failure, deferred null/failure, duplicate null/failure, rejected null, failed-only terminal disclosure, and duplicate answer identity. T040 verifies the public projection passes through `RoomPagePost` to the rendered learner controls and submits the structured IDs.
+- T027 was inspected in Playwright at 1280x900 and 390x844 using a static question fixture after loading the app bundle and styles. At 390px, `documentElement.clientWidth` and `scrollWidth` were both 390; Tab focus matched `:focus-visible` and computed to a 2px solid outline. Desktop, focused desktop, and mobile screenshots are under ignored `.playwright-cli/` (`page-2026-09-27T11-55-56-073Z.png`, `page-2026-09-27T11-56-32-285Z.png`, `page-2026-09-27T11-57-00-090Z.png`, and `page-2026-09-27T11-57-33-294Z.png`). The actual room route displayed `Room not found` after Supabase returned `Failed to fetch`; browser evidence is visual CSS inspection, not backend integration evidence.
+- The ownership audit found that historical 103 commit `21915f4` edited the 101-owned `tutor-system/src/types/index.ts` barrel, adding a UI option-ID send signature and message display field. Integration review commit `4eb5ed9` accepts this as a recorded historical exception; it does not claim the edit never happened. At integration `e433e9e` versus component 103 `67e0ec1`, the `integration/... ..103-transfer-room-ui` comparison has no pending net diff to the shared barrel or any 101/102/104-owned code, SQL/RLS, auth/provider, prompt, Promptfoo, or release-browser path. The only non-103 paths in the full changed-path audit are inherited orchestration controls, which remain integration-owned and were not edited by this continuation. T048 is complete with this exception and zero pending cross-owner net change documented.
+- Hosted SQL/RLS, provider evaluation, deployment, and release-browser checks were not run. The local `.env` is ignored and not part of the commit.
+
+## Prior Local Gate (2026-09-26)
 
 The dated [task audit](task-audit-2026-09-26.md) reconciles all 48 tasks individually. Eight are checked; 40 remain open. Historical results below describe earlier trees and do not supersede this gate.
 
@@ -127,6 +148,7 @@ is claimed.
 | US2 answer | `RoomContext.transferAnswer.test.tsx` | exit 1, 3 failed / 3 passed: `Private assessment material leaked into browser-facing state: assessment_key at $[2].assessment_key`, plus a stored-row-is-raw assertion | exit 0, 6 tests |
 | US3 ingress | `RoomContext.transferIngress.test.tsx` | exit 1, 1 failed / 4 passed: a realtime room update with `active_response_mode: 'assessment'` was adopted as the room mode while a legitimate `guard` change worked | exit 0, 5 tests |
 | US4 export | `roomExportBuilder.transfer.test.ts` | exit 1, 2 failed / 3 passed: a delivered question exported only its stem, with no instruction and no options | exit 0, 5 tests (13 with the existing export suite) |
+| US4 lifecycle export privacy | `roomExportBuilder.transfer.test.ts` | exit 1, 2 failed / 7 passed: teacher JSON and text exports inherited a target learner's terminal explanation; distinct message/assessment ID linkage passed | exit 0, 9 tests; only the signed-in target learner receives lifecycle data |
 
 ## Upstream gaps reported, not worked around
 
@@ -136,12 +158,15 @@ is claimed.
 
 ## Unresolved blockers in this component
 
-- The production build gate is red (`npm run build` exit 1, re-run on the final tree): the same
-  pre-existing `SupabaseAuthClient.getUser` type error at `src/services/checklistService.ts:114`, a
-  file this branch does not touch. It is the only blocker left in this component.
-- Nothing else in the component's own scope is outstanding: T025/T037 are implemented and tested,
-  and the page-level lifecycle states (preparing, unavailable, validation, superseded) are
-  implemented and tested.
+- The current production build gate passed with existing source-map, ESLint, and Browserslist
+  warnings. An earlier build failure at `src/services/checklistService.ts:114` predates that run and
+  is superseded by the current result. The four-directory T045 regression is red; its inspected
+  representative failures reproduce on pre-103 baselines, but the unscoped suite remains unverified
+  after the latest follow-up. The current TypeScript gate also remains red with 506 errors in 41 files.
+- No other implementation task in this component is outstanding: T025/T037 and the page-level
+  lifecycle states (preparing, unavailable, validation, superseded) are implemented and tested.
+  The component and integration release gates remain blocked by the red regression/type gates and
+  deferred hosted, provider, deployment, and release-browser checks.
 
 ## Behaviour delivered in the closure round
 

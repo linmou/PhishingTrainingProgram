@@ -9,6 +9,7 @@
 
 import {
   assertDeliverableReview,
+  answerLifecycleFromProcessed,
   classifyAssessmentFailure,
   participationModeFromRoom,
 } from '../transferAssessmentUiAdapter';
@@ -18,8 +19,15 @@ import {
   LEARNER_A_ID,
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
+  duplicateTabTerminalStates,
+  processedCorrectTerminal,
+  processedDeferredTerminalFailure,
+  processedFirstIncorrectRetry,
+  processedSecondIncorrectTerminal,
   preparedCandidate,
 } from '../../test-support/transferRoomFixtures';
+import type { ProcessedMessageDTO } from '../../services/transferAssessmentService';
+import { AssessmentApiRequestError } from '../../services/transferAssessmentService';
 
 const scope = {
   roomId: TRANSFER_ROOM_ID,
@@ -36,6 +44,67 @@ jest.mock('../../services/supabase', () => ({
 }));
 
 describe('transferAssessmentUiAdapter mode and target contract', () => {
+  it('keeps lifecycle fixtures on component 102 canonical ProcessedMessageDTO keys', () => {
+    const fixtures: ProcessedMessageDTO[] = [
+      processedFirstIncorrectRetry,
+      processedCorrectTerminal,
+      processedSecondIncorrectTerminal,
+      processedDeferredTerminalFailure,
+      duplicateTabTerminalStates.secondTab,
+    ];
+    const canonicalKeys = [
+      'message_id',
+      'assessment_id',
+      'processing_state',
+      'answer_outcome',
+      'attempt_number',
+      'attempts_used',
+      'attempts_remaining',
+      'selected_option_ids',
+      'terminal',
+      'transition',
+      'feedback_required',
+      'code',
+      'already_processed',
+      'terminal_failure_feedback',
+    ];
+
+    fixtures.forEach((processed) => expect(Object.keys(processed)).toEqual(canonicalKeys));
+    expect(processedDeferredTerminalFailure).toMatchObject({
+      processing_state: 'deferred',
+      answer_outcome: 'failed',
+      terminal: true,
+    });
+    expect(answerLifecycleFromProcessed(processedDeferredTerminalFailure)).toMatchObject({
+      processingState: 'deferred',
+      answerOutcome: 'failed',
+      attemptsUsed: 2,
+      attemptsRemaining: 0,
+      terminal: true,
+    });
+  });
+
+  it('keeps duplicate-tab replay on the same persisted terminal attempt', () => {
+    const { firstTab, secondTab } = duplicateTabTerminalStates;
+    const firstView = answerLifecycleFromProcessed(firstTab);
+    const replayView = answerLifecycleFromProcessed(secondTab);
+
+    expect(secondTab.message_id).toBe(firstTab.message_id);
+    expect(secondTab.assessment_id).toBe(firstTab.assessment_id);
+    expect(secondTab.already_processed).toBe(true);
+    expect(replayView).toMatchObject({
+      messageId: firstView.messageId,
+      assessmentId: firstView.assessmentId,
+      answerOutcome: firstView.answerOutcome,
+      attemptNumber: firstView.attemptNumber,
+      attemptsUsed: firstView.attemptsUsed,
+      attemptsRemaining: firstView.attemptsRemaining,
+      terminal: firstView.terminal,
+      terminalFailureFeedback: firstView.terminalFailureFeedback,
+      alreadyProcessed: true,
+    });
+  });
+
   it('accepts a confirmed assessment turn with its prepared item', () => {
     expect(assertDeliverableReview(preparedCandidate, scope)).toEqual({ ok: true });
   });
@@ -98,9 +167,9 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
     // The learner already has a delivered assessment: this delivery is superseded, not retried.
     expect(classifyAssessmentFailure(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered')).status)
       .toBe('superseded');
-    // The focus message is no longer this learner's: the teacher must prepare the turn again.
+    // The prepared focus identity no longer matches, so the previous review is superseded.
     expect(classifyAssessmentFailure(new Error('WRONG_LEARNER: focus message belongs to another learner')).status)
-      .toBe('validation');
+      .toBe('superseded');
     // There is no transfer checklist in this room, so the capability does not apply.
     expect(classifyAssessmentFailure(new Error('LEGACY_CHECKLIST: no transfer checklist')).status)
       .toBe('unavailable');
@@ -122,5 +191,19 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
 
     expect(classified.message).toContain('ASSESSMENT_ALREADY_OPEN');
     expect(classified.message).not.toContain('correct_option_ids');
+  });
+
+  it('uses typed service error codes and hides raw provider details from review state', () => {
+    const error = new AssessmentApiRequestError({
+      code: 'AI_PROVIDER_ERROR',
+      message: 'raw provider response includes a private payload',
+      retryable: true,
+    });
+    const classified = classifyAssessmentFailure(error);
+
+    expect(classified.status).toBe('retryable');
+    expect(classified.message).toContain('AI_PROVIDER_ERROR');
+    expect(classified.message).not.toContain('raw provider response');
+    expect(classified.message).not.toContain('private payload');
   });
 });

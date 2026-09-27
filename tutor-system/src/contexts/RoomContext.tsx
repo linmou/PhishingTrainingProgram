@@ -29,18 +29,34 @@ import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guar
 import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import {
-    answerLifecycleFromProcessed,
-    assertDeliverableReview,
-    mergeRoomMessages,
+  answerLifecycleFromProcessed,
+  assertDeliverableReview,
+  createReviewCandidate,
+  mergeRoomMessages,
     participationModeFromRoom,
     projectRoomMessage,
     publicAssessmentForDecision,
+    readAnswerLifecycle,
     withAnswerLifecycle,
 } from './transferAssessmentUiAdapter';
+import type { AnswerLifecycleView, RoomMessageView } from './transferAssessmentUiAdapter';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
+
+function preferredQuestionLifecycle(
+    question: RoomMessageView,
+    incoming: AnswerLifecycleView
+): AnswerLifecycleView {
+    const current = readAnswerLifecycle(question);
+    const currentIsAcceptedTerminal = current?.terminal === true &&
+        (current.answerOutcome === 'passed' || current.answerOutcome === 'failed');
+    const incomingHasNoAcceptedAttempt = incoming.answerOutcome === null ||
+        incoming.attemptNumber === null || !incoming.terminal;
+
+    return currentIsAcceptedTerminal && incomingHasNoAcceptedAttempt ? current : incoming;
+}
 
 export const useRoom = () => {
     const context = useContext(RoomContext);
@@ -533,6 +549,52 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Combine pre-populated messages with existing messages.
             const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
 
+            // Re-read the server's idempotent result for this learner's persisted assessment
+            // answers so lifecycle feedback is available after reload or reconnect.
+            if (user?.current_role === 'student' && user.id) {
+                for (const answer of allMessages) {
+                    if (answer.user_id !== user.id || answer.user_role !== 'student' || !answer.parent_message_id) {
+                        continue;
+                    }
+
+                    const questionIndex = allMessages.findIndex(message => {
+                        const publicQuestion = (message as Partial<RoomMessageView>).publicQuestion;
+                        return (
+                            message.id === answer.parent_message_id &&
+                            publicQuestion?.studentId === user.id &&
+                            Boolean(publicQuestion.id)
+                        );
+                    });
+                    if (questionIndex < 0) continue;
+
+                    const question = allMessages[questionIndex] as RoomMessageView;
+                    const assessmentId = question.publicQuestion?.id;
+                    if (!assessmentId) continue;
+
+                    try {
+                        const processed = await transferAssessmentService.processMessage(answer.id, assessmentId);
+                        if (processed.message_id !== answer.id || processed.assessment_id !== assessmentId) {
+                            continue;
+                        }
+
+                        const lifecycle = answerLifecycleFromProcessed(processed);
+                        const answerIndex = allMessages.findIndex(message => message.id === answer.id);
+                        if (answerIndex >= 0) {
+                            allMessages[answerIndex] = withAnswerLifecycle(
+                                allMessages[answerIndex] as RoomMessageView,
+                                lifecycle
+                            );
+                        }
+                        allMessages[questionIndex] = withAnswerLifecycle(
+                            question,
+                            preferredQuestionLifecycle(question, lifecycle)
+                        );
+                    } catch (restoreError) {
+                        console.warn('Could not restore transfer assessment feedback:', restoreError);
+                    }
+                }
+            }
+
             setCurrentRoom(normalizeRoom(roomData));
             // Merge rather than replace: a realtime insert that arrived before this fetch
             // completed must survive it.
@@ -541,7 +603,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    }, [addDisplayNameToMessage, normalizeRoom, user?.id]);
+    }, [addDisplayNameToMessage, normalizeRoom, user?.id, user?.current_role]);
 
     const leaveRoom = useCallback(async (): Promise<void> => {
         setCurrentRoom(null);
@@ -623,25 +685,43 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                 };
                 if (options?.assessmentId) {
-                    try {
-                        const processed = await transferAssessmentService.processMessage(
-                            storedMessage.id,
-                            options.assessmentId
-                        );
-                        // Consume the trusted lifecycle result: the server, not the browser, decides
-                        // whether the answer was graded or needs a clarifying label.
-                        setMessages(prev => mergeRoomMessages(prev, [
-                            addDisplayNameToMessage(
-                                withAnswerLifecycle(storedMessage, answerLifecycleFromProcessed(processed)),
-                                participants
-                            ),
-                        ]));
-                    } catch (assessmentError) {
-                        if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
-                            throw assessmentError;
-                        }
-                        await analyzeEvidence();
+                    const processed = await transferAssessmentService.processMessage(
+                        storedMessage.id,
+                        options.assessmentId
+                    );
+                    if (
+                        processed.message_id !== storedMessage.id ||
+                        processed.assessment_id !== options.assessmentId ||
+                        storedMessage.parent_message_id !== options.replyToMessageId
+                    ) {
+                        throw new Error('Assessment processing returned mismatched answer, assessment, or parent identity');
                     }
+                    // Keep the trusted result on the answer and its question so the answer surface
+                    // can render feedback and the question can disable another submission.
+                    const lifecycle = answerLifecycleFromProcessed(processed);
+                    const answerWithLifecycle = addDisplayNameToMessage(
+                        withAnswerLifecycle(storedMessage, lifecycle),
+                        participants
+                    );
+                    setMessages(prev => {
+                        const question = prev.find(message => {
+                            const view = message as Partial<RoomMessageView>;
+                            const publicQuestion = view.publicQuestion;
+                            return (
+                                message.id === storedMessage.parent_message_id &&
+                                publicQuestion?.id === processed.assessment_id &&
+                                publicQuestion.studentId === user.id
+                            );
+                        }) as RoomMessageView | undefined;
+                        const incoming = [answerWithLifecycle];
+                        if (question) {
+                            incoming.push(addDisplayNameToMessage(
+                                withAnswerLifecycle(question, preferredQuestionLifecycle(question, lifecycle)),
+                                participants
+                            ));
+                        }
+                        return mergeRoomMessages(prev, incoming);
+                    });
                 } else {
                     await analyzeEvidence();
                 }
@@ -670,7 +750,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 contextMessages: currentSuggestionContext.contextMessages
             });
 
-            setMessages(prev => [...prev, addDisplayNameToMessage(reviewedResult.message, participants)]);
+            setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(reviewedResult.message, participants)]));
             setCurrentRoom(normalizeRoom(reviewedResult.room));
             setAIInteractions(prev => [...prev, {
                 timestamp: new Date().toISOString(),
@@ -717,7 +797,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         // Add message optimistically
-        setMessages(prev => [...prev, optimisticMessage]);
+        setMessages(prev => mergeRoomMessages(prev, [optimisticMessage]));
 
         const { data, error } = await supabase
             .from('messages')
@@ -743,10 +823,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Replace optimistic message with real message
         if (data) {
-            setMessages(prev => prev.map(msg => 
-                msg.id === optimisticMessage.id 
-                    ? { ...data, display_name: user.display_name || 'User', avatar_url: user.avatar_url }
-                    : msg
+            const persistedMessage = addDisplayNameToMessage(
+                projectRoomMessage(data as Record<string, unknown>),
+                participants
+            );
+            setMessages(prev => mergeRoomMessages(
+                prev.filter(message => message.id !== optimisticMessage.id),
+                [persistedMessage]
             ));
         }
     };
@@ -863,24 +946,22 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const prepared = await transferAssessmentService.prepareTurn({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
-                    checklistId: transferChecklist.id,
+                  checklistId: transferChecklist.id,
                 });
-                const preparedDecision = prepared.decision as TutorDecisionV3 | undefined;
-                if (!preparedDecision) {
-                    throw new Error('Transfer preparation did not return a structured tutor decision');
+                const candidate = createReviewCandidate(prepared);
+                if (!candidate) {
+                    throw new Error('Transfer preparation did not return a valid review candidate');
                 }
                 setTransferDraft({
-                    decision: preparedDecision,
+                    decision: candidate.decision,
                     progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
-                    roomId: String(prepared.room_id),
-                    studentId: String(prepared.student_id),
-                    checklistId: String(prepared.checklist_id),
-                    // Keep null as null. String(null) is the text "null", which the RPC would
-                    // reject as an invalid UUID on every tutoring and Guard turn.
-                    itemId: prepared.item_id == null ? null : String(prepared.item_id),
-                    focusStudentMessageId: String(prepared.focus_student_message_id),
+                    roomId: candidate.scope.roomId,
+                    studentId: candidate.scope.studentId,
+                    checklistId: candidate.scope.checklistId,
+                    itemId: candidate.scope.itemId,
+                    focusStudentMessageId: candidate.scope.focusStudentMessageId,
                 });
-                setAiSuggestion(preparedDecision.assessment?.rendered_text || preparedDecision.response);
+                setAiSuggestion(candidate.decision.assessment?.rendered_text || candidate.decision.response);
                 setAiDecision(null);
                 setFinalMode('tutoring');
                 setCurrentSuggestionContext(null);
@@ -1142,10 +1223,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const stored = [...(data as Message[])].sort(
             (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
-        setMessages(prev => [
-            ...prev,
-            ...stored.map(message => addDisplayNameToMessage(message, participants))
-        ]);
+        setMessages(prev => mergeRoomMessages(
+            prev,
+            stored.map(message => addDisplayNameToMessage(message, participants))
+        ));
         clearAISuggestion();
     };
 
@@ -1306,8 +1387,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const roomTitle = currentRoom.title.replace(/\s+/g, '_');
         const timestamp = new Date().toISOString().split('T')[0];
         
-        // Only include AI data for tutors
-        const isTutor = user?.current_role === 'tutor';
+        const userRole = user?.current_role ?? 'observer';
+        const userId = user?.id ?? null;
         
         if (format === 'json') {
             // Get feedback summary for the room
@@ -1324,7 +1405,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 messageFeedbackStats,
                 feedbackSummary,
                 aiInteractions,
-                isTutor
+                userRole,
+                userId,
             });
             
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -1343,7 +1425,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 messages,
                 messageFeedbackStats,
                 aiInteractions,
-                isTutor
+                userRole,
+                userId,
             });
 
             const blob = new Blob([content], { type: 'text/plain' });
