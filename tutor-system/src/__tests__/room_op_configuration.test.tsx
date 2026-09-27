@@ -7,35 +7,53 @@ import RoomPagePost from '../pages/RoomPagePost';
 import RoomCard from '../components/RoomCard';
 import PostComment from '../components/PostComment';
 import RoomPost from '../components/RoomPost';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { RoomProvider } from '../contexts/RoomContext';
 import * as supabaseService from '../services/supabase';
 
 // Mock Supabase service
 jest.mock('../services/supabase');
+jest.mock('../contexts/AuthContext', () => ({
+    ...jest.requireActual('../contexts/AuthContext'),
+    useAuth: jest.fn()
+}));
 
 // Mock implementations
 const mockCreateRoom = jest.fn();
 const mockGetRoomsByTutor = jest.fn();
-const mockGetCurrentUser = jest.fn();
+const mockUseAuth = useAuth as jest.Mock;
+let mockRoomQueryData: any = null;
+const mockRoomChannel = {
+    on: jest.fn(),
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn()
+};
+
+const createSupabaseQuery = (data: any = null) => {
+    const query: any = {};
+    query.select = jest.fn().mockReturnValue(query);
+    query.eq = jest.fn().mockReturnValue(query);
+    query.in = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.order = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.single = jest.fn().mockResolvedValue({ data, error: null });
+    return query;
+};
 
 // Setup mocks
 beforeEach(() => {
     jest.clearAllMocks();
+    mockRoomQueryData = null;
     
     (supabaseService.createRoom as jest.Mock) = mockCreateRoom;
     (supabaseService.getRoomsByTutor as jest.Mock) = mockGetRoomsByTutor;
-    (supabaseService.getCurrentUser as jest.Mock) = mockGetCurrentUser;
-    (supabaseService.supabase.from as jest.Mock) = jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockReturnValue({
-                    data: null,
-                    error: null
-                })
-            })
-        })
-    });
+    (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([]);
+    (supabaseService.supabase.from as jest.Mock) = jest.fn().mockImplementation((table: string) =>
+        createSupabaseQuery(table === 'rooms' ? mockRoomQueryData : null)
+    );
+    mockRoomChannel.on.mockReturnThis();
+    mockRoomChannel.subscribe.mockReturnThis();
+    (supabaseService.supabase.channel as jest.Mock) = jest.fn().mockReturnValue(mockRoomChannel);
 });
 
 describe('Room OP Configuration', () => {
@@ -91,7 +109,7 @@ describe('Room OP Configuration', () => {
     describe('OP Configuration in Room Creation', () => {
         it('should show OP configuration section in room creation form', async () => {
             mockGetRoomsByTutor.mockResolvedValueOnce([]);
-            mockGetCurrentUser.mockResolvedValueOnce(mockTutor);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>
@@ -108,26 +126,26 @@ describe('Room OP Configuration', () => {
             render(<TestApp />);
 
             // Click create room button
-            const createButton = await screen.findByText('Create a new Room');
+            const createButton = await screen.findByRole('button', { name: /Create a new Room/i });
             fireEvent.click(createButton);
 
             // Check for OP settings section
             expect(screen.getByText('Original Poster (OP) Settings')).toBeInTheDocument();
-            expect(screen.getByLabelText('Use my profile as OP')).toBeInTheDocument();
-            expect(screen.getByLabelText('Use custom OP name')).toBeInTheDocument();
+            expect(screen.getByText('Use my profile as OP')).toBeInTheDocument();
+            expect(screen.getByText('Use custom OP name')).toBeInTheDocument();
             
             // Default selection should be profile
-            const profileRadio = screen.getByLabelText('Use my profile as OP') as HTMLInputElement;
+            const profileRadio = screen.getAllByRole('radio')[0] as HTMLInputElement;
             expect(profileRadio.checked).toBe(true);
             
             // Should show tutor name preview
-            expect(screen.getByText('OP will be: John Tutor')).toBeInTheDocument();
+            expect(screen.getByText((_, element) => element?.textContent === 'OP will be: John Tutor')).toBeInTheDocument();
         });
 
         it('should create room with tutor profile as OP by default', async () => {
             mockCreateRoom.mockResolvedValueOnce(mockRoomWithProfileOP);
             mockGetRoomsByTutor.mockResolvedValueOnce([]);
-            mockGetCurrentUser.mockResolvedValueOnce(mockTutor);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>
@@ -144,7 +162,7 @@ describe('Room OP Configuration', () => {
             render(<TestApp />);
 
             // Click create room button
-            const createButton = await screen.findByText('Create a new Room');
+            const createButton = await screen.findByRole('button', { name: /Create a new Room/i });
             fireEvent.click(createButton);
 
             // Fill in room details
@@ -170,7 +188,7 @@ describe('Room OP Configuration', () => {
         it('should create room with custom OP name when selected', async () => {
             mockCreateRoom.mockResolvedValueOnce(mockRoomWithCustomOP);
             mockGetRoomsByTutor.mockResolvedValueOnce([]);
-            mockGetCurrentUser.mockResolvedValueOnce(mockTutor);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>
@@ -187,7 +205,7 @@ describe('Room OP Configuration', () => {
             render(<TestApp />);
 
             // Click create room button
-            const createButton = await screen.findByText('Create a new Room');
+            const createButton = await screen.findByRole('button', { name: /Create a new Room/i });
             fireEvent.click(createButton);
 
             // Fill in room details
@@ -195,8 +213,8 @@ describe('Room OP Configuration', () => {
             fireEvent.change(titleInput, { target: { value: 'Corporate Training' } });
 
             // Select custom OP option
-            const customOPRadio = screen.getByLabelText('Use custom OP name');
-            fireEvent.click(customOPRadio);
+            fireEvent.click(screen.getByText('Use custom OP name'));
+            expect((screen.getAllByRole('radio')[1] as HTMLInputElement).checked).toBe(true);
 
             // Enter custom OP name
             const customOPInput = screen.getByPlaceholderText('Enter custom OP name');
@@ -221,7 +239,7 @@ describe('Room OP Configuration', () => {
 
         it('should validate custom OP name when selected', async () => {
             mockGetRoomsByTutor.mockResolvedValueOnce([]);
-            mockGetCurrentUser.mockResolvedValueOnce(mockTutor);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>
@@ -238,7 +256,7 @@ describe('Room OP Configuration', () => {
             render(<TestApp />);
 
             // Click create room button
-            const createButton = await screen.findByText('Create a new Room');
+            const createButton = await screen.findByRole('button', { name: /Create a new Room/i });
             fireEvent.click(createButton);
 
             // Fill in room details
@@ -246,15 +264,15 @@ describe('Room OP Configuration', () => {
             fireEvent.change(titleInput, { target: { value: 'Test Room' } });
 
             // Select custom OP option but don't enter name
-            const customOPRadio = screen.getByLabelText('Use custom OP name');
-            fireEvent.click(customOPRadio);
+            fireEvent.click(screen.getByText('Use custom OP name'));
+            expect((screen.getAllByRole('radio')[1] as HTMLInputElement).checked).toBe(true);
 
             // Submit form without entering custom OP name
             const submitButton = screen.getByText('🚀 Create Room');
             fireEvent.click(submitButton);
 
             await waitFor(() => {
-                expect(screen.getByText('Custom OP name is required when using custom OP')).toBeInTheDocument();
+                expect(screen.getAllByText('Custom OP name is required when using custom OP').length).toBeGreaterThan(0);
                 expect(mockCreateRoom).not.toHaveBeenCalled();
             });
         });
@@ -341,17 +359,8 @@ describe('Room OP Configuration', () => {
 
     describe('RoomPagePost OP Display', () => {
         it('should always show OP in RoomPagePost', async () => {
-            // Mock room data fetch
-            (supabaseService.supabase.from as jest.Mock).mockReturnValueOnce({
-                select: jest.fn().mockReturnValue({
-                    eq: jest.fn().mockReturnValue({
-                        single: jest.fn().mockResolvedValueOnce({
-                            data: mockRoomWithCustomOP,
-                            error: null
-                        })
-                    })
-                })
-            });
+            mockRoomQueryData = mockRoomWithCustomOP;
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
 
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/room/room-456']}>

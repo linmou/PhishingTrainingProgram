@@ -35,6 +35,13 @@ The four-directory regression was not rerun for this focused batch.
 - Check the rendered `🟢 Active` status element instead of combining the separate `Status:` label with the value.
 - Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_room_persistence.test.tsx` (1 suite, 4 tests passed).
 
+## Room OP Configuration Regression
+
+- Use button-role queries for the icon-prefixed create-room control and interact with the visible OP options.
+- Mock the current authenticated tutor through `useAuth` and return an empty room-template list.
+- Preserve the default profile OP, custom OP creation, and required-name validation checks against current rendered markup.
+- Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/room_op_configuration.test.tsx` (1 suite, 11 tests passed).
+
 ## Verification
 
 - Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`
