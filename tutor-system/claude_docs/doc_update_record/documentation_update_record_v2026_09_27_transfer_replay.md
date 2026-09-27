@@ -18,5 +18,6 @@ Intent: record why component 102 documentation changed and the evidence availabl
 - Separate synthetic valid-legacy rehearsal: 1 keyed/0 uncovered before migration; one private `legacy_incomplete` row, public key column absent, zero attempts afterward. Migration, backend 8/8, and RPC 27/27 passed.
 - Native local two-session races: wrong/wrong and correct/wrong both observed a blocked competing session and passed final persisted state assertions.
 - Native direct-role checks: anon and authenticated each denied for v2 RPC, legacy v1 RPC, and private table update; six SQLSTATE `42501` results and zero mutations.
+- Corrected invalid terminal transition on a new local clone: migration passed, backend 8/8, RPC 28/28 including rollback and actual history checks; expanded direct-role matrix 10/10 denied with zero mutations.
 - Component branch build: exit 1 at the component-103-owned `transferRoomFixtures.ts:146` public DTO mismatch.
 - Hosted Supabase, two-session races, and hosted generated types remain open in `specs/102-transfer-backend/implementation-evidence.md`.

@@ -246,7 +246,9 @@ BEGIN
       AND (v_result->>'attempts_remaining')::INTEGER = 1
       AND v_result->'terminal_failure_feedback' = 'null'::JSONB
       AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_assessment) = 1
-      AND (SELECT count(*) FROM private.learning_event_inbox) = v_before_events,
+      AND (SELECT count(*) FROM private.learning_event_inbox) = v_before_events
+      AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_assessment)
+      AND NOT EXISTS (SELECT 1 FROM public.checklist_updates WHERE assessment_id = v_assessment),
     v_result::TEXT
   );
 
@@ -296,7 +298,15 @@ BEGIN
       AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_assessment) = 'failed'
       AND EXISTS (SELECT 1 FROM private.learning_event_inbox
         WHERE event_payload->>'assessment_id' = v_assessment::TEXT
-          AND event_kind = 'assessment_fail'),
+          AND event_kind = 'assessment_fail' AND processing_state = 'applied')
+      AND (SELECT status FROM public.checklist_items WHERE id = v_item) = 'needs_review'
+      AND (SELECT understanding_level FROM public.checklist_items WHERE id = v_item) = 'basic'
+      AND (SELECT attempts_count FROM public.checklist_items WHERE id = v_item) = 1
+      AND (SELECT count(*) FROM public.coverage_evidence WHERE assessment_id = v_assessment) = 1
+      AND (SELECT count(*) FROM public.checklist_updates
+        WHERE assessment_id = v_assessment
+          AND previous_status = 'partially_covered' AND new_status = 'needs_review'
+          AND previous_understanding = 'basic' AND new_understanding = 'basic') = 1,
     v_result::TEXT
   );
 
@@ -398,7 +408,15 @@ BEGIN
       AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_pass_assessment) = 1
       AND EXISTS (SELECT 1 FROM private.learning_event_inbox
         WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT
-          AND event_kind = 'assessment_pass'),
+          AND event_kind = 'assessment_pass' AND processing_state = 'applied')
+      AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'covered'
+      AND (SELECT understanding_level FROM public.checklist_items WHERE id = v_pass_item) = 'good'
+      AND (SELECT attempts_count FROM public.checklist_items WHERE id = v_pass_item) = 1
+      AND (SELECT count(*) FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment) = 1
+      AND (SELECT count(*) FROM public.checklist_updates
+        WHERE assessment_id = v_pass_assessment
+          AND previous_status = 'partially_covered' AND new_status = 'covered'
+          AND previous_understanding = 'basic' AND new_understanding = 'good') = 1,
     v_result::TEXT
   );
 
@@ -663,6 +681,53 @@ BEGIN
       AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment),
     v_deferred_event::TEXT
   );
+
+  v_pass_item := gen_random_uuid();
+  INSERT INTO public.checklist_items(
+    id, checklist_id, area_text, item_type, priority, status, understanding_level
+  ) VALUES (
+    v_pass_item, v_checklist, 'Reject a stale assessment transition',
+    'verification_step', 'critical', 'covered', 'good'
+  );
+  v_reviewed_payload := jsonb_set(
+    v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
+  );
+  v_result := public.send_reviewed_tutor_response_v4(
+    v_reviewed_payload, v_room, v_student, v_checklist, v_pass_item,
+    v_focus, v_tutor, gen_random_uuid()
+  );
+  v_pass_question := (v_result->'message'->>'id')::UUID;
+  v_pass_assessment := (v_result->'message'->'assessment'->>'id')::UUID;
+  v_result := public.post_assessment_message_v2(
+    v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
+  );
+  v_pass_answer := (v_result->'message'->>'id')::UUID;
+  BEGIN
+    PERFORM public.process_assessment_message_v2(
+      v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),
+      0, 'open', 'passed', ARRAY['B'],
+      jsonb_build_object('status', 'covered', 'understanding_level', 'good'), 'assessment_pass'
+    );
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_terminal_transition', 'invalid terminal pair rolls back completely', FALSE, 'unexpected success'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    INSERT INTO transfer_v2_results VALUES (
+      'invalid_terminal_transition', 'invalid terminal pair rolls back completely',
+      SQLERRM = 'INVALID_TRANSITION'
+        AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'open'
+        AND (SELECT attempt_count FROM private.transfer_assessments WHERE id = v_pass_assessment) = 0
+        AND NOT EXISTS (SELECT 1 FROM private.transfer_assessment_attempts
+          WHERE assessment_id = v_pass_assessment)
+        AND NOT EXISTS (SELECT 1 FROM private.learning_event_inbox
+          WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT)
+        AND NOT EXISTS (SELECT 1 FROM public.coverage_evidence WHERE assessment_id = v_pass_assessment)
+        AND NOT EXISTS (SELECT 1 FROM public.checklist_updates WHERE assessment_id = v_pass_assessment)
+        AND (SELECT assessment_lifecycle FROM public.messages WHERE id = v_pass_question) = 'delivered'
+        AND (SELECT status FROM public.checklist_items WHERE id = v_pass_item) = 'covered',
+      SQLSTATE || ': ' || SQLERRM
+    );
+  END;
 END;
 $test$;
 

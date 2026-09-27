@@ -947,6 +947,8 @@ BEGIN
     ));
     IF v_transition->>'processing_state' = 'deferred_guard' THEN
       v_processing_state := 'deferred';
+    ELSIF v_transition->>'processing_state' = 'rejected' THEN
+      RAISE EXCEPTION 'INVALID_TRANSITION' USING ERRCODE = 'P0001';
     END IF;
   END IF;
 
