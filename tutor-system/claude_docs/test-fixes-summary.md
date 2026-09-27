@@ -42,6 +42,12 @@ The four-directory regression was not rerun for this focused batch.
 - Preserve the default profile OP, custom OP creation, and required-name validation checks against current rendered markup.
 - Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/room_op_configuration.test.tsx` (1 suite, 11 tests passed).
 
+## Tutor View Regression
+
+- Assert the room's visible participant count rather than a named participant list.
+- Supply the required feedback-stat map and use the current comment composer, message metadata, and download-format flow.
+- Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_view.test.tsx` (1 suite, 5 tests passed).
+
 ## Verification
 
 - Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`

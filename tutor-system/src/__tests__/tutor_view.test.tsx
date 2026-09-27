@@ -128,6 +128,7 @@ defineFeature(feature, test => {
             currentRoom: null,
             participants: [],
             messages: [],
+            messageFeedbackStats: {},
             typingUsers: [],
             startTyping: jest.fn(),
             stopTyping: jest.fn(),
@@ -144,9 +145,16 @@ defineFeature(feature, test => {
         mockUseRoom.mockImplementation(() => mockRoomContextState);
 
         // Mock Supabase calls
-        mockSupabaseClient.from.mockReturnValue({
-            select: jest.fn().mockResolvedValue({ data: [], error: null }),
-        } as any);
+        mockSupabaseClient.from.mockImplementation(() => {
+            const query: any = {};
+            query.select = jest.fn().mockReturnValue(query);
+            query.eq = jest.fn().mockReturnValue(query);
+            query.in = jest.fn().mockResolvedValue({ data: [], error: null });
+            query.order = jest.fn().mockResolvedValue({ data: [], error: null });
+            query.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+            query.single = jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } });
+            return query;
+        });
         
         // Mock getRoomsByTutor to return empty array initially
         mockGetRoomsByTutor.mockResolvedValue([]);
@@ -368,18 +376,18 @@ defineFeature(feature, test => {
             });
         });
 
-        and('they can see the student in the participant list', () => {
-            expect(screen.getByText(studentUser.display_name)).toBeInTheDocument();
+        and('the room should show two participants', () => {
+            expect(screen.getByText('2 participants')).toBeInTheDocument();
         });
 
         when(/^the tutor sends the message "(.*)"$/, (message) => {
-            fireEvent.change(screen.getByPlaceholderText(/Type a message.../i), { target: { value: message } });
-            fireEvent.click(screen.getByRole('button', { name: /Send/i }));
+            fireEvent.change(screen.getByPlaceholderText(/Write a comment\.\.\./i), { target: { value: message } });
+            fireEvent.click(screen.getByTitle('Send comment'));
         });
 
         then(/^the message "(.*)" from the tutor should be visible in the chat$/, async (message) => {
             await waitFor(() => {
-                expect(mockRoomContextState.sendMessage).toHaveBeenCalledWith(message);
+                expect(mockRoomContextState.sendMessage).toHaveBeenCalledWith(message, { replyToMessageId: undefined });
             });
         });
     });
@@ -402,18 +410,19 @@ defineFeature(feature, test => {
         });
 
         when('the tutor clicks the "Download History" button', () => {
-            fireEvent.click(screen.getByRole('button', { name: /Download History/i }));
+            fireEvent.click(screen.getByTitle('Download Chat History'));
+        });
+
+        then('the download format options are shown', () => {
+            expect(screen.getByText('Download Room Data')).toBeInTheDocument();
+        });
+
+        when('the tutor selects the "Chat History (TXT)" format', () => {
+            fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
         });
 
         then('a file containing the chat history and room details should be downloaded', () => {
-            expect(mockRoomContextState.downloadChatHistory).toHaveBeenCalled();
-            // In a real scenario, the downloadChatHistory in the context would be mocked
-            // to verify the content it's called with.
-            // For example:
-            // expect(mockRoomContextState.downloadChatHistory).toHaveBeenCalledWith(
-            //     expect.objectContaining({ title: 'Advanced Phishing' }),
-            //     expect.arrayContaining([expect.objectContaining({ content: 'Hello there' })])
-            // );
+            expect(mockRoomContextState.downloadChatHistory).toHaveBeenCalledWith('txt');
         });
     });
 }); 
