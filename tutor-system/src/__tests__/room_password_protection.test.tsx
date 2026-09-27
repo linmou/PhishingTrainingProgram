@@ -4,38 +4,57 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import TutorView from '../pages/TutorView';
 import RoomPagePost from '../pages/RoomPagePost';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { RoomProvider } from '../contexts/RoomContext';
 import * as supabaseService from '../services/supabase';
 
 // Mock Supabase service
 jest.mock('../services/supabase');
+jest.mock('../contexts/AuthContext', () => ({
+    ...jest.requireActual('../contexts/AuthContext'),
+    useAuth: jest.fn()
+}));
 
 // Mock implementations
 const mockCreateRoom = jest.fn();
 const mockGetRoomsByTutor = jest.fn();
 const mockGetRoomById = jest.fn();
 const mockValidateRoomPassword = jest.fn();
-const mockGetCurrentUser = jest.fn();
+const mockUseAuth = useAuth as jest.Mock;
+let mockRoomQueryData: any = null;
+const mockRoomChannel = {
+    on: jest.fn(),
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn()
+};
+
+const createSupabaseQuery = (data: any = null) => {
+    const query: any = {};
+    query.select = jest.fn().mockReturnValue(query);
+    query.eq = jest.fn().mockReturnValue(query);
+    query.in = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.order = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.single = jest.fn().mockResolvedValue({ data, error: null });
+    return query;
+};
 
 // Setup mocks
 beforeEach(() => {
     jest.clearAllMocks();
+    mockRoomQueryData = null;
     
     (supabaseService.createRoom as jest.Mock) = mockCreateRoom;
     (supabaseService.getRoomsByTutor as jest.Mock) = mockGetRoomsByTutor;
-    (supabaseService.supabase.from as jest.Mock) = jest.fn().mockReturnValue({
-        select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-                single: jest.fn().mockReturnValue({
-                    data: null,
-                    error: null
-                })
-            })
-        })
-    });
+    (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([]);
+    (supabaseService.supabase.from as jest.Mock) = jest.fn().mockImplementation((table: string) =>
+        createSupabaseQuery(table === 'rooms' ? mockRoomQueryData : null)
+    );
+    mockRoomChannel.on.mockReturnThis();
+    mockRoomChannel.subscribe.mockReturnThis();
+    (supabaseService.supabase.channel as jest.Mock) = jest.fn().mockReturnValue(mockRoomChannel);
     (supabaseService.validateRoomPassword as jest.Mock) = mockValidateRoomPassword;
-    (supabaseService.getCurrentUser as jest.Mock) = mockGetCurrentUser;
+    mockUseAuth.mockReturnValue({ user: null, loading: false });
 });
 
 describe('Room Password Protection', () => {
@@ -84,6 +103,7 @@ describe('Room Password Protection', () => {
         it('should create a room with password when password is provided', async () => {
             mockCreateRoom.mockResolvedValueOnce(mockPasswordRoom);
             mockGetRoomsByTutor.mockResolvedValueOnce([]);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>
@@ -100,7 +120,7 @@ describe('Room Password Protection', () => {
             render(<TestApp />);
 
             // Click create room button
-            const createButton = await screen.findByText('Create a new Room');
+            const createButton = await screen.findByRole('button', { name: /Create a new Room/i });
             fireEvent.click(createButton);
 
             // Fill in room details
@@ -108,8 +128,7 @@ describe('Room Password Protection', () => {
             fireEvent.change(titleInput, { target: { value: 'Password Protected Room' } });
 
             // Enable password protection
-            const passwordCheckbox = screen.getByLabelText('Password protect this room');
-            fireEvent.click(passwordCheckbox);
+            fireEvent.click(screen.getByText('Enable password protection for this room'));
 
             // Enter password
             const passwordInput = screen.getByLabelText('Room Password');
@@ -131,6 +150,7 @@ describe('Room Password Protection', () => {
 
         it('should display password in room card for tutor', async () => {
             mockGetRoomsByTutor.mockResolvedValueOnce([mockPasswordRoom]);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>
@@ -155,19 +175,8 @@ describe('Room Password Protection', () => {
 
     describe('Password Validation for Room Access', () => {
         it('should bypass password check for room owner', async () => {
-            mockGetCurrentUser.mockResolvedValueOnce(mockTutor);
-            
-            // Mock room data fetch
-            (supabaseService.supabase.from as jest.Mock).mockReturnValueOnce({
-                select: jest.fn().mockReturnValue({
-                    eq: jest.fn().mockReturnValue({
-                        single: jest.fn().mockResolvedValueOnce({
-                            data: mockPasswordRoom,
-                            error: null
-                        })
-                    })
-                })
-            });
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
+            mockRoomQueryData = mockPasswordRoom;
 
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/room/room-789']}>
@@ -190,19 +199,8 @@ describe('Room Password Protection', () => {
         });
 
         it('should show password prompt for non-owner users', async () => {
-            mockGetCurrentUser.mockResolvedValueOnce(mockStudent);
-            
-            // Mock room data fetch
-            (supabaseService.supabase.from as jest.Mock).mockReturnValueOnce({
-                select: jest.fn().mockReturnValue({
-                    eq: jest.fn().mockReturnValue({
-                        single: jest.fn().mockResolvedValueOnce({
-                            data: mockPasswordRoom,
-                            error: null
-                        })
-                    })
-                })
-            });
+            mockUseAuth.mockReturnValue({ user: mockStudent, loading: false });
+            mockRoomQueryData = mockPasswordRoom;
 
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/room/room-789']}>
@@ -226,7 +224,8 @@ describe('Room Password Protection', () => {
         });
 
         it('should accept correct password and grant access', async () => {
-            mockGetCurrentUser.mockResolvedValueOnce(mockStudent);
+            mockUseAuth.mockReturnValue({ user: mockStudent, loading: false });
+            mockRoomQueryData = mockPasswordRoom;
             mockValidateRoomPassword.mockResolvedValueOnce({ 
                 success: true, 
                 message: 'Password correct' 
@@ -266,7 +265,8 @@ describe('Room Password Protection', () => {
         });
 
         it('should show error for incorrect password and allow retry', async () => {
-            mockGetCurrentUser.mockResolvedValueOnce(mockStudent);
+            mockUseAuth.mockReturnValue({ user: mockStudent, loading: false });
+            mockRoomQueryData = mockPasswordRoom;
             mockValidateRoomPassword.mockResolvedValueOnce({ 
                 success: false, 
                 message: 'Incorrect password' 
@@ -316,6 +316,7 @@ describe('Room Password Protection', () => {
             };
             
             mockGetRoomsByTutor.mockResolvedValueOnce([unprotectedRoom]);
+            mockUseAuth.mockReturnValue({ user: mockTutor, loading: false });
             
             const TestApp = () => (
                 <MemoryRouter initialEntries={['/tutor']}>

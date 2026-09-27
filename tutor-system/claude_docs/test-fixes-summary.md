@@ -48,6 +48,13 @@ The four-directory regression was not rerun for this focused batch.
 - Supply the required feedback-stat map and use the current comment composer, message metadata, and download-format flow.
 - Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_view.test.tsx` (1 suite, 5 tests passed).
 
+## Room Password Protection Regression
+
+- Mock the authenticated user through the current `useAuth` contract and provide table-aware room reads plus the realtime channel methods used by `RoomContext`.
+- Query the create-room control by its button role and interact with the visible password-protection option.
+- Focused run before Feature 103: 6 tests passed and 1 retry-path test failed after room lookup returned `Room not found`.
+- Combined verification candidate `9493750`, which includes Feature 103, passed the focused password suite (7/7), the four-directory regression (66 suites and 589 tests passed; 7 suites and 107 tests skipped; 13 checklist todos), build, and Node handoff/E2E checks (25/25).
+
 ## Checklist Management Contract
 
 - Replaced calls to removed `ChecklistService` methods with tests for the current template, read, progress, tutor update, custom area, transfer ownership, AI coverage, and fallback APIs.
