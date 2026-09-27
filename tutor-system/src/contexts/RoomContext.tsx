@@ -615,25 +615,35 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const storedMessage = projectRoomMessage(storedRow);
             setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(storedMessage, participants)]));
             if (user.current_role === 'student') {
-                try {
-                    const processed = await transferAssessmentService.processMessage(storedMessage.id);
-                    // Consume the trusted lifecycle result: the server, not the browser, decides
-                    // whether the answer was graded or needs a clarifying label.
-                    setMessages(prev => mergeRoomMessages(prev, [
-                        addDisplayNameToMessage(
-                            withAnswerLifecycle(storedMessage, answerLifecycleFromProcessed(processed)),
-                            participants
-                        ),
-                    ]));
-                } catch (assessmentError) {
-                    if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
-                        throw assessmentError;
-                    }
+                const analyzeEvidence = async () => {
                     try {
                         await transferAssessmentService.analyzeMessage(storedMessage.id, currentRoom.id);
                     } catch (analysisError) {
                         console.warn('Transfer evidence analysis unavailable; message was stored:', analysisError);
                     }
+                };
+                if (options?.assessmentId) {
+                    try {
+                        const processed = await transferAssessmentService.processMessage(
+                            storedMessage.id,
+                            options.assessmentId
+                        );
+                        // Consume the trusted lifecycle result: the server, not the browser, decides
+                        // whether the answer was graded or needs a clarifying label.
+                        setMessages(prev => mergeRoomMessages(prev, [
+                            addDisplayNameToMessage(
+                                withAnswerLifecycle(storedMessage, answerLifecycleFromProcessed(processed)),
+                                participants
+                            ),
+                        ]));
+                    } catch (assessmentError) {
+                        if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
+                            throw assessmentError;
+                        }
+                        await analyzeEvidence();
+                    }
+                } else {
+                    await analyzeEvidence();
                 }
             }
             return;
