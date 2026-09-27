@@ -32,6 +32,8 @@ The `private` schema owns three unexposed tables:
 
 `process_assessment_message_v2` locks the room, checklist item, and private assessment, then compares the expected attempt count and lifecycle before committing. A stale caller receives `CONCURRENT_MODIFICATION`; the Edge Function rereads state and reruns component 101's pure resolver. First wrong stores only attempt 1. Pass or second failure applies the existing learning event in the same transaction as the terminal attempt and lifecycle update.
 
+If Guard activates between resolution and commit, a terminal assessment stores its attempt and causal inbox event with deferred processing and leaves progress unchanged. Leaving Guard through a reviewed or manual room mode update replays linked deferred assessment events in order. The original event ID and dedupe key remain intact; a still-valid transition writes one coverage evidence row, one checklist update, and the same item state as `apply_learning_event_v1`. An item that is no longer partially covered produces an explicit rejected event without progress or history mutation.
+
 ### Users Table (Lines 12-43)
 **Purpose**: User identity and role management
 ```typescript

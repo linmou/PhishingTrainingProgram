@@ -60,7 +60,7 @@ New delivered rows require key, explanation, scope, public message, and lifecycl
 | `ordinal` | 1 or 2; unique per assessment |
 | `selected_option_ids` | Canonical deduplicated option IDs |
 | `result` | `correct` or `incorrect` |
-| `processing_state` | `applied`, `deferred`, or `error`; retries read the existing row |
+| `processing_state` | `applied`, `deferred`, or `rejected`; retries read the committed response |
 | `learning_event_id` | Nullable terminal causal event link |
 | `created_at` | Audit timestamp |
 
@@ -85,7 +85,7 @@ The Edge Function records each provider attempt through service-role-only storag
 
 ### Existing `private.learning_event_inbox`
 
-Terminal pass/fail uses the existing causal learning-event ledger. The event key includes assessment and terminal answer identities. First incorrect attempts create no learning event. Guard-deferred and error states remain visible.
+Terminal pass/fail uses the existing causal learning-event ledger. The event key includes assessment and terminal answer identities. First incorrect attempts create no learning event. If Guard becomes active after answer resolution, the terminal attempt and original inbox event commit as deferred without progress. A room transition from Guard to tutoring replays deferred terminal assessment events in creation order through a database trigger, whether the mode change is reviewed or manual. Replay retains each event ID and dedupe key, writes one evidence and history row if the item remains partially covered, and rejects an invalidated transition without changing progress. Repeated mode updates do not reapply the event.
 
 ## Lifecycle
 

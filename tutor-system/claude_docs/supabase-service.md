@@ -14,6 +14,8 @@ Core database client configuration and service abstraction layer. Provides type-
 
 The same trusted boundary preserves ordinary room messages and reviewed tutoring or Guard turns. Those branches create no private assessment row; private key and attempt state exist only for an assessment turn.
 
+The database applies a deferred terminal assessment event when a reviewed or manual room mode change clears Guard. That room update is the recovery trigger; the browser does not resubmit the answer or write progress. The original inbox event and dedupe identity remain the causal record.
+
 The Edge Function verifies the caller, checks room and role scope, and calls service-role-only RPCs. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution. Missing verifier configuration, feature activation, or required provider settings fails closed.
 
 The Edge Function imports the existing CRA resolver directly. `deno.json` enables sloppy relative-import resolution for that established module graph; there is no copied Edge lifecycle implementation.

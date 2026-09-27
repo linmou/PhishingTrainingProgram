@@ -73,8 +73,8 @@ CREATE TABLE IF NOT EXISTS private.transfer_assessment_attempts (
   ordinal INTEGER NOT NULL CHECK (ordinal IN (1, 2)),
   selected_option_ids TEXT[] NOT NULL CHECK (cardinality(selected_option_ids) BETWEEN 1 AND 3),
   answer_outcome TEXT NOT NULL CHECK (answer_outcome IN ('retry', 'passed', 'failed')),
-  processing_state TEXT NOT NULL CHECK (processing_state IN ('applied', 'deferred')),
-  learning_event_id UUID,
+  processing_state TEXT NOT NULL CHECK (processing_state IN ('applied', 'deferred', 'rejected')),
+  learning_event_id UUID UNIQUE,
   transition JSONB,
   response_payload JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -85,6 +85,112 @@ CREATE TABLE IF NOT EXISTS private.transfer_assessment_attempts (
 
 CREATE INDEX IF NOT EXISTS transfer_assessment_attempts_assessment_idx
   ON private.transfer_assessment_attempts(assessment_id, ordinal);
+
+CREATE OR REPLACE FUNCTION private.replay_deferred_transfer_assessments()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, private
+AS $$
+DECLARE
+  v_event private.learning_event_inbox%ROWTYPE;
+  v_item public.checklist_items%ROWTYPE;
+  v_attempt private.transfer_assessment_attempts%ROWTYPE;
+  v_assessment private.transfer_assessments%ROWTYPE;
+  v_next_status TEXT;
+  v_evidence_id UUID;
+  v_update_id UUID;
+  v_prior_operation TEXT := current_setting('app.transfer_operation', true);
+BEGIN
+  IF OLD.active_response_mode IS DISTINCT FROM 'guard'
+     OR NEW.active_response_mode = 'guard' THEN
+    RETURN NEW;
+  END IF;
+
+  FOR v_event IN
+    SELECT e.* FROM private.learning_event_inbox e
+    JOIN private.transfer_assessment_attempts attempt ON attempt.learning_event_id = e.event_id
+    WHERE e.room_id = NEW.id AND e.processing_state = 'deferred_guard'
+      AND e.event_kind IN ('assessment_pass', 'assessment_fail')
+    ORDER BY e.created_at, e.event_id
+    FOR UPDATE OF e
+  LOOP
+    SELECT * INTO v_attempt FROM private.transfer_assessment_attempts
+    WHERE learning_event_id = v_event.event_id FOR UPDATE;
+    SELECT * INTO v_assessment FROM private.transfer_assessments
+    WHERE id = v_attempt.assessment_id;
+    SELECT * INTO v_item FROM public.checklist_items WHERE id = v_event.item_id FOR UPDATE;
+    IF v_attempt.processing_state IS DISTINCT FROM 'deferred'
+       OR v_assessment.id IS NULL
+       OR v_event.event_payload->>'assessment_id' IS DISTINCT FROM v_assessment.id::TEXT
+       OR v_event.student_id IS DISTINCT FROM v_assessment.student_id
+       OR v_event.checklist_id IS DISTINCT FROM v_assessment.checklist_id
+       OR v_event.item_id IS DISTINCT FROM v_assessment.item_id
+       OR v_event.source_message_id IS DISTINCT FROM v_attempt.answer_message_id
+       OR v_assessment.lifecycle IS DISTINCT FROM CASE
+         WHEN v_event.event_kind = 'assessment_pass' THEN 'passed' ELSE 'failed' END
+       OR v_item.status IS DISTINCT FROM 'partially_covered'
+       OR v_item.checklist_id IS DISTINCT FROM v_event.checklist_id
+       OR NOT EXISTS (
+         SELECT 1 FROM public.session_checklists sc
+         WHERE sc.id = v_event.checklist_id AND sc.room_id = NEW.id
+           AND sc.student_id = v_event.student_id AND sc.progress_policy_version = 'transfer_v1'
+       ) THEN
+      UPDATE private.learning_event_inbox
+      SET processing_state = 'rejected', error_code = 'INVALID_TRANSITION'
+      WHERE event_id = v_event.event_id;
+      UPDATE private.transfer_assessment_attempts
+      SET processing_state = 'rejected' WHERE learning_event_id = v_event.event_id;
+      CONTINUE;
+    END IF;
+
+    v_next_status := CASE WHEN v_event.event_kind = 'assessment_pass'
+      THEN 'covered' ELSE 'needs_review' END;
+    PERFORM set_config('app.transfer_operation', 'on', true);
+    INSERT INTO public.coverage_evidence(
+      item_id, evidence_text, analysis, confidence_score, detection_method,
+      message_id, event_id, assessment_id
+    ) VALUES (
+      v_item.id, v_event.event_payload->>'evidence_text',
+      COALESCE(v_event.event_payload->>'explanation', 'Transfer event applied by trusted operation'),
+      100, CASE WHEN v_event.classified_by = 'tutor' THEN 'tutor_manual' ELSE 'ai_analysis' END,
+      v_event.source_message_id, v_event.event_id,
+      (v_event.event_payload->>'assessment_id')::UUID
+    ) RETURNING id INTO v_evidence_id;
+    UPDATE public.checklist_items
+    SET status = v_next_status,
+        understanding_level = CASE WHEN v_event.event_kind = 'assessment_pass' THEN 'good' ELSE 'basic' END,
+        last_addressed = NOW(),
+        attempts_count = attempts_count + 1, updated_at = NOW()
+    WHERE id = v_item.id;
+    INSERT INTO public.checklist_updates(
+      checklist_id, item_id, previous_status, new_status, previous_understanding,
+      new_understanding, evidence_id, event_id, assessment_id, updated_by
+    ) VALUES (
+      v_event.checklist_id, v_item.id, v_item.status, v_next_status,
+      v_item.understanding_level,
+      CASE WHEN v_event.event_kind = 'assessment_pass' THEN 'good' ELSE 'basic' END,
+      v_evidence_id, v_event.event_id,
+      (v_event.event_payload->>'assessment_id')::UUID,
+      CASE WHEN v_event.classified_by = 'tutor' THEN 'tutor' ELSE 'ai' END
+    ) RETURNING id INTO v_update_id;
+    UPDATE private.learning_event_inbox
+    SET processing_state = 'applied', error_code = NULL,
+        linked_update_id = v_update_id, linked_evidence_id = v_evidence_id, applied_at = NOW()
+    WHERE event_id = v_event.event_id;
+    UPDATE private.transfer_assessment_attempts
+    SET processing_state = 'applied' WHERE learning_event_id = v_event.event_id;
+    PERFORM set_config('app.transfer_operation', COALESCE(v_prior_operation, ''), true);
+  END LOOP;
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION private.replay_deferred_transfer_assessments() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS replay_deferred_transfer_assessments ON public.rooms;
+CREATE TRIGGER replay_deferred_transfer_assessments
+AFTER UPDATE OF active_response_mode ON public.rooms
+FOR EACH ROW EXECUTE FUNCTION private.replay_deferred_transfer_assessments();
 
 CREATE TABLE IF NOT EXISTS private.transfer_provider_attempts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -839,7 +945,9 @@ BEGIN
       'classified_by', 'deterministic_grader',
       'expected_next_progress', p_next_progress
     ));
-    IF v_transition->>'disposition' = 'deferred' THEN v_processing_state := 'deferred'; END IF;
+    IF v_transition->>'processing_state' = 'deferred_guard' THEN
+      v_processing_state := 'deferred';
+    END IF;
   END IF;
 
   UPDATE private.transfer_assessments
