@@ -35,7 +35,7 @@ DECLARE
   v_pass_answer UUID;
   v_before_events INTEGER;
 BEGIN
-  INSERT INTO public.users(id, email, display_name, current_role, status)
+  INSERT INTO public.users(id, email, display_name, "current_role", status)
   VALUES
     (v_tutor, 'transfer-v2-tutor@example.invalid', 'Transfer V2 Tutor', 'tutor', 'active'),
     (v_student, 'transfer-v2-student@example.invalid', 'Transfer V2 Student', 'student', 'active');
