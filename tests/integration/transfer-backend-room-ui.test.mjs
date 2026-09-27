@@ -187,7 +187,8 @@ test('local adapter contract: the learner projection carries no private key', as
 test('local adapter contract: scoped failures classify to distinct fail-closed outcomes', () => {
   const cases = [
     ['LEGACY_CHECKLIST: no transfer checklist in this room', 'unavailable'],
-    ['WRONG_LEARNER: the focus message is not this learner', 'validation'],
+    ['WRONG_LEARNER: the focus message is not this learner', 'superseded'],
+    ['ITEM_VALIDATION_FAILED: the candidate needs correction', 'validation'],
     ['ASSESSMENT_ALREADY_OPEN: this learner already has a delivered assessment', 'superseded'],
   ];
 
