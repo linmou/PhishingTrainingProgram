@@ -156,7 +156,16 @@ export function publicQuestionFromStoredRow(
   row: Record<string, unknown>,
   explicit?: PublicAssessmentDTO | null
 ): PublicQuestionView | null {
-  const assessment = explicit ?? asRecord(row).assessment;
+  const source = asRecord(row);
+  const assessment = explicit ?? (source.assessment !== undefined
+    ? source.assessment
+    : {
+      id: source.assessment_id,
+      student_id: source.assessment_student_id,
+      selection_type: source.assessment_selection_type,
+      stem: source.content,
+      options: source.assessment_options,
+    });
   if (!isCompletePublicAssessment(assessment)) return null;
   return {
     id: assessment.id,
@@ -405,7 +414,17 @@ export function mergeRoomMessages(
   const remember = (message: Message | null | undefined) => {
     if (!message || !message.id) return;
     const current = byId.get(message.id);
-    byId.set(message.id, { message, seen: current ? current.seen : byId.size });
+    const currentView = current?.message as Partial<RoomMessageView> | undefined;
+    const incomingView = message as Partial<RoomMessageView>;
+    const merged = current
+      ? {
+        ...current.message,
+        ...message,
+        publicQuestion: incomingView.publicQuestion ?? currentView?.publicQuestion ?? null,
+        answerLifecycle: incomingView.answerLifecycle ?? currentView?.answerLifecycle ?? null,
+      }
+      : message;
+    byId.set(message.id, { message: merged, seen: current ? current.seen : byId.size });
   };
   existing.forEach(remember);
   incoming.forEach(remember);

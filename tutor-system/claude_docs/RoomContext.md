@@ -86,15 +86,19 @@ Guard review records also preserve `raw_mode`, `mode_reason`, `final_mode`, and 
 Transfer assessment delivery uses the reviewed `TutorDecisionV3` candidate and the typed service
 facade. `RoomContext` keeps the prepared scope until delivery succeeds, sends assessment content
 through the reviewed delivery operation, and projects the returned public message before storing it
-in room state. The projection includes only the learner-safe question DTO; private answer keys and
-transfer basis fields are discarded at the UI boundary.
+in room state. On reload, the public question can be rebuilt from the persisted assessment ID,
+student ID, selection type, stem, and options columns. Malformed or incomplete rows fail closed;
+private answer keys and transfer basis fields are discarded at the UI boundary.
 
-Learner answers send `selectedOptionIds` with the assessment message identity and pass that same
-identity to the trusted processing operation. Student messages without an assessment identity use
-evidence analysis directly. The context stores the server's `ProcessedMessageDTO` lifecycle result,
-and `PublicAssessmentQuestion` renders retry, passed, rejected, deferred, duplicate, and
-terminal-failure states from that result. The browser does not grade answers or construct terminal
-feedback.
+Assessment submissions send canonical `selectedOptionIds` with the public question message ID as the
+persisted parent and the separate assessment ID for trusted processing. The context validates the
+processor's returned answer and assessment IDs before attaching lifecycle state to the answer and
+its matching question. On student reload or reconnect, it re-reads each matching answer through the
+idempotent `processMessage` facade, only for the signed-in learner's own answers and questions. A
+failed re-read leaves the room visible without inventing feedback. Message merges retain the
+projected question and server lifecycle when polling replaces a local view with a fresh database
+row. Student messages without an assessment identity use evidence analysis directly. The browser
+does not grade answers or write progress.
 
 ### Parameter Override System (Lines 556-604)
 **Purpose**: Real-time AI behavior modification

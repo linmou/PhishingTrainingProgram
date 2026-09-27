@@ -6,7 +6,21 @@ Record the commands actually run on branch `103-transfer-room-ui`, their exit co
 counts, every failure with its cause, and every gate that is deferred. Nothing here is a projected
 result: each number was read from the command output recorded in the run logs.
 
-## Current Local Gate (2026-09-26)
+## Current Local Gate (2026-09-27)
+
+The dated [task audit](task-audit-2026-09-26.md) now reconciles all 48 task clauses against the current tree: 19 complete, 29 open. Historical sections below preserve earlier runs and do not replace this gate.
+
+- The exact 17-path command in `quickstart.md`, run with `CI=true`, `--runInBand`, and all listed paths, exited **0**: **17 suites, 148 tests passed**. No live/provider operation ran. Full output: `/tmp/103-focused-gate-20260927-final.log`.
+- The focused answer/comment rerun exited **0**: **2 suites, 20 tests passed**, covering idempotent reload restoration, distinct question/assessment identity, persisted remaining attempts, canonical selected-option forwarding, learner-only enabled controls, read-only tutor/observer controls, and private-field absence in rendered markup.
+- `CI=true npm run test:regression -- --runInBand` exited **1**: **35 failed, 9 skipped, 90 passed suites; 151 failed, 141 skipped, 942 passed tests**. Full output: `/tmp/103-regression-20260927.log`. The current `RoomContext.test.tsx` failure is `channel.unsubscribe is not a function` during teardown because its older realtime mock lacks `unsubscribe`; the current `PostComment.test.tsx` failure is its unrelated multi-agent profile expectation for Riley. The 2026-09-26 logs previously cited below are absent from the current RTK log directory, so the current failure-name list cannot be compared to those runs. T045 remains open.
+- `npx tsc --noEmit` exited **2** with **506 errors in 41 files**. A check of the full diagnostics found none in the modified 103 UI, adapter, or focused-test paths. Full output: `/tmp/103-tsc-20260927-final.log`.
+- `npm run build` exited **0** after removing the new `joinRoom` dependency warning. Existing source-map, lint, and Browserslist warnings remain; the build is successful but does not make the TypeScript gate green.
+- `git diff --check` exited **0** after documentation updates.
+- `tutor-system/README.md` and `tutor-system/claude_docs/README.md` were reviewed; their existing high-level transfer-assessment description remains accurate. `tutor-system/claude_docs/RoomContext.md` now documents safe question projection, idempotent lifecycle restoration, and view-state preservation through polling. The matching record is `tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_27_transfer_room_reload_restore.md`.
+- The ownership audit from the initial 103 commit `0c4dfb6` through `HEAD` found the shared type barrel `tutor-system/src/types/index.ts` modified by 103 commit `21915f4`, despite the task boundary assigning that file to component 101. No other prohibited shared-service, SQL/RLS, auth/provider, prompt, Promptfoo, component 104, or release-browser paths appear in that 103 range. The broader `2fcd0b4..HEAD` integration range includes separate earlier 101/102/104 and orchestration commits; they are not attributed to 103. T048 remains open for that shared-type ownership disposition.
+- Hosted SQL/RLS, provider evaluation, deployment, and release-browser checks were not run. The local `.env` is ignored and not part of the commit.
+
+## Prior Local Gate (2026-09-26)
 
 The dated [task audit](task-audit-2026-09-26.md) reconciles all 48 tasks individually. Eight are checked; 40 remain open. Historical results below describe earlier trees and do not supersede this gate.
 

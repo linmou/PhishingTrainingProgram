@@ -397,10 +397,14 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
-    const handleAssessmentSubmit = async (messageId: string, selectedOptionIds: AssessmentOptionId[]) => {
+    const handleAssessmentSubmit = async (
+        messageId: string,
+        assessmentId: string,
+        selectedOptionIds: AssessmentOptionId[]
+    ) => {
         await sendMessage(selectedOptionIds.join(','), {
             replyToMessageId: messageId,
-            assessmentId: messageId,
+            assessmentId,
             selectedOptionIds,
         });
     };

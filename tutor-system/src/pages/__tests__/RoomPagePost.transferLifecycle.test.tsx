@@ -14,9 +14,14 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../RoomPagePost';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
+import { projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
 import {
+  DELIVERED_QUESTION_ID,
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
+  deliveredPublicAssessment,
+  deliveredQuestionRow,
+  learnerAUser,
   learnerAMessageRow,
   preparedCandidate,
   transferRoom,
@@ -178,6 +183,28 @@ describe('RoomPagePost transfer lifecycle states', () => {
 
     expect(screen.getByRole('heading', { name: 'Review transfer assessment' })).toBeInTheDocument();
     expect(document.querySelector('[data-transfer-status]')).toBeNull();
+  });
+
+  it('submits the public question parent ID and assessment ID separately', async () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const question = projectRoomMessage(
+      { ...deliveredQuestionRow, id: questionMessageId },
+      deliveredPublicAssessment
+    );
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    mount({ messages: [question], sendMessage });
+
+    fireEvent.click(screen.getByRole('radio', { name: /A\./ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
+    });
+
+    expect(sendMessage).toHaveBeenCalledWith('A', {
+      replyToMessageId: questionMessageId,
+      assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: ['A'],
+    });
   });
 
   it('clears a previous lifecycle state when a new preparation starts and succeeds', async () => {

@@ -72,10 +72,12 @@ describe('RoomContext learner answer path', () => {
   let processMessage: jest.SpyInstance;
   let analyzeMessage: jest.SpyInstance;
   let room: ReturnType<typeof useRoom> | null;
+  let initialMessages: Array<Record<string, unknown>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     room = null;
+    initialMessages = [learnerAMessageRow, deliveredQuestionRow];
 
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -112,9 +114,9 @@ describe('RoomContext learner answer path', () => {
       if (table === 'messages') {
         return {
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({
-                data: [learnerAMessageRow, deliveredQuestionRow],
+              eq: jest.fn().mockReturnValue({
+                order: jest.fn().mockResolvedValue({
+                data: initialMessages,
                 error: null,
               }),
             }),
@@ -145,14 +147,28 @@ describe('RoomContext learner answer path', () => {
     // The trusted boundary returns the stored row; it carries the private key, as a crafted
     // request could observe, so the browser must project it.
     postMessage = jest.spyOn(transferAssessmentService, 'postMessage').mockImplementation(async (input) => ({
-      message: { ...deliveredAnswerRow, content: input.content, assessment_key: PRIVATE_ASSESSMENT_KEY },
+      message: {
+        ...deliveredAnswerRow,
+        content: input.content,
+        parent_message_id: input.replyToMessageId ?? null,
+        assessment_key: PRIVATE_ASSESSMENT_KEY,
+      },
     } as unknown as Record<string, unknown>));
     processMessage = jest.spyOn(transferAssessmentService, 'processMessage').mockResolvedValue({
-      question_id: DELIVERED_QUESTION_ID,
-      result: { verdict: 'pass' },
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'passed',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
       selected_option_ids: ['B'],
       transition: { status: 'covered' },
-      feedback_required: true,
+      feedback_required: false,
+      code: null,
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
     });
     analyzeMessage = jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
   });
@@ -180,6 +196,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B', {
         replyToMessageId: DELIVERED_QUESTION_ID,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -188,6 +205,7 @@ describe('RoomContext learner answer path', () => {
       content: 'B',
       replyToMessageId: DELIVERED_QUESTION_ID,
       assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: ['B'],
     });
     expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
     expect(analyzeMessage).not.toHaveBeenCalled();
@@ -236,11 +254,20 @@ describe('RoomContext learner answer path', () => {
 
   it('keeps an unresolved answer server-authoritative instead of inventing a selection', async () => {
     processMessage.mockResolvedValue({
-      question_id: '',
-      result: null,
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'rejected',
+      answer_outcome: null,
+      attempt_number: null,
+      attempts_used: 0,
+      attempts_remaining: 2,
       selected_option_ids: null,
       transition: null,
       feedback_required: false,
+      code: 'ANSWER_FORMAT_UNRESOLVED',
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
     });
     await mountRoom();
 
@@ -257,27 +284,179 @@ describe('RoomContext learner answer path', () => {
     expect(JSON.stringify(room!.messages)).not.toContain('selected_option_ids');
   });
 
-  it('falls back to evidence analysis when no assessment is open, without duplicating the answer', async () => {
-    processMessage.mockRejectedValue(new Error('ASSESSMENT_NOT_OPEN: no open assessment'));
+  it('attaches the trusted result to the matching assessment question for learner feedback', async () => {
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['B'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
     await mountRoom();
 
     await act(async () => {
-      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID });
+      await room!.sendMessage('B', {
+        replyToMessageId: DELIVERED_QUESTION_ID,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
     });
 
-    expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      answerLifecycle?: { state?: string; assessmentId?: string; attemptsRemaining?: number };
+    };
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptsRemaining: 1,
+    });
+    expect(processMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('matches the trusted assessment ID to its question message and preserves the distinct parent ID', async () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    initialMessages = [learnerAMessageRow, { ...deliveredQuestionRow, id: questionMessageId }];
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['B'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: false,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('B', {
+        replyToMessageId: questionMessageId,
+        assessmentId: DELIVERED_QUESTION_ID,
+      });
+    });
+
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      replyToMessageId: questionMessageId,
+      assessmentId: DELIVERED_QUESTION_ID,
+    }));
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
+    expect(answer?.parent_message_id).toBe(questionMessageId);
+    const question = room!.messages.find((message) => message.id === questionMessageId) as unknown as {
+      publicQuestion?: { id?: string };
+      answerLifecycle?: { state?: string; assessmentId?: string };
+    };
+    expect(question.publicQuestion?.id).toBe(DELIVERED_QUESTION_ID);
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+    });
+  });
+
+  it('restores persisted learner answer feedback after joining through the idempotent processor', async () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    initialMessages = [
+      {
+        ...deliveredQuestionRow,
+        assessment: undefined,
+        id: questionMessageId,
+        assessment_id: DELIVERED_QUESTION_ID,
+        assessment_student_id: LEARNER_A_ID,
+      },
+      { ...deliveredAnswerRow, parent_message_id: questionMessageId },
+      {
+        ...deliveredAnswerRow,
+        id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+        user_id: '44444444-4444-4444-8444-444444444444',
+        parent_message_id: questionMessageId,
+      },
+    ];
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['B'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: true,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
+
+    await mountRoom();
+
+    expect(processMessage).toHaveBeenCalledTimes(1);
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
+      answerLifecycle?: { state?: string; assessmentId?: string; attemptsRemaining?: number };
+    };
+    const question = room!.messages.find((message) => message.id === questionMessageId) as unknown as {
+      publicQuestion?: { id?: string };
+      answerLifecycle?: { state?: string; assessmentId?: string; attemptsRemaining?: number };
+    };
+    expect(answer.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptsRemaining: 1,
+    });
+    expect(question.publicQuestion?.id).toBe(DELIVERED_QUESTION_ID);
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'retry',
+      assessmentId: DELIVERED_QUESTION_ID,
+      attemptsRemaining: 1,
+    });
+  });
+
+  it('does not route an explicit assessment answer through evidence analysis when processing rejects it', async () => {
+    processMessage.mockRejectedValue(new Error('ASSESSMENT_NOT_OPEN: no open assessment'));
+    await mountRoom();
+
+    let processingError: unknown;
+    await act(async () => {
+      try {
+        await room!.sendMessage('B', {
+          replyToMessageId: DELIVERED_QUESTION_ID,
+          assessmentId: DELIVERED_QUESTION_ID,
+        });
+      } catch (error) {
+        processingError = error;
+      }
+    });
+
+    expect(processingError).toEqual(expect.objectContaining({
+      message: expect.stringContaining('ASSESSMENT_NOT_OPEN'),
+    }));
+    expect(analyzeMessage).not.toHaveBeenCalled();
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
   });
 
   it('surfaces a server rejection instead of inventing a selection or a failure', async () => {
     processMessage.mockResolvedValue({
-      message_id: DELIVERED_QUESTION_ID,
+      message_id: DELIVERED_ANSWER_ID,
       assessment_id: DELIVERED_QUESTION_ID,
       processing_state: 'rejected',
       answer_outcome: null,
       attempt_number: null,
-      attempts_used: 1,
-      attempts_remaining: 1,
+      attempts_used: 0,
+      attempts_remaining: 2,
       selected_option_ids: null,
       transition: null,
       feedback_required: false,

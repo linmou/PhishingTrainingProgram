@@ -2,7 +2,7 @@
 
 Intent: reconcile each task against the current branch's source, focused tests, and local gates. An unchecked task may have useful partial implementation; it is not accepted until every clause in its task text has evidence.
 
-Date: 2026-09-26. Branch: `103-transfer-room-ui`. Focused command in `quickstart.md`: 17 suites/127 tests passed. Browser and hosted behavior were not run.
+Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`. Focused command in `quickstart.md`: 17 suites/148 tests passed. Browser and hosted behavior were not run.
 
 | Task | State | Specific evidence or missing clause |
 |---|---|---|
@@ -13,7 +13,7 @@ Date: 2026-09-26. Branch: `103-transfer-room-ui`. Focused command in `quickstart
 | T005 | Open | `transferAssessmentUiAdapter.test.ts` tests projection and missing identity, but not the full target-learner/teacher/observer control matrix or authorization-negative case. |
 | T006 | Open | `transferAssessmentUiAdapter.lifecycle.test.ts` covers passed, retry, failed, deferred, duplicate, and rejected; the two named contract/lifecycle files do not assert every requested field and combination. |
 | T007 | Complete | `transferAssessmentUiAdapter.ts` imports 101/102 types and defines UI-only `ReviewStatus`, `PublicQuestionView`, `AnswerLifecycleView`, and `TeacherReviewCandidateView`; no local mutation authority is exposed. |
-| T008 | Open | Stable-ID `mergeRoomMessages` is in the adapter and called by `RoomContext.tsx`; optimistic replacement and legacy pre-populated ordering are not fully demonstrated at every ingress. |
+| T008 | Open | `mergeRoomMessages` now retains public-question and answer-lifecycle view state when polling replaces a projected message; optimistic replacement and legacy pre-populated ordering are not fully demonstrated at every ingress. |
 | T009 | Open | Adapter maps public/processed DTOs but no complete typed-envelope-to-view-state test covers all required read-only outcomes. |
 | T010 | Complete | `AssessmentDraftEditor.test.tsx` passes 36 cases covering ordered options, key cardinality, explanation, every edit/reconfirmation, review status, and no progress control. |
 | T011 | Open | `RoomContext.transferDraftLifecycle.test.tsx` covers prepared scope and one send; explicit review-then-send ordering and all focus identities need stronger assertions. |
@@ -23,24 +23,24 @@ Date: 2026-09-26. Branch: `103-transfer-room-ui`. Focused command in `quickstart
 | T015 | Open | `RoomContext.transferDraftLifecycle.test.tsx` supports scoped send and one-message merge; progress non-mutation and every focus transition remain unproven together. |
 | T016 | Open | `RoomPagePost.transferDecision.test.tsx` proves structured/legacy split, but authorization and all reconfirm/send/discard routes are not fully asserted. |
 | T017 | Open | Legacy suggestion behavior is exercised, but no focused evidence establishes every structured candidate and quick-adjust clause in `AISuggestionBox.tsx`. |
-| T018 | Open | `PublicAssessmentQuestion.test.tsx` has three tests, only single radios and disabled-before-selection; multiple, submission-pending, and terminal disabled states lack tests. |
-| T019 | Open | The public component test covers ordered options and key absence, but does not assert no `rendered_text`, exact-once DOM count, and no free-text input together. |
-| T020 | Open | Retry/passed/failed/deferred UI branches exist in `PublicAssessmentQuestion.tsx`; the named component test has no lifecycle feedback cases. |
-| T021 | Open | `PostComment.transfer.test.tsx` covers one learner render and ordinary/Guard messages, but lacks teacher/observer read-only and target-learner controls. |
+| T018 | Complete | `PublicAssessmentQuestion.test.tsx` covers single radios, multiple checkboxes, ordered and labelled options, disabled-before-selection, pending submission, and disabled terminal results. |
+| T019 | Complete | Component tests assert the stem once, every option once, no `rendered_text` in the projected DTO or DOM, and no free-text input. |
+| T020 | Complete | Tests cover undisclosed retry, terminal passed with null feedback, terminal failed feedback for applied/deferred/duplicate processing, rejected/null outcome, and an already-processed duplicate result. |
+| T021 | Complete | `PostComment.transfer.test.tsx` covers controls for the target learner, disabled read-only controls and no submit action for tutor/observer, exact option rendering, ordinary/Guard display, and private-field-name absence in the rendered markup. |
 | T022 | Open | `RoomContext.transferAnswer.test.tsx` covers parent ID, privacy, and no progress write; not every processing/outcome combination and duplicate path. |
-| T023 | Open | `PublicAssessmentQuestion.tsx` implements radios/checkboxes and submit, but local test coverage and all upstream feedback states remain incomplete. |
-| T024 | Open | `PostComment.tsx` gates `canAnswer` by role and target ID; teacher/observer and exact-once/no-duplication behavior lack complete mounted tests. |
-| T025 | Open | `RoomPagePost.tsx` routes assessment submissions; a page test for separation from free text plus canonical IDs/parent in one flow is missing. |
-| T026 | Open | `RoomContext.tsx` calls post/process and merges lifecycle; the exact-once and no-evidence-fallback paths need stronger coverage across explicit submissions. |
+| T023 | Complete | `PublicAssessmentQuestion.tsx` implements ordered radios/checkboxes, stable selection, explicit submission, canonical option ordering, pending/terminal disabled states, and server lifecycle feedback; the focused component suite passes. |
+| T024 | Complete | `PostComment.tsx` passes the distinct question-message and assessment IDs through its submit callback, exposes controls only to the target learner, and keeps teacher/observer controls disabled; mounted tests cover the role behavior. |
+| T025 | Complete | `RoomPagePost.tsx` uses a dedicated assessment-submit callback separate from the text composer; its page test verifies canonical `selectedOptionIds`, assessment ID, and distinct persisted parent ID in one submission. |
+| T026 | Complete | The context test proves canonical option IDs reach `postMessage`, the persisted answer/assessment identities reach `processMessage`, trusted lifecycle attaches to answer and question, ordinary messages use evidence analysis, and explicit assessment failures never fall back to analysis. |
 | T027 | Open | CSS contains editor rules; stable learner controls, feedback layout, responsive geometry, and focus states across both named stylesheets are unverified. |
-| T028 | Open | `RoomContext.transferIngress.test.tsx` tests realtime-before-fetch, duplicate, and reconnect; polling overlap, reload restoration, and remaining chances are absent. |
+| T028 | Open | A `RoomContext.transferAnswer.test.tsx` join test now proves reload restoration and persisted `attemptsRemaining`; the named ingress suite still lacks polling-overlap and full remaining-chance convergence coverage. |
 | T029 | Open | `RoomContext.transferConcurrency.test.tsx` tests retry/already-delivered/focus/resolved answer; simultaneous second submissions and two-tab terminal reread are absent. |
 | T030 | Open | `RoomContext.transferModes.test.tsx` covers tutoring delivery, Guard adoption, null item, and invalid pair; manual Guard recovery and all compatibility cases remain unverified. |
-| T031 | Open | `PostComment.transfer.test.tsx` has no folding/collapse cases. |
+| T031 | Complete | `PostComment.transfer.test.tsx` covers default-expanded state and accessible collapse/expand for student, tutor, and observer, participant-local controls, and mounted selection/result preservation. |
 | T032 | Open | `RoomPagePost.transferLifecycle.test.tsx` covers preparing/unavailable/superseded/validation; reload/catch-up, remaining chances, and selected-learner preservation are absent. |
-| T033 | Open | `RoomContext.tsx` uses `mergeRoomMessages`; authoritative reload/reconnect attempt restoration across all ingress paths is unproven. |
+| T033 | Open | `RoomContext.tsx` now restores the signed-in learner's persisted lifecycle through the idempotent processor and merge preserves derived state; optimistic replacement still bypasses the helper on legacy paths and the complete ingress matrix is not tested. |
 | T034 | Open | Resolved-answer and already-delivered cases exist, but simultaneous/stale terminal retry convergence is not established. |
-| T035 | Open | `PostComment.tsx` has no participant-local expanded/collapsed control. |
+| T035 | Complete | `PostComment.tsx` uses instance-local expanded-by-default state, an accessible icon control, and keeps the question mounted while hidden; the component test confirms the answer selection and result survive folding. |
 | T036 | Open | Page has preparation/refusal states; explicit catch-up and retryable behavior without legacy switching is not fully tested. |
 | T037 | Open | Adapter refuses assessment as room participation mode and mode tests pass; complete Guard recovery through `AISuggestionBox` is not demonstrated. |
 | T038 | Open | `ChecklistPanel.transfer.test.tsx` covers owner scope, legacy and Guard lock, but the combined role/cross-learner projection matrix is incomplete. |
@@ -49,10 +49,10 @@ Date: 2026-09-26. Branch: `103-transfer-room-ui`. Focused command in `quickstart
 | T041 | Open | Checklist tests cover server-owned writes and legacy path; full server-provided learner-owned projection across roles is not yet evidenced. |
 | T042 | Open | Export builder allowlists fields; terminal-only explanation and observer projection are not fully asserted. |
 | T043 | Open | Page and comment have role logic; complete role-appropriate progress/export and legacy-preservation evidence is missing. |
-| T044 | Complete | Exact 17-path focused command in `quickstart.md` exited 0: 17 suites, 127 tests. See current verification notes. |
-| T045 | Open | `npm run test:regression -- --runInBand` ran; 35 suites/151 tests fail. Counts match the recorded pre-edit exception, but legacy failure-name attribution has not been completed. |
-| T046 | Complete | `npx tsc --noEmit` exited 2 with 508 errors in 43 files; `npm run build` exited 0 with warnings after fixture repair. Both outcomes are recorded in verification notes. |
-| T047 | Open | `tutor-system/README.md` and `claude_docs/README.md` were reviewed; nearest room/service docs and required owner-routed update disposition remain to be documented. |
-| T048 | Open | Current three-file diff is component-local, but the full branch-diff ownership audit against the allocated baseline is not recorded. |
+| T044 | Complete | Exact 17-path focused command in `quickstart.md` exited 0 on 2026-09-27: 17 suites, 148 tests. See current verification notes. |
+| T045 | Open | Full regression ran and exited 1: 35 failed, 9 skipped, 90 passed suites; 151 failed, 141 skipped, 942 passed tests. Current `RoomContext.test.tsx` fails on its incomplete realtime mock (`channel.unsubscribe` missing), and current `PostComment.test.tsx` fails an unrelated multi-agent profile expectation. Historical 2026-09-26 logs named in the prior notes are absent, so failure-identity comparison against that run remains unresolved. |
+| T046 | Complete | `npx tsc --noEmit` exited 2 with 506 errors in 41 files, with no diagnostics in the modified 103 UI/source/test paths. `npm run build` exited 0 after removing the new callback dependency warning; existing source-map, lint, and Browserslist warnings remain. |
+| T047 | Complete | Reviewed `tutor-system/README.md`, `claude_docs/README.md`, and `claude_docs/RoomContext.md`; updated the nearest room doc and added `documentation_update_record_v2026_09_27_transfer_room_reload_restore.md`. No integration-owner doc update was deferred. |
+| T048 | Open | Ownership audit of `0c4dfb6..HEAD` found `tutor-system/src/types/index.ts` changed by 103 commit `21915f4`, despite the task boundary assigning that shared barrel to component 101. No other prohibited 101/102/104, SQL/RLS, provider/auth, Promptfoo, or release-browser path appears in that 103 range. The earlier `2fcd0b4..HEAD` tree also includes separate 101/102/104 and orchestration commits, which are not attributed to component 103. |
 
-Eight tasks are checked, 40 remain unchecked. A passing local focused suite does not substitute for the missing clauses above or for a browser/hosted gate.
+Nineteen tasks are checked, 29 remain unchecked. A passing local focused suite does not substitute for the missing clauses above or for a browser/hosted gate.

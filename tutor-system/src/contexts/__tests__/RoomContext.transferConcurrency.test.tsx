@@ -127,11 +127,20 @@ describe('RoomContext transfer concurrency', () => {
     jest.spyOn(transferAssessmentService, 'prepareTurn').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
     jest.spyOn(transferAssessmentService, 'processMessage').mockResolvedValue({
-      question_id: DELIVERED_QUESTION_ID,
-      result: { verdict: 'pass' },
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'duplicate',
+      answer_outcome: 'passed',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
       selected_option_ids: ['B'],
+      terminal: false,
       transition: null,
-      feedback_required: true,
+      feedback_required: false,
+      code: null,
+      already_processed: true,
+      terminal_failure_feedback: null,
     });
     jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
   });

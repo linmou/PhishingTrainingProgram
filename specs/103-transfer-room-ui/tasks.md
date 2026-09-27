@@ -63,18 +63,18 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 ### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Add component tests for single-answer radios, multiple-answer checkboxes, ordered options, accessible labels, explicit Submit answer, and disabled states before selection, during submission, and after terminal outcome in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
-- [ ] T019 [P] [US2] Add component tests proving `PublicAssessmentDTO.stem` and each structured option render exactly once, the DTO and DOM contain no `rendered_text`, and no free-text assessment input exists in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
-- [ ] T020 [P] [US2] Add feedback tests mapping `answer_outcome: retry` without disclosure, terminal `passed` with null feedback, terminal `failed` with `terminal_failure_feedback` for both applied and deferred processing, rejected/null outcomes, and already-processed render in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
-- [ ] T021 [P] [US2] Add message integration tests for learner-only controls, teacher/observer read-only views, exact-once options, ordinary tutoring and Guard display, and private-field absence in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
+- [X] T018 [P] [US2] Add component tests for single-answer radios, multiple-answer checkboxes, ordered options, accessible labels, explicit Submit answer, and disabled states before selection, during submission, and after terminal outcome in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
+- [X] T019 [P] [US2] Add component tests proving `PublicAssessmentDTO.stem` and each structured option render exactly once, the DTO and DOM contain no `rendered_text`, and no free-text assessment input exists in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
+- [X] T020 [P] [US2] Add feedback tests mapping `answer_outcome: retry` without disclosure, terminal `passed` with null feedback, terminal `failed` with `terminal_failure_feedback` for both applied and deferred processing, rejected/null outcomes, and already-processed render in `tutor-system/src/components/__tests__/PublicAssessmentQuestion.test.tsx`.
+- [X] T021 [P] [US2] Add message integration tests for learner-only controls, teacher/observer read-only views, exact-once options, ordinary tutoring and Guard display, and private-field absence in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
 - [ ] T022 [P] [US2] Add context tests for canonical option-ID serialization, canonical `message_id`/`assessment_id`, persisted `parent_message_id`, every `processing_state`/`answer_outcome` combination used by the UI, failed-only `terminal_failure_feedback`, duplicate request handling, and zero direct progress writes in `tutor-system/src/contexts/__tests__/RoomContext.transferAnswer.test.tsx`.
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Update `tutor-system/src/components/PublicAssessmentQuestion.tsx` to render radio controls for `single`, checkbox controls for `multiple`, an explicit Submit answer button, stable local selection, and upstream lifecycle feedback supplied through props.
-- [ ] T024 [US2] Update `tutor-system/src/components/PostComment.tsx` to render the interactive question only for its target learner, pass submit/result state without duplicating stem or options, and keep teacher/observer views read-only.
-- [ ] T025 [US2] Update `tutor-system/src/pages/RoomPagePost.tsx` to route assessment selection submission separately from the free-text composer and call the existing room path with canonical option IDs, assessment identity, and persisted parent ID.
-- [ ] T026 [US2] Update `tutor-system/src/contexts/RoomContext.tsx` to submit the canonical selection, process the persisted answer once, merge component 102's authoritative retry/terminal state, and never fall back to evidence analysis for an explicit assessment submission.
+- [X] T023 [US2] Update `tutor-system/src/components/PublicAssessmentQuestion.tsx` to render radio controls for `single`, checkbox controls for `multiple`, an explicit Submit answer button, stable local selection, and upstream lifecycle feedback supplied through props.
+- [X] T024 [US2] Update `tutor-system/src/components/PostComment.tsx` to render the interactive question only for its target learner, pass submit/result state without duplicating stem or options, and keep teacher/observer views read-only.
+- [X] T025 [US2] Update `tutor-system/src/pages/RoomPagePost.tsx` to route assessment selection submission separately from the free-text composer and call the existing room path with canonical option IDs, assessment identity, and persisted parent ID.
+- [X] T026 [US2] Update `tutor-system/src/contexts/RoomContext.tsx` to submit the canonical selection, process the persisted answer once, merge component 102's authoritative retry/terminal state, and never fall back to evidence analysis for an explicit assessment submission.
 - [ ] T027 [US2] Update `tutor-system/src/components/RoomPagePost.css` and `tutor-system/src/components/PostComment.css` for stable control dimensions, focus states, feedback layout, and responsive text without changing surrounding message geometry.
 
 **Checkpoint**: Learners can submit displayed choices only; component 102 decides attempts, terminal state, disclosure, and progress.
@@ -90,14 +90,14 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - [ ] T028 [P] [US3] Add RoomContext ingress tests for realtime-before-fetch, duplicate realtime insert, polling/realtime overlap, reconnect catch-up, reload persistence, authoritative remaining-chance restoration, and stable chronological merge in `tutor-system/src/contexts/__tests__/RoomContext.transferIngress.test.tsx`.
 - [ ] T029 [P] [US3] Add concurrency tests for simultaneous second submissions, already-terminal replay, exactly one accepted terminal transition, timeout retry, and identical reread state across tabs in `tutor-system/src/contexts/__tests__/RoomContext.transferConcurrency.test.tsx`.
 - [ ] T030 [P] [US3] Add mode compatibility tests for tutoring, Guard, assessment turn delivery, manual Guard change, Guard recovery, invalid mode/instruction pairs, and no assessment room mode in `tutor-system/src/contexts/__tests__/RoomContext.transferModes.test.tsx`.
-- [ ] T031 [P] [US3] Add message tests for expanded-by-default state, accessible collapse/expand controls for every role, participant-local toggles, and selection/result preservation in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
+- [X] T031 [P] [US3] Add message tests for expanded-by-default state, accessible collapse/expand controls for every role, participant-local toggles, and selection/result preservation in `tutor-system/src/components/__tests__/PostComment.transfer.test.tsx`.
 - [ ] T032 [P] [US3] Add page tests for reload/catch-up UI states, persisted remaining chances, unavailable capability, stale conflict messaging, and preserving the current selected learner in `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`.
 
 ### Implementation for User Story 3
 
 - [ ] T033 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to route initial fetch, realtime, polling, optimistic replacement, and reconnect catch-up through the stable-ID merge helper and to restore component 102's persisted attempt and terminal state without any reset path.
 - [ ] T034 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` to use upstream idempotency and stale/terminal outcomes for retry rather than appending another local answer or reprocessing a resolved question.
-- [ ] T035 [US3] Update `tutor-system/src/components/PostComment.tsx` and `tutor-system/src/components/PostComment.css` to keep expanded state participant-local and true by default, expose an accessible icon control, and preserve mounted answer selection/result state while collapsed.
+- [X] T035 [US3] Update `tutor-system/src/components/PostComment.tsx` and `tutor-system/src/components/PostComment.css` to keep expanded state participant-local and true by default, expose an accessible icon control, and preserve mounted answer selection/result state while collapsed.
 - [ ] T036 [US3] Update `tutor-system/src/pages/RoomPagePost.tsx` to render explicit loading, unavailable, stale, retryable, and catch-up states without switching legacy rooms to transfer behavior.
 - [ ] T037 [US3] Update `tutor-system/src/contexts/RoomContext.tsx` and `tutor-system/src/components/AISuggestionBox.tsx` so assessment turn decisions cannot be coerced into `RoomParticipationMode`, and Guard recovery remains a reviewed tutoring action.
 
@@ -130,7 +130,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - [X] T044 Run the focused W7-W8 suite from `specs/103-transfer-room-ui/quickstart.md` and record exit status and test counts in `specs/103-transfer-room-ui/verification-notes.md`.
 - [ ] T045 Run existing room/component regression tests and inspect any legacy tutoring/Guard failures in `tutor-system/src/__tests__/`, `tutor-system/src/components/__tests__/`, `tutor-system/src/contexts/__tests__/`, and `tutor-system/src/pages/__tests__/`.
 - [X] T046 Run `npx tsc --noEmit` and `npm run build` from `tutor-system/`; record failures as unresolved rather than changing configuration or adding fallbacks in `specs/103-transfer-room-ui/verification-notes.md`.
-- [ ] T047 Review `tutor-system/README.md`, `tutor-system/claude_docs/README.md`, and nearest room/service documentation for required behavior updates; update only documentation owned by this component and record any deferred integration-owner update in `specs/103-transfer-room-ui/verification-notes.md`.
+- [X] T047 Review `tutor-system/README.md`, `tutor-system/claude_docs/README.md`, and nearest room/service documentation for required behavior updates; update only documentation owned by this component and record any deferred integration-owner update in `specs/103-transfer-room-ui/verification-notes.md`.
 - [ ] T048 Confirm no SQL/RLS, auth/provider, prompt, Promptfoo, component 101/102/104-owned code, or release-browser files were changed by component 103 in `specs/103-transfer-room-ui/verification-notes.md`.
 
 ## Dependencies and Execution Order

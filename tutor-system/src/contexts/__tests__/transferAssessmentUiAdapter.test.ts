@@ -8,6 +8,7 @@
  */
 
 import {
+  answerLifecycleFromProcessed,
   createReviewCandidate,
   mergeRoomMessages,
   projectRoomMessage,
@@ -69,6 +70,29 @@ describe('transferAssessmentUiAdapter projections', () => {
     const view = projectRoomMessage(deliveredQuestionRow);
 
     expect(view.publicQuestion!.selectionType).toBe('single');
+  });
+
+  it('rebuilds the public question from allowlisted database columns with distinct message identity', () => {
+    const questionMessageId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    const view = projectRoomMessage({
+      ...deliveredQuestionRow,
+      assessment: undefined,
+      id: questionMessageId,
+      assessment_id: DELIVERED_QUESTION_ID,
+      assessment_student_id: LEARNER_A_ID,
+      assessment_selection_type: 'multiple',
+    });
+
+    expect(view.id).toBe(questionMessageId);
+    expect(view.publicQuestion).toMatchObject({
+      id: DELIVERED_QUESTION_ID,
+      studentId: LEARNER_A_ID,
+      selectionType: 'multiple',
+      stem: deliveredQuestionRow.content,
+    });
+    expect(view.publicQuestion!.options.map((option) => option.id)).toEqual(['A', 'B', 'C', 'D']);
+    expectNoPrivateAssessmentFields(view);
+    expect(JSON.stringify(view)).not.toContain('assessment_key');
   });
 
   it('prefers the explicit public projection on the delivery path over the persisted column', () => {
@@ -148,6 +172,44 @@ describe('transferAssessmentUiAdapter projections', () => {
     const replaced = mergeRoomMessages([first, second], [corrected]);
     expect(replaced).toHaveLength(2);
     expect(replaced.find((message) => message.id === LEARNER_A_MESSAGE_ID)!.content).toBe('edited content');
+  });
+
+  it('preserves a trusted answer lifecycle when polling replaces a local view with a raw row', () => {
+    const answer = projectRoomMessage({
+      id: 'answer-restore',
+      room_id: TRANSFER_ROOM_ID,
+      user_id: LEARNER_A_ID,
+      content: 'B',
+      user_role: 'student',
+      parent_message_id: DELIVERED_QUESTION_ID,
+      created_at: '2026-09-12T09:15:00Z',
+    });
+    const withLifecycle = {
+      ...answer,
+      answerLifecycle: answerLifecycleFromProcessed({
+        message_id: 'answer-restore',
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied',
+        answer_outcome: 'retry',
+        attempt_number: 1,
+        attempts_used: 1,
+        attempts_remaining: 1,
+        selected_option_ids: ['B'],
+        terminal: false,
+        transition: null,
+        feedback_required: false,
+        code: null,
+        already_processed: false,
+        terminal_failure_feedback: null,
+      }),
+    };
+
+    const merged = mergeRoomMessages([withLifecycle], [answer]);
+
+    expect(merged[0]).toMatchObject({
+      id: 'answer-restore',
+      answerLifecycle: { state: 'retry', assessmentId: DELIVERED_QUESTION_ID, attemptsRemaining: 1 },
+    });
   });
 
   it('keeps pre-populated messages first and does not drop a realtime message the fetch does not know', () => {

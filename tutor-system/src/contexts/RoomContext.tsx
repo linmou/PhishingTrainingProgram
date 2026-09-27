@@ -37,6 +37,7 @@ import {
     publicAssessmentForDecision,
     withAnswerLifecycle,
 } from './transferAssessmentUiAdapter';
+import type { RoomMessageView } from './transferAssessmentUiAdapter';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 
@@ -533,6 +534,49 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Combine pre-populated messages with existing messages.
             const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
 
+            // Re-read the server's idempotent result for this learner's persisted assessment
+            // answers so lifecycle feedback is available after reload or reconnect.
+            if (user?.current_role === 'student' && user.id) {
+                for (const answer of allMessages) {
+                    if (answer.user_id !== user.id || answer.user_role !== 'student' || !answer.parent_message_id) {
+                        continue;
+                    }
+
+                    const questionIndex = allMessages.findIndex(message => {
+                        const publicQuestion = (message as Partial<RoomMessageView>).publicQuestion;
+                        return (
+                            message.id === answer.parent_message_id &&
+                            publicQuestion?.studentId === user.id &&
+                            Boolean(publicQuestion.id)
+                        );
+                    });
+                    if (questionIndex < 0) continue;
+
+                    const question = allMessages[questionIndex] as RoomMessageView;
+                    const assessmentId = question.publicQuestion?.id;
+                    if (!assessmentId) continue;
+
+                    try {
+                        const processed = await transferAssessmentService.processMessage(answer.id, assessmentId);
+                        if (processed.message_id !== answer.id || processed.assessment_id !== assessmentId) {
+                            continue;
+                        }
+
+                        const lifecycle = answerLifecycleFromProcessed(processed);
+                        const answerIndex = allMessages.findIndex(message => message.id === answer.id);
+                        if (answerIndex >= 0) {
+                            allMessages[answerIndex] = withAnswerLifecycle(
+                                allMessages[answerIndex] as RoomMessageView,
+                                lifecycle
+                            );
+                        }
+                        allMessages[questionIndex] = withAnswerLifecycle(question, lifecycle);
+                    } catch (restoreError) {
+                        console.warn('Could not restore transfer assessment feedback:', restoreError);
+                    }
+                }
+            }
+
             setCurrentRoom(normalizeRoom(roomData));
             // Merge rather than replace: a realtime insert that arrived before this fetch
             // completed must survive it.
@@ -541,7 +585,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    }, [addDisplayNameToMessage, normalizeRoom, user?.id]);
+    }, [addDisplayNameToMessage, normalizeRoom, user?.id, user?.current_role]);
 
     const leaveRoom = useCallback(async (): Promise<void> => {
         setCurrentRoom(null);
@@ -623,25 +667,40 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                 };
                 if (options?.assessmentId) {
-                    try {
-                        const processed = await transferAssessmentService.processMessage(
-                            storedMessage.id,
-                            options.assessmentId
-                        );
-                        // Consume the trusted lifecycle result: the server, not the browser, decides
-                        // whether the answer was graded or needs a clarifying label.
-                        setMessages(prev => mergeRoomMessages(prev, [
-                            addDisplayNameToMessage(
-                                withAnswerLifecycle(storedMessage, answerLifecycleFromProcessed(processed)),
-                                participants
-                            ),
-                        ]));
-                    } catch (assessmentError) {
-                        if (!String(assessmentError).includes('ASSESSMENT_NOT_OPEN')) {
-                            throw assessmentError;
-                        }
-                        await analyzeEvidence();
+                    const processed = await transferAssessmentService.processMessage(
+                        storedMessage.id,
+                        options.assessmentId
+                    );
+                    if (
+                        processed.message_id !== storedMessage.id ||
+                        processed.assessment_id !== options.assessmentId ||
+                        storedMessage.parent_message_id !== options.replyToMessageId
+                    ) {
+                        throw new Error('Assessment processing returned mismatched answer, assessment, or parent identity');
                     }
+                    // Keep the trusted result on the answer and its question so the answer surface
+                    // can render feedback and the question can disable another submission.
+                    const lifecycle = answerLifecycleFromProcessed(processed);
+                    const answerWithLifecycle = addDisplayNameToMessage(
+                        withAnswerLifecycle(storedMessage, lifecycle),
+                        participants
+                    );
+                    setMessages(prev => {
+                        const question = prev.find(message => {
+                            const view = message as Partial<RoomMessageView>;
+                            const publicQuestion = view.publicQuestion;
+                            return (
+                                message.id === storedMessage.parent_message_id &&
+                                publicQuestion?.id === processed.assessment_id &&
+                                publicQuestion.studentId === user.id
+                            );
+                        }) as RoomMessageView | undefined;
+                        const incoming = [answerWithLifecycle];
+                        if (question) {
+                            incoming.push(addDisplayNameToMessage(withAnswerLifecycle(question, lifecycle), participants));
+                        }
+                        return mergeRoomMessages(prev, incoming);
+                    });
                 } else {
                     await analyzeEvidence();
                 }

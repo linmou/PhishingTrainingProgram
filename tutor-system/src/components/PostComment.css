@@ -125,6 +125,36 @@
     font-weight: 500;
 }
 
+.assessment-disclosure-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    padding: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #fff;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+.assessment-disclosure-button:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.assessment-disclosure-button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.assessment-disclosure-icon {
+    width: 16px;
+    height: 16px;
+}
+
 /* Comment Text Content */
 .comment-text {
     font-size: 14px;
