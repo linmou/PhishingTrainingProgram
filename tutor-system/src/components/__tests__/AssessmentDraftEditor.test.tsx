@@ -5,12 +5,12 @@
  *
  * Responsibility: prove the editor renders the four ordered options and learner preview, enforces
  * key cardinality and content validation through the production validator, clears confirmation on
- * every edit, exposes its own review state, can discard the candidate without persisting anything,
+ * every edit including learner-safe explanation, exposes its own review states, can discard without persisting anything,
  * and offers no direct progress control.
  */
 
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AssessmentDraftEditor from '../AssessmentDraftEditor';
 import { preparedCandidate } from '../../test-support/transferRoomFixtures';
@@ -137,4 +137,201 @@ describe('AssessmentDraftEditor', () => {
     const buttonNames = screen.getAllByRole('button').map((button) => button.textContent || '');
     expect(buttonNames.join(' ')).not.toMatch(/progress|understanding|mastery/i);
   });
+
+  it('requires reconfirmation after editing the learner-safe explanation and sends the edited value', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={onSubmit} />);
+
+    const explanation = screen.getByLabelText('Learner-safe explanation') as HTMLTextAreaElement;
+    expect(explanation.value).toBe(preparedCandidate.assessment!.learner_safe_explanation);
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.change(explanation, { target: { value: '  Verify through an official channel first.  ' } });
+
+    expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Confirm that the concept');
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    expect(screen.getByRole('alert')).toHaveTextContent('Confirm that the concept');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].assessment).toMatchObject({
+      stem: preparedCandidate.assessment!.stem,
+      options: preparedCandidate.assessment!.options,
+      learner_safe_explanation: 'Verify through an official channel first.',
+      selection_type: 'single',
+      correct_option_ids: ['B'],
+    });
+  });
+
+  it('rejects a blank learner-safe explanation after reconfirmation', async () => {
+    const onSubmit = jest.fn();
+    render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: '   ' } });
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('learner-safe explanation');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it.each(['question', 'option A', 'option B', 'option C', 'option D', 'selection', 'key', 'explanation'] as const)(
+    'retains validation feedback while editing %s until resubmission', async (field) => {
+      const onSubmit = jest.fn();
+      render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={onSubmit} />);
+
+      fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: '   ' } });
+      fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent('learner-safe explanation');
+      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+
+      if (field === 'question') {
+        fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'What should you check before paying?' } });
+      } else if (field.startsWith('option ')) {
+        const index = ['A', 'B', 'C', 'D'].indexOf(field.slice(-1));
+        fireEvent.change(optionTextInputs()[index], { target: { value: `Revised option ${field.slice(-1)}.` } });
+      } else if (field === 'selection') {
+        fireEvent.change(screen.getByLabelText('Answer type'), { target: { value: 'multiple' } });
+      } else if (field === 'key') {
+        selectKey('C');
+      } else {
+        fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: 'Verify through an official channel.' } });
+      }
+
+      expect(screen.getByRole('alert')).toHaveTextContent('learner-safe explanation');
+      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+      expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+      expect(onSubmit).not.toHaveBeenCalled();
+    }
+  );
+
+  it('recalculates validation only after an explicit submission', async () => {
+    const onSubmit = jest.fn();
+    render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: '   ' } });
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('learner-safe explanation');
+
+    fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: 'Verify through an official channel.' } });
+    expect(screen.getByRole('alert')).toHaveTextContent('learner-safe explanation');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Confirm that the concept');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('retains validation feedback through confirmation toggles until an explicit send', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(undefined);
+    render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: '   ' } });
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('learner-safe explanation');
+
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    expect(screen.getByRole('alert')).toHaveTextContent('learner-safe explanation');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    expect(screen.getByRole('alert')).toHaveTextContent('learner-safe explanation');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'validating');
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: 'Verify through an official channel.' } });
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    expect(screen.getByRole('alert')).toHaveTextContent('learner-safe explanation');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it.each(['option A', 'option B', 'option C', 'option D', 'selection', 'key'] as const)(
+    'refuses an unreconfirmed send when %s changes', async (field) => {
+    const onSubmit = jest.fn();
+    const initialDecision = field === 'selection'
+      ? { ...preparedCandidate, assessment: { ...preparedCandidate.assessment!, selection_type: 'multiple' as const, correct_option_ids: ['A', 'B'] as Array<'A' | 'B'> } }
+      : preparedCandidate;
+    render(<AssessmentDraftEditor decision={initialDecision} onSubmit={onSubmit} />);
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+
+    if (field.startsWith('option ')) {
+      const optionIndex = ['A', 'B', 'C', 'D'].indexOf(field.slice(-1));
+      fireEvent.change(optionTextInputs()[optionIndex], { target: { value: `Changed answer ${field.slice(-1)}.` } });
+    } else if (field === 'selection') {
+      fireEvent.change(screen.getByLabelText('Answer type'), { target: { value: 'single' } });
+    } else {
+      selectKey('C');
+    }
+
+    expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Confirm that the concept');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('shows saving while the request is pending and server failure after rejection', async () => {
+    let rejectSend: (error: Error) => void = () => undefined;
+    const onSubmit = jest.fn().mockImplementation(() => new Promise<void>((_, reject) => {
+      rejectSend = reject;
+    }));
+    render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={onSubmit} />);
+    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+
+    expect(await screen.findByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'saving');
+    rejectSend(new Error('ASSESSMENT_ALREADY_OPEN'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'server-failure');
+  });
+
+  it.each(['question', 'option A', 'option B', 'option C', 'option D', 'selection', 'key', 'explanation'] as const)(
+    'clears a failed send when editing %s and requires a new confirmation', async (field) => {
+      const onSubmit = jest.fn()
+        .mockRejectedValueOnce(new Error('ASSESSMENT_ALREADY_OPEN'))
+        .mockResolvedValue(undefined);
+      const initialDecision = field === 'selection'
+        ? { ...preparedCandidate, assessment: { ...preparedCandidate.assessment!, selection_type: 'multiple' as const, correct_option_ids: ['A', 'B'] as Array<'A' | 'B'> } }
+        : preparedCandidate;
+      render(<AssessmentDraftEditor decision={initialDecision} onSubmit={onSubmit} />);
+
+      fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+      });
+      expect(screen.getByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
+      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'server-failure');
+
+      if (field === 'question') {
+        fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'What should you verify before paying?' } });
+      } else if (field.startsWith('option ')) {
+        const index = ['A', 'B', 'C', 'D'].indexOf(field.slice(-1));
+        fireEvent.change(optionTextInputs()[index], { target: { value: `Revised option ${field.slice(-1)}.` } });
+      } else if (field === 'selection') {
+        fireEvent.change(screen.getByLabelText('Answer type'), { target: { value: 'single' } });
+      } else if (field === 'key') {
+        selectKey('C');
+      } else {
+        fireEvent.change(screen.getByLabelText('Learner-safe explanation'), { target: { value: 'Check with the official source.' } });
+      }
+
+      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'dirty');
+      expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByLabelText(/I confirm the concept/));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+    }
+  );
 });

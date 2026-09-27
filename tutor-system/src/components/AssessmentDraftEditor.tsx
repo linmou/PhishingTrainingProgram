@@ -34,10 +34,12 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   const [correctOptionIds, setCorrectOptionIds] = useState<AssessmentOptionId[]>(
     initialAssessment?.correct_option_ids || []
   );
+  const [explanation, setExplanation] = useState(initialAssessment?.learner_safe_explanation || '');
   const [contentConfirmed, setContentConfirmed] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<'validating' | 'server-failure' | null>(null);
 
   useEffect(() => {
     const assessment = decision.assessment;
@@ -45,9 +47,11 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     setSelectionType(assessment?.selection_type || 'single');
     setOptions(assessment?.options || []);
     setCorrectOptionIds(assessment?.correct_option_ids || []);
+    setExplanation(assessment?.learner_safe_explanation || '');
     setContentConfirmed(false);
     setDirty(false);
     setError(null);
+    setErrorKind(null);
   }, [decision]);
 
   const renderedText = useMemo(() => renderAssessment({
@@ -58,12 +62,20 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   if (!initialAssessment) return null;
 
-  const reviewStatus = saving ? 'saving' : dirty ? 'dirty' : 'ready';
+  const reviewStatus = saving ? 'saving' : errorKind || (contentConfirmed ? 'confirmed' : dirty ? 'dirty' : 'ready');
+
+  const clearServerFailure = () => {
+    if (errorKind === 'server-failure') {
+      setError(null);
+      setErrorKind(null);
+    }
+  };
 
   const setOptionText = (id: AssessmentOptionId, text: string) => {
     setOptions((current) => current.map((option) => option.id === id ? { ...option, text } : option));
     setContentConfirmed(false);
     setDirty(true);
+    clearServerFailure();
   };
 
   const setSelection = (id: AssessmentOptionId, checked: boolean) => {
@@ -73,6 +85,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     });
     setContentConfirmed(false);
     setDirty(true);
+    clearServerFailure();
   };
 
   const handleSelectionTypeChange = (value: 'single' | 'multiple') => {
@@ -80,26 +93,36 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     setCorrectOptionIds((current) => value === 'single' ? current.slice(0, 1) : uniqueSelections(current));
     setContentConfirmed(false);
     setDirty(true);
+    clearServerFailure();
   };
 
   const handleSubmit = async () => {
     setError(null);
+    setErrorKind(null);
     const validation = validateAssessmentRendering({ stem, selection_type: selectionType, options });
     const expectedKeys = selectionType === 'single'
       ? correctOptionIds.length === 1
       : correctOptionIds.length >= 2 && correctOptionIds.length <= 3;
     if (!validation.valid) {
       setError(validation.errors.join('. '));
+      setErrorKind('validating');
       return;
     }
     if (!expectedKeys) {
       setError(selectionType === 'single'
         ? 'Choose exactly one correct option.'
         : 'Choose two or three correct options.');
+      setErrorKind('validating');
+      return;
+    }
+    if (!explanation.trim()) {
+      setError('Enter a learner-safe explanation.');
+      setErrorKind('validating');
       return;
     }
     if (!contentConfirmed) {
       setError('Confirm that the concept, changed context, and answer key are appropriate.');
+      setErrorKind('validating');
       return;
     }
 
@@ -118,6 +141,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         selection_type: selectionType,
         options: options.map((option) => ({ id: option.id, text: option.text.trim() })),
         correct_option_ids: uniqueSelections(correctOptionIds),
+        learner_safe_explanation: explanation.trim(),
       },
     };
 
@@ -128,10 +152,17 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         knownItemIds: knownItemIds || [decision.decision.target_item_id || ''],
         knownMessageIds: knownMessageIds || initialAssessment.transfer_basis?.source_evidence_message_ids || [],
       });
-      setSaving(true);
+    } catch (validationError) {
+      setError(validationError instanceof Error ? validationError.message : 'Assessment could not be validated.');
+      setErrorKind('validating');
+      return;
+    }
+    setSaving(true);
+    try {
       await onSubmit(nextDecision);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Assessment could not be confirmed.');
+      setErrorKind('server-failure');
     } finally {
       setSaving(false);
     }
@@ -143,7 +174,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       {itemLabel && <p>Target: {itemLabel}</p>}
       <label>
         Question
-        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); }} rows={3} />
+        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }} rows={3} />
       </label>
       <label>
         Answer type
@@ -167,16 +198,26 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
           </label>
         ))}
       </fieldset>
+      <label>
+        Learner-safe explanation
+        <textarea value={explanation} onChange={(event) => { setExplanation(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }} rows={3} />
+      </label>
       <p aria-live="polite">Learner-visible preview:</p>
       <pre>{renderedText}</pre>
       <label>
-        <input type="checkbox" checked={contentConfirmed} onChange={(event) => setContentConfirmed(event.target.checked)} />
+        <input type="checkbox" checked={contentConfirmed} onChange={(event) => { setContentConfirmed(event.target.checked); clearServerFailure(); }} />
         I confirm the concept, changed context, and answer key are appropriate.
       </label>
       {/* Local review state only: there is no draft row, so this never reports a server status. */}
       <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
         {reviewStatus === 'saving'
           ? 'Sending the confirmed assessment…'
+          : reviewStatus === 'server-failure'
+            ? 'The assessment was not sent.'
+          : reviewStatus === 'validating'
+            ? 'Review the highlighted validation error.'
+          : reviewStatus === 'confirmed'
+            ? 'Confirmed and ready to send.'
           : reviewStatus === 'dirty'
             ? 'Unsaved edits — the previous confirmation was cleared.'
             : 'Ready to send once you confirm.'}
