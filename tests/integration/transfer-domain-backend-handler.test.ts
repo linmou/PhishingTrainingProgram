@@ -45,6 +45,12 @@ const CASES: AttemptCase[] = [
     expectedOutcome: "failed",
   },
   {
+    name: "correct second answer passes terminally",
+    acceptedAttemptCount: 1,
+    selectedOptionIds: ["B"],
+    expectedOutcome: "passed",
+  },
+  {
     name: "ambiguous single-answer selection is clarified without persistence",
     acceptedAttemptCount: 0,
     selectedOptionIds: ["A", "B"],
@@ -220,14 +226,26 @@ for (const testCase of CASES) {
     ]);
     assertEquals(readCall.args.p_assessment_id, "assessment-1");
     assertEquals(readCall.args.p_message_id, answerId);
+    assert(
+      "attempt_snapshot" in result,
+      "the real 101 attempt-aware result includes its snapshot",
+    );
+    assertEquals(
+      result.attempt_snapshot.accepted_attempt_count,
+      testCase.acceptedAttemptCount +
+        (testCase.expectedOutcome === null ? 0 : 1),
+    );
+    assertEquals(
+      result.attempt_snapshot.resolution,
+      testCase.expectedOutcome === "passed"
+        ? "passed"
+        : testCase.expectedOutcome === "failed"
+        ? "failed"
+        : "open",
+    );
 
     if (!hasCommittedOutcome(testCase)) {
       assertEquals(result.disposition, "unresolved");
-      assert(
-        "attempt_snapshot" in result,
-        "the real 101 attempt-aware result includes its snapshot",
-      );
-      assertEquals(result.attempt_snapshot.accepted_attempt_count, 0);
       assertEquals(payload.data.processing_state, "rejected");
       assertEquals(payload.data.answer_outcome, null);
       assertEquals(payload.data.attempts_used, 0);
@@ -244,6 +262,19 @@ for (const testCase of CASES) {
       testCase.expectedOutcome,
       "the 101 result matches the scenario",
     );
+    if (
+      testCase.expectedOutcome === "passed" ||
+      testCase.expectedOutcome === "failed"
+    ) {
+      assert(
+        "learner_feedback_authorized" in result,
+        "terminal 101 results declare learner feedback authorization",
+      );
+      assertEquals(
+        result.learner_feedback_authorized,
+        testCase.expectedOutcome === "failed",
+      );
+    }
     assertEquals(
       commitCall.args.p_expected_attempt_count,
       testCase.acceptedAttemptCount,
