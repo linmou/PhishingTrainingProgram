@@ -14,7 +14,7 @@ Replace the browser-only transfer service with a thin trusted-API facade. Restor
 **Language/Version**: TypeScript 4.9 for CRA consumers; Deno TypeScript for the Edge Function; PostgreSQL/PLpgSQL for trusted transactions
 **Primary Dependencies**: React 18 application facade, `@supabase/supabase-js` 2.39, Supabase Edge Functions/PostgreSQL, Jest, existing shared component-101 domain contracts
 **Storage**: Existing public room/checklist/message schema plus new private assessment, grading-attempt, and provider-attempt tables; existing private learning-event ledger
-**Testing**: Jest contract/service/static-migration suites, Deno Edge Function tests, hosted Supabase SQL/RPC tests, production TypeScript build
+**Testing**: Jest contract/service/static-migration suites, checked Deno Edge Function tests, native PostgreSQL 17 restored-copy SQL/RPC/race/rollback tests; integrated build and deployed Supabase gates remain separate
 **Target Platform**: Browser client calling a deployed Supabase Edge Function; supported hosted Supabase PostgreSQL
 **Project Type**: React web application with a trusted serverless backend
 **Performance Goals**: One provider request plus at most one format repair for preparation; one row-locked transaction for grading; no polling or browser retry may multiply attempts
@@ -28,9 +28,9 @@ Replace the browser-only transfer service with a thin trusted-API facade. Restor
 
 | Principle | Gate | Result |
 |---|---|---|
-| Preserve requirements and evidence | All FRs, tasks, hosted lanes, and downstream handoffs remain explicit | PASS |
+| Preserve requirements and evidence | Local component results and external gates remain explicit | PASS |
 | Keep authority server-side | Private key/explanation, grading, attempts, authorization, idempotency, and progress move behind the trusted boundary | PASS |
-| Test first and verify the real boundary | Tasks require failing tests before code plus hosted transaction/RLS/race evidence | PASS |
+| Verify the real boundary | Native restored-copy transaction/RLS/race evidence and focused service tests are recorded | PASS |
 | Use stable, explicit contracts | Versioned DTOs and RPCs are frozen under `contracts/` | PASS |
 | Prefer the smallest coherent design | Three requirement-backed private tables replace browser state; no draft workflow, compatibility grader, or second progress model is added | PASS |
 | Project constraints | React/TypeScript/Supabase remain; no Docker, new sign-in, or `auth.uid()` dependency; activation stays off | PASS |
@@ -91,7 +91,7 @@ tutor-system/
     └── doc_update_record/documentation_update_record_v2026_09_22_transfer_backend.md
 ```
 
-**Structure Decision**: Restore the previously established Edge Function path and keep the browser service as a typed facade. Use one new forward migration rather than reactivating or rewriting archived migrations. Extend existing CRA and hosted SQL test files where possible; the restored Deno test begins with a shebang and purpose comment, while CRA-consumed TypeScript follows the repository's explicit no-shebang parser rule and starts with the required purpose comment.
+**Structure Decision**: Restore the previously established Edge Function path and keep the browser service as a typed facade. Use one new forward migration rather than reactivating or rewriting archived migrations. Extend existing CRA and SQL test files where possible; the restored Deno test begins with a shebang and purpose comment, while CRA-consumed TypeScript follows the repository's explicit no-shebang parser rule and starts with the required purpose comment.
 
 ## Design Phases
 
@@ -107,12 +107,12 @@ tutor-system/
 - Define `send_reviewed_tutor_response_v4`, `post_assessment_message_v2`, and `process_assessment_message_v2` plus retained trusted operations in `contracts/rpc-contract.md`.
 - Define request parity, production prompt obligations, required DashScope-compatible settings, bounded repair, and private provider evidence in `contracts/provider-contract.md`.
 
-### Phase 2 - Test-first implementation
+### Phase 2 - Implementation and component verification
 
-- Start with contract, projection, provider, static migration, hosted transaction, authorization, and concurrency tests.
-- Restore the private storage/RPC boundary and generated database types.
+- Verify contract, projection, provider, static migration, native restored-copy transaction, authorization, and concurrency behavior.
+- Restore the private storage/RPC boundary and compare its local catalog with the checked-in database types.
 - Restore the Edge Function and production prompt, then replace the browser implementation with a trusted transport facade.
-- Run hosted, focused Jest, Deno, build, privacy scan, and documentation gates while `TRANSFER_ASSESSMENT_ENABLED` remains false.
+- Run local SQL, focused Jest, checked Deno, source privacy, and documentation gates while `TRANSFER_ASSESSMENT_ENABLED` remains false. Record the component build outcome; integration owns the combined build and hosted/generated-type gates.
 
 ## Component Boundaries
 
@@ -131,4 +131,4 @@ tutor-system/
 | Resolver and persisted outcome drift | Run the real component-101 resolver through the Edge handler into the commit RPC, including a stale-snapshot reread; compare stored attempt, event, progress, and history with the resolver result |
 | Private feedback leaks through generic projection | Allowlist DTOs and scan public rows, realtime, logs, errors, exports, and build artifacts |
 | Missing verifier/provider makes an unsafe fallback attractive | Return stable disabled/configuration errors; no browser grader, dummy provider output, or default model |
-| Archived migration state differs from hosted schema | Inspect hosted schema first, apply one forward reconciliation migration, regenerate types, and record mismatch as blocked |
+| Archived migration state differs from deployed schema | Rehearse one forward migration on a disposable restored copy; inspect deployed schema before any target migration and record any mismatch as blocked |

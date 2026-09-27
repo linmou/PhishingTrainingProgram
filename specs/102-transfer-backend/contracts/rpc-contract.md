@@ -71,6 +71,6 @@ The RPC does not regrade the key. It serializes and validates the trusted resolv
 - Check lifecycle/result/terminal-answer consistency.
 - Check new open/passed/failed records have non-empty key and learner-safe explanation; `legacy_incomplete` is exempt but ungradable.
 
-## Hosted Evidence
+## Component And Hosted Evidence
 
-Static SQL tests verify declarations. Hosted tests must prove grants, direct-write denial, key privacy, delivery idempotency, first-wrong persistence, pass on either attempt, second-wrong terminal disclosure, duplicate retries, two-tab races, third-attempt rejection, wrong-scope rejection, rollback, actual history, Guard behavior, and legacy preservation.
+Native tests on a disposable PostgreSQL 17 restored copy with Supabase-like roles verify grants, direct-write denial, key privacy, delivery idempotency, first-wrong persistence, pass on either attempt, second-wrong terminal disclosure, duplicate retries, two-session races, third-attempt rejection, wrong-scope rejection, rollback, actual history, Guard behavior, and synthetic legacy preservation. The local catalog comparison verifies RPC identities and private columns. Deployed Supabase grants/RLS, PostgREST and Edge authentication, and generated hosted types require separate integration evidence.

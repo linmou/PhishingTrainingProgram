@@ -5,8 +5,8 @@
 ## Preconditions
 
 - Component 101's promoted SHA is merged into this branch before implementation.
-- Use a disposable supported hosted Supabase scope. Do not reset or mutate a production project.
-- Configure a trusted `AssessmentPrincipalVerifier` adapter and server-only `OAI_API_KEY`, `OAI_BASE_URL`, `OAI_MODEL=qwen3.5-flash`.
+- Use a disposable PostgreSQL 17 restored copy with Supabase-like roles for the component SQL gate. Deployed Supabase verification remains an integration gate.
+- The local handler tests use an injected verifier and controlled fake provider. Deployed verification later requires a trusted `AssessmentPrincipalVerifier` adapter and server-only `OAI_API_KEY`, `OAI_BASE_URL`, `OAI_MODEL=qwen3.5-flash`.
 - Keep `TRANSFER_ASSESSMENT_ENABLED=false` until all initiative gates pass.
 
 ## Planning Gate
@@ -24,11 +24,11 @@ rtk proxy sh -c 'cd tutor-system && /Users/admin/.npm/_npx/05b6ef7b13673c57/node
 rtk proxy sh -c 'cd tutor-system && npm run build'
 ```
 
-The test-first record must show the relevant tests failing before implementation and passing afterward. CRA tests begin with purpose comments and no shebang because imported CRA TypeScript cannot parse one; the executable Deno test uses both a shebang and purpose comment.
+Record each command's exit code and tested SHA. CRA tests begin with purpose comments and no shebang because imported CRA TypeScript cannot parse one; the executable Deno test uses both a shebang and purpose comment. A build failure in a downstream-owned file is recorded as this branch's build outcome; the integration build is tracked at its combined SHA.
 
-## Hosted Schema and Transaction Evidence
+## Local Restored-Copy Database Evidence
 
-The owner of the disposable hosted scope, not this component run, executes this lane. Before applying the migration, record the scope identifier, schema revision, migration list, relevant table/column/function/grant/policy inventory, and this read-only legacy-key count on the exact database to be migrated:
+Use a disposable PostgreSQL 17 restored copy for the component gate. Record its identity, source schema snapshot, migration and script blobs, role fixtures, exact commands, exit codes, assertion counts, and rollback state. Before deployment, the integration owner inventories the actual Supabase target, confirms a restorable backup, and runs this read-only legacy-key count on that exact database:
 
 ```sql
 WITH keyed AS (
@@ -89,12 +89,12 @@ ORDER BY m.id;
 
 Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration also raises `LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED` before copying any key when its own coverage check finds such a row. It copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
 
-1. Apply `20260922000000_transfer_assessment_server_authority.sql` only to the approved disposable scope after the stop conditions pass.
+1. Apply `20260922000000_transfer_assessment_server_authority.sql` to the approved disposable restored copy after the stop conditions pass.
 2. Run `supabase/tests/transfer_assessment_backend.sql` for schema, privacy, grants, direct writes, public key removal, legacy-incomplete reconciliation, and rollback.
-3. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, concurrent distinct submissions, third submission, wrong scope, Guard behavior, evidence/history, and forced rollback. It writes test fixtures inside a transaction; do not run it on PhishingTutor.
-4. Regenerate `src/types/database.ts` from that schema and compare the exact private/public/RPC signatures to `contracts/rpc-contract.md`.
+3. Run `supabase/tests/transfer_assessment_rpc_behaviour.sql` for delivery retry, first wrong, pass on attempt 1/2, second wrong, duplicate answer/request, stale submissions, third submission, wrong scope, Guard behavior, evidence/history, and rollback. It writes test fixtures inside a transaction; do not run it on PhishingTutor. Separate scripts below cover actual two-session races and eight injected write failures.
+4. Run `supabase/tests/transfer_assessment_catalog_contract.sql` and compare local RPC identities and private columns with `contracts/rpc-contract.md` and `src/types/database.ts`. Record missing generated private types for the hosted integration gate.
 
-Invoke each SQL script with `psql -X -v ON_ERROR_STOP=1 "$DISPOSABLE_DATABASE_URL" -f <script>` so a raised assertion stops the run with a nonzero exit. The current scripts do not yet cover the full matrix in steps 2-3; keep T009, T011, T020, T027, and T033 open until those cases are encoded and executed. Record exact commands, timestamp, tested migration/SHA, exit code, test count, and immutable log path. Static SQL/Jest checks do not substitute for hosted execution.
+Invoke each SQL script with `psql -X -v ON_ERROR_STOP=1 "$DISPOSABLE_DATABASE_URL" -f <script>` so a raised assertion stops the run with a nonzero exit. Also run the two-session race, direct-role, delivery-race, and eight-stage terminal-fault scripts below. Record exact commands, timestamp, tested migration/SHA, exit code, test count, and available transcript paths. Native SQL checks close the component database gate only; deployed Supabase and generated-type checks remain separate.
 
 For valid legacy-key reconciliation, use a separate disposable pre-migration restore with no keyed rows. Run `supabase/tests/transfer_assessment_legacy_fixture_before.sql`, apply the same forward migration, then run `supabase/tests/transfer_assessment_legacy_fixture_after.sql`, all with the `psql` flags above. The first script commits one synthetic keyed question with matching room, checklist learner, item, and parent student message; the second asserts a private `legacy_incomplete` row and removal of the public key column. Do not run this fixture on the source project or the cleaned rehearsal clone. Record its restore identity, migration blob, script blobs, exit codes, and rollback/cleanup separately.
 
@@ -115,7 +115,7 @@ Capture both connection transcripts and the final row-count query with the teste
 
 Run `supabase/tests/transfer_assessment_terminal_faults.sql` with `psql -X -v ON_ERROR_STOP=1` on a disposable migrated clone for eight write-stage failure injections. It creates and removes test triggers inside one transaction, asserts zero partial effects after every injected failure, verifies a normal terminal pass after trigger removal, and ends `ROLLBACK`. Record its script blob, eight results, normal recovery, exit code, and absence of fixture rows/triggers afterward.
 
-## Authorization and Provider Evidence
+## External Authorization and Provider Evidence
 
 1. Exercise absent verifier, invalid proof, forged body IDs, valid teacher, target learner, other learner, observer, cross-room, direct RPC, and legacy operation cases.
 2. Capture the provider request using a controlled fake endpoint and assert exact configured URL/model, `max_tokens=1200`, canonical v3 request serialization, required explanation instruction, and absence of grading labels/keys.

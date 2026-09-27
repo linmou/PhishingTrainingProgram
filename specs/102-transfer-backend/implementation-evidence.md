@@ -8,6 +8,22 @@
 **Promoted component-101 prerequisite**: `87118a3` (contains implementation `91d8036`)  
 **Implementation commits**: `419f785`, hardened by `de3777b`, trusted non-assessment paths completed by `c23fc9e`
 
+## Component Gate Revision (2026-09-27)
+
+The current `tasks.md` defines a local-runnable component gate. All 47/47 task markers are checked against the recorded component evidence; earlier “remains open” statements below are dated historical assessments under the former hosted gate. This revision adds no database, provider, or test execution. The latest pre-revision component HEAD is `f7a3b3b` and the final documentation commit is recorded by Git history. Native database results came from the integration owner's disposable PostgreSQL 17 restored copies with Supabase-like roles and auth fixtures, not a deployed Supabase project.
+
+| Local lane | Evidence and result | Revised tasks |
+|---|---|---|
+| Prerequisite and preflight | Baseline `2248000`, promoted 101 `87118a3`, local clone identities and migration blobs below; source read-only preflight found two uncovered keyed questions, so no source migration ran. Separate synthetic valid legacy clone migrated one key to `legacy_incomplete` and removed the public key column. | T001, T009 |
+| Schema and delivery | Migration blob `5316f04a30e5e3afdb25af8d7d3e0efa12e78740`; backend 8/8 and RPC 28/28, exits 0 with fixture rollback. Separate delivery race observed B waiting on the room lock, then one winning stem-only public/private pair and zero losing pairs. | T011, T017 |
+| Attempts and concurrency | `wrong_wrong`, `correct_wrong`, and `wrong_correct` two-session runs observed lock waits; A/B/observer/assert exited 0. Final counts were respectively attempts/events/evidence/history `1/0/0/0`, `1/1/1/1`, and `2/1/1/1` after stale correct retry. | T020, T025 |
+| Authorization and privacy | Direct-role script blob `5f5a58087907b1d56055efb115c74b5548ae74ed` passed 10/10 SQLSTATE `42501` denials for anon/authenticated with zero mutations. Component source scan found no browser table/provider/grader fallback. Browser bundle scan remains blocked by the 103 fixture mismatch. | T027, T032 |
+| Atomicity and Guard | RPC 28/28 covers Guard defer/replay and actual progress/history; terminal fault script blob `946c37d88eeb9713a3646e0d59c7924f89a1efb7` passed eight injected write failures with zero partial effects, then normal terminal recovery. | T033, T037 |
+| Handler and provider | The focused quickstart Jest run passed 5 suites/32 tests; the broader 101/102 regression passed 9 suites/179 tests. A later checked Deno run passed 13 tests. Deno fake-provider cases cover missing settings, exact model, bounded repair, and credential-free audit. No live provider was invoked. | T042, T043, T045 |
+| Catalog and build | Local catalog script blob `871c84b4b961a223eb09c2204495c4061fad3dd9` matched eight RPC identities and listed 50 private columns. Checked-in `src/types/database.ts` has public RPC Args but no generated `private` block. The 102 component-branch build exited 1 at the old 103-owned `transferRoomFixtures.ts:146`; integration later reported a passing combined build at `9e00b1f` after the 103 fixture correction. A browser bundle privacy scan remains unrecorded here. | T043, T044 |
+
+The component gate closes local database, SQL authorization, concurrency, rollback, and focused handler checks. Still pending externally: deployed Supabase migration/grants/RLS/PostgREST and Edge verifier behavior, hosted generated-type parity, live provider, browser bundle privacy scan, real 101 resolver-to-handler-to-RPC integration, 103 UI, 104 evaluation, browser flows, and release activation. `TRANSFER_ASSESSMENT_ENABLED=false` remains required. None of these external gates is inferred from the 47 checked component tasks.
+
 ## Environment And Migration Inventory
 
 - Disposable hosted scope identifier: unavailable; no restored Supabase project or connection was supplied. A read-only source project was inventoried later, as recorded in the 2026-09-27 audit below.
@@ -78,7 +94,7 @@ Commands below ran from `tutor-system/` unless a path is specified. Their result
 | T045 | Remains open: `.env.example` declares `TRANSFER_ASSESSMENT_ENABLED=false`; handler checks the flag, absent verifier, and exact model, and local tests cover absent verifier/model. Hosted rollback and full no-fallback/privacy evidence are absent. |
 | T047 | Handoff prepared in this record and the dispatch report: the clean commit, exact local commands/results, public contracts, prerequisites, and edge risks are reported without editing orchestration records. |
 
-The Deno `TS2352` source correction remains unmade: the mandatory `fast-multi-agent-tdd` workflow requires a genuine behavior-failing Red test before an executable edit, while this diagnostic is a type-check failure and the existing runtime suite is green. The component-103 fixture belongs to its recorded owner. Neither failure is counted as a backend pass.
+At the 2026-09-26 dispatch, the Deno `TS2352` source correction and component-103 fixture were still open. Later checked Deno runs passed 13 tests, and integration reported a passing combined build at `9e00b1f`; the earlier failures are retained here as dated results.
 
 **Integration handoff**: Public assessment remains exactly `{id, student_id, selection_type, stem, options}`, with canonical `ProcessedMessageDTO` and the six trusted operations; private keys, explanation, attempts, and progress authority stay server-side. E01 (101->102) needs the real resolver-to-handler/RPC test. The 102->103 gate needs the fixture updated to include `student_id` and omit `rendered_text`, followed by a green production build and UI handoff. The 102->104 gate needs canonical v3 request-builder consumption and provider/explanation evaluation without copying backend authority. The integration owner must run those gates against the promoted SHA; this component's local pass is not integration promotion.
 
