@@ -1,6 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+
+global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+global.URL.revokeObjectURL = jest.fn();
 
 // Create a simple test component that mimics the download functionality
 const DownloadChatButton: React.FC = () => {
@@ -66,26 +68,6 @@ Messages:
     URL.revokeObjectURL(url);
   };
 
-  const downloadAsPdf = async () => {
-    const jsPDF = (await import('jspdf')).default;
-    const pdf = new jsPDF();
-    
-    pdf.setFontSize(16);
-    pdf.text('Room: Phishing 101', 20, 20);
-    
-    pdf.setFontSize(12);
-    pdf.text('Created: 1/1/2024, 12:00:00 AM', 20, 30);
-    
-    pdf.setFontSize(14);
-    pdf.text('Messages:', 20, 50);
-    
-    pdf.setFontSize(10);
-    pdf.text('[1/1/2024, 10:00:00 AM] Prof. Smith (tutor): Welcome to Phishing 101!', 20, 65);
-    pdf.text('[1/1/2024, 10:01:00 AM] John Doe (student): Glad to be here!', 20, 75);
-
-    pdf.save('Phishing_101_chat_history.pdf');
-  };
-
   return (
     <div>
       <button onClick={() => setShowModal(true)}>Download Chat</button>
@@ -95,7 +77,6 @@ Messages:
             <h3>Download Chat History</h3>
             <button onClick={() => { downloadAsText(); setShowModal(false); }}>TXT</button>
             <button onClick={() => { downloadAsJson(); setShowModal(false); }}>JSON</button>
-            <button onClick={() => { downloadAsPdf(); setShowModal(false); }}>PDF</button>
             <button onClick={() => setShowModal(false)}>Cancel</button>
           </div>
         </div>
@@ -104,19 +85,13 @@ Messages:
   );
 };
 
-// Mock jsPDF
-jest.mock('jspdf', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    setFontSize: jest.fn(),
-    text: jest.fn(),
-    save: jest.fn(),
-  })),
-}));
-
 describe('Chat History Download Feature - Simplified', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(document, 'createElement');
+    global.Blob = jest.fn(function (this: Blob & { content: BlobPart[] }, content: BlobPart[]) {
+      this.content = content;
+    }) as unknown as typeof Blob;
   });
 
   afterEach(() => {
@@ -216,33 +191,22 @@ describe('Chat History Download Feature - Simplified', () => {
     });
   });
 
-  describe('PDF format download', () => {
-    it('should download chat history as PDF file', async () => {
+  describe('Supported download formats', () => {
+    it('should not offer PDF download', () => {
       render(<DownloadChatButton />);
       
       fireEvent.click(screen.getByText('Download Chat'));
-      fireEvent.click(screen.getByText('PDF'));
 
-      await waitFor(async () => {
-        const { default: jsPDF } = await import('jspdf');
-        const pdfInstance = (jsPDF as jest.Mock).mock.instances[0];
-        expect(pdfInstance.save).toHaveBeenCalledWith('Phishing_101_chat_history.pdf');
-      });
+      expect(screen.queryByRole('button', { name: 'PDF' })).not.toBeInTheDocument();
     });
 
-    it('should create a valid PDF document', async () => {
+    it('should offer TXT and JSON downloads', () => {
       render(<DownloadChatButton />);
       
       fireEvent.click(screen.getByText('Download Chat'));
-      fireEvent.click(screen.getByText('PDF'));
 
-      await waitFor(async () => {
-        const { default: jsPDF } = await import('jspdf');
-        expect(jsPDF).toHaveBeenCalled();
-        const pdfInstance = (jsPDF as jest.Mock).mock.instances[0];
-        expect(pdfInstance.text).toHaveBeenCalled();
-        expect(pdfInstance.setFontSize).toHaveBeenCalled();
-      });
+      expect(screen.getByRole('button', { name: 'TXT' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'JSON' })).toBeInTheDocument();
     });
   });
 
