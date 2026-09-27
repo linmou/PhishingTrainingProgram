@@ -72,6 +72,14 @@ function validProviderPayload(): Record<string, unknown> {
   };
 }
 
+// Test responsibility: verify that the production Edge module passes Deno's type checker.
+Deno.test('default RPC adapter type-checks without remote fetches', async () => {
+  const checked = await new Deno.Command(Deno.execPath(), {
+    args: ['check', '--cached-only', '--unstable-sloppy-imports', new URL('./index.ts', import.meta.url).pathname],
+  }).output();
+  assert(checked.success, new TextDecoder().decode(checked.stderr));
+});
+
 Deno.test('fails closed before data access when no principal verifier is wired', async () => {
   let calls = 0;
   const handler = createAssessmentApiHandler(dependencies({

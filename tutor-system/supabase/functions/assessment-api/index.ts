@@ -545,7 +545,10 @@ function createDefaultDependencies(): AssessmentApiDependencies {
   return {
     featureEnabled: env('TRANSFER_ASSESSMENT_ENABLED') === 'true',
     verifier,
-    rpc: async (name, args) => admin.rpc(name, args) as Promise<RpcResult>,
+    rpc: async (name, args) => {
+      const result = await admin.rpc(name, args);
+      return { data: result.data, error: result.error };
+    },
     env,
     fetch,
     resolveAnswer: resolveTransferAnswer,
