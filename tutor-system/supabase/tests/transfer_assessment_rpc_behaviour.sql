@@ -291,7 +291,8 @@ BEGIN
       AND v_result->'terminal_failure_feedback'->'correct_option_ids' = jsonb_build_array('B')
       AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_assessment) = 'failed'
       AND EXISTS (SELECT 1 FROM private.learning_event_inbox
-        WHERE assessment_id = v_assessment AND event_kind = 'assessment_fail'),
+        WHERE event_payload->>'assessment_id' = v_assessment::TEXT
+          AND event_kind = 'assessment_fail'),
     v_result::TEXT
   );
 
@@ -392,7 +393,8 @@ BEGIN
       AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'passed'
       AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_pass_assessment) = 1
       AND EXISTS (SELECT 1 FROM private.learning_event_inbox
-        WHERE assessment_id = v_pass_assessment AND event_kind = 'assessment_pass'),
+        WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT
+          AND event_kind = 'assessment_pass'),
     v_result::TEXT
   );
 
@@ -438,7 +440,8 @@ BEGIN
       AND (SELECT lifecycle FROM private.transfer_assessments WHERE id = v_pass_assessment) = 'passed'
       AND (SELECT count(*) FROM private.transfer_assessment_attempts WHERE assessment_id = v_pass_assessment) = 2
       AND (SELECT count(*) FROM private.learning_event_inbox
-        WHERE assessment_id = v_pass_assessment AND event_kind = 'assessment_pass') = 1,
+        WHERE event_payload->>'assessment_id' = v_pass_assessment::TEXT
+          AND event_kind = 'assessment_pass') = 1,
     v_result::TEXT
   );
 END;

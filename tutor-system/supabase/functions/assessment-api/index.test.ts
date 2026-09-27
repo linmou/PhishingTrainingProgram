@@ -169,17 +169,36 @@ Deno.test('returns the exact public assessment target and strips private fields'
 });
 
 Deno.test('requires every server-only provider setting with no model fallback', async () => {
-  const handler = createAssessmentApiHandler(dependencies({
-    rpc: async (name) => name === 'prepare_transfer_turn_v1'
-      ? { data: { room_id: 'room-1', student_id: 'learner-1' }, error: null }
-      : { data: {}, error: null },
-  }));
-  const response = await handler(request('prepare_turn', {
-    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
-  }));
-  const payload = await response.json();
-  assertEquals(response.status, 503);
-  assertEquals(payload.error.code, 'AI_PROVIDER_NOT_CONFIGURED');
+  const configured = {
+    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+  };
+  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
+    let providerCalls = 0;
+    let auditCalls = 0;
+    const settings = { ...configured } as Record<string, string | undefined>;
+    if (missing === 'wrong_model') settings.OAI_MODEL = 'other-model';
+    else settings[missing] = undefined;
+    const handler = createAssessmentApiHandler(dependencies({
+      env: (name) => settings[name],
+      rpc: async (name) => {
+        if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
+        auditCalls += 1;
+        return { data: {}, error: null };
+      },
+      fetch: async () => {
+        providerCalls += 1;
+        return new Response('{}', { status: 200 });
+      },
+    }));
+    const response = await handler(request('prepare_turn', {
+      room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+    }));
+    const payload = await response.json();
+    assertEquals(response.status, 503);
+    assertEquals(payload.error.code, 'AI_PROVIDER_NOT_CONFIGURED');
+    assertEquals(providerCalls, 0);
+    assertEquals(auditCalls, 0);
+  }
 });
 
 Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and private audit', async () => {
@@ -210,7 +229,43 @@ Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and p
   assertEquals(requests[0].body.response_format, { type: 'json_object' });
   assert(JSON.stringify(requests[0].body).includes('learner_safe_explanation'));
   assert(!JSON.stringify(audits[0]).includes('server-secret'));
+  assert(!JSON.stringify(payload).includes('server-secret'));
+  assert(!JSON.stringify(payload).includes('raw_response'));
   assertEquals(audits[0].p_validation_outcome, 'valid');
+});
+
+Deno.test('returns a valid second response after one format repair', async () => {
+  const audits: Record<string, unknown>[] = [];
+  const requests: Record<string, unknown>[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    env: (name) => ({
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    rpc: async (name, args) => {
+      if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
+      if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
+      return { data: 'audit', error: null };
+    },
+    fetch: async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify(requests.length === 1
+        ? { choices: [{ finish_reason: 'stop', message: { content: '{invalid' } }] }
+        : validProviderPayload()), { status: 200 });
+    },
+  }));
+  const response = await handler(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const payload = await response.json();
+  assertEquals(response.status, 200);
+  assertEquals(payload.data.decision.assessment.learner_safe_explanation, 'Verify through the official app.');
+  assertEquals(audits.map((entry) => entry.p_validation_outcome), ['invalid', 'valid']);
+  assertEquals(audits.map((entry) => entry.p_attempt_ordinal), [1, 2]);
+  assertEquals(requests.length, 2);
+  assert(JSON.stringify(requests[1]).includes('Return valid JSON matching the same contract.'));
+  assert(!JSON.stringify(audits).includes('server-secret'));
+  assert(!JSON.stringify(payload).includes('server-secret'));
+  assert(!JSON.stringify(payload).includes('raw_response'));
 });
 
 Deno.test('performs one format-only repair and rejects a second invalid result', async () => {
