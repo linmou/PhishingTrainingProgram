@@ -99,7 +99,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Producer output / consumer input: promoted 101 attempt/result types feed 103's adapter mapping through the promoted 102 DTO, never a copied lifecycle fixture.
 - Invariants: UI state is display-only; retry has no terminal feedback; pass/failure terminal behavior is distinguishable without local grading.
 - Integration glue: none beyond 103 imports of promoted types and the adapter's exhaustiveness checks.
-- Handoff test: covered through E03 using a real 101 result carried by 102's output; no separate synthetic adapter fixture is accepted.
+- Handoff test: `tests/integration/transfer-backend-room-ui-handler.test.ts` runs the real 101 resolver through the 102 Edge handler and `TransferAssessmentService`, then passes the exact retry and terminal-failure DTOs to 103's `answerLifecycleFromProcessed`. The RPC seam simulates the persisted result; no lifecycle result is hand-authored at the consumer boundary.
 - E2E/smoke: learner selection and terminal display from persisted server outcome.
 - Producer gate (101): canonical attempt/result types and lifecycle tests pass. Consumer gate (103): a real 101 result carried through 102 output reaches the UI mapping in the same run; E03 may share this run only when that 101 provenance is asserted.
 
@@ -108,7 +108,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - Producer output / consumer input: `PublicAssessmentDTO` and `ProcessedMessageDTO` from the real 102 facade feed `transferAssessmentUiAdapter.ts`, `RoomContext.tsx`, and question components.
 - Invariants: DTO field names are unchanged; `student_id` routes controls but never authorizes; stem/options render once; `terminal_failure_feedback` appears only for failed second attempts.
 - Integration glue: integration owner resolves only import/export or merge wiring; component-local adapter changes remain 103-owned.
-- Handoff test: `tests/integration/transfer-backend-room-ui-two-attempt.test.mjs` passes a real 102 response from the same run into the actual 103 adapter and rendered room state.
+- Handoff test: `tests/integration/transfer-backend-room-ui-handler.test.ts` sends a real 102 `send_reviewed` handler response through `TransferAssessmentService` into 103's `projectRoomMessage`, which builds the public question from the allowlisted assessment DTO. The response contains private fields at the simulated RPC seam so the real 102 projection and 103 mapping are both exercised.
 - E2E/smoke: radio/checkbox submission, reload, duplicate tab race, fold persistence, and teacher editor flow.
 - Producer gate (102): trusted public DTO and process-result contract tests pass without 103 code. Consumer gate (103): the handoff, UI focused suite, type check, and browser smoke pass on one integration SHA.
 
