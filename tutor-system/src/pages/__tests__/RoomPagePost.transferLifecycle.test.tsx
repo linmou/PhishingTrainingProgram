@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Test responsible for the page-level transfer lifecycle states in src/pages/RoomPagePost.tsx:
- * preparing, unavailable capability, superseded delivery, and retention of the reviewed candidate.
+ * Test responsible for the page-level transfer lifecycle states and download controls in
+ * src/pages/RoomPagePost.tsx: preparation and delivery outcomes, plus TXT/JSON export selection.
  *
  * Responsibility: prove a teacher sees a named state instead of a silent no-op when preparation is
  * running or refused, and that no state is invented for a legacy suggestion.
@@ -70,6 +70,7 @@ const transferDraft = {
 
 describe('RoomPagePost transfer lifecycle states', () => {
   let generateAIResponse: jest.Mock;
+  let downloadChatHistory: jest.Mock;
   let alertSpy: jest.SpyInstance;
 
   const mount = (overrides: Record<string, unknown> = {}) => {
@@ -88,7 +89,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
       startTyping: jest.fn(),
       stopTyping: jest.fn(),
       aiConfig: { model_name: 'qwen3.5-flash', prompt_config: null },
-      downloadChatHistory: jest.fn(),
+      downloadChatHistory,
       clearChatHistory: jest.fn(),
       transferDraft: null,
       confirmTransferDraft: jest.fn().mockResolvedValue(undefined),
@@ -114,6 +115,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
     generateAIResponse = jest.fn().mockResolvedValue(undefined);
+    downloadChatHistory = jest.fn();
     // The generate control is the room's AI button; it is enabled for a tutor in an AI room.
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -198,5 +200,36 @@ describe('RoomPagePost transfer lifecycle states', () => {
     await waitFor(() => {
       expect(document.querySelector('[data-transfer-status]')).toBeNull();
     });
+  });
+
+  it('offers TXT and JSON downloads without offering PDF', () => {
+    mount();
+
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+
+    expect(screen.getByRole('heading', { name: 'Download Room Data' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Chat History (TXT)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Complete Data (JSON)' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'PDF' })).not.toBeInTheDocument();
+  });
+
+  it('requests a TXT export when the chat-history option is selected', () => {
+    mount();
+
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
+
+    expect(downloadChatHistory).toHaveBeenCalledWith('txt');
+    expect(screen.queryByRole('heading', { name: 'Download Room Data' })).not.toBeInTheDocument();
+  });
+
+  it('requests a JSON export when the complete-data option is selected', () => {
+    mount();
+
+    fireEvent.click(screen.getByTitle('Download Chat History'));
+    fireEvent.click(screen.getByRole('button', { name: 'Complete Data (JSON)' }));
+
+    expect(downloadChatHistory).toHaveBeenCalledWith('json');
+    expect(screen.queryByRole('heading', { name: 'Download Room Data' })).not.toBeInTheDocument();
   });
 });

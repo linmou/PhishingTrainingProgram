@@ -191,25 +191,6 @@ describe('Chat History Download Feature - Simplified', () => {
     });
   });
 
-  describe('Supported download formats', () => {
-    it('should not offer PDF download', () => {
-      render(<DownloadChatButton />);
-      
-      fireEvent.click(screen.getByText('Download Chat'));
-
-      expect(screen.queryByRole('button', { name: 'PDF' })).not.toBeInTheDocument();
-    });
-
-    it('should offer TXT and JSON downloads', () => {
-      render(<DownloadChatButton />);
-      
-      fireEvent.click(screen.getByText('Download Chat'));
-
-      expect(screen.getByRole('button', { name: 'TXT' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'JSON' })).toBeInTheDocument();
-    });
-  });
-
   describe('Downloaded content validation', () => {
     it('should include room creation date in downloaded file', async () => {
       render(<DownloadChatButton />);
