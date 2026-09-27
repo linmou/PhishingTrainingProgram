@@ -15,10 +15,16 @@ import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
+import { transferAssessmentService } from '../../services/transferAssessmentService';
 import {
+  DELIVERED_ANSWER_ID,
+  DELIVERED_QUESTION_ID,
+  LEARNER_A_ID,
   LEARNER_A_MESSAGE_ID,
   LEARNER_B_MESSAGE_ID,
   TRANSFER_ROOM_ID,
+  deliveredAnswerRow,
+  deliveredQuestionRow,
   learnerAMessageRow,
   learnerBMessageRow,
   transferChecklist,
@@ -65,6 +71,8 @@ const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void 
 describe('RoomContext transfer ingress', () => {
   let room: ReturnType<typeof useRoom> | null;
   let fetchedMessages: unknown[];
+  let messageReadCount: number;
+  let deferredMessageFetch: (() => Promise<{ data: unknown[]; error: null }>) | null;
   let realtimeHandlers: Record<string, RealtimeHandler>;
   let roomsUpdateHandler: RealtimeHandler;
 
@@ -72,6 +80,8 @@ describe('RoomContext transfer ingress', () => {
     jest.clearAllMocks();
     room = null;
     fetchedMessages = [learnerBMessageRow];
+    messageReadCount = 0;
+    deferredMessageFetch = null;
     realtimeHandlers = {};
 
     (useAuth as jest.Mock).mockReturnValue({
@@ -120,10 +130,15 @@ describe('RoomContext transfer ingress', () => {
         };
       }
       if (table === 'messages') {
+        messageReadCount += 1;
+        const deferredFetch = deferredMessageFetch;
+        deferredMessageFetch = null;
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
-              order: jest.fn().mockImplementation(async () => ({ data: fetchedMessages, error: null })),
+              order: jest.fn().mockImplementation(() => deferredFetch
+                ? deferredFetch()
+                : Promise.resolve({ data: fetchedMessages, error: null })),
             }),
           }),
         };
@@ -140,6 +155,10 @@ describe('RoomContext transfer ingress', () => {
 
     (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(transferChecklist);
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const mountRoom = async () => {
@@ -165,26 +184,40 @@ describe('RoomContext transfer ingress', () => {
     });
   };
 
-  it('keeps a realtime insert that arrives before the join fetch completes', async () => {
-    render(
-      <RoomProvider>
-        <RoomProbe onReady={(api) => { room = api; }} />
-      </RoomProvider>
-    );
-    await waitFor(() => expect(room).not.toBeNull());
-    await act(async () => {
-      await room!.joinRoom(TRANSFER_ROOM_ID);
+  it('keeps a realtime insert that arrives before reconnect catch-up completes', async () => {
+    await mountRoom();
+    let resolveFetch!: (result: { data: unknown[]; error: null }) => void;
+    let markFetchStarted!: () => void;
+    const fetchStarted = new Promise<void>((resolve) => { markFetchStarted = resolve; });
+    deferredMessageFetch = () => new Promise((resolve) => {
+      resolveFetch = resolve;
+      markFetchStarted();
     });
 
+    let reconnect: Promise<void> | undefined;
+    await act(async () => {
+      reconnect = room!.joinRoom(TRANSFER_ROOM_ID);
+      await fetchStarted;
+    });
     await realtimeInsert(learnerAMessageRow);
     expect(room!.messages.map((message) => message.id)).toContain(LEARNER_A_MESSAGE_ID);
+
+    await act(async () => {
+      resolveFetch({ data: [learnerBMessageRow], error: null });
+      await reconnect;
+    });
 
     // A later poll that does not know about the realtime row must not drop it.
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 2100));
     });
 
-    expect(room!.messages.map((message) => message.id)).toContain(LEARNER_A_MESSAGE_ID);
+    expect(room!.messages.map((message) => message.id)).toEqual([
+      LEARNER_B_MESSAGE_ID,
+      LEARNER_A_MESSAGE_ID,
+    ]);
+    expect(new Set(room!.messages.map((message) => message.id)).size).toBe(room!.messages.length);
+    expect(messageReadCount).toBeGreaterThan(2);
   });
 
   it('collapses a duplicate realtime insert into one visible message', async () => {
@@ -208,6 +241,72 @@ describe('RoomContext transfer ingress', () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toContain(LEARNER_A_MESSAGE_ID);
     expect(ids).toContain(LEARNER_B_MESSAGE_ID);
+    expect(ids).toEqual([LEARNER_B_MESSAGE_ID, LEARNER_A_MESSAGE_ID]);
+  });
+
+  it('keeps an already-processed terminal answer when polling replaces projections with stored rows', async () => {
+    fetchedMessages = [deliveredQuestionRow, deliveredAnswerRow];
+    (useAuth as jest.Mock).mockReturnValue({
+      user: {
+        id: LEARNER_A_ID,
+        email: 'learner-a@example.com',
+        display_name: 'Learner A',
+        current_role: 'student',
+        status: 'active',
+        created_at: '2026-09-12T08:00:00Z',
+        updated_at: '2026-09-12T08:00:00Z',
+      },
+      loading: false,
+    });
+    const processMessage = jest.spyOn(transferAssessmentService, 'processMessage').mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'failed',
+      attempt_number: 2,
+      attempts_used: 2,
+      attempts_remaining: 0,
+      selected_option_ids: ['A'],
+      terminal: true,
+      transition: { status: 'failed' },
+      feedback_required: true,
+      code: null,
+      already_processed: true,
+      terminal_failure_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Use an official channel to verify the request.',
+      },
+    });
+
+    await mountRoom();
+    await waitFor(() => expect(messageReadCount).toBeGreaterThan(1));
+
+    const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID) as unknown as {
+      answerLifecycle?: { state?: string; attemptsRemaining?: number; terminal?: boolean };
+    };
+    const question = room!.messages.find((message) => message.id === DELIVERED_QUESTION_ID) as unknown as {
+      publicQuestion?: { id?: string };
+      answerLifecycle?: { state?: string; attemptsRemaining?: number; terminal?: boolean; terminalFailureFeedback?: {
+        learner_safe_explanation?: string;
+      } | null };
+    };
+
+    expect(processMessage).toHaveBeenCalledTimes(1);
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    expect(answer.answerLifecycle).toMatchObject({
+      state: 'failed',
+      attemptsRemaining: 0,
+      terminal: true,
+    });
+    expect(question.publicQuestion?.id).toBe(DELIVERED_QUESTION_ID);
+    expect(question.answerLifecycle).toMatchObject({
+      state: 'failed',
+      attemptsRemaining: 0,
+      terminal: true,
+      terminalFailureFeedback: {
+        learner_safe_explanation: 'Use an official channel to verify the request.',
+      },
+    });
   });
 
   it('never adopts an unrecognized room participation value', async () => {

@@ -2,8 +2,37 @@
  * Build a single room export payload that keeps chat, feedback, and tutor-only AI interaction metadata in one non-overlapping JSON structure.
  */
 
-import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room } from '../types';
-import { readPublicQuestion } from './transferAssessmentUiAdapter';
+import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room, UserRole } from '../types';
+import { readAnswerLifecycle, readPublicQuestion } from './transferAssessmentUiAdapter';
+import type { AnswerLifecycleView } from './transferAssessmentUiAdapter';
+
+interface PublicQuestionExport {
+  id: string;
+  stem: string;
+  selection_type: 'single' | 'multiple';
+  options: Array<{ id: string; text: string }>;
+}
+
+interface AnswerLifecycleExport {
+  assessment_id: string;
+  state: AnswerLifecycleView['state'];
+  processing_state: AnswerLifecycleView['processingState'];
+  answer_outcome: AnswerLifecycleView['answerOutcome'];
+  attempt_number: AnswerLifecycleView['attemptNumber'];
+  attempts_used: AnswerLifecycleView['attemptsUsed'];
+  attempts_remaining: AnswerLifecycleView['attemptsRemaining'];
+  terminal: boolean;
+  terminal_explanation?: string;
+}
+
+type RoomExportMessage = ChatExportData['messages'][number] & {
+  public_question?: PublicQuestionExport;
+  answer_lifecycle?: AnswerLifecycleExport;
+};
+
+type RoomExportData = Omit<ChatExportData, 'messages'> & {
+  messages: RoomExportMessage[];
+};
 
 /**
  * Learner-visible question lines for a delivered assessment message. Only the public projection is
@@ -29,7 +58,8 @@ interface BuildRoomExportDataArgs {
   messageFeedbackStats: Record<string, MessageFeedbackStats>;
   feedbackSummary: ChatExportData['feedback_summary'] | null;
   aiInteractions: AIInteraction[];
-  isTutor: boolean;
+  userRole: UserRole;
+  userId: string | null;
 }
 
 interface BuildRoomTextExportArgs {
@@ -37,8 +67,97 @@ interface BuildRoomTextExportArgs {
   messages: Message[];
   messageFeedbackStats: Record<string, MessageFeedbackStats>;
   aiInteractions: AIInteraction[];
-  isTutor: boolean;
+  userRole: UserRole;
+  userId: string | null;
 }
+
+const lifecycleForQuestion = (
+  messages: Message[],
+  questionMessage: Message,
+  userRole: UserRole,
+  userId: string | null
+): AnswerLifecycleView | null => {
+  const question = readPublicQuestion(questionMessage);
+  if (!question || userRole !== 'student' || question.studentId !== userId) return null;
+
+  const questionLifecycle = readAnswerLifecycle(questionMessage);
+  const answerWithLifecycle = messages.find((message) => {
+    const lifecycle = readAnswerLifecycle(message);
+    return (
+      message.user_role === 'student' &&
+      message.user_id === question.studentId &&
+      message.parent_message_id === questionMessage.id &&
+      lifecycle?.messageId === message.id &&
+      lifecycle.assessmentId === question.id
+    );
+  });
+  const answerLifecycle = answerWithLifecycle ? readAnswerLifecycle(answerWithLifecycle) : null;
+  const lifecycle = questionLifecycle ?? answerLifecycle;
+  if (!lifecycle || lifecycle.assessmentId !== question.id) return null;
+
+  const answer = messages.find((message) => message.id === lifecycle.messageId);
+  const linkedAnswerLifecycle = answer ? readAnswerLifecycle(answer) : null;
+  if (
+    !answer ||
+    answer.user_role !== 'student' ||
+    answer.user_id !== question.studentId ||
+    answer.parent_message_id !== questionMessage.id
+  ) return null;
+
+  if (linkedAnswerLifecycle && (
+    linkedAnswerLifecycle.messageId !== lifecycle.messageId ||
+    linkedAnswerLifecycle.assessmentId !== lifecycle.assessmentId
+  )) return null;
+
+  return lifecycle;
+};
+
+const publicQuestionExport = (message: Message): PublicQuestionExport | null => {
+  const question = readPublicQuestion(message);
+  if (!question) return null;
+  return {
+    id: question.id,
+    stem: question.stem,
+    selection_type: question.selectionType,
+    options: question.options.map(({ id, text }) => ({ id, text })),
+  };
+};
+
+const answerLifecycleExport = (lifecycle: AnswerLifecycleView): AnswerLifecycleExport => {
+  const terminalExplanation = lifecycle.state === 'failed' &&
+    lifecycle.answerOutcome === 'failed' && lifecycle.terminal
+    ? lifecycle.terminalFailureFeedback?.learner_safe_explanation
+    : undefined;
+  return {
+    assessment_id: lifecycle.assessmentId,
+    state: lifecycle.state,
+    processing_state: lifecycle.processingState,
+    answer_outcome: lifecycle.answerOutcome,
+    attempt_number: lifecycle.attemptNumber,
+    attempts_used: lifecycle.attemptsUsed,
+    attempts_remaining: lifecycle.attemptsRemaining,
+    terminal: lifecycle.terminal,
+    ...(terminalExplanation ? { terminal_explanation: terminalExplanation } : {}),
+  };
+};
+
+const renderAnswerLifecycleLines = (lifecycle: AnswerLifecycleView | null): string[] => {
+  if (!lifecycle) return [];
+  if (lifecycle.answerOutcome === 'retry') {
+    const attemptLabel = lifecycle.attemptsRemaining === 1 ? 'attempt' : 'attempts';
+    return [`   Incorrect. ${lifecycle.attemptsRemaining} ${attemptLabel} remaining.`];
+  }
+  if (lifecycle.answerOutcome === 'passed') return ['   Correct.'];
+  if (lifecycle.answerOutcome !== 'failed') return [];
+
+  const explanation = lifecycle.terminal && lifecycle.terminalFailureFeedback
+    ? lifecycle.terminalFailureFeedback.learner_safe_explanation
+    : null;
+  return [
+    '   Final answer: incorrect.',
+    ...(explanation ? [`   Explanation: ${explanation}`] : []),
+  ];
+};
 
 export const buildTutorInteractionText = (interaction: AIInteraction, index: number): string => {
   const modeChanged = interaction.raw_mode && interaction.final_mode
@@ -69,8 +188,10 @@ export const buildRoomTextExport = ({
   messages,
   messageFeedbackStats,
   aiInteractions,
-  isTutor,
+  userRole,
+  userId,
 }: BuildRoomTextExportArgs): string => {
+  const isTutor = userRole === 'tutor';
   const aiSummary = isTutor && aiInteractions.length > 0 ? [
     '',
     'AI Assistant Summary:',
@@ -114,8 +235,14 @@ export const buildRoomTextExport = ({
         ? ` [👍${feedbackStats.like_count} 👎${feedbackStats.dislike_count}${feedbackStats.overall_average_rating ? ` ★${feedbackStats.overall_average_rating.toFixed(1)}` : ''}]`
         : '';
       const line = `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
-      // A delivered question exports its public rendering, never its private material.
-      return [line, ...renderPublicQuestionLines(message)];
+      const lifecycle = readPublicQuestion(message)
+        ? lifecycleForQuestion(messages, message, userRole, userId)
+        : null;
+      return [
+        line,
+        ...renderPublicQuestionLines(message),
+        ...renderAnswerLifecycleLines(lifecycle),
+      ];
     }),
     ...aiSummary,
   ].filter((line) => line !== '').join('\n');
@@ -127,25 +254,35 @@ export const buildRoomExportData = ({
   messageFeedbackStats,
   feedbackSummary,
   aiInteractions,
-  isTutor,
-}: BuildRoomExportDataArgs): ChatExportData => {
-  const exportData: ChatExportData = {
+  userRole,
+  userId,
+}: BuildRoomExportDataArgs): RoomExportData => {
+  const isTutor = userRole === 'tutor';
+  const exportData: RoomExportData = {
     room: {
       id: room.id,
       title: room.title,
       created_at: room.created_at,
     },
-    messages: messages.map((msg) => ({
-      id: msg.id,
-      user_role: msg.user_role,
-      display_name: msg.display_name,
-      content: msg.content,
-      created_at: msg.created_at,
-      response_mode: msg.response_mode,
-      ai_model_used: msg.ai_model_used,
-      ai_response_time_ms: msg.ai_response_time_ms,
-      feedback_stats: messageFeedbackStats[msg.id] || undefined,
-    })),
+    messages: messages.map((msg) => {
+      const question = publicQuestionExport(msg);
+      const lifecycle = question
+        ? lifecycleForQuestion(messages, msg, userRole, userId)
+        : null;
+      return {
+        id: msg.id,
+        user_role: msg.user_role,
+        display_name: msg.display_name,
+        content: msg.content,
+        created_at: msg.created_at,
+        response_mode: msg.response_mode,
+        ai_model_used: msg.ai_model_used,
+        ai_response_time_ms: msg.ai_response_time_ms,
+        feedback_stats: messageFeedbackStats[msg.id] || undefined,
+        ...(question ? { public_question: question } : {}),
+        ...(lifecycle ? { answer_lifecycle: answerLifecycleExport(lifecycle) } : {}),
+      };
+    }),
     export_metadata: {
       exported_at: new Date().toISOString(),
       total_messages: messages.length,

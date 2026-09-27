@@ -132,6 +132,7 @@ does not grade answers or write progress.
 **Role-based Data**:
 - **Tutors**: JSON export includes merged chat + feedback data, AI suggestion analytics, and per-interaction `ai_config_snapshot` data
 - **Students/Observers**: Export excludes tutor-only AI analytics and config snapshots
+- Transfer exports include the public question for room participants, but include answer lifecycle and terminal explanation only for the signed-in target learner. Teacher progress remains sourced from the trusted checklist projection.
 
 **Export Design**:
 - JSON export is built through a single export builder so one message shape is used for both feedback and chat data

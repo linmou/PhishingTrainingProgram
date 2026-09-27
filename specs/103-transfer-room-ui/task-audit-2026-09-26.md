@@ -2,7 +2,7 @@
 
 Intent: reconcile each task against the current branch's source, focused tests, and local gates. An unchecked task may have useful partial implementation; it is not accepted until every clause in its task text has evidence.
 
-Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`. Focused command in `quickstart.md`: 17 suites/148 tests passed. Browser and hosted behavior were not run.
+Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`. Focused command in `quickstart.md`: 17 suites/153 tests passed. Browser and hosted behavior were not run.
 
 | Task | State | Specific evidence or missing clause |
 |---|---|---|
@@ -33,7 +33,7 @@ Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`.
 | T025 | Complete | `RoomPagePost.tsx` uses a dedicated assessment-submit callback separate from the text composer; its page test verifies canonical `selectedOptionIds`, assessment ID, and distinct persisted parent ID in one submission. |
 | T026 | Complete | The context test proves canonical option IDs reach `postMessage`, the persisted answer/assessment identities reach `processMessage`, trusted lifecycle attaches to answer and question, ordinary messages use evidence analysis, and explicit assessment failures never fall back to analysis. |
 | T027 | Open | CSS contains editor rules; stable learner controls, feedback layout, responsive geometry, and focus states across both named stylesheets are unverified. |
-| T028 | Open | A `RoomContext.transferAnswer.test.tsx` join test now proves reload restoration and persisted `attemptsRemaining`; the named ingress suite still lacks polling-overlap and full remaining-chance convergence coverage. |
+| T028 | Complete | `RoomContext.transferIngress.test.tsx` holds reconnect catch-up open while a realtime insert arrives, verifies the insert survives catch-up and a later poll, collapses duplicate IDs, and checks ordering. `RoomContext.transferAnswer.test.tsx` verifies reload restoration from an already-processed result with server-owned remaining attempts. |
 | T029 | Open | `RoomContext.transferConcurrency.test.tsx` tests retry/already-delivered/focus/resolved answer; simultaneous second submissions and two-tab terminal reread are absent. |
 | T030 | Open | `RoomContext.transferModes.test.tsx` covers tutoring delivery, Guard adoption, null item, and invalid pair; manual Guard recovery and all compatibility cases remain unverified. |
 | T031 | Complete | `PostComment.transfer.test.tsx` covers default-expanded state and accessible collapse/expand for student, tutor, and observer, participant-local controls, and mounted selection/result preservation. |
@@ -44,15 +44,15 @@ Updated: 2026-09-27 (first recorded 2026-09-26). Branch: `103-transfer-room-ui`.
 | T036 | Open | Page has preparation/refusal states; explicit catch-up and retryable behavior without legacy switching is not fully tested. |
 | T037 | Open | Adapter refuses assessment as room participation mode and mode tests pass; complete Guard recovery through `AISuggestionBox` is not demonstrated. |
 | T038 | Open | `ChecklistPanel.transfer.test.tsx` covers owner scope, legacy and Guard lock, but the combined role/cross-learner projection matrix is incomplete. |
-| T039 | Open | `roomExportBuilder.transfer.test.ts` covers private-field exclusion and teacher/learner separation; observer and terminal explanation disclosure are absent. |
+| T039 | Complete | `roomExportBuilder.transfer.test.ts` covers learner/teacher/observer/other-learner projections, pre-terminal explanation absence, terminal explanation for only the target learner, private-field exclusion, and distinct question-message versus assessment IDs. |
 | T040 | Open | `RoomPagePost.transferDecision.test.tsx` checks structured decisions; the named page/context requirement lacks a direct public-projection downstream assertion. |
 | T041 | Open | Checklist tests cover server-owned writes and legacy path; full server-provided learner-owned projection across roles is not yet evidenced. |
-| T042 | Open | Export builder allowlists fields; terminal-only explanation and observer projection are not fully asserted. |
+| T042 | Complete | `roomExportBuilder.ts` allowlists public question and lifecycle fields; only the signed-in target learner receives lifecycle data, terminal explanation is failed-terminal only, and teacher/observer exports do not reuse learner-local lifecycle state. `RoomContext` passes the current role and user ID to both builders. |
 | T043 | Open | Page and comment have role logic; complete role-appropriate progress/export and legacy-preservation evidence is missing. |
-| T044 | Complete | Exact 17-path focused command in `quickstart.md` exited 0 on 2026-09-27: 17 suites, 148 tests. See current verification notes. |
-| T045 | Open | Full regression ran and exited 1: 35 failed, 9 skipped, 90 passed suites; 151 failed, 141 skipped, 942 passed tests. Current `RoomContext.test.tsx` fails on its incomplete realtime mock (`channel.unsubscribe` missing), and current `PostComment.test.tsx` fails an unrelated multi-agent profile expectation. Historical 2026-09-26 logs named in the prior notes are absent, so failure-identity comparison against that run remains unresolved. |
-| T046 | Complete | `npx tsc --noEmit` exited 2 with 506 errors in 41 files, with no diagnostics in the modified 103 UI/source/test paths. `npm run build` exited 0 after removing the new callback dependency warning; existing source-map, lint, and Browserslist warnings remain. |
-| T047 | Complete | Reviewed `tutor-system/README.md`, `claude_docs/README.md`, and `claude_docs/RoomContext.md`; updated the nearest room doc and added `documentation_update_record_v2026_09_27_transfer_room_reload_restore.md`. No integration-owner doc update was deferred. |
+| T044 | Complete | Exact 17-path focused command in `quickstart.md` exited 0 on 2026-09-27: 17 suites, 153 tests. See current verification notes. |
+| T045 | Open | Full regression exited 1: 35 failed, 9 skipped, 90 passed suites; 151 failed, 141 skipped, 952 passed tests. A same-HEAD comparison with only the current export-policy delta removed reported the same failure/skip counts and 951 passing tests; this isolates only that delta and does not close the broader regression gate. |
+| T046 | Complete | `npx tsc --noEmit` exited 2 with 506 errors in 41 files. Five diagnostics remain in `roomExportBuilder.test.ts` on lines unchanged from `68a4b54`; none point at the changed call sites, transfer export tests, or production files. `npm run build` exited 0 with existing source-map, lint, and Browserslist warnings. With `CI=true`, those existing warnings are treated as errors and the build exits 1. |
+| T047 | Complete | Reviewed `tutor-system/README.md`, `claude_docs/README.md`, and `claude_docs/RoomContext.md`; updated the nearest room doc and added `documentation_update_record_v2026_09_27_transfer_room_export_lifecycle.md`. |
 | T048 | Open | Ownership audit of `0c4dfb6..HEAD` found `tutor-system/src/types/index.ts` changed by 103 commit `21915f4`, despite the task boundary assigning that shared barrel to component 101. No other prohibited 101/102/104, SQL/RLS, provider/auth, Promptfoo, or release-browser path appears in that 103 range. The earlier `2fcd0b4..HEAD` tree also includes separate 101/102/104 and orchestration commits, which are not attributed to component 103. |
 
-Nineteen tasks are checked, 29 remain unchecked. A passing local focused suite does not substitute for the missing clauses above or for a browser/hosted gate.
+Twenty-two tasks are checked, 26 remain unchecked. A passing local focused suite does not substitute for the missing clauses above or for a browser/hosted gate.

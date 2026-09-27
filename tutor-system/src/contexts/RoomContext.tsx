@@ -1365,8 +1365,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const roomTitle = currentRoom.title.replace(/\s+/g, '_');
         const timestamp = new Date().toISOString().split('T')[0];
         
-        // Only include AI data for tutors
-        const isTutor = user?.current_role === 'tutor';
+        const userRole = user?.current_role ?? 'observer';
+        const userId = user?.id ?? null;
         
         if (format === 'json') {
             // Get feedback summary for the room
@@ -1383,7 +1383,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 messageFeedbackStats,
                 feedbackSummary,
                 aiInteractions,
-                isTutor
+                userRole,
+                userId,
             });
             
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -1402,7 +1403,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 messages,
                 messageFeedbackStats,
                 aiInteractions,
-                isTutor
+                userRole,
+                userId,
             });
 
             const blob = new Blob([content], { type: 'text/plain' });

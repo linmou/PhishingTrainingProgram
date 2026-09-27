@@ -102,7 +102,8 @@ describe('buildRoomExportData', () => {
       messageFeedbackStats,
       feedbackSummary,
       aiInteractions,
-      isTutor: true,
+      userRole: 'tutor',
+      userId: 'tutor-123',
     });
 
     expect(exportData.feedback_summary).toEqual(feedbackSummary);
@@ -153,7 +154,8 @@ describe('buildRoomExportData', () => {
       messageFeedbackStats,
       feedbackSummary,
       aiInteractions,
-      isTutor: false,
+      userRole: 'student',
+      userId: 'student-1',
     });
 
     expect(exportData.feedback_summary).toEqual(feedbackSummary);
@@ -240,10 +242,10 @@ describe('buildRoomExportData', () => {
   });
 
   it('keeps the decision trail in the tutor TXT export and out of the student TXT export', () => {
-    const args = { room, messages, messageFeedbackStats, aiInteractions };
+    const args = { room, messages, messageFeedbackStats, aiInteractions, userId: 'tutor-123' };
 
-    const tutorText = buildRoomTextExport({ ...args, isTutor: true });
-    const studentText = buildRoomTextExport({ ...args, isTutor: false });
+    const tutorText = buildRoomTextExport({ ...args, userRole: 'tutor' });
+    const studentText = buildRoomTextExport({ ...args, userRole: 'student', userId: 'student-1' });
 
     expect(tutorText).toContain('Raw Mode: tutoring');
     expect(tutorText).toContain('Raw Instruction: correction');
@@ -257,7 +259,7 @@ describe('buildRoomExportData', () => {
     const roomContext = fs.readFileSync(path.resolve(process.cwd(), 'src/contexts/RoomContext.tsx'), 'utf8');
 
     expect(roomContext).toMatch(
-      /const downloadChatHistory[\s\S]*?if \(format === 'json'\)[\s\S]*?\} else \{[\s\S]*?const content = buildRoomTextExport\s*\(\s*\{[\s\S]*?isTutor[\s\S]*?\}\s*\);[\s\S]*?new Blob\s*\(\s*\[content\]/
+      /const downloadChatHistory[\s\S]*?if \(format === 'json'\)[\s\S]*?\} else \{[\s\S]*?const content = buildRoomTextExport\s*\(\s*\{[\s\S]*?userRole[\s\S]*?userId[\s\S]*?\}\s*\);[\s\S]*?new Blob\s*\(\s*\[content\]/
     );
   });
 });
