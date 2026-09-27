@@ -104,9 +104,9 @@ The UI rejects missing instructions, `assessment` without `transfer_assess`, tut
 
 The component-103 adapter imports component 101/102 exports unchanged and defines its React-only review, public-question, and lifecycle view-state types alongside their mappings in `src/contexts/transferAssessmentUiAdapter.ts`. It maps component 102's thrown service errors and returned projections into these states without exposing raw provider output:
 
-- `unavailable`: the capability is disabled or the trusted operation is not configured (`ASSESSMENT_FEATURE_DISABLED`, `AI_PROVIDER_NOT_CONFIGURED`, `AUTHORIZATION_NOT_CONFIGURED`);
-- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, local `parseTutorDecisionV3` rejection);
-- `superseded`: the server reports that persisted state already covers this delivery or the identity no longer matches (`ASSESSMENT_ALREADY_OPEN`, `WRONG_LEARNER`, `LEGACY_CHECKLIST`); nothing is rendered as delivered;
+- `unavailable`: the capability is disabled, the trusted operation is not configured, or the transfer checklist does not apply to the room (`ASSESSMENT_FEATURE_DISABLED`, `AI_PROVIDER_NOT_CONFIGURED`, `AUTHORIZATION_NOT_CONFIGURED`, `LEGACY_CHECKLIST`, `LEGACY_ASSESSMENT_INCOMPLETE`, `UNSUPPORTED_ROOM_SCOPE`);
+- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, `INVALID_REQUEST`, `PROGRESSION_LOCKED`, local `parseTutorDecisionV3` rejection);
+- `superseded`: the server reports that persisted state already covers this delivery or the identity no longer matches (`ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_TERMINAL`, `WRONG_LEARNER`); nothing is rendered as delivered;
 - `duplicate`: an idempotent replay whose persisted result can be shown once;
 - `unauthorized`: no data or action is rendered (`FORBIDDEN`, `UNAUTHORIZED`);
 - `retryable`: transient transport or provider failure with a safe retry action;
