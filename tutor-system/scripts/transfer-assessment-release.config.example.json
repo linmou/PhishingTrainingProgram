@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "output_root": "../../evals/transfer-assessment/release",
+  "browser_evidence_dir": "../../evals/transfer-assessment/release/browser",
+  "environment": {
+    "app_origin": "http://127.0.0.1:3001",
+    "supabase_origin": "https://your-isolated-project.supabase.co",
+    "isolated": true
+  },
+  "principals": {
+    "teacher": {
+      "application_user_id": "replace-with-verified-teacher-id",
+      "credential_env": "TRANSFER_RELEASE_TEACHER_EMAIL"
+    },
+    "learner": {
+      "application_user_id": "replace-with-verified-learner-id",
+      "credential_env": "TRANSFER_RELEASE_LEARNER_EMAIL"
+    }
+  },
+  "capability": {
+    "flag": "TRANSFER_ASSESSMENT_ENABLED",
+    "expected_state": "disabled"
+  },
+  "upstream_evidence": [
+    { "gate_id": "backend_boundary", "required": true, "path": "backend-boundary.json" },
+    { "gate_id": "room_ui", "required": true, "path": "room-ui.json" },
+    { "gate_id": "evaluation", "required": true, "path": "evaluation.json" }
+  ],
+  "scenarios": {
+    "manifest": "transfer-assessment-release-attack-matrix.json",
+    "required": true
+  },
+  "browser": {
+    "workflow": "dedicated workflow module configured by the release verifier",
+    "workflow_module": "",
+    "evidence_root": "../../evals/transfer-assessment/release/browser"
+  }
+}

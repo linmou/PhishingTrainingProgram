@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "scenarios": [
+    { "id": "US1-S1", "title": "eligible evidence produces one teacher-reviewable assessment", "requirement": "FR-003" },
+    { "id": "US1-S2", "title": "teacher review sends one public four-option assessment", "requirement": "FR-003" },
+    { "id": "US1-S3", "title": "correct answer resolves once and survives reload", "requirement": "FR-004" },
+    { "id": "US1-S4", "title": "wrong answer repairs after new evidence and changed context", "requirement": "FR-004" },
+    { "id": "US1-S5", "title": "Guard defers and recovers without duplicate progress", "requirement": "FR-004" },
+    { "id": "US1-S6", "title": "stale, retry, reconnect, and duplicate flows stay idempotent", "requirement": "FR-004" },
+    { "id": "US2-S1", "title": "learner surfaces contain no private assessment material", "requirement": "FR-005" },
+    { "id": "US2-S2", "title": "forged and cross-scope requests are rejected", "requirement": "FR-006" },
+    { "id": "US2-S3", "title": "stale, direct-write, and legacy operations do not mutate state", "requirement": "FR-006" },
+    { "id": "US3-S1", "title": "non-pass gates keep capability disabled", "requirement": "FR-010" },
+    { "id": "US3-S2", "title": "rollback disables new work without deleting evidence", "requirement": "FR-012" }
+  ],
+  "attacks": [
+    { "id": "forged_identity", "operation": "read_or_mutate_as_other_user", "expected": "rejected" },
+    { "id": "cross_learner", "operation": "read_or_mutate_other_learner_assessment", "expected": "rejected" },
+    { "id": "cross_room", "operation": "read_or_mutate_other_room_assessment", "expected": "rejected" },
+    { "id": "stale_question", "operation": "submit_stale_assessment_id", "expected": "rejected_or_idempotent" },
+    { "id": "direct_write", "operation": "write_assessment_fields_directly", "expected": "rejected" },
+    { "id": "legacy_rpc", "operation": "invoke_legacy_assessment_rpc", "expected": "rejected" }
+  ]
+}
