@@ -61,6 +61,32 @@ SELECT count(*) AS keyed_rows,
 FROM keyed k;
 ```
 
+When `uncovered_rows > 0`, inspect the relationships with this read-only query. It returns identifiers and scope checks, never answer-key values:
+
+```sql
+SELECT m.id AS question_message_id,
+       m.room_id AS question_room_id,
+       m.assessment_checklist_id,
+       m.assessment_item_id,
+       m.parent_message_id,
+       sc.student_id AS checklist_student_id,
+       sc.room_id AS checklist_room_id,
+       sc.progress_policy_version,
+       ci.id IS NOT NULL AS item_belongs_to_checklist,
+       parent.room_id AS parent_room_id,
+       parent.user_id AS parent_student_id,
+       parent.user_role AS parent_role,
+       parent.room_id = m.room_id AS parent_room_matches,
+       parent.user_id = sc.student_id AS parent_learner_matches
+FROM public.messages m
+LEFT JOIN public.session_checklists sc ON sc.id = m.assessment_checklist_id
+LEFT JOIN public.checklist_items ci
+  ON ci.checklist_id = sc.id AND ci.id = m.assessment_item_id
+LEFT JOIN public.messages parent ON parent.id = m.parent_message_id
+WHERE m.assessment_key IS NOT NULL
+ORDER BY m.id;
+```
+
 Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`, or a verified restorable pre-migration backup/PITR point is absent. The migration also raises `LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED` before copying any key when its own coverage check finds such a row. It copies eligible keys into `private.transfer_assessments` and then drops `public.messages.assessment_key`; a reverse migration cannot recover dropped keys. First rehearse migration and SQL behavioral tests on a disposable restored clone, confirm the legacy-incomplete private row count and key values against the preflight inventory, and retain the restore point before any user-authorized target run.
 
 1. Apply `20260922000000_transfer_assessment_server_authority.sql` only to the approved disposable scope after the stop conditions pass.
@@ -69,6 +95,17 @@ Stop if the query fails because the hosted schema differs, `uncovered_rows > 0`,
 4. Regenerate `src/types/database.ts` from that schema and compare the exact private/public/RPC signatures to `contracts/rpc-contract.md`.
 
 Invoke each SQL script with `psql -X -v ON_ERROR_STOP=1 "$DISPOSABLE_DATABASE_URL" -f <script>` so a raised assertion stops the run with a nonzero exit. The current scripts do not yet cover the full matrix in steps 2-3; keep T009, T011, T020, T027, and T033 open until those cases are encoded and executed. Record exact commands, timestamp, tested migration/SHA, exit code, test count, and immutable log path. Static SQL/Jest checks do not substitute for hosted execution.
+
+### Two-Session Race Lane
+
+Use two independent `psql` connections to the same disposable restored scope. Create an isolated room, learner, transfer checklist/item, and delivered assessment through the versioned RPCs; post two distinct wrong answer messages and retain the assessment, answer, learner, and request UUIDs. Do not reuse the rollback-only fixtures in `transfer_assessment_rpc_behaviour.sql`.
+
+1. Connection A: `BEGIN;` then call `process_assessment_message_v2` for wrong answer A with expected count `0`, resolution `open`, outcome `retry`, `ARRAY['A']`, the unchanged progress snapshot, and NULL transition. Keep the transaction open after its attempt-one result.
+2. Connection B: call the same RPC for wrong answer B with expected count `0`, resolution `open`, outcome `retry` and a distinct request UUID. It must wait on A's row lock. Commit A; B must return `CONCURRENT_MODIFICATION` and leave exactly one attempt, zero learning events, and lifecycle `open`.
+3. In B, reread the processing context and call the RPC for answer B with expected count `1`, resolution `open`, outcome `failed`, `ARRAY['A']`, the component-101 failure progress, and `assessment_fail`. Verify two distinct attempt rows, lifecycle `failed`, exactly one terminal learning event, and feedback only in the committed terminal response.
+4. Repeat with a fresh assessment and one correct plus one wrong posted answer. Let the correct call hold A's transaction open; B must return `CONCURRENT_MODIFICATION` after A commits, and retry must see the terminal pass without allocating an attempt. Reverse commit order on another fresh assessment: wrong first produces attempt one, then the correct retry passes on attempt two. Compare actual progress/history and event counts before and after each run.
+
+Capture both connection transcripts and the final row-count query with the tested migration SHA. A single sequential call that passes a stale expected count checks CAS behavior but does not prove the two-session race.
 
 ## Authorization and Provider Evidence
 
