@@ -642,6 +642,11 @@
     color: #721c24;
 }
 
+.room-card-status.in-session {
+    background: #d4edda;
+    color: #155724;
+}
+
 .room-card-actions {
     display: flex;
     flex-direction: column;

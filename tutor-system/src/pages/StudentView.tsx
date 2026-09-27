@@ -19,7 +19,23 @@ interface RoomWithTutor extends Room {
 interface RoomWithStatus extends RoomWithTutor {
     status: string;
     isJoinDisabled: boolean;
+    joinButtonText: string;
+    isCurrentStudentInRoom: boolean;
 }
+
+const activeStudentSessions = () => supabase
+    .from('sessions')
+    .select('room_id, student_id')
+    .eq('status', 'active')
+    .not('student_id', 'is', null);
+
+const activeStudentSessionForRoom = (roomId: string) => supabase
+    .from('sessions')
+    .select('room_id, student_id')
+    .eq('room_id', roomId)
+    .eq('status', 'active')
+    .not('student_id', 'is', null)
+    .maybeSingle();
 
 const StudentView: React.FC = () => {
     const navigate = useNavigate();
@@ -78,12 +94,27 @@ const StudentView: React.FC = () => {
                 return;
             }
 
-            // No capacity limits. Hide test/harness rooms (marker, Demo: titles, DemoTutor_*).
-            const roomsWithStatus = filterRoomsForStudentList(roomsData || []).map((room) => ({
-                ...room,
-                status: 'Available',
-                isJoinDisabled: false
-            } as RoomWithStatus));
+            const { data: sessionsData, error: sessionsError } = await activeStudentSessions();
+            if (sessionsError) {
+                throw sessionsError;
+            }
+
+            const activeSessionByRoom = new Map(
+                (sessionsData || []).map((session) => [session.room_id, session.student_id])
+            );
+            const roomsWithStatus = filterRoomsForStudentList(roomsData || []).map((room) => {
+                const activeStudentId = activeSessionByRoom.get(room.id);
+                const isCurrentStudentInRoom = Boolean(user?.id && activeStudentId === user.id);
+                const isOccupied = Boolean(activeStudentId);
+
+                return {
+                    ...room,
+                    status: isCurrentStudentInRoom ? 'Your Session' : isOccupied ? 'Room Full' : 'Available',
+                    isJoinDisabled: isOccupied && !isCurrentStudentInRoom,
+                    joinButtonText: isCurrentStudentInRoom ? 'Rejoin Room' : 'Join Room',
+                    isCurrentStudentInRoom
+                } as RoomWithStatus;
+            });
 
             setRooms(roomsWithStatus);
             setError(null); // Clear any previous errors
@@ -95,7 +126,7 @@ const StudentView: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user?.id]);
 
     useEffect(() => {
         fetchRooms();
@@ -181,6 +212,29 @@ const StudentView: React.FC = () => {
                 setError('Room not found.');
                 return;
             }
+
+            const { data: currentOccupant, error: occupancyError } = await activeStudentSessionForRoom(roomId);
+            if (occupancyError) {
+                setError('Unable to check room availability. Please try again.');
+                return;
+            }
+            if (currentOccupant?.student_id === user.id) {
+                navigate(`/room/${roomId}`);
+                return;
+            }
+            if (currentOccupant?.student_id) {
+                setRooms((currentRooms) => currentRooms.map((currentRoom) => currentRoom.id === roomId
+                    ? {
+                        ...currentRoom,
+                        status: 'Room Full',
+                        isJoinDisabled: true,
+                        joinButtonText: 'Join Room',
+                        isCurrentStudentInRoom: false
+                    }
+                    : currentRoom));
+                setError('This room is full. Another student has joined.');
+                return;
+            }
             
             // Debug logging
             console.log('Attempting to join room:', {
@@ -218,11 +272,33 @@ const StudentView: React.FC = () => {
                 
             if (joinError) {
                 console.error('Join error:', joinError);
+
+                if (joinError.code === '23505') {
+                    const { data: activeSession, error: activeSessionError } = await activeStudentSessionForRoom(roomId);
+                    if (!activeSessionError && activeSession?.student_id === user.id) {
+                        navigate(`/room/${roomId}`);
+                        return;
+                    }
+                    if (!activeSessionError && activeSession?.student_id) {
+                        setRooms((currentRooms) => currentRooms.map((currentRoom) => currentRoom.id === roomId
+                            ? {
+                                ...currentRoom,
+                                status: 'Room Full',
+                                isJoinDisabled: true,
+                                joinButtonText: 'Join Room',
+                                isCurrentStudentInRoom: false
+                            }
+                            : currentRoom));
+                        setError('This room is full. Another student has joined.');
+                        return;
+                    }
+                    setError('The room changed while joining. Please refresh and try again.');
+                    return;
+                }
+
                 // Provide more specific error messages
                 if (joinError.code === '23503') {
                     setError('User not found. Please ensure you are properly logged in.');
-                } else if (joinError.code === '23505') {
-                    setError('You are already in this room.');
                 } else if (joinError.code === '42501') {
                     setError('Permission denied. Please check your access rights.');
                 } else {
@@ -270,7 +346,7 @@ const StudentView: React.FC = () => {
 
                 <h2>Available Rooms</h2>
                 {error && (
-                    <div className="error-message" style={{ 
+                    <div className="error-message" role="alert" style={{
                         color: 'red', 
                         marginBottom: '15px',
                         padding: '10px',
@@ -331,6 +407,7 @@ const StudentView: React.FC = () => {
                                 onJoin={handleJoinRoom}
                                 roomStatus={room.status}
                                 isJoinDisabled={room.isJoinDisabled}
+                                joinButtonText={room.joinButtonText}
                             />
                         ))}
                         </div>

@@ -24,7 +24,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
     roomStatus = 'Available',
     showOp = false
 }) => {
-    const statusClass = roomStatus === 'Room Full' ? 'full' : 'available';
+    const statusClass = roomStatus === 'Room Full' ? 'full' : roomStatus === 'Your Session' ? 'in-session' : 'available';
     
     return (
         <div className="room-card" data-testid={`room-card-${room.id}`}>
@@ -58,7 +58,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
                 )}
                 
                 <div className={`room-card-status ${statusClass}`}>
-                    {roomStatus === 'Room Full' ? '🔒 Room Full' : '🟢 Available'}
+                    {roomStatus === 'Room Full' ? '🔒 Room Full' : roomStatus === 'Your Session' ? 'Your Session' : '🟢 Available'}
                 </div>
                 
                 <button

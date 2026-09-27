@@ -48,7 +48,7 @@ Feature: Student User Interface
     Given the user is logged in as a "Student"
     And the system will produce an error when they try to join "Phishing 101"
     When the student clicks the "Join" button for the "Phishing 101" room
-    Then the student should see an error message "Failed to join the room. Please try again."
+    Then the student should see an error message "Failed to join the room: Insert failed"
 
   # --- Test / harness rooms (behavior-eval) must not appear on Available Rooms ---
   # Covered by mock suites: StudentView.roomVisibility.test.tsx, behaviorTestRooms.test.ts
@@ -84,9 +84,9 @@ Feature: Student User Interface
 
   Scenario: Student still sees real classic teaching rooms from normal tutors
     Given the user is logged in as a "Student"
-    And an active room titled "Account Security Alert Scam" is owned by tutor "Adele"
+    And an active room titled "Secure Email Basics" is owned by tutor "Adele"
     When the student is on the dashboard
-    Then the student should see the room "Account Security Alert Scam" in the list
+    Then the student should see the room "Secure Email Basics" in the list
     And the student should see tutor "Adele" on the dashboard
 
   Scenario: Student sees empty list when only test or harness rooms are active
