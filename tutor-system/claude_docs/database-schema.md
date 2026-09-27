@@ -2,8 +2,8 @@
 
 Intent: document the generated TypeScript database contract used by the current Supabase schema.
 
-Updated: 2026-09-22
-Implementation commit: `c23fc9e`
+Updated: 2026-09-27
+Implementation commit: `12fb743`
 
 ## Purpose
 Complete TypeScript interface definitions for the PostgreSQL database schema. Provides full type safety for all database operations through Supabase client integration.
@@ -21,6 +21,8 @@ Complete TypeScript interface definitions for the PostgreSQL database schema. Pr
 ## Transfer Assessment Authority
 
 Migration `20260922000000_transfer_assessment_server_authority.sql` restores the trusted boundary without reactivating archived migrations. Public `messages` stores only the stem, ordered options, selection type, lifecycle, and immutable target `assessment_student_id`. The target is UI routing metadata and never authorizes an answer. The former public `assessment_key` column is removed.
+
+Before moving any legacy key, the migration checks that every keyed row has a valid transfer checklist/item and a parent student message whose room and learner match that checklist. An uncovered row raises `LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED` inside the migration transaction, preserving the existing rows and column for investigation. The source project preflight currently finds two uncovered rows, so migration execution remains stopped until a disposable restored scope and data decision are available.
 
 The `private` schema owns three unexposed tables:
 
