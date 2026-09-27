@@ -636,13 +636,19 @@ BEGIN
      OR v_assessment.student_id <> p_actor_id OR v_question.id <> p_parent_message_id THEN
     RAISE EXCEPTION 'WRONG_LEARNER' USING ERRCODE = '42501';
   END IF;
-  SELECT ARRAY(SELECT DISTINCT upper(value) FROM unnest(p_selected_option_ids) value ORDER BY upper(value))
+  SELECT ARRAY(SELECT DISTINCT upper(selected.option_id)
+    FROM unnest(p_selected_option_ids) AS selected(option_id)
+    ORDER BY upper(selected.option_id))
     INTO v_selected;
   IF p_selected_option_ids IS NULL OR cardinality(v_selected) = 0
-     OR EXISTS (SELECT 1 FROM unnest(v_selected) value WHERE value NOT IN ('A', 'B', 'C', 'D'))
+     OR EXISTS (SELECT 1 FROM unnest(v_selected) AS selected(option_id)
+       WHERE selected.option_id NOT IN ('A', 'B', 'C', 'D'))
      OR EXISTS (
-       SELECT 1 FROM unnest(v_selected) value
-       WHERE NOT EXISTS (SELECT 1 FROM jsonb_array_elements(v_question.assessment_options) option WHERE option->>'id' = value)
+       SELECT 1 FROM unnest(v_selected) AS selected(option_id)
+       WHERE NOT EXISTS (
+         SELECT 1 FROM jsonb_array_elements(v_question.assessment_options) AS options(option_json)
+         WHERE options.option_json->>'id' = selected.option_id
+       )
      ) THEN
     RAISE EXCEPTION 'ITEM_VALIDATION_FAILED' USING ERRCODE = 'P0001';
   END IF;
