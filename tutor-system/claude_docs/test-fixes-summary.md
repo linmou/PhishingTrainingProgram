@@ -48,6 +48,13 @@ The four-directory regression was not rerun for this focused batch.
 - Supply the required feedback-stat map and use the current comment composer, message metadata, and download-format flow.
 - Focused verification with local Supabase placeholders: `npm test -- --watchAll=false --runInBand --silent src/__tests__/tutor_view.test.tsx` (1 suite, 5 tests passed).
 
+## Checklist Management Contract
+
+- Replaced calls to removed `ChecklistService` methods with tests for the current template, read, progress, tutor update, custom area, transfer ownership, AI coverage, and fallback APIs.
+- Retained the 13 unsupported feature requirements as named `it.todo` cases; the BDD feature file remains unchanged.
+- Focused verification: `npm test -- --watchAll=false --runInBand --silent src/__tests__/checklist_management.test.ts` (13 implemented tests passed, 13 feature cases pending).
+- The exact pending clauses and type-check result are recorded in `doc_update_record/documentation_update_record_v2026_09_27_checklist_management_tests.md`.
+
 ## Verification
 
 - Focused run: `npm test -- --watchAll=false --runInBand --silent src/contexts/__tests__/RoomContext.test.tsx`
