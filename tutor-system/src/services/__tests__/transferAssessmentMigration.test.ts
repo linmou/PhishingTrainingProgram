@@ -34,6 +34,35 @@ describe('server-authoritative transfer assessment migration', () => {
     expect(sql).toMatch(/v_assessment->>'stem'/i);
   });
 
+  it('aborts uncovered legacy key scope before copying or dropping keys', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    const guard = sql.indexOf('LEGACY_TRANSFER_KEY_SCOPE_UNCOVERED');
+    expect(guard).toBeGreaterThan(0);
+    expect(guard).toBeLessThan(sql.indexOf('INSERT INTO private.transfer_assessments'));
+    expect(guard).toBeLessThan(sql.indexOf('DROP COLUMN IF EXISTS assessment_key'));
+    const preflight = sql.slice(sql.indexOf('DO $legacy_scope$'), guard);
+    expect(preflight).toMatch(/cardinality\(m\.assessment_key\) > 0/i);
+    expect(preflight).toMatch(/m\.assessment_selection_type IN \('single', 'multiple'\)/i);
+    expect(preflight).toMatch(/ci\.checklist_id = sc\.id AND ci\.id = m\.assessment_item_id/i);
+    expect(preflight).toMatch(/parent\.room_id = m\.room_id/i);
+    expect(preflight).toMatch(/parent\.user_id = sc\.student_id/i);
+    expect(preflight).toMatch(/parent\.user_role = 'student'/i);
+    expect(preflight).toMatch(/sc\.room_id = m\.room_id/i);
+    expect(preflight).toMatch(/sc\.progress_policy_version = 'transfer_v1'/i);
+  });
+
+  it('backfills a valid legacy target before installing public target immutability', () => {
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    const copy = sql.indexOf('INSERT INTO private.transfer_assessments');
+    const backfill = sql.indexOf('SET assessment_id = a.id');
+    const trigger = sql.indexOf('CREATE TRIGGER guard_public_transfer_columns');
+    expect(copy).toBeGreaterThan(0);
+    expect(backfill).toBeGreaterThan(copy);
+    expect(trigger).toBeGreaterThan(backfill);
+    expect(sql.slice(copy, backfill)).toMatch(/'legacy_incomplete'/);
+    expect(sql.slice(backfill, trigger)).toMatch(/assessment_student_id = a\.student_id/);
+  });
+
   it('defines service-role-only versioned RPCs with expected-snapshot compare-and-swap', () => {
     const sql = fs.readFileSync(migrationPath, 'utf8');
     for (const name of [

@@ -1,5 +1,8 @@
 -- Purpose: verify the deployed transfer-assessment schema, privacy grants, and versioned RPC boundary.
 
+BEGIN;
+
+CREATE TEMP TABLE transfer_v2_schema_checks ON COMMIT DROP AS
 WITH checks(check_name, pass, detail) AS (
   SELECT 'private assessment tables exist',
     (SELECT count(*) FROM information_schema.tables
@@ -17,11 +20,17 @@ WITH checks(check_name, pass, detail) AS (
 
   UNION ALL
   SELECT 'private tables are unavailable to API roles',
-    NOT has_table_privilege('anon', 'private.transfer_assessments', 'SELECT')
-    AND NOT has_table_privilege('authenticated', 'private.transfer_assessments', 'SELECT')
-    AND NOT has_table_privilege('anon', 'private.transfer_assessment_attempts', 'INSERT')
-    AND NOT has_table_privilege('authenticated', 'private.transfer_provider_attempts', 'SELECT'),
-    'anon/authenticated have no private read or write privilege'
+    (SELECT bool_and(NOT has_table_privilege(role_name, table_name, privilege_name))
+     FROM (VALUES ('anon'), ('authenticated')) AS roles(role_name)
+     CROSS JOIN (VALUES
+       ('private.transfer_assessments'),
+       ('private.transfer_assessment_attempts'),
+       ('private.transfer_provider_attempts')
+     ) AS target_tables(table_name)
+     CROSS JOIN (VALUES ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE')) AS privileges(privilege_name))
+    AND NOT has_schema_privilege('anon', 'private', 'USAGE')
+    AND NOT has_schema_privilege('authenticated', 'private', 'USAGE'),
+    'anon/authenticated have no private schema or table read/write privilege'
 
   UNION ALL
   SELECT 'attempt uniqueness and bound constraints exist',
@@ -46,11 +55,16 @@ WITH checks(check_name, pass, detail) AS (
 
   UNION ALL
   SELECT 'API roles cannot execute mutation RPCs',
-    NOT has_function_privilege('anon',
-      'public.process_assessment_message_v2(uuid,uuid,uuid,uuid,integer,text,text,text[],jsonb,text)', 'EXECUTE')
-    AND NOT has_function_privilege('authenticated',
-      'public.send_reviewed_tutor_response_v4(jsonb,uuid,uuid,uuid,uuid,uuid,uuid,uuid)', 'EXECUTE'),
-    'anon/authenticated execute privileges revoked'
+    (SELECT bool_and(NOT has_function_privilege(role_name, signature, 'EXECUTE'))
+     FROM (VALUES ('anon'), ('authenticated')) AS roles(role_name)
+     CROSS JOIN (VALUES
+       ('public.send_reviewed_tutor_response_v4(jsonb,uuid,uuid,uuid,uuid,uuid,uuid,uuid)'),
+       ('public.post_assessment_message_v2(uuid,text,uuid,uuid,text[],uuid,uuid)'),
+       ('public.get_transfer_assessment_processing_context_v1(uuid,uuid,uuid)'),
+       ('public.process_assessment_message_v2(uuid,uuid,uuid,uuid,integer,text,text,text[],jsonb,text)'),
+       ('public.record_transfer_provider_attempt_v1(uuid,uuid,uuid,uuid,uuid,integer,text,text,integer,text,jsonb,jsonb,text,text,text)')
+     ) AS target_functions(signature)),
+    'anon/authenticated execute privileges revoked for all five authority RPCs'
 
   UNION ALL
   SELECT 'obsolete grading RPCs are unavailable to API roles',
@@ -69,6 +83,16 @@ WITH checks(check_name, pass, detail) AS (
       OR position('private' in current_setting('pgrst.db_schemas', true)) = 0,
     'PostgREST exposed schema list excludes private'
 )
-SELECT check_name, pass, detail FROM checks
-UNION ALL
-SELECT 'FAILING_CHECKS', bool_and(pass), count(*) FILTER (WHERE NOT pass)::text FROM checks;
+SELECT check_name, pass, detail FROM checks;
+
+SELECT check_name, pass, detail FROM transfer_v2_schema_checks ORDER BY check_name;
+
+DO $test$
+BEGIN
+  IF EXISTS (SELECT 1 FROM transfer_v2_schema_checks WHERE NOT pass OR pass IS NULL) THEN
+    RAISE EXCEPTION 'transfer assessment schema checks failed';
+  END IF;
+END;
+$test$;
+
+ROLLBACK;

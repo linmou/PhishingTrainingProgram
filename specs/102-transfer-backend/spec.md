@@ -145,8 +145,8 @@ The trusted provider boundary generates the versioned tutor decision, including 
 - **FR-018**: Terminal grading MUST atomically write assessment state, the accepted attempt, causal evidence, the valid progress pair, actual before/after history, and idempotency outcome; failure MUST roll back all effects and feedback disclosure.
 - **FR-019**: The production provider boundary MUST generate and validate `learner_safe_explanation`, retain provider credentials and raw attempts server-side, allow at most one format-only repair, detect truncation, and never silently synthesize a question or result.
 - **FR-020**: Production and component 104 MUST consume the same versioned transfer request/context builders while the production prompt, credentials, provider call, private response, and grading remain backend-owned.
-- **FR-021**: Transfer-specific data mutations MUST use versioned trusted operations with direct untrusted execution revoked; generated database types and runtime contracts MUST match the supported hosted schema.
-- **FR-022**: Transfer assessment capability MUST remain disabled until hosted authorization, storage, concurrency, provider, integration, UI, evaluation, browser, and rollback gates pass.
+- **FR-021**: Transfer-specific data mutations MUST use versioned trusted operations with direct untrusted execution revoked. Component verification MUST compare the migration's RPC signatures, private columns, grants, RLS, and runtime contracts against a migrated disposable PostgreSQL 17 restore with Supabase-like roles. Generated-type parity against the deployed Supabase schema remains an integration gate.
+- **FR-022**: Component 102 may complete its local verification gate on a disposable PostgreSQL 17 restore while transfer assessment capability remains disabled. Activation MUST wait for deployed Supabase authorization, storage, concurrency, provider, integration, UI, evaluation, browser, generated-type, and rollback gates.
 - **FR-023**: Component evidence MUST keep backend tests distinct from component 103 UI, component 104 evaluation, and release-browser evidence and MUST record blocked or errored lanes as not passed.
 
 ### Key Entities
@@ -172,7 +172,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 - **SC-007**: 100% of forced failures leave no partial attempt, terminal state, evidence, progress, history, or private feedback disclosure.
 - **SC-008**: The complete unauthorized and cross-scope matrix causes zero transfer mutations and zero private-field disclosures.
 - **SC-009**: Provider contract tests observe the configured endpoint/model and output budget, no more than two provider attempts, and zero dummy assessments or progress writes on error.
-- **SC-010**: Hosted schema checks, focused backend tests, production build, handoff tests, integration tests, and release gates each retain separate pass/fail/blocked evidence.
+- **SC-010**: Local restored-database checks, focused backend tests, component build outcome, hosted Supabase checks, generated types, handoff tests, integration tests, and release gates each retain separate pass/fail/blocked evidence; a local pass never implies deployment readiness.
 
 ## Assumptions
 
@@ -182,7 +182,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 - Production generation uses the existing DashScope-compatible provider and requires server-side `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`; browser-prefixed provider variables do not satisfy this boundary.
 - A teacher may edit generated assessment content before delivery. Once delivered, the key, explanation, transfer basis, and assessment scope are immutable.
 - The correct key and learner-safe explanation are intentionally withheld after a pass; the learner receives them only after terminal second failure.
-- A hosted Supabase test scope is required for storage, authorization, row-lock, and transaction evidence; local static SQL checks cannot close those gates.
+- A disposable PostgreSQL 17 restore with Supabase-like roles and auth fixtures can close component 102's database, storage, grant/RLS, row-lock, race, and rollback checks. It does not establish deployed Supabase, PostgREST, Edge authentication, generated hosted types, browser bundle, or release readiness.
 - Existing browser-only assessment data cannot be trusted as private grading authority. Migration must report legacy/incomplete rows and must not infer absent keys or explanations.
 
 ## Out of Scope
