@@ -41,3 +41,6 @@ PRs should include a short problem statement, the approach taken, test evidence,
 
 ## Security & Configuration Tips
 Do not commit secrets. Frontend env vars should use `REACT_APP_*`. When changing Supabase-related code, make sure `src/services/supabase.ts` and the SQL migrations stay aligned, especially for RLS and storage policies.
+
+## Supabase Migration Delivery
+Treat SQL migration files as temporary scripts for a human to execute in the Supabase website. Keep at most one pending migration in `tutor-system/supabase/migrations/`. Prepare it from the current hosted schema and applicable requirements; do not use existing local or archived migration files as the source for new migration work. After the human confirms successful execution, move the script to `tutor-system/supabase/archived_migrations/` before preparing another migration.
