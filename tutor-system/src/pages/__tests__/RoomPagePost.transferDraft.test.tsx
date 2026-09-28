@@ -131,6 +131,49 @@ describe('RoomPagePost transfer review surface', () => {
 
     expect(screen.getByRole('heading', { name: 'Review transfer assessment' })).toBeInTheDocument();
     expect(screen.queryByTestId('ai-suggestion-box')).not.toBeInTheDocument();
+
+    const editor = screen.getByRole('region', { name: 'Transfer assessment review' });
+    expect(editor).toHaveClass('assessment-draft-editor');
+    expect(editor.querySelector('.assessment-draft-editor__header')).toBeInTheDocument();
+    expect(editor.querySelector('.assessment-draft-editor__badge')).toHaveTextContent('Draft');
+    expect(editor.querySelector('.assessment-draft-editor__body')).toBeInTheDocument();
+    expect(editor.querySelectorAll('.assessment-draft-editor__field')).toHaveLength(3);
+    expect(editor.querySelector('.assessment-draft-editor__select')).toBeInTheDocument();
+    expect(screen.getByLabelText('Answer type')).toHaveValue('single');
+    expect(screen.getByLabelText('Question')).toHaveValue(preparedCandidate.assessment!.stem);
+    expect(screen.getByLabelText('Learner-safe explanation')).toHaveValue(
+      preparedCandidate.assessment!.learner_safe_explanation
+    );
+    expect(editor.querySelector('.assessment-draft-editor__options')).toBeInTheDocument();
+    expect(editor.querySelectorAll('.assessment-draft-editor__option')).toHaveLength(4);
+    expect(screen.getByLabelText('Option B')).toHaveValue(
+      'Stop and verify the offer through an official channel.'
+    );
+    expect(editor.querySelector('.assessment-draft-editor__answer-key')).toHaveTextContent(
+      /B.*Stop and verify the offer through an official channel\./
+    );
+    expect(editor.querySelector('.assessment-draft-editor__preview')).toBeInTheDocument();
+    expect(editor.querySelector('.assessment-draft-editor__preview')).toHaveTextContent(
+      preparedCandidate.assessment!.stem
+    );
+    expect(editor.querySelector('.assessment-draft-editor__preview')).toHaveTextContent('Choose one.');
+    expect(editor.querySelector('.assessment-draft-editor__preview')).toHaveTextContent(
+      'Stop and verify the offer through an official channel.'
+    );
+    expect(editor.querySelector('.assessment-draft-editor__confirmation')).toBeInTheDocument();
+    expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+    expect(editor.querySelector('.assessment-draft-editor__footer')).toBeInTheDocument();
+    expect(editor.querySelector('.assessment-draft-editor__footer [role="status"]')).toHaveAttribute(
+      'data-review-status',
+      'ready'
+    );
+    expect(editor.querySelector('.assessment-draft-editor__actions')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirm assessment' })).toHaveClass(
+      'assessment-draft-editor__send'
+    );
+    expect(screen.getByRole('button', { name: 'Discard candidate' })).toHaveClass(
+      'assessment-draft-editor__discard'
+    );
   });
 
   it('keeps a prepared candidate hidden from learner roles', () => {

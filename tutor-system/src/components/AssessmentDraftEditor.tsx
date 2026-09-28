@@ -1,6 +1,7 @@
 // Purpose: let an authorized tutor review and confirm a structured transfer-assessment draft before delivery.
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { Check, Send, X } from 'lucide-react';
 import { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
 import { renderAssessment, validateAssessmentRendering } from '../services/assessmentRendering';
 import { parseTutorDecisionV3 } from '../services/tutorDecisionContract';
@@ -171,74 +172,153 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   };
 
   return (
-    <section aria-label="Transfer assessment review">
-      <h3>Review transfer assessment</h3>
-      {itemLabel && <p>Target: {itemLabel}</p>}
-      <label>
-        Question
-        <textarea value={stem} onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }} rows={3} />
-      </label>
-      <label>
-        Answer type
-        <select value={selectionType} onChange={(event) => handleSelectionTypeChange(event.target.value as 'single' | 'multiple')}>
-          <option value="single">Choose one</option>
-          <option value="multiple">Select all that apply</option>
-        </select>
-      </label>
-      <fieldset>
-        <legend>Options and correct answer</legend>
-        {options.map((option) => (
-          <label key={option.id}>
-            <input
-              type={selectionType === 'single' ? 'radio' : 'checkbox'}
-              name="assessment-correct-option"
-              checked={correctOptionIds.includes(option.id)}
-              onChange={(event) => setSelection(option.id, event.target.checked)}
-            />
-            <span>{option.id}.</span>
-            <input value={option.text} onChange={(event) => setOptionText(option.id, event.target.value)} />
-          </label>
-        ))}
-      </fieldset>
-      <label>
-        Learner-safe explanation
-        <textarea value={explanation} onChange={(event) => { setExplanation(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }} rows={3} />
-      </label>
-      <p aria-live="polite">Learner-visible preview:</p>
-      <pre>{renderedText}</pre>
-      <label>
-        <input type="checkbox" checked={contentConfirmed} onChange={(event) => { setContentConfirmed(event.target.checked); clearServerFailure(); }} />
-        I confirm the concept, changed context, and answer key are appropriate.
-      </label>
-      {/* Local review state only: there is no draft row, so this never reports a server status. */}
-      <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
-        {reviewStatus === 'saving'
-          ? 'Sending the confirmed assessment…'
-          : reviewStatus === 'validating'
-            ? 'Review the highlighted validation error.'
-          : reviewStatus === 'superseded'
-            ? 'This candidate is no longer current.'
-          : reviewStatus === 'unavailable'
-            ? 'Transfer assessments are unavailable.'
-          : reviewStatus === 'unauthorized'
-            ? 'This account cannot send this assessment.'
-          : reviewStatus === 'retryable'
-            ? 'The request can be retried.'
-          : reviewStatus === 'validation'
-            ? 'The candidate needs correction before it can be sent.'
-          : reviewStatus === 'confirmed'
-            ? 'Confirmed and ready to send.'
-          : reviewStatus === 'dirty'
-            ? 'Unsaved edits — the previous confirmation was cleared.'
-            : 'Ready to send once you confirm.'}
-      </p>
-      {error && <p role="alert">{error}</p>}
-      <div>
-        <button type="button" onClick={handleSubmit} disabled={saving}>
-          {saving ? 'Saving…' : 'Confirm assessment'}
-        </button>
-        {onCancel && <button type="button" onClick={onCancel} disabled={saving}>Discard candidate</button>}
+    <section className="assessment-draft-editor" aria-label="Transfer assessment review">
+      <header className="assessment-draft-editor__header">
+        <div>
+          <h3>Review transfer assessment</h3>
+          {itemLabel && <p className="assessment-draft-editor__target">Target: {itemLabel}</p>}
+        </div>
+        <span className="assessment-draft-editor__badge">Draft</span>
+      </header>
+
+      <div className="assessment-draft-editor__body">
+        <label className="assessment-draft-editor__field">
+          <span>Question</span>
+          <textarea
+            aria-label="Question"
+            value={stem}
+            onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }}
+            rows={3}
+            disabled={saving}
+          />
+        </label>
+
+        <label className="assessment-draft-editor__field">
+          <span>Answer type</span>
+          <select
+            aria-label="Answer type"
+            className="assessment-draft-editor__select"
+            value={selectionType}
+            onChange={(event) => handleSelectionTypeChange(event.target.value as 'single' | 'multiple')}
+            disabled={saving}
+          >
+            <option value="single">Choose one</option>
+            <option value="multiple">Select all that apply</option>
+          </select>
+        </label>
+
+        <fieldset className="assessment-draft-editor__choices">
+          <legend>Answer choices</legend>
+          <div className="assessment-draft-editor__options">
+            {options.map((option) => (
+              <label
+                className={`assessment-draft-editor__option${correctOptionIds.includes(option.id) ? ' assessment-draft-editor__option--selected' : ''}`}
+                key={option.id}
+              >
+                <input
+                  aria-label={`Correct answer ${option.id}`}
+                  type={selectionType === 'single' ? 'radio' : 'checkbox'}
+                  name="assessment-correct-option"
+                  checked={correctOptionIds.includes(option.id)}
+                  onChange={(event) => setSelection(option.id, event.target.checked)}
+                  disabled={saving}
+                />
+                <span className="assessment-draft-editor__letter" aria-hidden="true">{option.id}</span>
+                <input
+                  type="text"
+                  aria-label={`Option ${option.id}`}
+                  value={option.text}
+                  onChange={(event) => setOptionText(option.id, event.target.value)}
+                  disabled={saving}
+                />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="assessment-draft-editor__answer-key" data-testid="assessment-answer-key" aria-live="polite">
+          <span className="assessment-draft-editor__answer-key-mark" aria-hidden="true">
+            <Check size={16} strokeWidth={3} />
+          </span>
+          <div>
+            <span className="assessment-draft-editor__answer-key-label">
+              Correct answer{selectionType === 'multiple' ? 's' : ''}
+            </span>
+            <p>
+              {options
+                .filter((option) => correctOptionIds.includes(option.id))
+                .map((option) => `${option.id} — ${option.text.trim()}`)
+                .join(' | ') || 'No correct answer selected.'}
+            </p>
+          </div>
+        </div>
+
+        <label className="assessment-draft-editor__field">
+          <span>Learner-safe explanation</span>
+          <textarea
+            aria-label="Learner-safe explanation"
+            value={explanation}
+            onChange={(event) => { setExplanation(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }}
+            rows={3}
+            disabled={saving}
+          />
+        </label>
+
+        <div className="assessment-draft-editor__preview">
+          <p className="assessment-draft-editor__preview-label" aria-live="polite">Learner-visible preview</p>
+          <pre className="assessment-draft-editor__preview-content">{renderedText}</pre>
+        </div>
+
+        <label className="assessment-draft-editor__confirmation">
+          <input
+            type="checkbox"
+            checked={contentConfirmed}
+            onChange={(event) => { setContentConfirmed(event.target.checked); clearServerFailure(); }}
+            disabled={saving}
+          />
+          <span>I confirm the concept, changed context, and answer key are appropriate.</span>
+        </label>
       </div>
+
+      <footer className="assessment-draft-editor__footer">
+        <div>
+          {/* Local review state only: there is no draft row, so this never reports a server status. */}
+          <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
+            {reviewStatus === 'saving'
+              ? 'Sending the confirmed assessment…'
+              : reviewStatus === 'validating'
+                ? 'Review the highlighted validation error.'
+              : reviewStatus === 'superseded'
+                ? 'This candidate is no longer current.'
+              : reviewStatus === 'unavailable'
+                ? 'Transfer assessments are unavailable.'
+              : reviewStatus === 'unauthorized'
+                ? 'This account cannot send this assessment.'
+              : reviewStatus === 'retryable'
+                ? 'The request can be retried.'
+              : reviewStatus === 'validation'
+                ? 'The candidate needs correction before it can be sent.'
+              : reviewStatus === 'confirmed'
+                ? 'Confirmed and ready to send.'
+              : reviewStatus === 'dirty'
+                ? 'Unsaved edits — the previous confirmation was cleared.'
+                : 'Ready to send once you confirm.'}
+          </p>
+          {error && <p className="assessment-draft-editor__error" role="alert">{error}</p>}
+        </div>
+        <div className="assessment-draft-editor__actions">
+          {onCancel && (
+            <button className="assessment-draft-editor__discard" type="button" onClick={onCancel} disabled={saving}>
+              <X size={16} aria-hidden="true" />
+              Discard candidate
+            </button>
+          )}
+          <button className="assessment-draft-editor__send" type="button" onClick={handleSubmit} disabled={saving}>
+            <Send size={16} aria-hidden="true" />
+            {saving ? 'Saving…' : 'Confirm assessment'}
+          </button>
+        </div>
+      </footer>
     </section>
   );
 };

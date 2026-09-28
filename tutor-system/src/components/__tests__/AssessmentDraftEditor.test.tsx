@@ -29,7 +29,9 @@ const selectKey = (label: string) => {
 
 describe('AssessmentDraftEditor', () => {
   it('renders the target, four ordered options, and the learner-visible preview', () => {
-    render(<AssessmentDraftEditor decision={preparedCandidate} itemLabel="Verify payment requests" onSubmit={jest.fn()} />);
+    const { container } = render(
+      <AssessmentDraftEditor decision={preparedCandidate} itemLabel="Verify payment requests" onSubmit={jest.fn()} />
+    );
 
     expect(screen.getByText('Target: Verify payment requests')).toBeInTheDocument();
     expect(optionTextInputs().map((input) => input.value)).toEqual([
@@ -38,8 +40,10 @@ describe('AssessmentDraftEditor', () => {
       'Forward the offer to a friend.',
       'Reply with your bank details.',
     ]);
-    expect(screen.getByText(/Choose one\./)).toBeInTheDocument();
-    expect(screen.getByText(/Stop and verify the offer through an official channel\./)).toBeInTheDocument();
+    const preview = container.querySelector('.assessment-draft-editor__preview');
+    expect(preview).toBeInTheDocument();
+    expect(preview).toHaveTextContent(/Choose one\./);
+    expect(preview).toHaveTextContent(/Stop and verify the offer through an official channel\./);
   });
 
   it('submits the edited decision with the single confirmed key', async () => {

@@ -979,7 +979,21 @@
     resize: vertical;
 }
 
+.assessment-draft-editor__select {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid #aeb7c3;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1d2733;
+    font: inherit;
+    font-weight: 400;
+}
+
 .assessment-draft-editor textarea:focus,
+.assessment-draft-editor__select:focus-visible,
 .assessment-draft-editor input:focus-visible,
 .assessment-draft-editor button:focus-visible {
     border-color: #667eea;
@@ -1031,8 +1045,19 @@
     accent-color: #667eea;
 }
 
-.assessment-draft-editor__option textarea {
+.assessment-draft-editor__option input[type="text"] {
+    width: 100%;
+    min-width: 0;
     min-height: 46px;
+    height: auto;
+    padding: 10px 11px;
+    border: 1px solid #aeb7c3;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1d2733;
+    font: inherit;
+    font-weight: 400;
+    line-height: 1.45;
 }
 
 .assessment-draft-editor__letter {
@@ -1084,6 +1109,54 @@
     overflow-wrap: anywhere;
 }
 
+.assessment-draft-editor__preview {
+    min-width: 0;
+    padding: 12px 14px;
+    border-left: 3px solid #2877a8;
+    background: #f1f6f8;
+}
+
+.assessment-draft-editor__preview-label {
+    margin: 0 0 7px;
+    color: #536171;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.assessment-draft-editor__preview-content {
+    margin: 0;
+    color: #1d2733;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.assessment-draft-editor__confirmation {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #b9cbd8;
+    border-radius: 8px;
+    background: #f1f7fa;
+    color: #304454;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.assessment-draft-editor__confirmation input {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 1px 0 0;
+    accent-color: #2877a8;
+}
+
 .assessment-draft-editor__footer {
     border-top: 1px solid #d9dee5;
     background: #f7f8fa;
@@ -1106,6 +1179,7 @@
 .assessment-draft-editor__actions {
     display: flex;
     flex: 0 0 auto;
+    flex-wrap: wrap;
     gap: 9px;
 }
 
@@ -1175,6 +1249,10 @@
     .assessment-draft-editor__footer {
         display: grid;
         grid-template-columns: 1fr;
+    }
+
+    .assessment-draft-editor__footer > div:first-child {
+        min-width: 0;
     }
 
     .assessment-draft-editor__actions {
