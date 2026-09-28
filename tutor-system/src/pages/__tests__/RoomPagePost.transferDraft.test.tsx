@@ -4,7 +4,7 @@
  * surface is wired to the room context, can be discarded, and surfaces an authoritative refusal
  * without leaving a phantom learner message.
  *
- * Responsibility: prove the page-level review contract for US1 (review, reconfirm, discard, send
+ * Responsibility: prove the page-level review contract for US1 (review, direct send, discard, and retry
  * failure) rather than only the editor's internal state.
  */
 
@@ -137,13 +137,11 @@ describe('RoomPagePost transfer review surface', () => {
     expect(editor.querySelector('.assessment-draft-editor__header')).toBeInTheDocument();
     expect(editor.querySelector('.assessment-draft-editor__badge')).toHaveTextContent('Draft');
     expect(editor.querySelector('.assessment-draft-editor__body')).toBeInTheDocument();
-    expect(editor.querySelectorAll('.assessment-draft-editor__field')).toHaveLength(3);
+    expect(editor.querySelectorAll('.assessment-draft-editor__field')).toHaveLength(2);
     expect(editor.querySelector('.assessment-draft-editor__select')).toBeInTheDocument();
     expect(screen.getByLabelText('Answer type')).toHaveValue('single');
     expect(screen.getByLabelText('Question')).toHaveValue(preparedCandidate.assessment!.stem);
-    expect(screen.getByLabelText('Learner-safe explanation')).toHaveValue(
-      preparedCandidate.assessment!.learner_safe_explanation
-    );
+    expect(screen.queryByLabelText('Learner-safe explanation')).not.toBeInTheDocument();
     expect(editor.querySelector('.assessment-draft-editor__options')).toBeInTheDocument();
     expect(editor.querySelectorAll('.assessment-draft-editor__option')).toHaveLength(4);
     expect(screen.getByLabelText('Option B')).toHaveValue(
@@ -152,23 +150,16 @@ describe('RoomPagePost transfer review surface', () => {
     expect(editor.querySelector('.assessment-draft-editor__answer-key')).toHaveTextContent(
       /B.*Stop and verify the offer through an official channel\./
     );
-    expect(editor.querySelector('.assessment-draft-editor__preview')).toBeInTheDocument();
-    expect(editor.querySelector('.assessment-draft-editor__preview')).toHaveTextContent(
-      preparedCandidate.assessment!.stem
-    );
-    expect(editor.querySelector('.assessment-draft-editor__preview')).toHaveTextContent('Choose one.');
-    expect(editor.querySelector('.assessment-draft-editor__preview')).toHaveTextContent(
-      'Stop and verify the offer through an official channel.'
-    );
-    expect(editor.querySelector('.assessment-draft-editor__confirmation')).toBeInTheDocument();
-    expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
+    expect(editor.querySelector('.assessment-draft-editor__preview')).not.toBeInTheDocument();
+    expect(editor.querySelector('.assessment-draft-editor__confirmation')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/I confirm the concept/)).not.toBeInTheDocument();
     expect(editor.querySelector('.assessment-draft-editor__footer')).toBeInTheDocument();
     expect(editor.querySelector('.assessment-draft-editor__footer [role="status"]')).toHaveAttribute(
       'data-review-status',
       'ready'
     );
     expect(editor.querySelector('.assessment-draft-editor__actions')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirm assessment' })).toHaveClass(
+    expect(screen.getByRole('button', { name: 'Send assessment' })).toHaveClass(
       'assessment-draft-editor__send'
     );
     expect(screen.getByRole('button', { name: 'Discard candidate' })).toHaveClass(
@@ -191,7 +182,7 @@ describe('RoomPagePost transfer review surface', () => {
     renderPage();
 
     expect(screen.queryByRole('heading', { name: 'Review transfer assessment' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Confirm assessment' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Send assessment' })).not.toBeInTheDocument();
   });
 
   it('discards the candidate through the room context without delivering anything', () => {
@@ -209,42 +200,37 @@ describe('RoomPagePost transfer review surface', () => {
 
     const originalMessageIds = visibleMessages.map((message) => message.id);
 
-    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('ASSESSMENT_ALREADY_OPEN');
     });
-    expect(screen.getByRole('button', { name: 'Confirm assessment' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send assessment' })).toBeInTheDocument();
     expect(confirmTransferDraft).toHaveBeenCalledTimes(1);
     expect(visibleMessages.map((message) => message.id)).toEqual(originalMessageIds);
   });
 
-  it('marks a candidate dirty after an edit and requires confirmation again', () => {
+  it('sends a valid edited candidate directly from the room', async () => {
     renderPage();
 
-    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
-    expect(screen.getByLabelText(/I confirm the concept/)).toBeChecked();
-
+    const editedQuestion = 'A revised question for the selected learner.';
     fireEvent.change(screen.getByLabelText('Question'), {
-      target: { value: 'A revised question for the selected learner.' },
+      target: { value: editedQuestion },
     });
 
     expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'dirty');
-    expect(screen.getByLabelText(/I confirm the concept/)).not.toBeChecked();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Confirm that the concept');
-    expect(confirmTransferDraft).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
+    await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(1));
+    expect(confirmTransferDraft.mock.calls[0][0].response).toBe(editedQuestion);
   });
 
-  it('keeps the candidate unsent and adds no learner message after a retryable send failure', async () => {
+  it('keeps the candidate unsent and retries an edited candidate after a retryable send failure', async () => {
     const retryableError = new Error('AI_PROVIDER_ERROR: raw provider response should not be rendered');
     confirmTransferDraft.mockRejectedValueOnce(retryableError).mockResolvedValueOnce(undefined);
     renderPage();
     const originalMessageIds = visibleMessages.map((message) => message.id);
 
-    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('AI_PROVIDER_ERROR');
     expect(screen.getByRole('alert')).not.toHaveTextContent('raw provider response');
@@ -252,7 +238,17 @@ describe('RoomPagePost transfer review surface', () => {
     expect(screen.getByRole('heading', { name: 'Review transfer assessment' })).toBeInTheDocument();
     expect(visibleMessages.map((message) => message.id)).toEqual(originalMessageIds);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    const editedQuestion = 'A revised question before retrying the assessment.';
+    fireEvent.change(screen.getByLabelText('Question'), {
+      target: { value: editedQuestion },
+    });
+
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'dirty');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(2));
+    expect(confirmTransferDraft.mock.calls[0][0].response).toBe(preparedCandidate.response);
+    expect(confirmTransferDraft.mock.calls[1][0].response).toBe(editedQuestion);
+    expect(visibleMessages.map((message) => message.id)).toEqual(originalMessageIds);
   });
 });

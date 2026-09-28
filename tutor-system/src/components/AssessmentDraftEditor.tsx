@@ -1,4 +1,4 @@
-// Purpose: let an authorized tutor review and confirm a structured transfer-assessment draft before delivery.
+// Purpose: let an authorized tutor review and edit a structured transfer-assessment draft before sending it.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Send, X } from 'lucide-react';
@@ -30,14 +30,13 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   onCancel,
 }) => {
   const initialAssessment = decision.assessment;
+  const explanation = initialAssessment?.learner_safe_explanation || '';
   const [stem, setStem] = useState(initialAssessment?.stem || decision.response);
   const [selectionType, setSelectionType] = useState(initialAssessment?.selection_type || 'single');
   const [options, setOptions] = useState(initialAssessment?.options || []);
   const [correctOptionIds, setCorrectOptionIds] = useState<AssessmentOptionId[]>(
     initialAssessment?.correct_option_ids || []
   );
-  const [explanation, setExplanation] = useState(initialAssessment?.learner_safe_explanation || '');
-  const [contentConfirmed, setContentConfirmed] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +48,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     setSelectionType(assessment?.selection_type || 'single');
     setOptions(assessment?.options || []);
     setCorrectOptionIds(assessment?.correct_option_ids || []);
-    setExplanation(assessment?.learner_safe_explanation || '');
-    setContentConfirmed(false);
     setDirty(false);
     setError(null);
     setErrorKind(null);
@@ -64,7 +61,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   if (!initialAssessment) return null;
 
-  const reviewStatus = saving ? 'saving' : errorKind || (contentConfirmed ? 'confirmed' : dirty ? 'dirty' : 'ready');
+  const reviewStatus = saving ? 'saving' : errorKind || (dirty ? 'dirty' : 'ready');
 
   const clearServerFailure = () => {
     if (errorKind && errorKind !== 'validating') {
@@ -75,7 +72,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   const setOptionText = (id: AssessmentOptionId, text: string) => {
     setOptions((current) => current.map((option) => option.id === id ? { ...option, text } : option));
-    setContentConfirmed(false);
     setDirty(true);
     clearServerFailure();
   };
@@ -85,7 +81,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       if (selectionType === 'single') return checked ? [id] : [];
       return checked ? uniqueSelections([...current, id]) : current.filter((value) => value !== id);
     });
-    setContentConfirmed(false);
     setDirty(true);
     clearServerFailure();
   };
@@ -93,7 +88,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   const handleSelectionTypeChange = (value: 'single' | 'multiple') => {
     setSelectionType(value);
     setCorrectOptionIds((current) => value === 'single' ? current.slice(0, 1) : uniqueSelections(current));
-    setContentConfirmed(false);
     setDirty(true);
     clearServerFailure();
   };
@@ -119,11 +113,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     }
     if (!explanation.trim()) {
       setError('Enter a learner-safe explanation.');
-      setErrorKind('validating');
-      return;
-    }
-    if (!contentConfirmed) {
-      setError('Confirm that the concept, changed context, and answer key are appropriate.');
       setErrorKind('validating');
       return;
     }
@@ -187,7 +176,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
           <textarea
             aria-label="Question"
             value={stem}
-            onChange={(event) => { setStem(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }}
+            onChange={(event) => { setStem(event.target.value); setDirty(true); clearServerFailure(); }}
             rows={3}
             disabled={saving}
           />
@@ -253,31 +242,6 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
           </div>
         </div>
 
-        <label className="assessment-draft-editor__field">
-          <span>Learner-safe explanation</span>
-          <textarea
-            aria-label="Learner-safe explanation"
-            value={explanation}
-            onChange={(event) => { setExplanation(event.target.value); setContentConfirmed(false); setDirty(true); clearServerFailure(); }}
-            rows={3}
-            disabled={saving}
-          />
-        </label>
-
-        <div className="assessment-draft-editor__preview">
-          <p className="assessment-draft-editor__preview-label" aria-live="polite">Learner-visible preview</p>
-          <pre className="assessment-draft-editor__preview-content">{renderedText}</pre>
-        </div>
-
-        <label className="assessment-draft-editor__confirmation">
-          <input
-            type="checkbox"
-            checked={contentConfirmed}
-            onChange={(event) => { setContentConfirmed(event.target.checked); clearServerFailure(); }}
-            disabled={saving}
-          />
-          <span>I confirm the concept, changed context, and answer key are appropriate.</span>
-        </label>
       </div>
 
       <footer className="assessment-draft-editor__footer">
@@ -285,7 +249,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
           {/* Local review state only: there is no draft row, so this never reports a server status. */}
           <p role="status" data-testid="assessment-review-status" data-review-status={reviewStatus}>
             {reviewStatus === 'saving'
-              ? 'Sending the confirmed assessment…'
+              ? 'Sending assessment…'
               : reviewStatus === 'validating'
                 ? 'Review the highlighted validation error.'
               : reviewStatus === 'superseded'
@@ -298,11 +262,9 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
                 ? 'The request can be retried.'
               : reviewStatus === 'validation'
                 ? 'The candidate needs correction before it can be sent.'
-              : reviewStatus === 'confirmed'
-                ? 'Confirmed and ready to send.'
               : reviewStatus === 'dirty'
-                ? 'Unsaved edits — the previous confirmation was cleared.'
-                : 'Ready to send once you confirm.'}
+                ? 'Unsaved edits ready to send.'
+                : 'Ready to send.'}
           </p>
           {error && <p className="assessment-draft-editor__error" role="alert">{error}</p>}
         </div>
@@ -315,7 +277,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
           )}
           <button className="assessment-draft-editor__send" type="button" onClick={handleSubmit} disabled={saving}>
             <Send size={16} aria-hidden="true" />
-            {saving ? 'Saving…' : 'Confirm assessment'}
+            {saving ? 'Sending…' : 'Send assessment'}
           </button>
         </div>
       </footer>

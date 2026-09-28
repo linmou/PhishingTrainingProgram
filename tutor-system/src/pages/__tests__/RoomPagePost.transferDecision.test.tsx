@@ -139,14 +139,14 @@ describe('RoomPagePost structured decision consumption', () => {
     expect(optionInputs.map((input) => input.value)).toEqual(
       preparedCandidate.assessment!.options.map((option) => option.text)
     );
-    expect(screen.getByLabelText(/I confirm the concept/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/I confirm the concept/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send assessment' })).toBeInTheDocument();
   });
 
-  it('forwards a structured decision object on confirm, never suggestion text', async () => {
+  it('forwards a structured decision object on direct send, never suggestion text', async () => {
     mount({ transferDraft: candidateDraft });
 
-    fireEvent.click(screen.getByLabelText(/I confirm the concept/));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm assessment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(1));
     const submitted = confirmTransferDraft.mock.calls[0][0] as TutorDecisionV3;

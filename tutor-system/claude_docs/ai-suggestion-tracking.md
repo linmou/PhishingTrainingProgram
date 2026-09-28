@@ -103,9 +103,11 @@ When Guard Mode is active for a tutor, the composer profile switches to the `Sec
 
 ### Transfer Assessment Review
 
-When a prepared transfer assessment is available, the tutor reviews it in the room view instead of using the ordinary suggestion card. The tutor can edit the question, answer text, and selected correct answers, then send it directly. There is no learner preview or separate acknowledgement gate.
+When a prepared transfer assessment is available, the tutor reviews it in the room view instead of using the ordinary suggestion card. The tutor can edit the question, answer type, answer text, and selected correct answers. There is no learner preview or acknowledgement checkbox.
 
-The AI-selected `selection_type` is fixed for that draft: `single` renders radio controls and requires one answer; `multiple` renders checkboxes and requires two or three answers. The review surface shows every currently selected correct answer and updates immediately when the tutor changes an answer or its text. A failed send keeps those edits available for retry.
+The review editor lets the tutor choose `single` or `multiple` answer type. Single selection uses radio controls and requires one correct answer; multiple selection uses checkboxes and requires two or three. The answer-key summary updates as the tutor edits the choices. The learner-safe explanation remains in the prepared assessment payload but is not shown in the editor. The learner preview and acknowledgement checkbox are absent.
+
+The tutor sends only after reviewing the candidate and pressing **Send assessment**. The room uses its reviewed delivery operation, and a failed send keeps the edited candidate available for retry.
 
 ### Data Collection
 Every interaction is tracked:
