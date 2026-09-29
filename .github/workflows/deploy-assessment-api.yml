@@ -7,6 +7,10 @@ on:
         description: Apply the pending staging assessment runtime migration
         type: boolean
         default: false
+      seed_assessment_room:
+        description: Seed the dedicated staging browser room
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,6 +46,11 @@ jobs:
         if: inputs.apply_runtime_migration
         shell: bash
         run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/migrations/20260929090000_staging_assessment_runtime.sql
+
+      - name: Seed staging assessment browser room
+        if: inputs.seed_assessment_room
+        shell: bash
+        run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/fixtures/staging_assessment_room_20260929.sql
 
       - name: Configure Edge Function provider secrets
         shell: bash
