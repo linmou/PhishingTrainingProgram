@@ -7,6 +7,12 @@
 **Status**: Production snapshot, read-only catalog inspection on 2026-09-28
 **Input**: Observed assessment-related Supabase database functions and schema.
 
+## TransferLearning Refactor Contract
+
+`initialize_checklist` accepts a nonempty list of approved `{area_text, item_type, priority}` items for an authorized room and learner. The server assigns IDs and initializes `pending/none`; replay preserves approved items and progress. Missing targets are an explicit setup error. Ordinary persisted learner messages receive idempotent semantic analysis against that learner's room items through the learning-event authority. Assessment answers use `process_message` alone.
+
+The existing `prepare_turn` wire operation means `prepareAssessment()` in the browser. It catches up analysis through the focus message, derives eligibility from current server state, and returns either one assessment-only draft or `null` when no assessment is due. An eligible assessment is mandatory; provider failure, invalid output, missing targets, and incomplete analysis are errors. Reviewed delivery rechecks room, learner, target, blockers, and Guard state before its atomic write. The provider generates assessment content only; the shared tutor retains tutoring/Guard decisions.
+
 ## Scope
 
 This document describes the current production database implementation observed through Supabase MCP on 2026-09-28. Function definitions and schema were inspected without invoking assessment writes. Repository component tests and design documents are not evidence that the production flow completed successfully.

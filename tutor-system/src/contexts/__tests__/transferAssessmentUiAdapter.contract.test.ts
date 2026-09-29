@@ -33,7 +33,7 @@ const scope = {
   roomId: TRANSFER_ROOM_ID,
   studentId: LEARNER_A_ID,
   checklistId: CHECKLIST_ID,
-  itemId: CHECKLIST_ITEM_ID as string | null,
+  itemId: CHECKLIST_ITEM_ID,
   focusStudentMessageId: LEARNER_A_MESSAGE_ID,
 };
 
@@ -110,14 +110,14 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
   });
 
   it('refuses an assessment turn whose checklist item is missing', () => {
-    const result = assertDeliverableReview(preparedCandidate, { ...scope, itemId: null });
+    const result = assertDeliverableReview(preparedCandidate, { ...scope, itemId: '' });
 
     expect(result.ok).toBe(false);
     expect(result.ok === false && result.status).toBe('validation');
     expect(result.ok === false && result.message).toContain('item');
   });
 
-  it('refuses a tutoring turn that still carries an assessment payload', () => {
+  it('refuses a draft with a tutor decision field', () => {
     const decision = {
       ...preparedCandidate,
       decision: { mode: 'tutoring' as const, instruction: 'scaffolding' as const, target_item_id: null },
@@ -129,10 +129,10 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
     expect(result.ok === false && result.status).toBe('validation');
   });
 
-  it('refuses assessment mode without the transfer_assess instruction', () => {
+  it('refuses a draft with an unrelated instruction field', () => {
     const decision = {
       ...preparedCandidate,
-      decision: { ...preparedCandidate.decision, instruction: 'scaffolding' as const },
+      instruction: 'scaffolding',
     };
 
     const result = assertDeliverableReview(decision, scope);
@@ -167,11 +167,15 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
     // The learner already has a delivered assessment: this delivery is superseded, not retried.
     expect(classifyAssessmentFailure(new Error('ASSESSMENT_ALREADY_OPEN: assessment already delivered')).status)
       .toBe('superseded');
+    expect(classifyAssessmentFailure(new Error('ASSESSMENT_NOT_ELIGIBLE: target changed')).status)
+      .toBe('superseded');
     // The prepared focus identity no longer matches, so the previous review is superseded.
     expect(classifyAssessmentFailure(new Error('WRONG_LEARNER: focus message belongs to another learner')).status)
       .toBe('superseded');
     // There is no transfer checklist in this room, so the capability does not apply.
     expect(classifyAssessmentFailure(new Error('LEGACY_CHECKLIST: no transfer checklist')).status)
+      .toBe('unavailable');
+    expect(classifyAssessmentFailure(new Error('TARGET_SETUP_REQUIRED: no approved items')).status)
       .toBe('unavailable');
     expect(classifyAssessmentFailure(new Error('ITEM_VALIDATION_FAILED: invalid reviewed payload')).status)
       .toBe('validation');
@@ -179,6 +183,8 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
       .toBe('unavailable');
     expect(classifyAssessmentFailure(new Error('AI_PROVIDER_NOT_CONFIGURED: no provider')).status)
       .toBe('unavailable');
+    expect(classifyAssessmentFailure(new Error('ANALYSIS_INCOMPLETE: evidence pending')).status)
+      .toBe('retryable');
     expect(classifyAssessmentFailure(new Error('FORBIDDEN: principal is not authorized')).status)
       .toBe('unauthorized');
     expect(classifyAssessmentFailure(new Error('Assessment API request failed: network down')).status)

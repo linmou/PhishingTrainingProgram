@@ -21,7 +21,7 @@ export interface ChecklistGenerationContext {
  * Assess the context for checklist generation
  * Determines what options should be presented to the user
  */
-export async function assessChecklistGenerationContext(roomId: string): Promise<ChecklistGenerationContext> {
+export async function assessChecklistGenerationContext(roomId: string, requireRoomContext = false): Promise<ChecklistGenerationContext> {
   try {
     // First check if room has AI enabled
     const { data: roomData, error: roomError } = await supabase
@@ -39,7 +39,7 @@ export async function assessChecklistGenerationContext(roomId: string): Promise<
     let aiConfig = await getAIConfig(roomId);
     
     // If no persisted room config is available, synthesize defaults from the room flag
-    if (!aiConfig && roomData.ai_assistant_enabled) {
+    if (!aiConfig && roomData.ai_assistant_enabled && !requireRoomContext) {
       console.log('⚠️ No persisted AI prompt found, but room has AI enabled. Looking for default system prompt...');
       
       // Check if there's a default system prompt we can use
@@ -82,6 +82,10 @@ export async function assessChecklistGenerationContext(roomId: string): Promise<
         verificationSteps: persistedVerificationSteps,
         aiConfigId: aiConfig.id
       };
+    }
+
+    if (requireRoomContext && !systemPrompt.trim()) {
+      return { type: 'empty_system_prompt', aiConfigId: aiConfig.id };
     }
     
     // Try to extract detection areas using async LLM extraction

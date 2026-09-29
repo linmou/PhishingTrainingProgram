@@ -203,9 +203,9 @@ describe('transferAssessmentUiAdapter projections', () => {
     expect(view.publicQuestion).toBeNull();
   });
 
-  it('keeps the prepared scope identity and the null item id for a tutoring turn', () => {
+  it('keeps the prepared scope identity and rejects an absent assessment', () => {
     const candidate = createReviewCandidate(preparedTurnResult);
-    const tutoring = createReviewCandidate(preparedTutoringTurnResult);
+    const tutoring = preparedTutoringTurnResult && createReviewCandidate(preparedTutoringTurnResult);
 
     expect(candidate).not.toBeNull();
     expect(candidate!.scope).toEqual({
@@ -215,8 +215,7 @@ describe('transferAssessmentUiAdapter projections', () => {
       itemId: CHECKLIST_ITEM_ID,
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
     });
-    expect(tutoring!.scope.itemId).toBeNull();
-    expect(tutoring!.scope.itemId).not.toBe('null');
+    expect(tutoring).toBeNull();
   });
 
   it('fails closed when the preparation result is missing required identity', () => {

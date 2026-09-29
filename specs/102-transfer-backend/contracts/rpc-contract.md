@@ -32,26 +32,28 @@ The remaining contract below records the local component-102 v2 design. It is re
 
 | RPC | Version / status | Obligation |
 |---|---|---|
-| `initialize_transfer_checklist_v1` | retain/harden | create or return one active owner-scoped transfer checklist; preserve legacy rows |
+| `initialize_transfer_checklist_v1` | new JSON-items signature | validate approved room item inputs; create or return one active owner-scoped transfer checklist without resetting progress |
 | `post_assessment_message_v2` | new | store ordinary messages or a target learner's normalized structured assessment selection; never grade or expose key |
-| `prepare_transfer_turn_v1` | retain/harden | return a scope-checked canonical provider context snapshot; provider call remains outside the DB transaction |
-| `send_reviewed_tutor_response_v4` | new | atomically insert stem-only public tutor message and immutable private assessment, enforce one open assessment per learner, return only public projection |
+| `get_transfer_message_analysis_context_v1` / `apply_transfer_message_analysis_v1` | new | validate persisted learner-message ownership and approved items; apply idempotent semantic learning events with Guard deferral/replay |
+| `prepare_transfer_assessment_context_v1` | new | catch up analysis, select a current relevant eligible target, and return the assessment-only provider context or explicit no-assessment state |
+| `send_reviewed_transfer_assessment_v1` | new | revalidate target, learner evidence, Guard, feedback, and context; delegate the atomic public/private delivery transaction |
+| `send_reviewed_tutor_response_v4` | existing transaction | atomically insert public tutor message and immutable private assessment, enforce one open assessment per learner, return only public projection |
 | `process_assessment_message_v2` | new | row-lock assessment, dedupe, validate stored answer and expected snapshot, commit the trusted resolver outcome and terminal event atomically, and return role-safe DTO |
 | `apply_learning_event_v1` | retain/harden | validate causal scope and atomically record evidence, progress, actual history, and event state |
 | `record_transfer_provider_attempt_v1` | new internal | append one credential-free private provider request/response/error audit row; service-role-only and never browser callable |
 
 Old transfer RPC versions remain revoked from untrusted callers and are not browser fallbacks. Migration may replace their bodies or revoke/drop obsolete signatures after dependency inspection; it must not leave two live grading authorities.
 
-## Historical `send_reviewed_tutor_response_v4` Contract
+## `send_reviewed_transfer_assessment_v1`
 
-Inputs: reviewed `TutorDecisionV3`, room, student, checklist, item, focus learner message, server-derived actor, request ID.
+Inputs: reviewed `TransferAssessmentDraft`, room, student, checklist, item, focus learner message, server-derived actor, request ID.
 
-For assessment mode it must:
+The wrapper validates the assessment-only draft and current eligibility, then supplies the historical shape required by `send_reviewed_tutor_response_v4`. That existing RPC remains the delivery transaction. Together they must:
 
-1. Validate mode/instruction/target and the full component-101 private assessment, including learner-safe explanation.
+1. Validate the target, full component-101 private assessment, learner-safe explanation, and learner-owned evidence for the selected target.
 2. Lock the room before checking for an existing open assessment for the learner.
 3. Revalidate teacher, learner, checklist, item, focus message, and room relationships.
-4. Insert one tutor message whose `content` is exactly `assessment.stem`, whose immutable `assessment_student_id` equals the validated checklist/private target learner, whose structured public assessment has A-D options and selection type, and whose turn mode is assessment.
+4. Insert one tutor message whose `content` is exactly `assessment.stem`, whose immutable `assessment_student_id` equals the validated checklist/private target learner, whose structured public assessment has A-D options and selection type, and whose `response_mode` is assessment.
 5. Insert one linked private assessment with reviewed key, explanation, transfer basis, scope, lifecycle `open`, attempt count 0, and unique delivery request ID.
 6. Preserve room participation as tutoring.
 7. Return only `ReviewedDeliveryDTO`; retry returns the same result.

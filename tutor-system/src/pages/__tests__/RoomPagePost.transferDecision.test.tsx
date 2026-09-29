@@ -26,7 +26,7 @@ import {
 } from '../../test-support/transferRoomFixtures';
 import { projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
 import type { Message } from '../../types';
-import type { TutorDecisionV3 } from '../../types/assessment';
+import type { TransferAssessmentDraft } from '../../types/assessment';
 
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
@@ -45,8 +45,16 @@ jest.mock('../../components/RoomPost', () => function MockRoomPost() {
 jest.mock('../../components/CommentInput', () => function MockCommentInput() {
   return <div data-testid="comment-input" />;
 });
-jest.mock('../../components/AISuggestionBox', () => function MockAISuggestionBox() {
-  return <div data-testid="ai-suggestion-box" />;
+jest.mock('../../components/AISuggestionBox', () => function MockAISuggestionBox(props: {
+  suggestion: string;
+  onCopy: (suggestion: string) => void;
+  onReject: () => void;
+}) {
+  return <div data-testid="ai-suggestion-box">
+    <span>{props.suggestion}</span>
+    <button onClick={() => props.onCopy(props.suggestion)}>Use response</button>
+    <button onClick={props.onReject}>Discard</button>
+  </div>;
 });
 
 const learnerMessage: Message = {
@@ -87,6 +95,7 @@ describe('RoomPagePost structured decision consumption', () => {
       transferDraft: null,
       confirmTransferDraft,
       clearAISuggestion: jest.fn(),
+      recordAIFeedback: jest.fn().mockResolvedValue(undefined),
       aiSuggestion: null,
       finalMode: 'tutoring',
       messageFeedbackStats: {},
@@ -149,15 +158,11 @@ describe('RoomPagePost structured decision consumption', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(1));
-    const submitted = confirmTransferDraft.mock.calls[0][0] as TutorDecisionV3;
+    const submitted = confirmTransferDraft.mock.calls[0][0] as TransferAssessmentDraft;
     expect(typeof submitted).toBe('object');
-    expect(submitted.decision).toEqual({
-      mode: 'assessment',
-      instruction: 'transfer_assess',
-      target_item_id: preparedCandidate.decision.target_item_id,
-    });
-    expect(submitted.assessment!.correct_option_ids).toEqual(['B']);
-    expect(submitted.assessment!.options).toHaveLength(4);
+    expect(submitted.target_item_id).toBe(preparedCandidate.target_item_id);
+    expect(submitted.assessment.correct_option_ids).toEqual(['B']);
+    expect(submitted.assessment.options).toHaveLength(4);
   });
 
   it('keeps the copy-only suggestion path for a room with no transfer candidate', () => {
@@ -167,28 +172,19 @@ describe('RoomPagePost structured decision consumption', () => {
     expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
   });
 
-  it('shows a tutoring draft so the tutor can use or discard its response', () => {
+  it('routes an ordinary tutor response through the suggestion controls', async () => {
     const clearAISuggestion = jest.fn();
     const response = 'Open the carrier website from an independent source.';
     mount({
-      transferDraft: {
-        ...candidateDraft,
-        itemId: null,
-        decision: {
-          ...preparedCandidate,
-          decision: { mode: 'tutoring', instruction: 'clarify', target_item_id: null },
-          response,
-          assessment: null,
-        },
-      },
+      aiSuggestion: response,
       clearAISuggestion,
     });
 
-    expect(screen.getByRole('region', { name: 'Tutor response review' })).toHaveTextContent(response);
+    expect(screen.getByTestId('ai-suggestion-box')).toHaveTextContent(response);
     expect(screen.getByRole('button', { name: 'Use response' })).toBeInTheDocument();
     expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
-    expect(clearAISuggestion).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(clearAISuggestion).toHaveBeenCalledTimes(1));
   });
 
   it('renders and submits a public assessment projection through the page message list', async () => {

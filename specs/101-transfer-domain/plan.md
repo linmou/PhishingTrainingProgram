@@ -5,6 +5,8 @@
 
 ## Summary
 
+Refactor revision (2026-09-29): add the assessment-only `TransferAssessmentDraft` and its validator in the existing assessment module. Keep historical `TutorDecisionV3` parsing for compatibility. Preserve all deterministic attempt and progress rules while removing active assessment dependence on tutor mode selection.
+
 Upgrade the existing deterministic transfer domain so one delivered assessment has a server-owned snapshot with at most two consumed valid selections. Add the private `learner_safe_explanation` contract, retry and terminal result discriminants, failure-only learner-disclosure policy, shared barrel exports, and golden fixtures. Reuse the existing parser, exact-set grader, progress reducer, and pure orchestrator. Keep persistence/concurrency, role projection, React, prompt generation, semantic evaluation, and browser evidence downstream.
 
 ## Technical Context

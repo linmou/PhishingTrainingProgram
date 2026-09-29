@@ -8,6 +8,12 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, and `contracts/`
 **Scope**: T001-T044 document the already-implemented baseline harness and are retained as historical context. The upgrade implementation starts at T045. Component 101 owns lifecycle semantics; component 102 owns attempt persistence, role-safe DTOs, production request/prompt/provider behavior; component 104 owns evaluation consumption, explanation judgment, parity tests, immutable evidence, and gates. Production implementation, database/auth, React UI, and release browser work remain excluded.
 
+## TransferLearning Refactor Tasks (2026-09-29)
+
+- [ ] R401 Update active cases for semantic evidence, two distinct room target sets, mandatory assessment routing, and each blocker; preserve shared-tutor tutoring/Guard regression cases.
+- [ ] R402 Assert production/evaluation assessment-only request parity and zero shared-tutor calls for eligible and provider-failure paths.
+- [ ] R403 Run the revised quality checks without changing immutable historical results.
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Establish the versioned evaluation workspace and source-of-truth boundaries before authoring transfer cases.

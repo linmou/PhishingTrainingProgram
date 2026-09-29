@@ -25,6 +25,8 @@ The production public.messages relation has no assessment_key column. The v3 del
 
 The following plan, technical choices, verification gates, and risks describe the local component-102 v2 design. They are preserved as history and are not the production implementation inventory.
 
+Refactor revision (2026-09-29): use approved room items for learner-scoped initialization, semantic message analysis through the existing learning-event authority, and mandatory assessment-only preparation. Keep the six wire operations and existing service/Edge Function; add one forward migration based on the hosted schema for capability, item initialization, analysis, and delivery checks. Do not use templates in the transfer path.
+
 Replace the browser-only transfer service with a thin trusted-API facade. Restore the `assessment-api` Edge Function, move generation and component-101 answer resolution behind its verified-principal boundary, and add one forward migration that creates private delivered-assessment, append-only attempt, and provider-attempt audit rows. Public tutor messages retain only the assessment identity, target `student_id`, stem, ordered options, selection type, and lifecycle identity. A row-locked versioned commit RPC enforces two attempts, atomically applies the resolved terminal transition, and releases key/explanation only for terminal second failure.
 
 ## Historical Technical Context

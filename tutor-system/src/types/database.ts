@@ -50,6 +50,7 @@ export interface Database {
                     image_url: string | null
                     is_active: boolean
                     ai_assistant_enabled: boolean
+                    transfer_learning_enabled: boolean
                     ai_assistant_model: string | null
                     ai_assistant_prompt: string | null
                     pre_populated_dialogue: Json | null
@@ -71,6 +72,7 @@ export interface Database {
                     image_url?: string | null
                     is_active?: boolean
                     ai_assistant_enabled?: boolean
+                    transfer_learning_enabled?: boolean
                     ai_assistant_model?: string | null
                     ai_assistant_prompt?: string | null
                     pre_populated_dialogue?: Json | null
@@ -92,6 +94,7 @@ export interface Database {
                     image_url?: string | null
                     is_active?: boolean
                     ai_assistant_enabled?: boolean
+                    transfer_learning_enabled?: boolean
                     ai_assistant_model?: string | null
                     ai_assistant_prompt?: string | null
                     pre_populated_dialogue?: Json | null

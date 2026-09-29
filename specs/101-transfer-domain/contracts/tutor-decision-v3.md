@@ -4,6 +4,10 @@
 **Date**: 2026-09-11  
 **Revised**: 2026-09-22
 
+## Active Assessment Contract (2026-09-29)
+
+`TransferAssessmentDraft` is `{ reason: string, target_item_id: string, assessment: PrivateAssessment }`. Assessment validation checks the known target, learner-owned source evidence, private item quality, and rendering. It has no `decision.mode`, instruction, or `response`; `assessment.stem` is the question. The `TutorDecisionV3` shape below is retained for historical reading, not active assessment generation.
+
 ## Decision Contract
 
 `TutorDecisionV3` is reason-first JSON with these required top-level fields:
@@ -52,7 +56,7 @@ Component 101 defines the pure learner-visible shape that component 102 must pro
 }
 ```
 
-The unresolved component 101 public contract must not contain `correct_option_ids`, `learner_safe_explanation`, `transfer_basis`, private rationale, raw model output, API operations, or transport fields. Component 102 owns private-to-public projection, API adaptation, and their tests. Public assessment delivery is still an ordinary tutor turn with `mode: assessment`; it is not a room participation mode.
+The unresolved component 101 public contract must not contain `correct_option_ids`, `learner_safe_explanation`, `transfer_basis`, private rationale, raw model output, API operations, or transport fields. Component 102 owns private-to-public projection, API adaptation, and their tests. Public assessment delivery is a tutor-authored message with `response_mode: assessment`; it is not a room participation mode or a shared-tutor decision.
 
 ## Attempt and Feedback Contract
 

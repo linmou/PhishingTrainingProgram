@@ -6,9 +6,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 import { resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts';
 import {
   buildTransferTutorRequestContextV3,
-  buildTransferTutorRequestV3,
-  buildTransferTutorUserMessageV3,
+  buildTransferAssessmentRequest,
 } from '../../../src/services/ecologicalTutorCall.ts';
+import { validateAssessmentDraft } from '../../../src/services/assessmentValidation.ts';
 
 const OPERATIONS = new Set([
   'initialize_checklist', 'post_message', 'analyze_message',
@@ -18,20 +18,23 @@ const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
 const PROVIDER_MODEL = 'qwen3.5-flash';
 const PROVIDER_MAX_TOKENS = 1200;
 
-const TRANSFER_V3_SYSTEM_PROMPT = [
-  'Return exactly one JSON object with keys reason, learning_evidence, decision, response, assessment.',
-  'reason must be a concise observable conclusion of at most 40 words; keep it under 25 words. Do not narrate your decision process.',
-  'learning_evidence must be an array. decision must be an object with keys mode, instruction, target_item_id; never a string.',
-  'prior_participation_mode describes the previous turn, not the required decision for this turn.',
-  'For tutoring or guard, set decision.target_item_id and assessment to null. For assessment, set decision.mode to assessment, decision.instruction to transfer_assess, and decision.target_item_id to one eligible_assessment_item_ids value.',
-  'When the learner has shown basic understanding of an eligible item, prefer a changed-context transfer assessment over repeating the same explanation.',
-  'If the learner asks for help or clarification about a failed assessment, choose tutoring and answer that question directly before offering another assessment.',
-  'An assessment has selection_type exactly "single" or "multiple", stem, rendered_text, options as four objects with ids A, B, C, D and nonempty text, correct_option_ids as an array of those ids, learner_safe_explanation, and transfer_basis.',
-  'transfer_basis must be an object with concept_rule, source_context, changed_context, and source_evidence_message_ids (an array containing the real focus student message id). Never use a string for transfer_basis or "single_choice" for selection_type.',
-  'Set response to the learner-facing question stem for assessment mode. Use a nonempty learner-facing response in every mode.',
-  'For assessment mode, the question stem must have at most two sentences, and the question plus all four option texts must total at most 80 words.',
-  'learner_safe_explanation must be concise, age-appropriate, grounded in the correct option, safe to disclose after terminal failure, and contain no hidden reasoning.',
-  'Never invent IDs. Return JSON only, without markdown or hidden chain-of-thought.',
+const TRANSFER_ASSESSMENT_SYSTEM_PROMPT = [
+  'Return exactly one JSON object with only reason, target_item_id, and assessment. Generate assessment content only.',
+  'target_item_id must equal target_item.id in the user input. Use only source_evidence_message_ids listed for that target_item.',
+  'Shape: {"reason":"brief rationale","target_item_id":"target UUID","assessment":{"selection_type":"single","stem":"question in a new situation","options":[{"id":"A","text":"choice"},{"id":"B","text":"choice"},{"id":"C","text":"choice"},{"id":"D","text":"choice"}],"correct_option_ids":["A"],"learner_safe_explanation":"brief answer explanation","transfer_basis":{"concept_rule":"rule being transferred","source_context":"situation in learner evidence","changed_context":"different situation tested by the question","source_evidence_message_ids":["known learner message UUID"]}}}.',
+  'selection_type is exactly single or multiple. Single has one correct option; multiple has two or three. All four option texts must be distinct and nonempty.',
+  'Apply the same concept_rule to a materially different changed_context; the stem must test that new situation, not repeat the source scenario.',
+  'Keep the stem to at most two sentences and the full question with choices under 80 words. learner_safe_explanation must be concise, age-appropriate, and safe to disclose after terminal failure.',
+  'Do not include rendered_text; the server creates it. Never invent IDs. Return JSON only, without markdown or hidden reasoning.',
+].join('\n');
+
+const TRANSFER_ANALYSIS_SYSTEM_PROMPT = [
+  'Classify this persisted learner message against only the listed room learning targets.',
+  'Return JSON with events, requires_protection, requires_correction, and explanation.',
+  'Each event has item_id, kind, and explanation. Kind is initial_signal, post_repair_signal, spontaneous_transfer, or contradiction.',
+  'Include every supported target, but omit unsupported claims. Do not treat tutor statements as learner evidence.',
+  'Set requires_protection or requires_correction when the learner message needs an immediate safety or factual response.',
+  'Never invent target IDs. Return JSON only.',
 ].join('\n');
 
 export interface VerifiedPrincipal {
@@ -89,6 +92,9 @@ const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   AI_PROVIDER_ERROR: { status: 502, retryable: true },
   AI_OUTPUT_TRUNCATED: { status: 502, retryable: true },
   AI_OUTPUT_INVALID: { status: 502, retryable: false },
+  TARGET_SETUP_REQUIRED: { status: 409, retryable: false },
+  ANALYSIS_INCOMPLETE: { status: 503, retryable: true },
+  ASSESSMENT_NOT_ELIGIBLE: { status: 409, retryable: false },
   PERSISTENCE_FAILED: { status: 500, retryable: true },
 };
 
@@ -202,22 +208,16 @@ async function rpc(deps: AssessmentApiDependencies, name: string, args: Record<s
   return result.data;
 }
 
-function assertReviewedCandidate(value: unknown, itemId: string | null): void {
-  const candidate = asRecord(value);
-  const decision = asRecord(candidate.decision);
-  const assessment = asRecord(candidate.assessment);
-  if (decision.mode !== 'assessment') {
-    if (!['tutoring', 'guard'].includes(decision.mode) || candidate.assessment !== null ||
-        decision.target_item_id !== null || decision.instruction === 'transfer_assess') {
-      throw new Error('ITEM_VALIDATION_FAILED');
-    }
-    return;
-  }
-  if (!itemId || decision.instruction !== 'transfer_assess' ||
-      decision.target_item_id !== itemId || assessment.selection_type !== 'single' && assessment.selection_type !== 'multiple' ||
-      !Array.isArray(assessment.options) || assessment.options.length !== 4 ||
-      !Array.isArray(assessment.correct_option_ids) || assessment.correct_option_ids.length === 0 ||
-      typeof assessment.learner_safe_explanation !== 'string' || !assessment.learner_safe_explanation.trim()) {
+function assertReviewedCandidate(value: unknown, itemId: string): void {
+  try {
+    const assessment = asRecord(asRecord(value).assessment);
+    const basis = asRecord(assessment.transfer_basis);
+    validateAssessmentDraft(value, {
+      knownItemIds: [itemId],
+      knownMessageIds: Array.isArray(basis.source_evidence_message_ids)
+        ? basis.source_evidence_message_ids : [],
+    });
+  } catch {
     throw new Error('ITEM_VALIDATION_FAILED');
   }
 }
@@ -267,47 +267,110 @@ function providerConfig(deps: AssessmentApiDependencies): { key: string; baseUrl
   return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
 }
 
-function validateProviderCandidate(value: unknown): Record<string, unknown> {
-  const candidate = asRecord(value);
-  if (typeof candidate.reason !== 'string' || !candidate.reason.trim() ||
-      !Array.isArray(candidate.learning_evidence) || typeof candidate.response !== 'string' ||
-      !candidate.decision || !('assessment' in candidate)) throw new Error('AI_OUTPUT_INVALID');
-  const decision = asRecord(candidate.decision);
-  if (!['tutoring', 'guard', 'assessment'].includes(decision.mode)) throw new Error('AI_OUTPUT_INVALID');
-  if (decision.mode === 'assessment') {
-    assertReviewedCandidate(candidate, requiredString(decision.target_item_id, 'AI_OUTPUT_INVALID'));
-  } else if (candidate.assessment !== null) {
-    throw new Error('AI_OUTPUT_INVALID');
-  }
-  return candidate;
-}
-
-async function prepareTurn(
+async function analyzeMessage(
   deps: AssessmentApiDependencies,
   body: Record<string, any>,
   principal: VerifiedPrincipal,
   requestId: string,
 ): Promise<Record<string, unknown>> {
+  const roomId = assertRoom(principal, body.room_id);
+  const messageId = requiredString(body.message_id);
+  const scope = asRecord(await rpc(deps, 'get_transfer_message_analysis_context_v1', {
+    p_room_id: roomId, p_message_id: messageId, p_actor_id: principal.application_user_id,
+  }));
+  if (scope.analysis_complete === true) return { applied: [], already_processed: true };
+  if (scope.analysis_deferred === true) {
+    return asRecord(await rpc(deps, 'apply_transfer_message_analysis_v1', {
+      p_room_id: roomId, p_message_id: messageId,
+      p_actor_id: principal.application_user_id,
+      p_request_id: requestId, p_analysis: {},
+    }));
+  }
+  const message = asRecord(scope.message);
+  const items = scope.items;
+  if (message.id !== messageId || message.room_id !== roomId || message.user_role !== 'student' ||
+      message.user_id !== scope.student_id || !Array.isArray(items) || !items.length) {
+    throw new Error('INVALID_SCOPE');
+  }
+  const provider = providerConfig(deps);
+  let providerResponse: Response;
+  try {
+    providerResponse = await deps.fetch(`${provider.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
+      body: JSON.stringify({
+        model: provider.model,
+        messages: [
+          { role: 'system', content: TRANSFER_ANALYSIS_SYSTEM_PROMPT },
+          { role: 'user', content: JSON.stringify({ message, items }) },
+        ],
+        temperature: 0,
+        max_tokens: 600,
+        enable_thinking: false,
+        response_format: { type: 'json_object' },
+      }),
+    });
+  } catch {
+    throw new Error('AI_PROVIDER_ERROR');
+  }
+  if (!providerResponse.ok) throw new Error('AI_PROVIDER_ERROR');
+  const payload = asRecord(await providerResponse.json().catch(() => ({})));
+  const choice = asRecord(payload.choices?.[0]);
+  if (choice.finish_reason === 'length') throw new Error('AI_OUTPUT_TRUNCATED');
+  let analysis: Record<string, any>;
+  try {
+    analysis = asRecord(JSON.parse(requiredString(asRecord(choice.message).content, 'AI_OUTPUT_INVALID')));
+  } catch {
+    throw new Error('AI_OUTPUT_INVALID');
+  }
+  const knownIds = new Set(items.map((item: any) => item.id));
+  const allowedKinds = new Set(['initial_signal', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
+  if (!Array.isArray(analysis.events) || analysis.events.some((event: unknown) => {
+    const evidence = asRecord(event);
+    return !knownIds.has(evidence.item_id) || !allowedKinds.has(evidence.kind) ||
+      typeof evidence.explanation !== 'string' || !evidence.explanation.trim();
+  }) || typeof analysis.requires_protection !== 'boolean' ||
+      typeof analysis.requires_correction !== 'boolean') {
+    throw new Error('AI_OUTPUT_INVALID');
+  }
+  return asRecord(await rpc(deps, 'apply_transfer_message_analysis_v1', {
+    p_room_id: roomId,
+    p_message_id: messageId,
+    p_actor_id: principal.application_user_id,
+    p_request_id: requestId,
+    p_analysis: analysis,
+  }));
+}
+
+async function prepareAssessment(
+  deps: AssessmentApiDependencies,
+  body: Record<string, any>,
+  principal: VerifiedPrincipal,
+  requestId: string,
+): Promise<Record<string, unknown> | null> {
   assertTeacher(principal);
   const roomId = assertRoom(principal, body.room_id);
-  const scope = asRecord(await rpc(deps, 'prepare_transfer_turn_v1', {
+  const focusMessageId = requiredString(body.focus_student_message_id);
+  await analyzeMessage(deps, { room_id: roomId, message_id: focusMessageId }, principal, requestId);
+  const scope = asRecord(await rpc(deps, 'prepare_transfer_assessment_context_v1', {
     p_room_id: roomId,
-    p_focus_student_message_id: requiredString(body.focus_student_message_id),
+    p_focus_student_message_id: focusMessageId,
     p_checklist_id: requiredString(body.checklist_id),
     p_actor_id: principal.application_user_id,
     p_request_id: requestId,
   }));
-  const provider = providerConfig(deps);
+  if (scope.no_assessment_due === true) return null;
+  const targetItemId = requiredString(scope.selected_target_item_id, 'ANALYSIS_INCOMPLETE');
   const rawContext = asRecord(scope.context ?? scope);
   const context = buildTransferTutorRequestContextV3(rawContext as any);
-  const providerRequest = buildTransferTutorRequestV3(context);
-  const userMessage = buildTransferTutorUserMessageV3(providerRequest);
+  const userMessage = buildTransferAssessmentRequest(context, targetItemId);
+  const provider = providerConfig(deps);
 
   for (let ordinal = 1; ordinal <= 2; ordinal += 1) {
     const requestPayload = {
       model: provider.model,
       messages: [
-        { role: 'system', content: TRANSFER_V3_SYSTEM_PROMPT },
+        { role: 'system', content: TRANSFER_ASSESSMENT_SYSTEM_PROMPT },
         { role: 'user', content: ordinal === 1 ? userMessage : `${userMessage}\nReturn valid JSON matching the same contract.` },
       ],
       temperature: 0.3,
@@ -340,10 +403,13 @@ async function prepareTurn(
         payload, finishReason, 'truncated', 'AI_OUTPUT_TRUNCATED');
       throw new Error('AI_OUTPUT_TRUNCATED');
     }
-    let candidate: Record<string, unknown>;
+    let candidate: ReturnType<typeof validateAssessmentDraft>;
     try {
       const content = requiredString(asRecord(choice.message).content, 'AI_OUTPUT_INVALID');
-      candidate = validateProviderCandidate(JSON.parse(content));
+      candidate = validateAssessmentDraft(JSON.parse(content), {
+        knownItemIds: [targetItemId],
+        knownMessageIds: context.checklist_items.find(item => item.id === targetItemId)?.relevant_evidence_message_ids || [],
+      });
     } catch {
       await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
         payload, finishReason, 'invalid', 'AI_OUTPUT_INVALID');
@@ -352,14 +418,7 @@ async function prepareTurn(
     }
     await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
       payload, finishReason, 'valid', null);
-    return {
-      ...scope,
-      item_id: asRecord(candidate.decision).mode === 'assessment'
-        ? asRecord(candidate.decision).target_item_id
-        : null,
-      progress_snapshot_hash: rawContext.progress_snapshot_hash,
-      decision: candidate,
-    };
+    return { ...scope, item_id: targetItemId, assessment_draft: candidate };
   }
   throw new Error('AI_OUTPUT_INVALID');
 }
@@ -455,12 +514,19 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       switch (body.operation) {
         case 'initialize_checklist':
           assertTeacher(principal);
-          data = { checklist_id: await rpc(deps, 'initialize_transfer_checklist_v1', {
+          if (!Array.isArray(body.items) || body.items.length === 0 || body.items.some((value: unknown) => {
+            const item = asRecord(value);
+            return typeof item.area_text !== 'string' || !item.area_text.trim() ||
+              !['detection_area', 'verification_step', 'understanding', 'behavior'].includes(item.item_type) ||
+              !['critical', 'important', 'optional'].includes(item.priority) ||
+              Object.keys(item).some(key => !['area_text', 'item_type', 'priority'].includes(key));
+          })) throw new Error('ITEM_VALIDATION_FAILED');
+          data = await rpc(deps, 'initialize_transfer_checklist_v1', {
             p_room_id: assertRoom(principal, body.room_id),
             p_student_id: requiredString(body.student_id),
-            p_template_name: requiredString(body.template_name),
+            p_items: body.items,
             p_actor_id: principal.application_user_id,
-          }) };
+          });
           break;
         case 'post_message': {
           const roomId = assertRoom(principal, body.room_id);
@@ -476,28 +542,24 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
           break;
         }
         case 'analyze_message':
-          data = await rpc(deps, 'analyze_transfer_message_v1', {
-            p_room_id: assertRoom(principal, body.room_id),
-            p_message_id: requiredString(body.message_id),
-            p_actor_id: principal.application_user_id,
-            p_request_id: body.request_id,
-          });
+          data = await analyzeMessage(deps, body, principal, body.request_id);
           break;
         case 'prepare_turn':
-          data = await prepareTurn(deps, body, principal, body.request_id);
+          data = await prepareAssessment(deps, body, principal, body.request_id);
           break;
         case 'send_reviewed': {
           assertTeacher(principal);
           const roomId = assertRoom(principal, body.room_id);
-          const itemId = body.item_id == null ? null : requiredString(body.item_id, 'ITEM_VALIDATION_FAILED');
+          const itemId = requiredString(body.item_id, 'ITEM_VALIDATION_FAILED');
+          const focusMessageId = requiredString(body.focus_student_message_id);
           assertReviewedCandidate(body.reviewed_payload, itemId);
-          data = projectDelivery(await rpc(deps, 'send_reviewed_tutor_response_v4', {
+          data = projectDelivery(await rpc(deps, 'send_reviewed_transfer_assessment_v1', {
             p_reviewed_payload: body.reviewed_payload,
             p_room_id: roomId,
             p_student_id: requiredString(body.student_id),
             p_checklist_id: requiredString(body.checklist_id),
             p_item_id: itemId,
-            p_focus_student_message_id: requiredString(body.focus_student_message_id),
+            p_focus_student_message_id: focusMessageId,
             p_actor_id: principal.application_user_id,
             p_request_id: body.request_id,
           }));

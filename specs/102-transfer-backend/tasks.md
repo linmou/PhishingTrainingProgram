@@ -8,6 +8,13 @@ The checked tasks record completion of the local component-102 v2 backlog and it
 **Verification scope**: Component 102 uses focused Jest, checked Deno, and disposable PostgreSQL 17 restored-copy evidence. Hosted Supabase, generated types, integrated build, and release gates remain separate.
 **Upstream gate**: Merge the exact promoted component-101 integration SHA before implementation.
 
+## TransferLearning Refactor Tasks (2026-09-29)
+
+- [ ] R201 Author one forward migration from the current hosted schema for transfer capability, explicit-item initialization, semantic evidence authority, eligibility, and reviewed-send revalidation.
+- [ ] R202 Replace template-based transfer initialization with approved items and make `analyze_message` apply idempotent learner evidence.
+- [ ] R203 Narrow `prepare_turn` to mandatory assessment-only generation, focus-message catch-up, and explicit no-assessment/error outcomes.
+- [ ] R204 Prove scope, Guard, feedback/repair, replay, privacy, and provider-failure behavior in the existing Edge, SQL, and service suites.
+
 ## Phase 1: Setup
 
 **Purpose**: Capture immutable prerequisites and expose required configuration without enabling behavior.

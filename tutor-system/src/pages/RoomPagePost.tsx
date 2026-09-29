@@ -12,6 +12,7 @@ import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
 import MultiAgentSuggestionEditor from '../components/MultiAgentSuggestionEditor';
 import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/transferAssessmentUiAdapter';
 import ChecklistPanel from '../components/ChecklistPanel';
+import { ChecklistService } from '../services/checklistService';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
@@ -118,6 +119,7 @@ const RoomPagePost: React.FC = () => {
     const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
     // Local status for the transfer turn: preparing, or the named reason a preparation was refused.
     const [transferTurnStatus, setTransferTurnStatus] = useState<{ status: string; message: string } | null>(null);
+    const [waitingForTargets, setWaitingForTargets] = useState(false);
     const [newMessageCount, setNewMessageCount] = useState(0);
     const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -638,6 +640,24 @@ const RoomPagePost: React.FC = () => {
     const canSendMessages = user && user.current_role !== 'observer';
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
+    useEffect(() => {
+        if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'student') {
+            setWaitingForTargets(false);
+            return;
+        }
+        let active = true;
+        ChecklistService.getChecklistForStudent(currentRoom.id, user.id)
+            .then(checklist => {
+                if (active) setWaitingForTargets(!checklist ||
+                    checklist.detection_areas.length + checklist.verification_steps.length === 0);
+            })
+            .catch(() => { if (active) setWaitingForTargets(true); });
+        return () => { active = false; };
+    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, messages.length]);
+    const learnerIds = Array.from(new Set(participants
+        .filter(participant => participant.current_role === 'student')
+        .map(participant => participant.id)));
+    const transferStudentId = learnerIds.length === 1 ? learnerIds[0] : null;
 
     const handleToggleGuardMode = async () => {
         if (!currentRoom) return;
@@ -915,7 +935,7 @@ const RoomPagePost: React.FC = () => {
                 </div>
 
                 {/* Structured transfer-assessment review for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && transferDraft?.decision.decision.mode === 'assessment' && (
+                {user?.current_role === 'tutor' && canUseAI && transferDraft && (
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
                         onSubmit={confirmTransferDraft}
@@ -923,14 +943,6 @@ const RoomPagePost: React.FC = () => {
                         onCancel={clearAISuggestion}
                     />
                 )}
-                {user?.current_role === 'tutor' && canUseAI && transferDraft && transferDraft.decision.decision.mode !== 'assessment' && (
-                    <section aria-label="Tutor response review" className="transfer-turn-status">
-                        <p>{transferDraft.decision.response}</p>
-                        <button type="button" onClick={() => setMessageText(transferDraft.decision.response)}>Use response</button>
-                        <button type="button" onClick={clearAISuggestion}>Discard</button>
-                    </section>
-                )}
-
                 {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
                     <MultiAgentSuggestionEditor
                         messages={multiAgentDraft.generatedMessages}
@@ -1118,9 +1130,12 @@ const RoomPagePost: React.FC = () => {
             )}
 
             {/* Checklist Panel - Only for tutors */}
+            {waitingForTargets && <p role="status">Waiting for the tutor to set up learning targets.</p>}
             {roomId && user?.current_role === 'tutor' && (
                 <ChecklistPanel 
                     roomId={roomId} 
+                    transferEnabled={currentRoom.transfer_learning_enabled === true}
+                    studentId={transferStudentId}
                     isVisible={showChecklist}  
                     onToggleVisibility={() => setShowChecklist(!showChecklist)}
                     progressLocked={currentRoom.active_response_mode === 'guard'}

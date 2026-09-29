@@ -5,12 +5,16 @@
 
 ## Contract Records
 
-### `TutorDecisionV3`
+### `TransferAssessmentDraft`
+
+Active assessment preparation returns `{ reason, target_item_id, assessment }`. `target_item_id` identifies one approved item in the current learner checklist. `assessment` is a `PrivateAssessment`; its stem is the question, and its evidence IDs belong to the focused learner. The draft has no tutor decision mode, teaching instruction, or duplicate response field. It is held only in teacher review state.
+
+### Historical `TutorDecisionV3`
 
 | Field | Shape | W2 rule |
 |---|---|---|
 | `reason` | non-empty string | Serialized first; supervisor-facing and grounded in observable evidence. |
-| `decision.mode` | `tutoring` / `guard` / `assessment` | Assessment is a turn mode, not a room participation mode. |
+| `decision.mode` | `tutoring` / `guard` / `assessment` | Historical parser field; active assessment generation uses `TransferAssessmentDraft`. |
 | `decision.instruction` | real teaching instruction, `guard`, or `transfer_assess` | Tutoring requires one real teaching instruction; Guard permits `guard` or one real teaching instruction; assessment requires `transfer_assess`. |
 | `decision.target_item_id` | known item ID or null | Required for assessment; null for tutoring and Guard. |
 | `response` | non-empty string | Assessment stem source; bounded by rendering rules. |

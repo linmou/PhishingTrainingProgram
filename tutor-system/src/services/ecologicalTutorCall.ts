@@ -169,6 +169,21 @@ export function buildTransferTutorUserMessageV3(request: TransferTutorRequestV3)
   return JSON.stringify(request);
 }
 
+export function buildTransferAssessmentRequest(
+  context: TransferTutorRequestContextV3,
+  targetItemId: string
+): string {
+  const target = context.checklist_items.find(item => item.id === targetItemId);
+  if (!target || !context.eligible_assessment_item_ids.includes(targetItemId)) {
+    throw new Error('Assessment target is not eligible in this context');
+  }
+  return JSON.stringify({
+    contract_version: 'transfer_assessment_request_v1',
+    context,
+    target_item: target,
+  });
+}
+
 export const GUARD_MODE_POLICY = [
   'Return exactly one JSON object with these required string fields: mode, mode_reason, suggested_response.',
   'mode must be exactly "tutoring" or "guard" and must be decided independently on every turn.',

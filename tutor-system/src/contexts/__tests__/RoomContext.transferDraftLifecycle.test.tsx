@@ -15,7 +15,7 @@ import '@testing-library/jest-dom';
 import { RoomProvider, useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
-import { getAIConfig } from '../../services/aiService';
+import { generateTutorSuggestion, getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 import {
@@ -31,12 +31,11 @@ import {
   learnerBMessageRow,
   preparedCandidate,
   preparedTurnResult,
-  preparedTutoringTurnResult,
   reviewedDelivery,
   transferChecklist,
   transferRoom,
 } from '../../test-support/transferRoomFixtures';
-import type { TutorDecisionV3 } from '../../types/assessment';
+import type { TransferAssessmentDraft } from '../../types/assessment';
 
 jest.mock('../../services/supabase', () => ({
   supabase: { channel: jest.fn(), from: jest.fn(), storage: { from: jest.fn() } },
@@ -76,7 +75,7 @@ const RoomProbe: React.FC<{ onReady: (room: ReturnType<typeof useRoom>) => void 
 type RealtimeHandler = (payload: { new: Record<string, unknown> }) => void;
 
 describe('RoomContext teacher transfer review lifecycle', () => {
-  let prepareTurn: jest.SpyInstance;
+  let prepareAssessment: jest.SpyInstance;
   let sendReviewed: jest.SpyInstance;
   let room: ReturnType<typeof useRoom> | null;
   let messageInsertHandler: RealtimeHandler | null;
@@ -163,7 +162,8 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(transferChecklist);
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
 
-    prepareTurn = jest.spyOn(transferAssessmentService, 'prepareTurn').mockResolvedValue(preparedTurnResult);
+    jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
+    prepareAssessment = jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
   });
 
@@ -190,7 +190,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       await room!.generateAIResponse();
     });
 
-    expect(prepareTurn).toHaveBeenCalledWith({
+    expect(prepareAssessment).toHaveBeenCalledWith({
       roomId: TRANSFER_ROOM_ID,
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
       checklistId: CHECKLIST_ID,
@@ -199,23 +199,30 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.studentId).toBe(LEARNER_A_ID);
     expect(room!.transferDraft!.checklistId).toBe(CHECKLIST_ID);
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
+    expect(generateTutorSuggestion).not.toHaveBeenCalled();
   });
 
-  it('keeps the tutoring-turn item id as null rather than the text "null"', async () => {
-    prepareTurn.mockResolvedValue(preparedTutoringTurnResult);
+  it('routes an explicit no-assessment result to the ordinary tutor', async () => {
+    prepareAssessment.mockResolvedValue(null);
+    (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+      success: true,
+      suggestion: 'Verify the request through an official channel.',
+      decision: { mode: 'tutoring', instruction: 'scaffolding', suggested_response: 'Verify the request through an official channel.' },
+      contextMessages: [LEARNER_A_MESSAGE_ID],
+    });
     await mountRoom();
 
     await act(async () => {
       await room!.generateAIResponse();
     });
 
-    expect(room!.transferDraft!.itemId).toBeNull();
-    expect(room!.transferDraft!.itemId as unknown).not.toBe('null');
+    expect(room!.transferDraft).toBeNull();
+    expect(generateTutorSuggestion).toHaveBeenCalledTimes(1);
   });
 
   it('sends the edited decision with the prepared scope exactly once', async () => {
     const callOrder: string[] = [];
-    prepareTurn.mockImplementation(async () => {
+    prepareAssessment.mockImplementation(async () => {
       callOrder.push('prepare');
       return preparedTurnResult;
     });
@@ -246,10 +253,9 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       } });
     });
 
-    const edited: TutorDecisionV3 = {
+    const edited: TransferAssessmentDraft = {
       ...preparedCandidate,
-      response: 'An edited stem asks for a first step.',
-      assessment: { ...preparedCandidate.assessment!, stem: 'An edited stem asks for a first step.' },
+      assessment: { ...preparedCandidate.assessment, stem: 'An edited stem asks for a first step.' },
     };
 
     await act(async () => {
@@ -274,19 +280,13 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   });
 
   it('refuses an assessment turn with no checklist item before calling the service', async () => {
-    prepareTurn.mockResolvedValue({ ...preparedTurnResult, item_id: null });
+    prepareAssessment.mockResolvedValue({ ...preparedTurnResult, item_id: null });
     await mountRoom();
-    await act(async () => {
-      await room!.generateAIResponse();
-    });
-
-    await expect(act(async () => {
-      await room!.confirmTransferDraft(preparedCandidate);
-    })).rejects.toThrow(/item/i);
+    await expect(act(async () => { await room!.generateAIResponse(); })).rejects.toThrow(/candidate/i);
 
     expect(sendReviewed).not.toHaveBeenCalled();
     expect(room!.messages.map((message) => message.id)).not.toContain(DELIVERED_QUESTION_ID);
-    expect(room!.transferDraft).not.toBeNull();
+    expect(room!.transferDraft).toBeNull();
   });
 
   it('does not deliver twice when a send is already in flight', async () => {

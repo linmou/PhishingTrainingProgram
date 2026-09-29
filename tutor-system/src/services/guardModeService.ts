@@ -37,7 +37,18 @@ export interface ReviewedTransferResponseInput {
 export async function sendReviewedTutorResponseV3(
   input: ReviewedTransferResponseInput
 ): Promise<ReviewedDeliveryDTO> {
-  return transferAssessmentService.sendReviewed(input);
+  if (!input.itemId || !isAssessmentDecision(input.reviewedPayload) || !input.reviewedPayload.assessment) {
+    throw new Error('Only assessment drafts use the transfer reviewed-send path');
+  }
+  return transferAssessmentService.sendReviewed({
+    ...input,
+    itemId: input.itemId,
+    reviewedPayload: {
+      reason: input.reviewedPayload.reason,
+      target_item_id: input.itemId,
+      assessment: input.reviewedPayload.assessment,
+    },
+  });
 }
 
 /** Validate the editor payload before it reaches the server-side review operation. */

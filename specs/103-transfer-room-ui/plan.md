@@ -5,6 +5,8 @@
 
 ## Summary
 
+Refactor revision (2026-09-29): expose target setup in the room even when the panel is collapsed, persist tutor-approved generated/manual items, and route transfer response generation through `prepareAssessment()` before the shared tutor. Treat only an explicit no-assessment result as permission to use ordinary tutor generation. Use the existing assessment editor for assessment-only drafts.
+
 Extend the existing React room flow so component 102 owns transfer-assessment envelope parsing and the UI consumes its canonical service projections without changing the shared service or becoming a second authority for identity, grading, attempts, terminal state, disclosure, or progress. The plan covers React-specific state adaptation, stable learner/message/checklist focus, deduplicated initial/realtime/reconnect ingress, teacher review/edit/reconfirm/send including a learner-safe explanation, learner radio/checkbox selection and explicit submission, server retry/terminal feedback, exact-once question rendering, participant-local folding, binary tutoring/Guard room state, and role-scoped progress/export projections.
 
 The implementation stays within the existing `RoomContext` and room page/component composition. SQL/RLS, trusted principal and provider behavior, model prompts, Promptfoo, and release-browser execution remain upstream or downstream gates. The original plan is preserved at SHA-256 `33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2`.
@@ -45,7 +47,7 @@ The current branch already contains partial transfer artifacts: `types/assessmen
 Ownership boundaries for this plan:
 
 - **Component 101**: domain contracts, progress-pair semantics, and shared assessment/progress type exports in `tutor-system/src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`.
-- **Component 102**: `tutor-system/src/services/transferAssessmentService.ts`, typed API DTO/envelope exports, the six-operation mapping (`initializeChecklist`, `postMessage`, `prepareTurn`, `sendReviewed`, `processMessage`, `analyzeMessage`), service contract tests, trusted operations, authorization, atomicity, idempotency, answer keys, and backend lifecycle outcomes. There is no draft table, so there is no `review_draft`, `reject_draft`, or `regenerate_draft` operation.
+- **Component 102**: `tutor-system/src/services/transferAssessmentService.ts`, typed API DTO/envelope exports, the six-operation mapping (`initializeChecklist`, `postMessage`, `prepareAssessment`, `sendReviewed`, `processMessage`, `analyzeMessage`), service contract tests, trusted operations, authorization, atomicity, idempotency, answer keys, and backend lifecycle outcomes. There is no draft table, so there is no `review_draft`, `reject_draft`, or `regenerate_draft` operation.
 - **Component 103**: React-specific narrowing and adapter-local view-state types in UI-owned files, room state convergence, teacher/learner rendering, review lifecycle controls, public/private view projections, and React integration tests. It does not edit component 101's shared type files or component 102's service and tests.
 - **Component 105**: release-browser evidence and promotion decisions.
 
@@ -55,7 +57,7 @@ Root `AGENTS.md` and agent context are integration-owned. Running `.specify/scri
 
 ### 1. Typed consumer boundary
 
-Consume component 101's shared assessment/progress domain exports and component 102's exported `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed operation envelopes for preparation, delivery, persisted messages, and lifecycle results. The React-only review, public-question, and lifecycle view-state types are defined with their mappings in `src/contexts/transferAssessmentUiAdapter.ts` before entering `RoomContext`; the adapter imports 101/102 types unchanged and does not redeclare DTOs, edit shared type barrels, or map API operation names. Components receive the candidate `TutorDecisionV3` only on the teacher review path and `PublicAssessmentDTO` only on learner/public message paths.
+Consume component 101's shared assessment/progress domain exports and component 102's exported `PublicAssessmentDTO`, `PublicMessageDTO`, `ReviewedDeliveryDTO`, `ProcessedMessageDTO`, and typed operation envelopes for preparation, delivery, persisted messages, and lifecycle results. The React-only review, public-question, and lifecycle view-state types are defined with their mappings in `src/contexts/transferAssessmentUiAdapter.ts` before entering `RoomContext`. Components receive the `TransferAssessmentDraft` only on the teacher review path and `PublicAssessmentDTO` only on learner/public message paths.
 
 The learner question projection consumes component 102's exact `PublicAssessmentDTO { id, student_id, selection_type, stem, options }`. The adapter maps the canonical `ProcessedMessageDTO` fields into component-owned presentation states without redefining or renaming the shared DTO. Learner feedback reads only `terminal_failure_feedback`, and only when `answer_outcome` is terminal `failed`; retry and passed results keep it null. Unknown fields are not spread into public component props or exports.
 
@@ -73,7 +75,7 @@ Persisted lifecycle records and server idempotency outcomes are authoritative. L
 
 ### 4. Teacher review lifecycle
 
-The review surface uses structured decision data. Editing stem, selection type, options, key, or learner-safe explanation clears confirmation and marks the candidate dirty. Confirmation is UI-local review state, not a server write. Send consumes component 102's typed `sendReviewed` method with the confirmed `TutorDecisionV3` and the prepared scope identity. There is no draft row, so there is nothing to reject, regenerate, or re-revise on the server: discarding or replacing an unconfirmed candidate is a local action that persists nothing, and no operation is invented for it. Server validation, scope, and conflict outcomes (`ITEM_VALIDATION_FAILED`, `INVALID_SCOPE`, `WRONG_LEARNER`, `ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_FEATURE_DISABLED`, `FORBIDDEN`) are explicit and leave no phantom learner message.
+The review surface uses structured assessment data. Editing stem, selection type, options, key, or learner-safe explanation marks the candidate dirty. Confirmation is UI-local review state, not a server write. Send consumes component 102's typed `sendReviewed` method with the confirmed `TransferAssessmentDraft` and the prepared scope identity. Discarding or replacing an unconfirmed candidate persists nothing. Server validation, scope, and conflict outcomes (`ITEM_VALIDATION_FAILED`, `INVALID_SCOPE`, `WRONG_LEARNER`, `ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_FEATURE_DISABLED`, `FORBIDDEN`) are explicit and leave no phantom learner message.
 
 `itemId` stays `string | null` end to end: a tutoring or Guard turn has no checklist item and must pass `null`, never the text `"null"`.
 
@@ -106,7 +108,7 @@ Read transfer progress for the selected learner through the existing owner-scope
 ### Phase 2: Teacher lifecycle (US1)
 
 - Complete `AssessmentDraftEditor` lifecycle behavior for dirty edits, validation, confirmation, authoritative server failures, and send errors.
-- Integrate `RoomContext` and `RoomPagePost` with typed `prepareTurn`/`sendReviewed` calls and selected learner/message identity.
+- Integrate `RoomContext` and `RoomPagePost` with typed `prepareAssessment`/`sendReviewed` calls and selected learner/message identity.
 - Preserve legacy `AISuggestionBox` behavior for non-transfer rooms.
 
 ### Phase 3: Learner public flow (US2)

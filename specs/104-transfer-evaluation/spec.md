@@ -4,9 +4,13 @@
 
 **Feature Branch**: `104-transfer-evaluation`  
 **Created**: 2026-09-11  
-**Updated**: 2026-09-22  
+**Updated**: 2026-09-29
 **Status**: Draft  
 **Input**: Upgrade transfer assessment evaluation for server-authoritative two-attempt sequences and learner-safe explanation correctness/safety.
+
+## TransferLearning Refactor Contract
+
+Evaluation must cover semantic learner-evidence classification, target selection from two rooms with different approved targets, mandatory eligible assessment preparation, protection/correction/Guard and lifecycle blockers, and assessment-item quality. Eligible routing asserts zero shared-tutor calls, including provider-error cases. The request builder used in evaluation must match production's assessment-only request. Retain shared-tutor tutoring/Guard regression coverage and preserve immutable historical run artifacts and hashes.
 
 ## Scope and Authority
 

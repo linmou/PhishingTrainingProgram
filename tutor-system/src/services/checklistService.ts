@@ -17,6 +17,7 @@ import { SCENARIO_TEMPLATES } from './detectionTemplates';
 import { ConversationMessage } from '../types';
 import { generateChecklistFromSystemPrompt } from './checklistIntegration';
 import { transferAssessmentService } from './transferAssessmentService';
+import type { LearningTargetInput } from '../types/checklist';
 
 export class ChecklistService {
   private static async assertProgressUnlocked(roomId: string): Promise<void> {
@@ -103,16 +104,19 @@ export class ChecklistService {
   static async initializeTransferChecklistForStudent(
     roomId: string,
     studentId: string,
-    templateName: string
+    items: LearningTargetInput[]
   ): Promise<SessionChecklist> {
-    if (!roomId || !studentId || !templateName.trim()) {
-      throw new Error('Room, student, and template are required for a transfer checklist');
+    if (!roomId || !studentId || !items.length || items.some(item =>
+      !item.area_text.trim() || !item.priority ||
+      !['detection_area', 'verification_step', 'understanding', 'behavior'].includes(item.item_type)
+    )) {
+      throw new Error('Room, student, and valid learning targets are required');
     }
 
     const result = await transferAssessmentService.initializeChecklist({
       roomId,
       studentId,
-      templateName: templateName.trim(),
+      items,
     });
 
     const checklist = await this.getChecklistForStudent(roomId, studentId);

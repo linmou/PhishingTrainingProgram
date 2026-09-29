@@ -5,6 +5,12 @@
 **Status**: Planned  
 **Input**: Component 103 ownership for W7-W8 room lifecycle and teacher/learner UI integration.
 
+## TransferLearning Refactor Contract
+
+A transfer-enabled room remains identifiable before targets exist. The room shows a tutor-visible target-setup reminder even with a collapsed checklist; the tutor can generate from room configuration or enter targets manually and approve them before persistence. Empty generation asks for configuration editing or manual entry. Learners see a setup-waiting state. Transfer progress stays read-only while target setup remains available.
+
+For a transfer room, `generateAIResponse()` waits for focus-message analysis and asks `prepareAssessment()` first. A returned candidate opens the existing assessment editor and skips the shared tutor. An explicit `null` uses ordinary shared-tutor tutoring/Guard generation. Setup, analysis, provider, and validation errors remain visible errors. Discarding an unsent assessment does not satisfy eligibility. Reviewed send rechecks eligibility on the server; a stale target or active Guard blocks delivery.
+
 ## Scope
 
 This specification is the source of truth for the teacher and learner room experience: question review and delivery, answer selection and submission, room-state continuity, progress visibility, and role-appropriate exports. The room consumes the approved domain rules and trusted-service results; it does not decide identity, grading, attempts, or progress. Supporting plans and contracts define the exact service fields and local view state. Database, authorization, provider, evaluation, and release-browser behavior remain separate capabilities.
@@ -132,8 +138,8 @@ As a room participant, I need progress and exports scoped to my role and learner
 ### Key Entities
 
 - **Room participation**: The room's tutoring or Guard state, separate from a question presented during one tutor turn.
-- **Tutor decision**: The structured choice to tutor, use Guard, or present an assessment, with compatible instructions and target.
-- **Teacher review question**: A prepared question shown to the teacher with its target, answer, editable explanation, learner preview, and confirmation state. It is not a saved draft.
+- **Tutor decision**: The shared tutor's tutoring or Guard choice when no transfer assessment is due.
+- **Teacher review question**: An assessment-only draft shown to the teacher with its target, answer, editable explanation, learner preview, and confirmation state. It is not a saved draft.
 - **Public question**: The learner-visible stem, selection instruction, choices, and routing information, without private grading material. Its exact field shape is defined by the [upstream API contract](../102-transfer-backend/contracts/assessment-api.md).
 - **Terminal failure explanation**: The correct answer and learner-safe explanation shown only to the authorized learner after the second incorrect answer.
 - **Answer message**: A learner's room message associated with the delivered question and its original parent/source.

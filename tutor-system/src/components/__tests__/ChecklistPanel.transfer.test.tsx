@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ChecklistPanel from '../ChecklistPanel';
 import { useChecklist } from '../../hooks/useChecklist';
@@ -272,5 +272,41 @@ describe('ChecklistPanel transfer presentation', () => {
     await expandFirstItem();
 
     expect(document.querySelector('.status-select')).toBeDisabled();
+  });
+
+  it('shows tutor setup actions when no transfer checklist exists', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} transferEnabled studentId={LEARNER_A_ID}
+      isVisible onToggleVisibility={jest.fn()} progressLocked />);
+
+    expect(await screen.findByRole('button', { name: 'Generate Learning Targets' })).toBeEnabled();
+    expect(screen.queryByText(/Learning targets required/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enter Manually' })).toBeEnabled();
+    expect(checklistApi.read).not.toHaveBeenCalled();
+  });
+
+  it('keeps the zero-item setup reminder out of the collapsed panel', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(buildChecklist({
+      detection_areas: [], verification_steps: [], total_items: 0,
+    }));
+    const onToggleVisibility = jest.fn();
+    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} transferEnabled studentId={LEARNER_A_ID}
+      isVisible={false} onToggleVisibility={onToggleVisibility} />);
+
+    await waitFor(() => expect(checklistApi.getActiveTransferChecklistForRoom).toHaveBeenCalled());
+    expect(screen.queryByText(/Learning targets required/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Learning Progress' }));
+    expect(onToggleVisibility).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a waiting notice without setup controls to a learner', async () => {
+    setUser('student');
+    checklistApi.getChecklistForStudent.mockResolvedValue(null);
+    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} transferEnabled studentId={LEARNER_A_ID}
+      isVisible onToggleVisibility={jest.fn()} />);
+
+    expect(await screen.findByText('Waiting for the tutor to set up learning targets.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Generate Learning Targets' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Enter Manually' })).not.toBeInTheDocument();
   });
 });

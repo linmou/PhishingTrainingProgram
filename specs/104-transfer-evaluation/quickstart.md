@@ -2,6 +2,8 @@
 
 **Intent**: provide exact validation commands for the two-attempt/explanation upgrade while keeping planning, offline evidence, and live evidence distinct.
 
+Refactor check (2026-09-29): run `rtk proxy node --test evals/promptfoo/v1/transfer/current-assessment-contract.test.js` from the repository root. It exercises production's assessment-only request builder with two distinct approved room targets and rejects invented target/evidence IDs. The frozen v3 manifest and historical run hashes below remain unchanged; they describe the earlier combined tutor contract and are not evidence that the current assessment-only path has passed its full Promptfoo gate.
+
 ## Static planning verification
 
 Run from the allocated worktree root:

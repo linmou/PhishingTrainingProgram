@@ -7,8 +7,7 @@ import {
 // @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
 import type { TransferProgress } from '../types/learningProgress.ts';
 
-// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
-export { isValidTransferProgress } from '../types/learningProgress.ts';
+export { isValidTransferProgress };
 // @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
 export type { TransferProgress } from '../types/learningProgress.ts';
 

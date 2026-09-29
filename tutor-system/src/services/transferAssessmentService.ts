@@ -2,7 +2,8 @@
 
 import { supabase } from './supabase';
 import type { Room } from '../types';
-import type { AssessmentOption, AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
+import type { LearningTargetInput } from '../types/checklist';
+import type { AssessmentOption, AssessmentOptionId, TransferAssessmentDraft } from '../types/assessment';
 import {
   PUBLIC_ASSESSMENT_DTO_KEYS,
   type AssessmentApiEnvelope,
@@ -282,11 +283,11 @@ export class TransferAssessmentService {
     return data.data as T;
   }
 
-  initializeChecklist(input: { roomId: string; studentId: string; templateName: string }): Promise<{ checklist_id: string }> {
+  initializeChecklist(input: { roomId: string; studentId: string; items: LearningTargetInput[] }): Promise<{ checklist_id: string }> {
     return this.request('initialize_checklist', {
       room_id: input.roomId,
       student_id: input.studentId,
-      template_name: input.templateName,
+      items: input.items,
     });
   }
 
@@ -306,7 +307,7 @@ export class TransferAssessmentService {
     });
   }
 
-  prepareTurn(input: { roomId: string; focusStudentMessageId: string; checklistId: string }): Promise<Record<string, unknown>> {
+  prepareAssessment(input: { roomId: string; focusStudentMessageId: string; checklistId: string }): Promise<Record<string, unknown> | null> {
     return this.request('prepare_turn', {
       room_id: input.roomId,
       focus_student_message_id: input.focusStudentMessageId,
@@ -315,11 +316,11 @@ export class TransferAssessmentService {
   }
 
   async sendReviewed(input: {
-    reviewedPayload: TutorDecisionV3;
+    reviewedPayload: TransferAssessmentDraft;
     roomId: string;
     studentId: string;
     checklistId: string;
-    itemId: string | null;
+    itemId: string;
     focusStudentMessageId: string;
   }): Promise<ReviewedDeliveryDTO> {
     const result = await this.request('send_reviewed', {

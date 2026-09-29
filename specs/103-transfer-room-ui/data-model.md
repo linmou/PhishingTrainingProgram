@@ -35,10 +35,10 @@ The React-only review, public-question, and lifecycle state wrappers described b
 
 ### TeacherReviewCandidateView (component-103 UI state)
 
-The candidate is the structured `TutorDecisionV3` that `prepareTurn` returns to the authorized teacher. It has no persisted row, so this view carries:
+The candidate is the assessment-only `TransferAssessmentDraft` that `prepareAssessment` returns to the authorized teacher. It has no persisted row, so this view carries:
 
-- the prepared scope identity from the `prepareTurn` result: `room_id`, `student_id`, `checklist_id`, `item_id` (`string | null`), `focus_student_message_id`;
-- `decision`: the private structured `TutorDecisionV3` needed by the teacher editor, including key and transfer basis only in this authorized projection;
+- the prepared scope identity from the `prepareAssessment` result: `room_id`, `student_id`, `checklist_id`, `item_id` (`string`), `focus_student_message_id`;
+- `decision`: the private `TransferAssessmentDraft` needed by the teacher editor, including key and transfer basis only in this authorized projection;
 - `status`: the UI-local status listed above, derived from the teacher's own screen and from server errors. The UI does not invent or rewrite a persisted status.
 
 It carries no draft id, no revision, and no expected snapshot hash, and it has no reject or regenerate lifecycle. Teacher edit state is a copy of the structured decision until send succeeds. It must never be sent as a learner projection.

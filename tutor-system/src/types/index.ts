@@ -1,7 +1,7 @@
 // Supabase uses ISO string dates instead of Firestore Timestamps
 
 import { SystemPromptConfig } from '../services/prompts/types';
-import type { AssessmentOptionId, TutorDecisionV3 } from './assessment';
+import type { AssessmentOptionId, TransferAssessmentDraft } from './assessment';
 
 // User types
 export type UserRole = 'student' | 'tutor' | 'observer';
@@ -38,6 +38,7 @@ export interface Room {
     image_url: string | null;
     is_active: boolean;
     ai_assistant_enabled: boolean;
+    transfer_learning_enabled?: boolean;
     ai_assistant_model: string | null;
     ai_assistant_prompt: string | null;
     pre_populated_dialogue?: PrePopulatedMessage[] | null; // Added for dialogue customization
@@ -207,6 +208,7 @@ export type {
     AssessmentOptionId,
     AssessmentSelectionType,
     PrivateAssessment,
+    TransferAssessmentDraft,
     PublicAssessment,
     RoomParticipationMode as AssessmentRoomParticipationMode,
     TeachingInstruction,
@@ -259,6 +261,7 @@ export interface RoomContextType {
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string, options?: { replyToMessageId?: string; assessmentId?: string; selectedOptionIds?: AssessmentOptionId[] }) => Promise<void>;
     setResponseMode: (mode: TutorResponseMode) => Promise<void>;
+    setTransferLearningEnabled: (enabled: boolean) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
@@ -272,16 +275,15 @@ export interface RoomContextType {
     aiSuggestion: string | null;
     aiDecision: TutorActionDecision | null;
     transferDraft: {
-        decision: TutorDecisionV3;
+        decision: TransferAssessmentDraft;
         progressSnapshotHash: string;
         roomId: string;
         studentId: string;
         checklistId: string;
-        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
-        itemId: string | null;
+        itemId: string;
         focusStudentMessageId: string;
     } | null;
-    confirmTransferDraft: (decision: TutorDecisionV3) => Promise<void>;
+    confirmTransferDraft: (decision: TransferAssessmentDraft) => Promise<void>;
     finalMode: TutorResponseMode;
     updateFinalResponse: (response: string) => void;
     updateFinalMode: (mode: TutorResponseMode) => void;

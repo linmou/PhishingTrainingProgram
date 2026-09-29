@@ -25,7 +25,6 @@ import {
   learnerAMessageRow,
   preparedCandidate,
   preparedTurnResult,
-  preparedTutoringTurnResult,
   reviewedDelivery,
   transferChecklist,
   transferRoom,
@@ -118,6 +117,7 @@ describe('RoomContext transfer turn modes', () => {
 
     (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(transferChecklist);
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
+    jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
   });
 
@@ -137,8 +137,8 @@ describe('RoomContext transfer turn modes', () => {
     });
   };
 
-  const mountWithCandidate = async (result: Record<string, unknown>) => {
-    jest.spyOn(transferAssessmentService, 'prepareTurn').mockResolvedValue(result);
+  const mountWithCandidate = async (result: Record<string, unknown> | null) => {
+    jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(result);
     await mountRoom();
     await act(async () => {
       await room!.generateAIResponse();
@@ -156,12 +156,12 @@ describe('RoomContext transfer turn modes', () => {
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
   });
 
-  it('adopts guard when the server returns a guard room after the turn', async () => {
+  it('does not clear Guard when an assessment delivery is refused', async () => {
     sendReviewed.mockResolvedValue({ ...reviewedDelivery, room: { ...transferRoom, active_response_mode: 'guard' } });
-    await mountWithCandidate({ ...preparedTurnResult, item_id: null, decision: preparedTutoringTurnResult.decision });
+    await mountWithCandidate(preparedTurnResult);
 
     await act(async () => {
-      await room!.confirmTransferDraft(preparedTutoringTurnResult.decision as never);
+      await room!.confirmTransferDraft(preparedCandidate);
     });
 
     expect(room!.currentRoom!.active_response_mode).toBe('guard');
@@ -205,7 +205,7 @@ describe('RoomContext transfer turn modes', () => {
       } as never,
       room: { ...transferRoom, active_response_mode: 'tutoring' },
     });
-    (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(null);
+    jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(null);
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Verify the request through the official portal.',
@@ -244,24 +244,11 @@ describe('RoomContext transfer turn modes', () => {
     expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
   });
 
-  it('sends a tutoring turn with a real null item id, never the text "null"', async () => {
-    await mountWithCandidate(preparedTutoringTurnResult);
-
-    expect(room!.transferDraft!.itemId).toBeNull();
-
-    await act(async () => {
-      await room!.confirmTransferDraft(preparedTutoringTurnResult.decision as never);
-    });
-
-    expect(sendReviewed).toHaveBeenCalledWith(expect.objectContaining({ itemId: null }));
-    expect(JSON.stringify(sendReviewed.mock.calls[0][0])).not.toContain('"null"');
-  });
-
-  it('refuses assessment mode paired with a teaching instruction', async () => {
+  it('refuses an assessment draft with a changed target', async () => {
     await mountWithCandidate(preparedTurnResult);
     const incompatible = {
       ...preparedCandidate,
-      decision: { ...preparedCandidate.decision, instruction: 'scaffolding' as const },
+      target_item_id: 'another-target',
     };
 
     let error: unknown = null;
@@ -273,27 +260,18 @@ describe('RoomContext transfer turn modes', () => {
       }
     });
 
-    expect(String(error)).toMatch(/transfer_assess/);
+    expect(String(error)).toMatch(/target/i);
     expect(sendReviewed).not.toHaveBeenCalled();
     expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
   });
 
   it('never turns a refused assessment into a room mode', async () => {
-    await mountWithCandidate({ ...preparedTurnResult, item_id: null });
-
-    let error: unknown = null;
-    await act(async () => {
-      try {
-        await room!.confirmTransferDraft(preparedCandidate);
-      } catch (caught) {
-        error = caught;
-      }
-    });
-
-    expect(String(error)).toMatch(/item/i);
+    jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue({ ...preparedTurnResult, item_id: null });
+    await mountRoom();
+    await expect(act(async () => { await room!.generateAIResponse(); })).rejects.toThrow(/candidate/i);
     expect(sendReviewed).not.toHaveBeenCalled();
     expect(['tutoring', 'guard']).toContain(room!.currentRoom!.active_response_mode);
     expect(CHECKLIST_ITEM_ID).toBeTruthy();
-    expect(LEARNER_A_MESSAGE_ID).toBe(room!.transferDraft!.focusStudentMessageId);
+    expect(room!.transferDraft).toBeNull();
   });
 });

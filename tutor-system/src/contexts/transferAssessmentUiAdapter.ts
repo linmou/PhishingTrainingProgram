@@ -2,7 +2,8 @@
 // retaining private assessment material or inventing operation mapping.
 
 import type { Message, RoomParticipationMode } from '../types';
-import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, TutorDecisionV3 } from '../types/assessment';
+import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, TransferAssessmentDraft } from '../types/assessment';
+import { validateAssessmentDraft } from '../services/assessmentValidation';
 import {
   PUBLIC_MESSAGE_DTO_KEYS,
   TransferAssessmentService,
@@ -71,20 +72,19 @@ export interface AnswerLifecycleView {
   terminalFailureFeedback: TerminalFailureFeedbackDTO | null;
 }
 
-/** The prepared scope identity from `prepareTurn`. */
+/** The prepared scope identity from `prepareAssessment`. */
 export interface ReviewScope {
   roomId: string;
   studentId: string;
   checklistId: string;
-  /** Null for a tutoring or Guard turn: only an assessment names a checklist item. */
-  itemId: string | null;
+  itemId: string;
   focusStudentMessageId: string;
 }
 
 /** The teacher-visible candidate decision plus its local review status. */
 export interface TeacherReviewCandidateView {
   scope: ReviewScope;
-  decision: TutorDecisionV3;
+  decision: TransferAssessmentDraft;
   status: ReviewStatus;
   message: string | null;
 }
@@ -93,7 +93,6 @@ export interface TeacherReviewCandidateView {
 export type ReviewCheck = { ok: true } | { ok: false; status: ReviewStatus; message: string };
 
 const OPTION_ORDER: ReadonlyArray<AssessmentOption['id']> = ['A', 'B', 'C', 'D'];
-const TURN_MODES: ReadonlyArray<string> = ['tutoring', 'guard', 'assessment'];
 
 type ReviewFailureStatus = 'superseded' | 'validation' | 'unavailable' | 'unauthorized' | 'retryable';
 
@@ -103,6 +102,7 @@ const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_n
 const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['ASSESSMENT_FEATURE_DISABLED', 'unavailable'],
   ['AI_PROVIDER_NOT_CONFIGURED', 'unavailable'],
+  ['TARGET_SETUP_REQUIRED', 'unavailable'],
   ['AUTHORIZATION_NOT_CONFIGURED', 'unavailable'],
   // No transfer checklist in this room: the capability does not apply here at all.
   ['LEGACY_CHECKLIST', 'unavailable'],
@@ -110,6 +110,7 @@ const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['UNSUPPORTED_ROOM_SCOPE', 'unavailable'],
   // The learner already has a delivered assessment, so this delivery is superseded.
   ['ASSESSMENT_ALREADY_OPEN', 'superseded'],
+  ['ASSESSMENT_NOT_ELIGIBLE', 'superseded'],
   ['ASSESSMENT_TERMINAL', 'superseded'],
   // The prepared focus identity no longer matches the learner: prepare the turn again.
   ['WRONG_LEARNER', 'superseded'],
@@ -121,6 +122,7 @@ const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['FORBIDDEN', 'unauthorized'],
   ['UNAUTHORIZED', 'unauthorized'],
   ['AI_PROVIDER_ERROR', 'retryable'],
+  ['ANALYSIS_INCOMPLETE', 'retryable'],
   ['AI_OUTPUT_TRUNCATED', 'retryable'],
   ['PERSISTENCE_FAILED', 'retryable'],
 ];
@@ -291,7 +293,7 @@ export function readPublicQuestion(message: Message | null | undefined): PublicQ
 }
 
 /**
- * Build the teacher's review candidate from component 102's `prepareTurn` result. Returns null
+ * Build the teacher's review candidate from component 102's `prepareAssessment` result. Returns null
  * when required identity is missing, so a page cannot render an unidentified review surface.
  */
 export function createReviewCandidate(
@@ -299,10 +301,8 @@ export function createReviewCandidate(
   status: ReviewStatus = 'ready'
 ): TeacherReviewCandidateView | null {
   const source = asRecord(result);
-  const decision = asRecord(source.decision) as unknown as TutorDecisionV3;
-  const decisionBody = asRecord(decision.decision);
-  const mode = asNonEmptyString(decisionBody.mode);
-  if (!mode || !TURN_MODES.includes(mode) || typeof decision.response !== 'string') return null;
+  const decision = asRecord(source.assessment_draft) as unknown as TransferAssessmentDraft;
+  if (!asNonEmptyString(decision.reason) || !asNonEmptyString(decision.target_item_id)) return null;
 
   const roomId = asNonEmptyString(source.room_id);
   const studentId = asNonEmptyString(source.student_id);
@@ -310,12 +310,8 @@ export function createReviewCandidate(
   const focusStudentMessageId = asNonEmptyString(source.focus_student_message_id);
   if (!roomId || !studentId || !checklistId || !focusStudentMessageId) return null;
 
-  // A tutoring or Guard turn carries no item. The text "null" is never a valid item id.
-  const rawItemId = source.item_id;
-  const itemId = rawItemId === null || rawItemId === undefined || rawItemId === 'null'
-    ? null
-    : asNonEmptyString(rawItemId);
-  if (rawItemId !== null && rawItemId !== undefined && rawItemId !== 'null' && !itemId) return null;
+  const itemId = asNonEmptyString(source.item_id);
+  if (!itemId || decision.target_item_id !== itemId) return null;
 
   return {
     scope: { roomId, studentId, checklistId, itemId, focusStudentMessageId },
@@ -330,7 +326,7 @@ export function createReviewCandidate(
  * helper. The private key and transfer basis go in and are not part of the result.
  */
 export function publicAssessmentForDecision(
-  decision: TutorDecisionV3 | null | undefined,
+  decision: TransferAssessmentDraft | null | undefined,
   messageId: string,
   studentId: string
 ): PublicAssessmentDTO | null {
@@ -353,34 +349,18 @@ export function publicAssessmentForDecision(
  * instead of being coerced into a payload the server would reject.
  */
 export function assertDeliverableReview(
-  decision: TutorDecisionV3 | null | undefined,
+  decision: TransferAssessmentDraft | null | undefined,
   scope: ReviewScope,
   knownItemIds?: ReadonlyArray<string>,
   knownMessageIds?: ReadonlyArray<string>
 ): ReviewCheck {
   const refuse = (message: string): ReviewCheck => ({ ok: false, status: 'validation', message });
-  const body = asRecord(decision?.decision);
-  const mode = asNonEmptyString(body.mode);
-
-  if (!decision || !mode || !TURN_MODES.includes(mode)) {
-    return refuse('The reviewed turn has no valid mode.');
-  }
+  if (!decision) return refuse('The assessment draft is missing.');
   if (!asNonEmptyString(scope.roomId) || !asNonEmptyString(scope.studentId) ||
       !asNonEmptyString(scope.checklistId) || !asNonEmptyString(scope.focusStudentMessageId)) {
     return refuse('The reviewed turn is missing its learner, checklist, or focus message identity.');
   }
 
-  if (mode !== 'assessment') {
-    if (decision.assessment) return refuse('A tutoring or Guard turn must not carry an assessment payload.');
-    if (body.instruction === 'transfer_assess') {
-      return refuse('The transfer_assess instruction is only valid for an assessment turn.');
-    }
-    return { ok: true };
-  }
-
-  if (body.instruction !== 'transfer_assess') {
-    return refuse('An assessment turn must use the transfer_assess instruction.');
-  }
   if (!scope.itemId) return refuse('An assessment turn must name the checklist item it assesses.');
   if (!decision.assessment || !isCompletePublicAssessment({
     id: 'pending',
@@ -392,11 +372,11 @@ export function assertDeliverableReview(
     return refuse('The assessment content is incomplete or malformed.');
   }
 
-  const targetItemId = asNonEmptyString(body.target_item_id);
-  if (targetItemId && scope.itemId !== targetItemId) {
+  const targetItemId = asNonEmptyString(decision.target_item_id);
+  if (scope.itemId !== targetItemId) {
     return refuse('The reviewed target item no longer matches the prepared item.');
   }
-  if (knownItemIds && targetItemId && !knownItemIds.includes(targetItemId)) {
+  if (knownItemIds && !knownItemIds.includes(targetItemId!)) {
     return refuse('The reviewed target item was not offered for this turn.');
   }
 
@@ -404,6 +384,15 @@ export function assertDeliverableReview(
   if (knownMessageIds && Array.isArray(sourceEvidenceIds)) {
     const unknownEvidence = sourceEvidenceIds.filter((id) => !knownMessageIds.includes(id));
     if (unknownEvidence.length > 0) return refuse('The assessment cites evidence from outside this turn.');
+  }
+
+  try {
+    validateAssessmentDraft(decision, {
+      knownItemIds: knownItemIds || [scope.itemId],
+      knownMessageIds: knownMessageIds || sourceEvidenceIds || [],
+    });
+  } catch (error) {
+    return refuse(error instanceof Error ? error.message : 'Assessment content is invalid.');
   }
 
   return { ok: true };
