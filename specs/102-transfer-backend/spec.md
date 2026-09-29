@@ -126,7 +126,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 ### Functional Requirements
 
 - **FR-001**: The system MUST preserve the existing six public operation names: `initialize_checklist`, `post_message`, `analyze_message`, `prepare_turn`, `send_reviewed`, and `process_message`, each using one versioned success/error envelope.
-- **FR-002**: Every transfer operation MUST derive identity and authorization from a trusted server verifier; browser-supplied IDs, roles, display names, local state, room passwords, and direct table access MUST NOT establish authority.
+- **FR-002**: The browser MUST send the current application user ID in `x-application-user-id`; the server MUST load role and room membership from the database before authorizing each operation. The application does not use Supabase Auth. The header is self-asserted and does not prove caller identity.
 - **FR-003**: The system MUST fail closed with stable, role-safe errors when authorization, provider, feature, or required scope configuration is absent or invalid.
 - **FR-004**: `prepare_turn` MUST return a structurally validated candidate only to an authorized teacher and MUST persist no delivered assessment or grading authority.
 - **FR-005**: A reviewed assessment MUST contain the component-101 private assessment contract, including a valid learner-safe explanation, and MUST be revalidated after teacher edits.
@@ -146,7 +146,7 @@ The trusted provider boundary generates the versioned tutor decision, including 
 - **FR-019**: The production provider boundary MUST generate and validate `learner_safe_explanation`, retain provider credentials and raw attempts server-side, allow at most one format-only repair, detect truncation, and never silently synthesize a question or result.
 - **FR-020**: Production and component 104 MUST consume the same versioned transfer request/context builders while the production prompt, credentials, provider call, private response, and grading remain backend-owned.
 - **FR-021**: Transfer-specific data mutations MUST use versioned trusted operations with direct untrusted execution revoked. Component verification MUST compare the migration's RPC signatures, private columns, grants, RLS, and runtime contracts against a migrated disposable PostgreSQL 17 restore with Supabase-like roles. Generated-type parity against the deployed Supabase schema remains an integration gate.
-- **FR-022**: Component 102 may complete its local verification gate on a disposable PostgreSQL 17 restore while transfer assessment capability remains disabled. Activation MUST wait for deployed Supabase authorization, storage, concurrency, provider, integration, UI, evaluation, browser, generated-type, and rollback gates.
+- **FR-022**: `TRANSFER_ASSESSMENT_ENABLED` MUST default to `true` so hosted verification can run, and setting it to `false` MUST disable assessment operations. Verification results MUST remain distinct from release readiness and MUST record any unverified authorization, storage, concurrency, provider, integration, UI, evaluation, browser, generated-type, and rollback gates.
 - **FR-023**: Component evidence MUST keep backend tests distinct from component 103 UI, component 104 evaluation, and release-browser evidence and MUST record blocked or errored lanes as not passed.
 
 ### Key Entities

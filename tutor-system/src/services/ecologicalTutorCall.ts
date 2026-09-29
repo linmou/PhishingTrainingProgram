@@ -4,8 +4,9 @@
  * "write the tutor response" instruction the room should use.
  */
 
-import type { ConversationMessage, InteractionMode, PrePopulatedMessage, TutorResponseMode } from '../types';
-// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { ConversationMessage, InteractionMode, PrePopulatedMessage, TutorResponseMode } from '../types/index.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
 import { ACTIVE_TUTOR_AGENT_PROMPT } from './prompts/activeTutorAgentPrompt.ts';
 
 export interface EcologicalCaseVars {

@@ -1,12 +1,16 @@
 // Purpose: apply the transfer-policy event/state table as the single pure progress authority.
 
-// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
-import { isValidTransferProgress } from '../types/learningProgress.ts';
-import type { TransferProgress } from '../types/learningProgress';
+import {
+  isValidTransferProgress,
+  // @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+} from '../types/learningProgress.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { TransferProgress } from '../types/learningProgress.ts';
 
-// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
 export { isValidTransferProgress } from '../types/learningProgress.ts';
-export type { TransferProgress } from '../types/learningProgress';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+export type { TransferProgress } from '../types/learningProgress.ts';
 
 export type LearningEventKind =
   | 'initial_signal'

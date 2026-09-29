@@ -1,6 +1,7 @@
 // Purpose: grade normalized assessment selections by exact set equality only.
 
-import type { AssessmentOptionId } from '../types/assessment';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { AssessmentOptionId } from '../types/assessment.ts';
 
 export function gradeSelection(
   selected: ReadonlyArray<AssessmentOptionId>,
