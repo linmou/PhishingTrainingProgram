@@ -41,6 +41,8 @@ Workflow run `36554316472` seeded the staging room, returning checklist `211e1b6
 
 The next hosted preparation still returned `AI_OUTPUT_INVALID`. Provider attempts inspected in run `36555110601` show the model chose assessment with a valid decision object, but used `selection_type: "single_choice"` and a string `transfer_basis`. The prompt now specifies `single`/`multiple` and the four required object fields. This second prompt edit leaves the context, provider settings, answer authority, and SQL state unchanged. Hosted retest remains pending.
 
+After deployment run `36555326283`, a direct Edge preparation returned a complete assessment candidate, and Playwright displayed its tutor review panel. Browser confirmation found the generated three-sentence stem and then a reason longer than the shared 40-word limit. The tutor shortened the stem in the browser, but the reason is not editable there. The prompt now includes both review limits and requests a reason under 25 words. No assessment was sent by that attempt; hosted retest is pending.
+
 ## Earlier Attempt
 
 Before the environment restrictions changed, the draft installed successfully in disposable PostgreSQL database `staging_runtime_20260929`. The existing RPC regression script progressed through delivery, attempts, terminal outcomes, and Guard cases, but did not complete: its final stale fixture attempted delivery to an already covered item and the delivery validator rejected it. The fixture and Guard replay handling were then corrected. Those final changes have not been rerun. No claim of a passing regression suite or browser E2E is made.

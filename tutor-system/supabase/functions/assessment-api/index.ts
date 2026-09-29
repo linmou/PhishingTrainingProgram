@@ -20,6 +20,7 @@ const PROVIDER_MAX_TOKENS = 1200;
 
 const TRANSFER_V3_SYSTEM_PROMPT = [
   'Return exactly one JSON object with keys reason, learning_evidence, decision, response, assessment.',
+  'reason must be a concise observable conclusion of at most 40 words; keep it under 25 words. Do not narrate your decision process.',
   'learning_evidence must be an array. decision must be an object with keys mode, instruction, target_item_id; never a string.',
   'prior_participation_mode describes the previous turn, not the required decision for this turn.',
   'For tutoring or guard, set decision.target_item_id and assessment to null. For assessment, set decision.mode to assessment, decision.instruction to transfer_assess, and decision.target_item_id to one eligible_assessment_item_ids value.',
@@ -27,6 +28,7 @@ const TRANSFER_V3_SYSTEM_PROMPT = [
   'An assessment has selection_type exactly "single" or "multiple", stem, rendered_text, options as four objects with ids A, B, C, D and nonempty text, correct_option_ids as an array of those ids, learner_safe_explanation, and transfer_basis.',
   'transfer_basis must be an object with concept_rule, source_context, changed_context, and source_evidence_message_ids (an array containing the real focus student message id). Never use a string for transfer_basis or "single_choice" for selection_type.',
   'Set response to the learner-facing question stem for assessment mode. Use a nonempty learner-facing response in every mode.',
+  'For assessment mode, the question stem must have at most two sentences, and the question plus all four option texts must total at most 80 words.',
   'learner_safe_explanation must be concise, age-appropriate, grounded in the correct option, safe to disclose after terminal failure, and contain no hidden reasoning.',
   'Never invent IDs. Return JSON only, without markdown or hidden chain-of-thought.',
 ].join('\n');
