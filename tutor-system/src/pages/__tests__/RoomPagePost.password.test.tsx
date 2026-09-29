@@ -15,8 +15,8 @@ jest.mock('../../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../../contexts/RoomContext', () => ({ useRoom: jest.fn() }));
 
 describe('RoomPagePost password prompt', () => {
-    const mount = (joinRoom: jest.Mock) => {
-        (useAuth as jest.Mock).mockReturnValue({ user: null, loading: false });
+    const mount = (joinRoom: jest.Mock, authState: { user: any; loading: boolean } = { user: null, loading: false }) => {
+        (useAuth as jest.Mock).mockImplementation(() => authState);
         (useRoom as jest.Mock).mockReturnValue({
             currentRoom: null,
             messages: [],
@@ -62,6 +62,31 @@ describe('RoomPagePost password prompt', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    it('joins once with the restored learner after a cold load', async () => {
+        const joinRoom = jest.fn().mockResolvedValue(undefined);
+        const authState = { user: null as any, loading: true };
+        const view = mount(joinRoom, authState);
+
+        expect(joinRoom).not.toHaveBeenCalled();
+
+        authState.user = { id: 'learner-1', current_role: 'student' };
+        authState.loading = false;
+        const room = (
+            <MemoryRouter initialEntries={['/room/room-1']}>
+                <Routes>
+                    <Route path="/room/:roomId" element={<RoomPagePost />} />
+                </Routes>
+            </MemoryRouter>
+        );
+        view.rerender(room);
+
+        await waitFor(() => expect(joinRoom).toHaveBeenCalledWith('room-1', undefined));
+        expect(joinRoom).toHaveBeenCalledTimes(1);
+
+        view.rerender(room);
+        expect(joinRoom).toHaveBeenCalledTimes(1);
     });
 
     it('keeps the password prompt open after an incorrect password so the learner can retry', async () => {

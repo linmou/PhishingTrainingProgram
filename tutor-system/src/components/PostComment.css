@@ -263,6 +263,56 @@
     opacity: 0.55;
 }
 
+.public-assessment-history {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding-top: 12px;
+    border-top: 1px solid #d9dee5;
+}
+
+.public-assessment-history-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #394958;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.public-assessment-history-nav button {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #c6d0d9;
+    border-radius: 4px;
+    background: #fff;
+    color: #263b4d;
+    cursor: pointer;
+}
+
+.public-assessment-history-nav button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.public-assessment-history-nav button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.public-assessment-saved-selection strong {
+    font-size: 13px;
+}
+
+.public-assessment-saved-selection ul {
+    margin: 4px 0 0;
+    padding-left: 20px;
+    overflow-wrap: anywhere;
+}
+
 .public-assessment [role='status'],
 .public-assessment [role='alert'] {
     margin: 0;

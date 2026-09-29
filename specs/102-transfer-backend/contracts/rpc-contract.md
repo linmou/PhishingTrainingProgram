@@ -1,8 +1,26 @@
-# Trusted RPC Contract
+# Production RPC Inventory: Transfer Assessment
 
-<!-- Intent: freeze the versioned storage operations, transaction boundaries, lock order, and grants. -->
+<!-- Intent: record current production assessment RPC definitions and their storage behavior, inspected 2026-09-28. -->
 
-## Common Rules
+## Current Production RPCs
+
+The following definitions are present in the production database.
+
+| Function | Signature | Production body behavior |
+|---|---|---|
+| send_reviewed_tutor_response_v3 | jsonb, uuid, uuid, uuid, uuid, uuid, uuid, uuid | Validates a reviewed tutor payload and scope. In assessment mode, inserts a tutor question into public.messages with options, key, lifecycle, checklist/item, and selection type. Returns the message without assessment_key. |
+| post_assessment_message_v1 | uuid, text, uuid, uuid, uuid, uuid | Validates the assessment question and target learner, then stores the learner answer as a public.messages row with assessment_id. |
+| process_assessment_message_v1 | uuid, uuid, uuid | Finds the related question, resolves the answer from message content, updates the question result/lifecycle, and calls the learning-event path. Reprocessing the same answer message returns an already-processed result. |
+
+All three assessment-specific functions are SECURITY DEFINER and check that the database role is service_role or postgres. Their request-id arguments do not implement delivery or answer-write deduplication. The processing function recognizes a repeated answer message, but does not use its request-id argument for that behavior.
+
+The v3 assessment insert and v1 processor both reference public.messages.assessment_key. That column is absent from the live production relation. The v3 function also does not insert into private.transfer_assessments; that private table contained zero rows at inspection. Therefore catalog presence is not evidence that the assessment sequence runs successfully.
+
+## Historical Component 102 RPC Design (Not Production)
+
+The remaining contract below records the local component-102 v2 design. It is retained for historical test and implementation evidence and does not describe current production RPCs.
+
+## Historical Common Rules
 
 - The Edge Function derives the actor and validates room/role scope before calling an RPC.
 - Transfer mutation RPCs accept the server-derived actor and request ID, execute only for `service_role`/`postgres`, and revoke `PUBLIC`, `anon`, and `authenticated` execution.
@@ -10,7 +28,7 @@
 - Results are allowlisted JSON. Private rows are never returned wholesale.
 - Existing public tables are not a grading authority. The trusted Edge handler obtains the private processing context, runs component 101's pure answer resolver, and sends its result to the service-role commit RPC. The private assessment row is locked before attempt count or lifecycle changes.
 
-## Operations
+## Historical Operations
 
 | RPC | Version / status | Obligation |
 |---|---|---|
@@ -24,7 +42,7 @@
 
 Old transfer RPC versions remain revoked from untrusted callers and are not browser fallbacks. Migration may replace their bodies or revoke/drop obsolete signatures after dependency inspection; it must not leave two live grading authorities.
 
-## `send_reviewed_tutor_response_v4`
+## Historical `send_reviewed_tutor_response_v4` Contract
 
 Inputs: reviewed `TutorDecisionV3`, room, student, checklist, item, focus learner message, server-derived actor, request ID.
 
@@ -40,13 +58,13 @@ For assessment mode it must:
 
 Any error rolls back both records.
 
-## `post_assessment_message_v2`
+## Historical `post_assessment_message_v2` Contract
 
 For an assessment answer, the RPC requires `assessment_id`, parent question message ID, and non-empty selected option IDs from the displayed A-D set. It validates the actor is the target learner and persists canonical deduplicated IDs on the answer message. It does not accept an attempt number, correctness, key, explanation, or progress result from the caller.
 
 Malformed, cross-scope, unknown-option, terminal, or legacy-incomplete submissions create no scored attempt. Ordinary non-assessment messages preserve existing behavior.
 
-## `process_assessment_message_v2`
+## Historical `process_assessment_message_v2` Contract
 
 Inputs: assessment ID, stored learner answer message ID, server-derived actor, request ID, expected attempt count, expected resolution, resolver answer outcome, stored selected option IDs, resolver next progress, and resolver applied transition. Only the trusted Edge handler may call this service-role RPC.
 
@@ -61,7 +79,7 @@ The Edge handler first calls `get_transfer_assessment_processing_context_v1`, ru
 
 The RPC does not regrade the key. It serializes and validates the trusted resolver result against current persisted state, then returns stored authoritative counts. A third distinct submission cannot allocate an ordinal. An invalid terminal progress transition raises `INVALID_TRANSITION` and rolls back the whole call. If Guard defers a progress event, the transaction commits the terminal attempt/lifecycle plus explicit deferred learning event without changing protected progress. An authorized second-failure response may then receive terminal feedback; rollback or an unrecorded event receives none.
 
-## Constraints and Indexes
+## Historical Constraints and Indexes
 
 - Unique `question_message_id` and `delivery_request_id` on private assessments.
 - One open private assessment per `(room_id, student_id)` through a correctly scoped private-table partial unique index.
@@ -71,6 +89,6 @@ The RPC does not regrade the key. It serializes and validates the trusted resolv
 - Check lifecycle/result/terminal-answer consistency.
 - Check new open/passed/failed records have non-empty key and learner-safe explanation; `legacy_incomplete` is exempt but ungradable.
 
-## Component And Hosted Evidence
+## Historical Component And Hosted Evidence
 
 Native tests on a disposable PostgreSQL 17 restored copy with Supabase-like roles verify grants, direct-write denial, key privacy, delivery idempotency, first-wrong persistence, pass on either attempt, second-wrong terminal disclosure, duplicate retries, two-session races, third-attempt rejection, wrong-scope rejection, rollback, actual history, Guard behavior, and synthetic legacy preservation. The local catalog comparison verifies RPC identities and private columns. Deployed Supabase grants/RLS, PostgREST and Edge authentication, and generated hosted types require separate integration evidence.

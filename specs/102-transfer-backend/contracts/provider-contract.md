@@ -1,10 +1,12 @@
 # Component 102 Provider Contract
 
-<!-- Intent: define the Edge Function provider behavior and request parity contract. -->
+<!-- Intent: define the repository Edge Function provider behavior and request parity contract. -->
+
+This is the component-102 repository contract. The production database catalog inspection does not verify provider configuration or deployed Edge Function behavior.
 
 ## Required Configuration
 
-The Edge Function reads the configured tutor provider values from its Supabase secrets, plus the required model setting:
+The Edge Function reads its configured provider values from Supabase secrets, plus the required model setting:
 
 ```text
 REACT_APP_OAI_API_KEY=<configured-value>
@@ -12,7 +14,7 @@ REACT_APP_OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OAI_MODEL=qwen3.5-flash
 ```
 
-All three are required in the Edge Function environment. The `REACT_APP_` prefix is exposed in a CRA browser bundle, but values configured as Supabase Edge Function secrets remain server-side at runtime. There is no hard-coded or runtime model fallback. Missing configuration returns `AI_PROVIDER_NOT_CONFIGURED` before a provider request.
+All three are required in the Edge Function environment. Give the Edge Function a distinct provider key: CRA exposes browser `REACT_APP_*` values in its bundle, while separately configured Supabase Edge secrets remain server-side at runtime. There is no hard-coded or runtime model fallback. Missing configuration returns `AI_PROVIDER_NOT_CONFIGURED` before a provider request.
 
 ## Shared Request Boundary
 
@@ -26,7 +28,7 @@ Component 102 retains these pure exports in `tutor-system/src/services/ecologica
 
 Production and component 104 serialize through the same builders. The shared module contains no production system prompt, credentials, provider transport, key, learner answer, or grading result. Component 104 owns cases/rubrics, not a copied request schema.
 
-## Production Request
+## Component 102 Request Implementation
 
 Only `tutor-system/supabase/functions/assessment-api/index.ts` composes the provider request. It uses:
 

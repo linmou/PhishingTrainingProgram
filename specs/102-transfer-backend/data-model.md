@@ -1,12 +1,40 @@
-# Data Model: Server-Authoritative Transfer Assessment Backend
+# Production Data Model: Transfer Assessment Backend
 
-<!-- Intent: define the private grading entities, public projection fields, and atomic lifecycle invariants. -->
+<!-- Intent: record the production assessment storage shape inspected on 2026-09-28. -->
 
-## Existing Policy and Progress
+## Current Production Data Model
+
+The live public.messages relation has these assessment-related columns:
+
+| Column | Type | Observed use |
+|---|---|---|
+| assessment_id | uuid | Links a learner answer message to its question message. |
+| assessment_options | jsonb | Stores displayed options on the tutor question. |
+| assessment_lifecycle | text | Tracks question lifecycle. |
+| assessment_answer_message_id | uuid | Links the processed learner answer. |
+| assessment_selected_option_ids | text[] | Stores resolved option IDs. |
+| assessment_result | text | Stores the result. |
+| assessment_closed_at | timestamptz | Stores terminal processing time. |
+| assessment_checklist_id | uuid | Associates the question with its checklist. |
+| assessment_item_id | uuid | Associates the question with its checklist item. |
+| assessment_selection_type | text | Stores single or multiple selection. |
+| assessment_student_id | uuid | Stores the intended learner identity. |
+
+The live public.messages relation has no assessment_key column.
+
+The private.transfer_assessments table exists with these columns: id, question_message_id, room_id, student_id, checklist_id, item_id, focus_student_message_id, selection_type, correct_option_ids, learner_safe_explanation, transfer_basis, reviewed_private_payload, lifecycle, attempt_count, terminal_answer_message_id, terminal_result, delivery_request_id, closed_at, created_at, and updated_at. It contained zero rows at inspection. The production assessment RPCs described in [rpc-contract.md](contracts/rpc-contract.md) do not read or write this table.
+
+The private.learning_event_inbox table also exists and contained zero rows at inspection. The assessment processor calls the learning-event function after grading.
+
+## Historical Component 102 Target Model (Not Production)
+
+The remaining sections preserve the local component-102 target model and are not a description of the production schema.
+
+## Historical Policy and Progress
 
 Transfer checklists remain owner-scoped `transfer_v1` rows. Component 101 owns the valid progress pairs and terminal event transitions. Component 102 persists those transitions without adding another mastery field.
 
-## Public Entities
+## Historical Public Entities
 
 ### `public.messages`
 
@@ -26,7 +54,7 @@ The delivered question remains an ordinary tutor message. New deliveries use:
 
 `assessment_key` is removed from public authority. Existing recoverable values are moved private before the public column is cleared/dropped. `assessment_student_id` must equal the private assessment `student_id` and the owner of its `transfer_v1` checklist at delivery. It allows room consumers to route controls but never authorizes submission. Public rows never contain `rendered_text`, the learner-safe explanation, transfer basis, rationale, reviewed private payload, raw provider output, or attempt ledger.
 
-## Private Entities
+## Historical Private Entities
 
 ### `private.transfer_assessments`
 
@@ -87,7 +115,7 @@ The Edge Function records each provider attempt through service-role-only storag
 
 Terminal pass/fail uses the existing causal learning-event ledger. The event key includes assessment and terminal answer identities. First incorrect attempts create no learning event. If Guard becomes active after answer resolution, the terminal attempt and original inbox event commit as deferred without progress. A room transition from Guard to tutoring replays deferred terminal assessment events in creation order through a database trigger, whether the mode change is reviewed or manual. Replay retains each event ID and dedupe key, writes one evidence and history row if the item remains partially covered, and rejects an invalidated transition without changing progress. Repeated mode updates do not reapply the event.
 
-## Lifecycle
+## Historical Lifecycle
 
 ```text
 delivery -> open(attempt_count=0)
@@ -97,13 +125,13 @@ open(after wrong #1) + wrong #2 -> failed, terminal progress event, terminal fai
 passed|failed|cancelled|legacy_incomplete + submission -> no mutation
 ```
 
-## Processed DTO Invariants
+## Historical Processed DTO Invariants
 
 `processing_state` describes application mechanics: `applied`, `duplicate`, `rejected`, or `deferred`. `answer_outcome` describes learning lifecycle: `retry`, `passed`, `failed`, or null. A duplicate may return the original `answer_outcome` with `already_processed=true`.
 
 `terminal_failure_feedback` is non-null if and only if the authorized learner receives a terminal `failed` outcome. Its exact fields are `correct_option_ids` and `learner_safe_explanation`. Every other projection uses null.
 
-## Lock and Transaction Order
+## Historical Lock and Transaction Order
 
 1. Resolve verified principal and authorize room/learner outside the RPC body in the Edge Function.
 2. Read the private processing context and resolve the stored answer with component 101 inside the trusted Edge handler.
@@ -113,7 +141,7 @@ passed|failed|cancelled|legacy_incomplete + submission -> no mutation
 6. For terminal outcomes, apply the learning event, evidence, progress, and actual history before marking the assessment terminal. A rejected transition rolls back the whole call.
 7. Return an allowlisted result only after commit. A committed second failure may disclose terminal feedback even when its learning event is explicitly `deferred` by Guard; rollback exposes no terminal feedback.
 
-## Migration Reconciliation
+## Historical Migration Reconciliation
 
 - Inspect hosted schema and archived migration state before applying the forward migration.
 - Move any existing `messages.assessment_key` into a private `legacy_incomplete` record tied to the message, then clear/drop the public key field.

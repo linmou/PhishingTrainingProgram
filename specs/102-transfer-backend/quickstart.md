@@ -1,6 +1,8 @@
-# Backend Verification Quickstart
+# Component 102 Local Verification Quickstart
 
 <!-- Intent: define the exact verification order and evidence needed to accept component 102 without overstating unrun hosted or downstream gates. -->
+
+This runbook records local component-102 v2 verification on disposable restored copies. It does not verify the production v1 RPC path. Some commands refer to historical component-worktree files that are not in the current checkout; use this as evidence provenance, not as a current execution guide. Current production catalog and schema findings are in [implementation evidence](implementation-evidence.md).
 
 ## Preconditions
 

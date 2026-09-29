@@ -570,6 +570,47 @@ describe('RoomContext learner answer path', () => {
     });
   });
 
+  it('does not process an ordinary reply to an assessment question during room restore', async () => {
+    const replyId = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+    initialMessages = [
+      deliveredQuestionRow,
+      deliveredAnswerRow,
+      {
+        ...deliveredAnswerRow,
+        id: replyId,
+        assessment_id: null,
+        content: 'Can you explain this question?',
+      },
+    ];
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID,
+      assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'applied',
+      answer_outcome: 'retry',
+      attempt_number: 1,
+      attempts_used: 1,
+      attempts_remaining: 1,
+      selected_option_ids: ['A'],
+      transition: null,
+      feedback_required: false,
+      code: null,
+      already_processed: true,
+      terminal: false,
+      terminal_failure_feedback: null,
+    });
+
+    await mountRoom();
+
+    expect(processMessage).toHaveBeenCalledTimes(1);
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    const reply = room!.messages.find((message) => message.id === replyId) as unknown as {
+      content: string;
+      answerLifecycle: unknown;
+    };
+    expect(reply.content).toBe('Can you explain this question?');
+    expect(reply.answerLifecycle).toBeNull();
+  });
+
   it('keeps the accepted terminal lifecycle when reload also re-reads a rejected concurrent answer', async () => {
     const rejectedAnswerId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
     let secondRoom: ReturnType<typeof useRoom> | null = null;

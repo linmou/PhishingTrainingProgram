@@ -2,14 +2,21 @@
 
 import React from 'react';
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AssessmentOptionId } from '../types/assessment';
 import type { AnswerLifecycleView, PublicQuestionView } from '../contexts/transferAssessmentUiAdapter';
 
 export interface PublicAssessmentQuestionProps {
   question: PublicQuestionView;
   answerLifecycle?: AnswerLifecycleView | null;
+  attempts?: AssessmentAnswerAttempt[];
   canAnswer?: boolean;
   onSubmit?: (selectedOptionIds: AssessmentOptionId[]) => Promise<void> | void;
+}
+
+export interface AssessmentAnswerAttempt {
+  messageId: string;
+  lifecycle: AnswerLifecycleView | null;
 }
 
 /**
@@ -22,13 +29,23 @@ export interface PublicAssessmentQuestionProps {
 const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
   question,
   answerLifecycle = null,
+  attempts = [],
   canAnswer = false,
   onSubmit,
 }) => {
   const [selected, setSelected] = useState<AssessmentOptionId[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const resolved = answerLifecycle?.answerOutcome === 'passed' || answerLifecycle?.answerOutcome === 'failed';
-  const disabled = !canAnswer || submitting || answerLifecycle?.terminal === true || resolved;
+  const [viewedAnswerId, setViewedAnswerId] = useState<string | null>(null);
+  const selectedIndex = viewedAnswerId === null
+    ? attempts.length - 1
+    : Math.max(0, attempts.findIndex((attempt) => attempt.messageId === viewedAnswerId));
+  const viewedAnswer = attempts[selectedIndex];
+  const displayedLifecycle = attempts.length > 0 ? viewedAnswer.lifecycle : answerLifecycle;
+  const latestAnswer = attempts[attempts.length - 1];
+  const currentLifecycle = answerLifecycle ?? latestAnswer?.lifecycle;
+  const pendingAnswer = latestAnswer && (!latestAnswer.lifecycle || latestAnswer.lifecycle.processingState === 'deferred');
+  const resolved = currentLifecycle?.answerOutcome === 'passed' || currentLifecycle?.answerOutcome === 'failed';
+  const disabled = !canAnswer || submitting || pendingAnswer || currentLifecycle?.terminal === true || resolved;
 
   const toggle = (id: AssessmentOptionId) => {
     if (disabled) return;
@@ -84,22 +101,61 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
           {submitting ? 'Submitting answer…' : 'Submit answer'}
         </button>
       )}
-      {answerLifecycle?.answerOutcome === 'retry' && (
-        <p role="status">
-          Incorrect. {answerLifecycle.attemptsRemaining} {answerLifecycle.attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining.
-        </p>
+      {attempts.length > 0 && (
+        <section className="public-assessment-history" aria-label="Answer history">
+          <div className="public-assessment-history-nav">
+            <button
+              type="button"
+              aria-label="Previous answer"
+              title="Previous answer"
+              disabled={selectedIndex === 0}
+              onClick={() => setViewedAnswerId(attempts[selectedIndex - 1].messageId)}
+            >
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button>
+            <span>Answer {selectedIndex + 1} of {attempts.length}</span>
+            <button
+              type="button"
+              aria-label="Next answer"
+              title="Next answer"
+              disabled={selectedIndex === attempts.length - 1}
+              onClick={() => setViewedAnswerId(attempts[selectedIndex + 1].messageId)}
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+          {displayedLifecycle?.selectedOptionIds && (
+            <div className="public-assessment-saved-selection">
+              <strong>Your answer</strong>
+              <ul>
+                {displayedLifecycle.selectedOptionIds.map((id) => {
+                  const option = question.options.find((candidate) => candidate.id === id);
+                  return <li key={id}>{id}. {option?.text ?? id}</li>;
+                })}
+              </ul>
+            </div>
+          )}
+        </section>
       )}
-      {answerLifecycle?.answerOutcome === 'passed' && <p role="status">Correct.</p>}
-      {answerLifecycle?.answerOutcome === 'failed' && answerLifecycle.terminalFailureFeedback && (
-        <div role="status">
-          <p>{answerLifecycle.terminalFailureFeedback.learner_safe_explanation}</p>
-          <p>Correct option(s): {answerLifecycle.terminalFailureFeedback.correct_option_ids.join(', ')}</p>
-        </div>
-      )}
-      {answerLifecycle?.processingState === 'deferred' && answerLifecycle.answerOutcome === null && (
+      {attempts.length > 0 && !displayedLifecycle && (
         <p role="status">Your answer is still processing.</p>
       )}
-      {answerLifecycle?.processingState === 'rejected' && answerLifecycle.answerOutcome === null && (
+      {displayedLifecycle?.answerOutcome === 'retry' && (
+        <p role="status">
+          Incorrect. {displayedLifecycle.attemptsRemaining} {displayedLifecycle.attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining.
+        </p>
+      )}
+      {displayedLifecycle?.answerOutcome === 'passed' && <p role="status">Correct.</p>}
+      {displayedLifecycle?.answerOutcome === 'failed' && displayedLifecycle.terminalFailureFeedback && (
+        <div role="status">
+          <p>{displayedLifecycle.terminalFailureFeedback.learner_safe_explanation}</p>
+          <p>Correct option(s): {displayedLifecycle.terminalFailureFeedback.correct_option_ids.join(', ')}</p>
+        </div>
+      )}
+      {displayedLifecycle?.processingState === 'deferred' && displayedLifecycle.answerOutcome === null && (
+        <p role="status">Your answer is still processing.</p>
+      )}
+      {displayedLifecycle?.processingState === 'rejected' && displayedLifecycle.answerOutcome === null && (
         <p role="alert">This answer was rejected. Please try again.</p>
       )}
     </div>

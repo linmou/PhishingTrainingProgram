@@ -1,9 +1,9 @@
 ## Intent
-Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing, learning progress export, and room data export behavior.
+Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-09-11
-- Implementation commit ID: `ff21a7e`
+- Updated: 2026-09-29
+- Implementation commit ID: `2988dd0`
 
 # Tutor-System Documentation Hub
 
@@ -50,6 +50,9 @@ This directory contains comprehensive architectural and implementation documenta
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login
 
 ### Testing & Quality Assurance
+- **[database-migration-workflow.md](./database-migration-workflow.md)** - Disposable PostgreSQL refresh, local migration testing, progress records, and human online application
+- **[Live snapshot/restore update](./doc_update_record/documentation_update_record_v2026_09_28_live_snapshot_restore.md)** - Snapshot and restore evidence, corrected local setup steps, and remaining migration parity gates
+- **[Staging schema sync update](./doc_update_record/documentation_update_record_v2026_09_29_staging_schema_sync.md)** - Schema-only staging bootstrap and the production assessment RPC mismatch
 - **[testing-strategy.md](./testing-strategy.md)** - Complete testing documentation for Tasks 1-3, including test coverage, execution instructions, and maintenance guidelines
 - **[test-coverage-gap-analysis.md](./test-coverage-gap-analysis.md)** - Comprehensive analysis and implementation of missing test coverage for RoomContext and RoomPage components  
 - **[test-fixes-summary.md](./test-fixes-summary.md)** - Technical details of test implementation fixes and patterns

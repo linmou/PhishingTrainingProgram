@@ -37,6 +37,7 @@ import {
     projectRoomMessage,
     publicAssessmentForDecision,
     readAnswerLifecycle,
+    readAssessmentId,
     withAnswerLifecycle,
 } from './transferAssessmentUiAdapter';
 import type { AnswerLifecycleView, RoomMessageView } from './transferAssessmentUiAdapter';
@@ -569,7 +570,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     const question = allMessages[questionIndex] as RoomMessageView;
                     const assessmentId = question.publicQuestion?.id;
-                    if (!assessmentId) continue;
+                    if (!assessmentId || readAssessmentId(answer) !== assessmentId) continue;
 
                     try {
                         const processed = await transferAssessmentService.processMessage(answer.id, assessmentId);

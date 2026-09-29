@@ -6,6 +6,10 @@
 **Status**: Ready for implementation  
 **Input**: Upgrade the deterministic transfer domain for two server-authoritative attempts and an editable learner-safe explanation.
 
+## Scope and Authority
+
+This specification is the source of truth for the required transfer-decision, grading, progress, and disclosure behavior. Its plan, data model, and contracts define the concrete structures and implementation boundaries needed to realize those outcomes. This feature defines deterministic domain behavior; persistence, authorization, API transport, room presentation, prompt generation, semantic evaluation, and release acceptance remain separate capabilities.
+
 ## Clarifications
 
 ### Session 2026-09-22
@@ -20,7 +24,7 @@ A learner may make up to two valid option selections for one delivered transfer 
 
 **Why this priority**: The attempt lifecycle controls grading, feedback disclosure, and durable progress. It cannot be inferred from page-local state.
 
-**Independent Test**: Replay correct-first, incorrect-then-correct, incorrect-then-incorrect, duplicate, stale, malformed, assistance, reload-equivalent, and third-submission fixtures through the pure resolver and verify one deterministic result for each server-owned lifecycle snapshot.
+**Independent Test**: Observe the outcomes for a correct first answer, an incorrect answer followed by a correct answer, two incorrect answers, duplicate and stale submissions, malformed input, assistance, reload-equivalent state, and a third submission. Each outcome must follow the same authoritative attempt state.
 
 **Acceptance Scenarios**:
 
@@ -33,19 +37,19 @@ A learner may make up to two valid option selections for one delivered transfer 
 
 ### User Story 2 - Author one learner-safe explanation (Priority: P1)
 
-A trusted tutor decision carries a dedicated explanation of why the correct answer is correct. A teacher can review and edit that private field before delivery. The server may retain it on any terminal result, but learners receive it only after terminal failure on the second incorrect attempt.
+A trusted tutor decision carries a dedicated explanation of why the correct answer is correct. A teacher can review and edit that private explanation before delivery. The server may retain it on any terminal result, but learners receive it only after terminal failure on the second incorrect attempt.
 
 **Why this priority**: The explanation must exist in the shared domain contract before generation, storage, teacher editing, or role-safe terminal feedback can work.
 
-**Independent Test**: Validate private decisions with present, missing, blank, and non-string explanations; project their pre-terminal public assessment shape; then inspect terminal and retry lifecycle results for field-level privacy.
+**Independent Test**: Check assessment decisions with present, missing, blank, and non-text explanations, then inspect what is visible before resolution, after a retry, after passing, and after terminal failure.
 
 **Acceptance Scenarios**:
 
-1. **Given** an assessment-mode `TutorDecisionV3`, **When** its private assessment has a non-empty `learner_safe_explanation`, **Then** contract validation accepts the field with the private answer key and transfer basis.
-2. **Given** an assessment-mode decision with a missing, blank, or non-string explanation, **When** it is validated, **Then** validation rejects it with a stable explanation error category.
-3. **Given** an unresolved question, first incorrect result, or correct result, **When** learner disclosure is evaluated, **Then** component 102 is not authorized to project the correct option IDs or learner-safe explanation.
-4. **Given** a second incorrect result, **When** terminal feedback is produced, **Then** the failed result authorizes component 102 to project the correct option IDs and learner-safe explanation to the learner.
-5. **Given** tutoring or Guard mode, **When** the decision is validated, **Then** the assessment and its explanation remain null.
+1. **Given** a tutor decision for an assessment, **When** its private question includes a non-empty learner-safe explanation, **Then** it is accepted together with the private answer key and transfer basis.
+2. **Given** an assessment decision with a missing, blank, or non-text explanation, **When** it is validated, **Then** the decision is rejected.
+3. **Given** an unresolved question, first incorrect result, or correct result, **When** learner disclosure is evaluated, **Then** the learner receives neither the correct answer nor its explanation.
+4. **Given** a second incorrect result, **When** terminal feedback is produced, **Then** the result authorizes the learner to receive the correct answer and explanation.
+5. **Given** a tutoring or Guard decision, **When** it is validated, **Then** it contains no assessment or assessment explanation.
 
 ### User Story 3 - Apply transfer progress transitions consistently (Priority: P1)
 
@@ -53,7 +57,7 @@ The learning workflow applies evidence and assessment outcomes to the existing `
 
 **Why this priority**: Progress state is the durable meaning of the assessment. A single deterministic authority is required so UI, prompts, and persistence cannot disagree about learner progress.
 
-**Independent Test**: Run the complete 4-state by 7-event reducer matrix and stateful golden sequences, verifying accepted pairs, no-change behavior, and rejected invalid transitions.
+**Independent Test**: Observe the result of every supported progress state and learning event, including no-change cases, and confirm that unsupported state pairs or events are rejected.
 
 **Acceptance Scenarios**:
 
@@ -64,42 +68,42 @@ The learning workflow applies evidence and assessment outcomes to the existing `
 5. **Given** `covered/good` or `partially_covered/basic`, **When** a later contradiction is classified, **Then** progress reopens as `needs_review/basic`.
 6. **Given** `needs_review/basic` after failure, **When** a repair signal and later learner evidence arrive, **Then** the learner may return to `partially_covered/basic` and a different context may be assessed.
 
-### User Story 4 - Validate and render one inspectable v3 transfer decision (Priority: P1)
+### User Story 4 - Produce one inspectable transfer question (Priority: P1)
 
-A trusted tutor decision produces one reviewable transfer assessment with a known target, cited source evidence, four canonical options, a valid key, a meaningful changed context, and bounded learner-visible text. Learner-facing output omits the private key, transfer basis, and rationale.
+A trusted tutor decision produces one reviewable transfer question with a known target, cited source evidence, four ordered options, a valid answer, a meaningful changed context, and bounded learner-visible text. Learner-facing output omits the private answer, transfer basis, and rationale.
 
-**Why this priority**: Stable versioned contracts and bounded rendering let downstream backend, UI, and evaluation components consume the same behavior without relying on copied text or hidden assumptions.
+**Why this priority**: Consistent decision rules and bounded question content let the rest of the product rely on the same behavior without copied or hidden assumptions.
 
-**Independent Test**: Validate golden valid/invalid `TutorDecisionV3` and `TransferTurnContext` payloads, verify the pure public output contract excludes private fields, and exercise rendering at every stated boundary. Component 102 separately verifies API projection and transport.
+**Independent Test**: Check valid and invalid tutoring, Guard, and assessment decisions against the current learner and evidence context. Confirm that accepted questions meet the stated content boundaries and that learner-visible content excludes private information.
 
 **Acceptance Scenarios**:
 
-1. **Given** an assessment decision, **When** it contains `assessment` mode, `transfer_assess`, one known target, and a valid item, **Then** the v3 contract accepts it and preserves reason-first serialization.
+1. **Given** a decision to present a transfer question, **When** it includes the required assessment action, one known target, and a valid question, **Then** it is accepted according to the linked decision contract.
 2. **Given** an item, **When** it is rendered, **Then** it has exactly A-D options, the correct single/multiple instruction, at most two stem sentences, and at most 80 learner-visible word-like segments.
-3. **Given** an item with a missing or blank learner-safe explanation, 81 word-like segments, three stem sentences, duplicate option text, an invalid key cardinality, or an unknown evidence ID, **When** it is validated, **Then** validation rejects it with a stable error category.
-4. **Given** a valid private decision, **When** component 101 exposes the unresolved public assessment contract for component 102, **Then** answer keys, learner-safe explanation, transfer basis, tutor rationale, raw model output, API operations, and transport fields are absent.
-5. **Given** tutoring mode, **When** the decision is validated, **Then** it requires one real teaching instruction with a null target and null assessment.
-6. **Given** Guard mode, **When** the decision is validated, **Then** it accepts `guard` or one real teaching instruction with a null target and null assessment, and it cannot create a room-level assessment mode.
+3. **Given** a question with a missing or blank learner-safe explanation, 81 word-like segments, three stem sentences, duplicate option text, an invalid number of correct options, or an unknown evidence source, **When** it is validated, **Then** it is rejected.
+4. **Given** a valid private decision, **When** its learner-visible question is formed, **Then** the answer key, learner-safe explanation, transfer basis, tutor rationale, and raw model output are absent. The exact public representation is defined by the linked contract.
+5. **Given** a tutoring decision, **When** it is validated, **Then** it requires one real teaching instruction and no assessment target or question.
+6. **Given** a Guard decision, **When** it is validated, **Then** it permits a Guard action or one real teaching instruction with no assessment target or question, and it cannot create a room-level assessment mode.
 
 ### User Story 5 - Sequence feedback and later transfer without chains (Priority: P2)
 
-The pure transfer assessment orchestrator coordinates delivery state, learner answer handling, feedback-first follow-up, repair, contradiction, spontaneous transfer, duplicate/stale messages, and no-chain behavior while leaving API transport, public projection, teacher review, and persistence boundaries explicit for downstream components.
+The tutoring workflow handles delivery, learner answers, feedback-first follow-up, repair, contradiction, spontaneous transfer, duplicate or stale messages, and prevents repeated assessment chains. API transport, public projection, teacher review, and persistence are defined by their respective supporting contracts.
 
-**Why this priority**: Correct individual functions are insufficient if the lifecycle schedules an assessment at the wrong time or treats an unsent, stale, or already-resolved event as current.
+**Why this priority**: Correct individual decisions are insufficient if the workflow schedules a question at the wrong time or treats an unsent, stale, or already-resolved event as current.
 
-**Independent Test**: Replay the named orchestrator sequences from golden fixtures and verify each observable disposition and next-action boundary without a provider, database, React component, or browser.
+**Independent Test**: Walk through review and delivery, answer resolution, feedback, repair, contradiction, spontaneous transfer, and later-question scenarios. Confirm the required order and that stale, duplicate, or unconfirmed activity does not start another assessment sequence.
 
 **Acceptance Scenarios**:
 
 1. **Given** a valid assessment draft, **When** it is reviewed and delivered, **Then** the learner receives one ordinary tutoring turn carrying an assessment decision and the room does not enter a separate assessment participation mode.
 2. **Given** a correct answer on either attempt, **When** resolution completes, **Then** tutoring feedback is required before another assessment is eligible.
 3. **Given** one wrong answer, **When** resolution completes, **Then** the assessment remains open; only a second wrong answer begins `needs_review` -> repair -> new learner signal -> different context, and failure alone does not enter Guard.
-4. **Given** a clarification, assistance request, spontaneous transfer, contradiction, duplicate message, or stale message, **When** the sequence is replayed, **Then** the result matches the corresponding golden fixture and does not create a second assessment chain.
+4. **Given** a clarification, assistance request, spontaneous transfer, contradiction, duplicate message, or stale message, **When** it is handled, **Then** the documented outcome occurs without creating a second assessment chain.
 5. **Given** an explicit rejection or dirty/stale draft, **When** the teacher has not reconfirmed it, **Then** no assessment is delivered or graded and automatic re-proposal is suppressed.
 
 ## Edge Cases
 
-- Attempt authority survives reloads, remounts, reconnects, retries, and separate tabs because component 102 persists the domain attempt snapshot; a client counter is display-only.
+- Attempt authority survives reloads, remounts, reconnects, retries, and separate tabs; client display state cannot reset or replace the authoritative attempt count.
 - Only a validated selection for the current delivered assessment consumes an attempt. Empty, malformed, ambiguous, assistance, undelivered, stale, wrong-assessment, and Guard-deferred inputs consume none.
 - Duplicate answer identities return the established outcome downstream and never consume an additional attempt.
 - A correct second attempt passes; prior incorrect history cannot downgrade it.
@@ -111,7 +115,7 @@ The pure transfer assessment orchestrator coordinates delivery state, learner an
 - The rendering boundary is inclusive at 80 word-like segments and exclusive at 81; the stem boundary is inclusive at two sentences and exclusive at three.
 - Invalid progress pairs, invalid transition events, unknown target IDs, unknown source message IDs, duplicate option IDs/text, invalid key cardinality, and incompatible mode/instruction combinations must be rejected rather than silently repaired.
 - A generated or teacher-edited draft that is not delivered is not answerable; a terminal question is not regraded by a later answer.
-- Unresolved and retryable public shapes exclude `correct_option_ids`, `learner_safe_explanation`, transfer basis, tutor rationale, and raw model output. A passed result may retain terminal feedback privately for server/audit use but MUST mark learner disclosure unauthorized. Only a second-incorrect failed result authorizes component 102 to project the key and explanation to the learner.
+- Unresolved and retryable learner-visible results exclude the correct answer, learner-safe explanation, transfer basis, tutor rationale, and raw model output. A passed result may retain terminal feedback privately for server/audit use but does not authorize learner disclosure. Only a second-incorrect failed result authorizes learner disclosure of the answer and explanation.
 - Feedback is a sequencing requirement after resolution, but an independently required protective or Guard response retains priority.
 - A later contradiction may reopen covered progress; an ordinary covered target is not routinely reassessed.
 - Existing legacy values, including legacy `excellent`/`covered` semantics, are not converted into transfer verification by this component.
@@ -120,69 +124,69 @@ The pure transfer assessment orchestrator coordinates delivery state, learner an
 
 ### Functional Requirements
 
-- **FR-001**: The component MUST expose a versioned `TutorDecisionV3` contract with reason-first serialization and explicit mode compatibility: tutoring requires one real teaching instruction with null target/assessment; Guard accepts `guard` or one real teaching instruction with null target/assessment; assessment requires `transfer_assess`, one known target, and one valid private assessment payload containing a trimmed, non-empty `learner_safe_explanation`.
-- **FR-002**: The component MUST expose a `TransferTurnContext` that carries the selected learner/message/checklist context, progress-policy version, checklist item snapshots, unresolved public assessment, eligible item IDs, feedback boundary, and progress snapshot hash without becoming a second progression authority.
+- **FR-001**: A structured tutor decision MUST distinguish tutoring, Guard, and assessment behavior and reject incompatible instructions or targets. Tutoring requires one real teaching instruction and no assessment target; Guard permits its protective action or one real teaching instruction and no assessment target; assessment requires the assessment action, one known target, and a valid private question with a trimmed, non-empty learner-safe explanation. The exact decision shape and serialization are defined by [the decision contract](contracts/tutor-decision-v3.md).
+- **FR-002**: A transfer decision MUST be evaluated against the selected learner and message, checklist and item context, progress-policy version, any unresolved public question, eligible targets, feedback boundary, and current progress snapshot. This context MUST NOT become a second source of progress authority; its exact structure is defined in the [data model](data-model.md).
 - **FR-003**: A valid transfer item MUST use exactly four canonical A-D options, a `single` key of one option or a `multiple` key of two or three options, and a changed context that tests the same concept through a relevant new situation rather than a cosmetic brand/name substitution or an unstated prerequisite; source evidence IDs MUST be known to the current context.
-- **FR-004**: The component MUST define an unresolved public assessment contract that omits answer keys, learner-safe explanation, transfer basis, tutor rationale, raw model output, API operations, and transport fields. Both terminal result variants MUST retain correct option IDs and `learner_safe_explanation` privately and MUST carry an explicit learner-disclosure policy.
-- **FR-005**: The answer parser MUST recognize only explicit labels or exact option text, normalize case/Unicode/punctuation/order/deduplication as specified, and classify ambiguous alternatives, content questions, and unrecognized prose without guessing.
+- **FR-004**: A learner-visible unresolved question MUST omit the answer key, learner-safe explanation, transfer basis, tutor rationale, and raw model output. Passed and failed results MAY retain the answer and explanation privately, but MUST state explicitly whether learner disclosure is authorized. Exact public and terminal representations are defined in the [domain contract](contracts/transfer-domain-determinism.md).
+- **FR-005**: Answer interpretation MUST recognize only explicit option labels or exact option text. It MUST apply the specified case, Unicode, punctuation, order, and duplicate normalization without guessing semantic answers, and MUST distinguish ambiguous alternatives, content questions, and unrecognized prose from a valid selection.
 - **FR-006**: The grader MUST return pass only for exact set equality after deduplication and order normalization; it MUST return fail for every other selection and MUST require no explanation or confidence value.
 - **FR-007**: Rendering and validation MUST enforce exactly four options, the correct selection instruction, a maximum of two stem sentences, and a maximum of 80 word-like segments, with deterministic boundary errors.
-- **FR-008**: The learning-progress reducer MUST preserve only the approved `status`/`understanding_level` pairs and implement the complete 4-state by 7-event transition matrix, including initial evidence, repair evidence, spontaneous transfer, contradiction, pass, fail, and no-change.
-- **FR-009**: The component MUST expose a `TransferAttemptSnapshot` with assessment identity, accepted-attempt count `0 | 1 | 2`, resolution `open | passed | failed`, and processed answer-message identities sufficient for deterministic duplicate suppression.
+- **FR-008**: Transfer behavior MUST preserve only the approved `status`/`understanding_level` pairs and define the outcome for every supported progress state and learning event, including initial evidence, repair evidence, spontaneous transfer, contradiction, pass, fail, and no change.
+- **FR-009**: The current assessment state MUST distinguish the assessment identity, accepted-attempt count (`0`, `1`, or `2`), resolution (`open`, `passed`, or `failed`), and previously processed answer identities so duplicate submissions have no new effect. The concrete state representation is defined in the [data model](data-model.md).
 - **FR-010**: Only a valid selection against the current delivered, non-stale, open assessment MUST consume an attempt; clarification, assistance, malformed, undelivered, stale, duplicate, and Guard-deferred inputs MUST consume none.
 - **FR-011**: The first incorrect valid selection MUST return a `retryable` result, accepted-attempt count one, unchanged progress, one remaining attempt, no learning transition, and no terminal feedback.
-- **FR-012**: A correct valid selection on attempt one or two MUST return terminal `passed`, emit `assessment_pass` exactly once, require feedback, report zero remaining attempts, and set `learner_feedback_authorized: false`; component 102 MUST NOT project any retained key or explanation to the learner for a passed result.
-- **FR-013**: A second incorrect valid selection MUST return terminal `failed`, emit `assessment_fail` exactly once, require repair, report zero remaining attempts, include terminal feedback, and set `learner_feedback_authorized: true`; only this outcome authorizes learner key/explanation disclosure.
+- **FR-012**: A correct valid selection on attempt one or two MUST pass exactly once, apply the passing progress outcome once, require feedback, report no remaining attempts, and forbid learner disclosure of any retained key or explanation.
+- **FR-013**: A second incorrect valid selection MUST fail exactly once, apply the failure progress outcome once, require repair, report no remaining attempts, and include terminal feedback; only this outcome authorizes disclosure of the answer and explanation to the learner.
 - **FR-014**: Duplicate submissions and submissions against a passed, failed, or exhausted snapshot MUST not increment attempts, emit a learning transition, or create another feedback chain.
-- **FR-015**: The learning-progress reducer MUST retain the approved four progress pairs and seven event kinds; the attempt lifecycle MUST gate calls to the reducer rather than changing its matrix.
+- **FR-015**: The learning-progress behavior MUST retain the approved four progress pairs and seven event kinds; the attempt lifecycle MUST control when progress changes without changing the approved outcomes.
 - **FR-016**: Wrong-answer recovery MUST begin only after terminal failure and MUST require repair and new learner evidence before selecting a different transfer context; an incorrect attempt or terminal failure alone MUST NOT enter Guard.
-- **FR-017**: Golden fixtures MUST encode valid and invalid contracts, explanation validation/privacy, parser boundaries, exhaustive grader subsets, rendering boundaries, the unchanged reducer matrix, and correct-first, incorrect-correct, incorrect-incorrect, duplicate, stale, reload/tab-equivalent, and third-submission sequences.
-- **FR-018**: Required shared attempt, result, feedback, assessment, and progress types MUST be exported through `tutor-system/src/types/index.ts` for downstream consumers.
-- **FR-019**: The deterministic component MUST remain pure with respect to persistence, transactions, authorization, API DTOs, providers, React effects, Supabase migrations/functions, Promptfoo, and browser release behavior.
+- **FR-017**: Evidence for this behavior MUST cover valid and invalid decisions, explanation presence and privacy, answer interpretation boundaries, exact answer matching, rendering limits, progress outcomes, and correct-first, incorrect-correct, incorrect-incorrect, duplicate, stale, reload/tab-equivalent, and third-submission behavior.
+- **FR-018**: The shared assessment, attempt, result, feedback, and progress behavior MUST be available to downstream capabilities through one stable domain contract. The concrete exported types and location are specified by the [implementation plan](plan.md) and linked contracts.
+- **FR-019**: This capability MUST determine domain outcomes independently of persistence, authorization, API transport, provider calls, room rendering, evaluation tooling, or release-browser behavior. Those boundaries are specified and verified separately.
 
 ### Key Entities
 
-- **TutorDecisionV3**: A reason-first structured tutor decision whose assessment mode carries one private transfer item; tutoring requires a real teaching instruction, while Guard accepts `guard` or a real teaching instruction, and both non-assessment modes require null target/assessment.
-- **TransferTurnContext**: The turn-scoped input snapshot used to validate target, evidence, current progress, unresolved question, feedback boundary, and stale-state identity.
-- **PublicAssessment**: Learner-visible assessment identity/content with no answer key, transfer basis, rationale, or raw model output.
-- **PrivateAssessment**: Review/server-side assessment content plus exact correct option IDs, transfer basis, and required `learner_safe_explanation`.
-- **ParsedSelection**: Deterministic answer parser result: selection, clarification required with a stable code, or not a selection.
-- **TransferAttemptSnapshot**: Server-owned lifecycle input with assessment identity, accepted-attempt count, resolution, and processed answer-message identities.
-- **TransferRetryResult**: First-incorrect non-terminal outcome with one remaining attempt, unchanged progress, and no terminal feedback fields.
-- **TransferTerminalResult**: Passed or failed outcome with zero remaining attempts, one progress transition, typed terminal feedback, and literal `learner_feedback_authorized`; false for pass and true only for second-incorrect failure.
-- **TransferTerminalFeedback**: Correct option IDs plus the learner-safe explanation. It remains private server/audit data on pass and becomes learner-projectable only when the failed result authorizes disclosure.
-- **TransferProgress**: The approved status/understanding-level pair: `pending/none`, `partially_covered/basic`, `needs_review/basic`, or `covered/good`.
-- **LearningEvent**: A learner-evidence or assessment outcome event with causal message IDs and an explicit classifier.
-- **Golden Fixture**: A versioned input/output case with scenario name, contract/policy version, expected disposition, and evidence references.
+- **Tutor decision**: A structured choice between tutoring, Guard, and transfer assessment, with compatible teaching instructions, target, and private assessment content.
+- **Turn context**: The current learner, source message, checklist, evidence, progress, unresolved question, feedback boundary, and other state needed to decide which action is valid.
+- **Public question**: The learner-visible assessment content, without the answer key, transfer basis, tutor rationale, or raw model output.
+- **Private assessment**: The reviewed question, correct answer, transfer basis, and required learner-safe explanation retained for authorized use.
+- **Parsed answer**: The result of interpreting an explicit option selection, a request for clarification, or input that is not an answer.
+- **Attempt state**: The current question identity, accepted attempt count, open or terminal status, and processed answer identities.
+- **Retry outcome**: A first incorrect answer that leaves one chance, preserves progress, and discloses no terminal feedback.
+- **Terminal outcome**: A pass or second-incorrect failure that applies one progress transition and explicitly controls whether learner feedback may be disclosed.
+- **Terminal feedback**: The correct answer and learner-safe explanation, private after a pass and learner-visible only after terminal failure.
+- **Transfer progress**: One of the approved pairs: `pending/none`, `partially_covered/basic`, `needs_review/basic`, or `covered/good`.
+- **Learning event**: A learner-evidence or assessment outcome associated with its source and an explicit classification.
+- **Behavior example**: A versioned input and expected result used to make a transfer behavior or boundary reviewable.
 
 ## Success Criteria
 
 ### Measurable Outcomes
 
-- **SC-001**: The reducer test suite exercises all 28 cells in the 4-state by 7-event matrix, with no undocumented transition result.
-- **SC-002**: The grader fixture suite evaluates every subset of A-D, including empty and full sets, against representative single and multiple keys and proves that only exact sets pass.
-- **SC-003**: Parser and rendering suites pass all documented boundaries, including Unicode/format normalization, ambiguity handling, exact option text, 80 versus 81 word-like segments, and two versus three stem sentences.
-- **SC-004**: Contract fixtures prove every accepted assessment decision has a non-empty learner-safe explanation and every unresolved public assessment contains zero key, explanation, transfer-basis, rationale, raw-model, API, or transport fields.
-- **SC-005**: 100% of attempt-sequence fixtures produce the canonical outcomes: correct-first passes, incorrect-correct passes, incorrect-incorrect fails, and no sequence consumes more than two attempts.
-- **SC-006**: 100% of first-incorrect fixtures preserve progress, emit no transition, report one remaining attempt, and expose no terminal feedback; 100% of passed fixtures set learner feedback authorization false; 100% of second-incorrect failed fixtures set it true and contain learner-projectable terminal feedback.
-- **SC-007**: 100% of duplicate, stale, malformed, assistance, Guard-deferred, reload/tab-equivalent, and third-submission fixtures consume no additional attempt and emit no additional progress transition.
-- **SC-008**: The complete deterministic command set and TypeScript check pass without provider credentials, database access, React rendering, browser automation, or feature activation, and report deferred downstream verification separately.
+- **SC-001**: Every one of the 28 approved progress-state/event combinations has a defined result, with no unsupported transition silently accepted.
+- **SC-002**: Every possible selection of options A-D is graded against representative single- and multiple-answer keys, and only an exact answer set passes.
+- **SC-003**: Answer interpretation and question rendering preserve all documented boundaries: Unicode and format normalization, ambiguity, exact option text, 80 versus 81 word-like segments, and two versus three stem sentences.
+- **SC-004**: Every accepted assessment decision includes a non-empty learner-safe explanation, and every unresolved learner-visible question excludes the key, explanation, transfer basis, rationale, and raw model output. The API and transport representation is covered by the linked contract.
+- **SC-005**: All attempt sequences follow the canonical outcomes: a correct first answer passes, incorrect-then-correct passes, incorrect-then-incorrect fails, and no sequence consumes more than two attempts.
+- **SC-006**: Every first-incorrect outcome preserves progress, reports one remaining chance, and exposes no terminal feedback; passing never authorizes learner disclosure; only a second-incorrect failure authorizes terminal feedback.
+- **SC-007**: Duplicate, stale, malformed, assistance, Guard-deferred, reload/tab-equivalent, and third submissions consume no additional attempt and create no additional progress transition.
+- **SC-008**: Domain outcomes can be verified without relying on a live provider, database, room interface, browser, or feature activation, and such evidence is reported separately from downstream verification.
 
 ## Assumptions
 
-- The approved policy makes the two-attempt snapshot server-authoritative and persistent across reloads and tabs; component 102 owns persistence, concurrency, and idempotent replay.
-- Existing TypeScript, Jest, and CRA test conventions remain the execution environment for deterministic tests.
-- Component 102 generates, stores, and role-projects the learner-safe explanation; component 101 defines the private field and deterministic rule that only second-incorrect failure authorizes learner disclosure.
-- Component 103 renders the server-returned attempt state. Any local attempt count is display-only and cannot reset the lifecycle.
-- Component 104 owns semantic correctness and safety evaluation of generated explanations; component 101 validates structural presence and deterministic privacy only.
-- W2 consumes selected targets and evidence classifications from upstream behavior but does not implement evidence detection, persistence transactions, authorization, provider calls, API transport/public projection, UI, or release activation.
+- The approved policy makes the two-attempt state server-authoritative and persistent across reloads and tabs; the trusted backend owns persistence, concurrency, and idempotent replay.
+- The established project tooling remains the execution environment for deterministic verification; its exact commands are recorded in the plan and quickstart.
+- The trusted service generates, stores, and role-projects learner-safe explanations; this feature defines the field's domain meaning and the rule that only second-incorrect failure authorizes learner disclosure.
+- The room experience renders server-returned attempt state. Any local count is display-only and cannot reset the lifecycle.
+- Semantic correctness and safety of generated explanations are evaluated separately; this feature validates structural presence and deterministic privacy only.
+- This feature consumes selected targets and evidence classifications but does not classify learner evidence or own persistence, authorization, provider calls, API projection, room presentation, or release activation.
 - `transfer_v1` is the only new-policy interpretation for this component; legacy checklist records retain their existing meaning.
 - The feature flag remains disabled until downstream database, authorization, provider, evaluation, and browser gates pass.
-- Tests may use explicit fixture IDs and local values, but they must not imply that mock-only tests prove hosted SQL/RLS or provider behavior.
+- Local examples may use explicit identifiers and values, but they do not prove hosted storage, authorization, or provider behavior.
 
 ## Out of Scope
 
-- Supabase migrations, database transactions, RLS, authorization, private key/explanation storage, Edge Function implementation, `transferAssessmentService.ts`, and its API/public projection tests.
-- React room integration, teacher editor UI, browser acceptance, Promptfoo evaluation, provider prompts/calls, and feature activation.
+- Database schema, persistence transactions, access control, private-field storage, trusted-service implementation, and API projection.
+- Room presentation, teacher editor, browser acceptance, semantic evaluation, provider prompt/calls, and feature activation.
 - New authentication or sign-in behavior.
 - Reinterpreting legacy checklist progress or adding a parallel mastery field.

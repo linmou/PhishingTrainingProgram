@@ -1,6 +1,8 @@
-# Tasks: Server-Authoritative Transfer Assessment Backend
+# Historical Component 102 Tasks
 
 <!-- Intent: provide an executable, dependency-ordered component backlog with separate external gates. -->
+
+The checked tasks record completion of the local component-102 v2 backlog and its component evidence. A checked item does not assert that the corresponding v2 RPC is deployed in production or that the production assessment path is operational. See [implementation evidence](implementation-evidence.md) for the current production snapshot.
 
 **Input**: [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md), [data-model.md](./data-model.md), [contracts/](./contracts/)
 **Verification scope**: Component 102 uses focused Jest, checked Deno, and disposable PostgreSQL 17 restored-copy evidence. Hosted Supabase, generated types, integrated build, and release gates remain separate.
@@ -11,7 +13,7 @@
 **Purpose**: Capture immutable prerequisites and expose required configuration without enabling behavior.
 
 - [x] T001 Record baseline SHA, promoted component-101 SHA, local restore identity and migration provenance, source preflight limits, existing assessment row counts where observed, and exact evidence locations in `specs/102-transfer-backend/implementation-evidence.md` (FR-021, FR-023, SC-010).
-- [x] T002 Add documented server-only `OAI_API_KEY`, `OAI_BASE_URL`, required `OAI_MODEL=qwen3.5-flash`, and `TRANSFER_ASSESSMENT_ENABLED=false` entries to `tutor-system/.env.example`; retain no model fallback (FR-003, FR-019, FR-022).
+- [x] T002 Document `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, required `OAI_MODEL=qwen3.5-flash`, and `TRANSFER_ASSESSMENT_ENABLED=true` in `tutor-system/.env.example`; retain no model fallback (FR-003, FR-019, FR-022).
 - [x] T003 Review current archived migrations 025-046 and record the forward-only hosted reconciliation assumptions in `specs/102-transfer-backend/implementation-evidence.md`; do not reactivate archived files (FR-021, SC-010).
 
 ---
@@ -81,7 +83,7 @@
 
 ## Phase 5: User Story 3 - Enforce Trusted Identity and Role-Safe Projection (Priority: P1)
 
-**Goal**: Fail closed without a trusted verifier and deny cross-scope/direct access to private grading or progress authority.
+**Goal**: Resolve the app identity's database role and room access; deny out-of-scope actions and direct access to private grading or progress authority.
 
 **Independent Test**: Execute absent/invalid proof, forged body identity, target learner, other learner, teacher, observer, cross-room, direct RPC/table, and old-operation cases with field-level leakage scans.
 
@@ -125,7 +127,7 @@
 
 ## Phase 7: User Story 5 - Generate the Production Contract Safely (Priority: P2)
 
-**Goal**: Generate and validate learner-safe explanations through the configured server-only `qwen3.5-flash` provider with one bounded format repair.
+**Goal**: Generate and validate learner-safe explanations through the configured Edge Function `qwen3.5-flash` provider with one bounded format repair.
 
 **Independent Test**: Capture valid, repaired, truncated, invalid, missing-config, HTTP, and network provider paths and compare canonical production/104 serialization.
 
@@ -150,7 +152,7 @@
 
 - [x] T043 Record focused Jest, checked Deno, and component-branch build commands, counts, exit codes, and tested SHA; identify the 103-owned fixture mismatch blocking this branch's bundle (SC-010).
 - [x] T044 Compare the local migrated catalog's eight RPC identities and private columns with `specs/102-transfer-backend/contracts/rpc-contract.md` and `tutor-system/src/types/database.ts`; record the absent generated private schema as an external type-parity gap (FR-021, FR-023).
-- [x] T045 Verify `TRANSFER_ASSESSMENT_ENABLED=false`, missing verifier/model fail closed, local rollback leaves no partial effects, and no browser grader/provider fallback remains; record the external activation blockers (FR-003, FR-019, FR-022-FR-023).
+- [x] T045 Verify explicit `TRANSFER_ASSESSMENT_ENABLED=false`, missing verifier/model fail closed, local rollback leaves no partial effects, and no browser grader fallback remains; record the external verification blockers (FR-003, FR-019, FR-022-FR-023).
 - [x] T046 Review and update `tutor-system/README.md`, `tutor-system/claude_docs/database-schema.md`, `tutor-system/claude_docs/supabase-service.md`, and `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md`; add `tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_22_transfer_backend.md` with intent, date, commands, results, and commit reference (FR-023).
 - [x] T047 Provide the integration owner with the clean component commit, exact verification commands/results/logs, changed public contracts, hosted/provider prerequisites, and 101->102 / 102->103 / 102->104 handoff risks; do not edit `specs/orchestration/**` (SC-010).
 
