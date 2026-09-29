@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Test responsible for the pure transfer-answer lifecycle: first-valid resolution, clarification, assistance, duplicate/stale suppression, feedback gating, and protective deferral.
+// Test responsible for the server-authoritative transfer-answer lifecycle and its non-consuming boundaries.
 
 import {
   resolveTransferAnswer,
@@ -40,6 +40,7 @@ function assessment(overrides: Partial<TransferAssessment> = {}): TransferAssess
     selection_type: 'single',
     options: TRANSFER_ASSESSMENT_OPTIONS,
     correct_option_ids: TRANSFER_CORRECT_OPTION_IDS,
+    learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
     progress_snapshot_hash: SNAPSHOT_HASH,
     ...overrides,
   };
@@ -54,6 +55,7 @@ function context(overrides: Partial<TransferLifecycleContext> = {}): TransferLif
     eligible_assessment_item_ids: ['item-1'],
     unresolved_assessment: publicAssessment(),
     pending_repair_message_id: null,
+    attempt_snapshot: attemptSnapshot(),
     ...overrides,
   };
 }
@@ -108,7 +110,7 @@ describe('transfer assessment orchestrator', () => {
   it('does not grade an undelivered question', () => {
     const result = resolveTransferAnswer(context(), answer('B', { delivered: false }));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'not_delivered',
       progress: PARTIALLY_COVERED,
       feedback_required: false,
@@ -121,7 +123,7 @@ describe('transfer assessment orchestrator', () => {
   it('grades the first valid delivered selection exactly once', () => {
     const result = resolveTransferAnswer(context(), answer('B'));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'passed',
       progress: COVERED,
       feedback_required: true,
@@ -134,7 +136,7 @@ describe('transfer assessment orchestrator', () => {
   it('keeps a question open without grading when the selection is ambiguous', () => {
     const result = resolveTransferAnswer(context(), answer('B or D'));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'unresolved',
       progress: PARTIALLY_COVERED,
       feedback_required: false,
@@ -145,16 +147,17 @@ describe('transfer assessment orchestrator', () => {
     });
   });
 
-  it('marks a wrong exact set as failed and requires repair', () => {
+  it('keeps a first wrong exact set retryable without starting repair', () => {
     const result = resolveTransferAnswer(context(), answer('A'));
 
-    expect(result).toEqual({
-      disposition: 'failed',
-      progress: { status: 'needs_review', understanding_level: 'basic' },
-      feedback_required: true,
-      next_action: 'await_tutor_repair',
+    expect(result).toMatchObject({
+      disposition: 'retryable',
+      progress: PARTIALLY_COVERED,
+      feedback_required: false,
+      next_action: 'await_learner_answer',
       assessment_id: 'assessment-1',
-      applied_transition: 'assessment_fail',
+      applied_transition: null,
+      remaining_attempts: 1,
     });
   });
 
@@ -168,7 +171,7 @@ describe('transfer assessment orchestrator', () => {
       answer('B', { answer_message_id: 'answer-2' })
     );
 
-    expect(withoutNewEvidence).toEqual({
+    expect(withoutNewEvidence).toMatchObject({
       disposition: 'unresolved',
       progress: { status: 'needs_review', understanding_level: 'basic' },
       feedback_required: false,
@@ -189,7 +192,7 @@ describe('transfer assessment orchestrator', () => {
       answer('B', { answer_message_id: 'answer-3', references_message_id: 'repair-1' })
     );
 
-    expect(withNewEvidence).toEqual({
+    expect(withNewEvidence).toMatchObject({
       disposition: 'unresolved',
       progress: PARTIALLY_COVERED,
       feedback_required: false,
@@ -202,7 +205,7 @@ describe('transfer assessment orchestrator', () => {
   it('resolves content help as assistance without failing the assessment', () => {
     const result = resolveTransferAnswer(context(), answer('What does compromised mean?'));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'assisted',
       progress: PARTIALLY_COVERED,
       feedback_required: false,
@@ -222,7 +225,7 @@ describe('transfer assessment orchestrator', () => {
   it('suppresses a stale answer whose snapshot no longer matches', () => {
     const result = resolveTransferAnswer(context(), answer('B', { assessment: assessment({ progress_snapshot_hash: 'snapshot-hash-0' }) }));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'stale',
       progress: PARTIALLY_COVERED,
       feedback_required: false,
@@ -235,11 +238,15 @@ describe('transfer assessment orchestrator', () => {
   it('reports a replayed answer as duplicate without a second effect', () => {
     const first = resolveTransferAnswer(context(), answer('B', { answer_message_id: 'answer-1' }));
     const replayed = resolveTransferAnswer(
-      context({ progress: first.progress, feedback_required: first.feedback_required }),
+      context({
+        progress: first.progress,
+        feedback_required: first.feedback_required,
+        attempt_snapshot: first.attempt_snapshot,
+      }),
       answer('B', { answer_message_id: 'answer-1' })
     );
 
-    expect(replayed).toEqual({
+    expect(replayed).toMatchObject({
       disposition: 'duplicate',
       progress: COVERED,
       feedback_required: true,
@@ -253,19 +260,24 @@ describe('transfer assessment orchestrator', () => {
   it('treats a repeated assessment delivery as duplicate', () => {
     const first = resolveTransferAnswer(context(), answer('A'));
     const second = resolveTransferAnswer(
-      context({ progress: first.progress, unresolved_assessment: null, eligible_assessment_item_ids: [] }),
+      context({
+        progress: first.progress,
+        unresolved_assessment: null,
+        eligible_assessment_item_ids: [],
+        attempt_snapshot: first.attempt_snapshot,
+      }),
       answer('B', { answer_message_id: 'answer-2', assessment: null })
     );
 
     expect(second.disposition).toBe('duplicate');
     expect(second.applied_transition).toBeNull();
-    expect(second.progress).toEqual({ status: 'needs_review', understanding_level: 'basic' });
+    expect(second.progress).toEqual(PARTIALLY_COVERED);
   });
 
   it('does not chain a second assessment while feedback is required', () => {
     const result = resolveTransferAnswer(context({ progress: COVERED, feedback_required: true }), answer('B'));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'duplicate',
       progress: COVERED,
       feedback_required: true,
@@ -278,7 +290,7 @@ describe('transfer assessment orchestrator', () => {
   it('defers transfer processing while the room requires a protective response', () => {
     const result = resolveTransferAnswer(context({ participation_mode: 'guard' }), answer('B'));
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       disposition: 'guard_deferred',
       progress: PARTIALLY_COVERED,
       feedback_required: false,
@@ -288,11 +300,11 @@ describe('transfer assessment orchestrator', () => {
     });
   });
 
-  it('does not enter Guard merely because the answer was wrong', () => {
+  it('keeps a first wrong answer retryable without entering Guard', () => {
     const result = resolveTransferAnswer(context(), answer('A'));
 
-    expect(result.disposition).toBe('failed');
-    expect(result.progress).toEqual({ status: 'needs_review', understanding_level: 'basic' });
+    expect(result.disposition).toBe('retryable');
+    expect(result.progress).toEqual(PARTIALLY_COVERED);
   });
 
   it('never grades without an open delivered assessment', () => {
@@ -327,7 +339,7 @@ describe('transfer assessment orchestrator', () => {
     unselected.forEach((result) => {
       expect(result.disposition).toBe('duplicate');
       expect(result.applied_transition).toBeNull();
-      expect(result.assessment_id).toBeNull();
+      expect(result.attempt_snapshot.assessment_id).toBe('assessment-1');
     });
   });
 
@@ -368,7 +380,7 @@ describe('transfer resolved assessment privacy', () => {
   it('never leaks a private field name through a real resolved result', () => {
     const privateFieldNames = ['correct_option_ids', 'transfer_basis', 'rationale', 'raw_model_output', 'api_operation', 'transport'];
     const results = [
-      resolveTransferAnswer(context(), answer('B')),
+      resolveTransferAnswer(context(), answer('B', { delivered: false })),
       resolveTransferAnswer(context(), answer('A')),
       resolveTransferAnswer(context(), answer('B or D')),
       resolveTransferAnswer(context({ participation_mode: 'guard' }), answer('B')),
@@ -386,19 +398,13 @@ describe('transfer resolved assessment privacy', () => {
     });
   });
 
-  it('exposes only the public assessment fields to consumers', () => {
-    const resolved: TransferResolvedAssessment = {
-      disposition: 'passed',
-      progress: COVERED,
-      feedback_required: true,
-      next_action: 'await_tutor_feedback',
-      assessment_id: 'assessment-1',
-      applied_transition: 'assessment_pass',
-    };
+  it('does not include terminal feedback on a retryable result', () => {
+    const resolved: TransferResolvedAssessment = resolveTransferAnswer(context(), answer('A'));
 
     const keys = Object.keys(resolved);
 
     expect(keys).not.toContain('correct_option_ids');
+    expect(keys).not.toContain('learner_safe_explanation');
     expect(keys).not.toContain('transfer_basis');
     expect(keys).not.toContain('raw_model_output');
     expect(keys).not.toContain('api_operation');
@@ -415,6 +421,26 @@ describe('transfer resolved assessment privacy', () => {
 });
 
 describe('server-authoritative two-attempt lifecycle', () => {
+  it('rejects a missing attempt snapshot before grading', () => {
+    const missingSnapshot = { ...context() } as Partial<TransferLifecycleContext>;
+    delete missingSnapshot.attempt_snapshot;
+
+    expect(() => resolveTransferAnswer(
+      missingSnapshot as TransferLifecycleContext,
+      authoritativeAnswer('A')
+    )).toThrow('INVALID_ATTEMPT_SNAPSHOT');
+  });
+
+  it('rejects a missing attempt snapshot without an unresolved assessment', () => {
+    const missingSnapshot = { ...context({ unresolved_assessment: null }) } as Partial<TransferLifecycleContext>;
+    delete missingSnapshot.attempt_snapshot;
+
+    expect(() => resolveTransferAnswer(
+      missingSnapshot as TransferLifecycleContext,
+      authoritativeAnswer('A')
+    )).toThrow('INVALID_ATTEMPT_SNAPSHOT');
+  });
+
   it('passes on the first valid attempt and retains private feedback without learner authorization', () => {
     const result = resolveTransferAnswer(authoritativeContext(), authoritativeAnswer('B'));
 

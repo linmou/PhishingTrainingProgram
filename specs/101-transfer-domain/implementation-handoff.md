@@ -8,6 +8,14 @@
 
 The two-attempt transfer lifecycle is implemented in the pure component 101 domain boundary. The resolver accepts a server-owned `TransferAttemptSnapshot`, validates lifecycle invariants, and returns immutable result snapshots. Component 102 remains responsible for persistence, concurrency, idempotency, API DTOs, and role-safe projection. `transferAssessmentService.ts`, Supabase migrations/functions, React/UI code, provider calls, and evaluation/release surfaces were not changed.
 
+### 2026-09-29 Snapshot Enforcement Follow-up
+
+`attempt_snapshot` is required on both resolver context types. `resolveTransferAnswer` always validates and consumes that snapshot; the snapshot-free one-attempt fallback and snapshot-free result type are removed. A missing or malformed snapshot fails with `INVALID_ATTEMPT_SNAPSHOT`. The normative requirements are unchanged.
+
+- RED evidence: the missing-snapshot regression failed before the implementation change and passed afterward.
+- Focused verification: orchestrator **32/32**, golden fixtures **103/103**, and assessment API Edge Function **13/13** passed.
+- TypeScript: isolated resolver check passed. Repository-wide `npx tsc --noEmit` remains non-zero with **454 pre-existing errors across 34 files**; there are no diagnostics on the edited implementation or test paths.
+
 ### Public contracts
 
 - `PrivateAssessment.learner_safe_explanation` is required and validated as trimmed, non-empty text by `tutorDecisionContract.ts`; it is absent from `PublicAssessment`.
