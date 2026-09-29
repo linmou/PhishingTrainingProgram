@@ -38,5 +38,5 @@ SELECT jsonb_build_object(
   ) ORDER BY created_at)
   FROM public.checklist_items
   WHERE checklist_id IN (SELECT id FROM public.session_checklists
-    WHERE room_id = '3581ba48-d1a7-45a0-bbee-0c9e3e6e7515')
+    WHERE room_id = '3581ba48-d1a7-45a0-bbee-0c9e3e6e7515'))
 ) AS state;
