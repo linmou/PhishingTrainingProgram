@@ -167,6 +167,30 @@ describe('RoomPagePost structured decision consumption', () => {
     expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
   });
 
+  it('shows a tutoring draft so the tutor can use or discard its response', () => {
+    const clearAISuggestion = jest.fn();
+    const response = 'Open the carrier website from an independent source.';
+    mount({
+      transferDraft: {
+        ...candidateDraft,
+        itemId: null,
+        decision: {
+          ...preparedCandidate,
+          decision: { mode: 'tutoring', instruction: 'clarify', target_item_id: null },
+          response,
+          assessment: null,
+        },
+      },
+      clearAISuggestion,
+    });
+
+    expect(screen.getByRole('region', { name: 'Tutor response review' })).toHaveTextContent(response);
+    expect(screen.getByRole('button', { name: 'Use response' })).toBeInTheDocument();
+    expect(screen.queryByText('Review transfer assessment')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    expect(clearAISuggestion).toHaveBeenCalledTimes(1);
+  });
+
   it('renders and submits a public assessment projection through the page message list', async () => {
     const projectedQuestion = projectRoomMessage({
       ...deliveredQuestionRow,

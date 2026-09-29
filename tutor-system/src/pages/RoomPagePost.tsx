@@ -893,13 +893,20 @@ const RoomPagePost: React.FC = () => {
                 </div>
 
                 {/* Structured transfer-assessment review for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && transferDraft && (
+                {user?.current_role === 'tutor' && canUseAI && transferDraft?.decision.decision.mode === 'assessment' && (
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
                         onSubmit={confirmTransferDraft}
                         // Discarding is UI-local: there is no draft row, so nothing is persisted.
                         onCancel={clearAISuggestion}
                     />
+                )}
+                {user?.current_role === 'tutor' && canUseAI && transferDraft && transferDraft.decision.decision.mode !== 'assessment' && (
+                    <section aria-label="Tutor response review" className="transfer-turn-status">
+                        <p>{transferDraft.decision.response}</p>
+                        <button type="button" onClick={() => setMessageText(transferDraft.decision.response)}>Use response</button>
+                        <button type="button" onClick={clearAISuggestion}>Discard</button>
+                    </section>
                 )}
 
                 {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
