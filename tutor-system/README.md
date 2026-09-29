@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-09-29
-Commit: b956cf1 (documentation baseline for staging Edge Function deployment)
+Commit: 5a3c56a (staging Edge Function workflow)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -160,7 +160,7 @@ OAI_MODEL=qwen3.5-flash
 
 ### Assessment API Deployment
 
-Run **Deploy Assessment API** from GitHub Actions to deploy the function to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `REACT_APP_OAI_API_KEY`, and `REACT_APP_OAI_BASE_URL`. The workflow sets the matching provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys with gateway JWT verification disabled because the app uses its application identity instead of Supabase Auth. Apply the assessment database migration and provision test principals before running the full room assessment flow.
+Run **Deploy Assessment API** from GitHub Actions to deploy the function to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `REACT_APP_OAI_API_KEY`, and `REACT_APP_OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the matching provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys with gateway JWT verification disabled because the app uses its application identity instead of Supabase Auth. Apply the assessment database migration and provision test principals before running the full room assessment flow.
 
 ### Supabase Setup Checklist
 
