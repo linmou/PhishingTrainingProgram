@@ -1,6 +1,8 @@
-# Research: Server-Authoritative Transfer Assessment Backend
+# Historical Design Research: Transfer Assessment Backend
 
-<!-- Intent: record the source-backed design decisions that replace the browser-only research boundary. -->
+<!-- Intent: preserve the source-backed decisions that shaped the local component-102 target. -->
+
+This document records research and design choices for the local component-102 target. It is historical context, not a description of the current production database implementation; see [implementation evidence](implementation-evidence.md) for the production snapshot.
 
 ## Sources Reconciled
 
@@ -25,7 +27,7 @@
 | Idempotency | Unique `(assessment_id, answer_message_id)` and request identity plus assessment row lock | Distinguishes retries from distinct concurrent submissions | Client dedupe and timestamps rejected |
 | API surface | Preserve six browser-facing operation names; map to new versioned trusted RPCs | Minimizes consumer churn without keeping unsafe behavior | Parallel browser and server implementations rejected |
 | Answer input | `post_message` accepts structured selected option IDs for an assessment answer and persists their normalized public selection; grading reads that stored message through `process_message` | Selectable UI no longer needs prose parsing; the stored message remains the causal source | Free-text parser as grading authority rejected |
-| Identity | Inject `AssessmentPrincipalVerifier`; deployment supplies a trusted session/capability adapter; missing adapter disables all transfer mutations | Existing application must not add sign-in or trust body/local identity | `auth.uid()`, bearer-specific contract, display name, role, user ID, or room password as identity rejected |
+| Identity | Inject `AssessmentPrincipalVerifier`; browser sends its current `tutor_system_user.id` in `x-application-user-id`; verifier loads the role and room memberships from the database | Matches the app's existing no-Supabase-Auth identity flow and keeps authorization checks server-side | `auth.uid()` and a new sign-in product are not used; localStorage identity is explicitly not proof against caller impersonation |
 | RPC access | Service-role/postgres execution only for transfer mutation RPCs; untrusted grants revoked | Prevents direct writes and private reads | Public `SECURITY DEFINER` execution rejected |
 | Provider | Require server-only `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`; use existing DashScope-compatible transport with no default | Canonical human answer; avoids silent experiment/config drift | Browser `REACT_APP_*` provider call and hard-coded fallback rejected |
 | Provider parity | Retain `TransferTutorRequestV3` and its canonical context/user-message builders in `ecologicalTutorCall.ts`; production and 104 consume them | One inspectable request contract prevents evaluation drift | Copied evaluator context rejected |
@@ -42,7 +44,7 @@ No functional ambiguity remains after the user approved server-authoritative att
 ## Deferred Deployment Prerequisites
 
 - A disposable supported hosted Supabase scope and service-role execution evidence.
-- A production `AssessmentPrincipalVerifier` adapter backed by the approved trusted session/capability.
+- Hosted verification of the `x-application-user-id` adapter against the database role and room-membership rows; this adapter does not provide cryptographic caller identity.
 - Server-side DashScope-compatible `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`.
 
 These are release prerequisites, not silent implementation substitutions. Missing values keep the feature disabled.

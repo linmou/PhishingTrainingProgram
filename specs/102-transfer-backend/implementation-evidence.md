@@ -1,12 +1,36 @@
-# Component 102 Implementation Evidence
+# Component 102 Evidence and Production Snapshot
 
-<!-- Intent: preserve reproducible local results and explicit external blockers for the server-authoritative backend. -->
+<!-- Intent: separate local component results from the read-only production implementation inventory. -->
 
 **Date**: 2026-09-22  
 **Branch**: `102-transfer-backend`  
 **Baseline before implementation**: `2248000`  
 **Promoted component-101 prerequisite**: `87118a3` (contains implementation `91d8036`)  
 **Implementation commits**: `419f785`, hardened by `de3777b`, trusted non-assessment paths completed by `c23fc9e`
+
+## Production Snapshot (2026-09-28)
+
+**Source**: Read-only Supabase MCP catalog and schema queries. Assessment RPCs were not invoked.
+
+The current worktree has no pending SQL file in tutor-system/supabase/migrations. The archived 20260928000000_private_transfer_assessment_storage.sql file defines the private storage migration but not these production RPC bodies.
+
+The production database defines these assessment RPCs:
+
+| Function | Observed behavior |
+|---|---|
+| send_reviewed_tutor_response_v3 | Validates a reviewed tutor payload. Assessment mode inserts a tutor question into public.messages, including options, key, lifecycle, checklist/item scope, and selection type. The returned JSON removes assessment_key. |
+| post_assessment_message_v1 | Validates the question and target learner, then inserts the learner answer as a public.messages row linked by assessment_id. |
+| process_assessment_message_v1 | Resolves the answer from message content and question options, updates selected IDs/result/lifecycle, and calls the learning-event path. Reprocessing the same answer message returns an already-processed result. |
+
+The live public.messages assessment columns are assessment_id, assessment_options, assessment_lifecycle, assessment_answer_message_id, assessment_selected_option_ids, assessment_result, assessment_closed_at, assessment_checklist_id, assessment_item_id, assessment_selection_type, and assessment_student_id. The relation has no assessment_key column.
+
+private.transfer_assessments exists with key, explanation, transfer-basis, lifecycle, attempt-count, and delivery-scope columns; it had zero rows at inspection. The three RPC bodies above do not read or write that table. private.learning_event_inbox also existed with zero rows at inspection.
+
+**Schema/function consistency**: The v3 delivery body inserts assessment_key into public.messages, and the v1 processor reads it from the question row. The live relation lacks that column. This is a catalog/source mismatch; this read-only inspection did not attempt the RPC, so no production execution result is claimed.
+
+The production RPC definitions accept request IDs, but delivery and answer insertion do not use them for deduplication. Processing recognizes the same already-processed answer message; its request ID is not used for deduplication.
+
+This snapshot supersedes any earlier statement in this document that the component-102 v2 design is the production implementation. The component gate and local restored-copy results below remain evidence for that local design only.
 
 ## Component Gate Revision (2026-09-27)
 
@@ -22,7 +46,7 @@ The current `tasks.md` defines a local-runnable component gate. All 47/47 task m
 | Handler and provider | The focused quickstart Jest run passed 5 suites/32 tests; the broader 101/102 regression passed 9 suites/179 tests. A later checked Deno run passed 13 tests. Deno fake-provider cases cover missing settings, exact model, bounded repair, and credential-free audit. No live provider was invoked. | T042, T043, T045 |
 | Catalog and build | Local catalog script blob `871c84b4b961a223eb09c2204495c4061fad3dd9` matched eight RPC identities and listed 50 private columns. Checked-in `src/types/database.ts` has public RPC Args but no generated `private` block. The 102 component-branch build exited 1 at the old 103-owned `transferRoomFixtures.ts:146`; integration later reported a passing combined build at `9e00b1f` after the 103 fixture correction. A browser bundle privacy scan remains unrecorded here. | T043, T044 |
 
-The component gate closes local database, SQL authorization, concurrency, rollback, and focused handler checks. Still pending externally: deployed Supabase migration/grants/RLS/PostgREST and Edge verifier behavior, hosted generated-type parity, live provider, browser bundle privacy scan, real 101 resolver-to-handler-to-RPC integration, 103 UI, 104 evaluation, browser flows, and release activation. `TRANSFER_ASSESSMENT_ENABLED=false` remains required. None of these external gates is inferred from the 47 checked component tasks.
+The component gate closes local database, SQL authorization, concurrency, rollback, and focused handler checks. Still pending externally: deployed Supabase migration/grants/RLS/PostgREST and Edge verifier behavior, hosted generated-type parity, live provider, browser bundle privacy scan, real 101 resolver-to-handler-to-RPC integration, 103 UI, 104 evaluation, and browser flows. The current config defaults `TRANSFER_ASSESSMENT_ENABLED=true` so these checks can run; set it to `false` to disable the feature explicitly. None of these external gates is inferred from the 47 checked component tasks.
 
 ## Environment And Migration Inventory
 
@@ -51,14 +75,14 @@ The component gate closes local database, SQL authorization, concurrency, rollba
 - Edge processing reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and submits the result to a row-locked expected-count/expected-resolution RPC. `CONCURRENT_MODIFICATION` causes a bounded reread and re-resolution.
 - `tutor-system/deno.json` enables Deno sloppy-import resolution for the existing CRA domain graph, so the Edge boundary can import the one component-101 resolver rather than copy its lifecycle rules.
 - First wrong commits attempt 1 without a learning event or feedback. Pass and second failure commit attempt, lifecycle, causal learning event, progress/history, and result together. Only committed failure returns key plus learner-safe explanation.
-- Provider configuration is server-only and requires exact `qwen3.5-flash`; one format repair is permitted and every attempt is privately audited without credentials.
-- `TRANSFER_ASSESSMENT_ENABLED=false` remains documented and the default deployment state.
+- The Edge Function reads `REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` plus exact `OAI_MODEL=qwen3.5-flash`; one format repair is permitted and every attempt is privately audited without credentials. CRA also exposes the `REACT_APP_*` values in the browser bundle.
+- `TRANSFER_ASSESSMENT_ENABLED=true` is the default; setting it to `false` or an invalid value disables the feature.
 
 ## External And Downstream Lanes
 
 - Deno handler execution at the implementation commit was blocked because `deno` was not installed. The dispatch verification below used Deno 2.9.6 through `npx`; runtime tests passed with type checking disabled, while the checked command failed before test execution.
 - Hosted schema/RLS/RPC/race/rollback execution: blocked because no disposable hosted scope or service-role connection was supplied. The two SQL scripts were updated but are not claimed as run.
-- Live provider: blocked because no server-only provider credentials or controlled endpoint was supplied. No live-provider claim is made.
+- Live provider: not verified because the hosted Edge Function endpoint is missing and no live provider request ran. Hosted provider-secret presence is unknown; no live-provider claim is made.
 - Generated hosted database types: blocked until the forward migration can run against the supported hosted schema. The checked-in type file reflects the reviewed contract, not a claimed hosted generation.
 - Component 102 to 103: `src/test-support/transferRoomFixtures.ts` must remove `rendered_text` and add stable `student_id`; the current 103-owned fixture blocks the production build.
 - Component 102 to 104: evaluation must import the existing canonical v3 request builders and validate the backend-owned explanation prompt; no copied provider or grading path is allowed.
@@ -91,7 +115,7 @@ Commands below ran from `tutor-system/` unless a path is specified. Their result
 | T042 | Remains open: controlled fake-provider tests pass at runtime; checked Deno execution, full provider privacy scan, and live provider metadata are absent. No live response is claimed. |
 | T043 | Remains open: Jest passes, but checked Deno fails `TS2352` and the build fails the component-103 fixture `TS2322`. |
 | T044 | Remains open: checked-in RPC names can be inspected, but `src/types/database.ts` has not been generated from a migrated supported hosted schema. |
-| T045 | Remains open: `.env.example` declares `TRANSFER_ASSESSMENT_ENABLED=false`; handler checks the flag, absent verifier, and exact model, and local tests cover absent verifier/model. Hosted rollback and full no-fallback/privacy evidence are absent. |
+| T045 | Remains open: the current config defaults `TRANSFER_ASSESSMENT_ENABLED=true` and supports explicit `false`; handler tests cover disabled mode, absent verifier/model, and no-fallback behavior. Hosted rollback and full no-fallback/privacy evidence are absent. |
 | T047 | Handoff prepared in this record and the dispatch report: the clean commit, exact local commands/results, public contracts, prerequisites, and edge risks are reported without editing orchestration records. |
 
 At the 2026-09-26 dispatch, the Deno `TS2352` source correction and component-103 fixture were still open. Later checked Deno runs passed 13 tests, and integration reported a passing combined build at `9e00b1f`; the earlier failures are retained here as dated results.
@@ -102,7 +126,7 @@ At the 2026-09-26 dispatch, the Deno `TS2352` source correction and component-10
 
 The generated `deno.lock` contains versioned dependency references and integrity hashes; it contains no environment values. It is included in the component commit so Deno reruns resolve the same dependencies and the worktree remains clean.
 
-**Controlled live prerequisites**: A designated disposable supported Supabase project, its scope identifier and pre-migration inventory, a service-role connection for the SQL/RPC scripts, a deployed `AssessmentPrincipalVerifier` trusted-session adapter, and a bounded test identity/room set are required. Provider execution additionally requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`, with a controlled endpoint and credential-free request/response logging. Keep `TRANSFER_ASSESSMENT_ENABLED=false` for release until hosted authorization, storage, race, rollback, provider, integration, UI, evaluation, and browser gates pass.
+**Controlled live prerequisites**: A designated disposable supported Supabase project, its scope identifier and pre-migration inventory, a service-role connection for the SQL/RPC scripts, a deployed `x-application-user-id` verifier adapter, and a bounded test identity/room set are required. Provider execution additionally requires `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash` configured in the Edge environment, with a controlled endpoint and credential-free request/response logging. The feature flag defaults true for these checks; `false` or an invalid value disables assessment requests.
 
 ## Corrective RPC Type Check (2026-09-26)
 
@@ -194,7 +218,7 @@ The latest run used local clone `phishingtutor_terminal_rehearsal`, PostgreSQL 1
 
 **Delivery and catalog local run, 2026-09-27**: On a new cleaned migrated clone `phishingtutor_delivery_race`, `transfer_assessment_delivery_setup.sql` passed target mismatch and invalid learner-safe explanation checks with zero public/private delivery pairs. In the two-session delivery run, B was observed waiting on a PostgreSQL `Lock` while A held the room transaction. A committed with exit 0; B returned `ASSESSMENT_ALREADY_OPEN`, exited 0, and created no public message or private assessment. The assertion exited 0 with exactly one matching stem-only public question and private assessment in the fixture room, four public options, and zero losing pairs. All sessions ended. The read-only `transfer_assessment_catalog_contract.sql` blob `871c84b4b961a223eb09c2204495c4061fad3dd9` exited 0 with `local_catalog_contract=true`, listing 50 private columns and matching eight RPC identity signatures, return types, and SECURITY DEFINER flags against the local PostgreSQL 17 catalog; it ended `ROLLBACK`. Frozen hashes matched and the local server stopped. This is a local catalog comparison, not hosted generated TypeScript. The checked-in browser `src/types/database.ts` includes public RPC Args but no `private` schema block, so T044 remains open rather than claiming complete generated-type parity.
 
-**Privacy/build limit**: The local source scan `rtk rg -n 'REACT_APP_OAI|OAI_API_KEY|OAI_BASE_URL|fetch\\(|\\.from\\(|\\.rpc\\(|gradeSelection|correct_option_ids|learner_safe_explanation' src/services/transferAssessmentService.ts src/services/prompts/transferV3Prompt.ts` found only authorized terminal-feedback field names and projection code in the transfer facade. The separate AI assistant retains `REACT_APP_OAI_*` examples in `.env.example`; the transfer Edge handler uses server-only `OAI_*` variables and `TRANSFER_ASSESSMENT_ENABLED=false`. The component-102 branch build still exits 1 at the component-103-owned `src/test-support/transferRoomFixtures.ts:146` DTO mismatch, so no 102-branch browser bundle was available for a build-asset scan. T042/T043/T045 and hosted privacy gates remain open; the integrated build must be checked at its exact combined SHA.
+**Historical privacy/build limit at the recorded component snapshot**: The local source scan `rtk rg -n 'REACT_APP_OAI|OAI_API_KEY|OAI_BASE_URL|fetch\\(|\\.from\\(|\\.rpc\\(|gradeSelection|correct_option_ids|learner_safe_explanation' src/services/transferAssessmentService.ts src/services/prompts/transferV3Prompt.ts` found only authorized terminal-feedback field names and projection code in the transfer facade. At that snapshot, the separate AI assistant retained `REACT_APP_OAI_*` examples in `.env.example`, while the transfer Edge handler used server-only `OAI_*` variables and `TRANSFER_ASSESSMENT_ENABLED=false`. The component-102 branch build still exited 1 at the component-103-owned `src/test-support/transferRoomFixtures.ts:146` DTO mismatch, so no 102-branch browser bundle was available for a build-asset scan. T042/T043/T045 and hosted privacy gates remained open; the integrated build needed checking at its exact combined SHA.
 
 ### Legacy-Key Migration Guard
 

@@ -1,5 +1,8 @@
 # RoomContext.tsx - Real-time Messaging System
 
+<!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
+<!-- Updated: 2026-09-29. Implementation commit: 2988dd0. -->
+
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
 
@@ -98,12 +101,17 @@ persisted parent and the separate assessment ID for trusted processing. The cont
 processor's returned answer and assessment IDs before attaching lifecycle state to the answer and
 its matching question. If concurrent results arrive in either order, an accepted terminal lifecycle
 remains the question state when a later result is rejected or has no accepted attempt; each answer
-retains its own processing result. On student reload or reconnect, the context re-reads each matching
-answer through the idempotent `processMessage` facade, only for the signed-in learner's own answers
-and questions. A failed re-read leaves the room visible without inventing feedback. Message merges
+retains its own processing result. On student reload or reconnect, the context re-reads only stored
+answers whose assessment ID matches the targeted question through the idempotent `processMessage`
+facade. Ordinary replies to the question remain discussion messages and are not graded. A failed
+re-read leaves the room visible without inventing feedback. Message merges
 retain the projected question and server lifecycle when polling replaces a local view with a fresh
 database row. Student messages without an assessment identity use evidence analysis directly. The
 browser does not grade answers or write progress.
+
+The learner's assessment submissions appear in answer history within the question, including
+pending submissions and their later server feedback. Other room participants retain the normal
+discussion view.
 
 Message ingress uses one stable-ID merge for the initial room fetch, realtime inserts, polling,
 reviewed sends, optimistic replacement, and catch-up. The page refreshes persisted room state after a

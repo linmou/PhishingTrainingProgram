@@ -1,18 +1,20 @@
-# Production Transfer Provider Contract
+# Component 102 Provider Contract
 
-<!-- Intent: freeze request parity, prompt ownership, required configuration, output validation, and bounded provider failure behavior. -->
+<!-- Intent: define the repository Edge Function provider behavior and request parity contract. -->
+
+This is the component-102 repository contract. The production database catalog inspection does not verify provider configuration or deployed Edge Function behavior.
 
 ## Required Configuration
 
-The Edge Function reads these server-only variables:
+The Edge Function reads the existing app provider variables plus the required model setting:
 
 ```text
-OAI_API_KEY=<secret>
-OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+REACT_APP_OAI_API_KEY=<configured-value>
+REACT_APP_OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OAI_MODEL=qwen3.5-flash
 ```
 
-All three are required. There is no hard-coded or runtime model fallback. Missing configuration returns `AI_PROVIDER_NOT_CONFIGURED` before a provider request. Browser-prefixed `REACT_APP_OAI_*` values are not production provider configuration.
+All three are required in the Edge Function environment. Give the Edge Function a distinct provider key: CRA exposes browser `REACT_APP_*` values in its bundle. There is no hard-coded or runtime model fallback. Missing configuration returns `AI_PROVIDER_NOT_CONFIGURED` before a provider request.
 
 ## Shared Request Boundary
 
@@ -26,11 +28,11 @@ Component 102 retains these pure exports in `tutor-system/src/services/ecologica
 
 Production and component 104 serialize through the same builders. The shared module contains no production system prompt, credentials, provider transport, key, learner answer, or grading result. Component 104 owns cases/rubrics, not a copied request schema.
 
-## Production Request
+## Component 102 Request Implementation
 
 Only `tutor-system/supabase/functions/assessment-api/index.ts` composes the provider request. It uses:
 
-- configured `OAI_BASE_URL` and exact configured `OAI_MODEL=qwen3.5-flash`;
+- configured `REACT_APP_OAI_BASE_URL` and exact configured `OAI_MODEL=qwen3.5-flash`;
 - the backend-owned transfer-v3 system prompt;
 - canonical `TransferTutorRequestV3` user content;
 - JSON response mode supported by the DashScope-compatible endpoint;

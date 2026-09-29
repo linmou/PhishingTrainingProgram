@@ -1,6 +1,8 @@
-# Specification Quality Checklist: Server-Authoritative Transfer Assessment Backend
+# Historical Specification Quality Checklist: Component 102 Target
 
 <!-- Intent: verify that the restored component specification is complete, testable, and bounded before technical planning. -->
+
+This checklist validates the historical component-102 target specification. Its checked items are not a production deployment or runtime verification result.
 
 **Purpose**: Validate specification completeness and quality before planning.
 **Created**: 2026-09-22
@@ -44,4 +46,4 @@
 
 ## Notes
 
-- The canonical provider decision requires server-side `OAI_MODEL=qwen3.5-flash` through the existing DashScope-compatible provider, with no runtime fallback. Planning includes updating `.env.example` because its current browser-prefixed provider settings are insufficient for the trusted boundary.
+- The Edge Function uses `REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` settings with exact `OAI_MODEL=qwen3.5-flash`. Configure a distinct Edge provider key; browser `REACT_APP_*` values are exposed in the CRA bundle. There is no runtime fallback.
