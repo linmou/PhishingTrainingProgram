@@ -10,6 +10,9 @@ jobs:
   deploy-staging:
     name: Deploy to PhishingTutorStaging
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tutor-system
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       REACT_APP_OAI_API_KEY: ${{ secrets.REACT_APP_OAI_API_KEY }}
