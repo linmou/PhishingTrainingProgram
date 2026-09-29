@@ -11,6 +11,10 @@ on:
         description: Seed the dedicated staging browser room
         type: boolean
         default: false
+      inspect_assessment_state:
+        description: Print provider validation for the staging browser room
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -51,6 +55,11 @@ jobs:
         if: inputs.seed_assessment_room
         shell: bash
         run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/fixtures/staging_assessment_room_20260929.sql
+
+      - name: Inspect staging provider attempts
+        if: inputs.inspect_assessment_state
+        shell: bash
+        run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/tests/staging_assessment_provider_inspect.sql
 
       - name: Configure Edge Function provider secrets
         shell: bash
