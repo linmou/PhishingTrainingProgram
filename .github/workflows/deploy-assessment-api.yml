@@ -18,15 +18,15 @@ jobs:
       REACT_APP_OAI_API_KEY: ${{ secrets.REACT_APP_OAI_API_KEY }}
       REACT_APP_OAI_BASE_URL: ${{ secrets.REACT_APP_OAI_BASE_URL }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Check required secrets
         shell: bash
         run: |
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$REACT_APP_OAI_API_KEY"
           test -n "$REACT_APP_OAI_BASE_URL"
-
-      - name: Check out repository
-        uses: actions/checkout@v4
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
