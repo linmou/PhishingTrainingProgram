@@ -10,12 +10,15 @@ DECLARE
   v_checklist uuid;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.rooms WHERE id = v_room AND tutor_id = v_tutor)
-    OR NOT EXISTS (SELECT 1 FROM public.sessions
-      WHERE room_id = v_room AND student_id = v_student AND status = 'active')
     OR NOT EXISTS (SELECT 1 FROM public.messages
       WHERE room_id = v_room AND user_id = v_student AND user_role = 'student'
         AND content LIKE 'The alert uses an account name I recognize%')
   THEN RAISE EXCEPTION 'STAGING_ROOM_NOT_READY'; END IF;
+
+  INSERT INTO public.sessions(tutor_id, student_id, room_id, status)
+  SELECT v_tutor, v_student, v_room, 'active'
+  WHERE NOT EXISTS (SELECT 1 FROM public.sessions
+    WHERE room_id = v_room AND student_id = v_student AND status = 'active');
 
   PERFORM set_config('app.transfer_operation', 'on', true);
   SELECT id INTO v_checklist FROM public.session_checklists
