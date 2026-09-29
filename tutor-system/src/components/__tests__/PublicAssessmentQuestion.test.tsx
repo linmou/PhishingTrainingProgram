@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PublicAssessmentQuestion from '../PublicAssessmentQuestion';
 import { answerLifecycleFromProcessed, projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
@@ -122,6 +122,64 @@ describe('PublicAssessmentQuestion', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Incorrect. 1 attempt remaining.');
     expect(screen.queryByText('Use an official channel to verify the request.')).not.toBeInTheDocument();
     expect(screen.queryByText('Correct option(s): B')).not.toBeInTheDocument();
+  });
+
+  it('navigates saved answers and feedback without changing the latest outcome', () => {
+    const view = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    const first = processedAnswer({ message_id: 'answer-1', answer_outcome: 'retry', selected_option_ids: ['A'] });
+    const second = processedAnswer({
+      message_id: 'answer-2',
+      answer_outcome: 'failed',
+      attempt_number: 2,
+      attempts_used: 2,
+      attempts_remaining: 0,
+      selected_option_ids: ['C'],
+      terminal: true,
+      terminal_failure_feedback: {
+        correct_option_ids: ['B'],
+        learner_safe_explanation: 'Use an official channel to verify the request.',
+      },
+    });
+
+    render(
+      <PublicAssessmentQuestion
+        question={view.publicQuestion!}
+        answerLifecycle={second}
+        attempts={[{ messageId: 'answer-1', lifecycle: first }, { messageId: 'answer-2', lifecycle: second }]}
+        canAnswer
+      />
+    );
+
+    expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Answer history' }))
+      .getByText('C. Forward the offer to a friend.')).toBeInTheDocument();
+    expect(screen.getByText('Use an official channel to verify the request.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next answer' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous answer' }));
+    expect(screen.getByText('Answer 1 of 2')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Answer history' }))
+      .getByText('A. Pay the fee quickly.')).toBeInTheDocument();
+    expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+    expect(screen.queryByText('Use an official channel to verify the request.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next answer' }));
+    expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
+  });
+
+  it('shows a saved answer as processing until its result arrives', () => {
+    const view = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    render(
+      <PublicAssessmentQuestion
+        question={view.publicQuestion!}
+        attempts={[{ messageId: 'answer-1', lifecycle: null }]}
+        canAnswer
+      />
+    );
+
+    expect(screen.getByText('Answer 1 of 1')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Your answer is still processing.');
   });
 
   it('disables further answers after the server reports a correct outcome', () => {

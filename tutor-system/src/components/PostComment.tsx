@@ -4,6 +4,7 @@ import { Message, MessageFeedbackStats } from '../types';
 import AvatarDisplay from './AvatarDisplay';
 import FeedbackRating from './FeedbackRating';
 import PublicAssessmentQuestion from './PublicAssessmentQuestion';
+import type { AssessmentAnswerAttempt } from './PublicAssessmentQuestion';
 import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 import { resolveMessagePresentation } from '../utils/messagePresentation';
 import type { AssessmentOptionId } from '../types/assessment';
@@ -32,6 +33,7 @@ interface PostCommentProps {
         assessmentId: string,
         selectedOptionIds: AssessmentOptionId[]
     ) => Promise<void> | void;
+    assessmentAttempts?: AssessmentAnswerAttempt[];
 }
 
 const PostComment: React.FC<PostCommentProps> = ({
@@ -51,7 +53,8 @@ const PostComment: React.FC<PostCommentProps> = ({
     className = '',
     onSubmitFeedback,
     feedbackStats,
-    onSubmitAssessment
+    onSubmitAssessment,
+    assessmentAttempts = []
 }) => {
     // A delivered assessment message renders its public question; every other message renders
     // its plain content.
@@ -201,6 +204,9 @@ const PostComment: React.FC<PostCommentProps> = ({
                                     ? <PublicAssessmentQuestion
                                         question={publicQuestion}
                                         answerLifecycle={answerLifecycle}
+                                        attempts={currentUserRole === 'student' && currentUserId === publicQuestion.studentId
+                                            ? assessmentAttempts
+                                            : []}
                                         canAnswer={currentUserRole === 'student' && currentUserId === publicQuestion.studentId}
                                         onSubmit={onSubmitAssessment
                                             ? (ids) => onSubmitAssessment(message.id, publicQuestion.id, ids)

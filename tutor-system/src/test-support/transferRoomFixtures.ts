@@ -273,7 +273,7 @@ export const transferChecklist = {
 };
 
 /** A stored learner answer row, as the server-authoritative processing path produced it. */
-export const deliveredAnswerRow: Message = {
+export const deliveredAnswerRow: Message & { assessment_id: string } = {
   id: DELIVERED_ANSWER_ID,
   room_id: TRANSFER_ROOM_ID,
   user_id: LEARNER_A_ID,
@@ -283,6 +283,7 @@ export const deliveredAnswerRow: Message = {
   ai_model_used: null,
   ai_response_time_ms: null,
   parent_message_id: DELIVERED_QUESTION_ID,
+  assessment_id: DELIVERED_QUESTION_ID,
   created_at: '2026-09-12T09:15:00Z',
   response_mode: null,
 };

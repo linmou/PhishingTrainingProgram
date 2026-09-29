@@ -44,6 +44,7 @@ export interface PublicQuestionView {
  */
 export interface RoomMessageView extends Message {
   publicQuestion: PublicQuestionView | null;
+  assessmentId: string | null;
   /** The server's own lifecycle result for a learner answer, when this message is one. */
   answerLifecycle: AnswerLifecycleView | null;
 }
@@ -223,6 +224,7 @@ export function projectRoomMessage(
     display_name: asNonEmptyString(projected.display_name) || undefined,
     avatar_url: asNonEmptyString(projected.avatar_url),
     publicQuestion: publicQuestionFromStoredRow(source, explicit),
+    assessmentId: asNonEmptyString(source.assessment_id),
     answerLifecycle: null,
   };
 }
@@ -274,6 +276,11 @@ export function readAnswerLifecycle(message: Message | null | undefined): Answer
   if (!message) return null;
   const candidate = (message as Partial<RoomMessageView>).answerLifecycle;
   return candidate && typeof candidate === 'object' ? candidate : null;
+}
+
+/** Read the persisted link between an answer message and its assessment. */
+export function readAssessmentId(message: Message | null | undefined): string | null {
+  return message ? (message as Partial<RoomMessageView>).assessmentId ?? null : null;
 }
 
 /** Read the public question a projected message carries, if any. */

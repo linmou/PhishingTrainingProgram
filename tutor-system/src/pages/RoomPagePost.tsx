@@ -19,6 +19,8 @@ import { getRatingLabel } from '../components/feedbackRatingLabels';
 import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
 import type { AssessmentOptionId } from '../types/assessment';
+import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
+import { readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
 
@@ -52,7 +54,7 @@ const COMPARISON_PAIR_LABELS = {
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const {
         currentRoom,
         messages,
@@ -180,6 +182,25 @@ const RoomPagePost: React.FC = () => {
     };
 
     const visibleMessages = dueMessages.filter(message => !isHeldByPairStagger(message));
+    const assessmentAttempts = new Map<string, AssessmentAnswerAttempt[]>();
+    const embeddedAnswerIds = new Set<string>();
+    if (user?.current_role === 'student') {
+        const questions = new Map(visibleMessages
+            .filter(message => readPublicQuestion(message)?.studentId === user.id)
+            .map(message => [message.id, readPublicQuestion(message)!]));
+        visibleMessages.forEach(message => {
+            const question = message.parent_message_id && questions.get(message.parent_message_id);
+            const lifecycle = readAnswerLifecycle(message);
+            if (!question || message.user_role !== 'student' || message.user_id !== user.id
+                || (lifecycle ? lifecycle.assessmentId !== question.id : readAssessmentId(message) !== question.id)) return;
+
+            const attempts = assessmentAttempts.get(message.parent_message_id!) || [];
+            attempts.push({ messageId: message.id, lifecycle });
+            assessmentAttempts.set(message.parent_message_id!, attempts);
+            embeddedAnswerIds.add(message.id);
+        });
+    }
+    const discussionMessages = visibleMessages.filter(message => !embeddedAnswerIds.has(message.id));
     const pendingPlayback = visibleMessages.length !== messages.length;
 
     useEffect(() => {
@@ -204,9 +225,9 @@ const RoomPagePost: React.FC = () => {
         return () => clearTimeout(timer);
     }, [messages, now, playbackAnchors]);
 
-    // Join room on component mount
+    // Join after the stored identity has been restored so saved learner results can be replayed.
     useEffect(() => {
-        if (roomId) {
+        if (roomId && !authLoading) {
             attemptJoinRoom();
         }
 
@@ -214,7 +235,7 @@ const RoomPagePost: React.FC = () => {
         return () => {
             leaveRoom();
         };
-    }, [roomId, leaveRoom]);
+    }, [roomId, leaveRoom, authLoading, user?.id, user?.current_role]);
 
     // Scroll functions (defined before useEffect that uses them)
     const scrollToBottom = useCallback((smooth: boolean = true) => {
@@ -794,7 +815,7 @@ const RoomPagePost: React.FC = () => {
                 <RoomPost
                     room={currentRoom}
                     tutor={tutor}
-                    messageCount={messages.length}
+                    messageCount={discussionMessages.length}
                     participantCount={participants?.length || 0}
                     onLike={handleRoomLike}
                     onShare={handleRoomShare}
@@ -825,7 +846,7 @@ const RoomPagePost: React.FC = () => {
                 {/* Comments Section */}
                 <div className="comments-section">
                     <div className="comments-header">
-                        💬 Discussion ({visibleMessages.length} message{visibleMessages.length !== 1 ? 's' : ''})
+                        💬 Discussion ({discussionMessages.length} message{discussionMessages.length !== 1 ? 's' : ''})
                     </div>
                     
                     <div 
@@ -833,12 +854,12 @@ const RoomPagePost: React.FC = () => {
                         ref={messagesContainerRef}
                         onScroll={handleScroll}
                     >
-                        {visibleMessages.length === 0 ? (
+                        {discussionMessages.length === 0 ? (
                             <div style={{ padding: '40px 20px', textAlign: 'center', color: '#65676b' }}>
                                 <p>No messages yet. Start the conversation!</p>
                             </div>
                         ) : (
-                            visibleMessages.map((message) => {
+                            discussionMessages.map((message) => {
                                 const engagement = messageEngagements[message.id] || {
                                     likeCount: 0,
                                     dislikeCount: 0,
@@ -861,6 +882,7 @@ const RoomPagePost: React.FC = () => {
                                         onSubmitFeedback={submitMessageFeedback}
                                         feedbackStats={messageFeedbackStats[message.id]}
                                         onSubmitAssessment={handleAssessmentSubmit}
+                                        assessmentAttempts={assessmentAttempts.get(message.id)}
                                     />
                                 );
                             })

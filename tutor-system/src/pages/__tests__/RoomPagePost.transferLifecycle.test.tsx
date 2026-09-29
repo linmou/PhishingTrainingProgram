@@ -26,6 +26,7 @@ import {
   LEARNER_A_MESSAGE_ID,
   TRANSFER_ROOM_ID,
   deliveredPublicAssessment,
+  deliveredAnswerRow,
   deliveredQuestionRow,
   learnerAUser,
   learnerAMessageRow,
@@ -279,6 +280,81 @@ describe('RoomPagePost transfer lifecycle states', () => {
     mount({ messages: [question] });
 
     expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+  });
+
+  it('shows saved learner submissions inside their question instead of separate comments', () => {
+    const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    const first = withAnswerLifecycle(
+      projectRoomMessage({ ...deliveredAnswerRow, content: 'A' }),
+      answerLifecycleFromProcessed({
+        message_id: DELIVERED_ANSWER_ID,
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied',
+        answer_outcome: 'retry',
+        attempt_number: 1,
+        attempts_used: 1,
+        attempts_remaining: 1,
+        selected_option_ids: ['A'],
+        terminal: false,
+        transition: null,
+        feedback_required: false,
+        code: null,
+        already_processed: true,
+        terminal_failure_feedback: null,
+      })
+    );
+    const second = withAnswerLifecycle(
+      projectRoomMessage({ ...deliveredAnswerRow, id: 'answer-2', content: 'B', created_at: '2026-09-12T09:16:00Z' }),
+      answerLifecycleFromProcessed({
+        message_id: 'answer-2',
+        assessment_id: DELIVERED_QUESTION_ID,
+        processing_state: 'applied',
+        answer_outcome: 'passed',
+        attempt_number: 2,
+        attempts_used: 2,
+        attempts_remaining: 0,
+        selected_option_ids: ['B'],
+        terminal: true,
+        transition: null,
+        feedback_required: false,
+        code: null,
+        already_processed: true,
+        terminal_failure_feedback: null,
+      })
+    );
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const { container } = mount({ messages: [question, first, second] });
+
+    expect(container.querySelectorAll('.post-comment')).toHaveLength(1);
+    expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
+    expect(screen.getByText('Correct.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Previous answer' }));
+    expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+  });
+
+  it('keeps a plain reply visible while embedding a pending answer to the same question', () => {
+    const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    const reply = projectRoomMessage({
+      ...deliveredAnswerRow,
+      id: 'plain-reply',
+      assessment_id: null,
+      content: 'Can you explain this question?',
+    });
+    const pendingAnswer = projectRoomMessage({
+      ...deliveredAnswerRow,
+      id: 'pending-answer',
+      assessment_id: DELIVERED_QUESTION_ID,
+      content: 'A',
+      created_at: '2026-09-12T09:16:00Z',
+    });
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    mount({ messages: [question, reply, pendingAnswer] });
+
+    expect(screen.getByText('Can you explain this question?')).toBeInTheDocument();
+    expect(screen.getByText(/Discussion \(2 messages\)/)).toBeInTheDocument();
+    expect(screen.getByText('Answer 1 of 1')).toBeInTheDocument();
+    expect(screen.getByText('Your answer is still processing.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
   });
 
