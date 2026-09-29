@@ -27,6 +27,8 @@ export interface ChecklistItem {
   updated_at: Date;
 }
 
+export type LearningTargetInput = Pick<ChecklistItem, 'area_text' | 'item_type' | 'priority'>;
+
 // Evidence for why an area was marked as covered
 export interface CoverageEvidence {
   id: string;

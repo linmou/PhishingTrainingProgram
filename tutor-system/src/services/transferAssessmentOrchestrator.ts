@@ -12,9 +12,12 @@ import type {
 } from '../types/assessment';
 import type { RoomParticipationMode } from '../types/assessment';
 import type { TransferProgress } from '../types/learningProgress';
-import { parseAssessmentAnswer } from './assessmentAnswerParser';
-import { gradeSelection } from './assessmentGrading';
-import { applyLearningEvent } from './learningProgressTransitions';
+// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+import { parseAssessmentAnswer } from './assessmentAnswerParser.ts';
+// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+import { gradeSelection } from './assessmentGrading.ts';
+// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+import { applyLearningEvent } from './learningProgressTransitions.ts';
 
 export type TransferAssessmentDisposition = TransferAttemptResult['disposition'];
 export type TransferAssessmentNextAction = TransferAttemptResult['next_action'];

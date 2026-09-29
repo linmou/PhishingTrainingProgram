@@ -22,17 +22,26 @@ function request(operation: string, body: Record<string, unknown> = {}): Request
 }
 
 function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): AssessmentApiDependencies {
+  const suppliedRpc = overrides.rpc ?? (async () => ({ data: {}, error: null }));
   return {
     featureEnabled: true,
     verifier: { verify: async () => ({
       principal_id: 'principal-1', application_user_id: 'teacher-1',
       allowed_room_ids: ['room-1'], can_review_assessment: true,
     }) },
-    rpc: async () => ({ data: {}, error: null }),
     env: () => undefined,
     fetch: globalThis.fetch,
     resolveAnswer: () => ({ disposition: 'retryable' } as never),
     ...overrides,
+    rpc: async (name, args) => {
+      if (name === 'get_transfer_message_analysis_context_v1') {
+        return { data: { analysis_complete: true }, error: null };
+      }
+      if (name === 'prepare_transfer_assessment_context_v1') {
+        return { data: { ...providerScope(), selected_target_item_id: 'item-1' }, error: null };
+      }
+      return suppliedRpc(name, args);
+    },
   };
 }
 
@@ -59,9 +68,7 @@ function validProviderPayload(): Record<string, unknown> {
   return {
     choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       reason: 'Assess transfer.',
-      learning_evidence: [],
-      decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: 'item-1' },
-      response: 'Which action is safest?',
+      target_item_id: 'item-1',
       assessment: {
         selection_type: 'single', stem: 'Which action is safest?', rendered_text: 'Which action is safest?',
         options: [{ id: 'A', text: 'Click' }, { id: 'B', text: 'Verify' }, { id: 'C', text: 'Reply' }, { id: 'D', text: 'Forward' }],
@@ -71,6 +78,108 @@ function validProviderPayload(): Record<string, unknown> {
     }) } }],
   };
 }
+
+Deno.test('approved custom target flows through evidence, assessment delivery, and answer processing', async () => {
+  const operations: string[] = [];
+  let approved = false;
+  let evidenceApplied = false;
+  let delivered = false;
+  let providerCalls = 0;
+  const scope = providerScope();
+  const deps: AssessmentApiDependencies = {
+    ...dependencies(),
+    env: (name) => ({
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    rpc: async (name, args) => {
+      operations.push(name);
+      if (name === 'initialize_transfer_checklist_v1') {
+        assertEquals(args.p_items, [{ area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical' }]);
+        approved = true;
+        return { data: { checklist_id: 'checklist-1' }, error: null };
+      }
+      if (name === 'get_transfer_message_analysis_context_v1') {
+        assert(approved);
+        return { data: {
+          analysis_complete: evidenceApplied,
+          room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+          message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
+          items: [{ id: 'item-1', area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical', status: 'pending', understanding_level: 'none' }],
+        }, error: null };
+      }
+      if (name === 'apply_transfer_message_analysis_v1') {
+        const analysis = args.p_analysis as { events: Array<{ item_id: string; kind: string }> };
+        assertEquals(analysis.events[0].item_id, 'item-1');
+        assertEquals(analysis.events[0].kind, 'initial_signal');
+        evidenceApplied = true;
+        return { data: { applied: [{ status: 'partially_covered', understanding_level: 'basic' }] }, error: null };
+      }
+      if (name === 'prepare_transfer_assessment_context_v1') {
+        assert(evidenceApplied);
+        return { data: { ...scope, selected_target_item_id: 'item-1' }, error: null };
+      }
+      if (name === 'record_transfer_provider_attempt_v1') return { data: {}, error: null };
+      if (name === 'send_reviewed_transfer_assessment_v1') {
+        assert(evidenceApplied);
+        assertEquals((args.p_reviewed_payload as { target_item_id: string }).target_item_id, 'item-1');
+        delivered = true;
+        return { data: { message: {
+          id: 'question-1', room_id: 'room-1', user_id: 'teacher-1', user_role: 'tutor',
+          content: 'Which action is safest?', parent_message_id: 'focus-1', response_mode: 'assessment',
+          created_at: '2026-09-29T00:00:00Z',
+          assessment: { id: 'question-1', student_id: 'learner-1', selection_type: 'single',
+            stem: 'Which action is safest?', options: [
+              { id: 'A', text: 'Click' }, { id: 'B', text: 'Verify' },
+              { id: 'C', text: 'Reply' }, { id: 'D', text: 'Forward' },
+            ], correct_option_ids: ['B'] },
+        }, room: { id: 'room-1' } }, error: null };
+      }
+      if (name === 'get_transfer_assessment_processing_context_v1') {
+        assert(delivered);
+        return { data: { context: { attempt_snapshot: { accepted_attempt_count: 0, resolution: 'open' } },
+          assessment: { id: 'question-1' }, answer: { selected_option_ids: ['B'], references_message_id: 'question-1' } }, error: null };
+      }
+      if (name === 'process_assessment_message_v2') {
+        assertEquals(args.p_answer_outcome, 'passed');
+        return { data: { message_id: 'answer-1', assessment_id: 'question-1', processing_state: 'applied',
+          answer_outcome: 'passed', attempt_number: 1, attempts_used: 1, attempts_remaining: 0,
+          selected_option_ids: ['B'], terminal: true, feedback_required: true }, error: null };
+      }
+      throw new Error(`unexpected RPC ${name}`);
+    },
+    fetch: async (_input, init) => {
+      providerCalls += 1;
+      const prompt = JSON.stringify(JSON.parse(String(init?.body)));
+      if (providerCalls === 1) {
+        assert(prompt.includes('Verify independently'));
+        return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+          events: [{ item_id: 'item-1', kind: 'initial_signal', explanation: 'Uses an independent source.' }],
+          requires_protection: false, requires_correction: false,
+        }) } }] }), { status: 200 });
+      }
+      assert(prompt.includes('item-1'));
+      return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
+    },
+    resolveAnswer: () => ({ disposition: 'passed', progress: { status: 'covered', understanding_level: 'good' }, applied_transition: { kind: 'assessment_pass' } }),
+  };
+  const handler = createAssessmentApiHandler(deps);
+  const init = await (await handler(request('initialize_checklist', { room_id: 'room-1', student_id: 'learner-1',
+    items: [{ area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical' }] }))).json();
+  assertEquals(init.data.checklist_id, 'checklist-1');
+  const analysis = await (await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }))).json();
+  assertEquals(analysis.data.applied[0].status, 'partially_covered');
+  const prepared = await (await handler(request('prepare_turn', { room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1' }))).json();
+  assertEquals(prepared.data.assessment_draft.target_item_id, 'item-1');
+  const sent = await (await handler(request('send_reviewed', { room_id: 'room-1', student_id: 'learner-1',
+    checklist_id: 'checklist-1', item_id: 'item-1', focus_student_message_id: 'focus-1',
+    reviewed_payload: prepared.data.assessment_draft }))).json();
+  assertEquals(sent.data.message.response_mode, 'assessment');
+  assert(!JSON.stringify(sent.data).includes('correct_option_ids'));
+  const processed = await (await handler(request('process_message', { room_id: 'room-1', assessment_id: 'question-1', message_id: 'answer-1' }))).json();
+  assertEquals(processed.data.answer_outcome, 'passed');
+  assertEquals(providerCalls, 2);
+  assert(operations.indexOf('apply_transfer_message_analysis_v1') < operations.indexOf('prepare_transfer_assessment_context_v1'));
+});
 
 // Test responsibility: verify that the production Edge module passes Deno's type checker.
 Deno.test('default RPC adapter type-checks without remote fetches', async () => {
@@ -131,7 +240,7 @@ Deno.test('forged actor and cross-room request cannot bypass verified scope', as
 Deno.test('returns the exact public assessment target and strips private fields', async () => {
   const handler = createAssessmentApiHandler(dependencies({
     rpc: async (name) => {
-      assertEquals(name, 'send_reviewed_tutor_response_v4');
+      assertEquals(name, 'send_reviewed_transfer_assessment_v1');
       return { data: {
         message: {
           id: 'question-1', room_id: 'room-1', user_id: 'teacher-1', content: 'Safest action?',
@@ -153,8 +262,7 @@ Deno.test('returns the exact public assessment target and strips private fields'
     room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
     item_id: 'item-1', focus_student_message_id: 'focus-1',
     reviewed_payload: {
-      decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: 'item-1' },
-      response: 'Safest action?', assessment: {
+      reason: 'Check transfer.', target_item_id: 'item-1', assessment: {
         selection_type: 'single', stem: 'Safest action?', rendered_text: 'Safest action?',
         options: [{ id: 'A', text: 'Click' }, { id: 'B', text: 'Verify' }, { id: 'C', text: 'Reply' }, { id: 'D', text: 'Forward' }],
         correct_option_ids: ['B'], learner_safe_explanation: 'Verify independently.',
@@ -258,7 +366,7 @@ Deno.test('returns a valid second response after one format repair', async () =>
   }));
   const payload = await response.json();
   assertEquals(response.status, 200);
-  assertEquals(payload.data.decision.assessment.learner_safe_explanation, 'Verify through the official app.');
+  assertEquals(payload.data.assessment_draft.assessment.learner_safe_explanation, 'Verify through the official app.');
   assertEquals(audits.map((entry) => entry.p_validation_outcome), ['invalid', 'valid']);
   assertEquals(audits.map((entry) => entry.p_attempt_ordinal), [1, 2]);
   assertEquals(requests.length, 2);
@@ -337,7 +445,82 @@ Deno.test('fails preparation without retry when provider audit persistence fails
   assertEquals(providerCalls, 1);
 });
 
-Deno.test('preserves trusted ordinary-message and tutoring-turn branches', async () => {
+Deno.test('analyzes persisted learner evidence before mandatory assessment preparation', async () => {
+  let analyzed = false;
+  let analysisCalls = 0;
+  let assessmentCalls = 0;
+  const base = dependencies({
+    env: (name) => ({
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    fetch: async (_input, init) => {
+      const body = JSON.parse(String(init?.body));
+      if (body.messages[0].content.includes('Classify this persisted learner message')) {
+        analysisCalls += 1;
+        return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+          events: [{ item_id: 'item-1', kind: 'initial_signal', explanation: 'Learner verifies independently.' }],
+          requires_protection: false, requires_correction: false, explanation: 'Relevant evidence.',
+        }) } }] }), { status: 200 });
+      }
+      assessmentCalls += 1;
+      return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
+    },
+  });
+  base.rpc = async (name, args) => {
+    if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+      analysis_complete: analyzed, room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+      message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
+      items: [{ id: 'item-1', area_text: 'Verify independently', status: analyzed ? 'partially_covered' : 'pending' }],
+    }, error: null };
+    if (name === 'apply_transfer_message_analysis_v1') {
+      assertEquals((args.p_analysis as Record<string, unknown>).events, [
+        { item_id: 'item-1', kind: 'initial_signal', explanation: 'Learner verifies independently.' },
+      ]);
+      analyzed = true;
+      return { data: { applied: [{ status: 'partially_covered' }] }, error: null };
+    }
+    if (name === 'prepare_transfer_assessment_context_v1') {
+      assert(analyzed, 'preparation used stale progress');
+      return { data: { ...providerScope(), selected_target_item_id: 'item-1' }, error: null };
+    }
+    return { data: {}, error: null };
+  };
+  const response = await createAssessmentApiHandler(base)(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1',
+  }));
+  const payload = await response.json();
+  assertEquals(payload.ok, true);
+  assertEquals(payload.data.assessment_draft.target_item_id, 'item-1');
+  assertEquals(analysisCalls, 1);
+  assertEquals(assessmentCalls, 1);
+});
+
+Deno.test('explicit no-assessment result avoids the provider, while an eligible provider failure is an error', async () => {
+  let calls = 0;
+  const noDue = dependencies({
+    rpc: async () => ({ data: {}, error: null }),
+    fetch: async () => { calls += 1; throw new Error('provider should not run'); },
+  });
+  noDue.rpc = async (name) => name === 'prepare_transfer_assessment_context_v1'
+    ? { data: { no_assessment_due: true }, error: null }
+    : { data: { analysis_complete: true }, error: null };
+  const body = { room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1' };
+  const none = await createAssessmentApiHandler(noDue)(request('prepare_turn', body));
+  assertEquals((await none.json()).data, null);
+  assertEquals(calls, 0);
+
+  const failing = dependencies({
+    env: (name) => ({
+      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    fetch: async () => { calls += 1; throw new Error('offline'); },
+  });
+  const failed = await createAssessmentApiHandler(failing)(request('prepare_turn', body));
+  assertEquals((await failed.json()).error.code, 'AI_PROVIDER_ERROR');
+  assertEquals(calls, 1);
+});
+
+Deno.test('preserves the trusted ordinary-message branch and rejects tutoring through assessment delivery', async () => {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const handler = createAssessmentApiHandler(dependencies({
     rpc: async (name, args) => {
@@ -364,9 +547,9 @@ Deno.test('preserves trusted ordinary-message and tutoring-turn branches', async
     },
   }));
   const payload = await reviewed.json();
-  assertEquals(payload.data.message.assessment, null);
+  assertEquals(payload.error.code, 'ITEM_VALIDATION_FAILED');
   assertEquals(calls[0].args.p_assessment_id, null);
-  assertEquals(calls[1].args.p_item_id, null);
+  assertEquals(calls.length, 1);
 });
 
 Deno.test('retries a stale CAS snapshot and returns the committed authoritative result', async () => {

@@ -39,6 +39,12 @@ export interface PrivateAssessment extends PublicAssessment {
   learner_safe_explanation: string;
 }
 
+export interface TransferAssessmentDraft {
+  reason: string;
+  target_item_id: string;
+  assessment: PrivateAssessment;
+}
+
 export interface TransferAttemptSnapshot {
   assessment_id: string;
   accepted_attempt_count: 0 | 1 | 2;

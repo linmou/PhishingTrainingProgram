@@ -165,8 +165,8 @@ describe('v3 transfer request contract', () => {
       'utf8'
     );
     expect(source).toContain('buildTransferTutorRequestContextV3');
-    expect(source).toContain('buildTransferTutorRequestV3');
-    expect(source).toContain('buildTransferTutorUserMessageV3');
+    expect(source).toContain('buildTransferAssessmentRequest');
+    expect(source).toContain('TRANSFER_ANALYSIS_SYSTEM_PROMPT');
     expect(source).toContain('learner_safe_explanation must be concise');
     expect(source).toContain('max_tokens: PROVIDER_MAX_TOKENS');
   });

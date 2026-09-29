@@ -446,14 +446,10 @@ describe('component 101 assessment-draft validation', () => {
   function assessmentDecision(overrides: Record<string, unknown> = {}): string {
     return JSON.stringify({
       reason: 'The learner applied the rule in the original account-alert example.',
-      decision: {
-        mode: 'assessment',
-        instruction: 'transfer_assess',
-        target_item_id: TRANSFER_FIXTURE_TARGET_ITEM_ID,
-      },
-      response: 'A teammate sends a prize link from a familiar account.',
+      target_item_id: TRANSFER_FIXTURE_TARGET_ITEM_ID,
       assessment: {
         selection_type: 'single',
+        stem: 'A teammate sends a prize link from a familiar account.',
         options: TRANSFER_ASSESSMENT_OPTIONS,
         correct_option_ids: TRANSFER_CORRECT_OPTION_IDS,
         learner_safe_explanation: 'A familiar displayed identity does not verify who controls the account.',
@@ -471,11 +467,7 @@ describe('component 101 assessment-draft validation', () => {
   it('validates a well-formed assessment draft through the production seam', () => {
     const decision = validateAssessmentDraft(assessmentDecision(), knownIds);
 
-    expect(decision.decision).toEqual({
-      mode: 'assessment',
-      instruction: 'transfer_assess',
-      target_item_id: TRANSFER_FIXTURE_TARGET_ITEM_ID,
-    });
+    expect(decision.target_item_id).toBe(TRANSFER_FIXTURE_TARGET_ITEM_ID);
     expect(decision.assessment?.correct_option_ids).toEqual(TRANSFER_CORRECT_OPTION_IDS);
   });
 
@@ -532,25 +524,25 @@ describe('component 101 assessment-draft validation', () => {
     expect(() => validateAssessmentDraft(JSON.stringify(multiple), knownIds)).toThrow('correct');
   });
 
-  it('rejects assessment mode without a payload', () => {
+  it('rejects an assessment draft without a payload', () => {
     expect(() => validateAssessmentDraft(assessmentDecision({ assessment: null }), knownIds)).toThrow('assessment');
   });
 
-  it('rejects a blank stem and a non-object decision payload', () => {
+  it('rejects a blank stem and a non-object draft', () => {
     const payload = JSON.parse(assessmentDecision());
-    payload.response = '   ';
+    payload.assessment.stem = '   ';
 
-    expect(() => validateAssessmentDraft(JSON.stringify(payload), knownIds)).toThrow('response');
-    expect(() => validateAssessmentDraft('[]', knownIds)).toThrow('decision');
+    expect(() => validateAssessmentDraft(JSON.stringify(payload), knownIds)).toThrow('stem');
+    expect(() => validateAssessmentDraft('[]', knownIds)).toThrow('draft');
   });
 
   it('keeps the private key inside the validated private assessment only', () => {
-    const decision = parseTutorDecisionV3(assessmentDecision(), knownIds);
+    const decision = validateAssessmentDraft(assessmentDecision(), knownIds);
     const publicView = {
       selection_type: decision.assessment!.selection_type,
       options: decision.assessment!.options,
-      stem: decision.response,
-      rendered_text: decision.response,
+      stem: decision.assessment.stem,
+      rendered_text: decision.assessment.rendered_text,
     };
 
     expect(JSON.stringify(publicView)).not.toContain('correct_option_ids');
