@@ -1,6 +1,6 @@
 --!/usr/bin/env psql
 -- Purpose: align the hosted staging schema with the active assessment-api contract.
--- DRAFT: not deployed; final regression validation is pending restored database access.
+-- Applied to staging project ciubrzggdqesgvfkpolj on 2026-09-29 by workflow run 36553210224.
 BEGIN;
 
 ALTER TABLE public.messages ADD COLUMN assessment_request_id uuid;

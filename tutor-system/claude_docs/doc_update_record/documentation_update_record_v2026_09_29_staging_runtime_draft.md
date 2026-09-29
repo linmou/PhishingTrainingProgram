@@ -1,6 +1,6 @@
 # Staging Assessment Runtime Draft
 
-Intent: preserve the pending backend update and its actual validation status for continued staging delivery.
+Intent: record the staging runtime delivery and browser assessment results with their validation limits.
 
 Date: 2026-09-29
 
@@ -51,4 +51,13 @@ The earlier restricted environment denied access to the PostgreSQL Unix socket, 
 
 ## Remaining Work
 
-Deliver the validated migration to staging through GitHub Actions, archive it after confirmed success, then create assessment-ready rooms and run Playwright tutor/student pass, retry, failure, and subsequent tutor-reaction flows. The ordinary-message classifier remains a separate follow-up if the hosted room flow requires automatic progress changes before tutor review.
+The runtime migration was applied once by workflow run `36553210224` and is archived. The one-time workflow input was removed. Function run `36555715803` deployed the prompt with bounded review text.
+
+The real Playwright tutor and student sessions used staging room `92081ace-7370-4fbf-bbb4-39aa10bf7f73` and checklist `211e1b68-eaf8-440b-870b-5b7014b0b479`:
+
+- The tutor reviewed and sent a bank-alert question. The student selected C on the first attempt and saw `Correct.`
+- Assessment `72cde923-fbb9-4aa8-87f9-a0001f382fe1` received A then C. The student first saw `Incorrect. 1 attempt remaining.`, then `Correct.` The tutor's refreshed checklist showed `50.0% Complete (2/4 items)` after the two passing assessments.
+- Assessment `69410777-9fbc-4b53-9d52-08999b8e56c1` received A then C against correct option B. The second answer disabled further submission and showed the learner-safe explanation with `Correct option(s): B`.
+- The student asked why calling the number in the suspicious delivery text was unsafe. The AI prepared another assessment instead of an explanation. The tutor discarded the draft and sent a direct clarification. This is an observed provider behavior issue; help routing is not validated as correct.
+
+Hosted private attempt, event, and checklist-row inspection remains to be run. The ordinary-message classifier still returns `awaiting_review`; tutor review remains the authority for these delivered assessments.

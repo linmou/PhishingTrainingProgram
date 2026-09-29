@@ -3,10 +3,6 @@ name: Deploy Assessment API
 on:
   workflow_dispatch:
     inputs:
-      apply_runtime_migration:
-        description: Apply the pending staging assessment runtime migration
-        type: boolean
-        default: false
       seed_assessment_room:
         description: Seed the dedicated staging browser room
         type: boolean
@@ -45,11 +41,6 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
-
-      - name: Apply staging assessment runtime migration
-        if: inputs.apply_runtime_migration
-        shell: bash
-        run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/migrations/20260929090000_staging_assessment_runtime.sql
 
       - name: Seed staging assessment browser room
         if: inputs.seed_assessment_room
