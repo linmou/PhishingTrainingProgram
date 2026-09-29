@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-09-29
-Commit: 5a3c56a (staging Edge Function workflow)
+Commit: 31cc05c (transfer room workflow)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -25,7 +25,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
 - **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
-- **Transfer Assessments**: Teacher-reviewed questions with private keys, persisted two-attempt grading, and terminal-only failure feedback behind the trusted assessment API; the Edge Function flag defaults to enabled
+- **Transfer Assessments**: Room-approved learner targets drive semantic evidence analysis and teacher-reviewed questions; private keys, two-attempt grading, and terminal-only failure feedback stay behind the trusted assessment API
 - **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support

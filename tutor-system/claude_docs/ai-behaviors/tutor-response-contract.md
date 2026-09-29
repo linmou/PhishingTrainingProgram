@@ -116,33 +116,22 @@ The former multi-agent path used a separate completion budget and repair instruc
 
 Historical Multi-agent responses were stored through the ordinary messages path, so the reviewed-send audit record (`ai_suggestion_feedback`) was not written for them. Multi-agent human-edit provenance remains unavailable for those records.
 
-## Transfer assessment v3 contract
+## Transfer assessment contract
 
-Intent: define the structured teacher-review payload used by the T09 transfer-assessment lifecycle while preserving the legacy v2 contract above.
+Intent: define the assessment-only teacher-review payload used by T09 while preserving historical shared-tutor decoding.
 
-T09 contract boundary: learner evidence may make a concept eligible without strong prior proof, but a transfer assessment is valid only when its scenario changes the meaningful situation. Assessment is a tutor turn, not a room mode; the reviewed send maps its participation state back to tutoring and does not bypass Guard. A spontaneous medium-transfer observation may verify the concept without an assessment.
+T09 contract boundary: learner evidence may make a concept eligible without strong prior proof, but a transfer assessment is valid only when its scenario changes the meaningful situation. Once a current room-approved target is fully eligible, TransferLearning prepares an assessment for the next AI-generated response and skips the shared tutor. Reviewed delivery stores `response_mode: assessment` without creating a room mode or bypassing Guard. A spontaneous medium-transfer observation may verify the concept without an assessment.
 
-The v3 model output is reason-first JSON with this shape:
+The assessment generator returns this private draft:
 
 ```json
 {
   "reason": "The learner applied the rule in a meaningfully changed context.",
-  "learning_evidence": [
-    {
-      "item_id": "checklist-item-id",
-      "evidence_message_id": "message-id",
-      "signal": "initial",
-      "analysis": "The learner applied the configured verification rule."
-    }
-  ],
-  "decision": {
-    "mode": "assessment",
-    "instruction": "transfer_assess",
-    "target_item_id": "checklist-item-id"
-  },
-  "response": "A teammate sends a prize link from a familiar account. What should you check first?",
+  "target_item_id": "checklist-item-id",
   "assessment": {
     "selection_type": "single",
+    "stem": "A teammate sends a prize link from a familiar account. What should you check first?",
+    "rendered_text": "A teammate sends a prize link from a familiar account. What should you check first?\nChoose one.\nA. Trust the displayed account\nB. Verify through an independent channel\nC. Open the link to inspect it\nD. Forward it to everyone",
     "options": [
       {"id": "A", "text": "Trust the displayed account"},
       {"id": "B", "text": "Verify through an independent channel"},
@@ -161,13 +150,7 @@ The v3 model output is reason-first JSON with this shape:
 }
 ```
 
-Allowed v3 combinations under T09 are:
-
-- `tutoring` with one teaching instruction and `assessment: null`;
-- `assessment` with `transfer_assess`, one known target item, and a complete four-option payload;
-- `guard` with `guard`, a null target, and `assessment: null`; or `guard` with a real teaching instruction and no assessment payload.
-
-The same v3 call performs T02 evidence classification before choosing the tutor turn. `learning_evidence` records every configured concept demonstrated by the focus learner message, using `initial`, `contradiction`, or `spontaneous_transfer`; an empty array means that message supplies no measurable evidence. Assessment requires prior stored evidence or a new `initial` signal for its target. The parser rejects evidence attributed to another learner/message, duplicate item signals, unknown IDs, missing or blank fields, noncanonical option content, invalid key cardinality, overlong rendering, and incompatible mode/instruction/payload combinations. Assessment rendering is bounded to two stem sentences and 80 word-like segments.
+The separate message-analysis operation classifies each persisted learner contribution against that room's approved targets, recording supported initial, contradiction, spontaneous-transfer, and post-repair evidence through server-owned learning events. The assessment generator cannot choose tutoring or Guard. Its validator rejects unknown targets or evidence IDs, missing or blank fields, invalid options or keys, and invalid rendering. The shared tutor retains its tutoring/Guard contract and runs when no assessment is due.
 
 Component 101 keeps the resolver pure: component 102 supplies and persists the server-owned `TransferAttemptSnapshot`, then projects the returned state by role. The learner-facing assessment shape omits the answer key, learner-safe explanation, and transfer basis. A valid selection is processed deterministically; an optional explanation cannot overturn an exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade.
 

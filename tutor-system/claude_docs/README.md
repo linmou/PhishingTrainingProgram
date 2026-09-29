@@ -2,8 +2,8 @@
 Document the current tutor-system architecture and highlight behavior that affects deployment and tutor workflows, including SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-09-11
-- Implementation commit ID: `ff21a7e`
+- Updated: 2026-09-29
+- Implementation commit ID: `31cc05c`
 
 # Tutor-System Documentation Hub
 
@@ -28,7 +28,8 @@ This directory contains comprehensive architectural and implementation documenta
 ### AI Assistant System
 - **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-adopted tutoring principles, P3 subprinciples and conditional priorities; each behavior requirement records its downstream interpretation
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
-- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy v2 and transfer v3 reason/decision/response contracts, teacher review boundary, exact assessment payload, and private-key rules
+- **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy tutor decoding, assessment-only teacher review, exact question payload, and private-key rules
+- **[Transfer refactor documentation record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_refactor.md)** - Updated behavior docs, staging migration status, and verification evidence
 - **[Transfer assessment evaluation readiness](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - Deterministic transfer checks and explicit pending semantic/database/browser gates
 - **[Transfer assessment BDD lifecycle](../features/transfer_assessment.feature)** - T09 room-level lifecycle scenarios; executable acceptance remains pending
 - **[Transfer assessment W0 applicability audit](../../evals/promptfoo/audits/transfer-assessment-w0-20260911/applicability-audit.json)** - All 43 legacy cases and 173 assertions explicitly not applicable to T09 while preserved
