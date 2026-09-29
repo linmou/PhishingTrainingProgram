@@ -36,7 +36,7 @@ WITH checks(check_name, pass, detail) AS (
   SELECT 'attempt uniqueness and bound constraints exist',
     EXISTS (SELECT 1 FROM pg_indexes
       WHERE schemaname = 'private' AND tablename = 'transfer_assessment_attempts'
-        AND indexdef ILIKE '%assessment_id%ordinal%')
+        AND indexdef ILIKE '%assessment_id%attempt_number%')
     AND EXISTS (SELECT 1 FROM pg_constraint c
       JOIN pg_class t ON t.oid = c.conrelid
       JOIN pg_namespace n ON n.oid = t.relnamespace

@@ -232,12 +232,13 @@ describe('assessment API contract', () => {
       'utf8'
     );
     expect(source).toContain("resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts'");
-    expect(source).toContain("deps.env('OAI_API_KEY')");
-    expect(source).toContain("deps.env('OAI_BASE_URL')");
+    expect(source).toContain("deps.env('REACT_APP_OAI_API_KEY')");
+    expect(source).toContain("deps.env('REACT_APP_OAI_BASE_URL')");
     expect(source).toContain("deps.env('OAI_MODEL')");
     expect(source).toContain("const PROVIDER_MODEL = 'qwen3.5-flash'");
     expect(source).toContain('p_expected_attempt_count');
     expect(source).toContain("committed.code === 'CONCURRENT_MODIFICATION'");
-    expect(source).not.toContain('REACT_APP_OAI');
+    expect(source).toContain("deps.env('REACT_APP_OAI_API_KEY')");
+    expect(source).toContain("deps.env('REACT_APP_OAI_BASE_URL')");
   });
 });

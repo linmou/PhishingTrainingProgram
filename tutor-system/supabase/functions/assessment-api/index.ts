@@ -54,7 +54,7 @@ export interface AssessmentApiDependencies {
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-user-id',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -253,8 +253,8 @@ async function recordProviderAttempt(
 }
 
 function providerConfig(deps: AssessmentApiDependencies): { key: string; baseUrl: string; model: string } {
-  const key = deps.env('OAI_API_KEY');
-  const baseUrl = deps.env('OAI_BASE_URL');
+  const key = deps.env('REACT_APP_OAI_API_KEY');
+  const baseUrl = deps.env('REACT_APP_OAI_BASE_URL');
   const model = deps.env('OAI_MODEL');
   if (!key || !baseUrl || model !== PROVIDER_MODEL) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
   return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
@@ -345,7 +345,14 @@ async function prepareTurn(
     }
     await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
       payload, finishReason, 'valid', null);
-    return { ...scope, decision: candidate };
+    return {
+      ...scope,
+      item_id: asRecord(candidate.decision).mode === 'assessment'
+        ? asRecord(candidate.decision).target_item_id
+        : null,
+      progress_snapshot_hash: rawContext.progress_snapshot_hash,
+      decision: candidate,
+    };
   }
   throw new Error('AI_OUTPUT_INVALID');
 }
@@ -441,12 +448,12 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       switch (body.operation) {
         case 'initialize_checklist':
           assertTeacher(principal);
-          data = await rpc(deps, 'initialize_transfer_checklist_v1', {
+          data = { checklist_id: await rpc(deps, 'initialize_transfer_checklist_v1', {
             p_room_id: assertRoom(principal, body.room_id),
             p_student_id: requiredString(body.student_id),
             p_template_name: requiredString(body.template_name),
             p_actor_id: principal.application_user_id,
-          });
+          }) };
           break;
         case 'post_message': {
           const roomId = assertRoom(principal, body.room_id);
@@ -520,11 +527,10 @@ function createDefaultDependencies(): AssessmentApiDependencies {
   const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const verifier: AssessmentPrincipalVerifier = {
     verify: async (request) => {
-      const authorization = request.headers.get('Authorization');
-      if (!authorization?.startsWith('Bearer ')) throw new Error('UNAUTHORIZED');
-      const { data: authData, error: authError } = await admin.auth.getUser(authorization.slice(7).trim());
-      if (authError || !authData.user) throw new Error('UNAUTHORIZED');
-      const userId = authData.user.id;
+      const userId = request.headers.get('x-application-user-id')?.trim();
+      if (!userId || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(userId)) {
+        throw new Error('UNAUTHORIZED');
+      }
       const [{ data: profile }, { data: sessions }, { data: rooms }] = await Promise.all([
         admin.from('users').select('current_role').eq('id', userId).maybeSingle(),
         admin.from('sessions').select('room_id').or(`student_id.eq.${userId},tutor_id.eq.${userId}`),
@@ -535,7 +541,7 @@ function createDefaultDependencies(): AssessmentApiDependencies {
       (sessions ?? []).forEach((entry: any) => roomIds.add(entry.room_id));
       (rooms ?? []).forEach((entry: any) => roomIds.add(entry.id));
       return {
-        principal_id: authData.user.id,
+        principal_id: userId,
         application_user_id: userId,
         allowed_room_ids: [...roomIds],
         can_review_assessment: profile.current_role === 'tutor',
@@ -543,7 +549,7 @@ function createDefaultDependencies(): AssessmentApiDependencies {
     },
   };
   return {
-    featureEnabled: env('TRANSFER_ASSESSMENT_ENABLED') === 'true',
+    featureEnabled: (env('TRANSFER_ASSESSMENT_ENABLED') ?? 'true') === 'true',
     verifier,
     rpc: async (name, args) => {
       const result = await admin.rpc(name, args);

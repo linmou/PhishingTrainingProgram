@@ -687,7 +687,7 @@ BEGIN
     id, checklist_id, area_text, item_type, priority, status, understanding_level
   ) VALUES (
     v_pass_item, v_checklist, 'Reject a stale assessment transition',
-    'verification_step', 'critical', 'covered', 'good'
+    'verification_step', 'critical', 'partially_covered', 'basic'
   );
   v_reviewed_payload := jsonb_set(
     v_reviewed_payload, '{decision,target_item_id}', to_jsonb(v_pass_item::TEXT)
@@ -702,6 +702,7 @@ BEGIN
     v_room, 'B', v_pass_question, v_pass_assessment, ARRAY['B'], v_student, gen_random_uuid()
   );
   v_pass_answer := (v_result->'message'->>'id')::UUID;
+  UPDATE public.checklist_items SET status = 'covered', understanding_level = 'good' WHERE id = v_pass_item;
   BEGIN
     PERFORM public.process_assessment_message_v2(
       v_pass_assessment, v_pass_answer, v_student, gen_random_uuid(),

@@ -1,10 +1,14 @@
-# Assessment API Contract
+# Component 102 Edge API Contract
 
 <!-- Intent: freeze the six browser-facing operations and their role-safe request/response DTOs. -->
 
+This contract describes the component-102 Edge Function in the repository. The production database inventory does not establish that this Edge Function contract is deployed or used by production.
+
 ## Envelope and Identity
 
-Every request is `POST` with a non-empty `operation` and `request_id`. Body identity fields are scope references, never principal proof. The handler receives an `AssessmentPrincipalVerifier`; deployment supplies a trusted session/capability adapter and tests inject a deterministic verifier. Without an adapter, all transfer mutations fail before data access:
+Every request is `POST` with a non-empty `operation` and `request_id`. The browser sends the current app user's ID from `localStorage.tutor_system_user` in the `x-application-user-id` header; the header is an identity hint, not cryptographic proof. The Edge Function loads that user's role and room memberships from the database and authorizes each requested scope from those records. The handler receives an `AssessmentPrincipalVerifier`, and tests inject a deterministic verifier. Without a verifier, all transfer mutations fail before data access:
+
+This app does not use Supabase Auth. Because the current localStorage identity can be edited or forged by the browser owner, database role and room checks prevent inconsistent claims but do not establish that the caller is the person named by the ID. A trusted identity mechanism would be needed before this boundary can defend against impersonation.
 
 ```ts
 interface AssessmentPrincipalVerifier {
@@ -43,6 +47,8 @@ Errors contain safe text only. They never contain a key, explanation, transfer b
 | `process_message` | stored learner `message_id` and `assessment_id` | verified target learner or trusted backend for that learner | authoritative attempt/result DTO |
 
 There is no browser grading fallback, persisted draft/revision, reject operation, regenerate operation, or client-selected attempt number.
+
+`initialize_checklist` returns `{ checklist_id: string }`, wrapping the database RPC's UUID result. `prepare_turn` includes `item_id` (the candidate's assessment target, or null for tutoring/Guard) and `progress_snapshot_hash` alongside its existing scope and decision. The review UI consumes these fields directly.
 
 ## Public DTOs
 

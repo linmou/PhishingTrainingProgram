@@ -2,6 +2,11 @@ name: Deploy Assessment API
 
 on:
   workflow_dispatch:
+    inputs:
+      apply_runtime_migration:
+        description: Apply the pending staging assessment runtime migration
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -10,11 +15,17 @@ jobs:
   deploy-staging:
     name: Deploy to PhishingTutorStaging
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tutor-system
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       REACT_APP_OAI_API_KEY: ${{ secrets.REACT_APP_OAI_API_KEY }}
       REACT_APP_OAI_BASE_URL: ${{ secrets.REACT_APP_OAI_BASE_URL }}
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Check required secrets
         shell: bash
         run: |
@@ -22,13 +33,15 @@ jobs:
           test -n "$REACT_APP_OAI_API_KEY"
           test -n "$REACT_APP_OAI_BASE_URL"
 
-      - name: Check out repository
-        uses: actions/checkout@v4
-
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: 2.118.0
+
+      - name: Apply staging assessment runtime migration
+        if: inputs.apply_runtime_migration
+        shell: bash
+        run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/migrations/20260929090000_staging_assessment_runtime.sql
 
       - name: Configure Edge Function provider secrets
         shell: bash

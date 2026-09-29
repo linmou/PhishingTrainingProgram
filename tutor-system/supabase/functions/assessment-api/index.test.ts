@@ -108,6 +108,21 @@ Deno.test('disabled feature makes no storage call', async () => {
   assertEquals(calls, 0);
 });
 
+Deno.test('projects the stored checklist UUID into the browser initialization contract', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    rpc: async (name, args) => {
+      assertEquals(name, 'initialize_transfer_checklist_v1');
+      assertEquals(args.p_actor_id, 'teacher-1');
+      return { data: 'checklist-1', error: null };
+    },
+  }));
+  const response = await handler(request('initialize_checklist', {
+    room_id: 'room-1', student_id: 'learner-1', template_name: 'Transfer',
+  }));
+  assertEquals(response.status, 200);
+  assertEquals((await response.json()).data, { checklist_id: 'checklist-1' });
+});
+
 Deno.test('forged actor and cross-room request cannot bypass verified scope', async () => {
   const calls: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
@@ -168,11 +183,11 @@ Deno.test('returns the exact public assessment target and strips private fields'
   assert(!JSON.stringify(payload).includes('learner_safe_explanation'));
 });
 
-Deno.test('requires every server-only provider setting with no model fallback', async () => {
+Deno.test('requires every configured provider setting with no model fallback', async () => {
   const configured = {
-    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
   };
-  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
+  for (const missing of ['REACT_APP_OAI_API_KEY', 'REACT_APP_OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
     let providerCalls = 0;
     let auditCalls = 0;
     const settings = { ...configured } as Record<string, string | undefined>;
@@ -206,7 +221,7 @@ Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and p
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -223,6 +238,8 @@ Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and p
   }));
   const payload = await response.json();
   assertEquals(payload.ok, true);
+  assertEquals(payload.data.item_id, 'item-1');
+  assertEquals(payload.data.progress_snapshot_hash, 'snapshot-1');
   assertEquals(requests[0].url, 'https://provider.invalid/v1/chat/completions');
   assertEquals(requests[0].body.model, 'qwen3.5-flash');
   assertEquals(requests[0].body.max_tokens, 1200);
@@ -239,7 +256,7 @@ Deno.test('returns a valid second response after one format repair', async () =>
   const requests: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -272,7 +289,7 @@ Deno.test('performs one format-only repair and rejects a second invalid result',
   let providerCalls = 0;
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -296,7 +313,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
   for (const scenario of ['truncated', 'http', 'network']) {
     let providerCalls = 0;
     const handler = createAssessmentApiHandler(dependencies({
-      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      env: (name) => ({ REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
       rpc: async (name) => name === 'prepare_transfer_turn_v1'
         ? { data: providerScope(), error: null }
         : { data: 'audit', error: null },
@@ -319,7 +336,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
 Deno.test('fails preparation without retry when provider audit persistence fails', async () => {
   let providerCalls = 0;
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
     rpc: async (name) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       return { data: null, error: { message: 'audit insert failed' } };
