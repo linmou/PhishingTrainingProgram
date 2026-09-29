@@ -22,7 +22,7 @@ The current `tasks.md` defines a local-runnable component gate. All 47/47 task m
 | Handler and provider | The focused quickstart Jest run passed 5 suites/32 tests; the broader 101/102 regression passed 9 suites/179 tests. A later checked Deno run passed 13 tests. Deno fake-provider cases cover missing settings, exact model, bounded repair, and credential-free audit. No live provider was invoked. | T042, T043, T045 |
 | Catalog and build | Local catalog script blob `871c84b4b961a223eb09c2204495c4061fad3dd9` matched eight RPC identities and listed 50 private columns. Checked-in `src/types/database.ts` has public RPC Args but no generated `private` block. The 102 component-branch build exited 1 at the old 103-owned `transferRoomFixtures.ts:146`; integration later reported a passing combined build at `9e00b1f` after the 103 fixture correction. A browser bundle privacy scan remains unrecorded here. | T043, T044 |
 
-The component gate closes local database, SQL authorization, concurrency, rollback, and focused handler checks. Still pending externally: deployed Supabase migration/grants/RLS/PostgREST and Edge verifier behavior, hosted generated-type parity, live provider, browser bundle privacy scan, real 101 resolver-to-handler-to-RPC integration, 103 UI, 104 evaluation, browser flows, and release activation. `TRANSFER_ASSESSMENT_ENABLED=false` remains required. None of these external gates is inferred from the 47 checked component tasks.
+The component gate closes local database, SQL authorization, concurrency, rollback, and focused handler checks. Still pending externally: deployed Supabase migration/grants/RLS/PostgREST and Edge verifier behavior, hosted generated-type parity, live provider, browser bundle privacy scan, real 101 resolver-to-handler-to-RPC integration, 103 UI, 104 evaluation, and browser flows. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true` so these checks can run; setting it to `false` disables assessment. None of these external gates is inferred from the 47 checked component tasks.
 
 ## Environment And Migration Inventory
 
@@ -52,7 +52,7 @@ The component gate closes local database, SQL authorization, concurrency, rollba
 - `tutor-system/deno.json` enables Deno sloppy-import resolution for the existing CRA domain graph, so the Edge boundary can import the one component-101 resolver rather than copy its lifecycle rules.
 - First wrong commits attempt 1 without a learning event or feedback. Pass and second failure commit attempt, lifecycle, causal learning event, progress/history, and result together. Only committed failure returns key plus learner-safe explanation.
 - Provider configuration is server-only and requires exact `qwen3.5-flash`; one format repair is permitted and every attempt is privately audited without credentials.
-- `TRANSFER_ASSESSMENT_ENABLED=false` remains documented and the default deployment state.
+- `TRANSFER_ASSESSMENT_ENABLED=true` is the default; the staging workflow sets it to `true` and can be explicitly disabled by changing the Edge Function secret.
 
 ## External And Downstream Lanes
 
@@ -91,7 +91,7 @@ Commands below ran from `tutor-system/` unless a path is specified. Their result
 | T042 | Remains open: controlled fake-provider tests pass at runtime; checked Deno execution, full provider privacy scan, and live provider metadata are absent. No live response is claimed. |
 | T043 | Remains open: Jest passes, but checked Deno fails `TS2352` and the build fails the component-103 fixture `TS2322`. |
 | T044 | Remains open: checked-in RPC names can be inspected, but `src/types/database.ts` has not been generated from a migrated supported hosted schema. |
-| T045 | Remains open: `.env.example` declares `TRANSFER_ASSESSMENT_ENABLED=false`; handler checks the flag, absent verifier, and exact model, and local tests cover absent verifier/model. Hosted rollback and full no-fallback/privacy evidence are absent. |
+| T045 | Remains open: the handler defaults `TRANSFER_ASSESSMENT_ENABLED` to `true` and supports explicit `false`; local tests cover disabled mode, absent verifier/model, and no-fallback behavior. Hosted rollback and full no-fallback/privacy evidence are absent. |
 | T047 | Handoff prepared in this record and the dispatch report: the clean commit, exact local commands/results, public contracts, prerequisites, and edge risks are reported without editing orchestration records. |
 
 At the 2026-09-26 dispatch, the Deno `TS2352` source correction and component-103 fixture were still open. Later checked Deno runs passed 13 tests, and integration reported a passing combined build at `9e00b1f`; the earlier failures are retained here as dated results.
@@ -102,7 +102,7 @@ At the 2026-09-26 dispatch, the Deno `TS2352` source correction and component-10
 
 The generated `deno.lock` contains versioned dependency references and integrity hashes; it contains no environment values. It is included in the component commit so Deno reruns resolve the same dependencies and the worktree remains clean.
 
-**Controlled live prerequisites**: A designated disposable supported Supabase project, its scope identifier and pre-migration inventory, a service-role connection for the SQL/RPC scripts, a deployed `AssessmentPrincipalVerifier` trusted-session adapter, and a bounded test identity/room set are required. Provider execution additionally requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`, with a controlled endpoint and credential-free request/response logging. Keep `TRANSFER_ASSESSMENT_ENABLED=false` for release until hosted authorization, storage, race, rollback, provider, integration, UI, evaluation, and browser gates pass.
+**Controlled live prerequisites**: A designated disposable supported Supabase project, its scope identifier and pre-migration inventory, a service-role connection for the SQL/RPC scripts, an app identity in `x-application-user-id`, and a bounded test identity/room set are required. Provider execution additionally requires `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash` configured in the Edge environment, with a controlled endpoint and credential-free request/response logging. The flag defaults to `true` for verification and can be set to `false` to disable the flow.
 
 ## Corrective RPC Type Check (2026-09-26)
 

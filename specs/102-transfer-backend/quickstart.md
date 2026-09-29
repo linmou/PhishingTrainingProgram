@@ -6,8 +6,8 @@
 
 - Component 101's promoted SHA is merged into this branch before implementation.
 - Use a disposable PostgreSQL 17 restored copy with Supabase-like roles for the component SQL gate. Deployed Supabase verification remains an integration gate.
-- The local handler tests use an injected verifier and controlled fake provider. Deployed verification later requires a trusted `AssessmentPrincipalVerifier` adapter and server-only `OAI_API_KEY`, `OAI_BASE_URL`, `OAI_MODEL=qwen3.5-flash`.
-- Keep `TRANSFER_ASSESSMENT_ENABLED=false` until all initiative gates pass.
+- The local handler tests use an injected verifier and controlled fake provider. Deployed requests send the current `tutor_system_user.id` in `x-application-user-id`; the verifier resolves role and room membership from the database. This app identity is editable in the browser and does not prove caller identity. The Edge Function requires `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash` in its environment.
+- `TRANSFER_ASSESSMENT_ENABLED` defaults to `true` for verification; set it to `false` to disable assessment explicitly.
 
 ## Planning Gate
 

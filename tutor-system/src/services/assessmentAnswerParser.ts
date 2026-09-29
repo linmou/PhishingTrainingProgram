@@ -1,6 +1,7 @@
 // Purpose: normalize explicit assessment selections without guessing from arbitrary learner prose.
 
-import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType } from '../types/assessment';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType } from '../types/assessment.ts';
 
 export type ParsedSelection =
   | { kind: 'selection'; option_ids: AssessmentOptionId[] }

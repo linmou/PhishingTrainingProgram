@@ -16,11 +16,11 @@ The same trusted boundary preserves ordinary room messages and reviewed tutoring
 
 The database applies a deferred terminal assessment event when a reviewed or manual room mode change clears Guard. That room update is the recovery trigger; the browser does not resubmit the answer or write progress. The original inbox event and dedupe identity remain the causal record.
 
-The Edge Function verifies the caller, checks room and role scope, and calls service-role-only RPCs. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution. Missing verifier configuration, feature activation, or required provider settings fails closed.
+The Edge Function does not use Supabase Auth. The browser facade sends the current app user ID from `localStorage.tutor_system_user` in `x-application-user-id`; the function looks up that user's role and room memberships before calling service-role-only RPCs. The header is self-asserted and does not prove who controls the browser. `process_message` reads a private persisted snapshot, calls component 101's `resolveTransferAnswer`, and commits through compare-and-swap. A concurrent change causes a bounded reread and re-resolution.
 
-The Edge Function imports the existing CRA resolver directly. `deno.json` enables sloppy relative-import resolution for that established module graph; there is no copied Edge lifecycle implementation.
+The Edge Function imports the existing CRA resolver directly. Shared runtime imports use explicit `.ts` paths so Deno can bundle that module graph; there is no copied Edge lifecycle implementation.
 
-Production generation requires server-only `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash`. `TRANSFER_ASSESSMENT_ENABLED` remains `false` until hosted schema, provider, downstream UI, and initiative integration gates pass.
+Assessment generation reads `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash` from the Supabase Edge Function secret store. The same provider values power ordinary tutor responses. `REACT_APP_` values are exposed in a CRA browser bundle, while Edge Function secrets remain server-side at runtime. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true` and can be set to `false` to disable assessment operations.
 
 ## Client Configuration
 

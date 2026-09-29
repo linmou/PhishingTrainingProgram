@@ -1,6 +1,7 @@
 // Purpose: define the public assessment payload and private v3 tutor-decision data contracts.
 
-import type { ProgressPolicyVersion, TransferProgress } from './learningProgress';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { ProgressPolicyVersion, TransferProgress } from './learningProgress.ts';
 
 export type AssessmentOptionId = 'A' | 'B' | 'C' | 'D';
 export type AssessmentSelectionType = 'single' | 'multiple';

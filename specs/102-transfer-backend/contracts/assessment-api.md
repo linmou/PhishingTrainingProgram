@@ -4,7 +4,7 @@
 
 ## Envelope and Identity
 
-Every request is `POST` with a non-empty `operation` and `request_id`. Body identity fields are scope references, never principal proof. The handler receives an `AssessmentPrincipalVerifier`; deployment supplies a trusted session/capability adapter and tests inject a deterministic verifier. Without an adapter, all transfer mutations fail before data access:
+Every request is `POST` with a non-empty `operation` and `request_id`. The browser sends the current app user's ID from `localStorage.tutor_system_user` in the `x-application-user-id` header. The handler reads the user's role and room memberships from the database before authorizing the operation. This project does not use Supabase Auth, and the header is an identity hint rather than cryptographic proof; a browser owner can change it. Tests inject a deterministic `AssessmentPrincipalVerifier`.
 
 ```ts
 interface AssessmentPrincipalVerifier {
@@ -75,7 +75,7 @@ interface ReviewedDeliveryDTO {
 }
 ```
 
-The exact public delivered-assessment shape is `{id, student_id, selection_type, stem, options}`. For a delivered assessment, `message.content === message.assessment.stem`. Options appear only in `message.assessment.options`. `student_id` is derived from the persisted private assessment and owner-scoped checklist, and room consumers use it only to render answer controls for the intended learner. It is never accepted as proof of identity or permission; `post_message` and `process_message` reauthorize the verified principal against private scope. A missing or mismatched target makes the projection unavailable rather than falling back to message author, latest learner, local role, or browser state.
+The exact public delivered-assessment shape is `{id, student_id, selection_type, stem, options}`. For a delivered assessment, `message.content === message.assessment.stem`. Options appear only in `message.assessment.options`. `student_id` is derived from the persisted private assessment and owner-scoped checklist, and room consumers use it only to render answer controls for the intended learner. It is never accepted as proof of identity or permission; `post_message` and `process_message` reauthorize the app user against database scope. A missing or mismatched target makes the projection unavailable rather than falling back to message author, latest learner, local role, or browser state.
 
 `PUBLIC_MESSAGE_DTO_KEYS` and `PUBLIC_ASSESSMENT_FORBIDDEN_KEYS` remain explicit allowlist/denylist evidence. Public DTOs exclude `rendered_text` so consumers cannot render an option-bearing string beside structured options. `ProcessedMessageDTO` remains canonical exactly as defined below; adding `student_id` does not change any processing field or outcome.
 

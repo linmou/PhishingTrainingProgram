@@ -9,12 +9,18 @@ import type {
   TransferAttemptResult,
   TransferAttemptSnapshot,
   TransferTerminalFeedback,
-} from '../types/assessment';
-import type { RoomParticipationMode } from '../types/assessment';
-import type { TransferProgress } from '../types/learningProgress';
-import { parseAssessmentAnswer } from './assessmentAnswerParser';
-import { gradeSelection } from './assessmentGrading';
-import { applyLearningEvent } from './learningProgressTransitions';
+  // @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+} from '../types/assessment.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { RoomParticipationMode } from '../types/assessment.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { TransferProgress } from '../types/learningProgress.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import { parseAssessmentAnswer } from './assessmentAnswerParser.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import { gradeSelection } from './assessmentGrading.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import { applyLearningEvent } from './learningProgressTransitions.ts';
 
 export type TransferAssessmentDisposition =
   | 'not_delivered'
@@ -117,7 +123,7 @@ function validateAttemptSnapshot(snapshot: TransferAttemptSnapshot, assessmentId
   }
   if (!Array.isArray(snapshot.processed_answer_message_ids)
     || snapshot.processed_answer_message_ids.length !== snapshot.accepted_attempt_count
-    || snapshot.processed_answer_message_ids.some((id) => typeof id !== 'string' || !id.trim())
+    || snapshot.processed_answer_message_ids.some((id: string) => typeof id !== 'string' || !id.trim())
     || new Set(snapshot.processed_answer_message_ids).size !== snapshot.processed_answer_message_ids.length) {
     throw new Error('INVALID_ATTEMPT_SNAPSHOT');
   }

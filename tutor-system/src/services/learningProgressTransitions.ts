@@ -2,11 +2,15 @@
 
 import {
   isValidTransferProgress,
-} from '../types/learningProgress';
-import type { TransferProgress } from '../types/learningProgress';
+  // @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+} from '../types/learningProgress.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+import type { TransferProgress } from '../types/learningProgress.ts';
 
-export { isValidTransferProgress } from '../types/learningProgress';
-export type { TransferProgress } from '../types/learningProgress';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+export { isValidTransferProgress } from '../types/learningProgress.ts';
+// @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
+export type { TransferProgress } from '../types/learningProgress.ts';
 
 export type LearningEventKind =
   | 'initial_signal'

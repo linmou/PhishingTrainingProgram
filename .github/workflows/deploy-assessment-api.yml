@@ -44,6 +44,7 @@ jobs:
             printf 'REACT_APP_OAI_API_KEY=%s\n' "$REACT_APP_OAI_API_KEY"
             printf 'REACT_APP_OAI_BASE_URL=%s\n' "$REACT_APP_OAI_BASE_URL"
             printf 'OAI_MODEL=qwen3.5-flash\n'
+            printf 'TRANSFER_ASSESSMENT_ENABLED=true\n'
           } > "$secrets_file"
           supabase secrets set --project-ref "$PROJECT_REF" --env-file "$secrets_file"
 
