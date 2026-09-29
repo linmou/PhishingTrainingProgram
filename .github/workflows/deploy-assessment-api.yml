@@ -45,7 +45,7 @@ jobs:
       - name: Seed staging assessment browser room
         if: inputs.seed_assessment_room
         shell: bash
-        run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/fixtures/staging_assessment_room_20260929.sql
+        run: supabase db query --linked --project-ref ciubrzggdqesgvfkpolj --file supabase/fixtures/staging_assessment_ai_only_20260929.sql
 
       - name: Inspect staging provider attempts
         if: inputs.inspect_assessment_state
