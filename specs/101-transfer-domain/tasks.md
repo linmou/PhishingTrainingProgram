@@ -2,7 +2,12 @@
 
 **Input**: Design documents from `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/specs/101-transfer-domain/`
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/`
-**Tests**: Required by the specification and repository constitution. Write tests before implementation changes and execute the repository's `fast-multi-agent-tdd` workflow when implementing code.
+**Tests**: Required by the specification and repository constitution. Cover the changed contract and keep prior lifecycle regression tests.
+
+## TransferLearning Refactor Tasks (2026-09-29)
+
+- [ ] R101 Add `TransferAssessmentDraft` and assessment-only validation while retaining historical `TutorDecisionV3` decoding.
+- [ ] R102 Verify the unchanged reducer, exact-set grading, privacy, and two-attempt rules against the new draft contract.
 
 ## Phase 1: Setup
 

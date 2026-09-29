@@ -10,9 +10,9 @@ Component 102's browser facade exports exactly these six typed methods. This tab
 
 | Operation (facade method) | Request identity | Response consumed by UI |
 |---|---|---|
-| `initialize_checklist` (`initializeChecklist`) | `roomId`, `studentId`, `templateName` | `{ checklist_id }` |
-| `prepare_turn` (`prepareTurn`) | `roomId`, `focusStudentMessageId`, `checklistId` | the generated candidate `TutorDecisionV3` decision plus the prepared scope identity (`room_id`, `student_id`, `checklist_id`, `item_id`, `focus_student_message_id`) and the server's informational `progress_snapshot_hash` echo |
-| `send_reviewed` (`sendReviewed`) | `reviewedPayload` (`TutorDecisionV3`), `roomId`, `studentId`, `checklistId`, `itemId` (`string \| null`), `focusStudentMessageId` | `ReviewedDeliveryDTO` = delivered `PublicMessageDTO` plus the updated `Room` |
+| `initialize_checklist` (`initializeChecklist`) | `roomId`, `studentId`, approved `items` | `{ checklist_id }` |
+| `prepare_turn` (`prepareAssessment`) | `roomId`, `focusStudentMessageId`, `checklistId` | an assessment-only `TransferAssessmentDraft` and prepared scope identity when due; `null` when no assessment is due; setup, analysis, and provider failures are errors |
+| `send_reviewed` (`sendReviewed`) | `reviewedPayload` (`TransferAssessmentDraft`), `roomId`, `studentId`, `checklistId`, `itemId` (`string`), `focusStudentMessageId` | `ReviewedDeliveryDTO` = delivered `PublicMessageDTO` plus the updated `Room` |
 | `post_message` (`postMessage`) | `roomId`, content, optional `replyToMessageId`, optional `assessmentId` | persisted message row (`Record<string, unknown>`) that the UI must project before it enters React state |
 | `process_message` (`processMessage`) | persisted answer/message ID plus the delivered assessment identity carried by the stored message | `ProcessedMessageDTO` = the server's persisted grading and attempt lifecycle result, never a client grade, attempt mutation, disclosure decision, or progress write instruction |
 | `analyze_message` (`analyzeMessage`) | persisted message ID and room ID | explicit evidence/lifecycle result for the server-owned path |
@@ -25,7 +25,7 @@ Component 102 types and unwraps the successful and failed envelopes (`Assessment
 
 The teacher editor may receive:
 
-- selected learner/source message/checklist/item identity from `prepareTurn`;
+- selected learner/source message/checklist/item identity from `prepareAssessment`;
 - the structured candidate decision required for teacher review, including answer key and transfer basis;
 - the local review status the teacher's own screen derives (`preparing`, `dirty`, `ready`, `sending`, `delivered`, `unavailable`, `validation`, `superseded`, `retryable`).
 
@@ -105,7 +105,7 @@ The UI rejects missing instructions, `assessment` without `transfer_assess`, tut
 The component-103 adapter imports component 101/102 exports unchanged and defines its React-only review, public-question, and lifecycle view-state types alongside their mappings in `src/contexts/transferAssessmentUiAdapter.ts`. It maps component 102's thrown service errors and returned projections into these states without exposing raw provider output:
 
 - `unavailable`: the capability is disabled, the trusted operation is not configured, or the transfer checklist does not apply to the room (`ASSESSMENT_FEATURE_DISABLED`, `AI_PROVIDER_NOT_CONFIGURED`, `AUTHORIZATION_NOT_CONFIGURED`, `LEGACY_CHECKLIST`, `LEGACY_ASSESSMENT_INCOMPLETE`, `UNSUPPORTED_ROOM_SCOPE`);
-- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, `INVALID_REQUEST`, `PROGRESSION_LOCKED`, local `parseTutorDecisionV3` rejection);
+- `validation`: malformed or semantically invalid reviewed payload (`ITEM_VALIDATION_FAILED`, `AI_OUTPUT_INVALID`, `INVALID_SCOPE`, `INVALID_REQUEST`, `PROGRESSION_LOCKED`, local `validateAssessmentDraft` rejection);
 - `superseded`: the server reports that persisted state already covers this delivery or the identity no longer matches (`ASSESSMENT_ALREADY_OPEN`, `ASSESSMENT_TERMINAL`, `WRONG_LEARNER`); nothing is rendered as delivered;
 - `duplicate`: an idempotent replay whose persisted result can be shown once;
 - `unauthorized`: no data or action is rendered (`FORBIDDEN`, `UNAUTHORIZED`);

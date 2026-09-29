@@ -2,6 +2,8 @@
 
 <!-- Intent: define the exact verification order and evidence needed to accept component 102 without overstating unrun hosted or downstream gates. -->
 
+Refactor revision (2026-09-29): `tutor-system/supabase/archived_migrations/20260929000000_transfer_learning_refactor.sql` follows the assessment RPC branch and was applied to staging with the analysis-event fix. Rehearse it only on a disposable database containing that branch's schema. The Edge contract now initializes from approved `items`, analyzes persisted learner evidence, and uses `prepare_turn` as the wire name for assessment-only `prepareAssessment()`. The older migration rehearsal below documents the prior rollout and does not validate the refactor migration. Current checks and limits are recorded in `refactor-verification-record.md`.
+
 ## Preconditions
 
 - Component 101's promoted SHA is merged into this branch before implementation.

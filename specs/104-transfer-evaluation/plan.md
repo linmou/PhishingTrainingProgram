@@ -7,6 +7,8 @@
 
 ## Summary
 
+Refactor revision (2026-09-29): extend existing evaluation cases with room-specific targets, genuine learner evidence, mandatory eligible assessment routing, blockers, and shared-tutor call counts. Keep existing quality and lifecycle checks and immutable prior runs.
+
 Upgrade the existing transfer evaluation package for the server-authoritative two-attempt lifecycle and learner-safe explanation. Preserve the five existing public rubrics, add the semantic `learner_explanation_quality` metric, add deterministic disclosure evidence, and version the lifecycle fixtures so historical first-valid-resolution evidence cannot satisfy the new gate. The adapter remains a thin consumer of component 102's promoted v3 request builders and prompt identity; evaluator code consumes component 101 lifecycle outcomes and component 102 DTOs without copying grading, persistence, authorization, or prompt logic.
 
 ## Technical Context

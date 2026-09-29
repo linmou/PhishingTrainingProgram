@@ -2,6 +2,8 @@
 
 Intent: control component ownership, contracts, dependencies, integration work, and promotion conditions for completing transfer assessment.
 
+Refactor revision (2026-09-29): active implementation follows `plan/transfer_learning_refactor_plan/transfer_learning_refactor_plan.md`. Component 101 owns `TransferAssessmentDraft` validation and the existing progress reducer while retaining `TutorDecisionV3` for historical reading. Component 102 owns room-target initialization, semantic learner-message analysis, mandatory assessment-only preparation, and reviewed delivery. Component 103 owns the room setup and assessment review surfaces. Component 104 evaluates evidence, eligibility routing, blockers, and question quality. Earlier integration records below describe the original rollout and remain historical evidence.
+
 ## Baseline
 
 - Target branch: `no_sign_up`
@@ -15,7 +17,7 @@ Intent: control component ownership, contracts, dependencies, integration work, 
 
 | Prefix | Branch | Worktree | Owner | Responsibility | Public contracts | Shared-file ownership | Exclusions |
 |---|---|---|---|---|---|---|---|
-| 101 | `101-transfer-domain` | `transfer-domain` | Kant (`01a09282-73c4-7323-b6ea-020a96c88368`) | W2 deterministic transfer behavior and golden fixtures | `TutorDecisionV3`, `TransferTurnContext`, parser, exact-set grader, renderer, progress reducer | Owns assessment/progress types and pure transfer services | No Supabase, React, provider calls, Promptfoo, or browser release work |
+| 101 | `101-transfer-domain` | `transfer-domain` | Kant (`01a09282-73c4-7323-b6ea-020a96c88368`) | W2 deterministic transfer behavior and golden fixtures | `TransferAssessmentDraft`, `TransferTurnContext`, validator, exact-set grader, renderer, progress reducer; historical `TutorDecisionV3` reader | Owns assessment/progress types and pure transfer services | No Supabase, React, provider calls, Promptfoo, or browser release work |
 | 102 | `102-transfer-backend` | `transfer-backend` | Dirac (`01a09282-77d6-7ba2-9450-e9ce6925b4db`) | W3-W6 storage, RLS, RPCs, authorization, provider boundary, evidence application, and production prompt | assessment API operations, allowlisted public DTOs, versioned RPC payloads and lifecycle | Owns migrations 025/026, `assessment-api`, transfer API facade, and generated database types | No React room UI, Promptfoo cases, or browser release evidence |
 | 103 | `103-transfer-room-ui` | `transfer-room-ui` | Hypatia (`01a09282-7962-7f82-8728-f02998238c8e`) | W7-W8 room lifecycle and teacher/learner UI integration | consumes public assessment DTOs and room/realtime lifecycle; emits no direct progress writes | Owns room context/pages and assessment-facing React components/tests | No SQL/RLS, provider implementation, production prompt, or Promptfoo work |
 | 104 | `104-transfer-evaluation` | `transfer-evaluation` | Franklin (`01a0928f-1970-7533-8ddc-f6f6fd734648`) | W9-W10 frozen semantic contract and Promptfoo evaluation | transfer case schema, rubric IDs, partitions, thresholds, run manifest, quality-gate result | Owns transfer-specific `evals/promptfoo` cases, rubrics, fixtures, holdouts, scripts, and results metadata | No production database, auth, room UI, or release-browser implementation |

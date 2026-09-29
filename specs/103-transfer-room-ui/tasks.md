@@ -10,7 +10,13 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 
 **Implementation boundary**: These tasks cover only browser/UI integration. Component 101 owns shared assessment/progress type exports in `tutor-system/src/types/assessment.ts`, `src/types/learningProgress.ts`, and `src/types/index.ts`. Component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, its typed DTO/envelope exports, all operation mapping, and service contract tests. Do not edit those files or add SQL/RLS, trusted authentication, provider logic, prompt changes, Promptfoo, deployment, or release-browser evidence here.
 
-**Test policy**: Tests are required by the component request. For every story, write the focused tests first, confirm the missing behavior fails, then implement and refactor using the repository's required `fast-multi-agent-tdd` workflow during implementation. Reuse existing production modules; every new test begins with a responsibility comment and covers negative and edge cases.
+**Test policy**: Tests are required by the component request. Reuse existing production modules; every new test begins with a responsibility comment and covers negative and edge cases.
+
+## TransferLearning Refactor Tasks (2026-09-29)
+
+- [ ] R301 Wire room capability and tutor-only target generation/manual approval into the existing checklist panel, including collapsed and zero-item states.
+- [ ] R302 Route transfer responses and regeneration through analysis and `prepareAssessment()`, using shared-tutor generation only for an explicit no-assessment result.
+- [ ] R303 Narrow review/edit/send to `TransferAssessmentDraft` and verify stable IDs, unsent drafts, and visible errors.
 
 ## Phase 1: Setup (Shared Planning and Contract Fixtures)
 

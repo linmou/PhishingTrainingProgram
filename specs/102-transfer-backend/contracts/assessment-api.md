@@ -33,9 +33,11 @@ Errors contain safe text only. They never contain a key, explanation, transfer b
 
 ## Operations
 
+Refactor revision (2026-09-29): `initialize_checklist` takes approved `items` with `area_text`, `item_type`, and `priority`; the server owns IDs and progress. `analyze_message` semantically applies idempotent learner evidence. The unchanged `prepare_turn` operation is exposed by the browser as `prepareAssessment()` and returns one assessment-only candidate when due, `null` only when no assessment is due, or an explicit error. `send_reviewed` accepts only an assessment draft and rechecks eligibility before atomic delivery.
+
 | Operation | Required body fields | Authorized caller | Result |
 |---|---|---|---|
-| `initialize_checklist` | `room_id`, `student_id`, `template_name` | authorized teacher | owner-scoped transfer checklist identity |
+| `initialize_checklist` | `room_id`, `student_id`, approved `items` (`area_text`, `item_type`, `priority`) | authorized teacher | owner-scoped transfer checklist identity; repeated initialization preserves approved items and progress |
 | `post_message` | `room_id`, `content`, optional `parent_message_id`; assessment answer additionally requires `assessment_id`, `selected_option_ids` | verified room participant; assessment answer must be the target learner | allowlisted stored message plus processing indicator |
 | `analyze_message` | `room_id`, stored learner `message_id` | trusted backend for authorized learner scope | allowlisted applied/deferred evidence outcomes |
 | `prepare_turn` | `room_id`, `focus_student_message_id`, `checklist_id` | authorized teacher | validated candidate decision and stable scope; nothing delivered is persisted |

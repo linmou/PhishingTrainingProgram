@@ -2,9 +2,15 @@
 
 **Feature Branch**: `101-transfer-domain`  
 **Created**: 2026-09-11  
-**Revised**: 2026-09-22  
+**Revised**: 2026-09-29
 **Status**: Ready for implementation  
 **Input**: Upgrade the deterministic transfer domain for two server-authoritative attempts and an editable learner-safe explanation.
+
+## TransferLearning Refactor Contract
+
+Transfer assessment content is a `TransferAssessmentDraft` with `reason`, `target_item_id`, and `assessment: PrivateAssessment`. It has no tutor mode, teaching instruction, or duplicate response. `TutorDecisionV3` remains readable for historical compatibility, but active assessment preparation and review use the assessment-only draft. The shared tutor chooses only tutoring or Guard. The existing pure transition matrix, exact-set grading, private key, and two-attempt lifecycle remain authoritative.
+
+An eligible target is a current room-approved checklist item at `partially_covered/basic` with learner-owned evidence and no open assessment, feedback, repair, protection, correction, or Guard blocker. Eligibility requires the next AI-generated response to be an assessment draft; it is not another tutor decision. Spontaneous transfer can verify the target without a quiz.
 
 ## Clarifications
 
@@ -41,8 +47,8 @@ A trusted tutor decision carries a dedicated explanation of why the correct answ
 
 **Acceptance Scenarios**:
 
-1. **Given** an assessment-mode `TutorDecisionV3`, **When** its private assessment has a non-empty `learner_safe_explanation`, **Then** contract validation accepts the field with the private answer key and transfer basis.
-2. **Given** an assessment-mode decision with a missing, blank, or non-string explanation, **When** it is validated, **Then** validation rejects it with a stable explanation error category.
+1. **Given** a `TransferAssessmentDraft`, **When** its private assessment has a non-empty `learner_safe_explanation`, **Then** contract validation accepts the field with the private answer key and transfer basis.
+2. **Given** an assessment draft with a missing, blank, or non-string explanation, **When** it is validated, **Then** validation rejects it with a stable explanation error category.
 3. **Given** an unresolved question, first incorrect result, or correct result, **When** learner disclosure is evaluated, **Then** component 102 is not authorized to project the correct option IDs or learner-safe explanation.
 4. **Given** a second incorrect result, **When** terminal feedback is produced, **Then** the failed result authorizes component 102 to project the correct option IDs and learner-safe explanation to the learner.
 5. **Given** tutoring or Guard mode, **When** the decision is validated, **Then** the assessment and its explanation remain null.
@@ -64,20 +70,20 @@ The learning workflow applies evidence and assessment outcomes to the existing `
 5. **Given** `covered/good` or `partially_covered/basic`, **When** a later contradiction is classified, **Then** progress reopens as `needs_review/basic`.
 6. **Given** `needs_review/basic` after failure, **When** a repair signal and later learner evidence arrive, **Then** the learner may return to `partially_covered/basic` and a different context may be assessed.
 
-### User Story 4 - Validate and render one inspectable v3 transfer decision (Priority: P1)
+### User Story 4 - Validate and render one inspectable assessment draft (Priority: P1)
 
-A trusted tutor decision produces one reviewable transfer assessment with a known target, cited source evidence, four canonical options, a valid key, a meaningful changed context, and bounded learner-visible text. Learner-facing output omits the private key, transfer basis, and rationale.
+A trusted assessment generator produces one reviewable transfer assessment with a known target, cited source evidence, four canonical options, a valid key, a meaningful changed context, and bounded learner-visible text. Learner-facing output omits the private key, transfer basis, and rationale.
 
 **Why this priority**: Stable versioned contracts and bounded rendering let downstream backend, UI, and evaluation components consume the same behavior without relying on copied text or hidden assumptions.
 
-**Independent Test**: Validate golden valid/invalid `TutorDecisionV3` and `TransferTurnContext` payloads, verify the pure public output contract excludes private fields, and exercise rendering at every stated boundary. Component 102 separately verifies API projection and transport.
+**Independent Test**: Validate golden valid/invalid `TransferAssessmentDraft` and `TransferTurnContext` payloads, verify the pure public output contract excludes private fields, and exercise rendering at every stated boundary. Keep historical `TutorDecisionV3` parser regression coverage. Component 102 separately verifies API projection and transport.
 
 **Acceptance Scenarios**:
 
-1. **Given** an assessment decision, **When** it contains `assessment` mode, `transfer_assess`, one known target, and a valid item, **Then** the v3 contract accepts it and preserves reason-first serialization.
+1. **Given** an assessment draft, **When** it contains one known target and a valid private item, **Then** the assessment-only contract accepts it without a tutor mode, instruction, or duplicate response.
 2. **Given** an item, **When** it is rendered, **Then** it has exactly A-D options, the correct single/multiple instruction, at most two stem sentences, and at most 80 learner-visible word-like segments.
 3. **Given** an item with a missing or blank learner-safe explanation, 81 word-like segments, three stem sentences, duplicate option text, an invalid key cardinality, or an unknown evidence ID, **When** it is validated, **Then** validation rejects it with a stable error category.
-4. **Given** a valid private decision, **When** component 101 exposes the unresolved public assessment contract for component 102, **Then** answer keys, learner-safe explanation, transfer basis, tutor rationale, raw model output, API operations, and transport fields are absent.
+4. **Given** a valid private assessment, **When** component 101 exposes the unresolved public assessment contract for component 102, **Then** answer keys, learner-safe explanation, transfer basis, tutor rationale, raw model output, API operations, and transport fields are absent.
 5. **Given** tutoring mode, **When** the decision is validated, **Then** it requires one real teaching instruction with a null target and null assessment.
 6. **Given** Guard mode, **When** the decision is validated, **Then** it accepts `guard` or one real teaching instruction with a null target and null assessment, and it cannot create a room-level assessment mode.
 
@@ -120,7 +126,7 @@ The pure transfer assessment orchestrator coordinates delivery state, learner an
 
 ### Functional Requirements
 
-- **FR-001**: The component MUST expose a versioned `TutorDecisionV3` contract with reason-first serialization and explicit mode compatibility: tutoring requires one real teaching instruction with null target/assessment; Guard accepts `guard` or one real teaching instruction with null target/assessment; assessment requires `transfer_assess`, one known target, and one valid private assessment payload containing a trimmed, non-empty `learner_safe_explanation`.
+- **FR-001**: The component MUST validate an assessment-only `TransferAssessmentDraft` containing a reason, one known target, and one valid private assessment with a trimmed, non-empty `learner_safe_explanation`. Active assessment generation has no tutor mode, instruction, or duplicate response. The historical `TutorDecisionV3` parser remains readable for stored and regression fixtures.
 - **FR-002**: The component MUST expose a `TransferTurnContext` that carries the selected learner/message/checklist context, progress-policy version, checklist item snapshots, unresolved public assessment, eligible item IDs, feedback boundary, and progress snapshot hash without becoming a second progression authority.
 - **FR-003**: A valid transfer item MUST use exactly four canonical A-D options, a `single` key of one option or a `multiple` key of two or three options, and a changed context that tests the same concept through a relevant new situation rather than a cosmetic brand/name substitution or an unstated prerequisite; source evidence IDs MUST be known to the current context.
 - **FR-004**: The component MUST define an unresolved public assessment contract that omits answer keys, learner-safe explanation, transfer basis, tutor rationale, raw model output, API operations, and transport fields. Both terminal result variants MUST retain correct option IDs and `learner_safe_explanation` privately and MUST carry an explicit learner-disclosure policy.
@@ -142,7 +148,8 @@ The pure transfer assessment orchestrator coordinates delivery state, learner an
 
 ### Key Entities
 
-- **TutorDecisionV3**: A reason-first structured tutor decision whose assessment mode carries one private transfer item; tutoring requires a real teaching instruction, while Guard accepts `guard` or a real teaching instruction, and both non-assessment modes require null target/assessment.
+- **TransferAssessmentDraft**: A private assessment-only review value with a reason, one approved target ID, and a private assessment. It is not persisted as a draft row.
+- **TutorDecisionV3**: Historical reason-first tutor decision retained for reading older transfer records and parser regressions.
 - **TransferTurnContext**: The turn-scoped input snapshot used to validate target, evidence, current progress, unresolved question, feedback boundary, and stale-state identity.
 - **PublicAssessment**: Learner-visible assessment identity/content with no answer key, transfer basis, rationale, or raw model output.
 - **PrivateAssessment**: Review/server-side assessment content plus exact correct option IDs, transfer basis, and required `learner_safe_explanation`.

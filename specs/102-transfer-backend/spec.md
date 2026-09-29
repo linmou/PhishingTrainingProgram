@@ -7,6 +7,12 @@
 **Status**: Planned
 **Input**: User description: "Restore the server-authoritative transfer-assessment boundary for a persistent two-attempt lifecycle and an editable learner-safe explanation."
 
+## TransferLearning Refactor Contract
+
+`initialize_checklist` accepts a nonempty list of approved `{area_text, item_type, priority}` items for an authorized room and learner. The server assigns IDs and initializes `pending/none`; replay preserves approved items and progress. Missing targets are an explicit setup error. Ordinary persisted learner messages receive idempotent semantic analysis against that learner's room items through the learning-event authority. Assessment answers use `process_message` alone.
+
+The existing `prepare_turn` wire operation means `prepareAssessment()` in the browser. It catches up analysis through the focus message, derives eligibility from current server state, and returns either one assessment-only draft or `null` when no assessment is due. An eligible assessment is mandatory; provider failure, invalid output, missing targets, and incomplete analysis are errors. Reviewed delivery rechecks room, learner, target, blockers, and Guard state before its atomic write. The provider generates assessment content only; the shared tutor retains tutoring/Guard decisions.
+
 ## Scope
 
 This component restores the trusted backend boundary removed by the browser-only research refactor. It owns persisted assessment delivery, private keys and explanations, server grading, two-attempt lifecycle authority, atomic progress changes, role-safe response projections, trusted provider calls, and production prompt behavior. It consumes component 101's assessment and progress contracts. It does not own React rendering, page-local view state, Promptfoo evaluation policy, or release-browser evidence.
