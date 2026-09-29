@@ -25,6 +25,45 @@ describe('AIAssistantSettings', () => {
         jest.clearAllMocks();
     });
 
+    it('defaults in-room assessment on when enabling AI in a new room', async () => {
+        const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
+        const setTransferLearningEnabled = jest.fn().mockResolvedValue(undefined);
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: { id: 'room-1', ai_assistant_enabled: false, transfer_learning_enabled: false },
+            aiConfig: null,
+            toggleAIAssistant,
+            setTransferLearningEnabled,
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        expect(screen.getByLabelText('Enable In-Room Assessment')).toBeChecked();
+        fireEvent.click(screen.getByLabelText('Enable AI Assistant'));
+        fireEvent.click(screen.getByText('Save Settings'));
+
+        await waitFor(() => {
+            expect(toggleAIAssistant).toHaveBeenCalledWith(true, expect.any(Object));
+            expect(setTransferLearningEnabled).toHaveBeenCalledWith(true);
+        });
+    });
+
+    it('preserves an existing room choice to leave in-room assessment off', () => {
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: false },
+            aiConfig: null,
+            toggleAIAssistant: jest.fn(),
+            setTransferLearningEnabled: jest.fn(),
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        expect(screen.getByLabelText('Enable In-Room Assessment')).not.toBeChecked();
+    });
+
     it('hydrates modular controls from aiConfig prompt_config instead of default values', async () => {
         (useAuth as jest.Mock).mockReturnValue({
             user: {

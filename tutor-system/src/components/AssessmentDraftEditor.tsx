@@ -2,17 +2,17 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Check, Send, X } from 'lucide-react';
-import { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
+import { AssessmentOptionId, TransferAssessmentDraft } from '../types/assessment';
 import { renderAssessment, validateAssessmentRendering } from '../services/assessmentRendering';
-import { parseTutorDecisionV3 } from '../services/tutorDecisionContract';
+import { validateAssessmentDraft } from '../services/assessmentValidation';
 import { classifyAssessmentFailure, type ReviewStatus } from '../contexts/transferAssessmentUiAdapter';
 
 export interface AssessmentDraftEditorProps {
-  decision: TutorDecisionV3;
+  decision: TransferAssessmentDraft;
   itemLabel?: string;
   knownItemIds?: ReadonlyArray<string>;
   knownMessageIds?: ReadonlyArray<string>;
-  onSubmit: (decision: TutorDecisionV3) => Promise<void> | void;
+  onSubmit: (decision: TransferAssessmentDraft) => Promise<void> | void;
   onCancel?: () => void;
 }
 
@@ -30,8 +30,8 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   onCancel,
 }) => {
   const initialAssessment = decision.assessment;
-  const explanation = initialAssessment?.learner_safe_explanation || '';
-  const [stem, setStem] = useState(initialAssessment?.stem || decision.response);
+  const [explanation, setExplanation] = useState(initialAssessment?.learner_safe_explanation || '');
+  const [stem, setStem] = useState(initialAssessment?.stem || '');
   const [selectionType, setSelectionType] = useState(initialAssessment?.selection_type || 'single');
   const [options, setOptions] = useState(initialAssessment?.options || []);
   const [correctOptionIds, setCorrectOptionIds] = useState<AssessmentOptionId[]>(
@@ -44,7 +44,8 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
 
   useEffect(() => {
     const assessment = decision.assessment;
-    setStem(assessment?.stem || decision.response);
+    setStem(assessment?.stem || '');
+    setExplanation(assessment?.learner_safe_explanation || '');
     setSelectionType(assessment?.selection_type || 'single');
     setOptions(assessment?.options || []);
     setCorrectOptionIds(assessment?.correct_option_ids || []);
@@ -117,14 +118,8 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       return;
     }
 
-    const nextDecision: TutorDecisionV3 = {
+    const nextDecision: TransferAssessmentDraft = {
       ...decision,
-      response: stem.trim(),
-      decision: {
-        ...decision.decision,
-        mode: 'assessment',
-        instruction: 'transfer_assess',
-      },
       assessment: {
         ...initialAssessment,
         stem: stem.trim(),
@@ -139,8 +134,8 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
     try {
       // Reuse the production validator so the editor cannot create a payload
       // that the trusted review operation would reject.
-      parseTutorDecisionV3(JSON.stringify(nextDecision), {
-        knownItemIds: knownItemIds || [decision.decision.target_item_id || ''],
+      validateAssessmentDraft(nextDecision, {
+        knownItemIds: knownItemIds || [decision.target_item_id],
         knownMessageIds: knownMessageIds || initialAssessment.transfer_basis?.source_evidence_message_ids || [],
       });
     } catch (validationError) {
@@ -224,6 +219,17 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
             ))}
           </div>
         </fieldset>
+
+        <label className="assessment-draft-editor__field">
+          <span>Explanation after a second incorrect answer</span>
+          <textarea
+            aria-label="Learner-safe explanation"
+            value={explanation}
+            onChange={(event) => { setExplanation(event.target.value); setDirty(true); clearServerFailure(); }}
+            rows={3}
+            disabled={saving}
+          />
+        </label>
 
         <div className="assessment-draft-editor__answer-key" data-testid="assessment-answer-key" aria-live="polite">
           <span className="assessment-draft-editor__answer-key-mark" aria-hidden="true">

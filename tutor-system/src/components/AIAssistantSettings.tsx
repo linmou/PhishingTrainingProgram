@@ -31,10 +31,11 @@ const getScenarioFromPromptConfig = (
 };
 
 const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) => {
-    const { currentRoom, aiConfig, toggleAIAssistant, loadingAI } = useRoom();
+    const { currentRoom, aiConfig, toggleAIAssistant, setTransferLearningEnabled, loadingAI } = useRoom();
     const { user } = useAuth();
 
     const [isEnabled, setIsEnabled] = useState(false);
+    const [transferEnabled, setTransferEnabled] = useState(true);
     const [selectedModel, setSelectedModel] = useState<AIModelName>(DEFAULT_AI_MODEL);
     const [systemPrompt, setSystemPrompt] = useState('');
     const [temperature, setTemperature] = useState(0.7);
@@ -134,6 +135,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
 
         if (currentRoom) {
             setIsEnabled(currentRoom.ai_assistant_enabled);
+            setTransferEnabled(currentRoom.transfer_learning_enabled === true || !currentRoom.ai_assistant_enabled);
         }
 
         if (aiConfig) {
@@ -301,6 +303,10 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                 max_tokens: maxTokens
             });
 
+            if (currentRoom && transferEnabled !== (currentRoom.transfer_learning_enabled === true)) {
+                await setTransferLearningEnabled(transferEnabled);
+            }
+
             onClose();
         } catch (error) {
             console.error('Failed to save AI settings:', error);
@@ -356,6 +362,18 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                         <p className="ai-setting-description">
                             Allow AI to generate responses in this tutoring session
                         </p>
+                    </div>
+
+                    <div className="ai-setting-group">
+                        <label className="ai-toggle-label">
+                            <input
+                                type="checkbox"
+                                checked={transferEnabled}
+                                onChange={(event) => setTransferEnabled(event.target.checked)}
+                                disabled={isSaving || loadingAI}
+                            />
+                            <span className="ai-toggle-text">Enable In-Room Assessment</span>
+                        </label>
                     </div>
 
                     {isEnabled && (

@@ -14,7 +14,7 @@ export interface ChecklistGenerationModalProps {
   onClose: () => void;
   onSetupAI?: () => void;
   onManualInput: () => void;
-  onUseTemplate: () => void;
+  onUseTemplate?: () => void;
   onEditAIPrompt?: () => void;
 }
 
@@ -97,13 +97,13 @@ export const ChecklistGenerationModal: React.FC<ChecklistGenerationModalProps> =
                   Create Manual Checklist
                 </button>
 
-                <button 
+                {onUseTemplate && <button
                   className="modal-option-button tertiary"
                   onClick={onUseTemplate}
                 >
                   <FileText size={16} />
                   Use Template
-                </button>
+                </button>}
               </>
             )}
 
@@ -117,13 +117,13 @@ export const ChecklistGenerationModal: React.FC<ChecklistGenerationModalProps> =
                   Add Custom Areas
                 </button>
 
-                <button 
+                {onUseTemplate && <button
                   className="modal-option-button secondary"
                   onClick={onUseTemplate}
                 >
                   <FileText size={16} />
                   Use Template
-                </button>
+                </button>}
 
                 {onEditAIPrompt && (
                   <button 

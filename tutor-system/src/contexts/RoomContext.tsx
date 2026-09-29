@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TutorDecisionV3 } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
 import type { AssessmentOptionId } from '../types/assessment';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
@@ -78,13 +78,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
     const [multiAgentDraft, setMultiAgentDraft] = useState<MultiAgentDraft | null>(null);
     const [transferDraft, setTransferDraft] = useState<{
-        decision: TutorDecisionV3;
+        decision: TransferAssessmentDraft;
         progressSnapshotHash: string;
         roomId: string;
         studentId: string;
         checklistId: string;
-        // Null for a tutoring or Guard turn: only an assessment names a checklist item.
-        itemId: string | null;
+        itemId: string;
         focusStudentMessageId: string;
     } | null>(null);
     const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
@@ -636,31 +635,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ? await checklistService.getChecklistForStudent?.(currentRoom.id, user.id) || null
                 : await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
         } catch (transferError) {
+            if (currentRoom.transfer_learning_enabled) throw transferError;
             console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
         }
-        if (!currentSuggestionContext && transferChecklist?.progress_policy_version === 'transfer_v1') {
-            if (user.current_role === 'tutor' && transferDraft && transferDraft.decision.decision.mode !== 'assessment') {
-                const reviewedDecision: TutorDecisionV3 = {
-                    ...transferDraft.decision,
-                    response: content,
-                };
-                const sent = await transferAssessmentService.sendReviewed({
-                    reviewedPayload: reviewedDecision,
-                    roomId: transferDraft.roomId,
-                    studentId: transferDraft.studentId,
-                    checklistId: transferDraft.checklistId,
-                    itemId: null,
-                    focusStudentMessageId: transferDraft.focusStudentMessageId,
-                });
-                const deliveredView = addDisplayNameToMessage(
-                    projectRoomMessage(sent.message as unknown as Record<string, unknown>),
-                    participants
-                );
-                setMessages(prev => mergeRoomMessages(prev, [deliveredView]));
-                setCurrentRoom(sent.room);
-                clearAISuggestion();
-                return;
-            }
+        if (!currentSuggestionContext && currentRoom.transfer_learning_enabled &&
+            transferChecklist?.progress_policy_version === 'transfer_v1') {
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,
@@ -881,7 +860,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentSuggestionContext(null);
     };
 
-    const generateAIResponse = async (prompt?: string): Promise<void> => {
+    const generateAIResponse = async (
+        prompt?: string,
+        focusMessageId?: string,
+        parameterOverrides?: ParameterOverrides
+    ): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
         }
@@ -905,10 +888,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 clearAISuggestion();
             }
 
-            // Get the latest student message if no prompt provided
+            // Keep an explicitly selected focus stable across regeneration.
             let parentMessageId: string | undefined;
             let parentMessageContent: string = '';
-            if (!prompt) {
+            if (focusMessageId) {
+                const selectedMessage = messages.find(m => m.id === focusMessageId && m.user_role === 'student');
+                if (!selectedMessage) throw new Error('Selected learner message is no longer available');
+                parentMessageId = selectedMessage.id;
+                parentMessageContent = selectedMessage.content;
+                prompt = selectedMessage.content;
+            } else if (!prompt) {
                 const latestMessage = messages
                     .filter(m => m.user_role === 'student')
                     .slice(-1)[0];
@@ -931,47 +920,53 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 transferChecklist = await checklistService.getActiveTransferChecklistForRoom?.(currentRoom.id) || null;
             } catch (transferError) {
+                if (currentRoom.transfer_learning_enabled) throw transferError;
                 console.warn('Transfer preparation unavailable; keeping legacy AI generation:', transferError);
             }
-            if (transferChecklist?.progress_policy_version === 'transfer_v1') {
+            if (currentRoom.transfer_learning_enabled) {
+                if (!transferChecklist ||
+                    transferChecklist.detection_areas.length + transferChecklist.verification_steps.length === 0) {
+                    throw new Error('Set up a learning target in Learning Progress before generating an assessment.');
+                }
                 const checklistOwnerId = transferChecklist.student_id;
-                const checklistOwnerMessage = messages
-                    .filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId)
-                    .slice(-1)[0];
+                const checklistOwnerMessage = focusMessageId
+                    ? messages.find(message => message.id === focusMessageId && message.user_id === checklistOwnerId)
+                    : messages.filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId).slice(-1)[0];
                 if (!checklistOwnerMessage) {
                     throw new Error('No learner message found for the transfer checklist owner');
                 }
                 parentMessageId = checklistOwnerMessage.id;
                 parentMessageContent = checklistOwnerMessage.content;
-                const prepared = await transferAssessmentService.prepareTurn({
+                await transferAssessmentService.analyzeMessage(parentMessageId, currentRoom.id);
+                const prepared = await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
                   checklistId: transferChecklist.id,
                 });
-                const candidate = createReviewCandidate(prepared);
-                if (!candidate) {
-                    throw new Error('Transfer preparation did not return a valid review candidate');
+                if (prepared) {
+                    const candidate = createReviewCandidate(prepared);
+                    if (!candidate) throw new Error('Transfer preparation returned an invalid assessment candidate');
+                    setTransferDraft({
+                        decision: candidate.decision,
+                        progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
+                        roomId: candidate.scope.roomId,
+                        studentId: candidate.scope.studentId,
+                        checklistId: candidate.scope.checklistId,
+                        itemId: candidate.scope.itemId,
+                        focusStudentMessageId: candidate.scope.focusStudentMessageId,
+                    });
+                    setAiSuggestion(candidate.decision.assessment.rendered_text);
+                    setAiDecision(null);
+                    setFinalMode('tutoring');
+                    setCurrentSuggestionContext(null);
+                    return;
                 }
-                setTransferDraft({
-                    decision: candidate.decision,
-                    progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),
-                    roomId: candidate.scope.roomId,
-                    studentId: candidate.scope.studentId,
-                    checklistId: candidate.scope.checklistId,
-                    itemId: candidate.scope.itemId,
-                    focusStudentMessageId: candidate.scope.focusStudentMessageId,
-                });
-                setAiSuggestion(candidate.decision.assessment?.rendered_text || candidate.decision.response);
-                setAiDecision(null);
-                setFinalMode('tutoring');
-                setCurrentSuggestionContext(null);
-                return;
             }
 
             const result = await generateTutorSuggestion(
                 currentRoom.id,
                 user.id,
-                undefined,
+                parameterOverrides,
                 {
                     // Same student line the tutor is responding to in the UI
                     focusStudentMessage: parentMessageContent || prompt
@@ -1018,6 +1013,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (!currentSuggestionContext) {
             throw new Error('No current suggestion to regenerate');
+        }
+
+        if (currentRoom.transfer_learning_enabled) {
+            await generateAIResponse(undefined, currentSuggestionContext.parentMessageId, parameterOverrides);
+            return;
         }
 
         setLoadingAI(true);
@@ -1278,6 +1278,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentRoom(normalizeRoom(updatedRoom));
     };
 
+    const setTransferLearningEnabled = async (enabled: boolean): Promise<void> => {
+        if (!currentRoom || !user || user.id !== currentRoom.tutor_id) {
+            throw new Error('Only the room tutor can configure transfer learning');
+        }
+        const { data, error } = await supabase.from('rooms')
+            .update({ transfer_learning_enabled: enabled })
+            .eq('id', currentRoom.id)
+            .eq('tutor_id', user.id)
+            .select('*')
+            .single();
+        if (error) throw error;
+        setCurrentRoom(normalizeRoom(data));
+    };
+
     const toggleAIAssistant = async (
         enabled: boolean,
         config?: Partial<AIAssistantConfig>
@@ -1483,7 +1497,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentSuggestionContext(null);
     };
 
-    const confirmTransferDraft = async (decision: TutorDecisionV3): Promise<void> => {
+    const confirmTransferDraft = async (decision: TransferAssessmentDraft): Promise<void> => {
         if (!transferDraft) throw new Error('No transfer assessment draft is available');
         if (deliveryInFlightRef.current) {
             throw new Error('A delivery is already in flight for this candidate.');
@@ -1654,6 +1668,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         leaveRoom,
         sendMessage,
         setResponseMode,
+        setTransferLearningEnabled,
         generateAIResponse,
         regenerateAIResponse,
         toggleAIAssistant,

@@ -128,7 +128,8 @@ describe('RoomContext transfer concurrency', () => {
     (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(transferChecklist);
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
 
-    jest.spyOn(transferAssessmentService, 'prepareTurn').mockResolvedValue(preparedTurnResult);
+    jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
+    jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
     jest.spyOn(transferAssessmentService, 'processMessage').mockResolvedValue({
       message_id: DELIVERED_ANSWER_ID,

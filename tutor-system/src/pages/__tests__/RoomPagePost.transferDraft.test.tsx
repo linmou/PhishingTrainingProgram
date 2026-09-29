@@ -137,11 +137,11 @@ describe('RoomPagePost transfer review surface', () => {
     expect(editor.querySelector('.assessment-draft-editor__header')).toBeInTheDocument();
     expect(editor.querySelector('.assessment-draft-editor__badge')).toHaveTextContent('Draft');
     expect(editor.querySelector('.assessment-draft-editor__body')).toBeInTheDocument();
-    expect(editor.querySelectorAll('.assessment-draft-editor__field')).toHaveLength(2);
+    expect(editor.querySelectorAll('.assessment-draft-editor__field')).toHaveLength(3);
     expect(editor.querySelector('.assessment-draft-editor__select')).toBeInTheDocument();
     expect(screen.getByLabelText('Answer type')).toHaveValue('single');
     expect(screen.getByLabelText('Question')).toHaveValue(preparedCandidate.assessment!.stem);
-    expect(screen.queryByLabelText('Learner-safe explanation')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Learner-safe explanation')).toBeInTheDocument();
     expect(editor.querySelector('.assessment-draft-editor__options')).toBeInTheDocument();
     expect(editor.querySelectorAll('.assessment-draft-editor__option')).toHaveLength(4);
     expect(screen.getByLabelText('Option B')).toHaveValue(
@@ -221,7 +221,7 @@ describe('RoomPagePost transfer review surface', () => {
     expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'dirty');
     fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(1));
-    expect(confirmTransferDraft.mock.calls[0][0].response).toBe(editedQuestion);
+    expect(confirmTransferDraft.mock.calls[0][0].assessment.stem).toBe(editedQuestion);
   });
 
   it('keeps the candidate unsent and retries an edited candidate after a retryable send failure', async () => {
@@ -247,8 +247,8 @@ describe('RoomPagePost transfer review surface', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(2));
-    expect(confirmTransferDraft.mock.calls[0][0].response).toBe(preparedCandidate.response);
-    expect(confirmTransferDraft.mock.calls[1][0].response).toBe(editedQuestion);
+    expect(confirmTransferDraft.mock.calls[0][0].assessment.stem).toBe(preparedCandidate.assessment.stem);
+    expect(confirmTransferDraft.mock.calls[1][0].assessment.stem).toBe(editedQuestion);
     expect(visibleMessages.map((message) => message.id)).toEqual(originalMessageIds);
   });
 });

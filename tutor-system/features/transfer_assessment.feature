@@ -12,9 +12,10 @@ Feature: Transfer assessment lifecycle
   Scenario: Broad learner evidence makes one meaningful transfer target eligible
     Given the learner has given a correct explanation for a configured concept
     And the learner has not already demonstrated transfer for that concept
-    When the tutor evaluates the next turn
+    When TransferLearning analyzes the persisted learner message
     Then the concept may become partially_covered with understanding_level basic
-    And the tutor may select at most one current relevant transfer target
+    And TransferLearning selects at most one current relevant transfer target
+    And the next AI-generated response is an assessment draft when the target is fully eligible
     And the transfer context must change the meaningful situation rather than only the brand
 
   @T09 @U03 @U07
@@ -29,7 +30,7 @@ Feature: Transfer assessment lifecycle
     Given the tutor has generated a structured transfer assessment draft
     And the draft contains four options labelled A, B, C, and D
     When the teacher reviews and explicitly sends the draft
-    Then the delivered tutor turn has mode assessment and instruction transfer_assess
+    Then the delivered tutor message has response_mode assessment
     And the room participation mode remains tutoring
     And the learner can see only the stem, instruction, and four options
     And the answer key, transfer basis, and model rationale remain private
@@ -75,3 +76,18 @@ Feature: Transfer assessment lifecycle
     When a later learner message genuinely contradicts that understanding
     Then the concept reopens as needs_review with understanding_level basic
     And the tutor does not routinely reassess an already verified concept without new contradictory evidence
+
+  @T09 @setup
+  Scenario: A transfer room waits for approved learning targets
+    Given a transfer-enabled room has no approved learning targets
+    When the teacher opens the room
+    Then the room shows the learning-target setup reminder
+    And no transfer assessment is prepared
+
+  @T09 @routing
+  Scenario: An eligible assessment bypasses the shared tutor
+    Given approved room targets and learner-owned evidence make one target eligible
+    And no Guard, protection, correction, feedback, or repair blocker applies
+    When the teacher requests the next AI-generated response
+    Then TransferLearning prepares one assessment-only draft
+    And the shared tutor is not called

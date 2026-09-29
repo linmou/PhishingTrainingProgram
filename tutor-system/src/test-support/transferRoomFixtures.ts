@@ -9,7 +9,7 @@
  */
 
 import type { Message, Room, User } from '../types';
-import type { AssessmentOptionId, TutorDecisionV3 } from '../types/assessment';
+import type { AssessmentOptionId, TransferAssessmentDraft } from '../types/assessment';
 import type {
   ProcessedMessageDTO,
   PublicAssessmentDTO,
@@ -84,6 +84,7 @@ export const transferRoom: Room = {
   password: null,
   pre_populated_dialogue: null,
   active_response_mode: 'tutoring',
+  transfer_learning_enabled: true,
   mode_changed_at: '2026-09-12T08:00:00Z',
   mode_change_source: 'reviewed_response',
   created_at: '2026-09-12T08:00:00Z',
@@ -195,15 +196,10 @@ export const reviewedDelivery: ReviewedDeliveryDTO = {
   room: { ...transferRoom, active_response_mode: 'tutoring' },
 };
 
-/** Candidate decision returned by prepareTurn for learner A, including the private key. */
-export const preparedCandidate: TutorDecisionV3 = {
+/** Assessment draft returned for learner A, including the private key. */
+export const preparedCandidate: TransferAssessmentDraft = {
   reason: 'The learner reports a payment request under pressure.',
-  decision: {
-    mode: 'assessment',
-    instruction: 'transfer_assess',
-    target_item_id: CHECKLIST_ITEM_ID,
-  },
-  response: deliveredQuestionRow.content,
+  target_item_id: CHECKLIST_ITEM_ID,
   assessment: {
     stem: deliveredQuestionRow.content,
     rendered_text: [
@@ -215,7 +211,7 @@ export const preparedCandidate: TutorDecisionV3 = {
       'D. Reply with your bank details.',
     ].join('\n'),
     selection_type: 'single',
-    options: deliveredQuestionRow.assessment_options as NonNullable<TutorDecisionV3['assessment']>['options'],
+    options: deliveredQuestionRow.assessment_options as TransferAssessmentDraft['assessment']['options'],
     correct_option_ids: ['B'],
     learner_safe_explanation: 'Pause and verify the request through an official channel before paying or sharing information.',
     transfer_basis: {
@@ -227,9 +223,9 @@ export const preparedCandidate: TutorDecisionV3 = {
   },
 };
 
-/** The prepareTurn result record component 102 returns, with the item id as the server sends it. */
+/** The prepare_turn result record component 102 returns. */
 export const preparedTurnResult = {
-  decision: preparedCandidate,
+  assessment_draft: preparedCandidate,
   progress_snapshot_hash: 'snapshot-hash-abc',
   room_id: TRANSFER_ROOM_ID,
   student_id: LEARNER_A_ID,
@@ -238,16 +234,8 @@ export const preparedTurnResult = {
   focus_student_message_id: LEARNER_A_MESSAGE_ID,
 };
 
-/** Same shape for a tutoring turn: no checklist item, and the id must stay null rather than "null". */
-export const preparedTutoringTurnResult = {
-  ...preparedTurnResult,
-  decision: {
-    ...preparedCandidate,
-    decision: { mode: 'tutoring', instruction: 'scaffolding', target_item_id: null },
-    assessment: null,
-  },
-  item_id: null,
-};
+/** An explicit no-assessment result routes to the shared tutor. */
+export const preparedTutoringTurnResult = null;
 
 export const transferChecklist = {
   id: CHECKLIST_ID,
@@ -270,6 +258,16 @@ export const transferChecklist = {
       updated_at: '2026-09-12T08:30:00Z',
     },
   ],
+  detection_areas: [{
+    id: CHECKLIST_ITEM_ID,
+    checklist_id: CHECKLIST_ID,
+    area_text: 'Verify payment requests',
+    item_type: 'detection_area',
+    priority: 'critical',
+    status: 'partially_covered',
+    understanding_level: 'basic',
+  }],
+  verification_steps: [],
 };
 
 /** A stored learner answer row, as the server-authoritative processing path produced it. */

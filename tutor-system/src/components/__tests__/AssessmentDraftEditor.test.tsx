@@ -13,7 +13,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom';
 import AssessmentDraftEditor from '../AssessmentDraftEditor';
 import { preparedCandidate } from '../../test-support/transferRoomFixtures';
-import type { TutorDecisionV3 } from '../../types/assessment';
+import type { TransferAssessmentDraft } from '../../types/assessment';
 
 const optionInputs = (): HTMLInputElement[] =>
   Array.from(document.querySelectorAll('input[name="assessment-correct-option"]')) as HTMLInputElement[];
@@ -41,7 +41,7 @@ describe('AssessmentDraftEditor', () => {
     ]);
     expect(container.querySelector('.assessment-draft-editor__preview')).not.toBeInTheDocument();
     expect(container.querySelector('.assessment-draft-editor__confirmation')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Learner-safe explanation')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Learner-safe explanation')).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /I confirm the concept/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Send assessment' })).toBeInTheDocument();
   });
@@ -57,16 +57,16 @@ describe('AssessmentDraftEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const submitted = onSubmit.mock.calls[0][0] as TutorDecisionV3;
-    expect(submitted.response).toBe(editedQuestion);
-    expect(submitted.decision).toEqual({ mode: 'assessment', instruction: 'transfer_assess', target_item_id: preparedCandidate.decision.target_item_id });
-    expect(submitted.assessment!.correct_option_ids).toEqual(['B']);
-    expect(submitted.assessment!.learner_safe_explanation).toBe(
-      preparedCandidate.assessment!.learner_safe_explanation
+    const submitted = onSubmit.mock.calls[0][0] as TransferAssessmentDraft;
+    expect(submitted.target_item_id).toBe(preparedCandidate.target_item_id);
+    expect(submitted.assessment.stem).toBe(editedQuestion);
+    expect(submitted.assessment.correct_option_ids).toEqual(['B']);
+    expect(submitted.assessment.learner_safe_explanation).toBe(
+      preparedCandidate.assessment.learner_safe_explanation
     );
-    expect(submitted.assessment!.rendered_text).toContain(editedQuestion);
-    expect(submitted.assessment!.rendered_text).toContain(editedOption);
-    expect(submitted.assessment!.rendered_text).not.toContain(preparedCandidate.assessment!.stem);
+    expect(submitted.assessment.rendered_text).toContain(editedQuestion);
+    expect(submitted.assessment.rendered_text).toContain(editedOption);
+    expect(submitted.assessment.rendered_text).not.toContain(preparedCandidate.assessment.stem);
   });
 
   it('refuses a blank stem through the production rendering validator', async () => {
@@ -87,7 +87,7 @@ describe('AssessmentDraftEditor', () => {
     fireEvent.change(screen.getByLabelText('Option B'), { target: { value: '   ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/options.*non-empty text/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/options.*nonempty/i);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -266,7 +266,7 @@ describe('AssessmentDraftEditor', () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     if (field === 'key') {
-      const submitted = onSubmit.mock.calls[0][0] as TutorDecisionV3;
+      const submitted = onSubmit.mock.calls[0][0] as TransferAssessmentDraft;
       expect(submitted.assessment!.correct_option_ids).toEqual(['C']);
     }
   });

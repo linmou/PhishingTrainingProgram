@@ -26,7 +26,7 @@ import {
 } from '../../test-support/transferRoomFixtures';
 import { projectRoomMessage } from '../../contexts/transferAssessmentUiAdapter';
 import type { Message } from '../../types';
-import type { TutorDecisionV3 } from '../../types/assessment';
+import type { TransferAssessmentDraft } from '../../types/assessment';
 
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
@@ -149,15 +149,11 @@ describe('RoomPagePost structured decision consumption', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
 
     await waitFor(() => expect(confirmTransferDraft).toHaveBeenCalledTimes(1));
-    const submitted = confirmTransferDraft.mock.calls[0][0] as TutorDecisionV3;
+    const submitted = confirmTransferDraft.mock.calls[0][0] as TransferAssessmentDraft;
     expect(typeof submitted).toBe('object');
-    expect(submitted.decision).toEqual({
-      mode: 'assessment',
-      instruction: 'transfer_assess',
-      target_item_id: preparedCandidate.decision.target_item_id,
-    });
-    expect(submitted.assessment!.correct_option_ids).toEqual(['B']);
-    expect(submitted.assessment!.options).toHaveLength(4);
+    expect(submitted.target_item_id).toBe(preparedCandidate.target_item_id);
+    expect(submitted.assessment.correct_option_ids).toEqual(['B']);
+    expect(submitted.assessment.options).toHaveLength(4);
   });
 
   it('keeps the copy-only suggestion path for a room with no transfer candidate', () => {

@@ -12,15 +12,23 @@ export interface ManualChecklistInputProps {
   onSubmit: (detectionAreas: string[], verificationSteps: string[]) => void;
   onCancel: () => void;
   suggestedTemplate?: string;
+  initialDetectionAreas?: string[];
+  initialVerificationSteps?: string[];
+  title?: string;
+  allowVerificationOnly?: boolean;
 }
 
 export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
   onSubmit,
   onCancel,
-  suggestedTemplate
+  suggestedTemplate,
+  initialDetectionAreas = [],
+  initialVerificationSteps = [],
+  title = 'Create Manual Checklist',
+  allowVerificationOnly = false
 }) => {
-  const [detectionAreasText, setDetectionAreasText] = useState('');
-  const [verificationStepsText, setVerificationStepsText] = useState('');
+  const [detectionAreasText, setDetectionAreasText] = useState(initialDetectionAreas.join('\n'));
+  const [verificationStepsText, setVerificationStepsText] = useState(initialVerificationSteps.join('\n'));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
@@ -44,8 +52,9 @@ export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
     setValidationError('');
 
     // Validation: At least one detection area required
-    if (parsedItems.detectionAreas.length === 0) {
-      setValidationError('At least one detection area is required');
+    if (parsedItems.detectionAreas.length === 0 &&
+      (!allowVerificationOnly || parsedItems.verificationSteps.length === 0)) {
+      setValidationError(allowVerificationOnly ? 'Enter at least one learning target' : 'At least one detection area is required');
       return;
     }
 
@@ -66,7 +75,7 @@ export const ManualChecklistInput: React.FC<ManualChecklistInputProps> = ({
   return (
     <div className="manual-checklist-input">
       <div className="manual-checklist-header">
-        <h2>Create Manual Checklist</h2>
+        <h2>{title}</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="manual-checklist-form">

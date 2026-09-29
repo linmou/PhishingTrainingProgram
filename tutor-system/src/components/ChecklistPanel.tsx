@@ -20,10 +20,13 @@ import { ChecklistGenerationModal } from './ChecklistGenerationModal';
 import { ManualChecklistInput } from './ManualChecklistInput';
 import AddCustomAreaModal from './AddCustomAreaModal';
 import { RoomFeaturesService } from '../services/roomFeaturesService';
+import { useOptionalAuth } from '../contexts/AuthContext';
 import './ChecklistPanel.css';
 
 interface ChecklistPanelProps {
   roomId: string;
+  transferEnabled?: boolean;
+  studentId?: string | null;
   isVisible: boolean;
   onToggleVisibility: () => void;
   progressLocked?: boolean;
@@ -303,10 +306,14 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
 
 const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   roomId,
+  transferEnabled = false,
+  studentId = null,
   isVisible,
   onToggleVisibility,
   progressLocked = false
 }) => {
+  const auth = useOptionalAuth();
+  const canSetupTargets = !transferEnabled || auth?.user?.current_role === 'tutor';
   // Use the enhanced service layer hook
   const { 
     checklist, 
@@ -319,15 +326,18 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     // New enhanced functionality
     showGenerationModal,
     showManualInput,
+    suggestedTargets,
     startSmartGeneration,
     openManualInput,
     closeModals,
     handleSetupAI,
     handleManualSubmit
-  } = useChecklist(roomId);
+  } = useChecklist(roomId, { enabled: transferEnabled, studentId });
 
   const [showAddCustomArea, setShowAddCustomArea] = useState(false);
   const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
+  const setupRequired = transferEnabled && (!checklist ||
+    checklist.detection_areas.length + checklist.verification_steps.length === 0);
   const progressControlsLocked = progressLocked || transferPolicy;
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
@@ -491,7 +501,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     );
   }
 
-  if (!checklist) {
+  if (!checklist || setupRequired) {
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -505,49 +515,56 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         </div>
         
         {/* Show manual input form */}
-        {showManualInput && (
+        {canSetupTargets && showManualInput && (
           <div className="checklist-manual-input">
             <ManualChecklistInput
               onSubmit={handleManualSubmit}
               onCancel={closeModals}
+              initialDetectionAreas={suggestedTargets?.detection}
+              initialVerificationSteps={suggestedTargets?.verification}
+              title={transferEnabled ? 'Approve Learning Targets' : undefined}
+              allowVerificationOnly={transferEnabled}
             />
           </div>
         )}
         
         {/* Show generation options when no manual input */}
-        {!showManualInput && (
+        {(!showManualInput || !canSetupTargets) && (
           <div className="checklist-empty">
-            <p>No checklist found for this room.</p>
-            <div className="checklist-generation-options">
+            {(!transferEnabled || !canSetupTargets) && <p>{transferEnabled
+              ? 'Waiting for the tutor to set up learning targets.'
+              : 'No checklist found for this room.'}</p>}
+            {transferEnabled && canSetupTargets && !studentId && <p>Waiting for a learner to join before targets can be saved.</p>}
+            {canSetupTargets && <div className="checklist-generation-options">
               <button 
-                onClick={() => startSmartGeneration('General Scam Indicators')} 
+                onClick={() => startSmartGeneration()}
                 className="generate-checklist-button primary"
-                disabled={loading || progressControlsLocked}
+                disabled={loading || (transferEnabled ? !studentId : progressControlsLocked)}
               >
                 <Zap size={16} />
-                {loading ? 'Generating...' : 'Smart Generate'}
+                {loading ? 'Generating...' : transferEnabled ? 'Generate Learning Targets' : 'Smart Generate'}
               </button>
               <button 
                 onClick={openManualInput} 
                 className="manual-checklist-button secondary"
-                disabled={loading || progressControlsLocked}
+                disabled={loading || (transferEnabled ? !studentId : progressControlsLocked)}
               >
                 <Edit size={16} />
-                Manual Input
+                {transferEnabled ? 'Enter Manually' : 'Manual Input'}
               </button>
-            </div>
+            </div>}
           </div>
         )}
         
         {/* Generation modal */}
-        {showGenerationModal && (
+        {canSetupTargets && showGenerationModal && (
           <ChecklistGenerationModal
             mode={showGenerationModal.mode}
             message={showGenerationModal.message}
             onClose={closeModals}
             onSetupAI={handleSetupAI}
             onManualInput={openManualInput}
-            onUseTemplate={() => generateChecklist('General Scam Indicators')}
+            onUseTemplate={transferEnabled ? undefined : () => generateChecklist('General Scam Indicators')}
             onEditAIPrompt={() => {
               closeModals();
               // TODO: Navigate to AI settings
