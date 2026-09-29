@@ -20,10 +20,13 @@ const PROVIDER_MAX_TOKENS = 1200;
 
 const TRANSFER_V3_SYSTEM_PROMPT = [
   'Return exactly one JSON object with keys reason, learning_evidence, decision, response, assessment.',
-  'Use assessment only with instruction transfer_assess and a known eligible item.',
+  'learning_evidence must be an array. decision must be an object with keys mode, instruction, target_item_id; never a string.',
+  'prior_participation_mode describes the previous turn, not the required decision for this turn.',
+  'For tutoring or guard, set decision.target_item_id and assessment to null. For assessment, set decision.mode to assessment, decision.instruction to transfer_assess, and decision.target_item_id to one eligible_assessment_item_ids value.',
+  'When the learner has shown basic understanding of an eligible item, prefer a changed-context transfer assessment over repeating the same explanation.',
   'An assessment has selection_type, stem, rendered_text, exactly options A-D, correct_option_ids, learner_safe_explanation, and transfer_basis.',
+  'Set response to the learner-facing question stem for assessment mode. Use a nonempty learner-facing response in every mode.',
   'learner_safe_explanation must be concise, age-appropriate, grounded in the correct option, safe to disclose after terminal failure, and contain no hidden reasoning.',
-  'Tutoring and guard modes must set assessment to null and target_item_id to null.',
   'Never invent IDs. Return JSON only, without markdown or hidden chain-of-thought.',
 ].join('\n');
 
