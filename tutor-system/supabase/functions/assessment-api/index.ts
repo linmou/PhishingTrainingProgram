@@ -25,6 +25,7 @@ const TRANSFER_V3_SYSTEM_PROMPT = [
   'prior_participation_mode describes the previous turn, not the required decision for this turn.',
   'For tutoring or guard, set decision.target_item_id and assessment to null. For assessment, set decision.mode to assessment, decision.instruction to transfer_assess, and decision.target_item_id to one eligible_assessment_item_ids value.',
   'When the learner has shown basic understanding of an eligible item, prefer a changed-context transfer assessment over repeating the same explanation.',
+  'If the learner asks for help or clarification about a failed assessment, choose tutoring and answer that question directly before offering another assessment.',
   'An assessment has selection_type exactly "single" or "multiple", stem, rendered_text, options as four objects with ids A, B, C, D and nonempty text, correct_option_ids as an array of those ids, learner_safe_explanation, and transfer_basis.',
   'transfer_basis must be an object with concept_rule, source_context, changed_context, and source_evidence_message_ids (an array containing the real focus student message id). Never use a string for transfer_basis or "single_choice" for selection_type.',
   'Set response to the learner-facing question stem for assessment mode. Use a nonempty learner-facing response in every mode.',
