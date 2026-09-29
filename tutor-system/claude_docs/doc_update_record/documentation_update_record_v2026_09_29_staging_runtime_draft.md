@@ -33,6 +33,8 @@ The one-time migration input in `.github/workflows/deploy-assessment-api.yml` ru
 
 The `analyze_transfer_message_v1` RPC currently returns `awaiting_review` for ordinary student messages. It does not classify them or advance progress; the tutor review flow remains the authority for sending an assessment.
 
+The first staging workflow run, `36553210224`, applied the runtime SQL and configured provider secrets, then failed bundling the Edge Function because Deno could not resolve extensionless imports in shared TypeScript modules. A function-only rerun with server-side bundling, `36553418118`, hit the same missing module. The shared runtime imports now use explicit `.ts` paths. Local Deno tests pass without sloppy resolution (14/14), and the CRA production build succeeds with existing lint warnings. The next dispatch must leave `apply_runtime_migration` false.
+
 ## Earlier Attempt
 
 Before the environment restrictions changed, the draft installed successfully in disposable PostgreSQL database `staging_runtime_20260929`. The existing RPC regression script progressed through delivery, attempts, terminal outcomes, and Guard cases, but did not complete: its final stale fixture attempted delivery to an already covered item and the delivery validator rejected it. The fixture and Guard replay handling were then corrected. Those final changes have not been rerun. No claim of a passing regression suite or browser E2E is made.

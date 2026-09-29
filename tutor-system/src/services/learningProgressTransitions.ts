@@ -1,11 +1,11 @@
 // Purpose: apply the transfer-policy event/state table as the single pure progress authority.
 
-import {
-  isValidTransferProgress,
-} from '../types/learningProgress';
+// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+import { isValidTransferProgress } from '../types/learningProgress.ts';
 import type { TransferProgress } from '../types/learningProgress';
 
-export { isValidTransferProgress } from '../types/learningProgress';
+// @ts-ignore Deno requires the extension; CRA resolves the same TypeScript source.
+export { isValidTransferProgress } from '../types/learningProgress.ts';
 export type { TransferProgress } from '../types/learningProgress';
 
 export type LearningEventKind =
