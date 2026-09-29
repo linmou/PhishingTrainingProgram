@@ -1,0 +1,51 @@
+name: Deploy Assessment API
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-staging:
+    name: Deploy to PhishingTutorStaging
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      REACT_APP_OAI_API_KEY: ${{ secrets.REACT_APP_OAI_API_KEY }}
+      REACT_APP_OAI_BASE_URL: ${{ secrets.REACT_APP_OAI_BASE_URL }}
+    steps:
+      - name: Check required secrets
+        shell: bash
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$REACT_APP_OAI_API_KEY"
+          test -n "$REACT_APP_OAI_BASE_URL"
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.118.0
+
+      - name: Configure Edge Function provider secrets
+        shell: bash
+        env:
+          PROJECT_REF: ciubrzggdqesgvfkpolj
+        run: |
+          secrets_file="$(mktemp)"
+          trap 'rm -f "$secrets_file"' EXIT
+          {
+            printf 'REACT_APP_OAI_API_KEY=%s\n' "$REACT_APP_OAI_API_KEY"
+            printf 'REACT_APP_OAI_BASE_URL=%s\n' "$REACT_APP_OAI_BASE_URL"
+            printf 'OAI_MODEL=qwen3.5-flash\n'
+          } > "$secrets_file"
+          supabase secrets set --project-ref "$PROJECT_REF" --env-file "$secrets_file"
+
+      - name: Deploy assessment-api without Supabase Auth JWT verification
+        shell: bash
+        env:
+          PROJECT_REF: ciubrzggdqesgvfkpolj
+        run: supabase functions deploy assessment-api --project-ref "$PROJECT_REF" --no-verify-jwt

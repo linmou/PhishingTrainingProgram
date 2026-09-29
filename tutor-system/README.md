@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-09-27
-Commit: c074ce7 (integrated transfer assessment components 101-103)
+Updated: 2026-09-29
+Commit: 5a3c56a (staging Edge Function workflow)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -25,7 +25,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
 - **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
-- **Transfer Assessments**: Teacher-reviewed questions with private keys, persisted two-attempt grading, and terminal-only failure feedback behind the trusted assessment API; activation remains disabled pending release gates
+- **Transfer Assessments**: Teacher-reviewed questions with private keys, persisted two-attempt grading, and terminal-only failure feedback behind the trusted assessment API; the Edge Function flag defaults to enabled
 - **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
@@ -150,14 +150,17 @@ Create a `.env.local` file in the root directory:
 REACT_APP_SUPABASE_URL=your_supabase_project_url
 REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Server-only assessment Edge Function settings
-OAI_API_KEY=your_server_provider_key
-OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+# Existing tutor provider settings, also configured as staging Edge Function secrets
+REACT_APP_OAI_API_KEY=your_dashscope_api_key_here
+REACT_APP_OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OAI_MODEL=qwen3.5-flash
-TRANSFER_ASSESSMENT_ENABLED=false
 ```
 
-Do not expose the server-only provider variables through `REACT_APP_*`. The browser calls the six-operation `assessment-api` facade and never reads assessment keys, grades answers, counts attempts, or calls the provider directly.
+`REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` are the existing general tutor settings and are exposed in the CRA browser bundle. The assessment Edge Function uses the same provider values from its own Supabase secrets. Its `TRANSFER_ASSESSMENT_ENABLED` flag defaults to `true`.
+
+### Assessment API Deployment
+
+Run **Deploy Assessment API** from GitHub Actions to deploy the function to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `REACT_APP_OAI_API_KEY`, and `REACT_APP_OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the matching provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys with gateway JWT verification disabled because the app uses its application identity instead of Supabase Auth. Apply the assessment database migration and provision test principals before running the full room assessment flow.
 
 ### Supabase Setup Checklist
 
