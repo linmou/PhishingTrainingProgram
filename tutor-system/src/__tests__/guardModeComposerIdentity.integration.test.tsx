@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test responsible for the room composer showing a tutor name normally and
+ * Mocked RoomPagePost integration test responsible for showing a tutor name normally and
  * the Security Supervisor profile only for tutors in persisted Guard Mode.
  */
 
@@ -53,6 +53,10 @@ const room = (mode: 'tutoring' | 'guard'): Room => ({
   ai_assistant_enabled: true,
   ai_assistant_model: 'qwen3.5-flash',
   ai_assistant_prompt: 'prompt',
+  op_id: null,
+  op_display_name: null,
+  op_avatar_url: null,
+  password: null,
   active_response_mode: mode,
   created_at: '2026-09-01T00:00:00Z',
   updated_at: '2026-09-01T00:00:00Z'

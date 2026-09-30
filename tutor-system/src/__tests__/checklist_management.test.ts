@@ -399,7 +399,7 @@ describe('Checklist Management System', () => {
       expect(result?.detection_areas[0].status).toBe('partially_covered');
     });
 
-    it('records AI-detected coverage and regenerates guidance after a student message', async () => {
+    it('records AI-detected coverage without replacing the room prompt', async () => {
       const checklist = buildChecklist([buildItem()]);
       const detectionResults = {
         detected_coverage: [{
@@ -427,7 +427,6 @@ describe('Checklist Management System', () => {
       jest.spyOn(CoverageDetectionService, 'analyzeStudentResponse').mockResolvedValue(detectionResults);
       jest.spyOn(CoverageDetectionService, 'validateDetectionResults').mockReturnValue(detectionResults);
       jest.spyOn(CoverageDetectionService, 'convertToChecklistUpdates').mockResolvedValue([coverageUpdate]);
-      jest.spyOn(ChecklistService as any, 'triggerSystemPromptRegeneration').mockResolvedValue(undefined);
       mockQuery.single
         .mockResolvedValueOnce({ data: { active_response_mode: 'tutoring' }, error: null })
         .mockResolvedValueOnce({ data: { attempts_count: 0 }, error: null })
@@ -449,7 +448,8 @@ describe('Checklist Management System', () => {
 
       expect(result.updatedItems).toHaveLength(1);
       expect(result.updatedItems[0].status).toBe('covered');
-      expect(result.promptRegenerated).toBe(true);
+      expect(result.promptRegenerated).toBe(false);
+      expect(mockQuery.update).not.toHaveBeenCalledWith(expect.objectContaining({ ai_assistant_prompt: expect.anything() }));
       expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
         item_id: 'item-1',
         evidence_text: 'The student checked the displayed sender domain.',

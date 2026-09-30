@@ -5,7 +5,7 @@
     "app_origin": "http://127.0.0.1:3001",
     "supabase_origin": "https://zgbufaxooqxeabewktzd.supabase.co",
     "isolated": false,
-    "note": "No isolated migrated target with a deployed assessment-api and verified principals was available in this session; the observed capability state is recorded as disabled and every lane is recorded blocked rather than substituted."
+    "note": "Historical blocked evidence snapshot for production project zgbufaxooqxeabewktzd, not staging project ciubrzggdqesgvfkpolj. No isolated migrated target with a deployed assessment-api and verified principals was available in this session; the observed capability state is recorded as disabled and every lane is recorded blocked rather than substituted."
   },
   "principals": {
     "teacher": {

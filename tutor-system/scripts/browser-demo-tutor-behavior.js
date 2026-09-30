@@ -12,7 +12,7 @@ const { execFileSync } = require('node:child_process');
 const ts = require('typescript');
 const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
-const dotenv = require('dotenv');
+const { PROJECT_URL: STAGING_URL, guardProject, assertProjectTraffic: assertStagingTraffic } = require('./browser-e2e/staging-support');
 
 const tutorRoot = path.resolve(__dirname, '..');
 const repoRoot = path.resolve(tutorRoot, '..');
@@ -93,13 +93,11 @@ async function captureFailureScreenshot(page, screenshotDir, caseId) {
   }
 }
 
-function loadLocalEnvironment(envFilePath) {
-  const envFile = envFilePath || path.join(tutorRoot, '.env');
-  const env = { ...(fs.existsSync(envFile) ? dotenv.parse(fs.readFileSync(envFile)) : {}), ...process.env };
-  const url = env.REACT_APP_SUPABASE_URL;
-  const key = env.REACT_APP_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error('Missing local Supabase configuration.');
-  return { env, supabase: createClient(url, key), secrets: [key, env.REACT_APP_OAI_API_KEY].filter(Boolean) };
+function loadLocalEnvironment(env = process.env) {
+  const url = env.REACT_APP_SUPABASE_STAGING_URL;
+  const key = env.REACT_APP_SUPABASE_STAGING_ANON_KEY;
+  if (url !== STAGING_URL || !key) throw new Error('Behavior browser evaluation requires explicit staging Supabase configuration.');
+  return { env: { ...env, REACT_APP_SUPABASE_URL: url }, supabase: createClient(url, key), secrets: [key, env.REACT_APP_OAI_API_KEY].filter(Boolean) };
 }
 
 async function loginAsTutor(page, displayName) {
@@ -433,9 +431,11 @@ async function main() {
   try {
     browser = await chromium.launch({ headless: true, channel: process.env.PW_CHANNEL || 'chrome' });
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const traffic = await guardProject(context);
     page = await context.newPage();
     page.setDefaultTimeout(TIMEOUT);
     await loginAsTutor(page, `BehaviorTutor_${Date.now().toString().slice(-6)}`);
+    assertStagingTraffic(traffic);
     for (const seed of seeds) {
       try {
         const record = await runCase({

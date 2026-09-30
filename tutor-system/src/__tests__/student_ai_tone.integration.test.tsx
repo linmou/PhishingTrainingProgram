@@ -1,6 +1,7 @@
+#!/usr/bin/env node
 /**
- * E2E (page-level) for features/student_ai_tone.feature
- * Purpose: drive the product room route (RoomPagePost) end-to-end for student
+ * File: src/pages/RoomPagePost.tsx and features/student_ai_tone.feature
+ * Purpose: drive the mocked room route for student
  * AI role opt-in → Peer/Adult selection → tutor and Quick Adjust role lock, and multi-student block.
  * Uses real StudentAIToneControl + AIAssistantSettings; mocks room/auth I/O only.
  */

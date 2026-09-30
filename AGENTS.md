@@ -34,6 +34,8 @@ Use TypeScript with 2-space indentation and keep modules small. Prefer straightf
 ## Testing Guidelines
 The repo uses Jest, React Testing Library, and `jest-cucumber`. Coverage thresholds are enforced in `tutor-system/package.json`: 75% branches and 80% for functions, lines, and statements. Add edge cases, not just happy paths, and keep test names tied to observable behavior.
 
+For real-browser tests, read `tutor-system/claude_docs/browser-e2e-testing.md` before selecting a command or target database. Production is `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The checked-in `tutor-system/.env` targets production.
+
 ## Commit & Pull Request Guidelines
 Recent history uses short imperative commits, often with prefixes like `feat(ui): ...` or `fix(ai): ...`. Keep commits focused and readable.
 

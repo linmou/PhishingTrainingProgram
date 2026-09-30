@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-09-29
-Commit: 31cc05c (transfer room workflow)
+Updated: 2026-09-30
+Commit: c2747f7 (base before browser E2E update)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -29,6 +29,10 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
+
+## Browser Testing Environments
+
+Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The browser workflow suite uses staging copies of production template rooms and cleans generated records after each workflow. See [Browser E2E testing](claude_docs/browser-e2e-testing.md) for setup, commands, and evidence handling.
 
 ## 🚀 Getting Started
 
@@ -201,14 +205,14 @@ npm test -- --watchAll=false --runTestsByPath \
   src/components/__tests__/AISuggestionBox.guardMode.test.tsx \
   src/components/__tests__/PostComment.guardMode.test.tsx
 
-# Run live OpenAI integration suites explicitly
-npm run test:integration:openai
+# Run live Qwen integration suites explicitly
+npm run test:integration:qwen
 
-# Run browser/ChromeDriver-backed integration suite explicitly
-npm run test:integration:browser
+# Run the real browser suite in staging template rooms
+npm run test:e2e:staging
 
-# Run all external integration suites
-npm run test:integration:external
+# Run one staging browser workflow
+npm run test:e2e:staging -- --workflow=checklist-generation
 
 # Run specific test suites
 npm test src/services/__tests__/supabase.test.ts      # Task 1
@@ -218,10 +222,9 @@ npm test src/contexts/__tests__/AuthContext.test.tsx  # Task 3
 
 ### Test Tiers
 
-- `npm test` and `npm run test:regression` are the default regression commands. They intentionally skip opt-in suites that require live OpenAI access or a working local ChromeDriver/browser pairing.
-- `npm run test:integration:openai` runs the real OpenAI-backed checklist suites. Use this for vendor integration validation, not as the default per-commit guardrail.
-- `npm run test:integration:browser` runs the Selenium checklist suite. Use this when the local browser automation environment is known-good.
-- `npm run test:integration:external` runs both external tiers in sequence.
+- `npm test` and `npm run test:regression` run deterministic Jest suites, including mocked page integration tests.
+- `npm run test:integration:qwen` exercises the live provider without a browser.
+- `npm run test:e2e:staging` runs seven Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
 
 ### Test Files Structure
 

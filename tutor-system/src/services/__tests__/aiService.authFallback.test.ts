@@ -45,6 +45,13 @@ function configureSupabaseMocks() {
             const order = jest.fn(() => ({ limit }));
             return { select: jest.fn(() => ({ eq: jest.fn(() => ({ order })) })) };
         }
+        if (table === 'session_checklists') {
+            const chain: any = {
+                eq: jest.fn(() => chain),
+                single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
+            };
+            return { select: jest.fn(() => chain) };
+        }
         throw new Error(`Unexpected Supabase table: ${table}`);
     });
 }
@@ -82,9 +89,9 @@ describe('AI Service provider failure behavior', () => {
         global.fetch = jest.fn().mockResolvedValue({
             ok: true,
             json: async () => ({ choices: [{ message: { content: JSON.stringify({
-                mode: 'tutoring',
-                mode_reason: 'The student is examining the sender address.',
-                suggested_response: 'What makes the sender address look suspicious to you?'
+                reason: 'The student is examining the sender address.',
+                decision: { mode: 'tutoring', instruction: 'scaffolding' },
+                response: 'What makes the sender address look suspicious to you?'
             }) } }] })
         } as Response);
 

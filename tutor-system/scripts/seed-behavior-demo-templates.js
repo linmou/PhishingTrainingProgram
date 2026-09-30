@@ -15,17 +15,11 @@ const ts = require('typescript');
 const { createClient } = require('@supabase/supabase-js');
 
 const tutorRoot = path.resolve(__dirname, '..');
-const envPath = path.join(tutorRoot, '.env');
+const STAGING_URL = 'https://ciubrzggdqesgvfkpolj.supabase.co';
 
 function loadEnv() {
-  if (!fs.existsSync(envPath)) {
-    throw new Error(`Missing ${envPath}`);
-  }
-  for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match && !process.env[match[1].trim()]) {
-      process.env[match[1].trim()] = match[2].trim();
-    }
+  if (process.env.REACT_APP_SUPABASE_STAGING_URL !== STAGING_URL || !process.env.REACT_APP_SUPABASE_STAGING_ANON_KEY) {
+    throw new Error('Template seeding requires explicit staging Supabase URL and anon key.');
   }
 }
 
@@ -53,11 +47,8 @@ const {
 } = require(path.join(tutorRoot, 'src/services/demoRoomTemplates.ts'));
 
 async function main() {
-  const url = process.env.REACT_APP_SUPABASE_URL;
-  const key = process.env.REACT_APP_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error('REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY are required');
-  }
+  const url = process.env.REACT_APP_SUPABASE_STAGING_URL;
+  const key = process.env.REACT_APP_SUPABASE_STAGING_ANON_KEY;
 
   const supabase = createClient(url, key);
   const requestedCaseIds = process.argv

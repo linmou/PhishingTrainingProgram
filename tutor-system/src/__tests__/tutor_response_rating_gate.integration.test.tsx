@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * File: src/pages/RoomPagePost.tsx
- * Purpose: verify students must rate the latest AI/Tutor response before sending their next reply.
+ * Purpose: verify the mocked room UI requires a rating before the next reply.
  */
 
 import React from 'react';

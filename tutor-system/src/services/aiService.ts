@@ -21,6 +21,7 @@ import {
 } from './ecologicalTutorCall';
 import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
 import { parseTutorDecision } from './tutorDecisionContract';
+import { ChecklistService } from './checklistService';
 
 export { AI_MODELS, DEFAULT_AI_MODEL };
 export type { AIModelName };
@@ -875,6 +876,20 @@ export const generateTutorSuggestion = async (
         
         // 3. Apply parameter overrides if provided
         aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
+
+        try {
+            const checklist = await ChecklistService.getChecklistByRoom(roomId);
+            if (checklist) {
+                const items = [...checklist.detection_areas, ...checklist.verification_steps];
+                const progress = items.map(item => `- ${item.area_text}: ${item.status}`).join('\n');
+                aiConfig = {
+                    ...aiConfig,
+                    system_prompt: `${aiConfig.system_prompt}\n\nCURRENT LEARNING PROGRESS\n${progress}`
+                };
+            }
+        } catch (error) {
+            console.warn('Checklist progress unavailable for tutor suggestion:', error);
+        }
         
         // 4. Log final configuration being used
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');

@@ -271,23 +271,23 @@ export function getDemoRoomTemplateSeeds(): DemoRoomTemplateSeed[] {
           user_name: 'Socail Media Testdrive',
           role: 'others',
           message:
-            '!!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount'
+            'Your account has a problem! Click this link now: http://testdrive.info/youraccount'
         },
         {
           user_name: 'Noa',
           role: 'others',
-          message: 'I almost clicked this last night when I was half asleep'
+          message: 'I almost clicked it. It made me worried.'
         },
         {
           user_name: 'Tutor',
           role: 'tutor',
-          message: 'What would you do if this popped up while you were scrolling?'
+          message: 'What should you do before you click?'
         },
         {
           user_name: 'Jordan',
           role: 'student',
           message:
-            'I would not click it. I would open the real app myself and check for alerts there.'
+            'I will not click it. I will open the real app myself.'
         }
       ],
       ai_config_template: buildCasualPeerAIConfig('Account Security Alert'),

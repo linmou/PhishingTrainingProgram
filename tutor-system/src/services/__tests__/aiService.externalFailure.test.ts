@@ -121,6 +121,17 @@ describe('aiService external backend failures', () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              eq: jest.fn().mockReturnValue({
+                single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } })
+              })
+            })
+          })
+        })
+      })
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
               data: { title: 'Test room', description: 'Test scenario' },
               error: null

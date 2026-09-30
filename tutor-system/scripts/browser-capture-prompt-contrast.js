@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const ts = require('typescript');
+const { PROJECT_URL: STAGING_URL, guardProject, assertProjectTraffic: assertStagingTraffic } = require('./browser-e2e/staging-support');
 
 const BASE_URL = process.env.DEMO_BASE_URL || 'http://localhost:3001';
 const TIMEOUT_MS = 60000;
@@ -120,6 +121,9 @@ async function generateOnce(page) {
 }
 
 async function main() {
+  if (process.env.REACT_APP_SUPABASE_STAGING_URL !== STAGING_URL) {
+    throw new Error('Prompt comparison browser capture requires explicit staging Supabase configuration.');
+  }
   const { chromium } = require('playwright');
   const tutorRoot = path.resolve(__dirname, '..');
   const artifactRoot = path.resolve(tutorRoot, '../artifacts/feedback-contrast');
@@ -141,6 +145,7 @@ async function main() {
   const seeds = getPromptComparisonTemplateSeeds();
   const browser = await chromium.launch({ headless: true, channel: process.env.PW_CHANNEL || 'chrome' });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const traffic = await guardProject(context);
   const page = await context.newPage();
   page.setDefaultTimeout(TIMEOUT_MS);
   const records = [];
@@ -148,6 +153,7 @@ async function main() {
 
   try {
     await loginAsTutor(page, `ContrastTutor_${Date.now().toString().slice(-6)}`);
+    assertStagingTraffic(traffic);
     for (const seed of seeds) {
       const comparison = seed.ai_config_template.prompt_config.prompt_comparison;
       const { templateId, roomId } = await createRoomFromTemplate(page, seed.template_name);

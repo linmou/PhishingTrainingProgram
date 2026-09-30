@@ -6,13 +6,11 @@
 
 import { supabase } from './supabase';
 import { CoverageDetectionService, CoverageUpdate } from './coverageDetectionService';
-import { generateSystemPromptWithChecklist } from './prompts/checklistPromptGenerator';
 import { 
   ChecklistItem, 
   SessionChecklist, 
   ChecklistProgress
 } from '../types/checklist';
-import { SystemPromptConfig } from './prompts/types';
 import { SCENARIO_TEMPLATES } from './detectionTemplates';
 import { ConversationMessage } from '../types';
 import { generateChecklistFromSystemPrompt } from './checklistIntegration';
@@ -481,17 +479,10 @@ export class ChecklistService {
       // Apply updates to database
       const updatedItems = await this.applyChecklistUpdates(checklist.id, updates);
 
-      // Regenerate system prompt if any updates were made
-      let promptRegenerated = false;
-      if (updatedItems.length > 0) {
-        await this.triggerSystemPromptRegeneration(roomId);
-        promptRegenerated = true;
-      }
-
       return {
         updatedItems,
         detectionResults,
-        promptRegenerated
+        promptRegenerated: false
       };
 
     } catch (error) {
@@ -808,72 +799,6 @@ export class ChecklistService {
       optional_pending: items.filter((item: any) => item.priority === 'optional' && item.status === 'pending').length,
       optional_covered: items.filter((item: any) => item.priority === 'optional' && item.status === 'covered').length
     };
-  }
-
-  /**
-   * Trigger system prompt regeneration
-   */
-  private static async triggerSystemPromptRegeneration(roomId: string): Promise<void> {
-    try {
-      const { data: roomData, error: roomError } = await supabase
-        .from('rooms')
-        .select('ai_assistant_enabled')
-        .eq('id', roomId)
-        .single();
-
-      if (roomError || !roomData?.ai_assistant_enabled) {
-        console.warn('No room-level AI config found for room, skipping prompt regeneration');
-        return;
-      }
-
-      // Get updated checklist
-      const checklist = await this.getChecklistByRoom(roomId);
-      if (!checklist) {
-        console.warn('No checklist found for prompt regeneration');
-        return;
-      }
-      const allItems = [...checklist.detection_areas, ...checklist.verification_steps];
-
-      // TODO: Get base prompt configuration from room settings
-      // For now, use a default configuration
-      const baseConfig: SystemPromptConfig = {
-        role: { role: 'high' },
-        communication_style: {
-          teen_slang: 'low',
-          conversational_markers: 'high',
-          uncertainty_expression: 'low'
-        },
-        cognitive_parameters: {
-          concept_density: 'high',
-          perspective_taking: 'high',
-          personal_examples: 'high',
-          consequence_highlighting: 'high'
-        },
-        emotional_parameters: {
-          enthusiasm_level: 'high',
-          validation_frequency: 'high',
-          mistake_normalization: 'high',
-          confidence_building: 'high'
-        },
-        detection_areas: checklist.detection_areas.map(item => item.area_text),
-        verification_steps: checklist.verification_steps.map(item => item.area_text)
-      };
-
-      // Generate new prompt with checklist context
-      const newPrompt = generateSystemPromptWithChecklist(baseConfig, allItems);
-
-      // Persist the regenerated prompt on the room source of truth.
-      await supabase
-        .from('rooms')
-        .update({ ai_assistant_prompt: newPrompt })
-        .eq('id', roomId);
-
-      console.log('✅ System prompt regenerated and synced for room:', roomId);
-
-    } catch (error) {
-      console.error('Failed to regenerate system prompt:', error);
-      // Don't throw error - this is not critical for checklist updates
-    }
   }
 
   /**

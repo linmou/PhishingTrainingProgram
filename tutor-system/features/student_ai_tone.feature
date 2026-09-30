@@ -7,7 +7,7 @@ Feature: Student AI role preference (1:1 rooms only)
   # Product note (feedback 9 reinterpretation):
   # Not multi-bot. One AI voice; student may opt in to peer vs adult.
   # Multi-student rooms: feature is blocked (hidden / unavailable) for now.
-  # E2E: src/__tests__/student_ai_tone_e2e.test.tsx (RoomPagePost + real role/settings UI)
+  # Mocked page integration: src/__tests__/student_ai_tone.integration.test.tsx
 
   Background:
     Given the AI assistant is enabled for the room

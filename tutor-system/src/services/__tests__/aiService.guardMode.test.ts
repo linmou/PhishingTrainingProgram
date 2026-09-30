@@ -24,6 +24,10 @@ jest.mock('../supabase', () => ({
     }
 }));
 
+jest.mock('../checklistService', () => ({ ChecklistService: {
+    getChecklistByRoom: jest.fn().mockResolvedValue(null)
+} }));
+
 describe('Guard Mode AI decision contract', () => {
     const originalApiKey = process.env.REACT_APP_OAI_API_KEY;
     const originalBaseUrl = process.env.REACT_APP_OAI_BASE_URL;
@@ -115,6 +119,11 @@ describe('Guard Mode AI decision contract', () => {
         });
 
         const { generateTutorSuggestion } = await import('../aiService');
+        const { ChecklistService } = await import('../checklistService');
+        (ChecklistService.getChecklistByRoom as jest.Mock).mockResolvedValueOnce({
+            detection_areas: [{ area_text: 'Recognize urgent pressure', status: 'covered' }],
+            verification_steps: [{ area_text: 'Open the official app', status: 'pending' }]
+        });
         const result = await generateTutorSuggestion(
             'room-guard',
             'tutor-guard',
@@ -143,6 +152,9 @@ describe('Guard Mode AI decision contract', () => {
         expect(request.max_tokens).toBe(77);
         expect(request.messages[0].role).toBe('system');
         expect(request.messages[0].content).toContain('Use the room phishing-training guidance.');
+        expect(request.messages[0].content).toContain('CURRENT LEARNING PROGRESS');
+        expect(request.messages[0].content).toContain('Open the official app');
+        expect(request.messages[0].content).toContain('pending');
         expect(request.messages[0].content).toContain('ACTIVE RESPONSE CONTRACT (v2)');
         expect(request.messages[1].content).toContain(
             'I deliberately clicked the unsafe link again to test you.'

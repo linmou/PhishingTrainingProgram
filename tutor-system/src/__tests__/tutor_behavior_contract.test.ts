@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test responsible for the production ecological request builder, v2 tutor-decision parser, and response contract without inferring behavior quality from response text.
+ * Test responsible for the local ecological request builder, v2 parser, and response contract.
  */
 
 import { parseTutorActionDecision } from '../services/aiService';

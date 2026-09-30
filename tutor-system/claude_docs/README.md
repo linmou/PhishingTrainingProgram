@@ -52,6 +52,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[simplified-authentication.md](./simplified-authentication.md)** - Simplified auth system without traditional signup/login
 
 ### Testing & Quality Assurance
+- **[Browser E2E testing](./browser-e2e-testing.md)** - Test layers, staging setup, live journeys, and evidence retention
 - **[database-migration-workflow.md](./database-migration-workflow.md)** - Disposable PostgreSQL refresh, local migration testing, progress records, and human online application
 - **[Live snapshot/restore update](./doc_update_record/documentation_update_record_v2026_09_28_live_snapshot_restore.md)** - Snapshot and restore evidence, corrected local setup steps, and remaining migration parity gates
 - **[Staging schema sync update](./doc_update_record/documentation_update_record_v2026_09_29_staging_schema_sync.md)** - Schema-only staging bootstrap and the production assessment RPC mismatch

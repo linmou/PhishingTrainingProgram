@@ -26,13 +26,9 @@ The repository now uses these validation tiers:
    - Rule: the web command requires a running local app, a configured local or hosted Supabase endpoint, and configured model/judge credentials. Persistence checks additionally require `024_raw_instruction.sql` at the target endpoint.
 
 4. Browser end-to-end integration:
-   - Command: `npm run test:integration:browser`
-   - Purpose: validate Selenium/browser wiring against a real local browser
-   - Rule: opt-in only because Chrome/ChromeDriver version skew can fail without a product regression
-
-5. Full external validation:
-   - Command: `npm run test:integration:external`
-   - Purpose: run Qwen checklist, tutor-behavior E2E, and browser tiers when preparing a release or checking environment health
+   - Command: `npm run test:e2e:staging`
+   - Purpose: exercise seven independently selectable tutor, checklist, Guard, and assessment workflows through Playwright in reusable staging template rooms
+   - Rule: explicit live run; see [Browser E2E testing](browser-e2e-testing.md) for configuration and evidence
 
 6. Ecological Promptfoo + real-browser product verification:
    - Layer 1: `npm run eval:prompts` (export + one Promptfoo evaluation over ecological and synthetic cases + quality gate)
@@ -212,11 +208,8 @@ npm run test:coverage
 # Run live Qwen integration suites
 npm run test:integration:qwen
 
-# Run browser-backed external integration suites
-npm run test:integration:browser
-
-# Run all external integration suites
-npm run test:integration:external
+# Run the explicit staging template-room browser suite
+npm run test:e2e:staging
 
 # Run comprehensive coverage report (Jest + custom analysis)
 npm run test:coverage-report

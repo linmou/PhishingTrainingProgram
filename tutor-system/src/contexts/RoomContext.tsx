@@ -300,7 +300,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 // One merge path: pre-populated dialogue stays first, persisted records are
                 // keyed by id, and a message this client already holds is never dropped.
-                setMessages(prevMessages => mergeRoomMessages(prevMessages, messagesWithDisplayName));
+                setMessages(prevMessages => mergeRoomMessages(
+                    prevMessages.filter(message => message.room_id === currentRoom.id),
+                    messagesWithDisplayName
+                ));
             }
         } catch (error) {
             console.error('Error polling messages:', error);
@@ -598,7 +601,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCurrentRoom(normalizeRoom(roomData));
             // Merge rather than replace: a realtime insert that arrived before this fetch
             // completed must survive it.
-            setMessages(prev => mergeRoomMessages(prev, allMessages));
+            setMessages(prev => mergeRoomMessages(
+                prev.filter(message => message.room_id === roomId),
+                allMessages
+            ));
             setParticipants(participantsData || []);
         } finally {
             setLoading(false);
@@ -811,6 +817,22 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 prev.filter(message => message.id !== optimisticMessage.id),
                 [persistedMessage]
             ));
+            if (user.current_role === 'student') {
+                try {
+                    await ChecklistService.processStudentMessage(
+                        currentRoom.id,
+                        content,
+                        persistedMessage.id,
+                        messages.filter(message => !message.id.startsWith('temp-')).map(message => ({
+                            role: message.user_role === 'student' ? 'user' : 'assistant',
+                            content: message.content,
+                            timestamp: Math.floor(new Date(message.created_at).getTime() / 1000)
+                        }))
+                    );
+                } catch (analysisError) {
+                    console.warn('Checklist analysis unavailable; message was stored:', analysisError);
+                }
+            }
         }
     };
 

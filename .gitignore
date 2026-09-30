@@ -1,5 +1,6 @@
 .playwright-cli/
 output
+tutor-system/output/
 # Logs
 logs
 *.log
