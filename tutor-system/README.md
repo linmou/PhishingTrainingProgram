@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-09-30
-Commit: c2747f7 (base before browser E2E update)
+Commit: 01aa7d86d4f26ae0dce5140af8ef39ac77892ea0
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -13,7 +13,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Frontend**: React.js with TypeScript
 - **Backend**: Supabase (PostgreSQL)
 - **Database**: PostgreSQL via Supabase
-- **Authentication**: Supabase Auth
+- **Authentication**: Application-managed name-and-role sessions via `AuthContext`, persisted in `localStorage` and synchronized with the Supabase `users` table when available
 - **Storage**: Supabase Storage (images)
 - **Real-time**: Supabase Realtime subscriptions
 - **Hosting**: Vercel/Netlify (recommended)
@@ -113,7 +113,7 @@ tutor-system/
 
 ### Key Features
 
-- **Row Level Security (RLS)**: Automatic access control based on user authentication
+- **Row Level Security (RLS)**: Database-level policies for the application data access model
 - **Real-time subscriptions**: Live updates for chat and room changes
 - **Triggers**: Automatic timestamp updates
 - **Enums**: Type-safe role and status management
@@ -125,13 +125,13 @@ tutor-system/
 - **Row Level Security**: Database-level access control
 - **Role-based permissions**: Enforced at the database level
 - **Capacity limits**: Automatically enforced via application logic
-- **Authenticated uploads**: Only tutors can upload images
+- **Role-based uploads**: Only tutors can upload images
 
 ## 📝 Development Roadmap
 
 - [x] **Task 1**: Project Setup & Architecture (Supabase) ✅
 - [ ] **Task 2**: Database Design & Schema (PostgreSQL)
-- [ ] **Task 3**: Supabase Authentication System
+- [x] **Task 3**: Application-managed authentication with role management
 - [ ] **Task 4**: Capacity Management Logic
 - [ ] **Task 5**: Supabase Storage Room Management
 - [ ] **Task 6**: Room Discovery & Joining
@@ -164,15 +164,14 @@ OAI_MODEL=qwen3.5-flash
 
 ### Assessment API Deployment
 
-Run **Deploy Assessment API** from GitHub Actions to deploy the function to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `REACT_APP_OAI_API_KEY`, and `REACT_APP_OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the matching provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys with gateway JWT verification disabled because the app uses its application identity instead of Supabase Auth. Apply the assessment database migration and provision test principals before running the full room assessment flow.
+Run **Deploy Assessment API** from GitHub Actions to deploy the function to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `REACT_APP_OAI_API_KEY`, and `REACT_APP_OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the matching provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys with gateway JWT verification disabled because the app uses its application identity. Apply the assessment database migration and provision test principals before running the full room assessment flow.
 
 ### Supabase Setup Checklist
 
 1. **Database**: Run the initial migration
-2. **Authentication**: Enable email/password authentication
-3. **Storage**: Create bucket for room images
-4. **RLS Policies**: Already included in migration
-5. **Real-time**: Enable for messages table
+2. **Storage**: Create bucket for room images
+3. **RLS Policies**: Already included in migration
+4. **Real-time**: Enable for messages table
 
 ## 🧪 Testing
 
@@ -182,7 +181,7 @@ We have comprehensive unit tests for completed tasks 1-3:
 
 - **Task 1**: Supabase service configuration and helper functions
 - **Task 2**: Database schema, RLS policies, and CRUD operations  
-- **Task 3**: Authentication system with role management and capacity limits
+- **Task 3**: Application-managed authentication with role management
 
 See [Testing Strategy Documentation](claude_docs/testing-strategy.md) for detailed coverage information.
 
@@ -239,8 +238,8 @@ src/
 
 ## 📱 Usage
 
-1. **Sign Up/Sign In**: Create account or log in
-2. **Role Selection**: Choose Student/Tutor/Observer
+1. **Join**: Enter a display name and choose Student, Tutor, or Observer
+2. **Session**: The selected identity is restored from local storage on reload
 3. **Tutors**: Create rooms with content and images
 4. **Students**: Browse and join available rooms
 5. **Observers**: View rooms and chat in read-only mode
