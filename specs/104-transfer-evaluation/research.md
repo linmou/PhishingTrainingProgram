@@ -62,7 +62,7 @@
 
 **Rationale**: This preserves comparable evidence and holdout independence. Exposed holdouts move to regression and require independent replacements.
 
-**Settings boundary**: Integration commit `df40f32` records the human decision that target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider. Production configuration is server-only `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`; browser-prefixed variables are not provider authority. The upgraded manifest records effective settings without credentials; missing or mismatched runtime configuration blocks with no fallback.
+**Settings boundary**: Integration commit `df40f32` records the human decision that target and judge both use `qwen3.5-flash` through the existing DashScope-compatible provider. The Edge Function reads `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash` from its Supabase secrets; the evaluation runner reads the same key and URL names from its own environment. The upgraded manifest records effective settings without credentials; missing or mismatched runtime configuration blocks with no fallback.
 
 ## Decision 5: Preserve raw evidence immutably and fail closed
 

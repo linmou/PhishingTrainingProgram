@@ -29,7 +29,7 @@ This document records research and design choices for the local component-102 ta
 | Answer input | `post_message` accepts structured selected option IDs for an assessment answer and persists their normalized public selection; grading reads that stored message through `process_message` | Selectable UI no longer needs prose parsing; the stored message remains the causal source | Free-text parser as grading authority rejected |
 | Identity | Inject `AssessmentPrincipalVerifier`; browser sends its current `tutor_system_user.id` in `x-application-user-id`; verifier loads the role and room memberships from the database | Matches the app's existing no-Supabase-Auth identity flow and keeps authorization checks server-side | `auth.uid()` and a new sign-in product are not used; localStorage identity is explicitly not proof against caller impersonation |
 | RPC access | Service-role/postgres execution only for transfer mutation RPCs; untrusted grants revoked | Prevents direct writes and private reads | Public `SECURITY DEFINER` execution rejected |
-| Provider | Require server-only `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`; use existing DashScope-compatible transport with no default | Canonical human answer; avoids silent experiment/config drift | Browser `REACT_APP_*` provider call and hard-coded fallback rejected |
+| Provider | Require `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash` in the Edge Function secret store; use existing DashScope-compatible transport with no default | Canonical human answer; avoids silent experiment/config drift | Browser provider call and hard-coded fallback rejected |
 | Provider parity | Retain `TransferTutorRequestV3` and its canonical context/user-message builders in `ecologicalTutorCall.ts`; production and 104 consume them | One inspectable request contract prevents evaluation drift | Copied evaluator context rejected |
 | Prompt | Production prompt exists only in the Edge Function and requires `learner_safe_explanation` for assessment mode | Keeps provider authority and raw output off the browser | Browser prompt as production source rejected |
 | Provider retry | At most one format-only repair after structural failure; no semantic resampling or dummy output | Bounded, observable recovery without changing experiment meaning | Unbounded retry, model switch, pattern-matched explanation, and silent fallback rejected |
@@ -39,12 +39,12 @@ This document records research and design choices for the local component-102 ta
 
 ## Clarification Result
 
-No functional ambiguity remains after the user approved server-authoritative attempts and selected required server-side `OAI_MODEL=qwen3.5-flash`. Provider API key and base URL already have an existing DashScope-compatible source pattern; implementation moves them to server-only names and fails closed when any required value is absent.
+No functional ambiguity remains after the user approved server-authoritative attempts and selected required server-side `OAI_MODEL=qwen3.5-flash`. Provider API key and base URL already have an existing DashScope-compatible source pattern; the Edge Function reads separately configured secrets under the existing `REACT_APP_OAI_*` names and fails closed when any required value is absent.
 
 ## Deferred Deployment Prerequisites
 
 - A disposable supported hosted Supabase scope and service-role execution evidence.
 - Hosted verification of the `x-application-user-id` adapter against the database role and room-membership rows; this adapter does not provide cryptographic caller identity.
-- Server-side DashScope-compatible `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`.
+- DashScope-compatible `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash` configured as Supabase Edge Function secrets.
 
 These are release prerequisites, not silent implementation substitutions. Missing values keep the feature disabled.

@@ -171,7 +171,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 
 **Independent Test**: Gate fixtures produce no accepted verdict for any missing lifecycle/disclosure row, explanation failure, upstream hash drift, provider mismatch, request mismatch, or baseline regression.
 
-- [ ] T061 [P] [US4] Write failing request-parity/comparison tests in `evals/promptfoo/v1/transfer/shared-request-contract.test.js` and `comparison.test.js` for promoted builder/prompt/context hashes, canonical public/result DTO field names, terminal explanation request shape, server-only `OAI_*` target/judge model/provider settings, and normalized request equality.
+- [ ] T061 [P] [US4] Write failing request-parity/comparison tests in `evals/promptfoo/v1/transfer/shared-request-contract.test.js` and `comparison.test.js` for promoted builder/prompt/context hashes, canonical public/result DTO field names, terminal explanation request shape, configured `REACT_APP_OAI_*` target/judge provider settings and exact model, and normalized request equality.
 - [ ] T062 [P] [US4] Write failing quality-gate tests in `evals/promptfoo/v1/transfer/quality-gate.test.js` for lifecycle/disclosure hard checks, explanation thresholds, missing promoted hashes, zero coverage, semantic pairs, provider mismatch, and non-regression.
 - [ ] T063 [US4] Upgrade shared-request consumption, runner registration, and comparison in `evals/promptfoo/v1/transfer/shared-request-contract.js`, `runner-config.js`, and `comparison.js` without copying the production prompt or provider-secret logic.
 - [ ] T064 [US4] Upgrade the blocking gate, immutable report, and non-substitution diagnostics in `evals/promptfoo/v1/transfer/quality-gate.js` and `report.js`.

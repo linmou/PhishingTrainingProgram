@@ -40,7 +40,7 @@ Replace the browser-only transfer service with a thin trusted-API facade. Restor
 **Performance Goals**: One provider request plus at most one format repair for preparation; one row-locked transaction for grading; no polling or browser retry may multiply attempts
 **Constraints**: No Docker; no new sign-in product or `auth.uid()` transfer identity contract; use the existing localStorage app user ID and resolve its role/room access from the database; no private key/explanation in public rows; six public operation names remain stable; feature remains disabled
 **Scale/Scope**: One open assessment per learner, four options per assessment, at most two attempts, ordinary room concurrency and duplicate tabs
-**Required Provider Configuration**: Server-only `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash`; no runtime default
+**Required Provider Configuration**: `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash` in the Supabase Edge Function secret store; no runtime default
 
 ## Historical Constitution Check
 

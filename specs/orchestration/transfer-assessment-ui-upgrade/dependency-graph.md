@@ -81,7 +81,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 - 102 owns the browser boundary. `PublicAssessmentDTO` is exactly `{ id, student_id, selection_type, stem, options }`; `student_id` is routing metadata, never authorization, and `rendered_text` is excluded. Its `ProcessedMessageDTO` is canonical: `message_id`, `assessment_id`, `processing_state`, `answer_outcome`, `attempt_number`, `attempts_used`, `attempts_remaining`, `selected_option_ids`, `terminal`, `transition`, `feedback_required`, `code`, `already_processed`, and `terminal_failure_feedback`.
 - 103 maps 102's exact DTO fields into React-only view state. It creates no local attempt/lifecycle authority and exposes `terminal_failure_feedback` only for an authorized failed outcome.
 - 104 pins the promoted 101/102 contracts, evaluates the teacher-reviewed explanation, and checks that pass, retry, and delivery projections contain no key or explanation.
-- Target and judge configuration is server-only `OAI_API_KEY`, `OAI_BASE_URL`, and required `OAI_MODEL=qwen3.5-flash`, using the approved DashScope-compatible provider with no fallback.
+- The Edge Function reads `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and required `OAI_MODEL=qwen3.5-flash` from Supabase secrets. The evaluation runner reads the same key and URL names from its own environment; both use the approved DashScope-compatible provider with no fallback.
 
 ## Edge Work Packets
 
