@@ -2,7 +2,7 @@
 
 **Intent**: Define the pure function and fixture obligations for W2 implementation and downstream consumption.
 **Date**: 2026-09-11  
-**Revised**: 2026-09-22
+**Revised**: 2026-09-30
 
 ## Pure Boundaries
 
@@ -12,12 +12,12 @@
 | `gradeSelection` | selected IDs and private key IDs | `pass` or `fail` | partial credit, explanation analysis, or LLM calls |
 | `renderAssessment` / validation | assessment stem, type, options | canonical text and deterministic errors | leak the key/basis or vary option order |
 | `applyLearningEvent` | valid progress pair and event kind | apply, no-change, or reject with next pair/error | write storage or invent a new state |
-| v3 parser/validator | JSON content and known IDs | normalized validated `TutorDecisionV3` | accept unknown IDs or incompatible modes; reject Guard merely for using a real teaching instruction |
+| `validateAssessmentDraft` | draft content and known IDs | normalized validated `TransferAssessmentDraft` | accept unknown IDs, tutor-decision fields, or invalid private assessment content |
 | answer resolver/orchestrator | delivery, current context, learner message, private assessment, server-owned attempt snapshot | next immutable snapshot, one stable lifecycle disposition, disclosure boundary, and next action | grade undelivered/stale/duplicate/terminal answers, persist attempts, chain assessments, call APIs, or project transport DTOs |
 
 ## Required Fixture Suites
 
-1. `contract`: valid v3 decisions for tutoring with a real teaching instruction, Guard with `guard`, Guard with each real teaching instruction, and assessment with `transfer_assess`; required learner-safe explanation; every invalid mode/instruction/target/payload/cardinality/privacy case.
+1. `contract`: valid assessment-only drafts; required learner-safe explanation; invalid target, payload, cardinality, private basis, and public-privacy cases. Tutoring and Guard decisions are covered by their separate contract tests.
 2. `parser`: explicit label normalization, exact option text, Unicode/full-width forms, ambiguity, content help, and malformed input.
 3. `grader`: all 16 A-D subsets, duplicate/order normalization, single and multiple keys, and empty selection.
 4. `rendering`: option order, instruction selection, 80/81 segment boundary, two/three sentence boundary, exactly four options.

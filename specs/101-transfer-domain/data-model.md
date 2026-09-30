@@ -2,25 +2,13 @@
 
 **Intent**: Define the assessment, attempt, result, progress, and fixture records shared by deterministic implementation and downstream consumers.
 **Date**: 2026-09-22
+**Revised**: 2026-09-30
 
 ## Contract Records
 
 ### `TransferAssessmentDraft`
 
 Active assessment preparation returns `{ reason, target_item_id, assessment }`. `target_item_id` identifies one approved item in the current learner checklist. `assessment` is a `PrivateAssessment`; its stem is the question, and its evidence IDs belong to the focused learner. The draft has no tutor decision mode, teaching instruction, or duplicate response field. It is held only in teacher review state.
-
-### Historical `TutorDecisionV3`
-
-| Field | Shape | W2 rule |
-|---|---|---|
-| `reason` | non-empty string | Serialized first; supervisor-facing and grounded in observable evidence. |
-| `decision.mode` | `tutoring` / `guard` / `assessment` | Historical parser field; active assessment generation uses `TransferAssessmentDraft`. |
-| `decision.instruction` | real teaching instruction, `guard`, or `transfer_assess` | Tutoring requires one real teaching instruction; Guard permits `guard` or one real teaching instruction; assessment requires `transfer_assess`. |
-| `decision.target_item_id` | known item ID or null | Required for assessment; null for tutoring and Guard. |
-| `response` | non-empty string | Assessment stem source; bounded by rendering rules. |
-| `assessment` | private assessment or null | Required only for assessment; never exposed in full to the learner. |
-
-Real teaching instructions are `protective_instruction`, `correction`, `scaffolding`, `explanation`, and `consolidation`. Tutoring and Guard both require a null target and null assessment. Guard does not make `guard` mandatory when the first substantive move is one of these teaching instructions.
 
 ### `TransferTurnContext`
 

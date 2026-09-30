@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-09-29. Implementation commit: 2988dd0. -->
+<!-- Updated: 2026-09-30. Prior implementation commit: 2988dd0. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -86,7 +86,7 @@ Guard review records also preserve `raw_mode`, `mode_reason`, `final_mode`, and 
 
 ### Transfer Assessment Review and Answer Flow
 
-Transfer assessment delivery uses the reviewed `TutorDecisionV3` candidate and the typed service
+Transfer assessment delivery uses the reviewed `TransferAssessmentDraft` candidate and the typed service
 facade. `RoomContext` keeps the prepared scope until delivery succeeds, sends assessment content
 through the reviewed delivery operation, and projects the returned public message before storing it
 in room state. On reload, the public question can be rebuilt from the persisted assessment ID,

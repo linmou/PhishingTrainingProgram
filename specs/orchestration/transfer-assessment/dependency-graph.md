@@ -2,7 +2,7 @@
 
 Intent: control component ownership, contracts, dependencies, integration work, and promotion conditions for completing transfer assessment.
 
-Refactor revision (2026-09-29): active implementation follows `plan/transfer_learning_refactor_plan/transfer_learning_refactor_plan.md`. Component 101 owns `TransferAssessmentDraft` validation and the existing progress reducer while retaining `TutorDecisionV3` for historical reading. Component 102 owns room-target initialization, semantic learner-message analysis, mandatory assessment-only preparation, and reviewed delivery. Component 103 owns the room setup and assessment review surfaces. Component 104 evaluates evidence, eligibility routing, blockers, and question quality. Earlier integration records below describe the original rollout and remain historical evidence.
+Refactor revision (2026-09-30): active implementation follows `plan/transfer_learning_refactor_plan/transfer_learning_refactor_plan.md`. Component 101 owns `TransferAssessmentDraft` validation and the existing progress reducer; the unused v3 tutor-decision type, parser, and reviewed-send adapter have been retired. Component 102 owns room-target initialization, semantic learner-message analysis, mandatory assessment-only preparation, and reviewed delivery. Component 103 owns the room setup and assessment review surfaces. Component 104 evaluates evidence, eligibility routing, blockers, and question quality. Earlier integration records below describe the original rollout and remain historical evidence.
 
 ## Baseline
 
@@ -17,7 +17,7 @@ Refactor revision (2026-09-29): active implementation follows `plan/transfer_lea
 
 | Prefix | Branch | Worktree | Owner | Responsibility | Public contracts | Shared-file ownership | Exclusions |
 |---|---|---|---|---|---|---|---|
-| 101 | `101-transfer-domain` | `transfer-domain` | Kant (`01a09282-73c4-7323-b6ea-020a96c88368`) | W2 deterministic transfer behavior and golden fixtures | `TransferAssessmentDraft`, `TransferTurnContext`, validator, exact-set grader, renderer, progress reducer; historical `TutorDecisionV3` reader | Owns assessment/progress types and pure transfer services | No Supabase, React, provider calls, Promptfoo, or browser release work |
+| 101 | `101-transfer-domain` | `transfer-domain` | Kant (`01a09282-73c4-7323-b6ea-020a96c88368`) | W2 deterministic transfer behavior and golden fixtures | `TransferAssessmentDraft`, `TransferTurnContext`, validator, exact-set grader, renderer, progress reducer | Owns assessment/progress types and pure transfer services | No Supabase, React, provider calls, Promptfoo, or browser release work |
 | 102 | `102-transfer-backend` | `transfer-backend` | Dirac (`01a09282-77d6-7ba2-9450-e9ce6925b4db`) | W3-W6 storage, RLS, RPCs, authorization, provider boundary, evidence application, and production prompt | assessment API operations, allowlisted public DTOs, versioned RPC payloads and lifecycle | Owns migrations 025/026, `assessment-api`, transfer API facade, and generated database types | No React room UI, Promptfoo cases, or browser release evidence |
 | 103 | `103-transfer-room-ui` | `transfer-room-ui` | Hypatia (`01a09282-7962-7f82-8728-f02998238c8e`) | W7-W8 room lifecycle and teacher/learner UI integration | consumes public assessment DTOs and room/realtime lifecycle; emits no direct progress writes | Owns room context/pages and assessment-facing React components/tests | No SQL/RLS, provider implementation, production prompt, or Promptfoo work |
 | 104 | `104-transfer-evaluation` | `transfer-evaluation` | Franklin (`01a0928f-1970-7533-8ddc-f6f6fd734648`) | W9-W10 frozen semantic contract and Promptfoo evaluation | transfer case schema, rubric IDs, partitions, thresholds, run manifest, quality-gate result | Owns transfer-specific `evals/promptfoo` cases, rubrics, fixtures, holdouts, scripts, and results metadata | No production database, auth, room UI, or release-browser implementation |
@@ -61,7 +61,7 @@ Component 103's planning package was authored before the one-table collapse and 
 
 | ID | Conflict | Canonical resolution | Owner | Disposition |
 |---|---|---|---|---|
-| R09 | 103's spec, plan, research, data-model, contracts, tasks, and quickstart all consume `TeacherAssessmentDraftDTO`, which 102 deleted along with `private.assessment_drafts`. | `prepare_turn` returns the generated candidate `TutorDecisionV3` directly to the authorized teacher, who reviews it in the editor before `send_reviewed` persists it in one call. 103 consumes `TutorDecisionV3` and the returned `ReviewedDeliveryDTO`. No draft DTO is to be reintroduced. | 103 | Corrected in 103's planning artifacts before implementation. |
+| R09 | 103's original planning package consumed `TeacherAssessmentDraftDTO`, which 102 deleted along with `private.assessment_drafts`. | The authorized teacher reviews a `TransferAssessmentDraft` returned by assessment preparation; `send_reviewed` persists it in one call. No draft-row DTO is used. | 103 | Superseded by the assessment-only refactor. |
 | R10 | 103 FR-005 requires the reviewed-send path to carry an expected draft revision and final content hash; US1 scenario 5 requires stale-revision handling. | There is no draft row, so there is no revision to be stale. `send_reviewed_tutor_response_v3` takes the reviewed payload plus stable identities and no expected revision or hash; the server validates the item and refuses a second open assessment per learner. **FR-005 and US1 scenario 5 are withdrawn.** | 103 | Withdrawn. 103 keeps the stable-identity requirement (FR-001) and drops the revision/hash guard. |
 | R11 | 103 FR-006 and US1 scenario 4 require reject and regenerate actions wired to 102 `reject_draft`/`regenerate_draft`. | Already reversed by R04: the operations were removed by the lean refactor and became impossible when the draft table was dropped. **FR-006 and US1 scenario 4 are withdrawn**, and T012/T014 drop their reject/regenerate cases. | 103 | Withdrawn, consistent with R04. |
 | R12 | 103 `plan.md` and T014 route teacher confirmation through a 102 `review_draft` operation. | No such operation exists in the six-operation contract. Confirmation is 103-local review state; the only persistence call is `send_reviewed`. | 103 | Corrected. Confirmation stays UI-local. |
@@ -102,7 +102,7 @@ Shared-file ownership after reconciliation:
 
 ### E01: 101 -> 102 Domain Decision To Persistence
 
-- Producer/output: validated `TutorDecisionV3`, deterministic answer disposition, and progress transition from 101 pure functions.
+- Producer/output: validated `TransferAssessmentDraft`, deterministic answer disposition, and progress transition from 101 pure functions.
 - Consumer/input: 102 draft validation, API DTO projection, and atomic RPC event/delivery inputs.
 - Invariants: identical mode matrix and progress table; known IDs retained; no private field enters learner output; no persistence occurs for rejected/undelivered/stale results.
 - Glue: 102 maps the 101 types without redefining them; no integration adapter is expected.
@@ -122,7 +122,7 @@ Shared-file ownership after reconciliation:
 
 ### E03: 102 -> 103 Backend DTO To Room UI
 
-- Producer/output: typed `AssessmentApiEnvelope`, `PublicAssessmentDTO`, `PublicMessageDTO`, the prepare-turn candidate `TutorDecisionV3`, `ReviewedDeliveryDTO` (message plus room), and the `process_message` result.
+- Producer/output: typed `AssessmentApiEnvelope`, `PublicAssessmentDTO`, `PublicMessageDTO`, the prepare-assessment candidate `TransferAssessmentDraft`, `ReviewedDeliveryDTO` (message plus room), and the `process_message` result.
 - Consumer/input: 103 UI adapter and room state.
 - Invariants: fail-closed DTO validation; learner projection excludes private data; `itemId` is `string | null` so a tutoring or Guard turn never sends the text `"null"` as a UUID; the learner projection excludes `assessment_key`, which lives on the message row and is stripped by the facade rather than being unreachable in storage; retries merge by persisted identity; assessment remains a tutor turn.
 - Glue: 103 UI adapter narrows backend exports into view state without remapping operations or grading. There is no draft revision and no reject/regenerate operation to map (see R10/R11/R12).

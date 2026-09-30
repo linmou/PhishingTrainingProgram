@@ -4,16 +4,16 @@
 **Prerequisites**: `plan.md`, `spec.md`, `research.md`, `data-model.md`, `contracts/`
 **Tests**: Required by the specification and repository constitution. Cover the changed contract and keep prior lifecycle regression tests.
 
-## TransferLearning Refactor Tasks (2026-09-29)
+## TransferLearning Refactor Tasks (2026-09-30)
 
-- [ ] R101 Add `TransferAssessmentDraft` and assessment-only validation while retaining historical `TutorDecisionV3` decoding.
+- [x] R101 Use `TransferAssessmentDraft` and assessment-only validation; remove the unused v3 tutor-decision type, parser, and reviewed-send adapter.
 - [ ] R102 Verify the unchanged reducer, exact-set grading, privacy, and two-attempt rules against the new draft contract.
 
 ## Phase 1: Setup
 
 **Purpose**: Freeze the upgrade contract before executable changes.
 
-- [x] T001 Review `specs/101-transfer-domain/spec.md`, `data-model.md`, `contracts/tutor-decision-v3.md`, and `contracts/transfer-domain-determinism.md` and record the approved server-authoritative attempt policy in `specs/101-transfer-domain/implementation-handoff.md`.
+- [x] T001 Review `specs/101-transfer-domain/spec.md`, `data-model.md`, `contracts/transfer-assessment-draft.md`, and `contracts/transfer-domain-determinism.md` and record the approved server-authoritative attempt policy in `specs/101-transfer-domain/implementation-handoff.md`.
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 

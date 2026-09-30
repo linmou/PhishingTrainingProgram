@@ -20,7 +20,7 @@ Record the repository and normative-plan evidence used to choose the smallest W7
 
 ### Decision: Treat assessment as a turn, not a room mode
 
-- **Decision**: Keep room participation state binary (`tutoring` or `guard`) and retain `assessment` only in the tutor-turn/message decision. Reviewed assessment delivery maps the room to tutoring; Guard recovery remains server-authoritative.
+- **Decision**: Keep room participation state binary (`tutoring` or `guard`). Assessment preparation returns a separate `TransferAssessmentDraft`; delivered assessment messages use `response_mode: assessment`. Reviewed assessment delivery maps the room to tutoring; Guard recovery remains server-authoritative.
 - **Rationale**: This is settled decision U08 and component 101's existing type split in `types/index.ts` and `types/assessment.ts` already expresses the distinction; component 103 consumes it unchanged.
 - **Alternatives considered**: Casting assessment into the existing room mode or adding an Assessment Mode toggle. Both violate the normative plan and would change Guard semantics.
 
@@ -66,7 +66,7 @@ The planning package for this component was written before upstream component 10
 
 ### Decision 2026-09-12a: Withdraw `TeacherAssessmentDraftDTO`
 
-- **Decision**: `TeacherAssessmentDraftDTO` is removed from FR-002, the Key Entities, the Assumptions, `plan.md`, `data-model.md`, `contracts/room-ui-contracts.md`, and the quickstart. The private teacher projection is the candidate `TutorDecisionV3` returned by `prepareTurn` plus the scope identity (`room_id`, `student_id`, `checklist_id`, `item_id`, `focus_student_message_id`) and the informational `progress_snapshot_hash` echo. `data-model.md` declares no `draft` field on room view state; it declares a UI-local `TeacherReviewCandidateView`.
+- **Decision**: `TeacherAssessmentDraftDTO` is removed from FR-002, the Key Entities, the Assumptions, `plan.md`, `data-model.md`, `contracts/room-ui-contracts.md`, and the quickstart. The private teacher projection is a `TransferAssessmentDraft` plus the scope identity (`room_id`, `student_id`, `checklist_id`, `item_id`, `focus_student_message_id`) and the informational `progress_snapshot_hash` echo. `data-model.md` declares no persisted draft row; the candidate remains UI-local review state.
 - **Reason**: `private.assessment_drafts` was dropped in migration 038. The type was deleted from the promoted 102 export list together with the table, so any code importing it would not compile.
 - **Alternatives considered**: Re-declaring a UI-local DTO with the same name to satisfy the old text. Rejected: it would keep a phantom draft identity in the contract for a row that does not exist.
 

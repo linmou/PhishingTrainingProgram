@@ -2,7 +2,7 @@
 
 **Feature Branch**: `101-transfer-domain`  
 **Created**: 2026-09-11  
-**Revised**: 2026-09-29
+**Revised**: 2026-09-30
 **Status**: Ready for implementation  
 **Input**: Upgrade the deterministic transfer domain for two server-authoritative attempts and an editable learner-safe explanation.
 
@@ -12,7 +12,7 @@ This component defines deterministic assessment, grading, progress, and disclosu
 
 ## TransferLearning Refactor Contract
 
-Transfer assessment content is a `TransferAssessmentDraft` with `reason`, `target_item_id`, and `assessment: PrivateAssessment`. It has no tutor mode, teaching instruction, or duplicate response. `TutorDecisionV3` remains readable for historical compatibility, but active assessment preparation and review use the assessment-only draft. The shared tutor chooses only tutoring or Guard. The existing pure transition matrix, exact-set grading, private key, and two-attempt lifecycle remain authoritative.
+Transfer assessment content is a `TransferAssessmentDraft` with `reason`, `target_item_id`, and `assessment: PrivateAssessment`. It has no tutor mode, teaching instruction, or duplicate response. Assessment preparation and review use this assessment-only draft; the shared tutor chooses only tutoring or Guard. The existing pure transition matrix, exact-set grading, private key, and two-attempt lifecycle remain authoritative.
 
 An eligible target is a current room-approved checklist item at `partially_covered/basic` with learner-owned evidence and no open assessment, feedback, repair, protection, correction, or Guard blocker. Eligibility requires the next AI-generated response to be an assessment draft; it is not another tutor decision. Spontaneous transfer can verify the target without a quiz.
 
@@ -80,7 +80,7 @@ A trusted assessment generator produces one reviewable transfer assessment with 
 
 **Why this priority**: Consistent decision rules and bounded question content let the rest of the product rely on the same behavior without copied or hidden assumptions.
 
-**Independent Test**: Validate golden valid/invalid `TransferAssessmentDraft` and `TransferTurnContext` payloads, verify the pure public output contract excludes private fields, and exercise rendering at every stated boundary. Keep historical `TutorDecisionV3` parser regression coverage. Component 102 separately verifies API projection and transport.
+**Independent Test**: Validate golden valid/invalid `TransferAssessmentDraft` and `TransferTurnContext` payloads, verify the pure public output contract excludes private fields, and exercise rendering at every stated boundary. Component 102 separately verifies API projection and transport.
 
 **Acceptance Scenarios**:
 
@@ -130,7 +130,7 @@ The tutoring workflow handles delivery, learner answers, feedback-first follow-u
 
 ### Functional Requirements
 
-- **FR-001**: The component MUST validate an assessment-only `TransferAssessmentDraft` containing a reason, one known target, and one valid private assessment with a trimmed, non-empty `learner_safe_explanation`. Active assessment generation has no tutor mode, instruction, or duplicate response. The historical `TutorDecisionV3` parser remains readable for stored and regression fixtures.
+- **FR-001**: The component MUST validate an assessment-only `TransferAssessmentDraft` containing a reason, one known target, and one valid private assessment with a trimmed, non-empty `learner_safe_explanation`. Assessment generation has no tutor mode, instruction, or duplicate response.
 - **FR-002**: The component MUST expose a `TransferTurnContext` that carries the selected learner/message/checklist context, progress-policy version, checklist item snapshots, unresolved public assessment, eligible item IDs, feedback boundary, and progress snapshot hash without becoming a second progression authority.
 - **FR-003**: A valid transfer item MUST use exactly four canonical A-D options, a `single` key of one option or a `multiple` key of two or three options, and a changed context that tests the same concept through a relevant new situation rather than a cosmetic brand/name substitution or an unstated prerequisite; source evidence IDs MUST be known to the current context.
 - **FR-004**: A learner-visible unresolved question MUST omit the answer key, learner-safe explanation, transfer basis, tutor rationale, and raw model output. Passed and failed results MAY retain the answer and explanation privately, but MUST state explicitly whether learner disclosure is authorized. Exact public and terminal representations are defined in the [domain contract](contracts/transfer-domain-determinism.md).
@@ -153,7 +153,6 @@ The tutoring workflow handles delivery, learner answers, feedback-first follow-u
 ### Key Entities
 
 - **TransferAssessmentDraft**: A private assessment-only review value with a reason, one approved target ID, and a private assessment. It is not persisted as a draft row.
-- **TutorDecisionV3**: Historical reason-first tutor decision retained for reading older transfer records and parser regressions.
 - **TransferTurnContext**: The turn-scoped input snapshot used to validate target, evidence, current progress, unresolved question, feedback boundary, and stale-state identity.
 - **PublicAssessment**: Learner-visible assessment identity/content with no answer key, transfer basis, rationale, or raw model output.
 - **PrivateAssessment**: Review/server-side assessment content plus exact correct option IDs, transfer basis, and required `learner_safe_explanation`.

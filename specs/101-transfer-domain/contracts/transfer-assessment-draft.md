@@ -1,41 +1,26 @@
-# Contract: TutorDecisionV3 and TransferTurnContext
+# Contract: TransferAssessmentDraft and TransferTurnContext
 
-**Intent**: Give downstream implementation, backend, and evaluation owners one explicit W2 contract for structured transfer decisions and turn snapshots.
+**Intent**: Give downstream owners one explicit contract for assessment-only drafts and turn snapshots.
 **Date**: 2026-09-11  
-**Revised**: 2026-09-22
+**Revised**: 2026-09-30
 
-## Active Assessment Contract (2026-09-29)
+## Active Assessment Contract
 
-`TransferAssessmentDraft` is `{ reason: string, target_item_id: string, assessment: PrivateAssessment }`. Assessment validation checks the known target, learner-owned source evidence, private item quality, and rendering. It has no `decision.mode`, instruction, or `response`; `assessment.stem` is the question. The `TutorDecisionV3` shape below is retained for historical reading, not active assessment generation.
+`TransferAssessmentDraft` is `{ reason: string, target_item_id: string, assessment: PrivateAssessment }`. Assessment validation checks the known target, learner-owned source evidence, private item quality, and rendering. It has no `decision.mode`, instruction, or `response`; `assessment.stem` is the question.
 
-## Decision Contract
+## Draft Contract
 
-`TutorDecisionV3` is reason-first JSON with these required top-level fields:
+The assessment-only draft has these top-level fields:
 
 ```json
 {
   "reason": "observable evidence and teaching purpose",
-  "decision": {
-    "mode": "tutoring | guard | assessment",
-    "instruction": "protective_instruction | correction | scaffolding | explanation | consolidation | guard | transfer_assess",
-    "target_item_id": "known-id-or-null"
-  },
-  "response": "non-empty learner-facing response or assessment stem",
-  "assessment": "private assessment object or null"
+  "target_item_id": "known item ID",
+  "assessment": "private assessment object with stem, options, key, explanation, and transfer basis"
 }
 ```
 
-Compatibility rules:
-
-| Mode | Instruction | Target | Assessment |
-|---|---|---|---|
-| `tutoring` | one real teaching instruction | null | null |
-| `guard` | `guard` or one real teaching instruction | null | null |
-| `assessment` | `transfer_assess` | known item ID | valid private assessment |
-
-Real teaching instructions are `protective_instruction`, `correction`, `scaffolding`, `explanation`, and `consolidation`. Guard rejects `transfer_assess`, a non-null target, or a non-null assessment payload; it does not reject a real teaching instruction merely because the participation mode is Guard.
-
-An assessment object requires `selection_type`, canonical A-D options, valid key cardinality, a trimmed non-empty `learner_safe_explanation`, and non-empty transfer basis with known source evidence IDs. The parser rejects missing/blank fields, a missing/blank/non-string explanation, non-first `reason`, unknown IDs, duplicate option text, invalid modes, incompatible fields, overlong rendering, and invalid key cardinality.
+An assessment object requires `selection_type`, canonical A-D options, valid key cardinality, a trimmed non-empty `learner_safe_explanation`, and non-empty transfer basis with known source evidence IDs. `validateAssessmentDraft` rejects missing or blank fields, unknown IDs, duplicate option text, overlong rendering, invalid key cardinality, and any top-level tutor-decision fields. Tutoring and Guard decisions use their separate tutor contract.
 
 ## Public Output Contract for Component 102
 
@@ -93,8 +78,8 @@ For `passed`, `learner_feedback_authorized` is the literal `false`; component 10
 
 ## Validation and Consumer Boundary
 
-- The v3 parser and assessment validation own structural contract validation.
-- The parser owns explicit selection syntax and clarification codes.
+- Assessment draft validation owns structural contract validation.
+- The answer parser owns explicit selection syntax and clarification codes.
 - The grader owns exact-set equality.
 - The reducer owns progress transitions.
 - The component 101 pure orchestrator owns deterministic sequencing and no-chain behavior.

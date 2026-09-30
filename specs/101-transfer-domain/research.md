@@ -2,13 +2,13 @@
 
 **Intent**: Record the evidence-backed design decisions needed to plan W2 without introducing new product behavior.
 **Date**: 2026-09-11  
-**Revised**: 2026-09-22
+**Revised**: 2026-09-30
 
 ## Decision 1: Keep W2 in the existing TypeScript/Jest service boundary
 
 **Decision**: Use the existing `tutor-system` TypeScript 4.9/CRA/Jest conventions and colocated service tests.
 
-**Rationale**: The repository already contains `assessment.ts`, `learningProgress.ts`, the parser, grader, renderer, validator, reducer, v3 contract parser, transfer service, and focused Jest suites. The normative runtime work package calls for pure functions and §14 deterministic suites in this boundary.
+**Rationale**: The repository contains `assessment.ts`, `learningProgress.ts`, the answer parser, grader, renderer, draft validator, reducer, transfer service, and focused Jest suites. The normative runtime work package calls for pure functions and deterministic suites in this boundary.
 
 **Alternatives considered**:
 
@@ -28,7 +28,7 @@
 
 ## Decision 3: Expose pure public contracts to the component 102 projection owner
 
-**Decision**: Validate private `TutorDecisionV3` assessment fields and define an unresolved public assessment without key/explanation plus discriminated retry and terminal lifecycle results. Terminal feedback contains the key and learner-safe explanation as private domain output; pass fixes learner authorization false and only second-incorrect failure fixes it true. Component 102 owns persistence, role enforcement, and API/private-to-public projection tests.
+**Decision**: Validate `TransferAssessmentDraft` private assessment fields and define an unresolved public assessment without key/explanation plus discriminated retry and terminal lifecycle results. Terminal feedback contains the key and learner-safe explanation as private domain output; pass fixes learner authorization false and only second-incorrect failure fixes it true. Component 102 owns persistence, role enforcement, and API/private-to-public projection tests.
 
 **Rationale**: The response contract and T09.3 require the answer key, transfer basis, rationale, and raw model output to remain private. Component 101 owns the pure types and domain outputs that make the boundary explicit; the declared component 102 owner must integrate and verify those contracts in `TransferAssessmentService` without 101 becoming a second facade writer.
 

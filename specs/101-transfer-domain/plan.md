@@ -5,7 +5,7 @@
 
 ## Summary
 
-Refactor revision (2026-09-29): add the assessment-only `TransferAssessmentDraft` and its validator in the existing assessment module. Keep historical `TutorDecisionV3` parsing for compatibility. Preserve all deterministic attempt and progress rules while removing active assessment dependence on tutor mode selection.
+Refactor revision (2026-09-30): use the assessment-only `TransferAssessmentDraft` and its validator. Retire the unused v3 tutor-decision parser and reviewed-send adapter. Preserve deterministic attempt and progress rules without assessment mode selection.
 
 Upgrade the existing deterministic transfer domain so one delivered assessment has a server-owned snapshot with at most two consumed valid selections. Add the private `learner_safe_explanation` contract, retry and terminal result discriminants, failure-only learner-disclosure policy, shared barrel exports, and golden fixtures. Reuse the existing parser, exact-set grader, progress reducer, and pure orchestrator. Keep persistence/concurrency, role projection, React, prompt generation, semantic evaluation, and browser evidence downstream.
 
@@ -90,7 +90,7 @@ Ownership remains:
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/types/assessment.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/types/index.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/assessmentValidation.ts`
-- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/tutorDecisionContract.ts`
+- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram/tutor-system/src/services/tutorDecisionContract.ts` (remove the unused v3 parser; retain tutoring/Guard parsing)
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/transferAssessmentOrchestrator.ts`
 - `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/src/services/transferAssessmentGoldenFixtures.ts`
 

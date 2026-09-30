@@ -177,4 +177,4 @@ is claimed.
 | Retry, duplicate tab, focus identity | Retry after a timeout converges to one message; already-open adds nothing; focus identity survives another learner speaking; a resolved answer is not reprocessed | `RoomContext.transferConcurrency.test.tsx` (4) |
 | Room versus turn modes | Assessment delivery leaves the room in tutoring; Guard is adopted from the server; a tutoring turn sends a real `null` item id; incompatible mode/instruction pairs are refused before delivery | `RoomContext.transferModes.test.tsx` (5) |
 | Page-level lifecycle states | `RoomPagePost` renders preparing and the classified refusal (unavailable, validation, superseded), clears it on a new attempt, and keeps the open candidate | `RoomPagePost.transferLifecycle.test.tsx` (6) |
-| Structured decision consumption | Candidate rendered as structured fields; a structured `TutorDecisionV3` is forwarded; the copy-only legacy path is preserved | `RoomPagePost.transferDecision.test.tsx` (4) |
+| Structured assessment consumption | Candidate rendered as structured fields; a `TransferAssessmentDraft` is forwarded | `RoomPagePost.transferDecision.test.tsx` (4) |

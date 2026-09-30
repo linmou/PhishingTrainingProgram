@@ -2,9 +2,6 @@
 
 import { Message, Room, TutorActionDecision, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
-import { TutorDecisionV3 } from '../types/assessment';
-import { transferAssessmentService } from './transferAssessmentService';
-import type { ReviewedDeliveryDTO } from './transferAssessmentService';
 
 export interface ReviewedTutorResponseInput {
   roomId: string;
@@ -21,39 +18,6 @@ export interface ReviewedTutorResponseInput {
 export interface ReviewedTutorResponseResult {
   message: Message;
   room: Room;
-}
-
-export interface ReviewedTransferResponseInput {
-  reviewedPayload: TutorDecisionV3;
-  roomId: string;
-  studentId: string;
-  checklistId: string;
-  /** Null for a tutoring or Guard turn; an assessment must name its item. */
-  itemId: string | null;
-  focusStudentMessageId: string;
-}
-
-/** Send a reviewed v3 tutoring, Guard, or assessment turn through the trusted API. */
-export async function sendReviewedTutorResponseV3(
-  input: ReviewedTransferResponseInput
-): Promise<ReviewedDeliveryDTO> {
-  if (!input.itemId || !isAssessmentDecision(input.reviewedPayload) || !input.reviewedPayload.assessment) {
-    throw new Error('Only assessment drafts use the transfer reviewed-send path');
-  }
-  return transferAssessmentService.sendReviewed({
-    ...input,
-    itemId: input.itemId,
-    reviewedPayload: {
-      reason: input.reviewedPayload.reason,
-      target_item_id: input.itemId,
-      assessment: input.reviewedPayload.assessment,
-    },
-  });
-}
-
-/** Validate the editor payload before it reaches the server-side review operation. */
-export function isAssessmentDecision(decision: TutorDecisionV3): boolean {
-  return decision.decision.mode === 'assessment' && decision.decision.instruction === 'transfer_assess' && decision.assessment !== null;
 }
 
 export async function sendReviewedTutorResponse(

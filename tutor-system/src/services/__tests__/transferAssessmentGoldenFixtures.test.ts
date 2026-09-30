@@ -5,7 +5,6 @@ import { parseAssessmentAnswer } from '../assessmentAnswerParser';
 import { gradeSelection } from '../assessmentGrading';
 import { renderAssessment, validateAssessmentRendering } from '../assessmentRendering';
 import { applyLearningEvent } from '../learningProgressTransitions';
-import { parseTutorDecisionV3 } from '../tutorDecisionContract';
 import { validateAssessmentDraft } from '../assessmentValidation';
 import { resolveTransferAnswer } from '../transferAssessmentOrchestrator';
 import { PrivateAssessment, PublicAssessment } from '../../types/assessment';

@@ -8,7 +8,7 @@
 
 The artifact index below describes the implemented historical baseline. It does not establish the approved two-attempt lifecycle or learner-safe explanation behavior. Upgrade implementation is blocked until this file records promoted immutable producer contracts:
 
-- Component 101: `PrivateAssessment.learner_safe_explanation`, `TransferAttemptSnapshot`, and `TransferResolvedAssessment` from `specs/101-transfer-domain/contracts/transfer-domain-determinism.md` and `tutor-decision-v3.md`.
+- Component 101: `PrivateAssessment.learner_safe_explanation`, `TransferAttemptSnapshot`, and `TransferResolvedAssessment` from `specs/101-transfer-domain/contracts/transfer-domain-determinism.md` and `transfer-assessment-draft.md`.
 - Component 102: planning commit `a8c8b31a91bcc1970071117ac0dbbd2dffce85ef` plus its reconciled `PublicAssessmentDTO.student_id` correction; `TransferTutorRequestV3`, `TransferTutorRequestContextV3`, canonical builders; `PublicAssessmentDTO {id, student_id, selection_type, stem, options}` with no `rendered_text`; and canonical `ProcessedMessageDTO` fields including `processing_state`, `answer_outcome`, and terminal-only `terminal_failure_feedback` from `specs/102-transfer-backend/contracts/assessment-api.md`, `provider-contract.md`, and `rpc-contract.md`.
 - Integration: canonical T09 reconciliation, green promotion SHA, producer commit SHAs/content hashes, and real 101->104 and 102->104 handoff commands.
 

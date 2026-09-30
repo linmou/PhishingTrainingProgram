@@ -1,19 +1,11 @@
-// Purpose: define the public assessment payload and private v3 tutor-decision data contracts.
+// Purpose: define public/private transfer assessments and deterministic attempt contracts.
 
 // @ts-ignore TypeScript 4.9 needs extensionless imports; Deno needs explicit extensions.
 import type { ProgressPolicyVersion, TransferProgress } from './learningProgress.ts';
 
 export type AssessmentOptionId = 'A' | 'B' | 'C' | 'D';
 export type AssessmentSelectionType = 'single' | 'multiple';
-export type TutorTurnMode = 'tutoring' | 'guard' | 'assessment' | 'multiagent';
 export type RoomParticipationMode = 'tutoring' | 'guard';
-export type TeachingInstruction =
-  | 'protective_instruction'
-  | 'correction'
-  | 'scaffolding'
-  | 'explanation'
-  | 'consolidation';
-export type TutorInstruction = TeachingInstruction | 'transfer_assess' | 'guard';
 
 export interface AssessmentOption {
   id: AssessmentOptionId;
@@ -124,28 +116,6 @@ export type TransferAttemptResult =
   | TransferPassedResult
   | TransferFailedResult
   | TransferNonConsumingResult;
-
-export type TransferEvidenceSignal = 'initial' | 'contradiction' | 'spontaneous_transfer';
-
-export interface TransferEvidenceDecision {
-  item_id: string;
-  evidence_message_id: string;
-  signal: TransferEvidenceSignal;
-  analysis: string;
-}
-
-export interface TutorDecisionV3 {
-  reason: string;
-  /** Required from the transfer provider; optional for reviewed legacy fixtures and consumers. */
-  learning_evidence?: TransferEvidenceDecision[];
-  decision: {
-    mode: TutorTurnMode;
-    instruction: TutorInstruction;
-    target_item_id: string | null;
-  };
-  response: string;
-  assessment: PrivateAssessment | null;
-}
 
 export type TransferChecklistItemSnapshot = TransferProgress & {
   id: string;
