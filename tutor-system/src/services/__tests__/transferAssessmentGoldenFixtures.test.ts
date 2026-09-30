@@ -8,7 +8,7 @@ import { applyLearningEvent } from '../learningProgressTransitions';
 import { parseTutorDecisionV3 } from '../tutorDecisionContract';
 import { validateAssessmentDraft } from '../assessmentValidation';
 import { resolveTransferAnswer } from '../transferAssessmentOrchestrator';
-import { PublicAssessment } from '../../types/assessment';
+import { PrivateAssessment, PublicAssessment } from '../../types/assessment';
 import type {
   TransferAttemptResult,
   TransferAttemptSnapshot,
@@ -343,7 +343,7 @@ describe('golden server-authoritative attempt sequences', () => {
     'replays %s from its persisted snapshots',
     (_sequenceId, fixture) => {
       fixture.steps.forEach((step) => {
-        const publicAssessment: Omit<PublicAssessment, 'transfer_basis'> & { id: string } = {
+        const publicAssessment: PublicAssessment & { id: string } = {
           id: fixture.steps[0].input_snapshot.assessment_id,
           selection_type: 'single',
           stem: 'A familiar teammate sends a prize link.',
@@ -406,6 +406,8 @@ describe('component 101 public/private separation', () => {
   const privateFields = ['correct_option_ids', 'transfer_basis', 'rationale', 'raw_model_output', 'api_operation', 'transport'];
 
   it('declares a public assessment contract without private or transport fields', () => {
+    const excludesTransferBasis: 'transfer_basis' extends keyof PublicAssessment ? false : true = true;
+    const privateRequiresTransferBasis: {} extends Pick<PrivateAssessment, 'transfer_basis'> ? false : true = true;
     const publicAssessment: PublicAssessment = {
       selection_type: 'single',
       options: TRANSFER_ASSESSMENT_OPTIONS,
@@ -414,6 +416,8 @@ describe('component 101 public/private separation', () => {
     };
 
     expect(Object.keys(publicAssessment).sort()).toEqual(['options', 'rendered_text', 'selection_type', 'stem']);
+    expect(excludesTransferBasis).toBe(true);
+    expect(privateRequiresTransferBasis).toBe(true);
     privateFields.forEach((field) => {
       expect(Object.keys(publicAssessment)).not.toContain(field);
     });

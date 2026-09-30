@@ -51,7 +51,7 @@ export interface TransferLifecycleContext {
   progress_snapshot_hash: string;
   feedback_required: boolean;
   eligible_assessment_item_ids: ReadonlyArray<string>;
-  unresolved_assessment: (Omit<PublicAssessment, 'transfer_basis'> & { id: string }) | null;
+  unresolved_assessment: (PublicAssessment & { id: string }) | null;
   /** Set while a failed concept is waiting for tutor repair before new learner evidence. */
   pending_repair_message_id: string | null;
   attempt_snapshot: TransferAttemptSnapshot;
@@ -76,7 +76,7 @@ export interface TransferTurnContextInput {
   progress_snapshot_hash: string;
   feedback_required: boolean;
   eligible_assessment_item_ids: ReadonlyArray<string>;
-  unresolved_assessment?: (Omit<PublicAssessment, 'transfer_basis'> & { id: string }) | null;
+  unresolved_assessment?: (PublicAssessment & { id: string }) | null;
   pending_repair_message_id?: string | null;
   attempt_snapshot: TransferAttemptSnapshot;
 }

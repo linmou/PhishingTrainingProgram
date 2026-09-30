@@ -32,10 +32,10 @@ export interface PublicAssessment {
   options: AssessmentOption[];
   stem: string;
   rendered_text: string;
-  transfer_basis?: TransferBasis;
 }
 
 export interface PrivateAssessment extends PublicAssessment {
+  transfer_basis: TransferBasis;
   correct_option_ids: AssessmentOptionId[];
   learner_safe_explanation: string;
 }
@@ -162,7 +162,7 @@ export interface TransferTurnContext {
   checklist_id: string | null;
   prior_participation_mode: RoomParticipationMode | 'unknown';
   checklist_items: TransferChecklistItemSnapshot[];
-  unresolved_assessment: Omit<PublicAssessment, 'transfer_basis'> & { id: string } | null;
+  unresolved_assessment: (PublicAssessment & { id: string }) | null;
   eligible_assessment_item_ids: string[];
   feedback_required: boolean;
   progress_snapshot_hash: string;

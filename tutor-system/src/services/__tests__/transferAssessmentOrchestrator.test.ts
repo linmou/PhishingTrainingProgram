@@ -19,7 +19,7 @@ import type { TransferAttemptSnapshot } from '../../types';
 
 const SNAPSHOT_HASH = 'snapshot-hash-1';
 
-function publicAssessment(): Omit<PublicAssessment, 'transfer_basis'> & { id: string } {
+function publicAssessment(): PublicAssessment & { id: string } {
   return {
     id: 'assessment-1',
     selection_type: 'single',
@@ -412,7 +412,7 @@ describe('transfer resolved assessment privacy', () => {
   });
 
   it('accepts a public assessment type without private fields', () => {
-    const projected: Omit<PublicAssessment, 'transfer_basis'> & { id: string } = publicAssessment();
+    const projected: PublicAssessment & { id: string } = publicAssessment();
     const progress: TransferProgress = PARTIALLY_COVERED;
 
     expect(Object.keys(projected).sort()).toEqual(['id', 'options', 'rendered_text', 'selection_type', 'stem']);
