@@ -38,7 +38,7 @@ Replace the browser-only transfer service with a thin trusted-API facade. Restor
 **Target Platform**: Browser client calling a deployed Supabase Edge Function; supported hosted Supabase PostgreSQL
 **Project Type**: React web application with a trusted serverless backend
 **Performance Goals**: One provider request plus at most one format repair for preparation; one row-locked transaction for grading; no polling or browser retry may multiply attempts
-**Constraints**: No Docker; no new sign-in product or `auth.uid()` transfer identity contract; use the existing localStorage app user ID and resolve its role/room access from the database; no private key/explanation in public rows; six public operation names remain stable; feature remains disabled
+**Constraints**: No Docker; no new sign-in product or `auth.uid()` transfer identity contract; use the existing localStorage app user ID and resolve its role/room access from the database; no private key/explanation in public rows; six public operation names remain stable. Current-version release authorization is recorded in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md`.
 **Scale/Scope**: One open assessment per learner, four options per assessment, at most two attempts, ordinary room concurrency and duplicate tabs
 **Required Provider Configuration**: `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and `OAI_MODEL=qwen3.5-flash` in the Supabase Edge Function secret store; no runtime default
 

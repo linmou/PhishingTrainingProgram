@@ -9,7 +9,7 @@ Give the implementation owner a focused verification order for W7-W8. These comm
 - Work from `tutor-system/` with the existing lockfile installed.
 - Use component 101's shared assessment/progress exports and component 102's exported six-operation facade (`initializeChecklist`, `postMessage`, `prepareAssessment`, `sendReviewed`, `processMessage`, `analyzeMessage`), DTOs, and typed service boundary. Component 102 unwraps envelopes; the 103 adapter maps canonical service projections into React view state. Keep React-only view-state types in `src/contexts/transferAssessmentUiAdapter.ts`. The draft is UI-local; there is no `review_draft`, `reject_draft`, or `regenerate_draft` operation.
 - Consume component 102's canonical `PublicAssessmentDTO { id, student_id, selection_type, stem, options }` and `ProcessedMessageDTO { message_id, assessment_id, processing_state, answer_outcome, attempt_number, attempts_used, attempts_remaining, selected_option_ids, terminal, transition, feedback_required, code, already_processed, terminal_failure_feedback }` without redefining or renaming fields. Stop on contract drift; do not add a browser counter, compatibility DTO, or text parser.
-- Keep `TRANSFER_ASSESSMENT_ENABLED` disabled unless the release owner has authorized a gate-complete environment.
+- The backend controls `TRANSFER_ASSESSMENT_ENABLED`. The current version has a separate owner release decision in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md`; this UI component does not set the flag.
 - Use isolated test data. Do not target a linked hosted project with reset, seed, migration push, or destructive commands.
 
 ## Red-green verification order

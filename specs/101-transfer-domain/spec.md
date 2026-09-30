@@ -188,7 +188,7 @@ The tutoring workflow handles delivery, learner answers, feedback-first follow-u
 - Semantic correctness and safety of generated explanations are evaluated separately; this feature validates structural presence and deterministic privacy only.
 - This feature consumes selected targets and evidence classifications but does not classify learner evidence or own persistence, authorization, provider calls, API projection, room presentation, or release activation.
 - `transfer_v1` is the only new-policy interpretation for this component; legacy checklist records retain their existing meaning.
-- The feature flag remains disabled until downstream database, authorization, provider, evaluation, and browser gates pass.
+- This component does not activate the backend feature flag. The version-scoped owner release decision is recorded in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md`; downstream gate results remain separate.
 - Local examples may use explicit identifiers and values, but they do not prove hosted storage, authorization, or provider behavior.
 
 ## Out of Scope

@@ -2,8 +2,8 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-09-29
-- Implementation commit IDs: `2988dd0`, `31cc05c`
+- Updated: 2026-09-30
+- Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`
 
 # Tutor-System Documentation Hub
 
@@ -31,6 +31,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy tutor decoding, assessment-only teacher review, exact question payload, and private-key rules
 - **[Transfer refactor documentation record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_refactor.md)** - Updated behavior docs, staging migration status, and verification evidence
 - **[Transfer refactor merge record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_merge.md)** - Merged contracts, migration history, and integration checks
+- **[Transfer release decision update](./doc_update_record/documentation_update_record_v2026_09_30_transfer_release_decision.md)** - Version-scoped owner authorization and incomplete gate status
 - **[Transfer assessment evaluation readiness](./ai-behaviors/tutor-behavior-evaluation-plan.md)** - Deterministic transfer checks and explicit pending semantic/database/browser gates
 - **[Transfer assessment BDD lifecycle](../features/transfer_assessment.feature)** - T09 room-level lifecycle scenarios; executable acceptance remains pending
 - **[Transfer assessment W0 applicability audit](../../evals/promptfoo/audits/transfer-assessment-w0-20260911/applicability-audit.json)** - All 43 legacy cases and 173 assertions explicitly not applicable to T09 while preserved

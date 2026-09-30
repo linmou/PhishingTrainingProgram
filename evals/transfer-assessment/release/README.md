@@ -1,4 +1,4 @@
-<!-- Updated: 2026-09-25; HEAD: 79120fd003b81fe4a7ec4224d64d7f12ea1a4e59 -->
+<!-- Updated: 2026-09-30; Base commit: 97ebe9fd11d78ab2874e098415f84e4c3eaf608d -->
 
 Intent: explain how the transfer release evidence bundle is produced and how incomplete release prerequisites remain visible.
 
@@ -32,6 +32,8 @@ npm run eval:transfer:release --prefix tutor-system -- --verify <run-id> --outpu
 ```
 
 Release rows use only `pass`, `fail`, `blocked`, `missing`, `error`, and `not_applicable`. Missing upstream evidence, absent verified principals, and unavailable browser/privacy/attack/activation/rollback drivers remain blocking evidence. The runner never enables `TRANSFER_ASSESSMENT_ENABLED`.
+
+The 2026-09-30 owner decision for the product-code version named in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md` authorizes release with incomplete gates. It does not change this runner's ordinary `release_not_approved` verdict. The runner records `disabled` from its configured expectation; it does not measure the hosted flag state.
 
 The preserved local wave-105 browser run is
 `/tmp/transfer-browser-wave105/wave105-blocked-20260924/`; its `verifyEvidenceBundle` result is

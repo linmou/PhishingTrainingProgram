@@ -75,4 +75,4 @@ The later implementation must include explicit tests for at least:
 
 ## Non-substitution boundary
 
-A passing gate establishes only the frozen transfer evaluation evidence. It does not establish T09 product behavior on the production provider path, database/RLS/atomicity, verified principal or answer-key privacy, browser downstream consumption, activation, or rollback. Those gates remain separate and the feature flag remains disabled until the initiative release gates pass.
+A passing gate establishes only the frozen transfer evaluation evidence. It does not establish T09 product behavior on the production provider path, database/RLS/atomicity, verified principal or answer-key privacy, browser downstream consumption, activation, or rollback. Those gates remain separate. The 2026-09-30 owner decision in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md` permits release of its named version with this gate incomplete; it does not turn an incomplete evaluation into a pass.

@@ -36,4 +36,4 @@ The repository does not define a dedicated mypy check because this component is 
 - Preserve fixture manifest/version, state/result input-output pairs, and any failure output; do not omit errored cases from a denominator.
 - Record that first-incorrect fixtures have unchanged progress and no terminal feedback, passed fixtures set learner feedback authorization false, and second-incorrect failed fixtures alone set it true.
 - Label these tests as deterministic/mock-only. They do not prove SQL/RLS, authorization, provider configuration, browser privacy, or deployment compatibility.
-- Keep `TRANSFER_ASSESSMENT_ENABLED` disabled.
+- Activation for the current version follows `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md`; this component does not set the backend flag.

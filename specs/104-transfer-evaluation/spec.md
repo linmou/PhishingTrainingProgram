@@ -107,7 +107,7 @@ As a release reviewer, I need immutable raw evidence and a blocking quality gate
 - Live model, judge, provider, or configuration errors cannot be silently retried away, converted to learner failures, or removed from the denominator.
 - Missing shared-generation identity, production prompt reference, effective output budget, or product/evaluation parity evidence is incomplete and blocks the run.
 - Evaluation must consume the approved production generation behavior rather than reconstructing its prompt, transfer context, provider request, credentials, endpoint, or secret access.
-- Evaluation evidence cannot be used to claim transfer release while the feature flag is disabled or any database, authorization, or browser gate is pending.
+- Evaluation evidence alone cannot establish release readiness. The version-scoped owner release decision in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md` is separate from this component's incomplete gate result.
 
 ## Requirements
 

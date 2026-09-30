@@ -32,7 +32,7 @@ Upgrade the existing deterministic transfer domain so one delivered assessment h
 | Test first and verify the real boundary | PASS WITH IMPLEMENTATION CONDITION | Tasks put fixture/test work before production edits; implementation must use the repository-required `fast-multi-agent-tdd` workflow. W2 evidence is labeled deterministic and cannot substitute for hosted gates. |
 | Use stable, explicit contracts | PASS | `PrivateAssessment`, `TransferAttemptSnapshot`, retry/terminal results, terminal feedback, reducer pairs, and fixture IDs are explicit in `contracts/`; component 102 owns persistence and projection. |
 | Prefer the smallest coherent design | PASS | Existing modules and service tests are extended; no new package, mastery field, or compatibility layer is proposed. |
-| Feature remains disabled until release gates | PASS | W2 does not enable `TRANSFER_ASSESSMENT_ENABLED`; downstream release gates remain required. |
+| W2 does not activate the feature | PASS | W2 does not set `TRANSFER_ASSESSMENT_ENABLED`; the current-version owner release decision is recorded separately in `specs/orchestration/transfer-assessment/release-decision-2026-09-30.md`. |
 | Root/integration ownership | PASS WITH DEFERRED ACTION | The normal agent-context update is deferred; this component will not modify root `AGENTS.md` or run `update-agent-context.sh`. |
 
 No constitutional violation requires a complexity justification.
@@ -116,7 +116,7 @@ Ownership remains:
 
 ## Post-Design Constitution Re-check
 
-PASS. The design makes the persisted server snapshot the attempt authority, keeps one progress reducer, excludes key/explanation material from unresolved public shapes, records exact evidence in fixtures, avoids a second mastery field, and leaves activation disabled. The integration-owned agent-context update remains deferred.
+PASS. The design makes the persisted server snapshot the attempt authority, keeps one progress reducer, excludes key/explanation material from unresolved public shapes, records exact evidence in fixtures, avoids a second mastery field, and does not activate the feature. The integration-owned agent-context update remains deferred.
 
 ## Complexity Tracking
 

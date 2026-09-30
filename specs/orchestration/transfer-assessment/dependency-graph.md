@@ -33,7 +33,7 @@ Refactor revision (2026-09-29): active implementation follows `plan/transfer_lea
 | `102-transfer-backend -> 104-transfer-evaluation` | Evaluation must exercise the same production request and prompt path. | Production adapter and prompt are promoted without a synthetic replacement. |
 | `102-transfer-backend -> 105-transfer-release` | Release attacks require the real authorization, RLS, transaction, and rollback boundary. | Hosted backend and privacy gates pass. |
 | `103-transfer-room-ui -> 105-transfer-release` | Browser acceptance requires the integrated teacher and learner room flows. | Room/UI handoff and browser-facing integration tests pass. |
-| `104-transfer-evaluation -> 105-transfer-release` | Release acceptance requires frozen, calibrated, complete semantic evidence. | Promptfoo baseline, candidate, holdout, pair, and quality gates pass. |
+| `104-transfer-evaluation -> 105-transfer-release` | Ordinary automated release acceptance requires frozen, calibrated, complete semantic evidence. | Promptfoo baseline, candidate, holdout, pair, and quality gates pass; the version-scoped owner release exception is recorded in `release-decision-2026-09-30.md` without marking this edge passed. |
 
 The authoritative graph is identical to allocation packet version 1. It is acyclic, changes no approved scope, owner, contract boundary, or wave, and therefore requires no renewed allocation decision.
 
