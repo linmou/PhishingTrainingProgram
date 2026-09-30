@@ -5,8 +5,8 @@
  * by the server.
  *
  * Responsibility: prove the answer keeps its real parent question id, that the returned stored row
- * is projected before it enters React state (no assessment_key), and that the browser never grades
- * or writes progress.
+ * is projected before it enters React state, even if assessment_key appears unexpectedly, and
+ * that the browser never grades or writes progress.
  */
 
 import React from 'react';

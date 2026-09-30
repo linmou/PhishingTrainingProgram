@@ -6,7 +6,7 @@
 // assessment material. Only the network transport (the Edge Function call) is replaced; every
 // projection and every decision under test is the production implementation.
 //
-// Run with: node --import ../tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs
+// Run with: node --experimental-strip-types --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs
 
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -66,10 +66,8 @@ function createRecordingTransport(responses) {
 }
 
 /**
- * A stored tutor message row as the collapsed model holds it. The assessment, its key, and the
- * transfer basis live on the message; `send_reviewed_tutor_response_v3` returns this row with
- * `assessment_key` removed, and `public.messages` stays participant-readable, which is the recorded
- * tradeoff the SQL lane asserts directly.
+ * The API's delivered tutor message, with participant-readable message fields and a public
+ * assessment projection. The key and transfer basis live in `private.transfer_assessments`.
  */
 function deliveredMessageRow() {
   return {
@@ -83,10 +81,26 @@ function deliveredMessageRow() {
     response_mode: 'assessment',
     created_at: '2026-09-12T00:00:01.000Z',
     assessment_options: clone(OPTIONS),
-    assessment_key: ['B'],
+    assessment_selection_type: 'single',
+    assessment_student_id: 'student-1',
     assessment_lifecycle: 'delivered',
     assessment_checklist_id: 'checklist-1',
     assessment_item_id: 'item-1',
+    assessment: {
+      id: 'assessment-1',
+      student_id: 'student-1',
+      selection_type: 'single',
+      stem: 'Which statement best describes the risk to this account?',
+      options: clone(OPTIONS),
+    },
+  };
+}
+
+/** Unexpected private fields in a malformed API response, for the browser projection check. */
+function messageWithPrivateMaterial() {
+  return {
+    ...deliveredMessageRow(),
+    assessment_key: ['B'],
     assessment_transfer_basis: { concept_rule: 'A familiar sender is not proof of safety.' },
     raw_model_output: { decision: { mode: 'assessment' } },
   };
@@ -122,6 +136,7 @@ function producedAssessment() {
     selection_type: 'single',
     options: clone(OPTIONS),
     correct_option_ids: ['B'],
+    learner_safe_explanation: 'Verify the alert through the official app.',
     progress_snapshot_hash: SNAPSHOT,
   };
 }
@@ -147,6 +162,12 @@ function lifecycleContext(overrides = {}) {
     eligible_assessment_item_ids: ['item-1'],
     unresolved_assessment: publicAssessment(),
     pending_repair_message_id: null,
+    attempt_snapshot: {
+      assessment_id: 'assessment-1',
+      accepted_attempt_count: 0,
+      resolution: 'open',
+      processed_answer_message_ids: [],
+    },
     ...overrides,
   };
 }
@@ -189,7 +210,7 @@ test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it 
   assert.deepEqual(resolved.progress, { status: 'covered', understanding_level: 'good' });
   assert.equal(resolved.feedback_required, true, 'a pass still requires tutor feedback');
 
-  const prepared = await service.prepareTurn({
+  const prepared = await service.prepareAssessment({
     roomId: 'room-1',
     focusStudentMessageId: 'message-1',
     checklistId: 'checklist-1',
@@ -229,18 +250,14 @@ test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it 
   assert.equal(containsPrivateFieldName(delivered.message), false, 'shared guard must see no private field name');
 });
 
-test('E2E: the facade projection drops the assessment key even when the response still carries it', async () => {
-  // The key lives on the tutor message row, and the RPC strips it. This asserts the browser-side
-  // allowlist independently: a response that still carried the key would not reach the learner
-  // through the facade, so the projection is a second line of defence rather than a copy of the
-  // server's behaviour.
-  const stored = deliveredMessageRow();
-  assert.deepEqual(stored.assessment_key, ['B'], 'the storage row holds the key');
-  assert.deepEqual(stored.assessment_options, OPTIONS, 'and the ordered options');
+test('E2E: the facade projection drops unexpected private fields in an API response', async () => {
+  const injected = messageWithPrivateMaterial();
+  assert.deepEqual(injected.assessment_key, ['B'], 'the injected response carries the key');
+  assert.deepEqual(injected.assessment_options, OPTIONS, 'and the ordered options');
 
   const transport = createRecordingTransport({
     send_reviewed: () => ({
-      message: stored,
+      message: injected,
       room: { id: 'room-1', active_response_mode: 'tutoring' },
     }),
   });
@@ -255,7 +272,7 @@ test('E2E: the facade projection drops the assessment key even when the response
     focusStudentMessageId: 'message-1',
   });
 
-  // The response the facade returns does not carry the key the responder sent.
+  // The facade allowlist also protects against an unexpectedly broad API response.
   assert.equal(delivered.message.assessment_key, undefined, 'the response must not carry the key');
   assert.equal(
     JSON.stringify(delivered.message).includes('assessment_key'),
@@ -269,15 +286,18 @@ test('E2E: the facade projection drops the assessment key even when the response
   );
   assert.equal(containsPrivateFieldName(delivered.message), false, 'shared guard must see no private field name');
 
-  // The same projection of the row alone drops the key and keeps the learner-visible identity.
-  const publicView = toPublicMessageDTO(stored);
+  // The same projection of the injected row keeps the learner-visible identity.
+  const publicView = toPublicMessageDTO(injected);
   assert.equal(publicView.id, 'message-2');
   assert.equal(publicView.user_role, 'tutor');
   assert.equal(publicView.assessment_key, undefined, 'public projection must strip the key');
 });
 
 test('E2E: the public message projection exposes identity and content but no private row', () => {
-  const message = toPublicMessageDTO(deliveredMessageRow());
+  const stored = deliveredMessageRow();
+  assert.equal(stored.assessment_key, undefined, 'the public response must not carry the answer key');
+  assert.equal(stored.assessment_transfer_basis, undefined, 'the public response must not carry the transfer basis');
+  const message = toPublicMessageDTO(stored);
   assert.equal(message.content, 'Which statement best describes the risk to this account?');
   assert.equal(message.user_role, 'tutor');
   assert.equal(message.response_mode, 'assessment');

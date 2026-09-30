@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Fixtures for the transfer-assessment room UI tests: one room with two learners, persisted
- * message rows (including a delivered question with a private assessment_key), a prepared
+ * public message rows, a deliberately contaminated response row, a prepared
  * review candidate, and the delivered/processed results component 102 returns.
  *
  * Responsibility: give every 103 test the same stable IDs and the same private material that
@@ -30,7 +30,7 @@ export const SECOND_DELIVERED_ANSWER_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
 export const CHECKLIST_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 export const CHECKLIST_ITEM_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
-/** The private answer key. It lives on public.messages by recorded owner tradeoff and must never be retained. */
+/** Private answer key used in drafts and simulated malformed browser responses. */
 export const PRIVATE_ASSESSMENT_KEY = ['B'];
 
 export const tutorUser: User = {
@@ -115,7 +115,7 @@ export const learnerBMessageRow = {
   created_at: '2026-09-12T09:05:00Z',
 };
 
-/** The delivered question row as a raw `select('*')` returns it, including the private key. */
+/** Delivered question with public message fields and a public assessment projection. */
 export const deliveredQuestionRow = {
   id: DELIVERED_QUESTION_ID,
   room_id: TRANSFER_ROOM_ID,
@@ -134,7 +134,6 @@ export const deliveredQuestionRow = {
     { id: 'C', text: 'Forward the offer to a friend.' },
     { id: 'D', text: 'Reply with your bank details.' },
   ],
-  assessment_key: PRIVATE_ASSESSMENT_KEY,
   assessment_lifecycle: 'delivered',
   assessment_checklist_id: CHECKLIST_ID,
   assessment_item_id: CHECKLIST_ITEM_ID,
@@ -369,11 +368,12 @@ export const duplicateTabTerminalStates = {
 };
 
 /**
- * A stored message row that carries private assessment material the browser must drop.
+ * A deliberately contaminated message response whose private fields the browser must drop.
  * Used by the privacy helper and by the projection tests.
  */
 export const rowWithPrivateMaterial = {
   ...deliveredQuestionRow,
+  assessment_key: PRIVATE_ASSESSMENT_KEY,
   transfer_basis: { concept_rule: 'secret' },
   private_payload: { correct_option_ids: ['B'] },
   private_payload_hash: 'private-hash',

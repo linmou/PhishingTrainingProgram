@@ -10,8 +10,8 @@ import { PUBLIC_ASSESSMENT_FORBIDDEN_KEYS } from '../services/transferAssessment
 
 /**
  * Keys that must never appear in learner-facing state, exports, or rendered output.
- * `assessment_key` is added on top of component 102's list: it is the private answer key the
- * promoted one-table design stores on the participant-readable message row.
+ * `assessment_key` covers an unexpected private field in a browser response. The answer key
+ * is stored in private.transfer_assessments, outside participant-readable message rows.
  */
 export const FORBIDDEN_BROWSER_KEYS: ReadonlyArray<string> = [
   ...PUBLIC_ASSESSMENT_FORBIDDEN_KEYS,
