@@ -136,7 +136,7 @@ The post-planning reconciliation confirmed this acyclic graph without changing a
 ## Integration Test Plan
 
 - Integration tests are integration-owned under `tests/integration/`; each handoff must create upstream output and pass that exact object to the consumer without a synthetic replacement. The E01 Deno handler test uses `npx --yes deno test --config tutor-system/deno.json --cached-only --allow-env --allow-net --allow-read --allow-run --unstable-sloppy-imports tests/integration/transfer-domain-backend-handler.test.ts`.
-- The current local service E2E aggregate includes `tests/e2e/transfer-assessment.test.mjs`; it uses mock transport and does not establish hosted or browser behavior. The planned two-attempt reload/replay browser flow remains an open release gate.
+- The local service integration aggregate is `tests/integration/transfer-assessment-service.test.mjs`; it uses mock transport and does not establish hosted or browser behavior. Browser workflows live under `tutor-system/scripts/browser-e2e/workflows/`; the planned two-attempt reload/replay remains an open release gate.
 - Smoke command and exact test commands will be added after the component quickstarts are promoted; all results, exit codes, paths, and tested SHAs are recorded in `integration-review.md`.
 
 ## Integration Ownership
