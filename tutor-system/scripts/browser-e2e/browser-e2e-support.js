@@ -6,12 +6,13 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const PROJECT = 'ciubrzggdqesgvfkpolj';
-const PROJECT_URL = `https://${PROJECT}.supabase.co`;
+const TARGET = process.env.E2E_TARGET || 'staging';
+const PROJECT = process.env.E2E_PROJECT_REF || (TARGET === 'production' ? 'zgbufaxooqxeabewktzd' : 'ciubrzggdqesgvfkpolj');
+const PROJECT_URL = process.env.E2E_SUPABASE_URL || `https://${PROJECT}.supabase.co`;
 const FIXTURE_VERSION = 3;
 const TIMEOUT = 90000;
 const tutorRoot = path.resolve(__dirname, '../..');
-const ROOMS = Object.freeze({
+const STAGING_ROOMS = Object.freeze({
   'tutor-response': { id: '34d84b08-5712-4c74-9c3c-443fefee587f', title: 'Demo: Click Impulse' },
   'checklist-generation': { id: '93ba95e9-fee9-4a1e-9486-a605d2ffc525', title: 'Demo: Pressure Words' },
   'checklist-management': { id: '7207c6cd-2850-4a6c-bd9d-fc722a14a4f1', title: 'Demo: Lock Icon Myth' },
@@ -21,25 +22,47 @@ const ROOMS = Object.freeze({
   'assessment-answer-pass': { id: 'd6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd', title: 'Demo: Click Impulse — Correct Safe Action' },
   'assessment-answer-failure': { id: '79be49a2-e53c-493d-bd66-adcffbadbba5', title: 'Demo: Click Impulse — Correct Safe Action' }
 });
+const PRODUCTION_ROOMS = Object.freeze({
+  'tutor-response': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'checklist-generation': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'checklist-management': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'checklist-coverage': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'guard-mode': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'assessment-delivery': { id: '4b15c7b9-a0f0-4dc5-bc53-e23b4ae08d0d', title: 'Demo: Click Impulse — Correct Safe Action' },
+  'assessment-answer-pass': { id: '4b15c7b9-a0f0-4dc5-bc53-e23b4ae08d0d', title: 'Demo: Click Impulse — Correct Safe Action' },
+  'assessment-answer-failure': { id: '4b15c7b9-a0f0-4dc5-bc53-e23b4ae08d0d', title: 'Demo: Click Impulse — Correct Safe Action' }
+});
+function roomFixtures(env = process.env) {
+  if (!env.E2E_ROOM_FIXTURES_JSON) return (env.E2E_TARGET || TARGET) === 'production' ? PRODUCTION_ROOMS : STAGING_ROOMS;
+  let fixtures;
+  try { fixtures = JSON.parse(env.E2E_ROOM_FIXTURES_JSON); } catch { throw new Error('E2E_ROOM_FIXTURES_JSON must be valid JSON'); }
+  if (!fixtures || typeof fixtures !== 'object' || Array.isArray(fixtures)) throw new Error('E2E_ROOM_FIXTURES_JSON must be an object');
+  return Object.freeze(fixtures);
+}
+const ROOMS = roomFixtures();
 
 function configFromEnv(env = process.env) {
   const appUrl = env.E2E_APP_URL;
-  const projectUrl = env.REACT_APP_SUPABASE_STAGING_URL;
-  const anonKey = env.REACT_APP_SUPABASE_STAGING_ANON_KEY;
+  const target = env.E2E_TARGET || 'staging';
+  const projectRef = env.E2E_PROJECT_REF || (target === 'production' ? 'zgbufaxooqxeabewktzd' : 'ciubrzggdqesgvfkpolj');
+  const projectUrl = env.E2E_SUPABASE_URL || (target === 'production' ? env.REACT_APP_SUPABASE_URL : env.REACT_APP_SUPABASE_STAGING_URL);
+  const anonKey = env.E2E_SUPABASE_ANON_KEY || (target === 'production' ? env.REACT_APP_SUPABASE_ANON_KEY : env.REACT_APP_SUPABASE_STAGING_ANON_KEY);
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
   const accessToken = env.SUPABASE_ACCESS_TOKEN;
   if (!appUrl || !projectUrl || !anonKey || !serviceKey || !accessToken || !env.REACT_APP_OAI_API_KEY || !env.REACT_APP_OAI_BASE_URL) {
-    throw new Error('Set E2E_APP_URL, staging Supabase URL and keys, SUPABASE_ACCESS_TOKEN, and REACT_APP_OAI_API_KEY/REACT_APP_OAI_BASE_URL.');
+    throw new Error('Set E2E_APP_URL, E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ACCESS_TOKEN, and provider settings.');
   }
-  if (new URL(projectUrl).origin !== PROJECT_URL || projectUrl.replace(/\/$/, '') !== PROJECT_URL) {
-    throw new Error(`Browser E2E requires staging project ${PROJECT}.`);
+  const expectedProjectUrl = `https://${projectRef}.supabase.co`;
+  if (new URL(projectUrl).origin !== expectedProjectUrl || projectUrl.replace(/\/$/, '') !== expectedProjectUrl ||
+      new URL(projectUrl).hostname !== `${projectRef}.supabase.co`) {
+    throw new Error(`Browser E2E project URL does not match ${projectRef}.`);
   }
-  if (serviceKey === anonKey) throw new Error('The staging service-role key must differ from the anon key.');
+  if (serviceKey === anonKey) throw new Error('The service-role key must differ from the anon key.');
   const origin = new URL(appUrl);
   if (!['http:', 'https:'].includes(origin.protocol) || origin.username || origin.password || origin.hash || origin.pathname !== '/') {
     throw new Error('E2E_APP_URL must be an HTTP(S) origin without credentials or a hash.');
   }
-  return { appUrl: origin.origin, projectUrl: PROJECT_URL, anonKey, serviceKey, accessToken };
+  return { appUrl: origin.origin, projectUrl: expectedProjectUrl, anonKey, serviceKey, accessToken, projectRef };
 }
 
 function guardProject(context) {
@@ -60,7 +83,7 @@ function guardProject(context) {
 
 function assertProjectTraffic(traffic) {
   assert.deepEqual(traffic.rejected, [], 'App attempted to reach another Supabase project');
-  assert(traffic.seen.has(PROJECT_URL), 'App made no staging Supabase request');
+  assert(traffic.seen.has(PROJECT_URL), `App made no ${PROJECT} Supabase request`);
 }
 
 function writeJson(file, value) {
@@ -121,7 +144,7 @@ async function existingRoom(client, kind, tutorId) {
   if (!expected) throw new Error(`No existing template room is configured for ${kind}`);
   const room = (await query(client, 'rooms', 'id,title,description,tutor_id,is_active,ai_assistant_enabled,ai_assistant_prompt,pre_populated_dialogue,transfer_learning_enabled,active_response_mode,mode_changed_at,mode_change_source', 'id', expected.id))[0];
   assert(room && room.title === expected.title && room.tutor_id === tutorId && room.is_active && room.ai_assistant_enabled,
-    `Staging room ${expected.id} no longer matches the ${kind} fixture`);
+    `${TARGET} room ${expected.id} no longer matches the ${kind} fixture`);
   assert(room.ai_assistant_prompt && room.pre_populated_dialogue?.length > 0, `Room ${expected.id} has no template content`);
   assert(room.description.includes('[browser-e2e-template]'), `Room ${expected.id} is not a browser fixture`);
   assert.equal(room.transfer_learning_enabled, kind.startsWith('assessment-'), `Room ${expected.id} has the wrong transfer mode`);
@@ -201,7 +224,7 @@ function extractedTargets(calls) {
 }
 
 async function managementQuery(config, sql) {
-  const response = await fetch(`https://api.supabase.com/v1/projects/${PROJECT}/database/query`, {
+  const response = await fetch(`https://api.supabase.com/v1/projects/${config.projectRef}/database/query`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${config.accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: sql })
@@ -221,7 +244,7 @@ async function screenshot(page, dir, name) {
 function requestId() { return crypto.randomUUID(); }
 
 module.exports = {
-  PROJECT, PROJECT_URL, ROOMS, FIXTURE_VERSION, TIMEOUT, tutorRoot, configFromEnv, guardProject,
+  TARGET, PROJECT, PROJECT_URL, ROOMS, FIXTURE_VERSION, TIMEOUT, tutorRoot, configFromEnv, guardProject,
   assertProjectTraffic, writeJson, query, insert, waitForRow, waitForMatch,
   joinAs, openRoom, sendStudentMessage, existingRoom, cleanupRoom, captureResponses, extractedTargets,
   managementQuery, screenshot, requestId

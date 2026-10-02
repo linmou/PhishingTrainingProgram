@@ -3,7 +3,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { openRoom, query, waitForRow, waitForMatch, screenshot } = require('../staging-support');
+const { openRoom, query, waitForRow, waitForMatch, screenshot } = require('../browser-e2e-support');
 
 module.exports = async function checklistManagement(ctx) {
   const { tutorPage, client, appUrl, evidenceDir } = ctx;

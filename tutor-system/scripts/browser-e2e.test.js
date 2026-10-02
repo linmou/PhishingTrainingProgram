@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// File: scripts/browser-e2e-staging.js. Purpose: verify existing-room selection, staging preflight, and cleanup handling.
+// File: scripts/browser-e2e.js. Purpose: verify target project selection, preflight, and cleanup handling.
 'use strict';
 
 const test = require('node:test');
@@ -7,28 +7,32 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e-staging');
+const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 
-const env = () => ({
+const env = (target = 'staging') => ({
   E2E_APP_URL: 'http://localhost:3001',
-  REACT_APP_SUPABASE_STAGING_URL: PROJECT_URL,
-  REACT_APP_SUPABASE_STAGING_ANON_KEY: 'staging-anon-key',
-  SUPABASE_SERVICE_ROLE_KEY: 'staging-service-key',
+  E2E_TARGET: target,
+  E2E_SUPABASE_URL: target === 'production' ? 'https://zgbufaxooqxeabewktzd.supabase.co' : PROJECT_URL,
+  E2E_SUPABASE_ANON_KEY: `${target}-anon-key`,
+  SUPABASE_SERVICE_ROLE_KEY: `${target}-service-key`,
   SUPABASE_ACCESS_TOKEN: 'management-token',
   REACT_APP_OAI_API_KEY: 'provider-key',
   REACT_APP_OAI_BASE_URL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 });
 
-test('accepts an explicit staging target and local app origin', () => {
+test('accepts either named target and local app origin', () => {
   const config = configFromEnv(env());
   assert.equal(config.projectUrl, PROJECT_URL);
   assert.equal(config.appUrl, 'http://localhost:3001');
+  const production = configFromEnv(env('production'));
+  assert.equal(production.projectRef, 'zgbufaxooqxeabewktzd');
+  assert.equal(production.projectUrl, 'https://zgbufaxooqxeabewktzd.supabase.co');
 });
 
 test('rejects production or another Supabase project', () => {
   for (const url of ['https://zgbufaxooqxeabewktzd.supabase.co', 'https://other.supabase.co']) {
-    assert.throws(() => configFromEnv({ ...env(), REACT_APP_SUPABASE_STAGING_URL: url }), /staging project/);
+    assert.throws(() => configFromEnv({ ...env(), E2E_SUPABASE_URL: url }), /does not match/);
   }
 });
 
@@ -48,9 +52,9 @@ test('rejects an app URL with credentials or a hash route', () => {
   }
 });
 
-test('fails if app traffic goes to production or never reaches staging', () => {
+test('fails if app traffic goes to another project or never reaches the target', () => {
   assert.throws(() => assertProjectTraffic({ seen: new Set([PROJECT_URL]), rejected: ['https://zgbufaxooqxeabewktzd.supabase.co'] }), /another Supabase/);
-  assert.throws(() => assertProjectTraffic({ seen: new Set(), rejected: [] }), /no staging/);
+  assert.throws(() => assertProjectTraffic({ seen: new Set(), rejected: [] }), /no ciubrzggdqesgvfkpolj/);
   assert.doesNotThrow(() => assertProjectTraffic({ seen: new Set([PROJECT_URL]), rejected: [] }));
 });
 
@@ -107,7 +111,7 @@ test('used template room is rejected before the workflow can write', async () =>
   await assert.rejects(existingRoom(client, 'checklist-management', 'tutor-id'), /still has session_checklists/);
 });
 
-test('selects one named workflow or all seven staging workflows', () => {
+test('selects one named workflow or all seven workflows', () => {
   assert.deepEqual(selectWorkflows([]), [
     'tutor-response', 'checklist-generation', 'checklist-management', 'checklist-coverage', 'guard-mode',
     'assessment-delivery', 'assessment-answer'

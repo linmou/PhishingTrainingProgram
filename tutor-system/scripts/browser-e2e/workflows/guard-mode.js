@@ -7,7 +7,7 @@ const path = require('node:path');
 const {
   openRoom, query, waitForMatch, captureResponses,
   writeJson, screenshot, TIMEOUT
-} = require('../staging-support');
+} = require('../browser-e2e-support');
 
 function decisionFrom(calls) {
   const content = [...calls].reverse().find((call) => call.status === 200 && call.response?.choices?.[0]?.message?.content)

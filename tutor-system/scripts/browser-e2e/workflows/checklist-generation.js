@@ -4,7 +4,7 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, sendStudentMessage, waitForRow, waitForMatch, query, captureResponses, extractedTargets, writeJson, screenshot, TIMEOUT } = require('../staging-support');
+const { openRoom, sendStudentMessage, waitForRow, waitForMatch, query, captureResponses, extractedTargets, writeJson, screenshot, TIMEOUT } = require('../browser-e2e-support');
 
 module.exports = async function checklistGeneration(ctx) {
   const { tutorPage, studentPage, client, appUrl, evidenceDir } = ctx;

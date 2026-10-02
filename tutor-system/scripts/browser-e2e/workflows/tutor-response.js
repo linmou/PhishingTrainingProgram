@@ -4,7 +4,7 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, sendStudentMessage, waitForMatch, query, captureResponses, writeJson, screenshot, TIMEOUT } = require('../staging-support');
+const { openRoom, sendStudentMessage, waitForMatch, query, captureResponses, writeJson, screenshot, TIMEOUT } = require('../browser-e2e-support');
 
 module.exports = async function tutorResponse(ctx) {
   const { tutorPage, studentPage, client, appUrl, evidenceDir } = ctx;

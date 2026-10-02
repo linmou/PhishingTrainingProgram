@@ -4,7 +4,7 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, sendStudentMessage, insert, query, waitForMatch, captureResponses, screenshot, writeJson, TIMEOUT } = require('../staging-support');
+const { openRoom, sendStudentMessage, insert, query, waitForMatch, captureResponses, screenshot, writeJson, TIMEOUT } = require('../browser-e2e-support');
 
 module.exports = async function checklistCoverage(ctx) {
   const { client, tutorPage, studentPage, appUrl, evidenceDir } = ctx;

@@ -3,7 +3,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { insert, query, sendStudentMessage, openRoom, requestId } = require('../staging-support');
+const { insert, query, sendStudentMessage, openRoom, requestId } = require('../browser-e2e-support');
+
+const TRANSFER_LEARNER_DIALOGUE = Object.freeze({
+  introduction: 'I want to know if this warning is real.',
+  evidence: "I won't click the warning link. I'll open the real app and check my account.",
+  followUp: 'I get it now. What else should I check in a warning like this?'
+});
 
 async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMessageId) {
   const targets = [
@@ -37,11 +43,14 @@ async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMe
 async function assessmentRoom(ctx) {
   const room = await ctx.existingRoom(ctx.kind);
   await openRoom(ctx.studentPage, ctx.appUrl, room.id);
-  const content = 'I would open the official app instead of this warning link. Can you test me on another warning?';
+  const content = TRANSFER_LEARNER_DIALOGUE.evidence;
+  const priorMessageIds = new Set((await query(ctx.client, 'messages', 'id', 'room_id', room.id)).map((row) => row.id));
   await sendStudentMessage(ctx.studentPage, content);
-  const focus = (await query(ctx.client, 'messages', 'id,content,user_id', 'room_id', room.id))
-    .find((row) => row.user_id === ctx.student.id && row.content === content);
-  assert(focus, 'Learner focus message was not persisted');
+  const focus = (await query(ctx.client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id))
+    .filter((row) => row.user_id === ctx.student.id && !priorMessageIds.has(row.id))
+    .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at))
+    .at(-1);
+  assert(focus?.id && focus.content, 'Learner focus message was not persisted');
   const session = await insert(ctx.client, 'sessions', {
     room_id: room.id, tutor_id: room.tutor_id, student_id: ctx.student.id, status: 'active'
   });
@@ -51,15 +60,15 @@ async function assessmentRoom(ctx) {
 async function deliverFixedAssessment(ctx, fixture) {
   const item = fixture.items[0];
   const assessment = {
-    selection_type: 'single', stem: 'A familiar account warning asks you to open its link. What should you do?',
+    selection_type: 'single', stem: 'A warning says there is a problem with your account and tells you to click a link. What should you do?',
     options: [
-      { id: 'A', text: 'Open the link immediately' },
-      { id: 'B', text: 'Open the official app independently' },
-      { id: 'C', text: 'Reply with a password' },
-      { id: 'D', text: 'Forward the link' }
+      { id: 'A', text: 'Click the link right away' },
+      { id: 'B', text: 'Open the official app yourself' },
+      { id: 'C', text: 'Send them your password' },
+      { id: 'D', text: 'Send the link to a friend' }
     ],
     correct_option_ids: ['B'],
-    learner_safe_explanation: 'Use the official app rather than the message link.',
+    learner_safe_explanation: 'Open the official app yourself instead of using the link.',
     transfer_basis: { source_evidence_message_ids: [fixture.focus.id] }
   };
   const { data, error } = await ctx.client.rpc('send_reviewed_tutor_response_v4', {
@@ -77,4 +86,4 @@ async function deliverFixedAssessment(ctx, fixture) {
   return { question_message_id: data.message.id, assessment_id: data.message.assessment.id, assessment };
 }
 
-module.exports = { assessmentRoom, deliverFixedAssessment, seedTransferChecklist };
+module.exports = { TRANSFER_LEARNER_DIALOGUE, assessmentRoom, deliverFixedAssessment, seedTransferChecklist };

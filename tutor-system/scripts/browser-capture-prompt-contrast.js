@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const ts = require('typescript');
-const { PROJECT_URL: STAGING_URL, guardProject, assertProjectTraffic: assertStagingTraffic } = require('./browser-e2e/staging-support');
+const { PROJECT_URL: STAGING_URL, guardProject, assertProjectTraffic: assertStagingTraffic } = require('./browser-e2e/browser-e2e-support');
 
 const BASE_URL = process.env.DEMO_BASE_URL || 'http://localhost:3001';
 const TIMEOUT_MS = 60000;

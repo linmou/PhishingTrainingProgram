@@ -6,10 +6,10 @@ Intent: identify test boundaries, reuse template rooms for live browser tests, a
 
 | Environment | Project reference | Current use |
 | --- | --- | --- |
-| Production | `zgbufaxooqxeabewktzd` | Source of the demo room templates. Never the browser workflow target. |
-| Staging | `ciubrzggdqesgvfkpolj` | Seven reusable copies of production templates, including transfer-enabled assessment rooms. |
+| Production | `zgbufaxooqxeabewktzd` | Production browser workflow target with dedicated fixture rooms. |
+| Staging | `ciubrzggdqesgvfkpolj` | Staging browser workflow target with reusable fixture rooms. |
 
-The app and runner must both use staging. The runner blocks browser traffic to other Supabase projects and validates each room's ID, title, owner, and template content. It never loads `.env`; supply variables in the process environment. CRA reads `REACT_APP_*` when the app starts.
+The app and runner must use the same selected target. `test:e2e:staging` and `test:e2e:production` invoke the same `scripts/browser-e2e.js` implementation with `E2E_TARGET` set before Node loads it. The runner blocks browser traffic to other Supabase projects and validates each room's ID, title, owner, and template content. It never loads `.env`; supply variables in the process environment. CRA reads `REACT_APP_*` when the app starts.
 
 ## Current Test Paths
 
@@ -17,7 +17,7 @@ The app and runner must both use staging. The runner blocks browser traffic to o
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
-| `test:e2e:staging` | Seven selectable Playwright tutor, checklist, assessment, and Guard workflows | Test rows are deleted after each workflow; template rooms remain | Explicit live suite. |
+| `test:e2e:staging` / `test:e2e:production` | Seven selectable Playwright tutor, checklist, assessment, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
@@ -27,14 +27,17 @@ The only GitHub Actions workflow is a manually dispatched assessment API deploym
 
 ## Run The Live Suite
 
-Use Node 18 or newer, Supabase CLI, and `jq`; install Playwright Chromium with `npx playwright install chromium`. From `tutor-system/`, load the existing `.env` into the shell without printing its values. The token needs project API-key access and database query access. Retrieve the staging keys in memory:
+Use Node 18 or newer and `jq`; install Playwright Chromium with `npx playwright install chromium`. From `tutor-system/`, load the existing `.env` into the shell without printing its values. Provide the selected project's anon and service-role keys in memory:
 
 ```bash
 set -a
 source .env
 set +a
-keys_json="$(supabase projects api-keys --project-ref ciubrzggdqesgvfkpolj -o json)"
-export REACT_APP_SUPABASE_STAGING_ANON_KEY="$(jq -er '.[] | select(.name == "anon" and .disabled != true) | .api_key' <<< "$keys_json")"
+export E2E_TARGET=staging
+export E2E_PROJECT_REF=ciubrzggdqesgvfkpolj
+export E2E_SUPABASE_URL=https://ciubrzggdqesgvfkpolj.supabase.co
+keys_json="$(curl --fail --silent --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" https://api.supabase.com/v1/projects/$E2E_PROJECT_REF/api-keys)"
+export E2E_SUPABASE_ANON_KEY="$(jq -er '.[] | select(.name == "anon" and .disabled != true) | .api_key' <<< "$keys_json")"
 export SUPABASE_SERVICE_ROLE_KEY="$(jq -er '.[] | select(.name == "service_role" and .disabled != true) | .api_key' <<< "$keys_json")"
 unset keys_json
 ```
@@ -43,14 +46,19 @@ The local `tutor-system/.env` points the app at production by default. Override 
 
 ```bash
 env -u SUPABASE_SERVICE_ROLE_KEY -u SUPABASE_ACCESS_TOKEN \
-REACT_APP_SUPABASE_URL="$REACT_APP_SUPABASE_STAGING_URL" \
-REACT_APP_SUPABASE_ANON_KEY="$REACT_APP_SUPABASE_STAGING_ANON_KEY" \
+REACT_APP_SUPABASE_URL="$E2E_SUPABASE_URL" \
+REACT_APP_SUPABASE_ANON_KEY="$E2E_SUPABASE_ANON_KEY" \
 PORT=3100 BROWSER=none npm start &
 curl --fail --silent --retry 20 --retry-connrefused --retry-delay 1 http://localhost:3100/ >/dev/null
 E2E_APP_URL=http://localhost:3100 npm run test:e2e:staging
+
+# For production, set E2E_TARGET=production, E2E_PROJECT_REF=zgbufaxooqxeabewktzd,
+# and E2E_SUPABASE_URL=https://zgbufaxooqxeabewktzd.supabase.co before fetching keys
+# and starting CRA, then run:
+E2E_APP_URL=http://localhost:3100 npm run test:e2e:production
 ```
 
-Use an unused port in both commands if 3100 is occupied. To run one workflow, append `-- --workflow=checklist-generation`. `npm run test:e2e:staging:unit` checks selection and preflight locally without a browser or credentials. The runner never creates a room. It requires an empty template room before each workflow and deletes generated messages, checklists, sessions, feedback, and private assessment rows afterward, including after a failure. Cleanup status is recorded per room in `report.json`; a cleanup failure fails the run.
+Use an unused port in both commands if 3100 is occupied. To run one workflow, append `-- --workflow=checklist-generation`. `npm run test:e2e:unit` checks selection and preflight locally without a browser or credentials. The runner never creates a room. It requires an empty template room before each workflow and deletes generated messages, checklists, sessions, feedback, and private assessment rows afterward, including after a failure. Cleanup status is recorded per room in `report.json`; a cleanup failure fails the run.
 
 The seven rooms were migrated once from production demo rooms with `npm run test:e2e:staging:migrate-templates`, using `SUPABASE_ACCESS_TOKEN`, `REACT_APP_SUPABASE_STAGING_URL`, and `STAGING_SUPABASE_SERVICE_ROLE_KEY`. The migration is idempotent and validates existing copies. Assessment copies receive the canonical local template dialogue and full target inventory, even when the production room's `prompt_config` is null. It is setup, not part of a test run.
 After fetching the staging service key above, set `STAGING_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"` when running the migration command.
@@ -79,7 +87,7 @@ Each workflow has its own result. The full command continues after an individual
 
 ## Test Data And Evidence
 
-`tmp/browser_demo_runs/staging-template-*/report.json` records the run ID, project, commit, room IDs, provider calls, results, cleanup status, and screenshots. The database rows are removed only after evidence is saved. Preserve complete run directories in durable storage before deleting local copies. The 2026-09-30 production trial's exact test rows and temporary learners were removed and verified absent; its reports remain historical evidence.
+`tmp/browser_demo_runs/<target>-template-*/report.json` records the run ID, project, commit, room IDs, provider calls, results, cleanup status, and screenshots. The database rows are removed only after evidence is saved. Preserve complete run directories in durable storage before deleting local copies.
 
 Preserve `evals/promptfoo/results/`: LLM-judge results include rubric evidence beyond pass/fail. `scripts/transfer-assessment-release.config.json` is a historical blocked snapshot.
 

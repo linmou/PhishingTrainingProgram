@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: record one staging transfer-learning journey as a side-by-side tutor/learner WebM.
+// Purpose: record one selected-target transfer-learning journey as a side-by-side tutor/learner WebM.
 'use strict';
 
 const assert = require('node:assert/strict');
@@ -9,10 +9,11 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
-const support = require('./browser-e2e/staging-support');
+const support = require('./browser-e2e/browser-e2e-support');
+const { TRANSFER_LEARNER_DIALOGUE } = require('./browser-e2e/workflows/assessment-fixture');
 
-const FOCUS_MESSAGE = 'I will not click the security alert link directly. I will type the real platform URL myself and check my account.';
-const FOLLOW_UP = 'I can now verify warnings through the official app. What other check should I remember?';
+const FOCUS_MESSAGE = TRANSFER_LEARNER_DIALOGUE.evidence;
+const FOLLOW_UP = TRANSFER_LEARNER_DIALOGUE.followUp;
 const TUTOR_NAME = 'DemoTutor_213782';
 const TIMEOUT = support.TIMEOUT;
 const FFMPEG = process.env.FFMPEG_BIN || 'ffmpeg';
@@ -124,6 +125,7 @@ async function main() {
   let studentPage;
   let room;
   let checklist;
+  let tutorDialogMessage = null;
   const evidence = { run_id: runId, project_ref: support.PROJECT, room_id: null, tutor_name: TUTOR_NAME, learner_name: learnerName, chapters };
 
   try {
@@ -135,16 +137,20 @@ async function main() {
     const studentTraffic = await support.guardProject(studentContext);
     tutorPage = await tutorContext.newPage();
     studentPage = await studentContext.newPage();
+    tutorPage.on('dialog', async (dialog) => {
+      tutorDialogMessage = dialog.message();
+      await dialog.dismiss();
+    });
 
     await chapter([tutorPage, studentPage], 'Transfer learning demo begins', chapters, startedAt);
     await support.joinAs(tutorPage, config.appUrl, TUTOR_NAME, 'tutor');
     support.assertProjectTraffic(tutorTraffic);
     const tutor = (await support.query(client, 'users', 'id,display_name', 'display_name', TUTOR_NAME))[0];
-    assert(tutor?.id, 'Tutor identity was not stored in staging');
+    assert(tutor?.id, `Tutor identity was not stored in ${support.TARGET}`);
     await support.joinAs(studentPage, config.appUrl, learnerName, 'student');
     support.assertProjectTraffic(studentTraffic);
     const student = (await support.query(client, 'users', 'id,display_name', 'display_name', learnerName))[0];
-    assert(student?.id, 'Learner identity was not stored in staging');
+    assert(student?.id, `Learner identity was not stored in ${support.TARGET}`);
 
     room = await support.existingRoom(client, 'assessment-delivery', tutor.id);
     evidence.room_id = room.id;
@@ -160,12 +166,15 @@ async function main() {
       room_id: room.id, tutor_id: tutor.id, student_id: student.id, status: 'active'
     });
     await support.openRoom(studentPage, config.appUrl, room.id);
-    await sendStudentMessage(studentPage, 'I am ready to learn how to verify this warning safely.');
-    await support.waitForMatch(
-      () => support.query(client, 'messages', 'id,content,user_id', 'room_id', room.id),
-      (rows) => rows.some((row) => row.user_id === student.id && row.content === 'I am ready to learn how to verify this warning safely.'),
+    const priorIntroductionIds = new Set((await support.query(client, 'messages', 'id', 'room_id', room.id)).map((row) => row.id));
+    await sendStudentMessage(studentPage, TRANSFER_LEARNER_DIALOGUE.introduction);
+    const introduction = (await support.waitForMatch(
+      () => support.query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id),
+      (rows) => rows.some((row) => row.user_id === student.id && !priorIntroductionIds.has(row.id)),
       'learner room introduction'
-    );
+    )).filter((row) => row.user_id === student.id && !priorIntroductionIds.has(row.id))
+      .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
+    assert(introduction?.id && introduction.content, 'Learner room introduction was not saved');
     await support.openRoom(tutorPage, config.appUrl, room.id);
 
     await chapter([tutorPage, studentPage], 'Tutor approves the learner target', chapters, startedAt);
@@ -177,13 +186,15 @@ async function main() {
     ))[0];
 
     await chapter([tutorPage, studentPage], 'Learner demonstrates the target', chapters, startedAt);
+    const priorEvidenceIds = new Set((await support.query(client, 'messages', 'id', 'room_id', room.id)).map((row) => row.id));
     await sendStudentMessage(studentPage, FOCUS_MESSAGE);
     const focus = (await support.waitForMatch(
-      () => support.query(client, 'messages', 'id,content,user_id', 'room_id', room.id),
-      (rows) => rows.some((row) => row.user_id === student.id && row.content === FOCUS_MESSAGE),
+      () => support.query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id),
+      (rows) => rows.some((row) => row.user_id === student.id && !priorEvidenceIds.has(row.id)),
       'learner target evidence'
-    )).find((row) => row.user_id === student.id && row.content === FOCUS_MESSAGE);
-    assert(focus, 'Learner evidence message was not saved');
+    )).filter((row) => row.user_id === student.id && !priorEvidenceIds.has(row.id))
+      .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
+    assert(focus?.id && focus.content, 'Learner evidence message was not saved');
     const checklistItems = await support.query(client, 'checklist_items', 'id,status,area_text', 'checklist_id', checklist.id);
     assert(checklistItems.length >= targets.detectionAreas.length + targets.verificationSteps.length,
       'Checklist did not preserve the complete template target inventory');
@@ -194,7 +205,7 @@ async function main() {
     );
 
     await tutorPage.reload({ waitUntil: 'domcontentloaded' });
-    await tutorPage.locator('.post-comment').filter({ hasText: FOCUS_MESSAGE }).waitFor({ timeout: TIMEOUT });
+    await tutorPage.locator('.post-comment').filter({ hasText: focus.content }).waitFor({ timeout: TIMEOUT });
     const checklistClose = tutorPage.locator('.checklist-close');
     if (await checklistClose.isVisible()) await checklistClose.click();
     await chapter([tutorPage, studentPage], 'Tutor reviews and sends the assessment', chapters, startedAt);
@@ -234,21 +245,27 @@ async function main() {
     );
 
     await chapter([tutorPage, studentPage], 'Learner asks a follow-up; tutor resumes tutoring', chapters, startedAt);
+    const priorFollowUpIds = new Set((await support.query(client, 'messages', 'id', 'room_id', room.id)).map((row) => row.id));
     await sendStudentMessage(studentPage, FOLLOW_UP);
     const followUp = (await support.waitForMatch(
-      () => support.query(client, 'messages', 'id,content,user_id', 'room_id', room.id),
-      (rows) => rows.some((row) => row.user_id === student.id && row.content === FOLLOW_UP),
+      () => support.query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id),
+      (rows) => rows.some((row) => row.user_id === student.id && !priorFollowUpIds.has(row.id)),
       'learner follow-up'
-    )).find((row) => row.user_id === student.id && row.content === FOLLOW_UP);
-    assert(followUp, 'Learner follow-up was not saved');
+    )).filter((row) => row.user_id === student.id && !priorFollowUpIds.has(row.id))
+      .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
+    assert(followUp?.id && followUp.content, 'Learner follow-up was not saved');
     await tutorPage.reload({ waitUntil: 'domcontentloaded' });
-    await tutorPage.locator('.post-comment').filter({ hasText: FOLLOW_UP }).waitFor({ timeout: TIMEOUT });
+    await tutorPage.locator('.post-comment').filter({ hasText: followUp.content }).waitFor({ timeout: TIMEOUT });
     const tutorChecklistClose = tutorPage.locator('.checklist-close');
     if (await tutorChecklistClose.isVisible()) await tutorChecklistClose.click();
-    const tutorStop = await support.captureResponses(tutorPage, (response) => response.url().includes('/chat/completions'));
+    const tutorStop = await support.captureResponses(
+      tutorPage,
+      (response) => response.url().includes('/chat/completions') || response.url().includes('/functions/v1/assessment-api')
+    );
     let tutorCalls;
     try {
       await tutorPage.locator('button.ai-generate-btn').click();
+      if (tutorDialogMessage) throw new Error(`Tutor generation dialog: ${tutorDialogMessage}`);
       await tutorPage.locator('.ai-suggestion-box .ai-suggestion-content p').first().waitFor({ timeout: TIMEOUT });
       await tutorPage.waitForFunction(() => {
         const value = document.querySelector('.ai-suggestion-box .ai-suggestion-content p')?.textContent?.trim();
@@ -256,7 +273,7 @@ async function main() {
       }, null, { timeout: TIMEOUT });
     } finally {
       tutorCalls = await tutorStop();
-      support.writeJson(path.join(evidenceDir, 'tutor-provider.json'), tutorCalls);
+      support.writeJson(path.join(evidenceDir, 'tutor-provider.json'), { dialog: tutorDialogMessage, calls: tutorCalls });
     }
     assert.equal(await tutorPage.getByRole('heading', { name: 'Review transfer assessment' }).count(), 0);
     const decision = parseDecision(tutorCalls);

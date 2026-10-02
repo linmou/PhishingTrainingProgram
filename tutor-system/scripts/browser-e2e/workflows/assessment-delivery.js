@@ -4,7 +4,7 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, captureResponses, managementQuery, query, waitForMatch, screenshot, writeJson, TIMEOUT } = require('../staging-support');
+const { openRoom, captureResponses, managementQuery, query, waitForMatch, screenshot, writeJson, TIMEOUT } = require('../browser-e2e-support');
 const { assessmentRoom } = require('./assessment-fixture');
 
 module.exports = async function assessmentDelivery(ctx) {

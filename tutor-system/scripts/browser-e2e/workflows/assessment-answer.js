@@ -4,7 +4,7 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { openRoom, query, waitForMatch, captureResponses, managementQuery, screenshot, writeJson, TIMEOUT } = require('../staging-support');
+const { openRoom, query, waitForMatch, captureResponses, managementQuery, screenshot, writeJson, TIMEOUT } = require('../browser-e2e-support');
 const { assessmentRoom, deliverFixedAssessment } = require('./assessment-fixture');
 
 async function answer(ctx, label, selections, expectedStatus) {

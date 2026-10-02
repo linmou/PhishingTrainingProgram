@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: run browser workflows in reusable staging copies of production template rooms.
+// Purpose: run browser workflows against the selected staging or production fixture rooms.
 // Environment setup: see ../claude_docs/browser-e2e-testing.md, "Run The Live Suite".
 'use strict';
 
@@ -9,7 +9,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
-const support = require('./browser-e2e/staging-support');
+const support = require('./browser-e2e/browser-e2e-support');
 
 const workflows = {
   'tutor-response': require('./browser-e2e/workflows/tutor-response'),
@@ -66,7 +66,7 @@ async function main(argv = process.argv.slice(2)) {
   const config = support.configFromEnv();
   const runId = `${new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14)}-${crypto.randomUUID().slice(0, 8)}`;
   const repoRoot = path.resolve(support.tutorRoot, '..');
-  const evidenceDir = path.join(repoRoot, 'tmp/browser_demo_runs', `staging-template-${runId}`);
+  const evidenceDir = path.join(repoRoot, 'tmp/browser_demo_runs', `${support.TARGET}-template-${runId}`);
   fs.mkdirSync(evidenceDir, { recursive: true });
   const report = {
     run_id: runId, project_ref: support.PROJECT, fixture_version: support.FIXTURE_VERSION,
@@ -83,25 +83,28 @@ async function main(argv = process.argv.slice(2)) {
   try {
     await support.managementQuery(config, 'select 1 as ready');
     browser = await chromium.launch({ headless: true });
-    const tutorContext = await browser.newContext();
-    const studentContext = await browser.newContext();
+    const videoOptions = process.env.E2E_RECORD_VIDEO === '1'
+      ? { recordVideo: { dir: path.join(evidenceDir, 'raw-video'), size: { width: 1280, height: 800 } } }
+      : {};
+    const tutorContext = await browser.newContext(videoOptions);
+    const studentContext = await browser.newContext(videoOptions);
     const tutorTraffic = await support.guardProject(tutorContext);
     const studentTraffic = await support.guardProject(studentContext);
     const tutorPage = await tutorContext.newPage();
     const studentPage = await studentContext.newPage();
-    const tutorName = 'DemoTutor_213782';
-    const studentName = 'E2E Learner 20260930062117-f2501ed1';
+    const tutorName = process.env.E2E_TUTOR_NAME || 'DemoTutor_213782';
+    const studentName = process.env.E2E_STUDENT_NAME || 'E2E Learner 20260930062117-f2501ed1';
     report.user_names = [tutorName, studentName];
     support.writeJson(path.join(evidenceDir, 'report.json'), report);
     await support.joinAs(tutorPage, config.appUrl, tutorName, 'tutor');
     support.assertProjectTraffic(tutorTraffic);
     const tutor = (await support.query(client, 'users', 'id,display_name', 'display_name', tutorName))[0];
-    if (!tutor?.id) throw new Error('Tutor browser identity was not stored in staging');
+    if (!tutor?.id) throw new Error(`Tutor browser identity was not stored in ${support.TARGET}`);
     report.user_ids.push(tutor.id);
     await support.joinAs(studentPage, config.appUrl, studentName, 'student');
     support.assertProjectTraffic(studentTraffic);
     const student = (await support.query(client, 'users', 'id,display_name', 'display_name', studentName))[0];
-    if (!student?.id) throw new Error('Learner browser identity was not stored in staging');
+    if (!student?.id) throw new Error(`Learner browser identity was not stored in ${support.TARGET}`);
     report.user_ids.push(student.id);
     support.writeJson(path.join(evidenceDir, 'report.json'), report);
     const context = {

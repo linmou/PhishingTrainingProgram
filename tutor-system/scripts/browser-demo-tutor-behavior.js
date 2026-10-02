@@ -12,7 +12,7 @@ const { execFileSync } = require('node:child_process');
 const ts = require('typescript');
 const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
-const { PROJECT_URL: STAGING_URL, guardProject, assertProjectTraffic: assertStagingTraffic } = require('./browser-e2e/staging-support');
+const { PROJECT_URL: STAGING_URL, guardProject, assertProjectTraffic: assertStagingTraffic } = require('./browser-e2e/browser-e2e-support');
 
 const tutorRoot = path.resolve(__dirname, '..');
 const repoRoot = path.resolve(tutorRoot, '..');
