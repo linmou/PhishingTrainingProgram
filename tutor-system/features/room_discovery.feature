@@ -61,12 +61,12 @@ Feature: Room Discovery and Joining
     And the tutor "John Tutor" has created a room titled "English Literature"
     And the student "Jane Student" has joined the room
     When I view the observer dashboard
-    And I click "Observe Room" on the "English Literature" room card
+    And I click "Join" on the "English Literature" room card
     Then I should be redirected to the room view
     And I should see "English Literature" as the room title
     And I should see the chat messages
     But I should not see the message input field
-    And I should see "Observer Mode - Read Only" indicator
+    And I should see "You are in observer mode. You can view the conversation but cannot participate."
 
   Scenario: Multiple observers can join the same room
     Given I am logged in as "Alice Observer" with role "observer"
@@ -74,7 +74,7 @@ Feature: Room Discovery and Joining
     And the student "Jane Student" has joined the room
     And 3 observers have already joined the room
     When I view the observer dashboard
-    And I click "Observe Room" on the "Science Lab" room card
+    And I click "Join" on the "Science Lab" room card
     Then I should successfully join the room as an observer
     And I should see "4 observers" in the room info
 
@@ -124,7 +124,7 @@ Feature: Room Discovery and Joining
 
   Scenario: Student still discovers classic teaching rooms from real tutors
     Given I am logged in as "Jane Student" with role "student"
-    And the tutor "Adele" has created a room titled "Account Security Alert Scam" with description "class period 4"
+    And the tutor "Adele" has created a room titled "Secure Email Basics" with description "class period 4 with Adele"
     When I view the student dashboard
-    Then I should see a room card for "Account Security Alert Scam"
+    Then I should see a room card for "Secure Email Basics"
     And I should see tutor "Adele" on the student dashboard

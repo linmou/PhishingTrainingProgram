@@ -34,6 +34,7 @@ Feature: Room Original Poster (OP) Configuration
   Scenario: OP configuration validation
     Given I am logged in as a tutor
     When I navigate to the room creation page
+    And I enter room title "OP validation room"
     And I select "Use custom OP name" option
     And I leave the custom OP name field empty
     And I submit the room creation form

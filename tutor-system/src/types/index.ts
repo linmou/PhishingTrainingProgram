@@ -497,16 +497,15 @@ export interface ChatExportData {
         ai_response_time_ms?: number | null;
         feedback_stats?: MessageFeedbackStats;
     }>;
+    participants?: Array<{
+        id: string;
+        display_name: string;
+        role: UserRole | null;
+    }>;
     export_metadata: {
         exported_at: string;
         total_messages: number;
         total_ai_interactions?: number;
-        interaction_summary?: {
-            accepted: number;
-            rejected: number;
-            modified: number;
-            ignored: number;
-        };
     };
     ai_interactions?: AIInteraction[];
     feedback_summary?: {

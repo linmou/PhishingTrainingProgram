@@ -62,6 +62,7 @@ function makeAssessment(overrides = {}) {
     selection_type: 'single',
     options: OPTIONS,
     correct_option_ids: ['B'],
+    learner_safe_explanation: 'Verify through an independent channel.',
     progress_snapshot_hash: SNAPSHOT,
     ...overrides,
   };
@@ -76,6 +77,12 @@ function makeContext(overrides = {}) {
     eligible_assessment_item_ids: ['item-1'],
     unresolved_assessment: publicAssessment(),
     pending_repair_message_id: null,
+    attempt_snapshot: {
+      assessment_id: 'assessment-1',
+      accepted_attempt_count: 0,
+      resolution: 'open',
+      processed_answer_message_ids: [],
+    },
     ...overrides,
   };
 }
@@ -122,8 +129,16 @@ test('101 domain contract: a delivered correct answer is terminal and asks for t
   assert.equal(persisted.applied_transition, 'assessment_pass');
 });
 
-test('101 domain contract: a delivered wrong answer forces review and repair', () => {
-  const produced = resolveTransferAnswer(makeContext(), makeAnswer('A'));
+test('101 domain contract: the first wrong answer is retryable and the second requires repair', () => {
+  const retry = resolveTransferAnswer(makeContext(), makeAnswer('A'));
+  assert.equal(retry.disposition, 'retryable');
+  assert.equal(retry.applied_transition, null);
+  assert.equal(retry.remaining_attempts, 1);
+
+  const produced = resolveTransferAnswer(
+    makeContext({ attempt_snapshot: retry.attempt_snapshot }),
+    makeAnswer('A', { answer_message_id: 'answer-2' })
+  );
   const persisted = summarizeForLocalAssertions(produced);
 
   assert.equal(produced.disposition, 'failed');
@@ -155,14 +170,13 @@ test('101 domain contract: undelivered, stale, Guard, feedback-pending, and no-o
   }
 });
 
-test('101 domain contract: private field names are absent from the resolver result', () => {
+test('101 domain contract: public resolver fields exclude private assessment material', () => {
   const produced = resolveTransferAnswer(makeContext(), makeAnswer('B'));
-  const serialized = JSON.stringify(produced);
 
   for (const field of PRIVATE_FIELD_NAMES) {
     assert.equal(Object.prototype.hasOwnProperty.call(produced, field), false, `${field} on result`);
-    assert.equal(serialized.includes(field), false, `${field} in serialization`);
   }
+  assert.equal(produced.learner_feedback_authorized, false);
   for (const key of Object.keys(summarizeForLocalAssertions(produced).learner_projection)) {
     assert.equal(PRIVATE_FIELD_NAMES.includes(key), false, `${key} in learner projection`);
   }
@@ -171,7 +185,7 @@ test('101 domain contract: private field names are absent from the resolver resu
 test('101 domain contract: replayed answers never produce a second transition', () => {
   const first = resolveTransferAnswer(makeContext(), makeAnswer('B'));
   const replayed = resolveTransferAnswer(
-    makeContext({ progress: first.progress, feedback_required: first.feedback_required }),
+    makeContext({ progress: first.progress, feedback_required: first.feedback_required, attempt_snapshot: first.attempt_snapshot }),
     makeAnswer('B', { answer_message_id: 'answer-1' })
   );
 

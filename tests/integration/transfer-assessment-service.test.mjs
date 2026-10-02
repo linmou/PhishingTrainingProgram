@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-// Purpose: integration-owned end-to-end aggregate for the transfer-assessment lifecycle. It runs
+// Purpose: local integration aggregate for the transfer-assessment lifecycle. It runs
 // one teacher session across both components: component 101's real pure resolver decides the turn
 // and produces the private assessment, component 102's real service facade prepares and delivers it
 // through its typed operations, and the published result is checked to contain no private
-// assessment material. Only the network transport (the Edge Function call) is replaced; every
-// projection and every decision under test is the production implementation.
+// assessment material. The transport is replaced; the Deno handler test covers server validation.
 //
-// Run with: node --experimental-strip-types --import ./tools/ts-resolve.mjs --test tests/e2e/transfer-assessment.test.mjs
+// Run with: node --experimental-strip-types --import ./tools/ts-resolve.mjs --test tests/integration/transfer-assessment-service.test.mjs
 
 import assert from 'node:assert/strict';
 import test from 'node:test';
@@ -25,6 +24,9 @@ const { containsPrivateFieldName } = await import(
 );
 const { resolveTransferAnswer } = await import(
   '../../tutor-system/src/services/transferAssessmentOrchestrator.ts'
+);
+const { validateAssessmentDraft } = await import(
+  '../../tutor-system/src/services/assessmentValidation.ts'
 );
 
 const OPTIONS = [
@@ -106,18 +108,18 @@ function messageWithPrivateMaterial() {
   };
 }
 
-/** The reviewed payload the tutor confirms, in the shape `send_reviewed` accepts. */
+/** The assessment-only draft the tutor confirms. */
 function reviewedPayload() {
   return {
     reason: 'The learner has not yet transferred the rule to a new sender.',
-    decision: { mode: 'assessment', instruction: 'transfer_assess', target_item_id: 'item-1' },
-    response: 'Which statement best describes the risk to this account?',
+    target_item_id: 'item-1',
     assessment: {
       selection_type: 'single',
       options: clone(OPTIONS),
       stem: 'Which statement best describes the risk to this account?',
       rendered_text: 'Which statement best describes the risk to this account?',
       correct_option_ids: ['B'],
+      learner_safe_explanation: 'Verify the alert through the official app.',
       transfer_basis: {
         concept_rule: 'A familiar sender is not proof of safety.',
         source_context: 'The learner judged a link safe because the sender was familiar.',
@@ -182,12 +184,17 @@ function answerInput(content, overrides = {}) {
   };
 }
 
-test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it without the key', async () => {
+test('integration: prepare returns a reviewable candidate and send_reviewed delivers it without the key', async () => {
+  assert.deepEqual(Object.keys(reviewedPayload()).sort(), ['assessment', 'reason', 'target_item_id']);
+  validateAssessmentDraft(reviewedPayload(), {
+    knownItemIds: ['item-1'],
+    knownMessageIds: ['message-1'],
+  });
   // There is no draft table, so prepare_turn persists nothing and returns the candidate plus the
   // scope it applies to. The reviewed payload then travels on the single send_reviewed call.
   const transport = createRecordingTransport({
     prepare_turn: () => ({
-      decision: reviewedPayload(),
+      assessment_draft: reviewedPayload(),
       progress_snapshot_hash: SNAPSHOT,
       room_id: 'room-1',
       student_id: 'student-1',
@@ -219,6 +226,7 @@ test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it 
   assert.equal(prepared.draft_id, undefined, 'prepare must not return a persisted draft');
   assert.equal(prepared.room_id, 'room-1', 'prepare returns the scope send_reviewed needs');
   assert.equal(prepared.item_id, 'item-1', 'prepare names the item the assessment targets');
+  assert.deepEqual(prepared.assessment_draft, reviewedPayload());
 
   const delivered = await service.sendReviewed({
     reviewedPayload: reviewedPayload(),
@@ -235,7 +243,7 @@ test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it 
     ['prepare_turn', 'send_reviewed'],
     'the session must drive prepare and send, with no review round trip'
   );
-  assert.equal(transport.calls[1].reviewed_payload.decision.mode, 'assessment');
+  assert.equal(transport.calls[1].reviewed_payload.target_item_id, 'item-1');
 
   // The published learner payload carries no private assessment material, checked by key and value.
   const learnerPayload = JSON.stringify(delivered.message);
@@ -250,7 +258,7 @@ test('E2E: prepare returns a reviewable candidate and send_reviewed delivers it 
   assert.equal(containsPrivateFieldName(delivered.message), false, 'shared guard must see no private field name');
 });
 
-test('E2E: the facade projection drops unexpected private fields in an API response', async () => {
+test('integration: the facade projection drops unexpected private fields in an API response', async () => {
   const injected = messageWithPrivateMaterial();
   assert.deepEqual(injected.assessment_key, ['B'], 'the injected response carries the key');
   assert.deepEqual(injected.assessment_options, OPTIONS, 'and the ordered options');
@@ -293,7 +301,7 @@ test('E2E: the facade projection drops unexpected private fields in an API respo
   assert.equal(publicView.assessment_key, undefined, 'public projection must strip the key');
 });
 
-test('E2E: the public message projection exposes identity and content but no private row', () => {
+test('integration: the public message projection exposes identity and content but no private row', () => {
   const stored = deliveredMessageRow();
   assert.equal(stored.assessment_key, undefined, 'the public response must not carry the answer key');
   assert.equal(stored.assessment_transfer_basis, undefined, 'the public response must not carry the transfer basis');

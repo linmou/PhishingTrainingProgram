@@ -18,7 +18,7 @@ Feature: AI Assistant for Tutors
     And the tutor sets temperature to 0.7
     And the tutor saves the settings
     Then the AI assistant should be enabled for the room
-    And the AI status should show as "AI: On (Qwen3.5 Flash)"
+    And AI settings should show the assistant enabled when reopened
 
   Scenario: Tutor disables AI assistant
     Given the AI assistant is enabled in the room
@@ -26,7 +26,7 @@ Feature: AI Assistant for Tutors
     And the tutor toggles "Enable AI Assistant" to off
     And the tutor saves the settings
     Then the AI assistant should be disabled for the room
-    And the AI status should show as "AI: Off"
+    And AI settings should show the assistant disabled when reopened
 
   Scenario: AI generates contextual suggestions
     Given the AI assistant is enabled
@@ -40,7 +40,7 @@ Feature: AI Assistant for Tutors
     Given the AI has generated a suggestion "Phishing is a cybercrime where..."
     When the tutor clicks "Copy to Input"
     Then the suggestion should be copied to the message input field
-    And the suggestion box should disappear
+    And the suggestion box should remain available until the tutor sends
     When the tutor sends the message without changes
     Then the system should track the suggestion as "accepted"
 
@@ -87,13 +87,13 @@ Feature: AI Assistant for Tutors
     When the tutor leaves the room
     And the tutor rejoins the room
     Then the AI settings should be preserved
-    And the AI status should show "AI: On (Qwen3.5 Flash)"
+    And AI settings should show the assistant enabled after rejoining
 
   Scenario: AI handles no student messages gracefully
     Given the AI assistant is enabled
     And there are no student messages in the chat
     When the tutor clicks the AI suggestion button
-    Then the system should show "No student message found to respond to"
+    Then the system should show "The transfer request could not be completed. Try again."
     And no suggestion should be generated
 
   Scenario: AI respects role-based access
@@ -104,11 +104,11 @@ Feature: AI Assistant for Tutors
     Then the observer should not see the AI Settings button
     And the observer should not see the AI suggestion button
 
-  Scenario: AI suggestion with custom system prompt
+  Scenario: Tutor receives a suggestion shaped by a custom system prompt
     Given the tutor has set a custom system prompt "Focus on practical examples"
     And the student asks "What is social engineering?"
     When the tutor requests an AI suggestion
-    Then the AI response should emphasize practical examples
+    Then the tutor should see a suggestion that emphasizes practical examples
     And the suggestion should align with the custom prompt
 
   Scenario: AI failure handling
@@ -116,5 +116,5 @@ Feature: AI Assistant for Tutors
     And the AI service is temporarily unavailable
     When the tutor clicks the AI suggestion button
     Then the system should show an error message
-    And the error should say "Failed to generate AI response"
+    And the error should say "The transfer request could not be completed. Try again."
     And the tutor should still be able to type manually

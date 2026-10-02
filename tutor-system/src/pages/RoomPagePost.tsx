@@ -315,6 +315,7 @@ const RoomPagePost: React.FC = () => {
                 setJoinError('This room is password protected. Please enter the password.');
             } else if (error.message.includes('Incorrect password')) {
                 setPasswordError('Incorrect password. Please try again.');
+                setRoomPassword('');
                 setShowPasswordPrompt(true); // Keep the prompt open for retry
             } else {
                 setJoinError(error.message || 'Failed to join room');

@@ -2,7 +2,7 @@
  * Build a single room export payload that keeps chat, feedback, and tutor-only AI interaction metadata in one non-overlapping JSON structure.
  */
 
-import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room, UserRole } from '../types';
+import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room, User, UserRole } from '../types';
 import { readAnswerLifecycle, readPublicQuestion } from './transferAssessmentUiAdapter';
 import type { AnswerLifecycleView } from './transferAssessmentUiAdapter';
 
@@ -58,6 +58,7 @@ interface BuildRoomExportDataArgs {
   messageFeedbackStats: Record<string, MessageFeedbackStats>;
   feedbackSummary: ChatExportData['feedback_summary'] | null;
   aiInteractions: AIInteraction[];
+  participants?: Array<Pick<User, 'id' | 'display_name' | 'current_role'>>;
   userRole: UserRole;
   userId: string | null;
 }
@@ -254,6 +255,7 @@ export const buildRoomExportData = ({
   messageFeedbackStats,
   feedbackSummary,
   aiInteractions,
+  participants,
   userRole,
   userId,
 }: BuildRoomExportDataArgs): RoomExportData => {
@@ -287,6 +289,11 @@ export const buildRoomExportData = ({
       exported_at: new Date().toISOString(),
       total_messages: messages.length,
     },
+    participants: (participants ?? []).map(({ id, display_name, current_role }) => ({
+      id,
+      display_name,
+      role: current_role,
+    })),
   };
 
   if (feedbackSummary) {
@@ -301,12 +308,6 @@ export const buildRoomExportData = ({
   exportData.room.ai_model = room.ai_assistant_model;
   exportData.ai_interactions = aiInteractions;
   exportData.export_metadata.total_ai_interactions = aiInteractions.length;
-  exportData.export_metadata.interaction_summary = {
-    accepted: aiInteractions.filter((entry) => entry.tutor_action === 'accepted').length,
-    rejected: aiInteractions.filter((entry) => entry.tutor_action === 'rejected').length,
-    modified: aiInteractions.filter((entry) => entry.tutor_action === 'modified').length,
-    ignored: aiInteractions.filter((entry) => entry.tutor_action === 'ignored').length,
-  };
 
   return exportData;
 };

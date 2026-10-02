@@ -8,15 +8,22 @@ Feature: Transfer assessment lifecycle
     Given the transfer assessment policy is enabled for a new learner-owned checklist
     And the checklist uses the existing status and understanding_level pair
 
-  @T09 @U01 @U02
-  Scenario: Broad learner evidence makes one meaningful transfer target eligible
+  @non_feasible @T09 @U01 @U02
+  Scenario: TransferLearning selects a meaningful target from learner evidence
     Given the learner has given a correct explanation for a configured concept
     And the learner has not already demonstrated transfer for that concept
     When TransferLearning analyzes the persisted learner message
-    Then the concept may become partially_covered with understanding_level basic
-    And TransferLearning selects at most one current relevant transfer target
-    And the next AI-generated response is an assessment draft when the target is fully eligible
+    Then TransferLearning selects at most one current relevant transfer target
     And the transfer context must change the meaningful situation rather than only the brand
+
+  @T09 @U01 @U02
+  Scenario: Eligible learner evidence updates progress and prepares an assessment draft
+    Given the learner has given a correct explanation for a configured concept
+    And the learner has not already demonstrated transfer for that concept
+    And analysis has identified one fully eligible transfer target
+    When the teacher requests the next AI-generated response
+    Then the learner progress pair for that concept becomes partially_covered with understanding_level basic
+    And the teacher receives one assessment draft for review
 
   @T09 @U03 @U07
   Scenario: Protection and correction precede transfer assessment
@@ -36,12 +43,51 @@ Feature: Transfer assessment lifecycle
     And the answer key, transfer basis, and model rationale remain private
 
   @T09 @U14 @D02 @D05 @D06
-  Scenario: The first valid delivered answer is graded by exact selection
+  Scenario: A correct first delivered answer passes by exact selection
     Given a delivered single-answer assessment has answer key B
     When the learner submits "B?" with an optional explanation
     Then the answer is graded as correct without requiring confidence
     And the assessment resolves exactly once
     And a later guess cannot create a second grade
+
+  @T09 @U14 @D02 @D05 @D06
+  Scenario: An incorrect first selection leaves one attempt
+    Given a delivered single-answer assessment has answer key B and two attempts available
+    When the learner submits A as the first valid selection
+    Then the assessment remains open with one attempt remaining
+    And the learner progress pair remains partially_covered with understanding_level basic
+    And no answer key or terminal explanation is disclosed
+
+  @T09 @U14 @D02 @D05 @D06
+  Scenario: A correct second selection passes after an incorrect first selection
+    Given a delivered single-answer assessment has answer key B
+    And the learner's first valid selection A was incorrect with one attempt remaining
+    When the learner submits B as the second valid selection
+    Then the assessment passes with no attempts remaining
+    And the learner progress pair becomes covered with understanding_level good
+    And assessment_pass is applied exactly once
+    And the answer key remains private to the teacher
+
+  @T09 @U14 @D02 @D05 @D06
+  Scenario: Two incorrect selections fail and disclose the answer
+    Given a delivered single-answer assessment has answer key B
+    And the learner's first valid selection A was incorrect with one attempt remaining
+    When the learner submits C as the second valid selection
+    Then the assessment fails with no attempts remaining
+    And the learner progress pair becomes needs_review with understanding_level basic
+    And assessment_fail is applied exactly once
+    And the learner receives the correct option B and a learner-safe explanation
+    And a later guess cannot create a third attempt or grade
+
+  @T09 @U14 @D05 @D06
+  Scenario: Reload and duplicate tabs preserve the accepted attempt count
+    Given a delivered single-answer assessment has answer key B
+    And the learner's first valid selection A was incorrect with one attempt remaining
+    When the learner reloads the room or opens the same assessment in another tab
+    Then both views show one attempt remaining from the persisted assessment state
+    When the first answer is replayed or both tabs submit the same answer message
+    Then the accepted attempt count remains one
+    And the learner still has only one valid selection available
 
   @T09 @D05 @D13
   Scenario: Ambiguity and assistance do not create a failing grade

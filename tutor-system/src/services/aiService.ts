@@ -1036,7 +1036,7 @@ async function getContextMessages(roomId: string): Promise<string[]> {
         .from('messages')
         .select('id')
         .eq('room_id', roomId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: true })
         .limit(5);
 
     return contextMessagesData?.map(m => m.id) || [];

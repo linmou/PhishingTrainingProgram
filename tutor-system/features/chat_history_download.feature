@@ -14,42 +14,35 @@ Feature: Chat History and Room Information Download
 
   Scenario: Download button is visible to all roles
     Given the user is logged in as a "tutor" in the "Phishing 101" room
-    Then the user should see a "Download Chat" button
+    Then the user should see a "Download Chat History" button
     When the user logs out and logs in as a "student" in the "Phishing 101" room
-    Then the user should see a "Download Chat" button
+    Then the user should see a "Download Chat History" button
     When the user logs out and logs in as an "observer" in the "Phishing 101" room
-    Then the user should see a "Download Chat" button
+    Then the user should see a "Download Chat History" button
 
   Scenario: Download chat history as TXT
     Given the user is logged in as a "student" in the "Phishing 101" room
-    When the user clicks the "Download Chat" button
+    When the user clicks the "Download Chat History" button
     And selects the "TXT" format
-    Then a file named "Phishing_101_chat_history.txt" should be downloaded
+    Then a file named "Phishing_101_chat_history_<date>.txt" should be downloaded
     And the file should contain the room title "Phishing 101"
     And the file should contain the messages "Welcome to Phishing 101!" and "Glad to be here!" with timestamps.
 
   Scenario: Download chat history as JSON
     Given the user is logged in as a "tutor" in the "Phishing 101" room
-    When the user clicks the "Download Chat" button
+    When the user clicks the "Download Chat History" button
     And selects the "JSON" format
-    Then a file named "Phishing_101_chat_history.json" should be downloaded
+    Then a file named "Phishing_101_chat_export_<date>.json" should be downloaded
     And the JSON file should be valid
     And the JSON file should contain the room title "Phishing 101"
-    And the JSON file should contain a list of participants including the "tutor", "student", and "observer"
+    And the JSON file should contain a list of currently identifiable participants including the "tutor" and "student"
     And the JSON file should contain a list of messages with content, author, role, and timestamp
-
-  Scenario: Download chat history as PDF
-    Given the user is logged in as an "observer" in the "Phishing 101" room
-    When the user clicks the "Download Chat" button
-    And selects the "PDF" format
-    Then a file named "Phishing_101_chat_history.pdf" should be downloaded
-    And the downloaded file should be a valid PDF document.
 
   Scenario: Downloaded content includes all required information
     Given the user is logged in as a "tutor" in the "Phishing 101" room
     When the user downloads the chat history as "JSON"
     Then the downloaded file should contain the room's creation date
-    And the downloaded file should contain each participant's display name and role
+    And the downloaded file should contain each currently identifiable participant's display name and role
     And each message in the downloaded file should have a unique ID, content, author's display name, author's role, and a precise timestamp.
 
   Scenario: Download includes AI interaction data for tutors
@@ -86,9 +79,9 @@ Feature: Chat History and Room Information Download
 
   Scenario: Download modal shows format options
     Given the user is in the "Phishing 101" room
-    When the user clicks the "Download History" button
+    When the user clicks the "Download Chat History" button
     Then a modal should appear with format options:
-      | Format | Description                                    |
-      | TXT    | Simple text format for easy reading           |
-      | JSON   | Structured data format with full details      |
-    And the modal should have a "Cancel" button to close without downloading 
+      | Format |
+      | TXT    |
+      | JSON   |
+    And the modal should have a "Cancel" button to close without downloading

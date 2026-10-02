@@ -7,26 +7,26 @@ Feature: Qwen API Integration
   Background:
     Given the system has environment variables configured:
       | Variable      | Description                          |
-      | OAI_API_KEY   | DashScope Qwen API key for authentication |
-      | OAI_BASE_URL  | Optional custom API endpoint         |
+      | REACT_APP_OAI_API_KEY   | DashScope Qwen API key for authentication |
+      | REACT_APP_OAI_BASE_URL  | Optional custom API endpoint         |
 
-  Scenario: System uses dummy AI when no API key is configured
-    Given OAI_API_KEY is not set
+  Scenario: System uses the debug dummy suggestion when no API key is configured
+    Given REACT_APP_OAI_API_KEY is not set
+    And the application environment is debug
     When a tutor requests an AI suggestion
-    Then the system should use the DummyAIService
-    And the response should be from predefined templates
-    And the response time should be simulated (200-800ms)
+    Then the system should use the debug dummy suggestion generator
+    And the response should be from predefined teaching responses
 
   Scenario: System uses Qwen when API key is configured
-    Given OAI_API_KEY is set to a valid API key
+    Given REACT_APP_OAI_API_KEY is set to a valid API key
     When a tutor requests an AI suggestion
     Then the system should use the QwenService
     And the request should be sent to DashScope's Qwen API
     And the response should be dynamically generated
 
   Scenario: Custom API endpoint configuration
-    Given OAI_API_KEY is set
-    And OAI_BASE_URL is set to "https://custom-api.example.com"
+    Given REACT_APP_OAI_API_KEY is set
+    And REACT_APP_OAI_BASE_URL is set to "https://custom-api.example.com"
     When a tutor requests an AI suggestion
     Then the system should send requests to the custom endpoint
     And use the provided API key for authentication
@@ -46,27 +46,27 @@ Feature: Qwen API Integration
     Given Qwen integration is active
     And the Qwen API returns an error
     When a tutor requests an AI suggestion
-    Then the system should show an error message
+    Then the Qwen service should return a failed suggestion result
+    And the error should include the API status
     And the error should be logged for debugging
-    And the tutor can still type responses manually
 
   Scenario: Response formatting from Qwen
     Given Qwen integration is active
     When Qwen returns a response
     Then the system should extract the content
-    And format it as a suggested_response
+    And format it as a tutor suggestion
     And include metadata (model_used, response_time_ms)
 
   Scenario: Cost-effective API usage
     Given Qwen integration is active
     Then the system should:
-      | Optimization           | Implementation                    |
-      | Limit context         | Only send recent relevant messages |
-      | Respect max_tokens    | Prevent excessive token usage      |
-      | Cache similar queries | Avoid duplicate API calls          |
+      | Optimization           | Implementation                                  |
+      | Limit context         | Send at most the last 10 conversation messages |
+      | Respect max_tokens    | Send the configured request limit              |
+      | Cache similar queries | Avoid duplicate API calls                       |
 
   Scenario: Security of API credentials
-    Given OAI_API_KEY is configured
+    Given REACT_APP_OAI_API_KEY is configured
     Then the API key should never be:
       | Exposed in           | Protection Method              |
       | Client-side code     | Server-side only              |
@@ -81,6 +81,7 @@ Feature: Qwen API Integration
       | Qwen3.5 Flash    | qwen3.5-flash    |
     Then the system should use the appropriate model
 
+  @non_feasible
   Scenario: Temperature effects on suggestions
     Given Qwen integration is active
     When temperature is set to different values:

@@ -238,12 +238,7 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 tutor_final_response: 'Phishing is a cybercrime...',
             });
             expect(exportedData.export_metadata.total_ai_interactions).toBe(1);
-            expect(exportedData.export_metadata.interaction_summary).toEqual({
-                accepted: 0,
-                rejected: 0,
-                modified: 1,
-                ignored: 0,
-            });
+            expect(exportedData.export_metadata.interaction_summary).toBeUndefined();
         });
 
         it('should exclude AI data for students', async () => {

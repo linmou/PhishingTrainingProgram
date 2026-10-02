@@ -14,6 +14,7 @@ Feature: Real-time Chat System
     When the tutor sends the message "Welcome to the session!"
     Then the student should see the message "Welcome to the session!" from the tutor
     And the observer should see the message "Welcome to the session!" from the tutor
+    And the student rates the latest tutor message with a thumbs up and 4 stars
     When the student sends the message "Hi, glad to be here."
     Then the tutor should see the message "Hi, glad to be here." from the student
     And the observer should see the message "Hi, glad to be here." from the student
@@ -23,6 +24,7 @@ Feature: Real-time Chat System
     When the tutor sends the message "Real-time test message"
     Then the student should see the message "Real-time test message" immediately without refreshing
     And the message should appear in the student's chat window within 2 seconds
+    And the student rates the latest tutor message with a thumbs up and 4 stars
     When the student sends the message "I can see it!"
     Then the tutor should see the message "I can see it!" immediately without refreshing
     And the message should appear in the tutor's chat window within 2 seconds
@@ -38,11 +40,12 @@ Feature: Real-time Chat System
     And the observer should see the updated thumbs down count immediately without refreshing
 
   Scenario: Observer has read-only access to the chat
-    Then the chat input should be disabled for the observer
-    And the send message button should be disabled for the observer
+    Then the chat composer should not be available to the observer
+    And the send message button should not be available to the observer
 
   Scenario: Chat history is preserved
     Given the tutor has sent the message "This is the first message."
+    And the student rates the latest tutor message with a thumbs up and 4 stars
     And the student has sent the message "This is the second message."
     When the student leaves the room
     And the student rejoins the "Phishing 101" room

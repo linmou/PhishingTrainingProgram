@@ -11,15 +11,15 @@ Feature: AI Suggestion Tracking and Analytics
 
   Scenario: Track accepted suggestions
     Given the student sends "How do I identify phishing emails?"
-    And the AI generates suggestion "Look for these red flags: suspicious sender addresses..."
+    And the AI generates suggestion "Look for red flags such as a mismatched sender or a link asking for credentials."
     When the tutor copies the suggestion
     And sends it without modification
     Then the system should record:
       | Field               | Value                                    |
       | tutor_action       | accepted                                 |
-      | parent_message     | How do I identify phishing emails?       |
-      | ai_suggestion      | Look for these red flags...              |
-      | tutor_final_response | Look for these red flags...           |
+      | parent_message_id  | student-message-1                        |
+      | ai_suggestion      | Look for red flags such as a mismatched sender or a link asking for credentials. |
+      | tutor_final_response | Look for red flags such as a mismatched sender or a link asking for credentials. |
       | response_time_ms   | <measured time>                         |
 
   Scenario: Track rejected suggestions
@@ -60,29 +60,6 @@ Feature: AI Suggestion Tracking and Analytics
       | Section          | Contains                              |
       | messages         | All chat messages                     |
       | ai_interactions  | Array of AI suggestion interactions   |
-      | summary          | Statistics on AI usage               |
-
-  Scenario: AI interaction summary in JSON export
-    Given the tutor has:
-      | Accepted suggestions | 5 |
-      | Rejected suggestions | 2 |
-      | Modified suggestions | 3 |
-      | Ignored suggestions  | 1 |
-    When the tutor exports as JSON
-    Then the summary section should show:
-      """json
-      {
-        "ai_summary": {
-          "total_suggestions": 11,
-          "accepted": 5,
-          "rejected": 2,
-          "modified": 3,
-          "ignored": 1,
-          "acceptance_rate": 45.45,
-          "modification_rate": 27.27
-        }
-      }
-      """
 
   Scenario: Export tracking data as TXT
     Given the tutor has used AI suggestions

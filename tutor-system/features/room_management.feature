@@ -110,7 +110,7 @@ Feature: Room Management with Preset Images
     And I am logged in as a student
     When I attempt to join the password-protected room
     Then I should see a password prompt modal
-    And the modal should display "This room is password protected. Please enter the password."
+    And the modal should display "This room is password protected. Please enter the password to continue."
     And the modal should have a password input field
 
   Scenario: Entering correct password for room access

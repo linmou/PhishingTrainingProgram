@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno test --allow-env --allow-net --allow-read --allow-run
 /// <reference lib="dom" />
-// Purpose: verify real 102 Edge/service outputs flow into 103 room UI adapter projections.
+// Test responsible for the 102 Edge/service to 103 room UI handoff, including reviewed-draft validation.
 
 import {
   type AssessmentApiDependencies,
@@ -229,7 +229,7 @@ Deno.test("E03: a real 102 reviewed delivery reaches the 103 public question ada
     ...privateAssessment,
   };
   const rpc = async (name: string) => {
-    if (name !== "send_reviewed_tutor_response_v4") {
+    if (name !== "send_reviewed_transfer_assessment_v1") {
       throw new Error(`unexpected RPC ${name}`);
     }
     return {
@@ -241,7 +241,7 @@ Deno.test("E03: a real 102 reviewed delivery reaches the 103 public question ada
           content: privateAssessment.stem,
           user_role: "tutor",
           parent_message_id: "source-1",
-          response_mode: "tutoring",
+          response_mode: "assessment",
           assessment: storedAssessment,
           created_at: "2026-09-26T00:00:00.000Z",
         },
@@ -256,12 +256,7 @@ Deno.test("E03: a real 102 reviewed delivery reaches the 103 public question ada
   const delivered = await service.sendReviewed({
     reviewedPayload: {
       reason: "The untrusted destination is the relevant clue.",
-      decision: {
-        mode: "assessment",
-        instruction: "transfer_assess",
-        target_item_id: "item-1",
-      },
-      response: "What is the strongest evidence this message is suspicious?",
+      target_item_id: "item-1",
       assessment: privateAssessment,
     },
     roomId: "room-1",
@@ -288,4 +283,34 @@ Deno.test("E03: a real 102 reviewed delivery reaches the 103 public question ada
     "stem",
     "student_id",
   ], "the 102 service DTO contains only public question fields");
+});
+
+Deno.test("E03: the handler rejects a retired tutor decision before calling persistence", async () => {
+  let rpcCalls = 0;
+  const handler = createAssessmentApiHandler(dependencies(async () => {
+    rpcCalls += 1;
+    return { data: {}, error: null };
+  }, true));
+  const response = await handler(new Request("http://localhost/assessment-api", {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: "Bearer test" },
+    body: JSON.stringify({
+      operation: "send_reviewed",
+      request_id: "00000000-0000-4000-8000-000000000002",
+      room_id: "room-1",
+      student_id: "learner-1",
+      checklist_id: "checklist-1",
+      item_id: "item-1",
+      focus_student_message_id: "source-1",
+      reviewed_payload: {
+        reason: "Assess transfer.",
+        decision: { mode: "assessment", instruction: "transfer_assess", target_item_id: "item-1" },
+        response: "Which action is safest?",
+        assessment: {},
+      },
+    }),
+  }));
+  const body = await response.json();
+  assertEquals(body.error.code, "ITEM_VALIDATION_FAILED", "the old shape must fail server validation");
+  assertEquals(rpcCalls, 0, "invalid drafts must not reach the send RPC");
 });
