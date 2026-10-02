@@ -1,5 +1,11 @@
 # Repository Guidelines
 
+## Tool Restrictions
+
+Do not start, stop, inspect, or use Docker. Do not use Docker in any situation.
+
+Supabase CLI commands may trigger Docker, including function download and deployment workflows. If a Supabase CLI operation would trigger Docker, do not use it; use the Supabase MCP tools instead. For Supabase project operations, honor an explicit MCP request over local CLI workflows.
+
 ## Project Structure & Module Organization
 This repository is centered on `tutor-system/`, a React + TypeScript phishing-training app with Supabase. Most contributor work happens there.
 
