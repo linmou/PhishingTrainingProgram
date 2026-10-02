@@ -246,7 +246,7 @@ Your analysis directly impacts student learning paths, so accuracy is critical.`
       if (detection.understanding_level === 'excellent' || detection.understanding_level === 'good') {
         newStatus = 'covered';
       } else if (detection.understanding_level === 'basic') {
-        newStatus = item.status === 'pending' ? 'partially_covered' : 'covered';
+        newStatus = 'partially_covered';
       } else {
         newStatus = 'partially_covered';
       }

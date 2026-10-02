@@ -197,7 +197,10 @@ export class ChecklistService {
       // Insert all items
       const { error: itemsError } = await supabase
         .from('checklist_items')
-        .insert(items);
+        .insert(items.map(item => ({
+          ...item,
+          checklist_id: checklist.id,
+        })));
 
       if (itemsError) {
         throw new Error(`Failed to create checklist items: ${itemsError.message}`);

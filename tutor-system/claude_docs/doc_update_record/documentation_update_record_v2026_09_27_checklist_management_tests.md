@@ -4,6 +4,8 @@ Intent: Record how the legacy checklist regression now tests the current service
 
 Date: 2026-09-27
 
+Historical status: On 2026-10-01, the pending checklist behavior scenarios and matching Jest TODO placeholders below were removed from the active feature and test suite at the user's direction. The list remains here as a record of the prior test update, not as current acceptance requirements.
+
 ## Current Coverage
 
 `src/__tests__/checklist_management.test.ts` now tests the supported `ChecklistService` and `ChecklistIntegration` APIs: template initialization, asynchronous extraction prefixes, item grouping and evidence reads, progress totals, tutor status changes and audit evidence, custom areas, template fallback, transfer learner ownership, AI message coverage, priority updates, and database error behavior.

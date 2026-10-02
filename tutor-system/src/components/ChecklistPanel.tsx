@@ -281,9 +281,11 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
               <div className="evidence-item">
                 <div className="evidence-text">"{item.coverage_evidence[0].evidence_text}"</div>
                 <div className="evidence-meta">
-                  {item.coverage_evidence[0].detection_method} • 
+                  {item.coverage_evidence[0].detection_method === 'ai_analysis' ? 'AI Analysis' : item.coverage_evidence[0].detection_method} • 
                   Confidence: {item.coverage_evidence[0].confidence_score}%
                 </div>
+                <div className="evidence-analysis">{item.coverage_evidence[0].analysis}</div>
+                <div className="evidence-timestamp">{new Date(item.coverage_evidence[0].timestamp).toLocaleString()}</div>
               </div>
             </div>
           )}
@@ -617,6 +619,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <div className="progress-text">
               {progress?.completion_percentage?.toFixed(1) || 0}% Complete 
               ({progress?.covered_areas || 0}/{allItems.length} items)
+            </div>
+            <div className="progress-counts">
+              <span>Covered: {progress?.covered_areas || 0}</span>
+              <span>Partially Covered: {progress?.partially_covered_areas || 0}</span>
+              <span>Pending: {Math.max(0, allItems.length - (progress?.covered_areas || 0) - (progress?.partially_covered_areas || 0))}</span>
             </div>
           </div>
         </div>

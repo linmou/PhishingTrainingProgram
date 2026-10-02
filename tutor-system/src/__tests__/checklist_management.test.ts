@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
  * Test target: src/services/checklistService.ts and its checklist generation contract.
- * Purpose: verify supported room, transfer, progress, evidence, and AI coverage behavior while
- * retaining unresolved feature clauses as explicit pending tests.
+ * Purpose: verify the currently supported checklist service and integration behavior.
  */
 
 import { ChecklistIntegration } from '../services/checklistIntegration';
@@ -491,31 +490,4 @@ describe('Checklist Management System', () => {
     });
   });
 
-  describe('Pending checklist feature coverage', () => {
-    it.todo('PENDING FEATURE: tutor status changes refresh AI guidance and show a reinforcement cue');
-
-    it.todo('PENDING FEATURE: custom items retain their description and appear in regenerated AI prompts');
-
-    it.todo('PENDING FEATURE: individual items can be soft-deleted and excluded from recalculated progress');
-
-    it.todo('PENDING FEATURE: coverage evidence remains available after an item is soft-deleted');
-
-    it.todo('PENDING FEATURE: analytics report time to first coverage, hardest and strongest items, and AI accuracy');
-
-    it.todo('PENDING FEATURE: analytics identify coverage patterns and recommend interventions');
-
-    it.todo('PENDING FEATURE: open panels receive checklist and progress changes without a page refresh');
-
-    it.todo('PENDING FEATURE: template changes regenerate AI prompts with the replacement items');
-
-    it.todo('PENDING FEATURE: understanding and behavior objectives remain separate and mixed concepts split into items');
-
-    it.todo('PENDING FEATURE: legacy room checklists preserve separate progress for each learner across sessions');
-
-    it.todo('PENDING FEATURE: tutors can set understanding levels and metadata controls adapt when optional fields are absent');
-
-    it.todo('PENDING FEATURE: mastery regression alerts include recommendations and an item reset action');
-
-    it.todo('PENDING FEATURE: AI outages show Manual Mode and queue updates for synchronization without interrupting the session');
-  });
 });
