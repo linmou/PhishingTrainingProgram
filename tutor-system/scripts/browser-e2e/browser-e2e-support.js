@@ -28,9 +28,9 @@ const PRODUCTION_ROOMS = Object.freeze({
   'checklist-management': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
   'checklist-coverage': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
   'guard-mode': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
-  'assessment-delivery': { id: '4b15c7b9-a0f0-4dc5-bc53-e23b4ae08d0d', title: 'Demo: Click Impulse — Correct Safe Action' },
-  'assessment-answer-pass': { id: '4b15c7b9-a0f0-4dc5-bc53-e23b4ae08d0d', title: 'Demo: Click Impulse — Correct Safe Action' },
-  'assessment-answer-failure': { id: '4b15c7b9-a0f0-4dc5-bc53-e23b4ae08d0d', title: 'Demo: Click Impulse — Correct Safe Action' }
+  'assessment-delivery': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' },
+  'assessment-answer-pass': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' },
+  'assessment-answer-failure': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' }
 });
 function roomFixtures(env = process.env) {
   if (!env.E2E_ROOM_FIXTURES_JSON) return (env.E2E_TARGET || TARGET) === 'production' ? PRODUCTION_ROOMS : STAGING_ROOMS;
@@ -49,7 +49,7 @@ function configFromEnv(env = process.env) {
   const anonKey = env.E2E_SUPABASE_ANON_KEY || (target === 'production' ? env.REACT_APP_SUPABASE_ANON_KEY : env.REACT_APP_SUPABASE_STAGING_ANON_KEY);
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
   const accessToken = env.SUPABASE_ACCESS_TOKEN;
-  if (!appUrl || !projectUrl || !anonKey || !serviceKey || !accessToken || !env.REACT_APP_OAI_API_KEY || !env.REACT_APP_OAI_BASE_URL) {
+  if (!appUrl || !projectUrl || !anonKey || !serviceKey || !accessToken || !env.OAI_API_KEY || !env.OAI_BASE_URL) {
     throw new Error('Set E2E_APP_URL, E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ACCESS_TOKEN, and provider settings.');
   }
   const expectedProjectUrl = `https://${projectRef}.supabase.co`;
@@ -134,9 +134,29 @@ async function openRoom(page, appUrl, roomId) {
 }
 
 async function sendStudentMessage(page, content) {
-  await page.locator('textarea.comment-input-field').fill(content);
-  await page.locator('form.comment-input-form button[type="submit"]').click();
-  await page.waitForFunction(() => document.querySelector('textarea.comment-input-field')?.value === '');
+  const reminder = page.locator('[data-testid="rating-reminder-backdrop"]');
+  const input = page.locator('textarea.comment-input-field');
+  const send = page.locator('form.comment-input-form button[type="submit"]');
+  const completeRating = async () => {
+    await reminder.locator('.rating-reminder-choice button').first().click();
+    await reminder.locator('.rating-reminder-stars button').nth(3).click();
+    await reminder.locator('.rating-reminder-submit').click();
+    await reminder.waitFor({ state: 'hidden', timeout: TIMEOUT });
+  };
+
+  if (await reminder.isVisible()) await completeRating();
+  await input.fill(content);
+  await send.click();
+  await page.waitForFunction(() =>
+    document.querySelector('textarea.comment-input-field')?.value === '' ||
+    document.querySelector('[data-testid="rating-reminder-backdrop"]') !== null,
+  null, { timeout: TIMEOUT });
+  if (await reminder.isVisible()) {
+    await completeRating();
+    await send.click();
+    await page.waitForFunction(() => document.querySelector('textarea.comment-input-field')?.value === '',
+      null, { timeout: TIMEOUT });
+  }
 }
 
 async function existingRoom(client, kind, tutorId) {

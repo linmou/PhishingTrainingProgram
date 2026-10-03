@@ -29,12 +29,19 @@ const TRANSFER_ASSESSMENT_SYSTEM_PROMPT = [
 ].join('\n');
 
 const TRANSFER_ANALYSIS_SYSTEM_PROMPT = [
-  'Classify this persisted learner message against only the listed room learning targets.',
-  'Return JSON with events, requires_protection, requires_correction, and explanation.',
-  'Each event has item_id, kind, and explanation. Kind is initial_signal, post_repair_signal, spontaneous_transfer, or contradiction.',
-  'Include every supported target, but omit unsupported claims. Do not treat tutor statements as learner evidence.',
-  'Set requires_protection or requires_correction when the learner message needs an immediate safety or factual response.',
-  'Never invent target IDs. Return JSON only.',
+  'Read dialogue_history in order to understand the room discussion. Each turn identifies its source, user_role, user_id when present, and speaker_name for setup dialogue. The focus learner is focus_student_id. Judge only the current message identified by evidence_message_id; earlier turns provide context, not new status evidence.',
+  'Judge the current learner message against the listed learning targets (items). Each item includes its current status.',
+  'An event is evidence in this learner message that changes one target. Return at most one event per item, and only when the learner demonstrates the claim in their own words. A keyword, a guess, or a tutor statement is not evidence.',
+  'Choose kind from these rules:',
+  '- initial_signal: an item is pending and the learner shows initial understanding of it.',
+  '- post_repair_signal: an item needs_review and the learner now shows corrected understanding of it.',
+  '- spontaneous_transfer: the learner independently applies the target concept with sound reasoning in a concrete situation beyond repeating the target text; this can mark an item covered.',
+  '- contradiction: an item is partially_covered or covered and the learner now states a conflicting or unsafe understanding of it.',
+  'Omit items without supported evidence. Use an empty events array when there is no supported status change.',
+  'requires_protection is true only when the message calls for an immediate safety response. requires_correction is true only when a factual mistake calls for immediate correction. Either flag defers a new assessment; neither flag changes status.',
+  'Every event must include evidence_message_id equal to the current message ID and evidence_quote copied exactly from the current message. Never cite another speaker or an earlier message as evidence.',
+  'Return exactly one JSON object in this shape: {"events":[{"item_id":"ID from items","kind":"initial_signal","evidence_message_id":"current message ID","evidence_quote":"exact words from current message","explanation":"brief reason"}],"requires_protection":false,"requires_correction":false,"explanation":"brief overall reason"}.',
+  'Replace the example values with your judgement. Use only item IDs from items and one of the four defined kinds. Include all four top-level fields, with boolean flags. Return JSON only, without markdown.',
 ].join('\n');
 
 export interface VerifiedPrincipal {
@@ -260,8 +267,8 @@ async function recordProviderAttempt(
 }
 
 function providerConfig(deps: AssessmentApiDependencies): { key: string; baseUrl: string; model: string } {
-  const key = deps.env('REACT_APP_OAI_API_KEY');
-  const baseUrl = deps.env('REACT_APP_OAI_BASE_URL');
+  const key = deps.env('OAI_API_KEY');
+  const baseUrl = deps.env('OAI_BASE_URL');
   const model = deps.env('OAI_MODEL');
   if (!key || !baseUrl || model !== PROVIDER_MODEL) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
   return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
@@ -288,8 +295,15 @@ async function analyzeMessage(
   }
   const message = asRecord(scope.message);
   const items = scope.items;
+  const history = scope.dialogue_history;
+  const focusIndex = Array.isArray(history)
+    ? history.findIndex((turn: unknown) => asRecord(turn).id === messageId)
+    : -1;
   if (message.id !== messageId || message.room_id !== roomId || message.user_role !== 'student' ||
-      message.user_id !== scope.student_id || !Array.isArray(items) || !items.length) {
+      message.user_id !== scope.student_id || !Array.isArray(items) || !items.length ||
+      focusIndex < 0 || asRecord(history[focusIndex]).user_id !== scope.student_id ||
+      asRecord(history[focusIndex]).user_role !== 'student' ||
+      asRecord(history[focusIndex]).content !== message.content) {
     throw new Error('INVALID_SCOPE');
   }
   const provider = providerConfig(deps);
@@ -302,7 +316,11 @@ async function analyzeMessage(
         model: provider.model,
         messages: [
           { role: 'system', content: TRANSFER_ANALYSIS_SYSTEM_PROMPT },
-          { role: 'user', content: JSON.stringify({ message, items }) },
+          { role: 'user', content: JSON.stringify({
+            focus_student_id: scope.student_id,
+            evidence_message_id: messageId,
+            message, items, dialogue_history: history.slice(0, focusIndex + 1),
+          }) },
         ],
         temperature: 0,
         max_tokens: 600,
@@ -328,6 +346,9 @@ async function analyzeMessage(
   if (!Array.isArray(analysis.events) || analysis.events.some((event: unknown) => {
     const evidence = asRecord(event);
     return !knownIds.has(evidence.item_id) || !allowedKinds.has(evidence.kind) ||
+      evidence.evidence_message_id !== messageId ||
+      typeof evidence.evidence_quote !== 'string' || !evidence.evidence_quote.trim() ||
+      typeof message.content !== 'string' || !message.content.includes(evidence.evidence_quote) ||
       typeof evidence.explanation !== 'string' || !evidence.explanation.trim();
   }) || typeof analysis.requires_protection !== 'boolean' ||
       typeof analysis.requires_correction !== 'boolean') {

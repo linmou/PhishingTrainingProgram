@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// File: scripts/browser-e2e.js. Purpose: verify target project selection, preflight, and cleanup handling.
+// File: scripts/browser-e2e.js and browser-e2e/browser-e2e-support.js. Purpose: verify project selection, workflow cleanup, and learner message submission.
 'use strict';
 
 const test = require('node:test');
@@ -7,7 +7,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
+const { chromium } = require('playwright');
+const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 
 const env = (target = 'staging') => ({
@@ -17,8 +18,8 @@ const env = (target = 'staging') => ({
   E2E_SUPABASE_ANON_KEY: `${target}-anon-key`,
   SUPABASE_SERVICE_ROLE_KEY: `${target}-service-key`,
   SUPABASE_ACCESS_TOKEN: 'management-token',
-  REACT_APP_OAI_API_KEY: 'provider-key',
-  REACT_APP_OAI_BASE_URL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+  OAI_API_KEY: 'provider-key',
+  OAI_BASE_URL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 });
 
 test('accepts either named target and local app origin', () => {
@@ -37,7 +38,7 @@ test('rejects production or another Supabase project', () => {
 });
 
 test('requires credentials for database and provider evidence', () => {
-  for (const key of ['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ACCESS_TOKEN', 'REACT_APP_OAI_API_KEY']) {
+  for (const key of ['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ACCESS_TOKEN', 'OAI_API_KEY']) {
     assert.throws(() => configFromEnv({ ...env(), [key]: '' }), /Set E2E_APP_URL/);
   }
 });
@@ -161,6 +162,67 @@ test('cleanup runs after a workflow failure and its failure fails the workflow',
     assert.equal(report.results.broken.status, 'fail');
     assert.match(report.results.broken.cleanup[0].error, /cleanup failed/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('learner sends once with a prior, prompted, or no required rating', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    for (const initiallyOpen of [true, false, null]) {
+      const page = await browser.newPage();
+      await page.setContent(`
+        <style>.rating-reminder-backdrop { position: fixed; inset: 0; background: white; z-index: 1; }</style>
+        <form class="comment-input-form">
+          <textarea class="comment-input-field"></textarea><button type="submit">Send</button>
+        </form>
+        <template id="reminder-template">
+          <div class="rating-reminder-backdrop" data-testid="rating-reminder-backdrop">
+            <section role="alertdialog" aria-label="Required rating">
+              <div class="rating-reminder-choice"><button type="button">Helpful</button></div>
+              <div class="rating-reminder-stars">
+                <button type="button">1</button><button type="button">2</button>
+                <button type="button">3</button><button type="button">4</button>
+              </div>
+              <button type="button" class="rating-reminder-submit">Submit rating</button>
+            </section>
+          </div>
+        </template>
+        <script>
+          window.sent = [];
+          window.submitAttempts = 0;
+          window.rated = ${initiallyOpen === null};
+          window.showRating = () => {
+            if (document.querySelector('[data-testid="rating-reminder-backdrop"]')) return;
+            const reminder = document.querySelector('#reminder-template').content.firstElementChild.cloneNode(true);
+            let useful = false;
+            let stars = 0;
+            reminder.querySelector('.rating-reminder-choice button').onclick = () => { useful = true; };
+            reminder.querySelectorAll('.rating-reminder-stars button').forEach((button, index) => {
+              button.onclick = () => { stars = index + 1; };
+            });
+            reminder.querySelector('.rating-reminder-submit').onclick = () => {
+              if (useful && stars === 4) { window.rated = true; reminder.remove(); }
+            };
+            document.body.append(reminder);
+          };
+          document.querySelector('form').onsubmit = (event) => {
+            event.preventDefault();
+            window.submitAttempts += 1;
+            if (!window.rated) { window.showRating(); return; }
+            const input = document.querySelector('textarea');
+            window.sent.push(input.value);
+            input.value = '';
+          };
+        </script>
+      `);
+      if (initiallyOpen) await page.evaluate(() => window.showRating());
+      await sendStudentMessage(page, 'Check the official app.');
+      const result = await page.evaluate(() => ({ sent: window.sent, rated: window.rated, attempts: window.submitAttempts }));
+      assert.deepEqual(result.sent, ['Check the official app.']);
+      assert.equal(result.rated, true);
+      assert.equal(result.attempts, initiallyOpen === false ? 2 : 1);
+      await page.close();
+    }
+  } finally { await browser.close(); }
 });
 
 test('independent learner fixture keeps public question ID separate from assessment ID', async () => {

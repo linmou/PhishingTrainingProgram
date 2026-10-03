@@ -85,11 +85,21 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   let evidenceApplied = false;
   let delivered = false;
   let providerCalls = 0;
+  let analysisInput: Record<string, unknown> = {};
   const scope = providerScope();
+  const dialogueHistory = [
+    { id: 'prepop-room-1-0', source: 'room_setup', user_id: null, user_role: 'tutor', speaker_name: 'Tutor', content: 'Check the sender first.' },
+    { id: 'prepop-room-1-1', source: 'room_setup', user_id: null, user_role: 'student', speaker_name: 'Scenario learner', content: 'The sender name looks real.' },
+    { id: 'earlier-focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', speaker_name: null, content: 'I am unsure about this link.' },
+    { id: 'earlier-1', source: 'message', user_id: 'other-learner', user_role: 'student', speaker_name: null, content: 'I clicked the link.' },
+    { id: 'repair-1', source: 'message', user_id: 'teacher-1', user_role: 'tutor', speaker_name: null, content: 'Use the official app instead.' },
+    { id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', speaker_name: null, content: 'I would verify through the official app.' },
+    { id: 'later-1', source: 'message', user_id: 'teacher-1', user_role: 'tutor', speaker_name: null, content: 'Feedback posted after the learner answer.' },
+  ];
   const deps: AssessmentApiDependencies = {
     ...dependencies(),
     env: (name) => ({
-      REACT_APP_OAI_API_KEY: 'test-key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       operations.push(name);
@@ -105,6 +115,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
           room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
           message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
           items: [{ id: 'item-1', area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical', status: 'pending', understanding_level: 'none' }],
+          dialogue_history: dialogueHistory,
         }, error: null };
       }
       if (name === 'apply_transfer_message_analysis_v1') {
@@ -151,9 +162,11 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
       providerCalls += 1;
       const prompt = JSON.stringify(JSON.parse(String(init?.body)));
       if (providerCalls === 1) {
+        analysisInput = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
         assert(prompt.includes('Verify independently'));
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-          events: [{ item_id: 'item-1', kind: 'initial_signal', explanation: 'Uses an independent source.' }],
+          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_message_id: 'focus-1',
+            evidence_quote: 'verify through the official app', explanation: 'Uses an independent source.' }],
           requires_protection: false, requires_correction: false,
         }) } }] }), { status: 200 });
       }
@@ -168,6 +181,10 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   assertEquals(init.data.checklist_id, 'checklist-1');
   const analysis = await (await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }))).json();
   assertEquals(analysis.data.applied[0].status, 'partially_covered');
+  assertEquals(analysisInput.focus_student_id, 'learner-1');
+  assertEquals(analysisInput.evidence_message_id, 'focus-1');
+  assertEquals(analysisInput.dialogue_history, dialogueHistory.slice(0, -1));
+  assertEquals((analysisInput.message as Record<string, unknown>).id, 'focus-1');
   const prepared = await (await handler(request('prepare_turn', { room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1' }))).json();
   assertEquals(prepared.data.assessment_draft.target_item_id, 'item-1');
   const sent = await (await handler(request('send_reviewed', { room_id: 'room-1', student_id: 'learner-1',
@@ -179,6 +196,47 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   assertEquals(processed.data.answer_outcome, 'passed');
   assertEquals(providerCalls, 2);
   assert(operations.indexOf('apply_transfer_message_analysis_v1') < operations.indexOf('prepare_transfer_assessment_context_v1'));
+});
+
+// Test responsible for assessment-api/index.ts: reject a status event grounded in another learner's historical words.
+Deno.test('rejects historical speaker evidence before updating learner status', async () => {
+  for (const evidenceMessageId of ['earlier-1', 'focus-1']) {
+    let applyCalls = 0;
+    const deps = dependencies({
+      env: (name) => ({
+        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      } as Record<string, string>)[name],
+      fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_message_id: evidenceMessageId,
+          evidence_quote: 'I clicked the link.', explanation: 'The learner clicked the link.' }],
+        requires_protection: false, requires_correction: false, explanation: 'Evidence from history.',
+      }) } }] }), { status: 200 }),
+    });
+    deps.rpc = async (name) => {
+      if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+        room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+        message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
+        items: [{ id: 'item-1', area_text: 'Verify independently', status: 'pending' }],
+        dialogue_history: [
+          { id: 'earlier-1', source: 'message', user_id: 'other-learner', user_role: 'student', speaker_name: null, content: 'I clicked the link.' },
+          { id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', speaker_name: null, content: 'I would verify through the official app.' },
+        ],
+      }, error: null };
+      if (name === 'apply_transfer_message_analysis_v1') {
+        applyCalls += 1;
+        return { data: { applied: [] }, error: null };
+      }
+      throw new Error(`unexpected RPC ${name}`);
+    };
+
+    const response = await createAssessmentApiHandler(deps)(request('analyze_message', {
+      room_id: 'room-1', message_id: 'focus-1',
+    }));
+    const payload = await response.json();
+    assertEquals(response.status, 502);
+    assertEquals(payload.error.code, 'AI_OUTPUT_INVALID');
+    assertEquals(applyCalls, 0);
+  }
 });
 
 // Test responsibility: verify that the production Edge module passes Deno's type checker.
@@ -295,9 +353,9 @@ Deno.test('returns the exact public assessment target and strips private fields'
 
 Deno.test('requires every configured provider setting with no model fallback', async () => {
   const configured = {
-    REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
   };
-  for (const missing of ['REACT_APP_OAI_API_KEY', 'REACT_APP_OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
+  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
     let providerCalls = 0;
     let auditCalls = 0;
     const settings = { ...configured } as Record<string, string | undefined>;
@@ -331,7 +389,7 @@ Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and p
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -366,7 +424,7 @@ Deno.test('returns a valid second response after one format repair', async () =>
   const requests: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -399,7 +457,7 @@ Deno.test('performs one format-only repair and rejects a second invalid result',
   let providerCalls = 0;
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -423,7 +481,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
   for (const scenario of ['truncated', 'http', 'network']) {
     let providerCalls = 0;
     const handler = createAssessmentApiHandler(dependencies({
-      env: (name) => ({ REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
       rpc: async (name) => name === 'prepare_transfer_turn_v1'
         ? { data: providerScope(), error: null }
         : { data: 'audit', error: null },
@@ -446,7 +504,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
 Deno.test('fails preparation without retry when provider audit persistence fails', async () => {
   let providerCalls = 0;
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
     rpc: async (name) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       return { data: null, error: { message: 'audit insert failed' } };
@@ -470,14 +528,15 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
   let assessmentCalls = 0;
   const base = dependencies({
     env: (name) => ({
-      REACT_APP_OAI_API_KEY: 'server-secret', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const body = JSON.parse(String(init?.body));
-      if (body.messages[0].content.includes('Classify this persisted learner message')) {
+      if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
         analysisCalls += 1;
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-          events: [{ item_id: 'item-1', kind: 'initial_signal', explanation: 'Learner verifies independently.' }],
+          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_message_id: 'focus-1',
+            evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' }],
           requires_protection: false, requires_correction: false, explanation: 'Relevant evidence.',
         }) } }] }), { status: 200 });
       }
@@ -490,10 +549,14 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
       analysis_complete: analyzed, room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
       items: [{ id: 'item-1', area_text: 'Verify independently', status: analyzed ? 'partially_covered' : 'pending' }],
+      dialogue_history: [
+        { id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', speaker_name: null, content: 'I would verify through the official app.' },
+      ],
     }, error: null };
     if (name === 'apply_transfer_message_analysis_v1') {
       assertEquals((args.p_analysis as Record<string, unknown>).events, [
-        { item_id: 'item-1', kind: 'initial_signal', explanation: 'Learner verifies independently.' },
+        { item_id: 'item-1', kind: 'initial_signal', evidence_message_id: 'focus-1',
+          evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' },
       ]);
       analyzed = true;
       return { data: { applied: [{ status: 'partially_covered' }] }, error: null };
@@ -530,7 +593,7 @@ Deno.test('explicit no-assessment result avoids the provider, while an eligible 
 
   const failing = dependencies({
     env: (name) => ({
-      REACT_APP_OAI_API_KEY: 'key', REACT_APP_OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
     } as Record<string, string>)[name],
     fetch: async () => { calls += 1; throw new Error('offline'); },
   });
