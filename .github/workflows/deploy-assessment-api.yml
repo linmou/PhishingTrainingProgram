@@ -24,8 +24,8 @@ jobs:
         working-directory: tutor-system
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      REACT_APP_OAI_API_KEY: ${{ secrets.REACT_APP_OAI_API_KEY }}
-      REACT_APP_OAI_BASE_URL: ${{ secrets.REACT_APP_OAI_BASE_URL }}
+      OAI_API_KEY: ${{ secrets.OAI_API_KEY }}
+      OAI_BASE_URL: ${{ secrets.OAI_BASE_URL }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -34,8 +34,8 @@ jobs:
         shell: bash
         run: |
           test -n "$SUPABASE_ACCESS_TOKEN"
-          test -n "$REACT_APP_OAI_API_KEY"
-          test -n "$REACT_APP_OAI_BASE_URL"
+          test -n "$OAI_API_KEY"
+          test -n "$OAI_BASE_URL"
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
@@ -60,8 +60,8 @@ jobs:
           secrets_file="$(mktemp)"
           trap 'rm -f "$secrets_file"' EXIT
           {
-            printf 'REACT_APP_OAI_API_KEY=%s\n' "$REACT_APP_OAI_API_KEY"
-            printf 'REACT_APP_OAI_BASE_URL=%s\n' "$REACT_APP_OAI_BASE_URL"
+            printf 'OAI_API_KEY=%s\n' "$OAI_API_KEY"
+            printf 'OAI_BASE_URL=%s\n' "$OAI_BASE_URL"
             printf 'OAI_MODEL=qwen3.5-flash\n'
             printf 'TRANSFER_ASSESSMENT_ENABLED=true\n'
           } > "$secrets_file"
@@ -72,3 +72,9 @@ jobs:
         env:
           PROJECT_REF: ciubrzggdqesgvfkpolj
         run: supabase functions deploy assessment-api --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
+
+      - name: Deploy ai-api for localStorage/offline sessions
+        shell: bash
+        env:
+          PROJECT_REF: ciubrzggdqesgvfkpolj
+        run: supabase functions deploy ai-api --project-ref "$PROJECT_REF" --no-verify-jwt --use-api

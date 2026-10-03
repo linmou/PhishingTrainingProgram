@@ -4,9 +4,20 @@ import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
 
-// Get OpenAI configuration from environment variables
-const OAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
-const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://api.openai.com/v1';
+interface AiCompletionResponse {
+    content: string;
+    model?: string;
+}
+
+const invokeAiApi = async (body: Record<string, unknown>): Promise<AiCompletionResponse> => {
+    const { data, error } = await (supabase as any).functions.invoke('ai-api', { body });
+    if (error) throw new Error(error.message || 'AI Edge Function request failed');
+    const payload = data?.data ?? data;
+    if (!payload || typeof payload.content !== 'string') {
+        throw new Error('AI Edge Function returned an invalid response');
+    }
+    return payload as AiCompletionResponse;
+};
 
 // Available AI models for the dummy service
 export const AI_MODELS = {
@@ -137,28 +148,13 @@ export class OpenAIService {
                 }
             ];
 
-            // Make API request
-            const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OAI_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: config.model_name,
-                    messages,
-                    temperature: config.temperature,
-                    max_tokens: config.max_tokens
-                })
+            const data = await invokeAiApi({
+                messages,
+                temperature: config.temperature,
+                max_tokens: config.max_tokens,
+                enable_thinking: false
             });
-
-            if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`OpenAI API error: ${response.status} - ${error}`);
-            }
-
-            const data = await response.json();
-            const responseContent = data.choices[0]?.message?.content || '';
+            const responseContent = data.content;
             const responseTime = Date.now() - startTime;
 
             return {
@@ -212,27 +208,13 @@ export class TutorSuggestionService {
                 }
             ];
 
-            const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OAI_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: config.model_name,
-                    messages,
-                    temperature: 0.7,
-                    max_tokens: 100
-                })
+            const data = await invokeAiApi({
+                messages,
+                temperature: 0.7,
+                max_tokens: 100,
+                enable_thinking: false
             });
-
-            if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`OpenAI API error: ${response.status} - ${error}`);
-            }
-
-            const data = await response.json();
-            const suggestion = data.choices[0]?.message?.content || '';
+            const suggestion = data.content;
 
             return {
                 suggestion,
@@ -717,22 +699,12 @@ export const generateTutorSuggestion = async (
     console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
     // Generate tutor suggestion
-    let suggestionResult;
-    if (OAI_API_KEY) {
-        // Use real OpenAI service for tutor suggestions
-        suggestionResult = await TutorSuggestionService.generateSuggestion(
-            conversationHistory,
-            aiConfig
-        );
-    } else {
-        // Use dummy service for tutor suggestions
-        const lastMessage = conversationHistory[conversationHistory.length - 1];
-        const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
-        const suggestion = DummyAIService.generateSuggestedResponse(category);
-        suggestionResult = { suggestion, success: true };
-    }
+    const suggestionResult = await TutorSuggestionService.generateSuggestion(
+        conversationHistory,
+        aiConfig
+    );
 
-    console.log('Suggestion Service used:', OAI_API_KEY ? 'OpenAI API' : 'Dummy Service');
+    console.log('Suggestion Service used: Supabase Edge Function');
 
     // Get context messages for tracking
     const { data: contextMessagesData } = await supabase
@@ -768,4 +740,4 @@ export const recordAISuggestionFeedback = async (
     console.log('📝 AI feedback tracking simplified - using existing message patterns');
     // Feedback is tracked implicitly through whether tutors use AI suggestions or not
     // Can be implemented later with analytics on message patterns if needed
-}; 
+};

@@ -2,7 +2,7 @@
  * LLM-based extraction service for checklist items from system prompts using Qwen.
  */
 
-import { QwenService, DummyAIService, DEFAULT_AI_MODEL } from './aiService';
+import { QwenService, DEFAULT_AI_MODEL } from './aiService';
 import { AIAssistantConfig } from '../types';
 
 export interface ExtractionResult {
@@ -26,16 +26,9 @@ const EXTRACTION_CONFIG: AIAssistantConfig = {
 };
 
 export class LLMExtractionService {
-  private static hasQwenKey = !!process.env.REACT_APP_OAI_API_KEY;
-
   /** Single method to extract checklist items from system prompts using Qwen. */
   static async extractFromSystemPrompt(systemPrompt: string): Promise<ExtractionResult> {
     if (!systemPrompt || systemPrompt.trim().length === 0) {
-      return { understanding: [], behavior: [] };
-    }
-
-    if (!this.hasQwenKey) {
-      console.warn('Qwen API key not found, falling back to empty result');
       return { understanding: [], behavior: [] };
     }
 
@@ -327,11 +320,6 @@ ${systemPrompt}
   static async categorizeTemplateItems(items: string[]): Promise<ExtractionResult> {
     if (!items || items.length === 0) {
       return { understanding: [], behavior: [] };
-    }
-
-    if (!this.hasQwenKey) {
-      // Simple fallback categorization without LLM
-      return this.simpleCategorization(items);
     }
 
     try {

@@ -65,8 +65,6 @@ const appendTutorDecisionRepairInstruction = (
 // CONSTANTS AND TYPES
 // ============================================================================
 
-const getOAIAPIKey = (): string | undefined => process.env.REACT_APP_OAI_API_KEY;
-const OAI_BASE_URL = process.env.REACT_APP_OAI_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
@@ -79,7 +77,27 @@ export const MULTI_AGENT_REPAIR_INSTRUCTION =
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
-const shouldAllowDummyAISuggestions = (): boolean => getRuntimeEnvironment() === 'debug' && !getOAIAPIKey();
+const shouldAllowDummyAISuggestions = (): boolean =>
+    getRuntimeEnvironment() === 'debug' && process.env.REACT_APP_USE_DUMMY_AI === 'true';
+
+interface AiCompletionResponse {
+    content: string;
+    model?: string;
+    finish_reason?: string | null;
+}
+
+const invokeAiApi = async (body: Record<string, unknown>): Promise<AiCompletionResponse> => {
+    const { data, error } = await (supabase as any).functions.invoke('ai-api', { body });
+    if (error) {
+        throw new Error(error.message || 'AI Edge Function request failed');
+    }
+
+    const payload = data?.data ?? data;
+    if (!payload || typeof payload.content !== 'string') {
+        throw new Error('AI Edge Function returned an invalid response');
+    }
+    return payload as AiCompletionResponse;
+};
 
 interface ParameterOverrides {
     role?: { role: 'low' | 'high' };
@@ -564,33 +582,18 @@ export class QwenService {
                 }
             ];
 
-            const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getOAIAPIKey()}`
-                },
-                body: JSON.stringify({
-                    model: QWEN_MODEL,
-                    messages,
-                    temperature: config.temperature,
-                    max_tokens: config.max_tokens,
-                    enable_thinking: false
-                })
+            const data = await invokeAiApi({
+                messages,
+                temperature: config.temperature,
+                max_tokens: config.max_tokens,
+                enable_thinking: false
             });
-
-            if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`Qwen API error: ${response.status} - ${error}`);
-            }
-
-            const data = await response.json();
-            const responseContent = stripWrappedQuotes(data.choices[0]?.message?.content || '');
+            const responseContent = stripWrappedQuotes(data.content || '');
             const responseTime = Date.now() - startTime;
 
             return {
                 content: responseContent,
-                model_used: QWEN_MODEL,
+                model_used: data.model || QWEN_MODEL,
                 response_time_ms: responseTime,
                 success: true
             };
@@ -676,34 +679,18 @@ export class TutorSuggestionService {
 
             for (let attempt = 0; attempt < MAX_TUTOR_DECISION_ATTEMPTS; attempt += 1) {
                 try {
-                    const response = await fetch(`${OAI_BASE_URL}/chat/completions`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${getOAIAPIKey()}`
-                        },
-                        body: JSON.stringify({
-                            model: QWEN_MODEL,
-                            messages: requestMessages,
-                            temperature,
-                            max_tokens: maxTokens,
-                            enable_thinking: false,
-                            response_format: TUTOR_DECISION_RESPONSE_FORMAT
-                        })
+                    const data = await invokeAiApi({
+                        messages: requestMessages,
+                        temperature,
+                        max_tokens: maxTokens,
+                        enable_thinking: false,
+                        response_format: TUTOR_DECISION_RESPONSE_FORMAT
                     });
-
-                    if (!response.ok) {
-                        const error = await response.text();
-                        throw new Error(`Qwen API error: ${response.status} - ${error}`);
-                    }
-
-                    const data = await response.json();
-                    const choice = data.choices?.[0];
-                    if (choice?.finish_reason === 'length') {
+                    if (data.finish_reason === 'length') {
                         // A truncated decision is unparsable; retry rather than presenting a partial envelope.
                         throw new Error('AI response was truncated before the tutor decision JSON was complete');
                     }
-                    const decision = parseTutorActionDecision(choice?.message?.content || '');
+                    const decision = parseTutorActionDecision(data.content || '');
 
                     return {
                         suggestion: decision.suggested_response,
@@ -990,28 +977,8 @@ async function generateSuggestionWithService(
     const lastMessage = conversationHistory[conversationHistory.length - 1];
     const category = lastMessage ? DummyAIService.determineResponseCategory(lastMessage.content) : 'educational';
 
-    if (getOAIAPIKey()) {
-        console.log('Using Qwen API for tutor suggestions (ecological path)');
-        const result = await TutorSuggestionService.generateSuggestion(
-            conversationHistory,
-            aiConfig,
-            options
-        );
-
-        if (result.success) {
-            return result;
-        }
-
-        console.warn('Qwen tutor suggestion failed:', result.error);
-        return result;
-    }
-
     if (!shouldAllowDummyAISuggestions()) {
-        return {
-            suggestion: '',
-            success: false,
-            error: 'AI suggestions require a valid Qwen API configuration'
-        };
+        return TutorSuggestionService.generateSuggestion(conversationHistory, aiConfig, options);
     }
 
     console.log('Using Dummy Service for tutor suggestions');
