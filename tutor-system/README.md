@@ -154,17 +154,17 @@ Create a `.env.local` file in the root directory:
 REACT_APP_SUPABASE_URL=your_supabase_project_url
 REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Existing tutor provider settings, also configured as staging Edge Function secrets
-REACT_APP_OAI_API_KEY=your_dashscope_api_key_here
-REACT_APP_OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+# Tutor provider settings (Supabase Edge Function secrets only)
+OAI_API_KEY=your_dashscope_api_key_here
+OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OAI_MODEL=qwen3.5-flash
 ```
 
-`REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` are the existing general tutor settings and are exposed in the CRA browser bundle. The assessment Edge Function uses the same provider values from its own Supabase secrets. Its `TRANSFER_ASSESSMENT_ENABLED` flag defaults to `true`.
+`OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` are read only by Supabase Edge Functions. The React bundle sends authenticated chat payloads to those functions and never receives the provider credentials. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true`.
 
 ### Assessment API Deployment
 
-Run **Deploy Assessment API** from GitHub Actions to deploy the function to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `REACT_APP_OAI_API_KEY`, and `REACT_APP_OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the matching provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys with gateway JWT verification disabled because the app uses its application identity. Apply the assessment database migration and provision test principals before running the full room assessment flow.
+Run **Deploy Assessment API** from GitHub Actions to deploy `assessment-api` and `ai-api` to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `OAI_API_KEY`, and `OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys the assessment function with gateway JWT verification disabled because that flow uses its application identity; `ai-api` verifies the Supabase user token in the function. Apply the assessment database migration and provision test principals before running the full room assessment flow.
 
 ### Supabase Setup Checklist
 

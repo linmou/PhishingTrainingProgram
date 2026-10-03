@@ -11,7 +11,7 @@ For the staging-to-production Edge Function release sequence, see [database-migr
 | Production | `zgbufaxooqxeabewktzd` | Production browser workflow target with dedicated fixture rooms. |
 | Staging | `ciubrzggdqesgvfkpolj` | Staging browser workflow target with reusable fixture rooms. |
 
-The app and runner must use the same selected target. `test:e2e:staging` and `test:e2e:production` invoke the same `scripts/browser-e2e.js` implementation with `E2E_TARGET` set before Node loads it. The runner blocks browser traffic to other Supabase projects and validates each room's ID, title, owner, and template content. It never loads `.env`; supply variables in the process environment. CRA reads `REACT_APP_*` when the app starts.
+The app and runner must use the same selected target. `test:e2e:staging` and `test:e2e:production` invoke the same `scripts/browser-e2e.js` implementation with `E2E_TARGET` set before Node loads it. The runner blocks browser traffic to other Supabase projects and validates each room's ID, title, owner, and template content. It never loads `.env`; supply variables in the process environment. CRA reads `REACT_APP_*` when the app starts. Tutor and extraction calls use the application's localStorage/offline-user session; they do not require a Supabase Auth user JWT.
 
 ## Current Test Paths
 
@@ -29,7 +29,7 @@ The only GitHub Actions workflow is a manually dispatched assessment API deploym
 
 ## Run The Live Suite
 
-Use Node 18 or newer and `jq`; install Playwright Chromium with `npx playwright install chromium`. From `tutor-system/`, load the existing `.env` into the shell without printing its values. Provide the selected project's anon and service-role keys in memory:
+Use Node 18 or newer and `jq`; install Playwright Chromium with `npx playwright install chromium`. From `tutor-system/`, load the existing `.env` into the shell without printing its values. Provide the selected project's anon and service-role keys in memory. The anon key is used by the browser Supabase client; the service-role key is used only by the runner for fixture inspection and cleanup. No staging user JWT is needed because the app uses its localStorage/offline-user identity:
 
 ```bash
 set -a

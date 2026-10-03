@@ -20,7 +20,7 @@ The Edge Function does not use Supabase Auth. The browser facade sends the curre
 
 The Edge Function imports the existing CRA resolver directly. Shared runtime imports use explicit `.ts` paths so Deno can bundle that module graph; there is no copied Edge lifecycle implementation.
 
-Assessment generation reads `REACT_APP_OAI_API_KEY`, `REACT_APP_OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash` from the Supabase Edge Function secret store. The same provider values power ordinary tutor responses. `REACT_APP_` values are exposed in a CRA browser bundle, while Edge Function secrets remain server-side at runtime. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true` and can be set to `false` to disable assessment operations.
+Assessment generation and ordinary tutor responses read `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash` from the Supabase Edge Function secret store. The React bundle sends the current localStorage/offline-user identity and chat payload to the functions and never receives provider credentials. Supabase Auth sign-in is not required for these application-managed sessions. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true` and can be set to `false` to disable assessment operations.
 
 ## Client Configuration
 

@@ -215,7 +215,7 @@ npm test src/services/__tests__/database.test.ts
 
 ### Common Issues
 - **Real-time not working**: Check Supabase replication settings, polling should work as fallback
-- **AI suggestions failing**: Verify `REACT_APP_OAI_API_KEY` environment variable
+- **AI suggestions failing**: Verify `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` in Supabase Edge Function secrets
 - **Authentication issues**: Check deterministic user ID generation in `AuthContext`
 - **Database errors**: Verify RLS policies are permissive for educational use
 - **Test failures**: Ensure proper context setup flow (joinRoom → action → assert)

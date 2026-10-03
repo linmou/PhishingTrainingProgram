@@ -64,7 +64,7 @@ interface ParameterOverrides {
 - **Detection areas**: `['Suspicious links', 'Urgent language', 'Unexpected requests']`
 - **Verification steps**: `['Check sender authenticity', 'Verify through official channels', 'Think before clicking']`
 - **Model**: `qwen3.5-flash` (`DEFAULT_AI_MODEL`, the only selectable model)
-- **Transport**: `POST {REACT_APP_OAI_BASE_URL}/chat/completions`, with `enable_thinking: false`
+- **Transport**: `supabase.functions.invoke('ai-api')` from the localStorage/offline-user session; the Edge Function calls the provider with `enable_thinking: false`. Supabase Auth sign-in is not required.
 - **Response policy**: prompt-controlled maximum of three sentences and 50 words; runtime output is not clipped or rewritten
 
 ## System Prompt Processing
@@ -221,8 +221,8 @@ The ecological prompt includes semantic Guard activation, persistence, exit, and
 
 ### Service Selection (Lines 562-576)
 **Strategy**:
-- **Production**: Use Qwen API if `REACT_APP_OAI_API_KEY` is available
-- **Development**: Fall back to dummy service for testing
+- **Production**: Use the `ai-api` Edge Function through the app's localStorage/offline-user session
+- **Development**: Fall back to dummy service only when `REACT_APP_USE_DUMMY_AI=true` in debug mode
 - **Category mapping**: Analyze last message for appropriate dummy response
 
 ### Context Message Tracking (Lines 581-590)
@@ -320,7 +320,7 @@ import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ## Security Considerations
 
 ### API Key Management
-- **Environment variables**: `REACT_APP_OAI_API_KEY` and `REACT_APP_OAI_BASE_URL` retain compatibility names for the Qwen OpenAI-shaped protocol
+- **Environment variables**: `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` are server-only Supabase Edge Function secrets
 - **Conditional logic**: Graceful operation without API access
 - **No key exposure**: Client-side code never exposes sensitive keys
 
