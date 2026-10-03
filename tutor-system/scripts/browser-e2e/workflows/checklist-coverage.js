@@ -22,7 +22,7 @@ module.exports = async function checklistCoverage(ctx) {
     item_type: 'detection_area', priority: 'important', status: 'pending', understanding_level: 'none'
   });
   await openRoom(studentPage, appUrl, room.id);
-  const stopAnalysis = await captureResponses(studentPage, (response) => response.url().includes('/chat/completions'));
+  const stopAnalysis = await captureResponses(studentPage, (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
   let analysisCalls;
   try {
     await sendStudentMessage(studentPage,
@@ -38,7 +38,7 @@ module.exports = async function checklistCoverage(ctx) {
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
   await tutorPage.locator('.checklist-item').filter({ hasText: 'Open the official app' }).waitFor({ timeout: TIMEOUT });
   await tutorPage.locator('.checklist-close').click();
-  const stopTutor = await captureResponses(tutorPage, (response) => response.url().includes('/chat/completions'));
+  const stopTutor = await captureResponses(tutorPage, (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
   let tutorCalls;
   try {
     await tutorPage.locator('button.ai-generate-btn').click();

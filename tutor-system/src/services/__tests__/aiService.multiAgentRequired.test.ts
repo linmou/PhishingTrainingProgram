@@ -13,7 +13,11 @@ jest.mock('../simplifiedAIContext', () => ({
 }));
 
 jest.mock('../supabase', () => ({
-  supabase: { from: jest.fn() }
+  supabase: { from: jest.fn(), functions: { invoke: jest.fn() } }
+}));
+
+jest.mock('../checklistService', () => ({
+  ChecklistService: { getChecklistByRoom: jest.fn().mockResolvedValue(null) }
 }));
 
 const promptConfig = (interactionMode: 'single_agent' | 'multi_agent') => ({
@@ -37,23 +41,15 @@ const PAIR = decision('multiagent', 'multiagent',
 
 describe('aiService deprecated Multi-agent mode', () => {
   const originalEnvironment = process.env.REACT_APP_ENVIRONMENT;
-  const originalApiKey = process.env.REACT_APP_OAI_API_KEY;
-  const originalBaseUrl = process.env.REACT_APP_OAI_BASE_URL;
-  const originalFetch = global.fetch;
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
     process.env.REACT_APP_ENVIRONMENT = 'production';
-    process.env.REACT_APP_OAI_API_KEY = 'test-oai-key';
-    process.env.REACT_APP_OAI_BASE_URL = 'https://example.invalid/v1';
   });
 
   afterAll(() => {
     process.env.REACT_APP_ENVIRONMENT = originalEnvironment;
-    process.env.REACT_APP_OAI_API_KEY = originalApiKey;
-    process.env.REACT_APP_OAI_BASE_URL = originalBaseUrl;
-    global.fetch = originalFetch;
   });
 
   const mockSupabaseFor = async (interactionMode: 'single_agent' | 'multi_agent') => {
@@ -119,25 +115,24 @@ describe('aiService deprecated Multi-agent mode', () => {
       });
   };
 
-  const mockModel = (contents: string[]) => {
-    const fetchMock = jest.fn();
+  const mockModel = async (contents: string[]) => {
+    const { supabase } = await import('../supabase');
+    const invokeMock = supabase.functions.invoke as jest.Mock;
     contents.forEach((content, index) => {
-      fetchMock.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ choices: [{ message: { content }, finish_reason: 'stop' }] })
+      invokeMock.mockResolvedValueOnce({
+        data: { content, finish_reason: 'stop', model: 'qwen3.5-flash' },
+        error: null
       });
       expect(index).toBeGreaterThanOrEqual(0);
     });
-    global.fetch = fetchMock as any;
-    return fetchMock;
+    return invokeMock;
   };
 
-  const systemAndUserTurns = (fetchMock: jest.Mock) =>
-    (fetchMock.mock.calls[0][0] as any, JSON.parse(fetchMock.mock.calls[0][1].body));
+  const requestBody = (invokeMock: jest.Mock, index: number) => invokeMock.mock.calls[index][1].body;
 
   it('uses the single-agent request contract for a room with a saved multi-agent config', async () => {
     await mockSupabaseFor('multi_agent');
-    const fetchMock = mockModel([decision('tutoring', 'scaffolding', 'Hello. What stands out to you about the alert?')]);
+    const fetchMock = await mockModel([decision('tutoring', 'scaffolding', 'Hello. What stands out to you about the alert?')]);
 
     const { generateTutorSuggestion } = await import('../aiService');
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
@@ -147,7 +142,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     expect(result.decision).toMatchObject({ mode: 'tutoring', instruction: 'scaffolding' });
     expect(result.suggestion).not.toContain('[agent:riley]');
 
-    const firstRequest = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const firstRequest = requestBody(fetchMock, 0);
     expect(firstRequest.max_tokens).toBe(100);
     expect(firstRequest.messages[1].content).toContain('"interaction_mode":"single_agent"');
     expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
@@ -159,7 +154,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     ['guard', { mode: 'guard', instruction: null }, decision('guard', null, 'Deliberately repeating that interrupts practice. Stop and make a task attempt.')]
   ])('accepts the exact %s exception without asking for a multiagent response', async (_label, expectedDecision, content) => {
     await mockSupabaseFor('multi_agent');
-    const fetchMock = mockModel([content]);
+    const fetchMock = await mockModel([content]);
 
     const { generateTutorSuggestion } = await import('../aiService');
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
@@ -171,7 +166,7 @@ describe('aiService deprecated Multi-agent mode', () => {
 
   it('rejects a model-produced Multi-agent decision and repairs with the single-agent contract', async () => {
     await mockSupabaseFor('multi_agent');
-    const fetchMock = mockModel([
+    const fetchMock = await mockModel([
       PAIR,
       decision('tutoring', 'correction', 'A copied logo does not prove the sender.')
     ]);
@@ -181,8 +176,8 @@ describe('aiService deprecated Multi-agent mode', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(result).toMatchObject({ success: true, decision: { mode: 'tutoring', instruction: 'correction' } });
-    const firstRequest = JSON.parse(fetchMock.mock.calls[0][1].body);
-    const repairRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
+    const firstRequest = requestBody(fetchMock, 0);
+    const repairRequest = requestBody(fetchMock, 1);
     expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
     expect(firstRequest.messages[1].content).toContain('"interaction_mode":"single_agent"');
     expect(repairRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
@@ -192,7 +187,7 @@ describe('aiService deprecated Multi-agent mode', () => {
 
   it('accepts ordinary corrections for a room with a saved multi-agent config', async () => {
     await mockSupabaseFor('multi_agent');
-    const fetchMock = mockModel([decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.')]);
+    const fetchMock = await mockModel([decision('tutoring', 'correction', 'The sender name is not enough to prove this is real.')]);
 
     const { generateTutorSuggestion } = await import('../aiService');
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
@@ -203,14 +198,14 @@ describe('aiService deprecated Multi-agent mode', () => {
 
   it('keeps the single-agent path untouched: no patch prompt, no multiagent decision allowed', async () => {
     await mockSupabaseFor('single_agent');
-    const fetchMock = mockModel([decision('tutoring', 'scaffolding', 'What stands out in this alert?')]);
+    const fetchMock = await mockModel([decision('tutoring', 'scaffolding', 'What stands out in this alert?')]);
 
     const { generateTutorSuggestion } = await import('../aiService');
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
-    const request = JSON.parse(fetchMock.mock.calls[0][1].body);
+    const request = requestBody(fetchMock, 0);
     expect(request.max_tokens).toBe(100);
     expect(request.messages[0].content).not.toContain('MULTI-AGENT MODE');
     expect(request.messages[1].content).toContain('"interaction_mode":"single_agent"');

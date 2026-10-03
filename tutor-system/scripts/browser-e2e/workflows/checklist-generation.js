@@ -13,7 +13,7 @@ module.exports = async function checklistGeneration(ctx) {
   await sendStudentMessage(studentPage, 'The alert feels urgent, but I can check my account in the official app.');
   await openRoom(tutorPage, appUrl, room.id);
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
-  const stop = await captureResponses(tutorPage, (response) => response.url().includes('/chat/completions'));
+  const stop = await captureResponses(tutorPage, (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
   let calls;
   try {
     await tutorPage.getByRole('button', { name: 'Smart Generate' }).click();

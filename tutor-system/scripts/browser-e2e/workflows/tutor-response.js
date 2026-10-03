@@ -16,7 +16,7 @@ module.exports = async function tutorResponse(ctx) {
   await waitForMatch(() => query(client, 'messages', 'id,content', 'room_id', room.id),
     (rows) => rows.some((row) => !priorMessages.has(row.id)), 'new learner message');
   await openRoom(tutorPage, appUrl, room.id);
-  const stop = await captureResponses(tutorPage, (response) => response.url().includes('/chat/completions'));
+  const stop = await captureResponses(tutorPage, (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
   let calls;
   try {
     await tutorPage.locator('button.ai-generate-btn').click();

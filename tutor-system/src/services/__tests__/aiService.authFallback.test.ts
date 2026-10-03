@@ -6,7 +6,10 @@ jest.mock('../simplifiedAIContext', () => ({
 }));
 
 jest.mock('../supabase', () => ({
-    supabase: { from: jest.fn() }
+    supabase: {
+        from: jest.fn(),
+        functions: { invoke: jest.fn() }
+    }
 }));
 
 import { generateTutorSuggestion } from '../aiService';
@@ -15,6 +18,7 @@ import { supabase } from '../supabase';
 
 const mockBuildAIContext = buildAIContextFromExistingData as jest.MockedFunction<typeof buildAIContextFromExistingData>;
 const mockSupabaseFrom = supabase.from as jest.Mock;
+const mockSupabaseInvoke = supabase.functions.invoke as jest.Mock;
 
 function configureSupabaseMocks() {
     mockSupabaseFrom.mockImplementation((table: string) => {
@@ -59,21 +63,18 @@ function configureSupabaseMocks() {
 describe('AI Service provider failure behavior', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        process.env.REACT_APP_OAI_API_KEY = 'test-qwen-key';
         mockBuildAIContext.mockResolvedValue([
             { role: 'system', content: 'You are helping a tutor guide a phishing discussion.' },
             { role: 'user', content: 'Student: This Nintendo Switch offer looks suspicious.' }
         ]);
         configureSupabaseMocks();
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: false,
-            status: 401,
-            text: async () => 'Unauthorized'
-        } as Response);
+        mockSupabaseInvoke.mockResolvedValue({
+            data: null,
+            error: { message: 'AI provider returned HTTP 401' }
+        });
     });
 
     afterEach(() => {
-        delete process.env.REACT_APP_OAI_API_KEY;
         jest.restoreAllMocks();
     });
 
@@ -86,14 +87,14 @@ describe('AI Service provider failure behavior', () => {
     });
 
     it('accepts a successful structured Qwen decision', async () => {
-        global.fetch = jest.fn().mockResolvedValue({
-            ok: true,
-            json: async () => ({ choices: [{ message: { content: JSON.stringify({
+        mockSupabaseInvoke.mockResolvedValue({
+            data: { content: JSON.stringify({
                 reason: 'The student is examining the sender address.',
                 decision: { mode: 'tutoring', instruction: 'scaffolding' },
                 response: 'What makes the sender address look suspicious to you?'
-            }) } }] })
-        } as Response);
+            }) },
+            error: null
+        });
 
         const result = await generateTutorSuggestion('room-123', 'tutor-123');
         expect(result.success).toBe(true);

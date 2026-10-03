@@ -260,7 +260,7 @@ async function main() {
     if (await tutorChecklistClose.isVisible()) await tutorChecklistClose.click();
     const tutorStop = await support.captureResponses(
       tutorPage,
-      (response) => response.url().includes('/chat/completions') || response.url().includes('/functions/v1/assessment-api')
+      (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api')
     );
     let tutorCalls;
     try {

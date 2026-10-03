@@ -20,7 +20,8 @@ jest.mock('../simplifiedAIContext', () => ({
 
 jest.mock('../supabase', () => ({
     supabase: {
-        from: jest.fn()
+        from: jest.fn(),
+        functions: { invoke: jest.fn() }
     }
 }));
 
@@ -29,24 +30,16 @@ jest.mock('../checklistService', () => ({ ChecklistService: {
 } }));
 
 describe('Guard Mode AI decision contract', () => {
-    const originalApiKey = process.env.REACT_APP_OAI_API_KEY;
-    const originalBaseUrl = process.env.REACT_APP_OAI_BASE_URL;
     const originalEnvironment = process.env.REACT_APP_ENVIRONMENT;
-    const originalFetch = global.fetch;
 
     beforeEach(() => {
         jest.resetModules();
         jest.clearAllMocks();
-        process.env.REACT_APP_OAI_API_KEY = 'test-oai-key';
-        process.env.REACT_APP_OAI_BASE_URL = 'https://example.invalid/v1';
         process.env.REACT_APP_ENVIRONMENT = 'production';
     });
 
     afterAll(() => {
-        process.env.REACT_APP_OAI_API_KEY = originalApiKey;
-        process.env.REACT_APP_OAI_BASE_URL = originalBaseUrl;
         process.env.REACT_APP_ENVIRONMENT = originalEnvironment;
-        global.fetch = originalFetch;
     });
 
     it('treats a newly created tutoring room with no mode history as unknown prior mode', async () => {
@@ -63,15 +56,13 @@ describe('Guard Mode AI decision contract', () => {
             decision: { mode: 'guard', instruction: null },
             response: 'Stop repeating that behavior and make a relevant attempt.'
         };
-        const fetchMock = jest.fn().mockResolvedValue({
-            ok: true,
-            json: async () => ({
-                choices: [{ message: { content: JSON.stringify(providerDecision) } }]
-            })
+        const invokeMock = jest.fn().mockResolvedValue({
+            data: { content: JSON.stringify(providerDecision), model: 'qwen3.5-flash', finish_reason: 'stop' },
+            error: null
         } as Response);
-        global.fetch = fetchMock;
 
         const { supabase } = await import('../supabase');
+        (supabase.functions.invoke as jest.Mock).mockImplementation(invokeMock);
         const mockFrom = supabase.from as jest.Mock;
         mockFrom.mockImplementation((table: string) => {
             if (table === 'rooms') {
@@ -141,13 +132,8 @@ describe('Guard Mode AI decision contract', () => {
             }
         });
 
-        expect(fetchMock).toHaveBeenCalledWith(
-            'https://example.invalid/v1/chat/completions',
-            expect.objectContaining({
-                body: expect.any(String)
-            })
-        );
-        const request = JSON.parse(fetchMock.mock.calls[0][1].body);
+        expect(invokeMock).toHaveBeenCalledWith('ai-api', expect.objectContaining({ body: expect.any(Object) }));
+        const request = invokeMock.mock.calls[0][1].body;
         expect(request.temperature).toBe(0.9);
         expect(request.max_tokens).toBe(77);
         expect(request.messages[0].role).toBe('system');
@@ -174,8 +160,8 @@ describe('Guard Mode AI decision contract', () => {
     });
 
     it('keeps the debug dummy decision in tutoring mode', async () => {
-        process.env.REACT_APP_OAI_API_KEY = '';
         process.env.REACT_APP_ENVIRONMENT = 'debug';
+        process.env.REACT_APP_USE_DUMMY_AI = 'true';
 
         const { supabase } = await import('../supabase');
         const mockFrom = supabase.from as jest.Mock;
@@ -229,17 +215,12 @@ describe('Guard Mode AI decision contract', () => {
             decision: { mode: 'guard', instruction: null },
             response: 'Stop repeating that behavior and make a relevant attempt.'
         };
-        const fetchMock = jest
+        const invokeMock = jest
             .fn()
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({ choices: [{ message: { content: '{"mode":"guard"' } }] })
-            } as Response)
-            .mockResolvedValueOnce({
-                ok: true,
-                json: async () => ({ choices: [{ message: { content: JSON.stringify(validDecision) } }] })
-            } as Response);
-        global.fetch = fetchMock;
+            .mockResolvedValueOnce({ data: { content: '{"mode":"guard"', model: 'qwen3.5-flash' }, error: null })
+            .mockResolvedValueOnce({ data: { content: JSON.stringify(validDecision), model: 'qwen3.5-flash' }, error: null });
+        const { supabase } = await import('../supabase');
+        (supabase.functions.invoke as jest.Mock).mockImplementation(invokeMock);
 
         const { TutorSuggestionService } = await import('../aiService');
         const result = await TutorSuggestionService.generateSuggestion(
@@ -268,11 +249,11 @@ describe('Guard Mode AI decision contract', () => {
                 suggested_response: validDecision.response
             }
         });
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-        fetchMock.mock.calls.forEach((call) => {
-            expect(JSON.parse(call[1].body).response_format).toEqual({ type: 'json_object' });
+        expect(invokeMock).toHaveBeenCalledTimes(2);
+        invokeMock.mock.calls.forEach((call) => {
+            expect(call[1].body.response_format).toEqual({ type: 'json_object' });
         });
-        const retryRequest = JSON.parse(fetchMock.mock.calls[1][1].body);
+        const retryRequest = invokeMock.mock.calls[1][1].body;
         expect(retryRequest.messages[retryRequest.messages.length - 1].content)
             .toContain('Return exactly one valid JSON object');
     });

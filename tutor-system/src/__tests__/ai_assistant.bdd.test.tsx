@@ -21,6 +21,7 @@ jest.mock('../services/supabase', () => ({
     from: jest.fn(),
     channel: jest.fn(),
     rpc: jest.fn(),
+    functions: { invoke: jest.fn() },
   },
   validateRoomPassword: jest.fn(),
   submitMessageFeedback: jest.fn(),
@@ -58,7 +59,6 @@ const ROOM_ID = 'ai-bdd-room';
 const TUTOR_ID = 'ai-bdd-tutor';
 const STUDENT_ID = 'ai-bdd-student';
 const STARTED_AT = '2026-01-01T00:00:00.000Z';
-const ORIGINAL_API_KEY = process.env.REACT_APP_OAI_API_KEY;
 const ORIGINAL_ENVIRONMENT = process.env.REACT_APP_ENVIRONMENT;
 
 const tutor: User = {
@@ -161,7 +161,7 @@ defineFeature(feature, (test) => {
           messages = [...messages, row];
           return { data: row, error: null };
         }
-        if (table === 'ai_suggestion_feedback') feedbackRows.push(insertValue);
+        if (table === 'ai_suggestion_feedback' && insertValue) feedbackRows.push(insertValue);
         if (table === 'ai_assistant_config_logs') configLogRows.push(insertValue);
         if (table === 'messages') {
           const data = selected === 'id' ? messages.map((message) => ({ id: message.id })) : [...messages];
@@ -236,7 +236,7 @@ defineFeature(feature, (test) => {
   const requestSuggestion = async () => {
     if (!view) await renderRoom();
     fireEvent.click(screen.getByTitle(/Generate AI Response/));
-    await waitFor(() => expect((global.fetch as jest.Mock).mock.calls.length > 0 || (window.alert as jest.Mock).mock.calls.length > 0).toBe(true));
+    await waitFor(() => expect(((supabase.functions.invoke as jest.Mock).mock.calls.length > 0) || (window.alert as jest.Mock).mock.calls.length > 0).toBe(true));
     if ((window.alert as jest.Mock).mock.calls.length > 0 && !screen.queryByText(nextSuggestion)) {
       throw new Error(`AI request failed in room workflow: ${(window.alert as jest.Mock).mock.calls[0][0]}`);
     }
@@ -292,7 +292,6 @@ defineFeature(feature, (test) => {
     blobParts = [];
     nextSuggestion = 'Phishing is a cybercrime where an attacker tricks someone into sharing information.';
     view = null;
-    process.env.REACT_APP_OAI_API_KEY = 'ai-assistant-bdd-key';
     process.env.REACT_APP_ENVIRONMENT = 'production';
 
     (useAuth as jest.Mock).mockReturnValue({ user: mockUser, loading: false });
@@ -311,29 +310,23 @@ defineFeature(feature, (test) => {
       configurable: true,
       value: jest.fn(),
     });
-    global.fetch = jest.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      const body = JSON.parse(String(init?.body || '{}'));
+    (supabase.functions.invoke as jest.Mock).mockImplementation(async (_name: string, options: { body: any }) => {
+      const body = options.body;
       const prompt = body.messages?.find((message: any) => message.role === 'system')?.content || '';
       const responseText = prompt.includes('Focus on practical examples')
         ? 'For example, a fake delivery notice may ask you to enter a password on a copied website.'
         : nextSuggestion;
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({ choices: [{ message: { content: JSON.stringify({
+      return { data: { content: JSON.stringify({
           reason: 'The student asked a learning question.',
           decision: { mode: 'tutoring', instruction: 'explanation' },
           response: responseText,
-        }) } }] }),
-      } as Response;
-    }) as typeof fetch;
+        }), model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null };
+    });
   });
 
   afterEach(() => {
     view?.unmount();
     view = null;
-    if (ORIGINAL_API_KEY === undefined) delete process.env.REACT_APP_OAI_API_KEY;
-    else process.env.REACT_APP_OAI_API_KEY = ORIGINAL_API_KEY;
     if (ORIGINAL_ENVIRONMENT === undefined) delete process.env.REACT_APP_ENVIRONMENT;
     else process.env.REACT_APP_ENVIRONMENT = ORIGINAL_ENVIRONMENT;
     jest.restoreAllMocks();
@@ -480,7 +473,7 @@ defineFeature(feature, (test) => {
     when(/^the student sends "Can you explain spear phishing\?"$/, () => undefined);
     and('the tutor clicks the AI suggestion button', async () => { await requestSuggestion(); });
     then('the AI should generate a response specifically about spear phishing', () => {
-      const request = JSON.parse(String((global.fetch as jest.Mock).mock.calls[0][1].body));
+      const request = (supabase.functions.invoke as jest.Mock).mock.calls[0][1].body;
       expect(request.messages).toContainEqual(expect.objectContaining({ content: expect.stringContaining('Can you explain spear phishing?') }));
     });
     and(/^the context should show "Can you explain spear phishing\?" as the parent message$/, () => expect(screen.getByText('"Can you explain spear phishing?"')).toBeInTheDocument());
@@ -542,7 +535,7 @@ defineFeature(feature, (test) => {
     when('the tutor clicks the AI suggestion button', async () => {
       await renderRoom();
       fireEvent.click(screen.getByTitle(/Generate AI Response/));
-      await waitFor(() => expect(global.fetch).not.toHaveBeenCalled());
+      await waitFor(() => expect(supabase.functions.invoke).not.toHaveBeenCalled());
     });
     then(/^the system should show "The transfer request could not be completed\. Try again\."$/, () => expect(window.alert).toHaveBeenCalledWith('The transfer request could not be completed. Try again.'));
     and('no suggestion should be generated', () => expect(screen.queryByText(nextSuggestion)).not.toBeInTheDocument());
@@ -574,7 +567,7 @@ defineFeature(feature, (test) => {
     when('the tutor requests an AI suggestion', async () => { await requestSuggestion(); });
     then('the tutor should see a suggestion that emphasizes practical examples', () => expect(screen.getByText(/For example, a fake delivery notice/i)).toBeInTheDocument());
     and('the suggestion should align with the custom prompt', () => {
-      const request = JSON.parse(String((global.fetch as jest.Mock).mock.calls[0][1].body));
+      const request = (supabase.functions.invoke as jest.Mock).mock.calls[0][1].body;
       expect(request.messages[0].content).toContain('Focus on practical examples');
     });
   });
@@ -583,7 +576,7 @@ defineFeature(feature, (test) => {
     bindBackground(given, and);
     given('the AI assistant is enabled', () => { roomRecord.ai_assistant_enabled = true; });
     and('the AI service is temporarily unavailable', () => {
-      global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 503, text: async () => 'temporarily unavailable' } as Response);
+      (supabase.functions.invoke as jest.Mock).mockResolvedValue({ data: null, error: { message: 'AI provider returned HTTP 503' } });
     });
     when('the tutor clicks the AI suggestion button', async () => {
       await renderRoom();

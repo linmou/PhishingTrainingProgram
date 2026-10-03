@@ -15,7 +15,7 @@ import type { Room, User } from '../types';
 
 jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../services/supabase', () => ({
-  supabase: { from: jest.fn(), channel: jest.fn(), rpc: jest.fn() },
+  supabase: { from: jest.fn(), channel: jest.fn(), rpc: jest.fn(), functions: { invoke: jest.fn() } },
   validateRoomPassword: jest.fn(),
   submitMessageFeedback: jest.fn(),
   getMessageFeedbackStats: jest.fn().mockResolvedValue({ like_count: 0, dislike_count: 0, overall_average_rating: 0, total_feedback_count: 0 }),
@@ -36,7 +36,6 @@ const ROOM_ID = 'tracking-bdd-room';
 const TUTOR_ID = 'tracking-bdd-tutor';
 const STUDENT_ID = 'tracking-bdd-student';
 const STARTED_AT = '2026-01-01T00:00:00.000Z';
-const originalApiKey = process.env.REACT_APP_OAI_API_KEY;
 const originalEnvironment = process.env.REACT_APP_ENVIRONMENT;
 
 const tutor: User = { id: TUTOR_ID, display_name: 'Tutor', current_role: 'tutor', email: 'tutor@example.test', status: 'active', created_at: STARTED_AT, updated_at: STARTED_AT } as User;
@@ -221,13 +220,23 @@ defineFeature(feature, (test) => {
     ignoredSuggestionText = '';
     responseTimeClock = null;
     view = null;
-    process.env.REACT_APP_OAI_API_KEY = 'tracking-bdd-key';
     process.env.REACT_APP_ENVIRONMENT = 'production';
     configureDatabase();
     (useAuth as jest.Mock).mockReturnValue({ user: tutor, loading: false });
     (getRoomFeedbackSummary as jest.Mock).mockResolvedValue(null);
     (buildAIContextFromExistingData as jest.Mock).mockImplementation(async () => messages.map((message) => ({ role: message.user_role === 'student' ? 'user' : 'assistant', content: message.content })));
-    global.fetch = jest.fn(async () => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify({ reason: 'The learner asks for phishing advice.', decision: { mode: 'tutoring', instruction: 'explanation' }, response: suggestionText }) } }] }) } as Response)) as typeof fetch;
+    (supabase.functions.invoke as jest.Mock).mockImplementation(async () => ({
+      data: {
+        content: JSON.stringify({
+          reason: 'The learner asks for phishing advice.',
+          decision: { mode: 'tutoring', instruction: 'explanation' },
+          response: suggestionText,
+        }),
+        model: 'qwen3.5-flash',
+        finish_reason: 'stop',
+      },
+      error: null,
+    }));
     jest.spyOn(window, 'alert').mockImplementation(() => undefined);
     Object.defineProperty(global, 'Blob', { configurable: true, value: jest.fn((parts: any[]) => { blobParts.push(parts); return { parts }; }) });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: jest.fn(() => 'blob:tracking-bdd') });
@@ -238,8 +247,6 @@ defineFeature(feature, (test) => {
   afterEach(() => {
     view?.unmount();
     view = null;
-    if (originalApiKey === undefined) delete process.env.REACT_APP_OAI_API_KEY;
-    else process.env.REACT_APP_OAI_API_KEY = originalApiKey;
     if (originalEnvironment === undefined) delete process.env.REACT_APP_ENVIRONMENT;
     else process.env.REACT_APP_ENVIRONMENT = originalEnvironment;
     jest.restoreAllMocks();

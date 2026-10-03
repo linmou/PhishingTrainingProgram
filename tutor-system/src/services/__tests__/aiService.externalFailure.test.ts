@@ -15,40 +15,32 @@ jest.mock('../simplifiedAIContext', () => ({
 
 jest.mock('../supabase', () => ({
   supabase: {
-    from: jest.fn()
+    from: jest.fn(),
+    functions: { invoke: jest.fn() }
   }
 }));
 
 describe('aiService external backend failures', () => {
   const originalEnvironment = process.env.REACT_APP_ENVIRONMENT;
-  const originalApiKey = process.env.REACT_APP_OAI_API_KEY;
-  const originalBaseUrl = process.env.REACT_APP_OAI_BASE_URL;
-  const originalFetch = global.fetch;
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
     process.env.REACT_APP_ENVIRONMENT = 'production';
-    process.env.REACT_APP_OAI_API_KEY = 'test-oai-key';
-    process.env.REACT_APP_OAI_BASE_URL = 'https://example.invalid/v1';
   });
 
   afterAll(() => {
     process.env.REACT_APP_ENVIRONMENT = originalEnvironment;
-    process.env.REACT_APP_OAI_API_KEY = originalApiKey;
-    process.env.REACT_APP_OAI_BASE_URL = originalBaseUrl;
-    global.fetch = originalFetch;
   });
 
   it('returns an error instead of a generic dummy suggestion when the configured AI backend returns 401', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 401,
-      text: jest.fn().mockResolvedValue('invalid token')
-    } as any);
-
     const { supabase } = await import('../supabase');
     const mockSupabaseFrom = supabase.from as jest.Mock;
+    const mockSupabaseInvoke = supabase.functions.invoke as jest.Mock;
+    mockSupabaseInvoke.mockResolvedValue({
+      data: null,
+      error: { message: 'AI provider returned HTTP 401' }
+    });
 
     mockSupabaseFrom
       .mockReturnValueOnce({

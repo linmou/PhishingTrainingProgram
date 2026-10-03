@@ -36,8 +36,8 @@ function loadEnvFile() {
 }
 
 function mapApiEnv() {
-  if (!process.env.OPENAI_API_KEY && process.env.REACT_APP_OAI_API_KEY) {
-    process.env.OPENAI_API_KEY = process.env.REACT_APP_OAI_API_KEY;
+  if (!process.env.OPENAI_API_KEY && process.env.OAI_API_KEY) {
+    process.env.OPENAI_API_KEY = process.env.OAI_API_KEY;
   }
   process.env.OPENAI_BASE_URL = endpoint;
   process.env.OPENAI_API_BASE = endpoint;
@@ -169,13 +169,13 @@ function writeMetadata(codes, report, verdict) {
 }
 
 loadEnvFile();
-endpoint = (process.env.REACT_APP_OAI_BASE_URL || '').replace(/\/+$/, '') ||
+endpoint = (process.env.OAI_BASE_URL || '').replace(/\/+$/, '') ||
   'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 mapApiEnv();
 fs.mkdirSync(runDir, { recursive: true });
 
 if (!process.env.OPENAI_API_KEY) {
-  console.error('Missing REACT_APP_OAI_API_KEY in tutor-system/.env.');
+  console.error('Missing OAI_API_KEY in tutor-system/.env.');
   process.exitCode = 1;
   process.exit();
 }

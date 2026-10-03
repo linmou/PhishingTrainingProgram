@@ -7,26 +7,26 @@ Feature: Qwen API Integration
   Background:
     Given the system has environment variables configured:
       | Variable      | Description                          |
-      | REACT_APP_OAI_API_KEY   | DashScope Qwen API key for authentication |
-      | REACT_APP_OAI_BASE_URL  | Optional custom API endpoint         |
+      | OAI_API_KEY            | Supabase Edge Function provider secret |
+      | OAI_BASE_URL           | Supabase Edge Function provider URL |
 
   Scenario: System uses the debug dummy suggestion when no API key is configured
-    Given REACT_APP_OAI_API_KEY is not set
+    Given OAI_API_KEY is not set
     And the application environment is debug
     When a tutor requests an AI suggestion
     Then the system should use the debug dummy suggestion generator
     And the response should be from predefined teaching responses
 
   Scenario: System uses Qwen when API key is configured
-    Given REACT_APP_OAI_API_KEY is set to a valid API key
+    Given OAI_API_KEY is set to a valid API key
     When a tutor requests an AI suggestion
     Then the system should use the QwenService
     And the request should be sent to DashScope's Qwen API
     And the response should be dynamically generated
 
   Scenario: Custom API endpoint configuration
-    Given REACT_APP_OAI_API_KEY is set
-    And REACT_APP_OAI_BASE_URL is set to "https://custom-api.example.com"
+    Given OAI_API_KEY is set
+    And OAI_BASE_URL is set to "https://custom-api.example.com"
     When a tutor requests an AI suggestion
     Then the system should send requests to the custom endpoint
     And use the provided API key for authentication
@@ -66,7 +66,7 @@ Feature: Qwen API Integration
       | Cache similar queries | Avoid duplicate API calls                       |
 
   Scenario: Security of API credentials
-    Given REACT_APP_OAI_API_KEY is configured
+    Given OAI_API_KEY is configured
     Then the API key should never be:
       | Exposed in           | Protection Method              |
       | Client-side code     | Server-side only              |

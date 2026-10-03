@@ -87,7 +87,7 @@ module.exports = async function guardMode(ctx) {
     const checklistClose = tutorPage.locator('.checklist-close');
     if (await checklistClose.isVisible()) await checklistClose.click();
     const before = (await query(client, 'rooms', 'active_response_mode', 'id', room.id))[0].active_response_mode;
-    const stop = await captureResponses(tutorPage, (response) => response.url().includes('/chat/completions'));
+    const stop = await captureResponses(tutorPage, (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
     let calls;
     try {
       await tutorPage.locator('button.ai-generate-btn').click();

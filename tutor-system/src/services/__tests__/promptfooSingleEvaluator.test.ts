@@ -104,8 +104,8 @@ describe('single Promptfoo Qwen evaluator', () => {
           ...process.env,
           PATH: `${tempDirectory}:${process.env.PATH || ''}`,
           PROMPTFOO_SHIM_LOG: shimLog,
-          REACT_APP_OAI_API_KEY: 'single-evaluator-test-key',
-          REACT_APP_OAI_BASE_URL: `http://127.0.0.1:${port}`
+          OAI_API_KEY: 'single-evaluator-test-key',
+          OAI_BASE_URL: `http://127.0.0.1:${port}`
         }
       });
 
