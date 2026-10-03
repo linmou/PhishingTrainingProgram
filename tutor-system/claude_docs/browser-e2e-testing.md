@@ -2,6 +2,8 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
+For the staging-to-production Edge Function release sequence, see [database-migration-workflow.md](database-migration-workflow.md#edge-function-release). This page contains the browser setup and commands.
+
 ## Supabase Projects
 
 | Environment | Project reference | Current use |
@@ -62,6 +64,8 @@ Use an unused port in both commands if 3100 is occupied. To run one workflow, ap
 
 The seven rooms were migrated once from production demo rooms with `npm run test:e2e:staging:migrate-templates`, using `SUPABASE_ACCESS_TOKEN`, `REACT_APP_SUPABASE_STAGING_URL`, and `STAGING_SUPABASE_SERVICE_ROLE_KEY`. The migration is idempotent and validates existing copies. Assessment copies receive the canonical local template dialogue and full target inventory, even when the production room's `prompt_config` is null. It is setup, not part of a test run.
 After fetching the staging service key above, set `STAGING_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"` when running the migration command.
+
+The production assessment workflows use dedicated empty room `286de02f-30b0-46ee-8df3-17d1dae1ca89`, copied from the production transfer demo without its messages. The browser runner clears generated rows after each workflow. The production `assessment-api` also requires `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` in its Edge secret store.
 
 ## Record The Transfer Demo
 

@@ -1,8 +1,8 @@
 # Database Migration Workflow
 
-Intent: validate migrations against a faithful local copy of the target Supabase database so local success is strong evidence for online application, and track the required human handoff.
+Intent: validate migrations against a faithful local copy of the hosted database, then apply and verify them on staging before production.
 
-Updated: 2026-09-28
+Updated: 2026-10-03
 
 ## Local Database Setup
 
@@ -20,19 +20,28 @@ Check `supabase/config.toml` and the target database for their current PostgreSQ
 
 ## Upgrade Sequence
 
-1. **Inspect online state.** Use Supabase MCP to inspect the target project's schema and any available migration history. Record the project identity and relevant tables, constraints, functions, roles, extensions, and policies.
+1. **Inspect online state.** Use Supabase MCP to inspect staging (`ciubrzggdqesgvfkpolj`) and production (`zgbufaxooqxeabewktzd`), including migration history and relevant tables, constraints, functions, roles, extensions, and policies. Resolve material differences before applying the same script to both.
 2. **Capture the baseline.** Run the configured `pd_dump.sh` and `scripts/database/pg_dump_roles.sh`; both load the same connection settings. Inspect whether the archive includes every dependency of the changed objects. Obtain additional schema exports through the configured connection when needed. MCP schema inspection is not itself a restorable snapshot.
 3. **Refresh locally.** Create a new disposable database for each scenario. Reapply and verify its source database ACLs and `ALTER DATABASE` settings, then restore source ownership, grants, policies, data, and dependencies. Pass the baseline comparison below before applying a candidate migration. Resolve missing dependencies in the local setup; incomplete setup blocks validation.
-4. **Implement the change.** Keep at most one pending SQL file under `supabase/migrations/`. Write it from the current hosted schema and applicable requirements, not from existing local or archived migration files. Do not use TDD for migration SQL; write the candidate directly and validate it against the isolated PostgreSQL database.
-5. **Validate locally.** Apply the exact candidate SQL under the online migration executor's role and transaction strategy. Run SQL behavior and permission tests under the actual application roles. Repeat from the same baseline for success and failure scenarios. Record commands, exit codes, assertions, and resulting catalog changes. The isolated database run and its assertions are the migration's test case.
-6. **Hand off online application.** Provide the tested SQL file, resume package, expected effects, and any required data decisions. A human executes the script in the target Supabase website.
-7. **Verify and archive.** Immediately before application, recheck the hosted schema and data preconditions through MCP. Refresh and retest if the baseline changed materially. After the human confirms successful execution, verify the expected schema and permissions, record the operator's result, and move the script to `supabase/archived_migrations/` before preparing another migration.
+4. **Establish Red, then implement.** Keep at most one pending SQL file under `supabase/migrations/`. Write behavior and permission assertions for the requested change, run them against a disposable database restored from the unmodified hosted baseline, and record the expected missing-behavior failure. Write the candidate migration from the current hosted schema and requirements, not from local or archived migration files. Follow this Red-Green sequence without invoking the `fast-multi-agent-tdd` skill.
+5. **Validate Green locally.** Apply the exact candidate SQL to a fresh disposable baseline under the online migration executor's role and transaction strategy. Rerun the same assertions under the actual application roles, including relevant edge cases and unaffected behavior. Repeat from the same baseline for success and failure scenarios. Record commands, exit codes, assertions, and resulting catalog changes. A parser or `EXPLAIN` check alone is not a migration test.
+6. **Apply and test on staging.** Recheck staging preconditions, apply the exact tested SQL through a verified Supabase MCP or Management API project connection, and verify schema, permissions, RPC behavior, and the matching application or Edge Function workflow. Stop on a failed check.
+7. **Apply and verify on production.** Recheck production preconditions and compare them with the tested baseline. Refresh and retest if they changed materially. Apply the same SQL through a verified project connection, verify schema, permissions, and behavior, then archive the script only after both projects are verified.
 
 Local snapshots do not need to be retained after the cycle. Keep baseline metadata and test evidence in the migration record so the result can still be understood. Credentials and exported user data belong outside Git.
 
+## Edge Function Release
+
+Use this sequence for an Edge Function change. If it needs SQL, complete the local Red-Green checks in the upgrade sequence above first. For an Edge-only change, start with the function tests; there is no SQL migration to apply or archive.
+
+1. **Test locally.** Run the changed Edge Function's Deno tests, including request validation, permission boundaries, provider failure, and the affected database contract. Record the command and result. Mocked provider tests do not replace a live provider check.
+2. **Release to staging.** Apply and verify any required SQL on staging first. Check that the function's required Edge secrets are configured without recording their values. Deploy the function to staging using an API-based path that does not start Docker, then run the relevant database assertions and live application or browser workflow against staging. Confirm expected function responses, provider-attempt outcome, visible application result, and test-data cleanup. Stop and fix failures before production.
+3. **Release to production.** Recheck schema and required Edge secret names. Apply and verify the same SQL on production if needed, then deploy the same function source there. Run the matching live workflow against a dedicated test fixture and verify its cleanup. A successful deployment or HTTP response alone does not establish that the workflow passed.
+4. **Record and close.** Record both project refs, SQL hash when applicable, function version or hash, test commands and results, provider and application evidence, cleanup results, and any failures and reruns in a dated `claude_docs/doc_update_record/` file. Archive the SQL only after both projects pass. Keep browser setup and commands in [browser-e2e-testing.md](browser-e2e-testing.md).
+
 ## Acceptance Gates
 
-Every gate must pass before reporting that a migration is ready for human application:
+Every gate must pass before applying a migration to staging or production:
 
 | Gate | Evidence required |
 | --- | --- |
@@ -41,7 +50,7 @@ Every gate must pass before reporting that a migration is ready for human applic
 | Baseline | Restored ownership, grants/default grants, RLS policies, function definitions, constraints, indexes, and required source data match the target snapshot |
 | Execution | The exact SQL succeeds under the intended executor and transaction strategy; a failed step stops the cycle |
 | Behavior | Required positive, negative, permission, rollback, and concurrency assertions pass under the relevant roles |
-| Current target | Hosted schema and data preconditions are rechecked before the human applies SQL |
+| Current target | Staging and production schema and data preconditions are checked before each application; material differences are resolved before the same SQL is used |
 
 Treat missing parity evidence as `local setup blocked`, not a passing test. Preserve restore errors and resolve their causes. Tests must exercise the same SQL and permission boundary that online execution will use.
 
@@ -184,15 +193,15 @@ Execute complete SQL files with `psql -f`; splitting SQL on semicolons breaks fu
 
 Run the SQL assertions relevant to the candidate after applying it to the restored hosted baseline. Catalog checks supplement behavioral, permission, and concurrency tests.
 
-## Human Online Application
+## Hosted Application
 
-The human operator checks the target project and exact tested script, then executes it in the Supabase website. Record whether execution committed successfully and any error. Website execution does not itself establish a Supabase CLI migration-history entry; report one only if observed.
+Prefer Supabase MCP for hosted application when it targets the intended project and has DDL permission. If it cannot select that project or lacks DDL permission, use the authenticated Supabase Management API with the explicit project ref and exact SQL file. Confirm the project ID, current schema, and tested script hash before each execution. If neither route can reach staging, stop rather than applying to production first. Apply to staging first, then run database and application tests against staging. A dependent Edge Function must be deployed to staging only after its SQL is applied there. Stop if the migration or any required staging test fails; inspect the hosted state and revise and retest the pending script before another attempt.
 
-After the human confirms successful execution, move that script to `supabase/archived_migrations/` before preparing another. If execution fails, inspect the hosted state and revise and retest the pending script before another attempt.
+After staging passes, recheck production against the tested preconditions and apply the same script there. Verify the resulting objects, permissions, and behavior. Deploy a dependent Edge Function to production only after the SQL is applied there. Record the MCP or Management API operation and result for each project. An observed SQL execution does not by itself establish a Supabase CLI migration-history entry; report one only if observed. Move the script to `supabase/archived_migrations/` after both projects are verified.
 
 ## Test Coverage
 
-Migration tests must execute against local PostgreSQL with the target dependencies. Test schema changes, existing data, RPC behavior, constraints, permissions, and failure atomicity as applicable. Mocked frontend tests do not establish that SQL migrations work.
+Migration tests must execute against local PostgreSQL with the target dependencies. Run the same assertions before and after applying the migration to separate disposable databases, recording the expected Red failure and Green pass. Test schema changes, existing data, RPC behavior, constraints, permissions, and failure atomicity as applicable. Mocked frontend tests and `EXPLAIN` do not establish that SQL migrations work. Rerun the relevant database assertions and an integrated application or Edge Function workflow on staging before any production application.
 
 Execute permission assertions under the actual `anon`, `authenticated`, and `service_role` roles as applicable, with the same JWT claim settings used by Supabase SQL functions. Assert both permitted and forbidden operations, including SQLSTATE and absence of unintended mutations. Privileged catalog assertions supplement these tests. Generate migration-specific setup and assertion SQL files and run them with `psql -X -v ON_ERROR_STOP=1 -f`; record every command and result. For concurrency scenarios, identify the participating sessions, enforce their ordering, and check the final committed state.
 
@@ -206,13 +215,13 @@ The agent must write `claude_docs/doc_update_record/documentation_update_record_
 
 | Field | Required content |
 | --- | --- |
-| Migration | Pending SQL filename and tested Git commit or file hash |
-| Baseline | Supabase project identity, export time, PostgreSQL version, and any observed migration history |
+| Migration | Pending SQL filename and tested Git commit or file hash, identical for staging and production |
+| Baseline | Staging and production project IDs, export time, PostgreSQL versions, relevant schema comparison, and observed migration history |
 | Local target | Cluster, port, database name for each scenario, migration executor, provisioned dependencies, database ACL and `ALTER DATABASE` settings comparison, baseline comparison and resolved differences |
 | Intended change | Affected schema objects, data transformations, permissions, and preconditions |
 | Resume package | Dump/role-export paths and hashes; role/database setup SQL; restore log and catalog comparison; migration/test SQL; command logs with exit codes; assertions with expected/observed results; exact next action or blocker |
-| Status | `draft`, `local setup blocked`, `local testing`, `local tests failed`, `local tests passed`, `awaiting human application`, `applied online`, or `verified online` |
-| Human application | Operator, Supabase project, script hash, time, execution result, and errors |
-| Online verification | Inspection time, observed objects/permissions, and remaining issues |
+| Status | `draft`, `local setup blocked`, `local testing`, `local tests failed`, `local tests passed`, `staging applied`, `staging verified`, `production applied`, or `production verified` |
+| Hosted application | MCP or Management API operation, project ID, script hash, time, execution result, and errors for each project |
+| Hosted verification | Staging and production inspection times, observed objects/permissions, behavior tests, and remaining issues |
 
-Keep the resume package outside Git and omit credentials and unnecessary row data. Report `local tests passed` only after all gates pass. Advance to `awaiting human application`, then to `applied online` after operator confirmation, and to `verified online` after checking the target. Record the archived script path and actual outcomes so predictive accuracy can be measured.
+Keep the resume package outside Git and omit credentials and unnecessary row data. Report `local tests passed` only after all local gates pass. Record separate staging and production application and verification states. Archive only after production is verified, and record the archived path and actual outcomes so predictive accuracy can be measured.
