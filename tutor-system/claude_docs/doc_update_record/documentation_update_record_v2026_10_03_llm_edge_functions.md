@@ -18,4 +18,4 @@ Updated `README.md`, `claude_docs/aiService.md`, `claude_docs/supabase-service.m
 - Staging live check after redeployment: unauthenticated POST with the staging anon key returned HTTP 200 and provider content `OK`; no Supabase Auth JWT was used.
 - Production deployment: current `ai-api` and `assessment-api` deployed through the API path with `--no-verify-jwt` for the offline-session model.
 - Production live check: unauthenticated POST with the production anon key returned HTTP 200 and provider content `OK`; no Supabase Auth JWT was used.
-- Status: `production verified` for the Edge Function boundary and provider response. The full browser fixture workflow was not run because its service-role cleanup credential is not configured locally.
+- Status at initial release: `production verified` for the Edge Function boundary and provider response. The full browser fixture workflow had not yet run. See [the staging and production browser verification record](documentation_update_record_v2026_10_03_browser_fixture_release.md) for the subsequent full-suite results.

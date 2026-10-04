@@ -29,7 +29,7 @@ The only GitHub Actions workflow is a manually dispatched assessment API deploym
 
 ## Run The Live Suite
 
-Use Node 18 or newer and `jq`; install Playwright Chromium with `npx playwright install chromium`. From `tutor-system/`, load the existing `.env` into the shell without printing its values. Provide the selected project's anon and service-role keys in memory. The anon key is used by the browser Supabase client; the service-role key is used only by the runner for fixture inspection and cleanup. No staging user JWT is needed because the app uses its localStorage/offline-user identity:
+Use Node 18 or newer and `jq`; install Playwright Chromium with `npx playwright install chromium`. From `tutor-system/`, load the existing `.env` into the shell without printing its values. Provide the selected project's anon and service-role keys in memory. The anon key is used by the browser Supabase client; the service-role key is used only by the runner for fixture inspection and cleanup. Provider credentials belong in Edge Function secrets and are not needed by the browser runner. No staging user JWT is needed because the app uses its localStorage/offline-user identity:
 
 ```bash
 set -a
@@ -50,6 +50,7 @@ The local `tutor-system/.env` points the app at production by default. Override 
 env -u SUPABASE_SERVICE_ROLE_KEY -u SUPABASE_ACCESS_TOKEN \
 REACT_APP_SUPABASE_URL="$E2E_SUPABASE_URL" \
 REACT_APP_SUPABASE_ANON_KEY="$E2E_SUPABASE_ANON_KEY" \
+REACT_APP_OAI_API_KEY= \
 PORT=3100 BROWSER=none npm start &
 curl --fail --silent --retry 20 --retry-connrefused --retry-delay 1 http://localhost:3100/ >/dev/null
 E2E_APP_URL=http://localhost:3100 npm run test:e2e:staging
@@ -65,7 +66,7 @@ Use an unused port in both commands if 3100 is occupied. To run one workflow, ap
 The seven rooms were migrated once from production demo rooms with `npm run test:e2e:staging:migrate-templates`, using `SUPABASE_ACCESS_TOKEN`, `REACT_APP_SUPABASE_STAGING_URL`, and `STAGING_SUPABASE_SERVICE_ROLE_KEY`. The migration is idempotent and validates existing copies. Assessment copies receive the canonical local template dialogue and full target inventory, even when the production room's `prompt_config` is null. It is setup, not part of a test run.
 After fetching the staging service key above, set `STAGING_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"` when running the migration command.
 
-The production assessment workflows use dedicated empty room `286de02f-30b0-46ee-8df3-17d1dae1ca89`, copied from the production transfer demo without its messages. The browser runner clears generated rows after each workflow. The production `assessment-api` also requires `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` in its Edge secret store.
+Production uses `3630671f-b40d-48ed-b28b-e1da6d407436` for the five tutor, checklist, and Guard workflows. Assessment delivery uses `286de02f-30b0-46ee-8df3-17d1dae1ca89`; answer pass and failure use separate empty copies `d6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd` and `79be49a2-e53c-493d-bd66-adcffbadbba5`. The browser runner clears generated rows after each workflow. The production `assessment-api` requires `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` in its Edge secret store.
 
 ## Record The Transfer Demo
 
