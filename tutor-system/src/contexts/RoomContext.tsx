@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
 import type { AssessmentOptionId } from '../types/assessment';
+import type { LearningTargetInput } from '../types/checklist';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import {
@@ -1346,6 +1347,37 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .single();
         if (error) throw error;
+
+        if (enabled) {
+            const { data: activeSessions, error: sessionError } = await supabase
+                .from('sessions')
+                .select('student_id')
+                .eq('room_id', currentRoom.id)
+                .eq('status', 'active');
+            if (sessionError) throw sessionError;
+
+            const studentId = (activeSessions || []).find((session) => session.student_id)?.student_id;
+            if (studentId) {
+                const legacyChecklist = await ChecklistService.getChecklistByRoom(currentRoom.id);
+                if (legacyChecklist) {
+                    const items: LearningTargetInput[] = [
+                        ...legacyChecklist.detection_areas,
+                        ...legacyChecklist.verification_steps,
+                    ].map(({ area_text, item_type, priority }) => ({
+                        area_text,
+                        item_type,
+                        priority: priority ?? 'important',
+                    }));
+                    if (items.length > 0) {
+                        await ChecklistService.initializeTransferChecklistForStudent(
+                            currentRoom.id,
+                            studentId,
+                            items,
+                        );
+                    }
+                }
+            }
+        }
         setCurrentRoom(normalizeRoom(data));
     };
 

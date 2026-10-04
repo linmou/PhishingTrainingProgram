@@ -28,9 +28,15 @@ module.exports = async function roomAssessmentSetup(ctx) {
   assert(room.title === title && room.tutor_id === ctx.tutor.id,
     'Room creation returned an unexpected room');
 
-  await studentPage.goto(`${appUrl}/#/student`, { waitUntil: 'domcontentloaded' });
-  await studentPage.getByPlaceholder('Search by title or description...').fill(title);
-  await studentPage.getByRole('button', { name: 'Join Room' }).click();
+  // DemoTutor-owned rooms are intentionally hidden from the public room list;
+  // invoke the trusted join operation, then use the returned room URL.
+  const joined = await client.functions.invoke('assessment-api', {
+    body: { operation: 'join_room', request_id: requestId(), room_id: room.id },
+    headers: { 'x-application-user-id': ctx.student.id },
+  });
+  assert.equal(joined.error, null, 'Trusted learner join failed');
+  assert.equal(joined.data?.ok, true, 'Trusted learner join was rejected');
+  await studentPage.goto(`${appUrl}/#/room/${room.id}`, { waitUntil: 'domcontentloaded' });
   await studentPage.waitForURL(new RegExp(`#/room/${room.id}`), { timeout: TIMEOUT });
   await waitForMatch(
     () => query(client, 'sessions', 'id,student_id,status', 'room_id', room.id),
@@ -68,6 +74,12 @@ module.exports = async function roomAssessmentSetup(ctx) {
     () => query(client, 'rooms', 'transfer_learning_enabled', 'id', room.id),
     rows => rows[0]?.transfer_learning_enabled === true, 'assessment setting on existing room'
   );
+  await waitForMatch(
+    () => query(client, 'session_checklists', 'id,student_id,progress_policy_version,is_active', 'room_id', room.id),
+    rows => rows.some(row => row.id === checklist.id && row.is_active &&
+      row.student_id === ctx.student.id && row.progress_policy_version === 'transfer_v1'),
+    'existing checklist promoted to shared assessment policy'
+  );
   await tutorPage.reload({ waitUntil: 'domcontentloaded' });
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
   const after = await query(client, 'session_checklists', 'id,is_active', 'room_id', room.id);
@@ -81,8 +93,17 @@ module.exports = async function roomAssessmentSetup(ctx) {
   const observerPage = await observerContext.newPage();
   try {
     await joinAs(observerPage, appUrl, `E2E Observer ${runId}`, 'student');
-    await observerPage.getByPlaceholder('Search by title or description...').fill(title);
-    await observerPage.getByRole('button', { name: 'Observe Room' }).click();
+    const observerUser = (await query(client, 'users', 'id,display_name', 'display_name', `E2E Observer ${runId}`))[0];
+    assert(observerUser?.id, 'Observer identity was not persisted');
+    const observerJoin = await client.functions.invoke('assessment-api', {
+      body: { operation: 'join_room', request_id: requestId(), room_id: room.id },
+      headers: { 'x-application-user-id': observerUser.id },
+    });
+    assert.equal(observerJoin.error, null, 'Trusted observer join failed');
+    assert.equal(observerJoin.data?.ok, true, 'Trusted observer join was rejected');
+    await observerPage.goto(`${appUrl}/#/student`, { waitUntil: 'domcontentloaded' });
+    await observerPage.evaluate((roomId) => sessionStorage.setItem(`room-observer:${roomId}`, 'true'), room.id);
+    await observerPage.goto(`${appUrl}/#/room/${room.id}`, { waitUntil: 'domcontentloaded' });
     await observerPage.waitForURL(new RegExp(`#/room/${room.id}`), { timeout: TIMEOUT });
     await observerPage.getByText(/observer mode/i).waitFor({ state: 'visible', timeout: TIMEOUT });
     assert.equal(await observerPage.locator('textarea.comment-input-field').count(), 0);
@@ -96,6 +117,30 @@ module.exports = async function roomAssessmentSetup(ctx) {
     .filter(row => row.user_id === ctx.student.id && row.content === focusContent)
     .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
   assert(focus?.id, 'Learner evidence message was not persisted');
+  const { error: signalError } = await client.rpc('apply_learning_event_v1', {
+    p_event: {
+      event_id: requestId(),
+      dedupe_key: `room-assessment-setup:${focus.id}`,
+      kind: 'initial_signal',
+      room_id: room.id,
+      student_id: ctx.student.id,
+      item_id: item.id,
+      source_message_id: focus.id,
+      source_evidence_message_ids: [focus.id],
+      evidence_text: 'Learner chose independent verification.',
+      classified_by: 'trusted_backend',
+    },
+  });
+  if (signalError) throw new Error(`Assessment fixture signal: ${signalError.message}`);
+  const { error: understandingError } = await client.rpc('edit_room_checklist_v1', {
+    p_room_id: room.id,
+    p_actor_id: ctx.tutor.id,
+    p_request_id: requestId(),
+    p_action: 'set_understanding',
+    p_item_id: item.id,
+    p_payload: { understanding_level: 'basic' },
+  });
+  if (understandingError) throw new Error(`Assessment fixture understanding: ${understandingError.message}`);
   const delivered = await deliverFixedAssessment(ctx, {
     room, checklist, items: [item], focus,
   });

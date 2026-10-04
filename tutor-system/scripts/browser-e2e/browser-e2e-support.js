@@ -219,6 +219,18 @@ async function cleanupCreatedRoom(config, roomId, tutorId) {
   assert.equal(rows[0].tutor_id, tutorId, `Refusing to delete room ${roomId} owned by another tutor`);
   assert(rows[0].description?.includes('[browser-e2e-created]'),
     `Refusing to delete room ${roomId} without the browser test marker`);
+  await managementQuery(config, `do $$ begin
+    delete from private.transfer_assessment_attempts where assessment_id in
+      (select id from private.transfer_assessments where room_id='${roomId}'::uuid);
+    delete from private.transfer_provider_attempts where room_id='${roomId}'::uuid;
+    delete from private.transfer_assessments where room_id='${roomId}'::uuid;
+    delete from private.learning_event_inbox where room_id='${roomId}'::uuid;
+    delete from public.ai_suggestion_feedback where room_id='${roomId}'::uuid;
+    delete from public.message_feedback where room_id='${roomId}'::uuid;
+    delete from public.sessions where room_id='${roomId}'::uuid;
+    delete from public.session_checklists where room_id='${roomId}'::uuid;
+    delete from public.messages where room_id='${roomId}'::uuid;
+  end $$;`);
   const deleted = await managementQuery(config,
     `delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid returning id`);
   assert.equal(deleted.length, 1, `Failed to delete created room ${roomId}`);
