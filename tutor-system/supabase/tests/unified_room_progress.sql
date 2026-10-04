@@ -21,6 +21,7 @@ DECLARE
   v_status text;
   v_updates integer;
   v_join_count integer;
+  v_denied boolean;
 BEGIN
   INSERT INTO public.users(id, email, display_name, "current_role", status)
   VALUES (v_tutor, v_tutor::text || '@example.invalid', 'Tutor', 'tutor', 'active'),
@@ -108,22 +109,27 @@ BEGIN
     RAISE EXCEPTION 'Judgment history attribution is incomplete';
   END IF;
 
+  v_denied := false;
   BEGIN
     PERFORM public.edit_room_checklist_v1(v_room, v_observer, gen_random_uuid(),
       'set_status', v_item, '{"status":"pending"}'::jsonb);
-    RAISE EXCEPTION 'Observer edited progress';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  EXCEPTION WHEN OTHERS THEN
+    v_denied := true;
   END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Observer edited progress'; END IF;
 
+  v_denied := false;
   BEGIN
     PERFORM public.post_assessment_message_v2(
       p_room_id := v_room, p_content := 'observer message', p_parent_message_id := NULL,
       p_assessment_id := NULL, p_selected_option_ids := NULL,
       p_actor_id := v_observer, p_request_id := gen_random_uuid());
-    RAISE EXCEPTION 'Observer posted a message';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  EXCEPTION WHEN OTHERS THEN
+    v_denied := true;
   END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Observer posted a message'; END IF;
 
+  v_denied := false;
   BEGIN
     PERFORM public.process_assessment_message_v2(
       p_assessment_id := gen_random_uuid(), p_message_id := gen_random_uuid(),
@@ -131,9 +137,10 @@ BEGIN
       p_expected_attempt_count := 0, p_expected_resolution := 'open',
       p_answer_outcome := 'passed', p_selected_option_ids := ARRAY[]::text[],
       p_next_progress := '{}'::jsonb, p_applied_transition := 'assessment_pass');
-    RAISE EXCEPTION 'Observer submitted an answer';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  EXCEPTION WHEN OTHERS THEN
+    v_denied := true;
   END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'Observer submitted an answer'; END IF;
 
   v_edit := public.edit_room_checklist_v1(v_room, v_tutor, gen_random_uuid(),
     'add_item', v_second_item,
