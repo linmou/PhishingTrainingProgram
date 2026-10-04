@@ -125,6 +125,44 @@ Deno.test('uses server configuration and projects the provider response', async 
   assert(!JSON.stringify(payload).includes('server-secret'));
 });
 
+Deno.test('forwards a full tutor prompt while rejecting requests above the total content limit', async () => {
+  const providerMessages: Array<{ role: string; content: string }> = [];
+  let providerCalls = 0;
+  const handler = createAiApiHandler(dependencies({
+    env: (name) => ({
+      OAI_API_KEY: 'server-secret',
+      OAI_BASE_URL: 'https://provider.invalid/v1',
+      OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    fetch: async (_input, init) => {
+      providerCalls += 1;
+      providerMessages.push(...JSON.parse(String(init?.body)).messages);
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: 'Ready' } }] }));
+    },
+  }));
+
+  const tutorPrompt = 'T'.repeat(23_637);
+  const accepted = await handler(request({
+    ...validBody,
+    messages: [{ role: 'system', content: tutorPrompt }, { role: 'user', content: 'Respond to the learner.' }],
+  }, ''));
+  assertEquals(accepted.status, 200);
+  assertEquals((await accepted.json()).data.content, 'Ready');
+  assertEquals(providerMessages[0], { role: 'system', content: tutorPrompt });
+  assertEquals(providerCalls, 1);
+
+  const oversized = await handler(request({
+    ...validBody,
+    messages: Array.from({ length: 5 }, (_, index) => ({
+      role: index === 0 ? 'system' : 'user',
+      content: 'T'.repeat(10_001),
+    })),
+  }, ''));
+  assertEquals(oversized.status, 400);
+  assertEquals((await oversized.json()).error.code, 'INVALID_REQUEST');
+  assertEquals(providerCalls, 1);
+});
+
 Deno.test('rejects invalid generation parameters without contacting the provider', async () => {
   let providerCalls = 0;
   const handler = createAiApiHandler(dependencies({

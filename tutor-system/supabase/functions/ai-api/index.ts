@@ -28,7 +28,7 @@ const corsHeaders = {
 };
 
 const MAX_MESSAGES = 30;
-const MAX_MESSAGE_LENGTH = 12_000;
+const MAX_MESSAGE_LENGTH = 50_000;
 const MAX_TOTAL_CONTENT_LENGTH = 50_000;
 const MAX_TOKENS = 2_000;
 
