@@ -291,6 +291,24 @@ export class TransferAssessmentService {
     });
   }
 
+  joinRoom(roomId: string): Promise<{ room_id: string; learner_id: string | null; room_role: 'student' | 'observer' }> {
+    return this.request('join_room', { room_id: roomId });
+  }
+
+  editLearningProgress(input: {
+    roomId: string;
+    itemId: string;
+    action?: 'set_status' | 'set_understanding' | 'edit_item' | 'set_priority' | 'add_item' | 'remove_item' | 'update_item';
+    updates: Record<string, unknown>;
+  }): Promise<Record<string, unknown>> {
+    return this.request('edit_learning_progress', {
+      room_id: input.roomId,
+      item_id: input.itemId,
+      action: input.action ?? 'update_item',
+      updates: input.updates,
+    });
+  }
+
   postMessage(input: {
     roomId: string;
     content: string;
@@ -334,10 +352,11 @@ export class TransferAssessmentService {
     return projectReviewedDelivery(result);
   }
 
-  async processMessage(messageId: string, assessmentId?: string): Promise<ProcessedMessageDTO> {
+  async processMessage(messageId: string, assessmentId?: string, roomId?: string): Promise<ProcessedMessageDTO> {
     const result = await this.request('process_message', {
       message_id: messageId,
       assessment_id: assessmentId ?? null,
+      room_id: roomId ?? null,
     });
     return projectProcessedMessage(result);
   }

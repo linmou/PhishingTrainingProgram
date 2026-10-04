@@ -600,26 +600,35 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             let restoredAIInteractions: AIInteraction[] = [];
             if (user?.current_role === 'tutor') {
-                const { data: feedbackData, error: feedbackError } = await supabase
-                    .from('ai_suggestion_feedback')
-                    .select('*')
-                    .eq('room_id', roomId)
-                    .order('created_at', { ascending: true });
-                if (feedbackError) throw feedbackError;
-                restoredAIInteractions = (feedbackData || []).map((feedback: any) => ({
-                    timestamp: feedback.created_at,
-                    parent_message_id: feedback.parent_message_id,
-                    parent_message_content: allMessages.find((message) => message.id === feedback.parent_message_id)?.content || '',
-                    ai_suggestion: feedback.ai_suggestion,
-                    tutor_action: feedback.tutor_action,
-                    tutor_final_response: feedback.tutor_final_response ?? undefined,
-                    response_time_ms: feedback.response_time_ms ?? undefined,
-                    raw_mode: feedback.raw_mode,
-                    raw_instruction: feedback.raw_instruction,
-                    mode_reason: feedback.mode_reason,
-                    final_mode: feedback.final_mode,
-                    mode_rectified: feedback.mode_rectified,
-                }));
+                try {
+                    const feedbackQuery = supabase
+                        .from('ai_suggestion_feedback')
+                        .select('*')
+                        .eq('room_id', roomId);
+                    const feedbackResult = typeof (feedbackQuery as any).order === 'function'
+                        ? await (feedbackQuery as any).order('created_at', { ascending: true })
+                        : { data: [], error: null };
+                    if (feedbackResult.error) {
+                        console.warn('Could not restore AI suggestion feedback:', feedbackResult.error);
+                    } else {
+                        restoredAIInteractions = (feedbackResult.data || []).map((feedback: any) => ({
+                            timestamp: feedback.created_at,
+                            parent_message_id: feedback.parent_message_id,
+                            parent_message_content: allMessages.find((message) => message.id === feedback.parent_message_id)?.content || '',
+                            ai_suggestion: feedback.ai_suggestion,
+                            tutor_action: feedback.tutor_action,
+                            tutor_final_response: feedback.tutor_final_response ?? undefined,
+                            response_time_ms: feedback.response_time_ms ?? undefined,
+                            raw_mode: feedback.raw_mode,
+                            raw_instruction: feedback.raw_instruction,
+                            mode_reason: feedback.mode_reason,
+                            final_mode: feedback.final_mode,
+                            mode_rectified: feedback.mode_rectified,
+                        }));
+                    }
+                } catch (feedbackLoadError) {
+                    console.warn('Could not restore AI suggestion feedback:', feedbackLoadError);
+                }
             }
 
             setCurrentRoom(normalizeRoom(roomData));

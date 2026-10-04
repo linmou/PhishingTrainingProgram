@@ -9,6 +9,7 @@ import { SessionChecklist, ChecklistItem, ChecklistProgress } from '../types/che
 import { getAIConfig } from '../services/aiService';
 import { assessChecklistGenerationContext, ChecklistGenerationContext } from '../services/checklistGenerationContext';
 import { useOptionalAuth } from '../contexts/AuthContext';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 
 export interface GenerationModalState {
   mode: 'no_ai_config' | 'empty_system_prompt';
@@ -16,8 +17,9 @@ export interface GenerationModalState {
   context: ChecklistGenerationContext;
 }
 
-/** Progress fields the trusted transfer path owns; the room UI must never write them. */
-const TRANSFER_PROGRESS_OWNED_FIELDS: ReadonlyArray<keyof ChecklistItem> = ['status', 'understanding_level'];
+const TRANSFER_PROGRESS_FIELDS: ReadonlyArray<keyof ChecklistItem> = [
+  'status', 'understanding_level', 'area_text', 'priority', 'item_type',
+];
 
 export interface UseChecklistReturn {
   // State
@@ -429,23 +431,57 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   const updateItem = useCallback(async (itemId: string, updates: Partial<ChecklistItem>) => {
     if (!roomId) return;
 
-    // A transfer-policy progress pair is written by the trusted transfer path only. The browser
-    // refuses the write here as well as in the panel, so no caller can mutate progression.
-    if (checklist?.progress_policy_version === 'transfer_v1'
-      && TRANSFER_PROGRESS_OWNED_FIELDS.some((field) => field in updates)) {
-      setError('Transfer-policy progress is server-owned and cannot be edited from the room UI.');
-      return;
-    }
-
-    setLoading(true);
+    const trustedTransferEdit = checklist?.progress_policy_version === 'transfer_v1'
+      && TRANSFER_PROGRESS_FIELDS.some((field) => field in updates);
+    setLoading(!trustedTransferEdit);
     setError(null);
 
     try {
       console.log('📝 Updating checklist item:', itemId, updates);
-      await RoomFeaturesService.checklist.update(itemId, updates);
+      if (trustedTransferEdit) {
+        await transferAssessmentService.editLearningProgress({
+          roomId,
+          itemId,
+          action: Object.prototype.hasOwnProperty.call(updates, 'status')
+            ? 'set_status'
+            : Object.prototype.hasOwnProperty.call(updates, 'understanding_level')
+              ? 'set_understanding'
+              : Object.prototype.hasOwnProperty.call(updates, 'area_text')
+                ? 'edit_item'
+                : Object.prototype.hasOwnProperty.call(updates, 'priority')
+                  ? 'set_priority'
+                  : 'update_item',
+          updates: updates as Record<string, unknown>,
+        });
+        setChecklist((current) => {
+          if (!current) return current;
+          const updateItemValue = (item: ChecklistItem) => item.id === itemId
+            ? { ...item, ...updates, updated_at: new Date() }
+            : item;
+          const next = {
+            ...current,
+            detection_areas: current.detection_areas.map(updateItemValue),
+            verification_steps: current.verification_steps.map(updateItemValue),
+            updated_at: new Date(),
+          };
+          const items = [...next.detection_areas, ...next.verification_steps];
+          const covered = items.filter(item => item.status === 'covered').length;
+          setProgress(previous => previous ? {
+            ...previous,
+            total_areas: items.length,
+            covered_areas: covered,
+            partially_covered_areas: items.filter(item => item.status === 'partially_covered').length,
+            pending_areas: items.filter(item => item.status === 'pending').length,
+            completion_percentage: items.length ? Math.round((covered / items.length) * 100) : 0,
+          } : previous);
+          return next;
+        });
+      } else {
+        await RoomFeaturesService.checklist.update(itemId, updates);
+      }
       
       // Refresh checklist to get updated data
-      await refreshChecklist();
+      if (!trustedTransferEdit) await refreshChecklist();
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update item';
@@ -472,13 +508,9 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       const transferChecklist = await (user?.current_role === 'student'
         ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
         : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
-      const legacyChecklist = transferEnabled && user?.current_role === 'tutor'
-        ? await RoomFeaturesService.checklist.read(roomId)
-        : null;
-      setPriorChecklist(legacyChecklist);
-      const updatedChecklist = transferEnabled
-        ? transferChecklist
-        : transferChecklist || legacyChecklist || await RoomFeaturesService.checklist.read(roomId);
+      const legacyChecklist = transferChecklist ? null : await RoomFeaturesService.checklist.read(roomId);
+      setPriorChecklist(null);
+      const updatedChecklist = transferChecklist || legacyChecklist;
       if (updatedChecklist?.progress_policy_version === 'transfer_v1' && (
         !updatedChecklist.student_id ||
         (user?.current_role === 'student' && updatedChecklist.student_id !== user.id)

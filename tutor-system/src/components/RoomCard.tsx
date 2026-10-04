@@ -58,7 +58,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
                 )}
                 
                 <div className={`room-card-status ${statusClass}`}>
-                    {roomStatus === 'Room Full' ? '🔒 Room Full' : roomStatus === 'Your Session' ? 'Your Session' : '🟢 Available'}
+                    {roomStatus === 'Room Full' ? '🔒 Room Full' : roomStatus === 'Observer Available' ? '👁️ Observer Available' : roomStatus === 'Your Session' ? 'Your Session' : '🟢 Available'}
                 </div>
                 
                 <button

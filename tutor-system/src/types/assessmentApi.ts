@@ -2,6 +2,8 @@
 
 export const ASSESSMENT_API_OPERATIONS = [
   'initialize_checklist',
+  'join_room',
+  'edit_learning_progress',
   'post_message',
   'analyze_message',
   'prepare_turn',

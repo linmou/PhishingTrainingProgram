@@ -13,7 +13,7 @@ import { applyLearningEvent, isValidTransferProgress } from '../../../src/servic
 import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
 const OPERATIONS = new Set([
-  'initialize_checklist', 'post_message', 'analyze_message',
+  'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
   'prepare_turn', 'send_reviewed', 'process_message',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
@@ -91,6 +91,7 @@ const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   INVALID_REQUEST: { status: 400, retryable: false },
   UNAUTHORIZED: { status: 401, retryable: false },
   FORBIDDEN: { status: 403, retryable: false },
+  OBSERVER_READ_ONLY: { status: 403, retryable: false },
   WRONG_LEARNER: { status: 409, retryable: false },
   ITEM_VALIDATION_FAILED: { status: 409, retryable: false },
   INVALID_SCOPE: { status: 409, retryable: false },
@@ -564,6 +565,12 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
     try {
       let data: unknown;
       switch (body.operation) {
+        case 'join_room':
+          data = await rpc(deps, 'join_room_v1', {
+            p_room_id: requiredString(body.room_id),
+            p_student_id: principal.application_user_id,
+          });
+          break;
         case 'initialize_checklist':
           assertTeacher(principal);
           if (!Array.isArray(body.items) || body.items.length === 0 || body.items.some((value: unknown) => {
@@ -580,8 +587,24 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             p_actor_id: principal.application_user_id,
           });
           break;
+        case 'edit_learning_progress':
+          assertTeacher(principal);
+          data = await rpc(deps, 'edit_room_checklist_v1', {
+            p_room_id: assertRoom(principal, body.room_id),
+            p_actor_id: principal.application_user_id,
+            p_request_id: requiredString(body.request_id),
+            p_action: requiredString(body.action, 'ITEM_VALIDATION_FAILED'),
+            p_item_id: requiredString(body.item_id, 'ITEM_VALIDATION_FAILED'),
+            p_payload: asRecord(body.updates),
+          });
+          break;
         case 'post_message': {
           const roomId = assertRoom(principal, body.room_id);
+          const roomEntry = asRecord(await rpc(deps, 'join_room_v1', {
+            p_room_id: roomId,
+            p_student_id: principal.application_user_id,
+          }));
+          if (roomEntry.room_role === 'observer') throw new Error('OBSERVER_READ_ONLY');
           data = await rpc(deps, 'post_assessment_message_v2', {
             p_room_id: roomId,
             p_content: requiredString(body.content),
@@ -618,7 +641,14 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
           break;
         }
         case 'process_message':
-          if (body.room_id != null) assertRoom(principal, body.room_id);
+          if (body.room_id != null) {
+            const roomId = assertRoom(principal, body.room_id);
+            const roomEntry = asRecord(await rpc(deps, 'join_room_v1', {
+              p_room_id: roomId,
+              p_student_id: principal.application_user_id,
+            }));
+            if (roomEntry.room_role === 'observer') throw new Error('OBSERVER_READ_ONLY');
+          }
           data = await processMessage(deps, body, principal, body.request_id);
           break;
       }
@@ -653,11 +683,11 @@ function createDefaultDependencies(): AssessmentApiDependencies {
         throw new Error('UNAUTHORIZED');
       }
       const [{ data: profile }, { data: sessions }, { data: rooms }] = await Promise.all([
-        admin.from('users').select('current_role').eq('id', userId).maybeSingle(),
-        admin.from('sessions').select('room_id').or(`student_id.eq.${userId},tutor_id.eq.${userId}`),
+        admin.from('users').select('current_role, status').eq('id', userId).maybeSingle(),
+        admin.from('sessions').select('room_id').eq('status', 'active').or(`student_id.eq.${userId},tutor_id.eq.${userId}`),
         admin.from('rooms').select('id').eq('tutor_id', userId),
       ]);
-      if (!profile) throw new Error('FORBIDDEN');
+      if (!profile || profile.status !== 'active') throw new Error('FORBIDDEN');
       const roomIds = new Set<string>();
       (sessions ?? []).forEach((entry: any) => roomIds.add(entry.room_id));
       (rooms ?? []).forEach((entry: any) => roomIds.add(entry.id));

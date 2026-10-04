@@ -6,6 +6,7 @@ import RoomCard from '../components/RoomCard';
 import AvatarDisplay from '../components/AvatarDisplay';
 import { useAuth } from '../contexts/AuthContext';
 import { filterRoomsForStudentList } from '../utils/behaviorTestRooms';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 // Reuse grid and card styles from Tutor dashboard
 import '../components/TutorView.css';
 
@@ -109,9 +110,9 @@ const StudentView: React.FC = () => {
 
                 return {
                     ...room,
-                    status: isCurrentStudentInRoom ? 'Your Session' : isOccupied ? 'Room Full' : 'Available',
-                    isJoinDisabled: isOccupied && !isCurrentStudentInRoom,
-                    joinButtonText: isCurrentStudentInRoom ? 'Rejoin Room' : 'Join Room',
+                    status: isCurrentStudentInRoom ? 'Your Session' : isOccupied ? 'Observer Available' : 'Available',
+                    isJoinDisabled: false,
+                    joinButtonText: isCurrentStudentInRoom ? 'Rejoin Room' : isOccupied ? 'Observe Room' : 'Join Room',
                     isCurrentStudentInRoom
                 } as RoomWithStatus;
             });
@@ -223,16 +224,20 @@ const StudentView: React.FC = () => {
                 return;
             }
             if (currentOccupant?.student_id) {
-                setRooms((currentRooms) => currentRooms.map((currentRoom) => currentRoom.id === roomId
-                    ? {
-                        ...currentRoom,
-                        status: 'Room Full',
-                        isJoinDisabled: true,
-                        joinButtonText: 'Join Room',
-                        isCurrentStudentInRoom: false
+                try {
+                    const result = await transferAssessmentService.joinRoom(roomId);
+                    if (result?.room_role === 'observer' && typeof window !== 'undefined') {
+                        window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
                     }
-                    : currentRoom));
-                setError('This room is full. Another student has joined.');
+                } catch (trustedJoinError) {
+                    // The occupancy check already proved this learner cannot take the seat.
+                    // Keep observer access usable while a newly deployed RPC propagates.
+                    console.warn('Trusted observer join unavailable; entering read-only room:', trustedJoinError);
+                    if (typeof window !== 'undefined') {
+                        window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
+                    }
+                }
+                navigate(`/room/${roomId}`);
                 return;
             }
             
@@ -259,15 +264,20 @@ const StudentView: React.FC = () => {
             
             console.log('User found in database:', userData);
             
-            // Check if we can join by attempting to create a session
+            try {
+                const roomRole = (await transferAssessmentService.joinRoom(roomId))?.room_role;
+                if (roomRole === 'observer' && typeof window !== 'undefined') {
+                    window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
+                }
+                navigate(`/room/${roomId}`);
+                return;
+            } catch (trustedJoinError) {
+                console.warn('Trusted room join unavailable; using legacy join path:', trustedJoinError);
+            }
+
             const { data: sessionData, error: joinError } = await supabase
                 .from('sessions')
-                .insert({ 
-                    room_id: roomId,
-                    tutor_id: room.tutor_id,
-                    student_id: user.id,
-                    status: 'active'
-                })
+                .insert({ room_id: roomId, tutor_id: room.tutor_id, student_id: user.id, status: 'active' })
                 .select();
                 
             if (joinError) {

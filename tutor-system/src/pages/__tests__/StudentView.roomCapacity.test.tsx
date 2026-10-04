@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Test file: src/pages/StudentView.roomCapacity.test.tsx
- * Purpose: verify one active student per room, same-student re-entry, and a concurrent join conflict.
+ * Purpose: verify the room's first learner can re-enter while later students join as observers.
  */
 
 import React from 'react';
@@ -29,6 +29,10 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: mockAuthUser, loading: false }),
+}));
+
+jest.mock('../../services/transferAssessmentService', () => ({
+  transferAssessmentService: { joinRoom: jest.fn(async (roomId: string) => ({ room_id: roomId, learner_id: 'student-2', room_role: 'observer' })) },
 }));
 
 const room = {
@@ -121,14 +125,18 @@ describe('StudentView room capacity', () => {
     setupSupabase();
   });
 
-  it('marks a room full and disables joining when another student has an active session', async () => {
+  it('offers observer entry when another student owns the room', async () => {
     activeSessions = [{ room_id: room.id, student_id: 'student-2', status: 'active' }];
 
     renderStudent();
 
     const card = await screen.findByTestId(`room-card-${room.id}`);
-    expect(card).toHaveTextContent('Room Full');
-    expect(screen.getByRole('button', { name: /join room/i })).toBeDisabled();
+    expect(card).toHaveTextContent('Observe');
+    expect(screen.getByRole('button', { name: /observe room/i })).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: /observe room/i }));
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
+    expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`);
+    expect(insertSession).not.toHaveBeenCalled();
   });
 
   it('allows the current student to rejoin without inserting a duplicate active session', async () => {
@@ -142,7 +150,7 @@ describe('StudentView room capacity', () => {
     expect(insertSession).not.toHaveBeenCalled();
   });
 
-  it('reports a full room when another student wins the active-session insert race', async () => {
+  it('enters as observer when another student wins the learner-seat race', async () => {
     activeSessions = [];
     insertSession.mockImplementationOnce(() => ({
       select: jest.fn().mockImplementation(async () => {
@@ -155,8 +163,8 @@ describe('StudentView room capacity', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: /join room/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/room is full/i);
-    expect(mockNavigate).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(`/room/${room.id}`));
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('rejoins when the current student wins the active-session insert race', async () => {

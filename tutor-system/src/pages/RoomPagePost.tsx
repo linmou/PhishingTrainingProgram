@@ -116,6 +116,16 @@ const RoomPagePost: React.FC = () => {
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [joinError, setJoinError] = useState('');
+    const [roomObserver, setRoomObserver] = useState(false);
+
+    useEffect(() => {
+        if (!roomId || typeof window === 'undefined') return;
+        const key = `room-observer:${roomId}`;
+        if (window.sessionStorage.getItem(key) === 'true') {
+            setRoomObserver(true);
+            window.sessionStorage.removeItem(key);
+        }
+    }, [roomId]);
     
     // Scroll and notification state
     const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
@@ -640,7 +650,7 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
-    const canSendMessages = user && user.current_role !== 'observer';
+    const canSendMessages = user && user.current_role !== 'observer' && !roomObserver;
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
     useEffect(() => {

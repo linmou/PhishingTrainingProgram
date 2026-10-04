@@ -20,6 +20,7 @@ import { ChecklistGenerationModal } from './ChecklistGenerationModal';
 import { ManualChecklistInput } from './ManualChecklistInput';
 import AddCustomAreaModal from './AddCustomAreaModal';
 import { RoomFeaturesService } from '../services/roomFeaturesService';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 import { useOptionalAuth } from '../contexts/AuthContext';
 import './ChecklistPanel.css';
 
@@ -173,26 +174,17 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
           <div className="checklist-item-controls-expanded">
             <div className="control-group">
               <label>Status:</label>
-              {transferPolicy ? (
-                <span className="status-policy-value">
-                  {item.status === 'pending' && 'Not yet demonstrated'}
-                  {item.status === 'partially_covered' && 'Ready for transfer check'}
-                  {item.status === 'needs_review' && 'Needs review'}
-                  {item.status === 'covered' && 'Transfer verified'}
-                </span>
-              ) : (
-                <select
-                  value={item.status}
-                  onChange={(e) => onStatusChange(item.id, e.target.value as ChecklistItem['status'])}
-                  className="status-select"
-                  disabled={progressLocked}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="partially_covered">Partially Covered</option>
-                  <option value="covered">Covered</option>
-                  <option value="needs_review">Needs Review</option>
-                </select>
-              )}
+              <select
+                value={item.status}
+                onChange={(e) => onStatusChange(item.id, e.target.value as ChecklistItem['status'])}
+                className="status-select"
+                disabled={progressLocked}
+              >
+                <option value="pending">Pending</option>
+                <option value="partially_covered">Partially Covered</option>
+                <option value="covered">Covered</option>
+                <option value="needs_review">Needs Review</option>
+              </select>
             </div>
 
             <div className="control-group">
@@ -201,6 +193,7 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 value={item.priority}
                 onChange={(e) => onPriorityChange(item.id, e.target.value as ChecklistItem['priority'])}
                 className="priority-select"
+                disabled={progressLocked}
               >
                 <option value="critical">Critical</option>
                 <option value="important">Important</option>
@@ -212,7 +205,7 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
           <div className="checklist-item-text-edit">
             <div className="text-edit-header">
               <label>Item Text:</label>
-              {!editingText && !transferPolicy && (
+              {!editingText && !progressLocked && (
                 <button
                   className="edit-text-button"
                   onClick={() => setEditingText(true)}
@@ -236,11 +229,11 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                   <button onClick={handleCancelEditText} className="cancel-text">Cancel</button>
                 </div>
               </div>
-            ) : (
+            ) : (!transferPolicy || !progressLocked) ? (
               <div className="text-display">
                 {item.area_text}
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="checklist-item-notes">
@@ -319,7 +312,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   // Use the enhanced service layer hook
   const { 
     checklist,
-    priorChecklist,
     loading, 
     error, 
     progress,
@@ -341,21 +333,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
   const setupRequired = transferEnabled && (!checklist ||
     checklist.detection_areas.length + checklist.verification_steps.length === 0);
-  const progressControlsLocked = progressLocked || transferPolicy;
-  const priorProgress = transferEnabled && priorChecklist && (
-    <div className="checklist-summary">
-      <strong>Previous Learning Progress</strong>
-      <div>{priorChecklist.template_name}</div>
-      <div>{priorChecklist.completion_percentage}% Complete</div>
-      {[...priorChecklist.detection_areas, ...priorChecklist.verification_steps].map(item => (
-        <div key={item.id} className="checklist-item">
-          <span>{item.area_text}</span>
-          <span>{item.status === 'partially_covered' ? 'Partially covered' :
-            item.status === 'covered' ? 'Covered' : 'Pending'}</span>
-        </div>
-      ))}
-    </div>
-  );
+  const progressControlsLocked = progressLocked;
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     if (progressControlsLocked) return;
@@ -437,8 +415,20 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
       const itemType = 'detection_area';
       console.log('Adding custom area:', { areaText, itemType, priority });
       
-      // Use the ChecklistService method to add the custom area
-      await RoomFeaturesService.checklist.addCustomArea(roomId, areaText, itemType, priority);
+      if (transferPolicy) {
+        const randomUuid = globalThis.crypto?.randomUUID;
+        const itemId = randomUuid
+          ? randomUuid.call(globalThis.crypto)
+          : `item-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        await transferAssessmentService.editLearningProgress({
+          roomId,
+          itemId,
+          action: 'add_item',
+          updates: { area_text: areaText, item_type: itemType, priority },
+        });
+      } else {
+        await RoomFeaturesService.checklist.addCustomArea(roomId, areaText, itemType, priority);
+      }
       
       // Refresh the checklist to show the new area
       await refreshChecklist();
@@ -530,8 +520,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <EyeOff size={16} />
           </button>
         </div>
-        {priorProgress}
-        
         {/* Show manual input form */}
         {canSetupTargets && showManualInput && (
           <div className="checklist-manual-input">
@@ -621,7 +609,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
       </div>
 
       <div className="checklist-content">
-        {priorProgress}
         <div className="checklist-summary">
           <div className="template-info">
             <strong>{checklist.template_name}</strong>
@@ -713,6 +700,26 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         </div>
 
         <div className="checklist-actions">
+          {transferEnabled && !transferPolicy && canSetupTargets && (
+            <>
+              <button
+                className="action-button primary"
+                onClick={() => startSmartGeneration()}
+                disabled={loading || progressControlsLocked}
+              >
+                <Zap size={16} />
+                Generate Learning Targets
+              </button>
+              <button
+                className="action-button secondary"
+                onClick={openManualInput}
+                disabled={loading || progressControlsLocked}
+              >
+                <Edit size={16} />
+                Enter Manually
+              </button>
+            </>
+          )}
           <button 
             className="action-button primary"
             onClick={() => setShowAddCustomArea(true)}

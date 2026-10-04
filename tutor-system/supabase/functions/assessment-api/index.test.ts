@@ -79,6 +79,105 @@ function validProviderPayload(): Record<string, unknown> {
   };
 }
 
+Deno.test('room entry grants the first student the learner seat and returns observer access afterward', async () => {
+  const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    verifier: { verify: async () => ({
+      principal_id: 'principal-student', application_user_id: 'student-2',
+      allowed_room_ids: ['room-1'], can_review_assessment: false,
+    }) },
+    rpc: async (name, args) => {
+      calls.push({ name, args });
+      return { data: { room_id: 'room-1', learner_id: 'student-1', room_role: 'observer' }, error: null };
+    },
+  }));
+
+  const response = await handler(request('join_room', { room_id: 'room-1' }));
+  assertEquals(response.status, 200);
+  assertEquals((await response.json()).data.room_role, 'observer');
+  assertEquals(calls.length, 1);
+  assertEquals(calls[0].args.p_actor_id, 'student-2');
+});
+
+Deno.test('tutor status judgment is submitted under the verified actor identity', async () => {
+  const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    rpc: async (name, args) => {
+      calls.push({ name, args });
+      return { data: { item_id: 'item-1', status: 'needs_review' }, error: null };
+    },
+  }));
+
+  const response = await handler(request('edit_learning_progress', {
+    room_id: 'room-1', item_id: 'item-1', action: 'set_status', status: 'needs_review',
+  }));
+  assertEquals(response.status, 200);
+  assertEquals((await response.json()).data.status, 'needs_review');
+  assertEquals(calls.length, 1);
+  assertEquals(calls[0].args.p_actor_id, 'teacher-1');
+  assertEquals(calls[0].args.p_action, 'set_status');
+});
+
+Deno.test('observer cannot post a message or answer through the trusted API', async () => {
+  const calls: string[] = [];
+  const handler = createAssessmentApiHandler(dependencies({
+    verifier: { verify: async () => ({
+      principal_id: 'observer-principal', application_user_id: 'student-2',
+      allowed_room_ids: ['room-1'], can_review_assessment: false,
+    }) },
+    rpc: async (name) => {
+      calls.push(name);
+      if (name === 'join_room_v1') return { data: { room_role: 'observer' }, error: null };
+      return { data: {}, error: null };
+    },
+  }));
+  const response = await handler(request('post_message', { room_id: 'room-1', content: 'observer write' }));
+  assertEquals(response.status, 403);
+  assertEquals((await response.json()).error.code, 'OBSERVER_READ_ONLY');
+  const answer = await handler(request('process_message', {
+    room_id: 'room-1', assessment_id: 'assessment-1', message_id: 'answer-1',
+  }));
+  assertEquals(answer.status, 403);
+  assertEquals((await answer.json()).error.code, 'OBSERVER_READ_ONLY');
+  assertEquals(calls, ['join_room_v1', 'join_room_v1']);
+});
+
+Deno.test('two simultaneous first joins are arbitrated by the trusted room boundary', async () => {
+  let arrivals = 0;
+  let release!: () => void;
+  const bothArrived = new Promise<void>((resolve) => { release = resolve; });
+  let learnerSeat: string | null = null;
+  const handler = createAssessmentApiHandler(dependencies({
+    verifier: { verify: async () => ({
+      principal_id: 'principal-student', application_user_id: `student-${arrivals + 1}`,
+      allowed_room_ids: ['room-1'], can_review_assessment: false,
+    }) },
+    rpc: async (name) => {
+      assertEquals(name, 'join_room_v1');
+      arrivals += 1;
+      if (arrivals === 2) release();
+      await bothArrived;
+      const result = learnerSeat
+        ? { room_id: 'room-1', learner_id: learnerSeat, room_role: 'observer' }
+        : (learnerSeat = 'student-1', { room_id: 'room-1', learner_id: learnerSeat, room_role: 'student' });
+      return { data: result, error: null };
+    },
+  }));
+
+  const [first, second] = await Promise.all([
+    handler(request('join_room', { room_id: 'room-1' })),
+    handler(request('join_room', { room_id: 'room-1' })),
+  ]);
+  assertEquals(first.status, 200);
+  assertEquals(second.status, 200);
+  const roles = await Promise.all([
+    first.json().then(body => body.data.room_role),
+    second.json().then(body => body.data.room_role),
+  ]);
+  assertEquals(roles.sort(), ['observer', 'student']);
+  assertEquals(learnerSeat, 'student-1');
+});
+
 Deno.test('approved custom target flows through evidence, assessment delivery, and answer processing', async () => {
   const operations: string[] = [];
   let approved = false;
