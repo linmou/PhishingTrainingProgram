@@ -14,6 +14,7 @@ const support = require('./browser-e2e/browser-e2e-support');
 const workflows = {
   'tutor-response': require('./browser-e2e/workflows/tutor-response'),
   'checklist-generation': require('./browser-e2e/workflows/checklist-generation'),
+  'room-assessment-setup': require('./browser-e2e/workflows/room-assessment-setup'),
   'checklist-management': require('./browser-e2e/workflows/checklist-management'),
   'checklist-coverage': require('./browser-e2e/workflows/checklist-coverage'),
   'guard-mode': require('./browser-e2e/workflows/guard-mode'),
@@ -110,13 +111,21 @@ async function main(argv = process.argv.slice(2)) {
     support.writeJson(path.join(evidenceDir, 'report.json'), report);
     const context = {
       tutorPage, studentPage, client, config, appUrl: config.appUrl, tutor, student, runId, evidenceDir,
+      createdRooms: new Set(),
       existingRoom: async (kind) => {
         const room = await support.existingRoom(client, kind, tutor.id);
         report.room_ids.push(room.id);
         support.writeJson(path.join(evidenceDir, 'report.json'), report);
         return room;
       },
-      cleanupRoom: (roomId) => support.cleanupRoom(config, roomId)
+      registerCreatedRoom: (roomId) => {
+        context.createdRooms.add(roomId);
+        report.room_ids.push(roomId);
+        support.writeJson(path.join(evidenceDir, 'report.json'), report);
+      },
+      cleanupRoom: (roomId) => context.createdRooms.has(roomId)
+        ? support.cleanupCreatedRoom(config, roomId, tutor.id)
+        : support.cleanupRoom(config, roomId)
     };
     report.status = await runWorkflows(selected, context, report, evidenceDir) ? 'pass' : 'fail';
   } catch (error) {

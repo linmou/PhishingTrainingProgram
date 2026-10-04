@@ -318,7 +318,8 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const canSetupTargets = !transferEnabled || auth?.user?.current_role === 'tutor';
   // Use the enhanced service layer hook
   const { 
-    checklist, 
+    checklist,
+    priorChecklist,
     loading, 
     error, 
     progress,
@@ -341,6 +342,20 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const setupRequired = transferEnabled && (!checklist ||
     checklist.detection_areas.length + checklist.verification_steps.length === 0);
   const progressControlsLocked = progressLocked || transferPolicy;
+  const priorProgress = transferEnabled && priorChecklist && (
+    <div className="checklist-summary">
+      <strong>Previous Learning Progress</strong>
+      <div>{priorChecklist.template_name}</div>
+      <div>{priorChecklist.completion_percentage}% Complete</div>
+      {[...priorChecklist.detection_areas, ...priorChecklist.verification_steps].map(item => (
+        <div key={item.id} className="checklist-item">
+          <span>{item.area_text}</span>
+          <span>{item.status === 'partially_covered' ? 'Partially covered' :
+            item.status === 'covered' ? 'Covered' : 'Pending'}</span>
+        </div>
+      ))}
+    </div>
+  );
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     if (progressControlsLocked) return;
@@ -515,6 +530,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <EyeOff size={16} />
           </button>
         </div>
+        {priorProgress}
         
         {/* Show manual input form */}
         {canSetupTargets && showManualInput && (
@@ -541,7 +557,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               <button 
                 onClick={() => startSmartGeneration()}
                 className="generate-checklist-button primary"
-                disabled={loading || (transferEnabled ? !studentId : progressControlsLocked)}
+                disabled={loading || (!transferEnabled && progressControlsLocked)}
               >
                 <Zap size={16} />
                 {loading ? 'Generating...' : transferEnabled ? 'Generate Learning Targets' : 'Smart Generate'}
@@ -549,7 +565,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               <button 
                 onClick={openManualInput} 
                 className="manual-checklist-button secondary"
-                disabled={loading || (transferEnabled ? !studentId : progressControlsLocked)}
+                disabled={loading || (!transferEnabled && progressControlsLocked)}
               >
                 <Edit size={16} />
                 {transferEnabled ? 'Enter Manually' : 'Manual Input'}
@@ -605,6 +621,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
       </div>
 
       <div className="checklist-content">
+        {priorProgress}
         <div className="checklist-summary">
           <div className="template-info">
             <strong>{checklist.template_name}</strong>

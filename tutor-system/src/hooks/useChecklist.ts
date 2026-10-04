@@ -22,6 +22,7 @@ const TRANSFER_PROGRESS_OWNED_FIELDS: ReadonlyArray<keyof ChecklistItem> = ['sta
 export interface UseChecklistReturn {
   // State
   checklist: SessionChecklist | null;
+  priorChecklist: SessionChecklist | null;
   loading: boolean;
   error: string | null;
   progress: ChecklistProgress | null;
@@ -60,6 +61,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   const transferEnabled = transfer?.enabled === true;
   const transferStudentId = transfer?.studentId ?? null;
   const [checklist, setChecklist] = useState<SessionChecklist | null>(null);
+  const [priorChecklist, setPriorChecklist] = useState<SessionChecklist | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<ChecklistProgress | null>(null);
@@ -470,7 +472,13 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       const transferChecklist = await (user?.current_role === 'student'
         ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
         : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
-      const updatedChecklist = transferEnabled ? transferChecklist : transferChecklist || await RoomFeaturesService.checklist.read(roomId);
+      const legacyChecklist = transferEnabled && user?.current_role === 'tutor'
+        ? await RoomFeaturesService.checklist.read(roomId)
+        : null;
+      setPriorChecklist(legacyChecklist);
+      const updatedChecklist = transferEnabled
+        ? transferChecklist
+        : transferChecklist || legacyChecklist || await RoomFeaturesService.checklist.read(roomId);
       if (updatedChecklist?.progress_policy_version === 'transfer_v1' && (
         !updatedChecklist.student_id ||
         (user?.current_role === 'student' && updatedChecklist.student_id !== user.id)
@@ -578,6 +586,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   return {
     // State
     checklist,
+    priorChecklist,
     loading,
     error,
     progress,

@@ -12,6 +12,7 @@ import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
 import MultiAgentSuggestionEditor from '../components/MultiAgentSuggestionEditor';
 import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/transferAssessmentUiAdapter';
 import ChecklistPanel from '../components/ChecklistPanel';
+import { supabase } from '../services/supabase';
 import { ChecklistService } from '../services/checklistService';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
@@ -97,6 +98,7 @@ const RoomPagePost: React.FC = () => {
     const [showClearChatModal, setShowClearChatModal] = useState(false);
     const [clearingChat, setClearingChat] = useState(false);
     const [showChecklist, setShowChecklist] = useState(false);
+    const [transferStudentId, setTransferStudentId] = useState<string | null>(null);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
     const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.active_response_mode === 'guard';
     const composerIdentity = isGuardComposer
@@ -655,10 +657,27 @@ const RoomPagePost: React.FC = () => {
             .catch(() => { if (active) setWaitingForTargets(true); });
         return () => { active = false; };
     }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, messages.length]);
-    const learnerIds = Array.from(new Set(participants
-        .filter(participant => participant.current_role === 'student')
-        .map(participant => participant.id)));
-    const transferStudentId = learnerIds.length === 1 ? learnerIds[0] : null;
+    useEffect(() => {
+        if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'tutor' || !showChecklist) {
+            setTransferStudentId(null);
+            return;
+        }
+        let active = true;
+        const loadLearner = async () => {
+            const { data, error } = await supabase.from('sessions')
+                .select('student_id')
+                .eq('room_id', currentRoom.id)
+                .eq('status', 'active')
+                .not('student_id', 'is', null);
+            if (active && !error) {
+                const learnerIds = Array.from(new Set((data || []).map(session => session.student_id)));
+                setTransferStudentId(learnerIds.length === 1 ? learnerIds[0] : null);
+            }
+        };
+        loadLearner();
+        const interval = window.setInterval(loadLearner, 3000);
+        return () => { active = false; window.clearInterval(interval); };
+    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.current_role, showChecklist]);
 
     const handleToggleGuardMode = async () => {
         if (!currentRoom) return;

@@ -5,7 +5,8 @@
  *
  * Responsibility: prove transfer progress is read owner-scoped straight from the server and cannot
  * be written from the browser (status or understanding), while a legacy room-shared checklist keeps
- * its editable controls and is never presented as transfer verification.
+ * its editable controls and is never presented as transfer verification. Also check target setup
+ * in a newly created assessment room before learner messages identify the owner.
  */
 
 import React from 'react';
@@ -15,6 +16,7 @@ import ChecklistPanel from '../ChecklistPanel';
 import { useChecklist } from '../../hooks/useChecklist';
 import { useOptionalAuth } from '../../contexts/AuthContext';
 import { RoomFeaturesService } from '../../services/roomFeaturesService';
+import { assessChecklistGenerationContext } from '../../services/checklistGenerationContext';
 import {
   CHECKLIST_ID,
   CHECKLIST_ITEM_ID,
@@ -32,6 +34,7 @@ jest.mock('../../services/roomFeaturesService', () => ({
       createFromSystemPromptOrTemplate: jest.fn(),
       getChecklistForStudent: jest.fn(),
       getActiveTransferChecklistForRoom: jest.fn(),
+      initializeTransferChecklistForStudent: jest.fn(),
     },
   },
 }));
@@ -45,6 +48,7 @@ const checklistApi = RoomFeaturesService.checklist as unknown as {
   update: jest.Mock;
   getChecklistForStudent: jest.Mock;
   getActiveTransferChecklistForRoom: jest.Mock;
+  initializeTransferChecklistForStudent: jest.Mock;
 };
 
 const buildItem = (overrides: Record<string, unknown> = {}) => ({
@@ -282,7 +286,47 @@ describe('ChecklistPanel transfer presentation', () => {
     expect(await screen.findByRole('button', { name: 'Generate Learning Targets' })).toBeEnabled();
     expect(screen.queryByText(/Learning targets required/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enter Manually' })).toBeEnabled();
-    expect(checklistApi.read).not.toHaveBeenCalled();
+    expect(checklistApi.read).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
+  });
+
+  // ChecklistPanel.tsx: a tutor must be able to start target generation in a newly created assessment room.
+  it('allows target generation before a learner has posted in a new assessment room', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    (assessChecklistGenerationContext as jest.Mock).mockResolvedValue({
+      type: 'ready_for_extraction', detectionAreas: ['Check the sender'], verificationSteps: [],
+    });
+    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} transferEnabled studentId={null}
+      isVisible onToggleVisibility={jest.fn()} />);
+
+    const generate = await screen.findByRole('button', { name: 'Generate Learning Targets' });
+    expect(generate).toBeEnabled();
+    fireEvent.click(generate);
+    expect(await screen.findByText('Approve Learning Targets')).toBeInTheDocument();
+    expect(screen.getByLabelText('Detection Areas')).toHaveValue('Check the sender');
+    fireEvent.click(screen.getByRole('button', { name: 'Create Checklist' }));
+    expect(await screen.findByText(/Wait for the learner to join before saving learning targets/i)).toBeInTheDocument();
+    expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+  });
+
+  // ChecklistPanel.tsx and useChecklist.ts: enabling assessment must keep prior room progress visible.
+  it('retains earlier learning progress while transfer targets are being set up', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    checklistApi.read.mockResolvedValue(buildChecklist({
+      progress_policy_version: 'legacy_v1', student_id: null,
+      detection_areas: [
+        buildItem({ status: 'partially_covered', understanding_level: 'basic' }),
+        buildItem({ id: 'second-item', area_text: 'Check the official app', status: 'covered', understanding_level: 'good' }),
+      ],
+      total_items: 2, completed_items: 1, completion_percentage: 50,
+    }));
+    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} transferEnabled studentId={null}
+      isVisible onToggleVisibility={jest.fn()} />);
+
+    expect(await screen.findByText('Previous Learning Progress')).toBeInTheDocument();
+    expect(screen.getByText('Verify payment requests')).toBeInTheDocument();
+    expect(screen.getByText(/Partially covered/i)).toBeInTheDocument();
+    expect(screen.getByText(/50% complete/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Generate Learning Targets' })).toBeEnabled();
   });
 
   it('keeps the zero-item setup reminder out of the collapsed panel', async () => {

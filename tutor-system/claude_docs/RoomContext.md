@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-09-30. Prior implementation commit: 2988dd0. -->
+<!-- Updated: 2026-10-04. Prior implementation commit: 2988dd0. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -124,6 +124,11 @@ server-selected active projection for a tutor. The returned transfer owner is ch
 scoped lookup and the legacy read fallback before progress reaches the UI; a missing or mismatched
 owner clears the view. Transfer lifecycle and progress controls stay limited to their authorized
 learner/tutor views, while ordinary legacy checklist reads and room text exports remain available.
+
+Tutor target setup resolves the sole active learner session when the checklist is opened, so a
+learner may join before posting a message. Enabling transfer assessment keeps the active legacy
+checklist visible as previous progress while new transfer targets are being prepared; transfer
+initialization still requires an identified learner owner.
 
 Room participation remains `tutoring` or `guard`; assessment is only a turn decision. Manual Guard
 changes use the room-mode service directly. Recovering from a Guard suggestion requires the tutor to

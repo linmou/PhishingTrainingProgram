@@ -210,6 +210,20 @@ async function cleanupRoom(config, roomId) {
   assert.equal(restored[0]?.mode_change_source, null, `Cleanup left mode source in room ${roomId}`);
 }
 
+async function cleanupCreatedRoom(config, roomId, tutorId) {
+  assert.match(roomId, /^[0-9a-f-]{36}$/i);
+  assert.match(tutorId, /^[0-9a-f-]{36}$/i);
+  const rows = await managementQuery(config,
+    `select tutor_id,description from public.rooms where id='${roomId}'::uuid`);
+  assert.equal(rows.length, 1, `Created room ${roomId} is missing`);
+  assert.equal(rows[0].tutor_id, tutorId, `Refusing to delete room ${roomId} owned by another tutor`);
+  assert(rows[0].description?.includes('[browser-e2e-created]'),
+    `Refusing to delete room ${roomId} without the browser test marker`);
+  const deleted = await managementQuery(config,
+    `delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid returning id`);
+  assert.equal(deleted.length, 1, `Failed to delete created room ${roomId}`);
+}
+
 async function captureResponses(page, predicate) {
   const pending = [];
   const records = [];
@@ -267,6 +281,6 @@ function requestId() { return crypto.randomUUID(); }
 module.exports = {
   TARGET, PROJECT, PROJECT_URL, ROOMS, FIXTURE_VERSION, TIMEOUT, tutorRoot, configFromEnv, guardProject,
   assertProjectTraffic, writeJson, query, insert, waitForRow, waitForMatch,
-  joinAs, openRoom, sendStudentMessage, existingRoom, cleanupRoom, captureResponses, extractedTargets,
+  joinAs, openRoom, sendStudentMessage, existingRoom, cleanupRoom, cleanupCreatedRoom, captureResponses, extractedTargets,
   managementQuery, screenshot, requestId
 };
