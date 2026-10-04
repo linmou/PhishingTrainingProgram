@@ -355,7 +355,7 @@ export class ChecklistService {
       template_name: checklist.template_name,
       session_start: new Date(checklist.session_start),
       detection_areas: (items || [])
-        .filter((item: any) => item.item_type === 'detection_area')
+        .filter((item: any) => item.item_type === 'detection_area' || item.item_type === 'understanding')
         .map(this.transformDatabaseItem),
       verification_steps: (items || [])
         .filter((item: any) => item.item_type === 'verification_step')

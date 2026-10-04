@@ -18,7 +18,8 @@ const workflows = {
   'checklist-coverage': require('./browser-e2e/workflows/checklist-coverage'),
   'guard-mode': require('./browser-e2e/workflows/guard-mode'),
   'assessment-delivery': require('./browser-e2e/workflows/assessment-delivery'),
-  'assessment-answer': require('./browser-e2e/workflows/assessment-answer')
+  'assessment-answer': require('./browser-e2e/workflows/assessment-answer'),
+  'transfer-status-events': require('./browser-e2e/workflows/transfer-status-events')
 };
 
 function selectWorkflows(argv) {

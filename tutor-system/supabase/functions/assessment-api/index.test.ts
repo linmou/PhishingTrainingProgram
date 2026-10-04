@@ -104,7 +104,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
     rpc: async (name, args) => {
       operations.push(name);
       if (name === 'initialize_transfer_checklist_v1') {
-        assertEquals(args.p_items, [{ area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical' }]);
+        assertEquals(args.p_items, [{ area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical' }]);
         approved = true;
         return { data: { checklist_id: 'checklist-1' }, error: null };
       }
@@ -114,7 +114,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
           analysis_complete: evidenceApplied,
           room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
           message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
-          items: [{ id: 'item-1', area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical', status: 'pending', understanding_level: 'none' }],
+          items: [{ id: 'item-1', area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical', status: 'pending', understanding_level: 'none' }],
           dialogue_history: dialogueHistory,
         }, error: null };
       }
@@ -165,9 +165,9 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
         analysisInput = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
         assert(prompt.includes('Verify independently'));
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_message_id: 'focus-1',
+          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
             evidence_quote: 'verify through the official app', explanation: 'Uses an independent source.' }],
-          requires_protection: false, requires_correction: false,
+          requires_protection: false, requires_correction: false, explanation: 'Initial understanding.',
         }) } }] }), { status: 200 });
       }
       assert(prompt.includes('item-1'));
@@ -177,7 +177,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   };
   const handler = createAssessmentApiHandler(deps);
   const init = await (await handler(request('initialize_checklist', { room_id: 'room-1', student_id: 'learner-1',
-    items: [{ area_text: 'Verify independently', item_type: 'detection_area', priority: 'critical' }] }))).json();
+    items: [{ area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical' }] }))).json();
   assertEquals(init.data.checklist_id, 'checklist-1');
   const analysis = await (await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }))).json();
   assertEquals(analysis.data.applied[0].status, 'partially_covered');
@@ -198,6 +198,167 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   assert(operations.indexOf('apply_transfer_message_analysis_v1') < operations.indexOf('prepare_transfer_assessment_context_v1'));
 });
 
+// Test responsible for assessment-api/index.ts: accept direct understanding with current-message evidence.
+Deno.test('accepts direct understanding evidence for the current learner message', async () => {
+  let stored: Record<string, unknown> | null = null;
+  const deps = dependencies({
+    env: (name) => ({
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    } as Record<string, string>)[name],
+    fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+      events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
+        evidence_quote: 'I will open the real app', explanation: 'The learner names the independent action and why the link is unsafe.' }],
+      requires_protection: false, requires_correction: false, explanation: 'Complete target evidence.',
+    }) } }] }), { status: 200 }),
+  });
+  deps.rpc = async (name, args) => {
+    if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+      room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+      message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student',
+        content: 'I will open the real app to check my account instead of using the warning link.' },
+      items: [{ id: 'item-1', area_text: 'Verify a warning in the official app',
+        status: 'pending', understanding_level: 'none' }],
+      dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1',
+        user_role: 'student', content: 'I will open the real app to check my account instead of using the warning link.' }],
+    }, error: null };
+    if (name === 'apply_transfer_message_analysis_v1') {
+      stored = args.p_analysis as Record<string, unknown>;
+      return { data: { applied: [{ status: 'covered', understanding_level: 'good' }] }, error: null };
+    }
+    throw new Error(`unexpected RPC ${name}`);
+  };
+  const response = await createAssessmentApiHandler(deps)(request('analyze_message', {
+    room_id: 'room-1', message_id: 'focus-1',
+  }));
+  const payload = await response.json();
+  assertEquals(response.status, 200);
+  assertEquals(payload.data.applied[0].status, 'covered');
+  assertEquals((stored as unknown as { events: Array<{ kind: string }> }).events[0].kind, 'demonstrated_understanding');
+});
+
+// Test responsible for assessment-api/index.ts: classify overlapping targets independently before applying events.
+Deno.test('keeps one target evidence from advancing a related target', async () => {
+  const analyzedIds: string[] = [];
+  let applied: Record<string, unknown> | null = null;
+  const deps = dependencies({
+    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
+      OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    fetch: async (_input, init) => {
+      const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
+      assertEquals(input.items.length, 1);
+      const itemId = input.items[0].id;
+      analyzedIds.push(itemId);
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: itemId, kind: itemId === 'action-1' ? 'demonstrated_understanding' : 'initial_signal',
+          evidence_type: 'action', evidence_message_id: 'focus-1', evidence_quote: 'I will open the app',
+          explanation: 'The learner states the action.' }],
+        requires_protection: false, requires_correction: false, explanation: 'Target evaluated.',
+      }) } }] }), { status: 200 });
+    },
+  });
+  deps.rpc = async (name, args) => {
+    if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+      room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+      message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student',
+        content: 'I will open the app instead of using this link.' },
+      items: [
+        { id: 'action-1', area_text: 'Check the app', status: 'pending', understanding_level: 'none' },
+        { id: 'reason-1', area_text: 'Explain the scam', item_type: 'understanding',
+          status: 'pending', understanding_level: 'none' },
+      ],
+      dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1',
+        user_role: 'student', content: 'I will open the app instead of using this link.' }],
+    }, error: null };
+    if (name === 'apply_transfer_message_analysis_v1') {
+      applied = args.p_analysis as Record<string, unknown>;
+      return { data: { applied: [{ status: 'covered', understanding_level: 'good' }] }, error: null };
+    }
+    throw new Error(`unexpected RPC ${name}`);
+  };
+  const response = await createAssessmentApiHandler(deps)(request('analyze_message', {
+    room_id: 'room-1', message_id: 'focus-1',
+  }));
+  assertEquals(response.status, 200);
+  assertEquals(analyzedIds, ['action-1', 'reason-1']);
+  assertEquals((applied as unknown as { events: Array<{ item_id: string }> }).events.map(event => event.item_id), ['action-1']);
+  assertEquals((applied as unknown as { rejected_events: Array<{ item_id: string; rejection_reason: string }> }).rejected_events,
+    [{ item_id: 'reason-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
+      evidence_quote: 'I will open the app', explanation: 'The learner states the action.',
+      rejection_reason: 'EVIDENCE_TYPE_MISMATCH' }]);
+});
+
+// Test responsible for assessment-api/index.ts: action evidence cannot fully cover a detection-area target.
+Deno.test('rejects action-only evidence for detection areas', async () => {
+  let stored: Record<string, any> | null = null;
+  const deps = dependencies({
+    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+      events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
+        evidence_quote: 'I will open the official app', explanation: 'The learner chooses a safe action.' }],
+      requires_protection: false, requires_correction: false, explanation: 'Action evidence only.',
+    }) } }] }), { status: 200 }),
+  });
+  deps.rpc = async (name, args) => {
+    if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+      room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+      message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I will open the official app.' },
+      items: [{ id: 'item-1', area_text: 'Suspicious URL', item_type: 'detection_area', status: 'pending', understanding_level: 'none' }],
+      dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', content: 'I will open the official app.' }],
+    }, error: null };
+    stored = args.p_analysis as Record<string, any>;
+    return { data: { applied: [] }, error: null };
+  };
+  const response = await createAssessmentApiHandler(deps)(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assertEquals(response.status, 200);
+  assertEquals((stored as unknown as { events: unknown[] }).events, []);
+  assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
+    'EVIDENCE_TYPE_MISMATCH');
+});
+
+// Test responsible for assessment-api/index.ts: preserve valid analysis while recording unsupported proposals.
+Deno.test('records and omits ineligible transitions and wrong evidence forms', async () => {
+  for (const [status, level, kind, itemType] of [
+    ['partially_covered', 'basic', 'initial_signal', 'verification_step'],
+    ['pending', 'none', 'post_repair_signal', 'verification_step'],
+    ['pending', 'none', 'initial_signal', 'understanding'],
+  ]) {
+    let applyCalls = 0;
+    let stored: Record<string, any> | null = null;
+    const deps = dependencies({
+      env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
+        OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: 'item-1', kind, evidence_type: 'action', evidence_message_id: 'focus-1',
+          evidence_quote: 'I will check the app', explanation: 'The learner describes a check.' }],
+        requires_protection: false, requires_correction: false, explanation: 'Evidence evaluated.',
+      }) } }] }), { status: 200 }),
+    });
+    deps.rpc = async (name, args) => {
+      if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+          room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+          message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student',
+            content: 'I will check the app.' },
+          items: [{ id: 'item-1', area_text: 'Check the app', item_type: itemType,
+            status, understanding_level: level }],
+          dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1',
+            user_role: 'student', content: 'I will check the app.' }],
+      }, error: null };
+      applyCalls += 1;
+      stored = args.p_analysis as Record<string, any>;
+      return { data: { applied: [] }, error: null };
+    };
+    const response = await createAssessmentApiHandler(deps)(request('analyze_message', {
+      room_id: 'room-1', message_id: 'focus-1',
+    }));
+    assertEquals(response.status, 200);
+    assertEquals((stored as unknown as { events: unknown[] }).events, []);
+    assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 1);
+    assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
+      itemType === 'understanding' ? 'EVIDENCE_TYPE_MISMATCH' : 'INELIGIBLE_TRANSITION');
+    assertEquals(applyCalls, 1);
+  }
+});
+
 // Test responsible for assessment-api/index.ts: reject a status event grounded in another learner's historical words.
 Deno.test('rejects historical speaker evidence before updating learner status', async () => {
   for (const evidenceMessageId of ['earlier-1', 'focus-1']) {
@@ -207,7 +368,7 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
         OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
       } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-        events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_message_id: evidenceMessageId,
+        events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: evidenceMessageId,
           evidence_quote: 'I clicked the link.', explanation: 'The learner clicked the link.' }],
         requires_protection: false, requires_correction: false, explanation: 'Evidence from history.',
       }) } }] }), { status: 200 }),
@@ -535,7 +696,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
         analysisCalls += 1;
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_message_id: 'focus-1',
+          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
             evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' }],
           requires_protection: false, requires_correction: false, explanation: 'Relevant evidence.',
         }) } }] }), { status: 200 });
@@ -548,14 +709,15 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
     if (name === 'get_transfer_message_analysis_context_v1') return { data: {
       analysis_complete: analyzed, room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
-      items: [{ id: 'item-1', area_text: 'Verify independently', status: analyzed ? 'partially_covered' : 'pending' }],
+      items: [{ id: 'item-1', area_text: 'Verify independently', status: analyzed ? 'partially_covered' : 'pending',
+        understanding_level: analyzed ? 'basic' : 'none' }],
       dialogue_history: [
         { id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', speaker_name: null, content: 'I would verify through the official app.' },
       ],
     }, error: null };
     if (name === 'apply_transfer_message_analysis_v1') {
       assertEquals((args.p_analysis as Record<string, unknown>).events, [
-        { item_id: 'item-1', kind: 'initial_signal', evidence_message_id: 'focus-1',
+        { item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
           evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' },
       ]);
       analyzed = true;

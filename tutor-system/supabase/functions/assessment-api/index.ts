@@ -9,6 +9,8 @@ import {
   buildTransferAssessmentRequest,
 } from '../../../src/services/ecologicalTutorCall.ts';
 import { validateAssessmentDraft } from '../../../src/services/assessmentValidation.ts';
+import { applyLearningEvent, isValidTransferProgress } from '../../../src/services/learningProgressTransitions.ts';
+import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
 const OPERATIONS = new Set([
   'initialize_checklist', 'post_message', 'analyze_message',
@@ -30,18 +32,21 @@ const TRANSFER_ASSESSMENT_SYSTEM_PROMPT = [
 
 const TRANSFER_ANALYSIS_SYSTEM_PROMPT = [
   'Read dialogue_history in order to understand the room discussion. Each turn identifies its source, user_role, user_id when present, and speaker_name for setup dialogue. The focus learner is focus_student_id. Judge only the current message identified by evidence_message_id; earlier turns provide context, not new status evidence.',
-  'Judge the current learner message against the listed learning targets (items). Each item includes its current status.',
-  'An event is evidence in this learner message that changes one target. Return at most one event per item, and only when the learner demonstrates the claim in their own words. A keyword, a guess, or a tutor statement is not evidence.',
-  'Choose kind from these rules:',
-  '- initial_signal: an item is pending and the learner shows initial understanding of it.',
-  '- post_repair_signal: an item needs_review and the learner now shows corrected understanding of it.',
-  '- spontaneous_transfer: the learner independently applies the target concept with sound reasoning in a concrete situation beyond repeating the target text; this can mark an item covered.',
-  '- contradiction: an item is partially_covered or covered and the learner now states a conflicting or unsafe understanding of it.',
-  'Omit items without supported evidence. Use an empty events array when there is no supported status change.',
+  'The items array contains one learning target. Judge that target at its own scope. A short answer may fully demonstrate a narrow target; a long answer may only partially demonstrate a broader target. Credit only what the current learner message adds, including when it answers an open tutor question. Do not credit the tutor, setup speakers, echoed reasoning, guesses, keywords, or agreement alone.',
+  'For each item, decide whether the learner shows only a relevant component or accurately demonstrates its essential content. For an understanding target, require the learner to express a relevant component for partial coverage and the essential relationship, mechanism, or reason for full coverage. A safe action alone is neither partial nor full evidence of an unstated explanation. For an action target, look for a sufficiently specific safe action that distinguishes it from an unsafe alternative. Do not infer urgency, credential theft, sender spoofing, or another target-specific fact from the scenario label or a safe choice. Do not require a new situation for full understanding of the current target. A misconception that undermines the decisive reasoning prevents full coverage.',
+  'A target may name several distinct steps. Credit only the step actually named in the learner quote. Refusing a link and opening an app does not show that the learner inspected the URL domain, reviewed login activity, enabled two-factor authentication, checked platform membership, contacted support, or manually typed a URL. For these targets return no event, including no initial_signal, unless the learner explicitly mentions the specific check. A prerequisite, broadly related safe action, or possible way to perform the target later is not partial evidence. If your explanation says the required step was not demonstrated, events must be empty. Do not treat a generally safe response as evidence for every safe action in the same scenario.',
+  'First identify the form of the learner claim in the evidence_quote: action, recognition, or explanation. For an understanding target, only an explanation that explicitly states a relevant how or why can produce an event; an action or recognition alone produces no event. For a target asking how an urgent alert steals a login, "I will ignore the link and open the official app" supplies no evidence. "The warning tries to scare me into clicking, but I do not know what happens next" supplies partial explanation evidence.',
+  'Return at most one status-changing event per item. Choose kind from these rules:',
+  '- initial_signal: a pending item has relevant but incomplete learner evidence. This makes it partially_covered.',
+  '- demonstrated_understanding: a pending or partially_covered item is fully demonstrated in the current situation. This makes it covered; it does not claim transfer to a different situation.',
+  '- post_repair_signal: a needs_review item has corrected learner evidence after a misconception. This makes it partially_covered before a later full demonstration.',
+  '- spontaneous_transfer: the learner independently applies the target principle with sound reasoning in a materially different concrete situation beyond the original target or discussion. This makes it covered. When the message uses the principle in a situation different from the one named in the target and prior discussion, choose spontaneous_transfer over demonstrated_understanding.',
+  '- contradiction: a partially_covered or covered item has new conflicting or unsafe learner evidence. This makes it needs_review.',
+  'Use each item current status when choosing an event. Do not return an event if it cannot change that status: incomplete evidence on an already partially_covered item is not a new initial_signal; post_repair_signal requires needs_review. Omit items without supported status-changing evidence. Use an empty events array when the learner only agrees, gives an unsupported verdict, asks a question, or supplies no target evidence.',
   'requires_protection is true only when the message calls for an immediate safety response. requires_correction is true only when a factual mistake calls for immediate correction. Either flag defers a new assessment; neither flag changes status.',
-  'Every event must include evidence_message_id equal to the current message ID and evidence_quote copied exactly from the current message. Never cite another speaker or an earlier message as evidence.',
-  'Return exactly one JSON object in this shape: {"events":[{"item_id":"ID from items","kind":"initial_signal","evidence_message_id":"current message ID","evidence_quote":"exact words from current message","explanation":"brief reason"}],"requires_protection":false,"requires_correction":false,"explanation":"brief overall reason"}.',
-  'Replace the example values with your judgement. Use only item IDs from items and one of the four defined kinds. Include all four top-level fields, with boolean flags. Return JSON only, without markdown.',
+  'Every event must include evidence_message_id equal to the current message ID and evidence_quote copied exactly from the current message. Use the shortest quote that actually states the target-specific claim. Set evidence_type to action, recognition, or explanation for that quote. Never cite another speaker or an earlier message as evidence.',
+  'Return exactly one JSON object in this shape: {"events":[{"item_id":"ID from items","kind":"demonstrated_understanding","evidence_type":"action","evidence_message_id":"current message ID","evidence_quote":"exact words from current message","explanation":"what this learner evidence demonstrates for this target"}],"requires_protection":false,"requires_correction":false,"explanation":"brief overall reason"}.',
+  'Replace the example values with your judgment. Use only item IDs from items and one of the five defined kinds and three defined evidence types. Include all four top-level fields, with boolean flags and a nonempty explanation. Return JSON only, without markdown.',
 ].join('\n');
 
 export interface VerifiedPrincipal {
@@ -307,53 +312,79 @@ async function analyzeMessage(
     throw new Error('INVALID_SCOPE');
   }
   const provider = providerConfig(deps);
-  let providerResponse: Response;
-  try {
-    providerResponse = await deps.fetch(`${provider.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
-      body: JSON.stringify({
-        model: provider.model,
-        messages: [
-          { role: 'system', content: TRANSFER_ANALYSIS_SYSTEM_PROMPT },
-          { role: 'user', content: JSON.stringify({
-            focus_student_id: scope.student_id,
-            evidence_message_id: messageId,
-            message, items, dialogue_history: history.slice(0, focusIndex + 1),
-          }) },
-        ],
-        temperature: 0,
-        max_tokens: 600,
-        enable_thinking: false,
-        response_format: { type: 'json_object' },
-      }),
-    });
-  } catch {
-    throw new Error('AI_PROVIDER_ERROR');
-  }
-  if (!providerResponse.ok) throw new Error('AI_PROVIDER_ERROR');
-  const payload = asRecord(await providerResponse.json().catch(() => ({})));
-  const choice = asRecord(payload.choices?.[0]);
-  if (choice.finish_reason === 'length') throw new Error('AI_OUTPUT_TRUNCATED');
-  let analysis: Record<string, any>;
-  try {
-    analysis = asRecord(JSON.parse(requiredString(asRecord(choice.message).content, 'AI_OUTPUT_INVALID')));
-  } catch {
-    throw new Error('AI_OUTPUT_INVALID');
-  }
-  const knownIds = new Set(items.map((item: any) => item.id));
-  const allowedKinds = new Set(['initial_signal', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
-  if (!Array.isArray(analysis.events) || analysis.events.some((event: unknown) => {
-    const evidence = asRecord(event);
-    return !knownIds.has(evidence.item_id) || !allowedKinds.has(evidence.kind) ||
-      evidence.evidence_message_id !== messageId ||
-      typeof evidence.evidence_quote !== 'string' || !evidence.evidence_quote.trim() ||
-      typeof message.content !== 'string' || !message.content.includes(evidence.evidence_quote) ||
-      typeof evidence.explanation !== 'string' || !evidence.explanation.trim();
-  }) || typeof analysis.requires_protection !== 'boolean' ||
-      typeof analysis.requires_correction !== 'boolean') {
-    throw new Error('AI_OUTPUT_INVALID');
-  }
+  const allowedKinds = new Set(['initial_signal', 'demonstrated_understanding', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
+  const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);
+  const analyses = await Promise.all(items.map(async (item: any) => {
+    let providerResponse: Response;
+    try {
+      providerResponse = await deps.fetch(`${provider.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [
+            { role: 'system', content: TRANSFER_ANALYSIS_SYSTEM_PROMPT },
+            { role: 'user', content: JSON.stringify({
+              focus_student_id: scope.student_id,
+              evidence_message_id: messageId,
+              message, items: [item], dialogue_history: history.slice(0, focusIndex + 1),
+            }) },
+          ],
+          temperature: 0,
+          max_tokens: 600,
+          enable_thinking: false,
+          response_format: { type: 'json_object' },
+        }),
+      });
+    } catch {
+      throw new Error('AI_PROVIDER_ERROR');
+    }
+    if (!providerResponse.ok) throw new Error('AI_PROVIDER_ERROR');
+    const payload = asRecord(await providerResponse.json().catch(() => ({})));
+    const choice = asRecord(payload.choices?.[0]);
+    if (choice.finish_reason === 'length') throw new Error('AI_OUTPUT_TRUNCATED');
+    let analysis: Record<string, any>;
+    try {
+      analysis = asRecord(JSON.parse(requiredString(asRecord(choice.message).content, 'AI_OUTPUT_INVALID')));
+    } catch {
+      throw new Error('AI_OUTPUT_INVALID');
+    }
+    if (!Array.isArray(analysis.events) || analysis.events.length > 1 || analysis.events.some((event: unknown) => {
+      const evidence = asRecord(event);
+      return evidence.item_id !== item.id || !allowedKinds.has(evidence.kind) ||
+        !allowedEvidenceTypes.has(evidence.evidence_type) ||
+        !isValidTransferProgress(item) ||
+        evidence.evidence_message_id !== messageId ||
+        typeof evidence.evidence_quote !== 'string' || !evidence.evidence_quote.trim() ||
+        typeof message.content !== 'string' || !message.content.includes(evidence.evidence_quote) ||
+        typeof evidence.explanation !== 'string' || !evidence.explanation.trim();
+    }) || typeof analysis.requires_protection !== 'boolean' ||
+        typeof analysis.requires_correction !== 'boolean' ||
+        typeof analysis.explanation !== 'string' || !analysis.explanation.trim()) {
+      throw new Error('AI_OUTPUT_INVALID');
+    }
+    const event = analysis.events[0];
+    const reason = event && ((item.item_type === 'understanding' && event.evidence_type !== 'explanation') ||
+      (item.item_type === 'detection_area' && event.evidence_type === 'action')
+      ? 'EVIDENCE_TYPE_MISMATCH'
+      : applyLearningEvent(item as TransferProgress, event.kind as LearningEventKind).disposition !== 'apply'
+      ? 'INELIGIBLE_TRANSITION' : null);
+    return {
+      ...analysis,
+      events: reason ? [] : analysis.events,
+      rejected_events: reason ? [{ ...event, rejection_reason: reason }] : [],
+      requires_protection: analysis.requires_protection,
+      requires_correction: analysis.requires_correction,
+      explanation: analysis.explanation,
+    };
+  }));
+  const analysis = {
+    events: analyses.flatMap((result) => result.events),
+    rejected_events: analyses.flatMap((result) => result.rejected_events),
+    requires_protection: analyses.some((result) => result.requires_protection),
+    requires_correction: analyses.some((result) => result.requires_correction),
+    explanation: analyses.map((result) => result.explanation).join(' '),
+  };
   return asRecord(await rpc(deps, 'apply_transfer_message_analysis_v1', {
     p_room_id: roomId,
     p_message_id: messageId,

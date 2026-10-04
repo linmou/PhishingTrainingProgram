@@ -2,11 +2,13 @@
 
 Intent: define the room dialogue and evidence contract used when judging one learner message.
 
+Status decisions and the structured output rules are defined in [the transfer status response contract](ai-behaviors/transfer-status-response-contract.md).
+
 ## Input
 
 `assessment-api` calls `get_transfer_message_analysis_context_v1` for a persisted, ordinary student message. The trusted database function returns the active checklist and all room dialogue through that message. Setup turns from `rooms.pre_populated_dialogue` come first in array order; persisted turns from `messages` follow in `(created_at, id)` order. Later turns are excluded. There is no fixed history limit.
 
-The Edge Function sends one system prompt and one JSON user message to Qwen. The user message has this shape:
+The Edge Function sends one system prompt and one JSON user message to Qwen for each target. The calls run concurrently and share the same focus learner message and dialogue. Each user message contains only its target in `items` and has this shape:
 
 ```json
 {
@@ -30,15 +32,15 @@ Qwen returns JSON in this shape:
 
 ```json
 {
-  "events": [{ "item_id": "item UUID", "kind": "initial_signal", "evidence_message_id": "current message UUID", "evidence_quote": "exact words from current learner text", "explanation": "brief reason" }],
+  "events": [{ "item_id": "item UUID", "kind": "initial_signal", "evidence_type": "explanation", "evidence_message_id": "current message UUID", "evidence_quote": "exact words from current learner text", "explanation": "brief reason" }],
   "requires_protection": false,
   "requires_correction": false,
   "explanation": "brief overall reason"
 }
 ```
 
-`kind` is one of `initial_signal`, `post_repair_signal`, `spontaneous_transfer`, or `contradiction`. An empty `events` array means the message supplies no new status evidence.
+`kind` is one of `initial_signal`, `demonstrated_understanding`, `post_repair_signal`, `spontaneous_transfer`, or `contradiction`. An empty `events` array means the message supplies no new status evidence.
 
-The Edge Function rejects an event if its message ID differs from the focus ID or its quote is absent from the focus message. Only validated output reaches `apply_transfer_message_analysis_v1`, which applies the resulting item-status changes. Historical dialogue informs interpretation but cannot itself create a new status event. Assessment option answers use the separate assessment-processing path.
+The Edge Function rejects malformed IDs, quotes, kinds, evidence types, or explanations. It omits well-formed events whose evidence type does not support the item or whose current status makes the event ineligible, recording them in private `rejected_events`. It combines supported events into one `apply_transfer_message_analysis_v1` call. Historical dialogue informs interpretation but cannot itself create a new status event. Assessment option answers use the separate assessment-processing path.
 
 For future changes to this contract, follow `supabase-release-workflow.md`: validate locally, apply and test on staging, then apply to production. Deploy the matching `assessment-api` function only after its SQL is applied in each project.

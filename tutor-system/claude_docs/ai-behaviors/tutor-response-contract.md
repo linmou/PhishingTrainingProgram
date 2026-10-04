@@ -120,7 +120,7 @@ Historical Multi-agent responses were stored through the ordinary messages path,
 
 Intent: define the assessment-only teacher-review payload used by T09 while preserving historical shared-tutor decoding.
 
-T09 contract boundary: learner evidence may make a concept eligible without strong prior proof, but a transfer assessment is valid only when its scenario changes the meaningful situation. Once a current room-approved target is fully eligible, TransferLearning prepares an assessment for the next AI-generated response and skips the shared tutor. Reviewed delivery stores `response_mode: assessment` without creating a room mode or bypassing Guard. A spontaneous medium-transfer observation may verify the concept without an assessment.
+T09 contract boundary: learner evidence may make a concept eligible without strong prior proof, but a transfer assessment is valid only when its scenario changes the meaningful situation. Once a current room-approved target is fully eligible, TransferLearning prepares an assessment for the next AI-generated response and skips the shared tutor. Reviewed delivery stores `response_mode: assessment` without creating a room mode or bypassing Guard. The separate [status response contract](transfer-status-response-contract.md) permits sufficient direct understanding or spontaneous transfer to cover an item without an assessment.
 
 The assessment generator returns this private draft:
 
@@ -150,7 +150,7 @@ The assessment generator returns this private draft:
 }
 ```
 
-The separate message-analysis operation classifies each persisted learner contribution against that room's approved targets, recording supported initial, contradiction, spontaneous-transfer, and post-repair evidence through server-owned learning events. The assessment generator cannot choose tutoring or Guard. Its validator rejects unknown targets or evidence IDs, missing or blank fields, invalid options or keys, and invalid rendering. The shared tutor retains its tutoring/Guard contract and runs when no assessment is due.
+The separate message-analysis operation classifies each persisted learner contribution against that room's approved targets, recording supported initial, direct-understanding, contradiction, spontaneous-transfer, and post-repair evidence through server-owned learning events. The assessment generator cannot choose tutoring or Guard. Its validator rejects unknown targets or evidence IDs, missing or blank fields, invalid options or keys, and invalid rendering. The shared tutor retains its tutoring/Guard contract and runs when no assessment is due.
 
 Component 101 keeps the resolver pure: component 102 supplies and persists the server-owned `TransferAttemptSnapshot`, then projects the returned state by role. The learner-facing assessment shape omits the answer key, learner-safe explanation, and transfer basis. A valid selection is processed deterministically; an optional explanation cannot overturn an exact selection. Clarification leaves the question open, while assistance cancels it without issuing a failing grade.
 

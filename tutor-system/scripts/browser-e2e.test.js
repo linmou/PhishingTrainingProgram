@@ -10,6 +10,7 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
+const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
 
 const env = (target = 'staging') => ({
   E2E_APP_URL: 'http://localhost:3001',
@@ -78,6 +79,21 @@ test('requires usable provider extraction rather than a fallback', () => {
   assert.equal(extractedTargets([response('{"understanding":["[understanding] Urgent wording"],"behavior":["[behavior] Open the official app"]}')]).length, 2);
 });
 
+test('transfer status checklist preserves every persisted room target', () => {
+  const config = {
+    detection_areas: ['Urgent warning', 'Suspicious URL'],
+    verification_steps: ['Do not click', 'Open the official app']
+  };
+  assert.deepEqual(templateChecklistItems(config), [
+    { area_text: 'Urgent warning', item_type: 'detection_area', priority: 'important' },
+    { area_text: 'Suspicious URL', item_type: 'detection_area', priority: 'important' },
+    { area_text: 'Do not click', item_type: 'verification_step', priority: 'critical' },
+    { area_text: 'Open the official app', item_type: 'verification_step', priority: 'critical' }
+  ]);
+  assert.throws(() => templateChecklistItems({ detection_areas: [], verification_steps: ['Only one'] }),
+    /detection areas/);
+});
+
 test('existing room selection validates template and owner without inserting', async () => {
   const expected = ROOMS['checklist-generation'];
   const client = {
@@ -110,13 +126,14 @@ test('used template room is rejected before the workflow can write', async () =>
   await assert.rejects(existingRoom(client, 'checklist-management', 'tutor-id'), /still has session_checklists/);
 });
 
-test('selects one named workflow or all seven workflows', () => {
+test('selects the transfer status workflow alongside the existing browser workflows', () => {
   assert.deepEqual(selectWorkflows([]), [
     'tutor-response', 'checklist-generation', 'checklist-management', 'checklist-coverage', 'guard-mode',
-    'assessment-delivery', 'assessment-answer'
+    'assessment-delivery', 'assessment-answer', 'transfer-status-events'
   ]);
   assert.deepEqual(selectWorkflows(['--workflow=checklist-generation']), ['checklist-generation']);
   assert.deepEqual(selectWorkflows(['--workflow=assessment-answer']), ['assessment-answer']);
+  assert.deepEqual(selectWorkflows(['--workflow=transfer-status-events']), ['transfer-status-events']);
   assert.throws(() => selectWorkflows(['--workflow=unknown']), /Unknown workflow/);
   assert.throws(() => selectWorkflows(['--workflow=tutor-response', '--workflow=assessment-answer']), /Use --workflow/);
 });

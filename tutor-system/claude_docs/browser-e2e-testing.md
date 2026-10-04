@@ -19,7 +19,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
-| `test:e2e:staging` / `test:e2e:production` | Seven selectable Playwright tutor, checklist, assessment, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain | Explicit live suite against the selected project. |
+| `test:e2e:staging` / `test:e2e:production` | Eight selectable Playwright tutor, checklist, assessment, status-event, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
@@ -63,10 +63,10 @@ E2E_APP_URL=http://localhost:3100 npm run test:e2e:production
 
 Use an unused port in both commands if 3100 is occupied. To run one workflow, append `-- --workflow=checklist-generation`. `npm run test:e2e:unit` checks selection and preflight locally without a browser or credentials. The runner never creates a room. It requires an empty template room before each workflow and deletes generated messages, checklists, sessions, feedback, and private assessment rows afterward, including after a failure. Cleanup status is recorded per room in `report.json`; a cleanup failure fails the run.
 
-The seven rooms were migrated once from production demo rooms with `npm run test:e2e:staging:migrate-templates`, using `SUPABASE_ACCESS_TOKEN`, `REACT_APP_SUPABASE_STAGING_URL`, and `STAGING_SUPABASE_SERVICE_ROLE_KEY`. The migration is idempotent and validates existing copies. Assessment copies receive the canonical local template dialogue and full target inventory, even when the production room's `prompt_config` is null. It is setup, not part of a test run.
+The four production browser-test rooms are mirrored to staging with `npm run test:e2e:staging:migrate-templates`, using `SUPABASE_ACCESS_TOKEN`, `REACT_APP_SUPABASE_STAGING_URL`, and `STAGING_SUPABASE_SERVICE_ROLE_KEY`. The migration copies each room's title, description, image, dialogue, transfer mode, assistant settings, and AI config into the same room ID on staging. It refuses occupied staging fixtures and reads back every copied field. Older staging demo rooms remain available but are not used by the browser runner.
 After fetching the staging service key above, set `STAGING_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"` when running the migration command.
 
-Production uses `3630671f-b40d-48ed-b28b-e1da6d407436` for the five tutor, checklist, and Guard workflows. Assessment delivery uses `286de02f-30b0-46ee-8df3-17d1dae1ca89`; answer pass and failure use separate empty copies `d6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd` and `79be49a2-e53c-493d-bd66-adcffbadbba5`. The browser runner clears generated rows after each workflow. The production `assessment-api` requires `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` in its Edge secret store.
+Both projects use `3630671f-b40d-48ed-b28b-e1da6d407436` for the five tutor, checklist, and Guard workflows. Assessment delivery uses `286de02f-30b0-46ee-8df3-17d1dae1ca89`; answer pass and failure use separate empty copies `d6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd` and `79be49a2-e53c-493d-bd66-adcffbadbba5`. The browser runner clears generated rows after each workflow. The production `assessment-api` requires `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` in its Edge secret store.
 
 ## Record The Transfer Demo
 
@@ -76,7 +76,7 @@ After exporting the staging variables above and starting CRA against staging, ru
 E2E_APP_URL=http://localhost:3100 node scripts/record-transfer-learning-demo-video.js
 ```
 
-The recorder reuses the existing `assessment-delivery` staging copy of the `Demo: Click Impulse (Correct Safe Action)` template. It reads that room's persisted detection and verification targets, creates the full multi-target transfer checklist, and records learner target approval, learner evidence, real assessment preparation and delivery, a learner answer, progress resolution, and the next tutoring response in two synchronized browser contexts. It does not create a room. The recorder cleans the room after the browser closes and writes the WebM, timestamped PNG contact sheet, evidence JSON, chapter list, screenshots, and raw context recordings under `output/playwright/`.
+The recorder reuses the `assessment-delivery` staging copy of the production `Transfer Assessment Demo: Account Warning` template. It reads that room's persisted detection and verification targets, creates the full multi-target transfer checklist, and records learner target approval, learner evidence, real assessment preparation and delivery, a learner answer, progress resolution, and the next tutoring response in two synchronized browser contexts. It does not create a room. The recorder cleans the room after the browser closes and writes the WebM, timestamped PNG contact sheet, evidence JSON, chapter list, screenshots, and raw context recordings under `output/playwright/`.
 
 | Workflow | Checks |
 | --- | --- |
@@ -84,8 +84,9 @@ The recorder reuses the existing `assessment-delivery` staging copy of the `Demo
 | `checklist-generation` | Smart Generate from an unstructured prompt, real LLM extraction, and stored targets. |
 | `checklist-management` | Manual creation, status/priority/text edits, and persistence after reload. |
 | `checklist-coverage` | Learner message, real coverage call, stored progress, and the next tutor request. Ordinary learner sends invoke analysis after persistence; tutor requests read current progress without replacing the authored prompt. |
-| `assessment-delivery` | Real transfer provider preparation, tutor review/send, and learner-visible question. |
+| `assessment-delivery` | One staging room journey: initializes every persisted detection and verification target from the assessment room's AI config, checks direct understanding and a partial signal, then verifies provider preparation, tutor review/send, learner answer, and `assessment_pass` changing the selected partial target to covered. |
 | `assessment-answer` | Learner pass and retry/failure in separate template rooms, persisted outcome, and reload. |
+| `transfer-status-events` | Real transfer analysis against the full persisted room target inventory: direct understanding, initial signal, later full understanding, spontaneous transfer, no evidence, and contradiction. Checks Edge responses, private event kinds, stored progress, and learner/tutor screenshots. Shares the opening learner journey with `assessment-delivery`, then tests the remaining events in the same empty assessment-delivery fixture. |
 | `guard-mode` | One student-tutor Guard journey: manual mode confirmation, locked checklist controls, real LLM Guard entry and persistence, recovery to tutoring, and response-mode audit rows. |
 
 Each workflow has its own result. The full command continues after an individual workflow failure. The Guard workflow reuses the existing `Demo: Lock Icon Myth — Correct Reasoning` staging template room; it does not create a room. Cleanup resets response mode before deleting checklist rows, then verifies zero messages, checklists, sessions, feedback, assessments, and provider attempts. A direct database check found all seven rooms back at baseline response-mode state after the 2026-09-30 run.

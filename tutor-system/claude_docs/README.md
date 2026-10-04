@@ -3,7 +3,7 @@ Document the current tutor-system architecture and development workflows, includ
 
 ## Metadata
 - Updated: 2026-10-04
-- Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`
+- Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 
 # Tutor-System Documentation Hub
 
@@ -29,6 +29,8 @@ This directory contains comprehensive architectural and implementation documenta
 - **[AI tutoring constitution](./ai-behaviors/constitution.md)** - Human-adopted tutoring principles, P3 subprinciples and conditional priorities; each behavior requirement records its downstream interpretation
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
 - **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy tutor decoding, assessment-only teacher review, exact question payload, and private-key rules
+- **[Transfer status response contract](./ai-behaviors/transfer-status-response-contract.md)** - Item-level evidence, direct coverage, transfer, and open classification limits
+- **[Direct understanding release record](./doc_update_record/documentation_update_record_v2026_10_04_direct_understanding_status.md)** - Staging and production deployment evidence and unresolved status-event issue
 - **[Transfer refactor documentation record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_refactor.md)** - Updated behavior docs, staging migration status, and verification evidence
 - **[Transfer refactor merge record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_merge.md)** - Merged contracts, migration history, and integration checks
 - **[Transfer release decision update](./doc_update_record/documentation_update_record_v2026_09_30_transfer_release_decision.md)** - Version-scoped owner authorization and incomplete gate status

@@ -9,18 +9,18 @@ const path = require('node:path');
 const TARGET = process.env.E2E_TARGET || 'staging';
 const PROJECT = process.env.E2E_PROJECT_REF || (TARGET === 'production' ? 'zgbufaxooqxeabewktzd' : 'ciubrzggdqesgvfkpolj');
 const PROJECT_URL = process.env.E2E_SUPABASE_URL || `https://${PROJECT}.supabase.co`;
-const FIXTURE_VERSION = 3;
+const FIXTURE_VERSION = 4;
 const TIMEOUT = 90000;
 const tutorRoot = path.resolve(__dirname, '../..');
 const STAGING_ROOMS = Object.freeze({
-  'tutor-response': { id: '34d84b08-5712-4c74-9c3c-443fefee587f', title: 'Demo: Click Impulse' },
-  'checklist-generation': { id: '93ba95e9-fee9-4a1e-9486-a605d2ffc525', title: 'Demo: Pressure Words' },
-  'checklist-management': { id: '7207c6cd-2850-4a6c-bd9d-fc722a14a4f1', title: 'Demo: Lock Icon Myth' },
-  'checklist-coverage': { id: '5ebb7df1-838c-4009-a533-3db0a9685583', title: 'Demo: Lock Icon Myth — Correct Reasoning' },
-  'guard-mode': { id: '5ebb7df1-838c-4009-a533-3db0a9685583', title: 'Demo: Lock Icon Myth — Correct Reasoning' },
-  'assessment-delivery': { id: '3a47a215-13ae-45f8-a94d-cc1e6200c03f', title: 'Demo: Click Impulse — Correct Safe Action' },
-  'assessment-answer-pass': { id: 'd6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd', title: 'Demo: Click Impulse — Correct Safe Action' },
-  'assessment-answer-failure': { id: '79be49a2-e53c-493d-bd66-adcffbadbba5', title: 'Demo: Click Impulse — Correct Safe Action' }
+  'tutor-response': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'checklist-generation': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'checklist-management': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'checklist-coverage': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'guard-mode': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
+  'assessment-delivery': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' },
+  'assessment-answer-pass': { id: 'd6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd', title: 'Transfer Assessment Demo: Account Warning' },
+  'assessment-answer-failure': { id: '79be49a2-e53c-493d-bd66-adcffbadbba5', title: 'Transfer Assessment Demo: Account Warning' }
 });
 const PRODUCTION_ROOMS = Object.freeze({
   'tutor-response': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },

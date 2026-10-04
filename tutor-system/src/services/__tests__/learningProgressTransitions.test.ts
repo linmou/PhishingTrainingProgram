@@ -22,6 +22,12 @@ const expected: Record<LearningEventKind, Array<TransferProgress | 'reject' | 's
     'same',
     'same',
   ],
+  demonstrated_understanding: [
+    { status: 'covered', understanding_level: 'good' },
+    { status: 'covered', understanding_level: 'good' },
+    'same',
+    'same',
+  ],
   post_repair_signal: [
     'same',
     'same',

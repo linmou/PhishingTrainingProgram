@@ -13,6 +13,7 @@ export type { TransferProgress } from '../types/learningProgress.ts';
 
 export type LearningEventKind =
   | 'initial_signal'
+  | 'demonstrated_understanding'
   | 'post_repair_signal'
   | 'spontaneous_transfer'
   | 'contradiction'
@@ -56,6 +57,10 @@ export function applyLearningEvent(
     case 'initial_signal':
       return current.status === 'pending'
         ? { disposition: 'apply', next: { status: 'partially_covered', understanding_level: 'basic' } }
+        : unchanged(current);
+    case 'demonstrated_understanding':
+      return current.status === 'pending' || current.status === 'partially_covered'
+        ? { disposition: 'apply', next: { status: 'covered', understanding_level: 'good' } }
         : unchanged(current);
     case 'post_repair_signal':
       return current.status === 'needs_review'
