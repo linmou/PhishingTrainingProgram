@@ -17,9 +17,7 @@ const env = (target = 'staging') => ({
   E2E_SUPABASE_URL: target === 'production' ? 'https://zgbufaxooqxeabewktzd.supabase.co' : PROJECT_URL,
   E2E_SUPABASE_ANON_KEY: `${target}-anon-key`,
   SUPABASE_SERVICE_ROLE_KEY: `${target}-service-key`,
-  SUPABASE_ACCESS_TOKEN: 'management-token',
-  OAI_API_KEY: 'provider-key',
-  OAI_BASE_URL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+  SUPABASE_ACCESS_TOKEN: 'management-token'
 });
 
 test('accepts either named target and local app origin', () => {
@@ -37,8 +35,8 @@ test('rejects production or another Supabase project', () => {
   }
 });
 
-test('requires credentials for database and provider evidence', () => {
-  for (const key of ['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ACCESS_TOKEN', 'OAI_API_KEY']) {
+test('requires browser and fixture credentials without local provider secrets', () => {
+  for (const key of ['E2E_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ACCESS_TOKEN']) {
     assert.throws(() => configFromEnv({ ...env(), [key]: '' }), /Set E2E_APP_URL/);
   }
 });
@@ -74,7 +72,7 @@ test('blocks production requests before browser navigation can write there', asy
 
 test('requires usable provider extraction rather than a fallback', () => {
   const request = { messages: [{ content: 'Extract cybersecurity learning content' }] };
-  const response = (content) => ({ status: 200, request, response: { choices: [{ message: { content } }] } });
+  const response = (content) => ({ status: 200, request, response: { ok: true, data: { content } } });
   assert.deepEqual(extractedTargets([response('not JSON')]), []);
   assert.deepEqual(extractedTargets([response('{"understanding":["[understanding] None"],"behavior":["[behavior] None"]}')]), []);
   assert.equal(extractedTargets([response('{"understanding":["[understanding] Urgent wording"],"behavior":["[behavior] Open the official app"]}')]).length, 2);

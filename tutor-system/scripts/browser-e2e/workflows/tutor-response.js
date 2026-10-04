@@ -25,9 +25,11 @@ module.exports = async function tutorResponse(ctx) {
       const value = document.querySelector('.ai-suggestion-box .ai-suggestion-content p')?.textContent?.trim();
       return value && value !== 'Generating new response...';
     }, null, { timeout: TIMEOUT });
-  } finally { calls = await stop(); }
-  writeJson(path.join(evidenceDir, 'tutor-provider.json'), calls);
-  assert(calls.some((call) => call.status === 200 && call.response?.choices?.[0]?.message?.content), 'Tutor provider call did not return content');
+  } finally {
+    calls = await stop();
+    writeJson(path.join(evidenceDir, 'tutor-provider.json'), calls);
+  }
+  assert(calls.some((call) => call.status === 200 && call.response?.data?.content), 'Tutor provider call did not return content');
   const suggestion = await tutorPage.locator('.ai-suggestion-box .ai-suggestion-content p').first().innerText();
   await tutorPage.getByRole('button', { name: /copy to input/i }).click();
   assert.equal(await tutorPage.locator('textarea.comment-input-field').inputValue(), suggestion);

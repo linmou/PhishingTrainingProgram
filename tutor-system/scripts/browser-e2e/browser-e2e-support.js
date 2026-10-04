@@ -29,8 +29,8 @@ const PRODUCTION_ROOMS = Object.freeze({
   'checklist-coverage': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
   'guard-mode': { id: '3630671f-b40d-48ed-b28b-e1da6d407436', title: 'Demo: Click Impulse' },
   'assessment-delivery': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' },
-  'assessment-answer-pass': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' },
-  'assessment-answer-failure': { id: '286de02f-30b0-46ee-8df3-17d1dae1ca89', title: 'Transfer Assessment Demo: Account Warning' }
+  'assessment-answer-pass': { id: 'd6b6b8f0-c0f8-4a4f-a55f-6c9f776221dd', title: 'Transfer Assessment Demo: Account Warning' },
+  'assessment-answer-failure': { id: '79be49a2-e53c-493d-bd66-adcffbadbba5', title: 'Transfer Assessment Demo: Account Warning' }
 });
 function roomFixtures(env = process.env) {
   if (!env.E2E_ROOM_FIXTURES_JSON) return (env.E2E_TARGET || TARGET) === 'production' ? PRODUCTION_ROOMS : STAGING_ROOMS;
@@ -49,8 +49,8 @@ function configFromEnv(env = process.env) {
   const anonKey = env.E2E_SUPABASE_ANON_KEY || (target === 'production' ? env.REACT_APP_SUPABASE_ANON_KEY : env.REACT_APP_SUPABASE_STAGING_ANON_KEY);
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
   const accessToken = env.SUPABASE_ACCESS_TOKEN;
-  if (!appUrl || !projectUrl || !anonKey || !serviceKey || !accessToken || !env.OAI_API_KEY || !env.OAI_BASE_URL) {
-    throw new Error('Set E2E_APP_URL, E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ACCESS_TOKEN, and provider settings.');
+  if (!appUrl || !projectUrl || !anonKey || !serviceKey || !accessToken) {
+    throw new Error('Set E2E_APP_URL, E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_ACCESS_TOKEN.');
   }
   const expectedProjectUrl = `https://${projectRef}.supabase.co`;
   if (new URL(projectUrl).origin !== expectedProjectUrl || projectUrl.replace(/\/$/, '') !== expectedProjectUrl ||
@@ -130,6 +130,7 @@ async function joinAs(page, appUrl, name, role) {
 
 async function openRoom(page, appUrl, roomId) {
   await page.goto(`${appUrl}/#/room/${roomId}`, { waitUntil: 'domcontentloaded' });
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await page.locator('.room-post').waitFor({ state: 'visible', timeout: TIMEOUT });
 }
 
@@ -231,7 +232,7 @@ async function captureResponses(page, predicate) {
 function extractedTargets(calls) {
   for (const call of calls) {
     if (call.status !== 200 || !JSON.stringify(call.request).includes('Extract cybersecurity learning content')) continue;
-    const content = call.response?.choices?.[0]?.message?.content;
+    const content = call.response?.data?.content;
     if (typeof content !== 'string') continue;
     try {
       const parsed = JSON.parse(content.trim().replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, ''));

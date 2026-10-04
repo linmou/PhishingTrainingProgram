@@ -10,8 +10,8 @@ const {
 } = require('../browser-e2e-support');
 
 function decisionFrom(calls) {
-  const content = [...calls].reverse().find((call) => call.status === 200 && call.response?.choices?.[0]?.message?.content)
-    ?.response.choices[0].message.content;
+  const content = [...calls].reverse().find((call) => call.status === 200 && call.response?.data?.content)
+    ?.response.data.content;
   assert(content, 'Tutor provider returned no decision');
   const parsed = JSON.parse(content);
   assert(['guard', 'tutoring'].includes(parsed.decision?.mode), 'Tutor provider returned no valid participation mode');
