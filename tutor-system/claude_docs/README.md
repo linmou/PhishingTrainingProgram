@@ -2,8 +2,8 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-09-30
-- Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`
+- Updated: 2026-10-04
+- Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`
 
 # Tutor-System Documentation Hub
 
@@ -54,7 +54,7 @@ This directory contains comprehensive architectural and implementation documenta
 
 ### Testing & Quality Assurance
 - **[Browser E2E testing](./browser-e2e-testing.md)** - Test layers, staging setup, live journeys, and evidence retention
-- **[database-migration-workflow.md](./database-migration-workflow.md)** - Disposable PostgreSQL refresh, local migration testing, progress records, and human online application
+- **[supabase-release-workflow.md](./supabase-release-workflow.md)** - Database migration validation and Edge Function release checks across local, staging, and production
 - **[Live snapshot/restore update](./doc_update_record/documentation_update_record_v2026_09_28_live_snapshot_restore.md)** - Snapshot and restore evidence, corrected local setup steps, and remaining migration parity gates
 - **[Staging schema sync update](./doc_update_record/documentation_update_record_v2026_09_29_staging_schema_sync.md)** - Schema-only staging bootstrap and the production assessment RPC mismatch
 - **[testing-strategy.md](./testing-strategy.md)** - Complete testing documentation for Tasks 1-3, including test coverage, execution instructions, and maintenance guidelines

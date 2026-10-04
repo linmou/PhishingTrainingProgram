@@ -1,6 +1,6 @@
-# Database Migration Workflow
+# Supabase Release Workflow
 
-Intent: validate migrations against a faithful local copy of the hosted database, then apply and verify them on staging before production.
+Intent: validate database migrations and Edge Function changes locally, then release and verify them on staging before production.
 
 Updated: 2026-10-03
 

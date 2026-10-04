@@ -7,7 +7,7 @@ Repository baseline commit: `b956cf1`.
 
 ## Changes
 
-- Added `../database-migration-workflow.md` with the PG17 cluster location, snapshot refresh sequence, complete-file SQL execution examples, required database dependencies, and migration test coverage.
+- Added the workflow now at `../supabase-release-workflow.md` with the PG17 cluster location, snapshot refresh sequence, complete-file SQL execution examples, required database dependencies, and migration test coverage.
 - Added a progress record template that distinguishes local validation, human online application, and subsequent online verification.
 - Linked the guide from `../README.md` and refreshed its intent and metadata.
 - Expanded the guide after user feedback with direct/session connection setup, configured credential loading, additional-schema and full `pg_dump` exports, archive checks, disposable database reset commands, and an existing SQL catalog test command.

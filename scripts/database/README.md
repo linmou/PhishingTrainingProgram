@@ -2,8 +2,8 @@
 
 Intent: identify the configured source and commands used to create disposable local migration baselines.
 
-Updated: 2026-09-28
-Repository baseline commit: `b956cf1`.
+Updated: 2026-10-04
+Repository baseline commit: `3c02349`.
 
 From the repository root:
 
@@ -16,4 +16,4 @@ rtk proxy sh ./scripts/database/pg_dump_roles.sh
 
 If `PGPASSWORD` is exported, it takes precedence. Otherwise, the helpers load the repository root `.env`, or `PG_DUMP_ENV_FILE` when provided. Source settings can be overridden with `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, and `PGSSLMODE`; `PGCLIENT_BIN_DIR` and `PG_DUMP_DIR` override the client and output directories. Keep credentials outside Git. The scripts return nonzero on exporter failure and print success only after the tool exits successfully.
 
-Role export can be rejected by hosted database permissions. Such a failure blocks role-parity validation until the necessary metadata is obtained through read-only catalog access. The schema-filtered application dump excludes dependencies in other schemas. Check [the migration workflow](../../tutor-system/claude_docs/database-migration-workflow.md) before treating local migration tests as predictive of online application.
+Role export can be rejected by hosted database permissions. Such a failure blocks role-parity validation until the necessary metadata is obtained through read-only catalog access. The schema-filtered application dump excludes dependencies in other schemas. Check [the release workflow](../../tutor-system/claude_docs/supabase-release-workflow.md) before treating local migration tests as predictive of online application.

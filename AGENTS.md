@@ -50,5 +50,5 @@ PRs should include a short problem statement, the approach taken, test evidence,
 ## Security & Configuration Tips
 Do not commit secrets. Frontend env vars should use `REACT_APP_*`. When changing Supabase-related code, make sure `src/services/supabase.ts` and the SQL migrations stay aligned, especially for RLS and storage policies.
 
-## Supabase Migration Delivery
-Use the Red-Green SQL checks and staging-before-production release sequence in [database-migration-workflow.md](tutor-system/claude_docs/database-migration-workflow.md). Apply and verify a schema change in each project before deploying an Edge Function that depends on it. Verify the matching live workflow on both projects, record the evidence, and archive the exact SQL only after both pass. Keep at most one pending migration in `tutor-system/supabase/migrations/`.
+## Supabase Release Delivery
+Use the staging-before-production sequence in [supabase-release-workflow.md](tutor-system/claude_docs/supabase-release-workflow.md) for database migrations and Edge Function changes, including Edge-only changes. Apply and verify a schema change in each project before deploying an Edge Function that depends on it. Verify the matching live workflow on both projects, record the evidence, and archive the exact SQL only after both pass. Keep at most one pending migration in `tutor-system/supabase/migrations/`.

@@ -2,7 +2,7 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-For the staging-to-production Edge Function release sequence, see [database-migration-workflow.md](database-migration-workflow.md#edge-function-release). This page contains the browser setup and commands.
+For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
 ## Supabase Projects
 

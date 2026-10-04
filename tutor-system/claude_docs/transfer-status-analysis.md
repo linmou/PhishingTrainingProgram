@@ -41,4 +41,4 @@ Qwen returns JSON in this shape:
 
 The Edge Function rejects an event if its message ID differs from the focus ID or its quote is absent from the focus message. Only validated output reaches `apply_transfer_message_analysis_v1`, which applies the resulting item-status changes. Historical dialogue informs interpretation but cannot itself create a new status event. Assessment option answers use the separate assessment-processing path.
 
-For future changes to this contract, follow `database-migration-workflow.md`: validate locally, apply and test on staging, then apply to production. Deploy the matching `assessment-api` function only after its SQL is applied in each project.
+For future changes to this contract, follow `supabase-release-workflow.md`: validate locally, apply and test on staging, then apply to production. Deploy the matching `assessment-api` function only after its SQL is applied in each project.
