@@ -918,6 +918,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentSuggestionContext(null);
     };
 
+    const createTransferPreparationError = (code: string, message: string, retryable = false) => {
+        const error = new Error(`${code}: ${message}`) as Error & { code: string; retryable: boolean };
+        error.code = code;
+        error.retryable = retryable;
+        return error;
+    };
+
     const generateAIResponse = async (
         prompt?: string,
         focusMessageId?: string,
@@ -984,14 +991,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (currentRoom.transfer_learning_enabled) {
                 if (!transferChecklist ||
                     transferChecklist.detection_areas.length + transferChecklist.verification_steps.length === 0) {
-                    throw new Error('Set up a learning target in Learning Progress before generating an assessment.');
+                    throw createTransferPreparationError(
+                        'TARGET_SETUP_REQUIRED',
+                        'Add at least one learning target in Learning Progress before generating an assessment.'
+                    );
                 }
                 const checklistOwnerId = transferChecklist.student_id;
                 const checklistOwnerMessage = focusMessageId
                     ? messages.find(message => message.id === focusMessageId && message.user_id === checklistOwnerId)
                     : messages.filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId).slice(-1)[0];
                 if (!checklistOwnerMessage) {
-                    throw new Error('No learner message found for the transfer checklist owner');
+                    throw createTransferPreparationError(
+                        'WRONG_LEARNER',
+                        'The active learning progress belongs to a learner without a message in this room.'
+                    );
                 }
                 parentMessageId = checklistOwnerMessage.id;
                 parentMessageContent = checklistOwnerMessage.content;
@@ -1003,7 +1016,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 });
                 if (prepared) {
                     const candidate = createReviewCandidate(prepared);
-                    if (!candidate) throw new Error('Transfer preparation returned an invalid assessment candidate');
+                    if (!candidate) {
+                        throw createTransferPreparationError(
+                            'AI_OUTPUT_INVALID',
+                            'Transfer preparation returned an invalid assessment candidate.'
+                        );
+                    }
                     setTransferDraft({
                         decision: candidate.decision,
                         progressSnapshotHash: String(prepared.progress_snapshot_hash || ''),

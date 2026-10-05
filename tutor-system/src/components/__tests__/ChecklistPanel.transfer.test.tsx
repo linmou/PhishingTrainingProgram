@@ -169,6 +169,85 @@ describe('useChecklist transfer progress ownership', () => {
     expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
   });
 
+  // useChecklist.ts: target submission stays local-first even when a learner ID is already known.
+  it('keeps a local draft visible before learner-owned synchronization', async () => {
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID, {
+      enabled: true,
+      studentId: LEARNER_A_ID,
+    }));
+
+    await act(async () => {
+      await result.current.handleManualSubmit(['Check the sender'], ['Use the official channel']);
+    });
+
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toContain('Check the sender');
+    expect(result.current.checklist?.id).toBe(`draft-${TRANSFER_ROOM_ID}`);
+    expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+  });
+
+  // useChecklist.ts: a failed promotion must retain the tutor's usable draft for a later retry.
+  it('retains a local draft when learner-owned synchronization fails', async () => {
+    checklistApi.initializeTransferChecklistForStudent.mockRejectedValueOnce(new Error('learner session not ready'));
+    const { result, rerender } = renderHook(
+      ({ studentId }: { studentId: string | null }) => useChecklist(TRANSFER_ROOM_ID, {
+        enabled: true,
+        studentId,
+      }),
+      { initialProps: { studentId: null } },
+    );
+
+    await act(async () => {
+      await result.current.handleManualSubmit(['Check the sender'], []);
+    });
+    rerender({ studentId: LEARNER_A_ID });
+
+    await waitFor(() => expect(checklistApi.initializeTransferChecklistForStudent).toHaveBeenCalled());
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toContain('Check the sender');
+    expect(result.current.checklist?.id).toBe(`draft-${TRANSFER_ROOM_ID}`);
+    await waitFor(() => expect(result.current.error).toMatch(/learner session not ready/i));
+  });
+
+  // useChecklist.ts: an ownerless server projection cannot hide a valid tutor-local draft.
+  it('keeps the local draft when the server returns ownerless transfer progress', async () => {
+    window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
+      detectionAreas: ['Check the sender'],
+      verificationSteps: [],
+    }));
+    checklistApi.getActiveTransferChecklistForRoom.mockRejectedValue(new Error(
+      'Server returned transfer progress without a valid learner owner.'
+    ));
+    checklistApi.read.mockResolvedValue(null);
+
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID, {
+      enabled: true,
+      studentId: null,
+    }));
+    await act(async () => {
+      await result.current.refreshChecklist();
+    });
+
+    expect(result.current.checklist?.id).toBe(`draft-${TRANSFER_ROOM_ID}`);
+    expect(result.current.error).toBeNull();
+  });
+
+  // ChecklistPanel.tsx: a failed promotion leaves the locally editable targets visible.
+  it('shows a non-blocking sync error while keeping the local draft editable', async () => {
+    window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
+      detectionAreas: ['Check the sender'],
+      verificationSteps: [],
+    }));
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    checklistApi.read.mockResolvedValue(null);
+    checklistApi.initializeTransferChecklistForStudent.mockRejectedValue(new Error('learner session not ready'));
+
+    render(<ChecklistPanel roomId={TRANSFER_ROOM_ID} transferEnabled studentId={LEARNER_A_ID}
+      isVisible onToggleVisibility={jest.fn()} />);
+
+    expect(await screen.findByText('Check the sender')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(/saved locally/i)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Retry sync' })).toBeInTheDocument();
+  });
+
   it('fails closed when the server returns transfer progress for a different learner', async () => {
     setUser('student');
     checklistApi.getChecklistForStudent.mockResolvedValue({ ...transferChecklist, student_id: LEARNER_B_ID } as never);
@@ -368,8 +447,8 @@ describe('ChecklistPanel transfer presentation', () => {
     expect(checklistApi.read).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
   });
 
-  // ChecklistPanel.tsx: a tutor can save a room draft before the learner joins.
-  it('saves learning targets before a learner joins', async () => {
+  // ChecklistPanel.tsx: generated targets are saved directly into the editable progress panel.
+  it('saves generated learning targets without a review page before a learner joins', async () => {
     window.localStorage.clear();
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
     (assessChecklistGenerationContext as jest.Mock).mockResolvedValue({
@@ -381,10 +460,9 @@ describe('ChecklistPanel transfer presentation', () => {
     const generate = await screen.findByRole('button', { name: 'Generate Learning Targets' });
     expect(generate).toBeEnabled();
     fireEvent.click(generate);
-    expect(await screen.findByText('Approve Learning Targets')).toBeInTheDocument();
-    expect(screen.getByLabelText('Detection Areas')).toHaveValue('Check the sender');
-    fireEvent.click(screen.getByRole('button', { name: 'Create Checklist' }));
     expect(await screen.findByText('Check the sender')).toBeInTheDocument();
+    expect(screen.queryByText('Approve Learning Targets')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Detection Areas')).not.toBeInTheDocument();
     expect(screen.queryByText(/Wait for the learner to join before saving learning targets/i)).not.toBeInTheDocument();
     expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toContain('Check the sender');

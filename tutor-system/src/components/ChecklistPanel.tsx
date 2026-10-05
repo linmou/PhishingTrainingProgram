@@ -321,7 +321,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     // New enhanced functionality
     showGenerationModal,
     showManualInput,
-    suggestedTargets,
     startSmartGeneration,
     openManualInput,
     closeModals,
@@ -485,7 +484,9 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     );
   }
 
-  if (error) {
+  const draftSyncError = Boolean(error && checklist?.id.startsWith('draft-'));
+
+  if (error && !draftSyncError) {
     return (
       <div className="checklist-panel">
         <div className="checklist-header">
@@ -526,9 +527,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             <ManualChecklistInput
               onSubmit={handleManualSubmit}
               onCancel={closeModals}
-              initialDetectionAreas={suggestedTargets?.detection}
-              initialVerificationSteps={suggestedTargets?.verification}
-              title={transferEnabled ? 'Approve Learning Targets' : undefined}
+              title={transferEnabled ? 'Enter Learning Targets' : undefined}
               allowVerificationOnly={transferEnabled}
             />
           </div>
@@ -607,6 +606,16 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
           <EyeOff size={16} />
         </button>
       </div>
+
+      {draftSyncError && (
+        <div className="checklist-error" role="status">
+          <p>{error}</p>
+          <button onClick={refreshChecklist} className="retry-button">
+            <RotateCcw size={14} />
+            Retry sync
+          </button>
+        </div>
+      )}
 
       <div className="checklist-content">
         <div className="checklist-summary">

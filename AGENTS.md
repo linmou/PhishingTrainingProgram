@@ -6,6 +6,10 @@ Do not start, stop, inspect, or use Docker. Do not use Docker in any situation.
 
 Supabase CLI commands may trigger Docker, including function download and deployment workflows. If a Supabase CLI operation would trigger Docker, do not use it; use the Supabase MCP tools instead. For Supabase project operations, honor an explicit MCP request over local CLI workflows.
 
+### Supabase Schema Inspection
+
+When reviewing the current database schema or diagnosing Supabase behavior, inspect the target project directly with Supabase MCP. Do not use local migration history as the primary source of truth for the live schema. Read local migration files only when preparing or reviewing the deployable migration artifact, then verify the result against the live project with MCP.
+
 ## Project Structure & Module Organization
 This repository is centered on `tutor-system/`, a React + TypeScript phishing-training app with Supabase. Most contributor work happens there.
 

@@ -156,6 +156,15 @@ describe('RoomContext transfer turn modes', () => {
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
   });
 
+  it('returns a named setup error when assessment is enabled without a checklist', async () => {
+    (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(null);
+    await mountRoom();
+
+    await expect(room!.generateAIResponse()).rejects.toMatchObject({
+      code: 'TARGET_SETUP_REQUIRED',
+    });
+  });
+
   it('does not clear Guard when an assessment delivery is refused', async () => {
     sendReviewed.mockResolvedValue({ ...reviewedDelivery, room: { ...transferRoom, active_response_mode: 'guard' } });
     await mountWithCandidate(preparedTurnResult);

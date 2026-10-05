@@ -3,7 +3,7 @@
  * Provides state management and service integration for checklist functionality
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { RoomFeaturesService } from '../services/roomFeaturesService';
 import { SessionChecklist, ChecklistItem, ChecklistProgress, LearningTargetInput } from '../types/checklist';
 import { getAIConfig } from '../services/aiService';
@@ -87,6 +87,29 @@ const draftChecklist = (roomId: string, draft: LearningTargetDraft): SessionChec
   };
 };
 
+const progressForChecklist = (currentChecklist: SessionChecklist): ChecklistProgress => {
+  const items = [...currentChecklist.detection_areas, ...currentChecklist.verification_steps];
+  const covered = items.filter(item => item.status === 'covered').length;
+  return {
+    total_areas: items.length,
+    covered_areas: covered,
+    partially_covered_areas: items.filter(item => item.status === 'partially_covered').length,
+    pending_areas: items.filter(item => item.status === 'pending').length,
+    completion_percentage: items.length ? Math.round((covered / items.length) * 100) : 0,
+    critical_pending: items.filter(item => item.priority === 'critical' && item.status !== 'covered').length,
+    critical_covered: items.filter(item => item.priority === 'critical' && item.status === 'covered').length,
+    important_pending: items.filter(item => item.priority === 'important' && item.status !== 'covered').length,
+    important_covered: items.filter(item => item.priority === 'important' && item.status === 'covered').length,
+    optional_pending: items.filter(item => item.priority === 'optional' && item.status !== 'covered').length,
+    optional_covered: items.filter(item => item.priority === 'optional' && item.status === 'covered').length,
+  };
+};
+
+const isOwnerlessTransferError = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error);
+  return /valid learner owner|unsupported_room_scope/i.test(message);
+};
+
 export interface UseChecklistReturn {
   // State
   checklist: SessionChecklist | null;
@@ -98,7 +121,6 @@ export interface UseChecklistReturn {
   // New modal states
   showGenerationModal: GenerationModalState | null;
   showManualInput: boolean;
-  suggestedTargets: { detection: string[]; verification: string[] } | null;
 
   // Actions
   generateChecklist: (templateName: string) => Promise<void>;
@@ -137,7 +159,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // New modal states
   const [showGenerationModal, setShowGenerationModal] = useState<GenerationModalState | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
-  const [suggestedTargets, setSuggestedTargets] = useState<{ detection: string[]; verification: string[] } | null>(null);
+  const transferPromotionInFlight = useRef(false);
 
   // Generate new checklist using TDD system prompt detection with template fallback
   const generateChecklist = useCallback(async (templateName: string) => {
@@ -215,6 +237,20 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     }
   }, [roomId, transferEnabled]);
 
+  const saveTransferTargets = useCallback(async (detectionAreas: string[], verificationSteps: string[]) => {
+    const items = [
+      ...detectionAreas.map(area_text => ({ area_text, item_type: 'detection_area' as const, priority: 'important' as const })),
+      ...verificationSteps.map(area_text => ({ area_text, item_type: 'verification_step' as const, priority: 'important' as const })),
+    ];
+    if (!items.length) throw new Error('Enter at least one learning target.');
+    const draft = { detectionAreas, verificationSteps };
+    window.localStorage.setItem(draftStorageKey(roomId), JSON.stringify(draft));
+    const localChecklist = draftChecklist(roomId, draft);
+    setChecklist(localChecklist);
+    setProgress(progressForChecklist(localChecklist));
+    setShowManualInput(false);
+  }, [roomId]);
+
   // New smart generation function that assesses context first
   const startSmartGeneration = useCallback(async (templateName?: string) => {
     if (!roomId) return;
@@ -235,8 +271,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
           if (!detection.length && !verification.length) {
             throw new Error('No learning targets found. Edit the room configuration or enter targets manually.');
           }
-          setSuggestedTargets({ detection, verification });
-          setShowManualInput(true);
+          await saveTransferTargets(detection, verification);
         } else {
           setShowGenerationModal({
             mode: context.type,
@@ -359,12 +394,11 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, transferEnabled]);
+  }, [roomId, saveTransferTargets, transferEnabled]);
 
   // Open manual input form
   const openManualInput = useCallback(() => {
     setShowGenerationModal(null);
-    setSuggestedTargets(null);
     setShowManualInput(true);
   }, []);
 
@@ -372,7 +406,6 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   const closeModals = useCallback(() => {
     setShowGenerationModal(null);
     setShowManualInput(false);
-    setSuggestedTargets(null);
   }, []);
 
   // Handle AI setup redirect
@@ -391,21 +424,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
 
     try {
       if (transferEnabled) {
-        const items = [
-          ...detectionAreas.map(area_text => ({ area_text, item_type: 'detection_area' as const, priority: 'important' as const })),
-          ...verificationSteps.map(area_text => ({ area_text, item_type: 'verification_step' as const, priority: 'important' as const })),
-        ];
-        if (!items.length) throw new Error('Enter at least one learning target.');
-        if (transferStudentId) {
-          const saved = await RoomFeaturesService.checklist.initializeTransferChecklistForStudent(roomId, transferStudentId, items);
-          setChecklist(saved);
-        } else {
-          const draft = { detectionAreas, verificationSteps };
-          window.localStorage.setItem(draftStorageKey(roomId), JSON.stringify(draft));
-          setChecklist(draftChecklist(roomId, draft));
-        }
-        setShowManualInput(false);
-        setSuggestedTargets(null);
+        await saveTransferTargets(detectionAreas, verificationSteps);
         return;
       }
       console.log('📝 Creating manual checklist:', { detectionAreas, verificationSteps });
@@ -496,7 +515,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, transferEnabled, transferStudentId]);
+  }, [roomId, saveTransferTargets, transferEnabled]);
 
   // Update checklist item
   const updateItem = useCallback(async (itemId: string, updates: Partial<ChecklistItem>) => {
@@ -594,44 +613,58 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // Refresh checklist data - reload existing data without clearing
   const refreshChecklist = useCallback(async () => {
     if (!roomId) return;
+    if (transferPromotionInFlight.current) return;
 
     console.log('🔄 Refreshing checklist data for room:', roomId);
     setLoading(true);
-    setError(null);
+    const localDraft = transferEnabled && user?.current_role === 'tutor'
+      ? readLearningTargetDraft(roomId)
+      : null;
+    if (!localDraft) setError(null);
 
     try {
       const checklistApi = RoomFeaturesService.checklist as typeof RoomFeaturesService.checklist & {
         getChecklistForStudent?: (id: string, studentId: string) => Promise<SessionChecklist | null>;
         getActiveTransferChecklistForRoom?: (id: string) => Promise<SessionChecklist | null>;
       };
-      const transferChecklist = await (user?.current_role === 'student'
-        ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
-        : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
-      const legacyChecklist = transferChecklist ? null : await RoomFeaturesService.checklist.read(roomId);
-      const localDraft = !transferChecklist && !legacyChecklist && transferEnabled && user?.current_role === 'tutor'
+      let transferChecklist: SessionChecklist | null = null;
+      try {
+        transferChecklist = await (user?.current_role === 'student'
+          ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
+          : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
+      } catch (transferError) {
+        const pendingDraft = localDraft || (transferEnabled && user?.current_role === 'tutor'
+          ? readLearningTargetDraft(roomId)
+          : null);
+        if (pendingDraft && user?.current_role === 'tutor' && isOwnerlessTransferError(transferError)) {
+          const localChecklist = draftChecklist(roomId, pendingDraft);
+          setChecklist(localChecklist);
+          setProgress(progressForChecklist(localChecklist));
+          return;
+        }
+        throw transferError;
+      }
+      const pendingDraft = transferEnabled && user?.current_role === 'tutor'
         ? readLearningTargetDraft(roomId)
         : null;
+      if (pendingDraft) {
+        const localChecklist = draftChecklist(roomId, pendingDraft);
+        setChecklist(localChecklist);
+        setProgress(progressForChecklist(localChecklist));
+        return;
+      }
+      const legacyChecklist = transferChecklist ? null : await RoomFeaturesService.checklist.read(roomId);
       setPriorChecklist(null);
       const updatedChecklist = transferChecklist || legacyChecklist || (localDraft ? draftChecklist(roomId, localDraft) : null);
       if (updatedChecklist?.progress_policy_version === 'transfer_v1' && (
         !updatedChecklist.student_id ||
         (user?.current_role === 'student' && updatedChecklist.student_id !== user.id)
       )) {
-        if (updatedChecklist.id.startsWith('draft-') && user?.current_role === 'tutor' && !transferStudentId) {
-          setChecklist(updatedChecklist);
-          setProgress({
-            total_areas: updatedChecklist.total_items,
-            covered_areas: 0,
-            partially_covered_areas: 0,
-            pending_areas: updatedChecklist.total_items,
-            completion_percentage: 0,
-            critical_pending: 0,
-            critical_covered: 0,
-            important_pending: updatedChecklist.total_items,
-            important_covered: 0,
-            optional_pending: 0,
-            optional_covered: 0,
-          });
+        if (localDraft && user?.current_role === 'tutor') {
+          const localChecklist = draftChecklist(roomId, localDraft);
+          setChecklist(localChecklist);
+          setProgress(progressForChecklist(localChecklist));
+          setError(null);
           return;
         }
         setChecklist(null);
@@ -652,24 +685,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       
       // Update progress only if checklist exists
       if (updatedChecklist) {
-        const allItems = [...updatedChecklist.detection_areas, ...updatedChecklist.verification_steps];
-        const covered = allItems.filter(item => item.status === 'covered').length;
-        const total = allItems.length;
-        const progress = total > 0 ? (covered / total) * 100 : 0;
-        
-        setProgress({
-          total_areas: total,
-          covered_areas: covered,
-          partially_covered_areas: allItems.filter(item => item.status === 'partially_covered').length,
-          pending_areas: allItems.filter(item => item.status === 'pending').length,
-          completion_percentage: Math.round(progress),
-          critical_pending: allItems.filter(item => item.priority === 'critical' && item.status !== 'covered').length,
-          critical_covered: allItems.filter(item => item.priority === 'critical' && item.status === 'covered').length,
-          important_pending: allItems.filter(item => item.priority === 'important' && item.status !== 'covered').length,
-          important_covered: allItems.filter(item => item.priority === 'important' && item.status === 'covered').length,
-          optional_pending: allItems.filter(item => item.priority === 'optional' && item.status !== 'covered').length,
-          optional_covered: allItems.filter(item => item.priority === 'optional' && item.status === 'covered').length
-        });
+        setProgress(progressForChecklist(updatedChecklist));
         
         console.log('✅ Checklist refreshed successfully');
       } else {
@@ -687,13 +703,14 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, user, transferEnabled, transferStudentId]);
+  }, [roomId, user, transferEnabled]);
 
   useEffect(() => {
     if (!transferEnabled || !transferStudentId || user?.current_role !== 'tutor') return;
     const draft = readLearningTargetDraft(roomId);
     if (!draft || draft.detectionAreas.length + draft.verificationSteps.length === 0) return;
     let active = true;
+    transferPromotionInFlight.current = true;
     const items: LearningTargetInput[] = [
       ...draft.detectionAreas.map((area_text, index) => ({
         area_text,
@@ -712,11 +729,18 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
         if (!active) return;
         window.localStorage.removeItem(draftStorageKey(roomId));
         setChecklist(saved);
+        setProgress(progressForChecklist(saved));
       })
       .catch((err: unknown) => {
-        if (active) setError(err instanceof Error ? err.message : 'Failed to sync learning targets');
+        if (!active) return;
+        const message = err instanceof Error ? err.message : 'Failed to sync learning targets';
+        const localChecklist = draftChecklist(roomId, draft);
+        setChecklist(localChecklist);
+        setProgress(progressForChecklist(localChecklist));
+        setError(`Learning targets remain saved locally. Sync failed: ${message}`);
       })
       .finally(() => {
+        transferPromotionInFlight.current = false;
         if (active) setLoading(false);
       });
     return () => { active = false; };
@@ -778,7 +802,6 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     // New modal states
     showGenerationModal,
     showManualInput,
-    suggestedTargets,
 
     // Actions
     generateChecklist,

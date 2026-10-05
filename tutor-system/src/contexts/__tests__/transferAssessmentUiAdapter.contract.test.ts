@@ -199,6 +199,19 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
     expect(classified.message).not.toContain('correct_option_ids');
   });
 
+  it('keeps local transfer setup failures distinct from the retry fallback', () => {
+    const error = Object.assign(
+      new Error('TARGET_SETUP_REQUIRED: Add at least one learning target'),
+      { code: 'TARGET_SETUP_REQUIRED', retryable: false }
+    );
+    const classified = classifyAssessmentFailure(error);
+
+    expect(classified.message).toBe(
+      'TARGET_SETUP_REQUIRED: Add at least one learning target in Learning Progress before generating an assessment.'
+    );
+    expect(classified.message).not.toBe('The transfer request could not be completed. Try again.');
+  });
+
   it('uses typed service error codes and hides raw provider details from review state', () => {
     const error = new AssessmentApiRequestError({
       code: 'AI_PROVIDER_ERROR',

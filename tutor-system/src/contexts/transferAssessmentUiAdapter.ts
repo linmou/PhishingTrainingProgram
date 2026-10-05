@@ -135,6 +135,12 @@ const FAILURE_MESSAGES: Record<ReviewFailureStatus, string> = {
   retryable: 'The transfer request could not be completed. Try again.',
 };
 
+const CODE_FAILURE_MESSAGES: Record<string, string> = {
+  TARGET_SETUP_REQUIRED: 'Add at least one learning target in Learning Progress before generating an assessment.',
+  WRONG_LEARNER: 'The active learning progress belongs to a learner without a message in this room.',
+  AI_OUTPUT_INVALID: 'Transfer preparation returned an invalid assessment candidate.',
+};
+
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -407,9 +413,10 @@ export function classifyAssessmentFailure(error: unknown): { status: ReviewStatu
     ERROR_STATUS.find(([candidate]) => raw === candidate || raw.startsWith(`${candidate}:`))?.[0] ?? null;
   const mappedStatus = code ? ERROR_STATUS.find(([candidate]) => candidate === code)?.[1] : null;
   const status = mappedStatus ?? (record.retryable === false ? 'validation' : 'retryable');
+  const detail = code ? CODE_FAILURE_MESSAGES[code] : null;
   return {
     status,
-    message: code ? `${code}: ${FAILURE_MESSAGES[status]}` : FAILURE_MESSAGES[status],
+    message: code ? `${code}: ${detail || FAILURE_MESSAGES[status]}` : FAILURE_MESSAGES[status],
   };
 }
 

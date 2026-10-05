@@ -14,6 +14,7 @@ import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/
 import ChecklistPanel from '../components/ChecklistPanel';
 import { supabase } from '../services/supabase';
 import { ChecklistService } from '../services/checklistService';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
@@ -22,6 +23,7 @@ import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
 import type { AssessmentOptionId } from '../types/assessment';
 import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
+import type { Message } from '../types';
 import { readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
@@ -53,6 +55,23 @@ const COMPARISON_PAIR_LABELS = {
     click_impulse: 'Click Impulse',
     personal_story: 'Personal Story'
 } as const;
+
+export const findFirstPersistedStudentId = (roomMessages: Message[]): string | null => {
+    const firstStudentMessage = roomMessages
+        .filter(message => message.user_role === 'student'
+            && !message.id.startsWith('prepop-')
+            && !message.id.startsWith('temp-'))
+        .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())[0];
+    return firstStudentMessage?.user_id || null;
+};
+
+export const resolveTransferLearnerId = (
+    sessionStudentIds: Array<string | null | undefined>,
+    fallbackStudentId: string | null,
+): string | null => {
+    const learnerIds = Array.from(new Set(sessionStudentIds.filter((id): id is string => Boolean(id))));
+    return learnerIds.length === 1 ? learnerIds[0] : learnerIds.length === 0 ? fallbackStudentId : null;
+};
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -319,6 +338,13 @@ const RoomPagePost: React.FC = () => {
             setJoinError('');
             setPasswordError('');
             await joinRoom(roomId!, password);
+            if (user?.current_role === 'student') {
+                const result = await transferAssessmentService.joinRoom(roomId!);
+                if (result.room_role === 'observer' && typeof window !== 'undefined') {
+                    setRoomObserver(true);
+                    window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
+                }
+            }
             return true;
         } catch (error: any) {
             console.error('Failed to join room:', error);
@@ -653,6 +679,7 @@ const RoomPagePost: React.FC = () => {
     const canSendMessages = user && user.current_role !== 'observer' && !roomObserver;
     const canUseAI = Boolean(user && user.current_role === 'tutor' && currentRoom);
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
+    const firstPersistedStudentId = findFirstPersistedStudentId(messages);
     useEffect(() => {
         if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'student') {
             setWaitingForTargets(false);
@@ -680,14 +707,18 @@ const RoomPagePost: React.FC = () => {
                 .eq('status', 'active')
                 .not('student_id', 'is', null);
             if (active && !error) {
-                const learnerIds = Array.from(new Set((data || []).map(session => session.student_id)));
-                setTransferStudentId(learnerIds.length === 1 ? learnerIds[0] : null);
+                setTransferStudentId(resolveTransferLearnerId(
+                    (data || []).map(session => session.student_id),
+                    firstPersistedStudentId,
+                ));
+            } else if (active && error) {
+                setTransferStudentId(firstPersistedStudentId);
             }
         };
         loadLearner();
         const interval = window.setInterval(loadLearner, 3000);
         return () => { active = false; window.clearInterval(interval); };
-    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.current_role, showChecklist]);
+    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.current_role, showChecklist, firstPersistedStudentId]);
 
     const handleToggleGuardMode = async () => {
         if (!currentRoom) return;
