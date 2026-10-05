@@ -4,7 +4,7 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, requestId, TIMEOUT } = require('../browser-e2e-support');
+const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, captureResponses, requestId, TIMEOUT } = require('../browser-e2e-support');
 const { deliverFixedAssessment } = require('./assessment-fixture');
 
 module.exports = async function roomAssessmentSetup(ctx) {
@@ -141,6 +141,29 @@ module.exports = async function roomAssessmentSetup(ctx) {
     p_payload: { understanding_level: 'basic' },
   });
   if (understandingError) throw new Error(`Assessment fixture understanding: ${understandingError.message}`);
+
+  // Exercise the real tutor AI action in the newly created room. The previous
+  // fixture delivery path bypassed this UI/API boundary entirely.
+  await openRoom(tutorPage, appUrl, room.id);
+  const prepareStop = await captureResponses(tutorPage,
+    response => response.url().includes('/functions/v1/assessment-api'));
+  let prepareCalls;
+  try {
+    const preparation = tutorPage.waitForResponse(response =>
+      response.url().includes('/functions/v1/assessment-api') &&
+      response.request().postDataJSON()?.operation === 'prepare_turn', { timeout: TIMEOUT });
+    await tutorPage.locator('button.ai-generate-btn').click();
+    const preparationResponse = await preparation;
+    assert.equal(preparationResponse.status(), 200, 'Tutor AI assessment preparation failed');
+    await tutorPage.getByRole('heading', { name: 'Review transfer assessment' }).waitFor({ timeout: TIMEOUT });
+    await tutorPage.getByRole('button', { name: 'Discard candidate' }).click();
+  } finally {
+    prepareCalls = await prepareStop();
+  }
+  const prepareCall = prepareCalls.find(call => call.request?.operation === 'prepare_turn');
+  assert.equal(prepareCall?.status, 200, 'Tutor AI response did not complete successfully');
+  assert.equal(prepareCall?.response?.ok, true, 'Tutor AI response returned an error envelope');
+
   const delivered = await deliverFixedAssessment(ctx, {
     room, checklist, items: [item], focus,
   });
