@@ -540,7 +540,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             {(!transferEnabled || !canSetupTargets) && <p>{transferEnabled
               ? 'Waiting for the tutor to set up learning targets.'
               : 'No checklist found for this room.'}</p>}
-            {transferEnabled && canSetupTargets && !studentId && <p>Waiting for a learner to join before targets can be saved.</p>}
+            {transferEnabled && canSetupTargets && !studentId && <p>Targets are saved locally and sync when a learner joins.</p>}
             {canSetupTargets && <div className="checklist-generation-options">
               <button 
                 onClick={() => startSmartGeneration()}

@@ -106,8 +106,10 @@ const setUser = (role: 'tutor' | 'student') => {
 describe('useChecklist transfer progress ownership', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    window.localStorage.clear();
     setUser('tutor');
     checklistApi.update.mockResolvedValue(undefined);
+    checklistApi.initializeTransferChecklistForStudent.mockResolvedValue(transferChecklist);
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
     checklistApi.getChecklistForStudent.mockResolvedValue(transferChecklist);
     checklistApi.read.mockResolvedValue(legacyChecklist);
@@ -138,6 +140,33 @@ describe('useChecklist transfer progress ownership', () => {
     expect(result.current.checklist!.progress_policy_version).toBe('transfer_v1');
     expect(result.current.checklist!.student_id).toBe(LEARNER_A_ID);
     expect(checklistApi.read).not.toHaveBeenCalled();
+  });
+
+  // useChecklist.ts: a room draft is promoted when the tutor observes the learner seat.
+  it('synchronizes a saved room draft when a learner joins', async () => {
+    window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
+      detectionAreas: ['Check the sender'],
+      verificationSteps: ['Use the official support channel'],
+    }));
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    checklistApi.initializeTransferChecklistForStudent.mockResolvedValue(transferChecklist);
+
+    const { rerender } = renderHook(
+      ({ studentId }: { studentId: string | null }) => useChecklist(TRANSFER_ROOM_ID, {
+        enabled: true,
+        studentId,
+      }),
+      { initialProps: { studentId: null } },
+    );
+    await act(async () => undefined);
+    rerender({ studentId: LEARNER_A_ID });
+
+    await waitFor(() => expect(checklistApi.initializeTransferChecklistForStudent)
+      .toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, [
+        { area_text: 'Check the sender', item_type: 'detection_area', priority: 'important' },
+        { area_text: 'Use the official support channel', item_type: 'verification_step', priority: 'important' },
+      ]));
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
   });
 
   it('fails closed when the server returns transfer progress for a different learner', async () => {
@@ -247,8 +276,10 @@ describe('ChecklistPanel transfer presentation', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    window.localStorage.clear();
     setUser('tutor');
     checklistApi.update.mockResolvedValue(undefined);
+    checklistApi.initializeTransferChecklistForStudent.mockResolvedValue(transferChecklist);
   });
 
   const expandFirstItem = async () => {
@@ -337,8 +368,9 @@ describe('ChecklistPanel transfer presentation', () => {
     expect(checklistApi.read).toHaveBeenCalledWith(TRANSFER_ROOM_ID);
   });
 
-  // ChecklistPanel.tsx: a tutor must be able to start target generation in a newly created assessment room.
-  it('allows target generation before a learner has posted in a new assessment room', async () => {
+  // ChecklistPanel.tsx: a tutor can save a room draft before the learner joins.
+  it('saves learning targets before a learner joins', async () => {
+    window.localStorage.clear();
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
     (assessChecklistGenerationContext as jest.Mock).mockResolvedValue({
       type: 'ready_for_extraction', detectionAreas: ['Check the sender'], verificationSteps: [],
@@ -352,8 +384,10 @@ describe('ChecklistPanel transfer presentation', () => {
     expect(await screen.findByText('Approve Learning Targets')).toBeInTheDocument();
     expect(screen.getByLabelText('Detection Areas')).toHaveValue('Check the sender');
     fireEvent.click(screen.getByRole('button', { name: 'Create Checklist' }));
-    expect(await screen.findByText(/Wait for the learner to join before saving learning targets/i)).toBeInTheDocument();
+    expect(await screen.findByText('Check the sender')).toBeInTheDocument();
+    expect(screen.queryByText(/Wait for the learner to join before saving learning targets/i)).not.toBeInTheDocument();
     expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toContain('Check the sender');
   });
 
   // ChecklistPanel.tsx and useChecklist.ts: enabling assessment must keep prior room progress visible.

@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { RoomFeaturesService } from '../services/roomFeaturesService';
-import { SessionChecklist, ChecklistItem, ChecklistProgress } from '../types/checklist';
+import { SessionChecklist, ChecklistItem, ChecklistProgress, LearningTargetInput } from '../types/checklist';
 import { getAIConfig } from '../services/aiService';
 import { assessChecklistGenerationContext, ChecklistGenerationContext } from '../services/checklistGenerationContext';
 import { useOptionalAuth } from '../contexts/AuthContext';
@@ -20,6 +20,72 @@ export interface GenerationModalState {
 const TRANSFER_PROGRESS_FIELDS: ReadonlyArray<keyof ChecklistItem> = [
   'status', 'understanding_level', 'area_text', 'priority', 'item_type',
 ];
+
+const draftStorageKey = (roomId: string) => `room-learning-target-draft:${roomId}`;
+
+interface LearningTargetDraft {
+  detectionAreas: string[];
+  verificationSteps: string[];
+  priorities?: Record<string, ChecklistItem['priority']>;
+}
+
+const readLearningTargetDraft = (roomId: string): LearningTargetDraft | null => {
+  if (typeof window === 'undefined') return null;
+  const raw = window.localStorage.getItem(draftStorageKey(roomId));
+  if (!raw) return null;
+  try {
+    const draft = JSON.parse(raw) as LearningTargetDraft;
+    if (!Array.isArray(draft.detectionAreas) || !Array.isArray(draft.verificationSteps)) return null;
+    return {
+      detectionAreas: draft.detectionAreas.filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+      verificationSteps: draft.verificationSteps.filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+      priorities: draft.priorities || {},
+    };
+  } catch {
+    return null;
+  }
+};
+
+const draftChecklist = (roomId: string, draft: LearningTargetDraft): SessionChecklist => {
+  const now = new Date();
+  const item = (areaText: string, itemType: ChecklistItem['item_type'], index: number): ChecklistItem => {
+    const id = `draft-${roomId}-${itemType}-${index}`;
+    return {
+    id,
+    area_text: areaText,
+    item_type: itemType,
+    priority: draft.priorities?.[id] || 'important',
+    status: 'pending',
+    understanding_level: 'none',
+    coverage_evidence: [],
+    tutor_notes: '',
+    last_addressed: null,
+    attempts_count: 0,
+    original_template_area: false,
+    created_at: now,
+    updated_at: now,
+    };
+  };
+  const detectionAreas = draft.detectionAreas.map((text, index) => item(text, 'detection_area', index));
+  const verificationSteps = draft.verificationSteps.map((text, index) => item(text, 'verification_step', index));
+  const totalItems = detectionAreas.length + verificationSteps.length;
+  return {
+    id: `draft-${roomId}`,
+    room_id: roomId,
+    student_id: null,
+    progress_policy_version: 'transfer_v1',
+    template_name: 'Room learning targets',
+    session_start: now,
+    detection_areas: detectionAreas,
+    verification_steps: verificationSteps,
+    total_items: totalItems,
+    completed_items: 0,
+    completion_percentage: 0,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+  };
+};
 
 export interface UseChecklistReturn {
   // State
@@ -325,14 +391,19 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
 
     try {
       if (transferEnabled) {
-        if (!transferStudentId) throw new Error('Wait for the learner to join before saving learning targets.');
         const items = [
           ...detectionAreas.map(area_text => ({ area_text, item_type: 'detection_area' as const, priority: 'important' as const })),
           ...verificationSteps.map(area_text => ({ area_text, item_type: 'verification_step' as const, priority: 'important' as const })),
         ];
         if (!items.length) throw new Error('Enter at least one learning target.');
-        const saved = await RoomFeaturesService.checklist.initializeTransferChecklistForStudent(roomId, transferStudentId, items);
-        setChecklist(saved);
+        if (transferStudentId) {
+          const saved = await RoomFeaturesService.checklist.initializeTransferChecklistForStudent(roomId, transferStudentId, items);
+          setChecklist(saved);
+        } else {
+          const draft = { detectionAreas, verificationSteps };
+          window.localStorage.setItem(draftStorageKey(roomId), JSON.stringify(draft));
+          setChecklist(draftChecklist(roomId, draft));
+        }
         setShowManualInput(false);
         setSuggestedTargets(null);
         return;
@@ -431,6 +502,34 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   const updateItem = useCallback(async (itemId: string, updates: Partial<ChecklistItem>) => {
     if (!roomId) return;
 
+    if (checklist?.id.startsWith('draft-')) {
+      const currentDraft = readLearningTargetDraft(roomId);
+      if (!currentDraft) return;
+      const allItems = [...currentDraft.detectionAreas, ...currentDraft.verificationSteps];
+      const draftIndex = allItems.findIndex((text, index) => `draft-${roomId}-${index < currentDraft.detectionAreas.length ? 'detection_area' : 'verification_step'}-${index < currentDraft.detectionAreas.length ? index : index - currentDraft.detectionAreas.length}` === itemId);
+      if (draftIndex < 0) return;
+      const nextDraft = {
+        detectionAreas: [...currentDraft.detectionAreas],
+        verificationSteps: [...currentDraft.verificationSteps],
+        priorities: { ...(currentDraft.priorities || {}) },
+      };
+      const targetList = draftIndex < nextDraft.detectionAreas.length
+        ? nextDraft.detectionAreas
+        : nextDraft.verificationSteps;
+      const targetIndex = draftIndex < nextDraft.detectionAreas.length
+        ? draftIndex
+        : draftIndex - nextDraft.detectionAreas.length;
+      if (typeof updates.area_text === 'string' && updates.area_text.trim()) {
+        targetList[targetIndex] = updates.area_text.trim();
+      }
+      if (updates.priority) {
+        nextDraft.priorities![itemId] = updates.priority;
+      }
+      window.localStorage.setItem(draftStorageKey(roomId), JSON.stringify(nextDraft));
+      setChecklist(draftChecklist(roomId, nextDraft));
+      return;
+    }
+
     const trustedTransferEdit = checklist?.progress_policy_version === 'transfer_v1'
       && TRANSFER_PROGRESS_FIELDS.some((field) => field in updates);
     setLoading(!trustedTransferEdit);
@@ -509,12 +608,32 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
         ? checklistApi.getChecklistForStudent?.(roomId, user.id) ?? null
         : checklistApi.getActiveTransferChecklistForRoom?.(roomId) ?? null);
       const legacyChecklist = transferChecklist ? null : await RoomFeaturesService.checklist.read(roomId);
+      const localDraft = !transferChecklist && !legacyChecklist && transferEnabled && user?.current_role === 'tutor'
+        ? readLearningTargetDraft(roomId)
+        : null;
       setPriorChecklist(null);
-      const updatedChecklist = transferChecklist || legacyChecklist;
+      const updatedChecklist = transferChecklist || legacyChecklist || (localDraft ? draftChecklist(roomId, localDraft) : null);
       if (updatedChecklist?.progress_policy_version === 'transfer_v1' && (
         !updatedChecklist.student_id ||
         (user?.current_role === 'student' && updatedChecklist.student_id !== user.id)
       )) {
+        if (updatedChecklist.id.startsWith('draft-') && user?.current_role === 'tutor' && !transferStudentId) {
+          setChecklist(updatedChecklist);
+          setProgress({
+            total_areas: updatedChecklist.total_items,
+            covered_areas: 0,
+            partially_covered_areas: 0,
+            pending_areas: updatedChecklist.total_items,
+            completion_percentage: 0,
+            critical_pending: 0,
+            critical_covered: 0,
+            important_pending: updatedChecklist.total_items,
+            important_covered: 0,
+            optional_pending: 0,
+            optional_covered: 0,
+          });
+          return;
+        }
         setChecklist(null);
         setProgress(null);
         setError(user?.current_role === 'student' && updatedChecklist.student_id !== user.id
@@ -568,7 +687,40 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, user, transferEnabled]);
+  }, [roomId, user, transferEnabled, transferStudentId]);
+
+  useEffect(() => {
+    if (!transferEnabled || !transferStudentId || user?.current_role !== 'tutor') return;
+    const draft = readLearningTargetDraft(roomId);
+    if (!draft || draft.detectionAreas.length + draft.verificationSteps.length === 0) return;
+    let active = true;
+    const items: LearningTargetInput[] = [
+      ...draft.detectionAreas.map((area_text, index) => ({
+        area_text,
+        item_type: 'detection_area' as const,
+        priority: draft.priorities?.[`draft-${roomId}-detection_area-${index}`] || 'important',
+      })),
+      ...draft.verificationSteps.map((area_text, index) => ({
+        area_text,
+        item_type: 'verification_step' as const,
+        priority: draft.priorities?.[`draft-${roomId}-verification_step-${index}`] || 'important',
+      })),
+    ];
+    setLoading(true);
+    RoomFeaturesService.checklist.initializeTransferChecklistForStudent(roomId, transferStudentId, items)
+      .then(saved => {
+        if (!active) return;
+        window.localStorage.removeItem(draftStorageKey(roomId));
+        setChecklist(saved);
+      })
+      .catch((err: unknown) => {
+        if (active) setError(err instanceof Error ? err.message : 'Failed to sync learning targets');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, [roomId, transferEnabled, transferStudentId, user?.current_role]);
 
   // Delete checklist
   const deleteChecklist = useCallback(async () => {
