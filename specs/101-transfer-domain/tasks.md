@@ -122,7 +122,7 @@
 - [x] T027 [P] Run the exact focused command from `specs/101-transfer-domain/quickstart.md` and record exit status, counts, fixture version, and key input-output pairs in `specs/101-transfer-domain/implementation-handoff.md`.
 - [x] T028 [P] Run `npx tsc --noEmit` from `tutor-system/` and record results for modified shared contracts in `specs/101-transfer-domain/implementation-handoff.md`.
 - [x] T029 Run `CI=true npm run test:regression -- --runInBand` and `npm run build` from `tutor-system/`, preserving attributable and baseline failures in `specs/101-transfer-domain/implementation-handoff.md`.
-- [x] T030 Review and update `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md` and create `tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_22_transfer_attempts.md` with intent, date, and implemented contract evidence.
+- [x] T030 Review and update `tutor-system/docs/ai-behaviors/tutor-response-contract.md` and create `tutor-system/docs/doc_update_record/documentation_update_record_v2026_09_22_transfer_attempts.md` with intent, date, and implemented contract evidence.
 - [x] T031 Finalize `specs/101-transfer-domain/implementation-handoff.md` with public contracts, exact commands, evidence metadata, downstream risks, unrun integration gates, and disabled feature status.
 
 ## Dependencies and Execution Order

@@ -27,7 +27,7 @@
 ## Commit & Pull Request Guidelines
 - Commits: imperative, present tense, concise (e.g., `fix auth flow redirect`, `feat: room template presets`). Optional scope in prefix.
 - PRs must include: summary, rationale, linked issue, screenshots/GIFs for UI changes (e.g., TutorView/RoomPage), and test notes.
-- Requirements: all tests pass, coverage meets thresholds, migrations updated under `supabase/migrations/` if schema changes, docs updated (`README.md`, `claude_docs/` when relevant).
+- Requirements: all tests pass, coverage meets thresholds, migrations updated under `supabase/migrations/` if schema changes, docs updated (`README.md`, `docs/` when relevant).
 
 ## Security & Configuration Tips
 - Copy env: `cp .env.example .env`; never commit secrets. CRA requires `REACT_APP_*` keys.

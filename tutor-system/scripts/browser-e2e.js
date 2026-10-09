@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Purpose: run browser workflows against the selected staging or production fixture rooms.
-// Environment setup: see ../claude_docs/browser-e2e-testing.md, "Run The Live Suite".
+// Environment setup: see ../docs/browser-e2e-testing.md, "Run The Live Suite".
 'use strict';
 
 const crypto = require('node:crypto');

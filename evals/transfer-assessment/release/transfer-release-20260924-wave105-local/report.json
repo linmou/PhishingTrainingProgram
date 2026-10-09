@@ -7,7 +7,7 @@
   "changed_files": [
     "tutor-system/package.json",
     "evals/transfer-assessment/",
-    "tutor-system/claude_docs/doc_update_record/documentation_update_record_v2026_09_24_transfer_release_runner.md",
+    "tutor-system/docs/doc_update_record/documentation_update_record_v2026_09_24_transfer_release_runner.md",
     "tutor-system/scripts/transfer-assessment-release-attack-matrix.json",
     "tutor-system/scripts/transfer-assessment-release.config.example.json",
     "tutor-system/scripts/transfer-assessment-release.config.json",

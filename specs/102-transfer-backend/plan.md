@@ -104,7 +104,7 @@ tutor-system/
 │   └── tests/
 │       ├── transfer_assessment_backend.sql
 │       └── transfer_assessment_rpc_behaviour.sql
-└── claude_docs/
+└── docs/
     ├── database-schema.md
     ├── supabase-service.md
     ├── ai-behaviors/tutor-response-contract.md

@@ -33,15 +33,15 @@
       "use": "Holdout independence, semantic pairs, state evidence, expected labels, and acceptance contract"
     },
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/constitution.md",
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
       "sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e"
     },
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/tutor-behavior-specification.md",
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
       "sha256": "5d3b2eed5b5561f3aaef3ad548e7198d709afc95d6ead3318d6cbe76e34975db"
     },
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md",
+      "path": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
       "sha256": "b4669fbde41f856b40114d762b227f058a625b30538e20542e4d465925654ad6"
     },
     {

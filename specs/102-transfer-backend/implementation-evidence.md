@@ -150,7 +150,7 @@ All commands below ran from `tutor-system/` through `rtk proxy` unless stated ot
 
 The production change only awaits `admin.rpc(name, args)` and returns its `data` and `error` fields, eliminating the invalid builder-to-Promise cast without adding a fallback. The nine still-unchecked tasks above remain open: hosted schema/RPC, race, rollback, authorization, provider and generated-type evidence are unrun; T043 remains open because the build is blocked. The migration has not been applied. `quickstart.md` now supplies the read-only key-coverage preflight and stop/backup conditions for the user's run. The existing `deno.lock` is tracked from the prior component commit and remains included; it was not removed.
 
-Before this corrective commit, `tutor-system/README.md`, `tutor-system/claude_docs/database-schema.md`, and `tutor-system/claude_docs/supabase-service.md` were reviewed. Their trusted-boundary descriptions remain accurate; the new migration runbook and correction results belong in this component's quickstart and evidence record.
+Before this corrective commit, `tutor-system/README.md`, `tutor-system/docs/database-schema.md`, and `tutor-system/docs/supabase-service.md` were reviewed. Their trusted-boundary descriptions remain accurate; the new migration runbook and correction results belong in this component's quickstart and evidence record.
 
 ## Verification Audit (2026-09-27)
 

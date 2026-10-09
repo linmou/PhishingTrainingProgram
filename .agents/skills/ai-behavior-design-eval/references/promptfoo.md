@@ -21,10 +21,10 @@ Use these paths only when working in this repository; inspect their current cont
 
 | Purpose | Project path |
 | --- | --- |
-| Shared behavior constitution | `tutor-system/claude_docs/ai-behaviors/constitution.md` |
-| Canonical tutor specification | `tutor-system/claude_docs/ai-behaviors/tutor-behavior-specification.md` |
-| Response contract and evaluation plan | `tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md`, `tutor-behavior-evaluation-plan.md` |
-| Documentation index and update records | `tutor-system/claude_docs/README.md`, `tutor-system/claude_docs/doc_update_record/` |
+| Shared behavior constitution | `tutor-system/docs/ai-behaviors/constitution.md` |
+| Canonical tutor specification | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` |
+| Response contract and evaluation plan | `tutor-system/docs/ai-behaviors/tutor-response-contract.md`, `tutor-behavior-evaluation-plan.md` |
+| Documentation index and update records | `tutor-system/docs/README.md`, `tutor-system/docs/doc_update_record/` |
 | Existing evaluation guide | `evals/promptfoo/AI_BEHAVIOR_EVALUATION_GUIDE.md` |
 | Evaluation configuration, rubrics, cases | `evals/promptfoo/promptfooconfig.yaml`, `rubrics/`, `cases/` |
 | Blocking gate | `tutor-system/scripts/check-promptfoo-quality-gate.js` |

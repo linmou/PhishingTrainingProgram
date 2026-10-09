@@ -103,8 +103,8 @@ Ownership remains:
 
 ### Documentation review during implementation
 
-- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md`
-- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/claude_docs/doc_update_record/documentation_update_record_v20260911_transfer_domain.md` (create only when the implemented public contract changes)
+- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/docs/ai-behaviors/tutor-response-contract.md`
+- `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/transfer-assessment/transfer-domain/tutor-system/docs/doc_update_record/documentation_update_record_v20260911_transfer_domain.md` (create only when the implemented public contract changes)
 
 ## Dependency and Boundary Notes
 

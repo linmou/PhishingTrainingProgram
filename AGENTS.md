@@ -44,15 +44,15 @@ Use TypeScript with 2-space indentation and keep modules small. Prefer straightf
 ## Testing Guidelines
 The repo uses Jest, React Testing Library, and `jest-cucumber`. Coverage thresholds are enforced in `tutor-system/package.json`: 75% branches and 80% for functions, lines, and statements. Add edge cases, not just happy paths, and keep test names tied to observable behavior.
 
-For real-browser tests, read `tutor-system/claude_docs/browser-e2e-testing.md` before selecting a command or target database. Production is `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The checked-in `tutor-system/.env` targets production.
+For real-browser tests, read `tutor-system/docs/browser-e2e-testing.md` before selecting a command or target database. Production is `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The checked-in `tutor-system/.env` targets production.
 
 ## Commit & Pull Request Guidelines
 Recent history uses short imperative commits, often with prefixes like `feat(ui): ...` or `fix(ai): ...`. Keep commits focused and readable.
 
-PRs should include a short problem statement, the approach taken, test evidence, and screenshots for UI changes. If you touch schema or security behavior, update `supabase/migrations/` and the nearest relevant docs such as `tutor-system/README.md` or `tutor-system/claude_docs/`.
+PRs should include a short problem statement, the approach taken, test evidence, and screenshots for UI changes. If you touch schema or security behavior, update `supabase/migrations/` and the nearest relevant docs such as `tutor-system/README.md` or `tutor-system/docs/`.
 
 ## Security & Configuration Tips
 Do not commit secrets. Frontend env vars should use `REACT_APP_*`. When changing Supabase-related code, make sure `src/services/supabase.ts` and the SQL migrations stay aligned, especially for RLS and storage policies.
 
 ## Supabase Release Delivery
-Use the staging-before-production sequence in [supabase-release-workflow.md](tutor-system/claude_docs/supabase-release-workflow.md) for database migrations and Edge Function changes, including Edge-only changes. Apply and verify a schema change in each project before deploying an Edge Function that depends on it. Verify the matching live workflow on both projects, record the evidence, and archive the exact SQL only after both pass. Keep at most one pending migration in `tutor-system/supabase/migrations/`.
+Use the staging-before-production sequence in [supabase-release-workflow.md](tutor-system/docs/supabase-release-workflow.md) for database migrations and Edge Function changes, including Edge-only changes. Apply and verify a schema change in each project before deploying an Edge Function that depends on it. Verify the matching live workflow on both projects, record the evidence, and archive the exact SQL only after both pass. Keep at most one pending migration in `tutor-system/supabase/migrations/`.

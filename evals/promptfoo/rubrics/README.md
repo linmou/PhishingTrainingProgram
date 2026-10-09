@@ -31,9 +31,9 @@ The user approved these v1 metric renames on 2026-09-07: `direct_correction` →
 
 G03 quality requires 80%, with dignity separately requiring 100%. T04 quality requires 80%, its safety-critical partition 100%, and its `accuracy_pass` hard-constraint verdict 100%. Rubric output can distinguish vague-but-true advice from false claims.
 
-T03 emits conditional applicability when feedback is present; T04 does so when knowledge is optional and absent. Valid inapplicability uses null pass/score and cannot become an automatic pass. Every expected applicability assessment, its reason, and baseline/candidate applicability changes must remain visible. The [evaluation plan](../../../tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md) owns denominators and gates; active reporting does not yet implement this extension.
+T03 emits conditional applicability when feedback is present; T04 does so when knowledge is optional and absent. Valid inapplicability uses null pass/score and cannot become an automatic pass. Every expected applicability assessment, its reason, and baseline/candidate applicability changes must remain visible. The [evaluation plan](../../../tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md) owns denominators and gates; active reporting does not yet implement this extension.
 
-The [v1 case review](../../../tutor-system/claude_docs/ai-behaviors/tutor-behavior-case-review.md) covers the 43 existing cases and preserves all 173 assertions, with explicit refinements and review questions.
+The [v1 case review](../../../tutor-system/docs/ai-behaviors/tutor-behavior-case-review.md) covers the 43 existing cases and preserves all 173 assertions, with explicit refinements and review questions.
 
 ## Deterministic check use
 
@@ -51,4 +51,4 @@ Local check validation, without model calls:
 rtk proxy node --test evals/promptfoo/rubrics/v1/decision-metrics.test.js
 ```
 
-This validates evaluator logic, not tutor behavior or LLM judge calibration. Full preparation and gates are owned by the [evaluation plan](../../../tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md).
+This validates evaluator logic, not tutor behavior or LLM judge calibration. Full preparation and gates are owned by the [evaluation plan](../../../tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md).

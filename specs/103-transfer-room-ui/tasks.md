@@ -136,7 +136,7 @@ description: "Dependency-ordered W7-W8 tasks for transfer room lifecycle and tea
 - [X] T044 Run the focused W7-W8 suite from `specs/103-transfer-room-ui/quickstart.md` and record exit status and test counts in `specs/103-transfer-room-ui/verification-notes.md`.
 - [X] T045 Run the existing room/component regression tests in the four named test directories and inspect legacy tutoring/Guard failures; record exact command, red result, representative pre-103 comparisons, and limits in `verification-notes.md`.
 - [X] T046 Run `npx tsc --noEmit` and `npm run build` from `tutor-system/`; record failures as unresolved rather than changing configuration or adding fallbacks in `specs/103-transfer-room-ui/verification-notes.md`.
-- [X] T047 Review `tutor-system/README.md`, `tutor-system/claude_docs/README.md`, and nearest room/service documentation for required behavior updates; update only documentation owned by this component and record any deferred integration-owner update in `specs/103-transfer-room-ui/verification-notes.md`.
+- [X] T047 Review `tutor-system/README.md`, `tutor-system/docs/README.md`, and nearest room/service documentation for required behavior updates; update only documentation owned by this component and record any deferred integration-owner update in `specs/103-transfer-room-ui/verification-notes.md`.
 - [X] T048 Audit changed paths and document the historical 101-owned `src/types/index.ts` exception from `21915f4`, its acceptance in integration commit `4eb5ed9`, and the zero pending net cross-owner diff against integration in `verification-notes.md`.
 
 ## Dependencies and Execution Order

@@ -119,7 +119,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 **Purpose**: Reconcile planning artifacts, documentation, and handoff evidence before integration.
 
 - [x] T041 [P] Run the complete deterministic/gate test command from `specs/104-transfer-evaluation/quickstart.md` and preserve its exit status and counts in `specs/104-transfer-evaluation/verification-record.md`.
-- [x] T042 [P] Review the nearest evaluation documentation and record any required doc update in `tutor-system/claude_docs/doc_update_record/` only when an implementation change alters canonical behavior; do not edit canonical docs from this component without an approved integration change.
+- [x] T042 [P] Review the nearest evaluation documentation and record any required doc update in `tutor-system/docs/doc_update_record/` only when an implementation change alters canonical behavior; do not edit canonical docs from this component without an approved integration change.
 - [x] T043 Re-run the read-only cross-artifact analysis against `specs/104-transfer-evaluation/spec.md`, `plan.md`, and `tasks.md`, resolve every CRITICAL/HIGH finding before handoff, and include the final report in the integration handoff.
 - [x] T044 Confirm the feature flag remains disabled and that no database/auth/UI/browser/release claim is made in `specs/104-transfer-evaluation/verification-record.md`.
 

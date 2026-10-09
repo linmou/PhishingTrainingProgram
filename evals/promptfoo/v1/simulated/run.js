@@ -122,7 +122,7 @@ async function main(out) {
   const rubrics = Object.fromEntries(rubricManifest.metrics.map(m => [m.id, fs.readFileSync(path.join(__dirname, m.file), 'utf8')]));
   const promptfoo = require(path.join(root, 'tutor-system/node_modules/promptfoo/dist/src/index.cjs'));
   const promptfooVersion = require(path.join(root, 'tutor-system/node_modules/promptfoo/package.json')).version;
-  const sources = Object.fromEntries(['constitution.md', 'tutor-behavior-specification.md', 'tutor-response-contract.md'].map(f => [f, fs.readFileSync(path.join(root, 'tutor-system/claude_docs/ai-behaviors', f), 'utf8')]));
+  const sources = Object.fromEntries(['constitution.md', 'tutor-behavior-specification.md', 'tutor-response-contract.md'].map(f => [f, fs.readFileSync(path.join(root, 'tutor-system/docs/ai-behaviors', f), 'utf8')]));
   const identity = { suite, cases, policy, settings, rubrics, rubricManifest, sources, promptfooVersion,
     code: fs.readFileSync(__filename, 'utf8'), harness: fs.readFileSync(path.join(__dirname, '../runner.js'), 'utf8') };
   const fingerprint = harness.sha(identity);

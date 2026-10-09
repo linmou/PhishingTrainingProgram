@@ -23,7 +23,7 @@ Open items (not prompt text): **#7 latency/typing indicator** only.
 - The active LLM evaluator is `qwen3.5-flash` through the DashScope OpenAI-compatible endpoint, with `enable_thinking: false`.
 - Promptfoo evaluates one active prompt, `evals/promptfoo/prompts/current.chat.prompt.json`; the old current-versus-improved prompt comparison was removed.
 - The blocking gate covers eight metrics, including deterministic `response_length`, with an 80% threshold applied independently to product-template ecological cases, synthetic holdouts, and `not_started` / `failed` direct-correction states.
-- The active Qwen run recorded in `tutor-system/claude_docs/aiService.md` did **not** satisfy the rubrics: `eval-SqR-2026-08-30T22:54:55`. Evidence is preserved under `evals/promptfoo/results/qwen3.5-flash/20260830T225452Z/`.
+- The active Qwen run recorded in `tutor-system/docs/aiService.md` did **not** satisfy the rubrics: `eval-SqR-2026-08-30T22:54:55`. Evidence is preserved under `evals/promptfoo/results/qwen3.5-flash/20260830T225452Z/`.
 - Historical GPT comparison results below remain useful evidence about the earlier prompt, but are not the active Qwen verdict or gate input.
 - The real-browser demos and deterministic product-path E2E remain separate validation layers; they are not additional LLM evaluators.
 

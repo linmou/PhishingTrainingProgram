@@ -12,19 +12,19 @@
   "human_direction": "2026-09-07: separate T01/T02; G02 participation-only; legacy v0/spec-derived v1; explicit decisions with deterministic metrics; keep rubric metadata only in the manifest. Subsequent approval: conditional T03/T04 applicability; G03 quality 80% and dignity 100%; T04 quality 80%, safety-critical factual partition 100% with constitutional accuracy retained; four clearer v1 names; audit every existing case and return ambiguous labels. Q1-Q4 resolved explicitly; user authorized full chatbot refinement while away.",
   "sources": [
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/constitution.md",
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
       "sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e"
     },
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/tutor-behavior-specification.md",
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
       "sha256": "06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e"
     },
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/tutor-response-contract.md",
+      "path": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
       "sha256": "36f2570d0d36474cc907ee453f5203730f98d6f86d997f57e8e08398ca55493b"
     },
     {
-      "path": "tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
       "sha256": "8434e4f102c3ba4a4ce2ba98beb5d66370d485c2dd8d0d54a030bdb82c102ed5"
     },
     {

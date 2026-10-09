@@ -65,7 +65,7 @@ evals/promptfoo/
 tutor-system/
 ├── src/services/ecologicalTutorCall.ts # component-102-owned shared v3 request/context contract; consumed, not copied
 ├── scripts/                    # existing command entry points; production prompt ownership stays upstream
-└── claude_docs/ai-behaviors/  # canonical behavior/contract/evaluation documents, read-only for this component
+└── docs/ai-behaviors/  # canonical behavior/contract/evaluation documents, read-only for this component
 
 ```
 

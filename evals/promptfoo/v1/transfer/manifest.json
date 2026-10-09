@@ -8,7 +8,7 @@
       "sha256": "33d87d856e34f181bb5c0cd145c2821c9638177a3780e3ff3dee12b5e6253da2"
     },
     "t09_specification": {
-      "path": "tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
       "sha256": null,
       "note": "canonical behaviour document; not modified by this component"
     },

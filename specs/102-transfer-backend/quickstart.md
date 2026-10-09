@@ -128,7 +128,7 @@ Run `supabase/tests/transfer_assessment_terminal_faults.sql` with `psql -X -v ON
 
 ## Documentation and Handoff
 
-Before commit, review and update `tutor-system/README.md`, `claude_docs/database-schema.md`, `claude_docs/supabase-service.md`, and `claude_docs/ai-behaviors/tutor-response-contract.md` where behavior changed. Add `claude_docs/doc_update_record/documentation_update_record_v2026_09_22_transfer_backend.md` with date, change, commands, results, and implementation commit reference. The integration owner separately records 101->102, 102->103, and 102->104 handoff evidence.
+Before commit, review and update `tutor-system/README.md`, `docs/database-schema.md`, `docs/supabase-service.md`, and `docs/ai-behaviors/tutor-response-contract.md` where behavior changed. Add `docs/doc_update_record/documentation_update_record_v2026_09_22_transfer_backend.md` with date, change, commands, results, and implementation commit reference. The integration owner separately records 101->102, 102->103, and 102->104 handoff evidence.
 
 ## Blocked Evidence
 

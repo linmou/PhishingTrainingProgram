@@ -32,7 +32,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 
 ## Browser Testing Environments
 
-Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The browser workflow suite uses staging copies of production template rooms and cleans generated records after each workflow. See [Browser E2E testing](claude_docs/browser-e2e-testing.md) for setup, commands, and evidence handling.
+Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The browser workflow suite uses staging copies of production template rooms and cleans generated records after each workflow. See [Browser E2E testing](docs/browser-e2e-testing.md) for setup, commands, and evidence handling.
 
 ## 🚀 Getting Started
 
@@ -183,7 +183,7 @@ We have comprehensive unit tests for completed tasks 1-3:
 - **Task 2**: Database schema, RLS policies, and CRUD operations  
 - **Task 3**: Application-managed authentication with role management
 
-See [Testing Strategy Documentation](claude_docs/testing-strategy.md) for detailed coverage information.
+See [Testing Strategy Documentation](docs/testing-strategy.md) for detailed coverage information.
 
 ### Running Tests
 

@@ -2,7 +2,7 @@
 
 Intent: run the approved v1 mixed deterministic/LLM evaluation while preserving the legacy Promptfoo cases and every intermediate result.
 
-This is the v1 execution entrypoint, separate from the legacy Promptfoo CLI. It preserves conditional applicability and the separate factual-accuracy hard verdict; neither can be represented honestly by averaging legacy component scores. The [project evaluation plan](../../../tutor-system/claude_docs/ai-behaviors/tutor-behavior-evaluation-plan.md) owns the experiment; the [rubric manifest](../rubrics/v1/manifest.json) owns check metadata. Rubric Markdown contains only judge instructions.
+This is the v1 execution entrypoint, separate from the legacy Promptfoo CLI. It preserves conditional applicability and the separate factual-accuracy hard verdict; neither can be represented honestly by averaging legacy component scores. The [project evaluation plan](../../../tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md) owns the experiment; the [rubric manifest](../rubrics/v1/manifest.json) owns check metadata. Rubric Markdown contains only judge instructions.
 
 ## Shared evaluator and adapters
 
