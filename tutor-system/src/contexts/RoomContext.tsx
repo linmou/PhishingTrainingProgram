@@ -680,7 +680,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (currentRoom.transfer_learning_enabled) throw transferError;
             console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
         }
-        if (!currentSuggestionContext && currentRoom.transfer_learning_enabled &&
+        if (user.current_role === 'student' && !currentSuggestionContext && currentRoom.transfer_learning_enabled &&
             transferChecklist?.progress_policy_version === 'transfer_v1') {
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,

@@ -101,10 +101,23 @@ describe('RoomContext transfer turn modes', () => {
         };
       }
       if (table === 'messages') {
+        const persistedTutorMessage = {
+          ...learnerAMessageRow,
+          id: 'tutor-message-1',
+          user_id: 'tutor-1',
+          user_role: 'tutor',
+          content: 'Verify the request through the official portal.',
+          response_mode: 'tutoring',
+        };
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
               order: jest.fn().mockResolvedValue({ data: [learnerAMessageRow], error: null }),
+            }),
+          }),
+          insert: jest.fn().mockReturnValue({
+            select: jest.fn().mockReturnValue({
+              single: jest.fn().mockResolvedValue({ data: persistedTutorMessage, error: null }),
             }),
           }),
         };
@@ -154,6 +167,19 @@ describe('RoomContext transfer turn modes', () => {
 
     expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
+  });
+
+  // RoomContext.tsx: tutors can send ordinary messages in transfer-enabled rooms.
+  it('uses the tutor message path instead of the learner-only assessment post operation', async () => {
+    const postMessage = jest.spyOn(transferAssessmentService, 'postMessage');
+    await mountRoom();
+
+    await act(async () => {
+      await room!.sendMessage('Verify the request through the official portal.');
+    });
+
+    expect(room!.messages.some(message => message.id === 'tutor-message-1')).toBe(true);
+    expect(postMessage).not.toHaveBeenCalled();
   });
 
   it('returns a named setup error when assessment is enabled without a checklist', async () => {
