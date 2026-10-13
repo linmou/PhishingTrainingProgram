@@ -56,7 +56,7 @@ function providerScope(): Record<string, unknown> {
       prior_participation_mode: 'tutoring',
       checklist_items: [{
         id: 'item-1', area_text: 'Verify independently', priority: 'critical',
-        status: 'partially_covered', understanding_level: 'basic',
+        status: 'covered', understanding_level: 'good',
         relevant_evidence_message_ids: ['focus-1'], repair_message_id: null,
       }],
       eligible_assessment_item_ids: ['item-1'], unresolved_assessment: null,
@@ -72,7 +72,7 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
       resolveAnswer: resolveTransferAnswer,
       rpc: async (name, args) => {
         if (name === 'get_transfer_assessment_processing_context_v1') return { data: {
-          context: { progress: { status: 'partially_covered', understanding_level: 'basic' },
+          context: { progress: { status: 'covered', understanding_level: 'good' },
             participation_mode: 'tutoring', progress_snapshot_hash: 'h', feedback_required: false,
             eligible_assessment_item_ids: ['item-1'], unresolved_assessment: { id: 'a' },
             pending_repair_message_id: null,
@@ -332,16 +332,16 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
           analysis_complete: evidenceApplied,
           room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
           message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
-          items: [{ id: 'item-1', area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical', status: 'pending', understanding_level: 'none' }],
+          items: [{ id: 'item-1', area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical', status: 'partially_covered', understanding_level: 'basic' }],
           dialogue_history: dialogueHistory,
         }, error: null };
       }
       if (name === 'apply_transfer_message_analysis_v1') {
         const analysis = args.p_analysis as { events: Array<{ item_id: string; kind: string }> };
         assertEquals(analysis.events[0].item_id, 'item-1');
-        assertEquals(analysis.events[0].kind, 'initial_signal');
+        assertEquals(analysis.events[0].kind, 'demonstrated_understanding');
         evidenceApplied = true;
-        return { data: { applied: [{ status: 'partially_covered', understanding_level: 'basic' }] }, error: null };
+        return { data: { applied: [{ status: 'covered', understanding_level: 'good' }] }, error: null };
       }
       if (name === 'prepare_transfer_assessment_context_v1') {
         assert(evidenceApplied);
@@ -383,7 +383,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
         analysisInput = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
         assert(prompt.includes('Verify independently'));
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
+          events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
             evidence_quote: 'verify through the official app', explanation: 'Uses an independent source.' }],
           requires_protection: false, requires_correction: false, explanation: 'Initial understanding.',
         }) } }] }), { status: 200 });
@@ -398,7 +398,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
     items: [{ area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical' }] }))).json();
   assertEquals(init.data.checklist_id, 'checklist-1');
   const analysis = await (await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }))).json();
-  assertEquals(analysis.data.applied[0].status, 'partially_covered');
+  assertEquals(analysis.data.applied[0].status, 'covered');
   assertEquals(analysisInput.focus_student_id, 'learner-1');
   assertEquals(analysisInput.evidence_message_id, 'focus-1');
   assertEquals(analysisInput.dialogue_history, dialogueHistory.slice(0, -1));
@@ -915,7 +915,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
         analysisCalls += 1;
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-          events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
+          events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
             evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' }],
           requires_protection: false, requires_correction: false, explanation: 'Relevant evidence.',
         }) } }] }), { status: 200 });
@@ -928,19 +928,19 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
     if (name === 'get_transfer_message_analysis_context_v1') return { data: {
       analysis_complete: analyzed, room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I would verify through the official app.' },
-      items: [{ id: 'item-1', area_text: 'Verify independently', status: analyzed ? 'partially_covered' : 'pending',
-        understanding_level: analyzed ? 'basic' : 'none' }],
+      items: [{ id: 'item-1', area_text: 'Verify independently', status: analyzed ? 'covered' : 'partially_covered',
+        understanding_level: analyzed ? 'good' : 'basic' }],
       dialogue_history: [
         { id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', speaker_name: null, content: 'I would verify through the official app.' },
       ],
     }, error: null };
     if (name === 'apply_transfer_message_analysis_v1') {
       assertEquals((args.p_analysis as Record<string, unknown>).events, [
-        { item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
+        { item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
           evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' },
       ]);
       analyzed = true;
-      return { data: { applied: [{ status: 'partially_covered' }] }, error: null };
+      return { data: { applied: [{ status: 'covered' }] }, error: null };
     }
     if (name === 'prepare_transfer_assessment_context_v1') {
       assert(analyzed, 'preparation used stale progress');

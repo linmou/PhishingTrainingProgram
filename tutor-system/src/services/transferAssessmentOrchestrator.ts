@@ -187,6 +187,11 @@ function resolveWithAttemptSnapshot(
     });
   }
 
+  // A final assessment can consume an attempt only after full understanding.
+  if (context.progress.status !== 'covered' || context.progress.understanding_level !== 'good') {
+    return authoritativeResult('duplicate', context, snapshot);
+  }
+
   const parsed = parseAssessmentAnswer(input.content, assessment.selection_type, assessment.options);
   if (parsed.kind === 'clarification_required') {
     return authoritativeResult('unresolved', context, snapshot, {

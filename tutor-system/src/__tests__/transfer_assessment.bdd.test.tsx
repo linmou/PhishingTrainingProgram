@@ -103,9 +103,9 @@ const OPTIONS = [
   { id: 'D' as const, text: 'Open the link to inspect it' },
 ];
 
-const PARTIAL_PROGRESS: TransferProgress = {
-  status: 'partially_covered',
-  understanding_level: 'basic',
+const COVERED_PROGRESS: TransferProgress = {
+  status: 'covered',
+  understanding_level: 'good',
 };
 
 interface ScenarioState {
@@ -137,7 +137,7 @@ function makeAssessment(selectionType: 'single' | 'multiple' = 'single'): Transf
 }
 
 function makeLifecycle(
-  progress: TransferProgress = PARTIAL_PROGRESS,
+  progress: TransferProgress = COVERED_PROGRESS,
   acceptedAttemptCount: 0 | 1 | 2 = 0,
   processedAnswerIds: string[] = [],
   resolution: 'open' | 'passed' | 'failed' = 'open',
@@ -337,7 +337,7 @@ function expectBackground(state: ScenarioState) {
 }
 
 defineFeature(feature, (test) => {
-  test('Eligible learner evidence updates progress and prepares an assessment draft', ({ given, and, when, then }) => {
+  test('Developed full understanding prepares a final assessment draft', ({ given, and, when, then }) => {
     const state = makeState();
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => {
       expectBackground(state);
@@ -345,14 +345,17 @@ defineFeature(feature, (test) => {
     and('the checklist uses the existing status and understanding_level pair', () => {
       expect(isValidTransferProgress(state.progress)).toBe(true);
     });
-    given('the learner has given a correct explanation for a configured concept', () => {
+    given('the learner has developed a partial concept into full understanding', () => {
       expect(learnerAMessageRow.user_role).toBe('student');
-      const transition = applyLearningEvent(state.progress, 'initial_signal');
+      const partial = applyLearningEvent(state.progress, 'initial_signal');
+      expect(partial.disposition).toBe('apply');
+      if (partial.disposition === 'apply') state.progress = partial.next;
+      const transition = applyLearningEvent(state.progress, 'demonstrated_understanding');
       expect(transition.disposition).toBe('apply');
       if (transition.disposition === 'apply') state.progress = transition.next;
     });
     and('the learner has not already demonstrated transfer for that concept', () => {
-      expect(state.progress).toEqual({ status: 'partially_covered', understanding_level: 'basic' });
+      expect(state.progress).toEqual(COVERED_PROGRESS);
     });
     and('analysis has identified one fully eligible transfer target', () => {
       const candidate = createReviewCandidate(preparedTurnResult);
@@ -366,14 +369,48 @@ defineFeature(feature, (test) => {
       });
       state.draft = state.room!.transferDraft?.decision as unknown as Record<string, unknown> ?? null;
     });
-    then('the learner progress pair for that concept becomes partially_covered with understanding_level basic', () => {
-      expect(state.progress).toEqual({ status: 'partially_covered', understanding_level: 'basic' });
+    then('the learner progress pair for that concept becomes covered with understanding_level good', () => {
+      expect(state.progress).toEqual(COVERED_PROGRESS);
     });
     and('the teacher receives one assessment draft for review', () => {
       expect(state.draft).toEqual(preparedCandidate);
       expect(state.prepareSpy).toHaveBeenCalledTimes(1);
       expect(state.analyzeSpy?.mock.invocationCallOrder[0]).toBeLessThan(state.prepareSpy!.mock.invocationCallOrder[0]);
       expect(generateTutorSuggestion).not.toHaveBeenCalled();
+    });
+  });
+
+  // RoomContext.tsx: an authoritative no-assessment result routes initial, repair and bypass evidence to tutoring.
+  test('Evidence outside developed full understanding continues normal tutoring', ({ given, and, when, then }) => {
+    let state = makeState();
+    given('the transfer assessment policy is enabled for a new learner-owned checklist', () => {
+      state = makeState();
+      expectBackground(state);
+    });
+    and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
+    given(/^the target starts at (\w+) with understanding_level (\w+)$/, (status, level) => {
+      const progress = { status, understanding_level: level };
+      expect(isValidTransferProgress(progress)).toBe(true);
+      state.progress = progress as TransferProgress;
+    });
+    when(/^analysis accepts (\w+) and the teacher requests the next response$/, async (event) => {
+      const transition = applyLearningEvent(state.progress, event as Parameters<typeof applyLearningEvent>[1]);
+      expect(transition.disposition).toBe('apply');
+      if (transition.disposition === 'apply') state.progress = transition.next;
+      await mountTeacherRoom(state);
+      state.prepareSpy!.mockResolvedValue(null);
+      (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+        success: true, suggestion: 'Tutor response', contextMessages: [LEARNER_A_MESSAGE_ID],
+        decision: { mode: 'tutoring', instruction: 'explain', suggested_response: 'Tutor response' },
+      });
+      await act(async () => { await state.room!.generateAIResponse(); });
+    });
+    then(/^the target remains at (\w+) with understanding_level (\w+)$/, (status, level) => {
+      expect(state.progress).toEqual({ status, understanding_level: level });
+    });
+    and('the teacher receives a normal tutor response without an assessment draft', () => {
+      expect(state.room!.transferDraft).toBeNull();
+      expect(generateTutorSuggestion).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -499,7 +536,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('a delivered single-answer assessment has answer key B', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
       state.assessment = makeAssessment();
     });
@@ -527,7 +564,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('a delivered single-answer assessment has answer key B and two attempts available', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
     });
     when('the learner submits A as the first valid selection', () => {
@@ -538,8 +575,8 @@ defineFeature(feature, (test) => {
       expect(state.result?.attempt_snapshot.resolution).toBe('open');
       expect(state.result?.remaining_attempts).toBe(1);
     });
-    and('the learner progress pair remains partially_covered with understanding_level basic', () => {
-      expect(state.result?.progress).toEqual(PARTIAL_PROGRESS);
+    and('the learner progress pair remains covered with understanding_level good', () => {
+      expect(state.result?.progress).toEqual(COVERED_PROGRESS);
     });
     and('no answer key or terminal explanation is disclosed', () => {
       expect(state.result).not.toHaveProperty('terminal_feedback');
@@ -552,7 +589,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('a delivered single-answer assessment has answer key B', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
     });
     and("the learner's first valid selection A was incorrect with one attempt remaining", () => {
@@ -593,7 +630,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('a delivered single-answer assessment has answer key B', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
     });
     and("the learner's first valid selection A was incorrect with one attempt remaining", () => {
@@ -642,7 +679,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('a delivered single-answer assessment has answer key B', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
     });
     and("the learner's first valid selection A was incorrect with one attempt remaining", () => {
@@ -683,7 +720,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('a delivered multiple-answer assessment has answer key B and D', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
       state.assessment = makeAssessment('multiple');
     });
@@ -702,7 +739,7 @@ defineFeature(feature, (test) => {
       expect(state.result?.disposition).toBe('assisted');
       expect(state.result?.applied_transition).toBeNull();
       expect(state.result?.attempt_snapshot.accepted_attempt_count).toBe(0);
-      expect(state.result?.progress).toEqual(PARTIAL_PROGRESS);
+      expect(state.result?.progress).toEqual(COVERED_PROGRESS);
     });
   });
 
@@ -742,7 +779,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('the learner has answered and resolved one delivered assessment', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       state.lifecycle = makeLifecycle(state.progress);
       state.result = resolveSelection(state, 'B', DELIVERED_ANSWER_ID);
       expect(state.result.disposition).toBe('passed');
@@ -791,7 +828,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('the learner demonstrates the concept in a meaningfully changed context', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = { status: 'partially_covered', understanding_level: 'basic' };
       expect(learnerAMessageRow.content).not.toBe(preparedCandidate.assessment.transfer_basis.changed_context);
     });
     when('the tutor records spontaneous transfer', () => {
@@ -849,7 +886,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('approved room targets and learner-owned evidence make one target eligible', () => {
-      state.progress = PARTIAL_PROGRESS;
+      state.progress = COVERED_PROGRESS;
       expect(createReviewCandidate(preparedTurnResult)?.scope.itemId).toBe(CHECKLIST_ITEM_ID);
     });
     and('no Guard, protection, correction, feedback, or repair blocker applies', () => {

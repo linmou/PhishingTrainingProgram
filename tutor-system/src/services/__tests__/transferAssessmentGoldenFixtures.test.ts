@@ -78,7 +78,7 @@ describe('golden fixture schema', () => {
     expect(manifest.rendering_fixture_ids.length).toBe(TRANSFER_RENDERING_FIXTURES.length);
     expect(manifest.reducer_fixture_ids.length).toBe(TRANSFER_REDUCER_FIXTURES.length);
     expect(manifest.lifecycle_fixture_ids.length).toBe(TRANSFER_LIFECYCLE_FIXTURES.length);
-    expect(manifest.reducer_fixture_ids.length).toBe(28);
+    expect(manifest.reducer_fixture_ids.length).toBe(32);
     expect(manifest.lifecycle_ids).toEqual([
       'pass_then_feedback',
       'fail_then_repair',
@@ -117,7 +117,7 @@ describe('server-authoritative attempt and result contracts', () => {
     };
     const retry: TransferRetryResult = {
       disposition: 'retryable',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'await_learner_answer',
       assessment_id: TRANSFER_FIXTURE_ASSESSMENT_ID,
@@ -239,7 +239,7 @@ describe('golden reducer fixtures', () => {
   });
 
   it('contains one fixture for every state/event cell in the data model matrix', () => {
-    expect(TRANSFER_REDUCER_FIXTURES).toHaveLength(28);
+    expect(TRANSFER_REDUCER_FIXTURES).toHaveLength(32);
     expect(TRANSFER_REDUCER_FIXTURES.filter((fixture) => fixture.expected_transition === 'reject')).toHaveLength(6);
   });
 });

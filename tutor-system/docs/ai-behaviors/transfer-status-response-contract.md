@@ -2,10 +2,11 @@
 
 Intent: define how learner-message analysis reports item-level evidence and how each event changes learning progress.
 
-Updated: 2026-10-04
-Status: SQL and Edge source deployed to staging and production on 2026-10-04; production assessment verified, transfer-status event check failed.
-Grounding: [AI tutoring constitution](constitution.md), P2 for demonstrated understanding, H1 for accuracy, and H4 for inspectable evidence.
-Production source: [assessment-api](../../supabase/functions/assessment-api/index.ts), [TypeScript transitions](../../src/services/learningProgressTransitions.ts), and the pending SQL migration under `supabase/migrations/`.
+Updated: 2026-10-13
+Status: locally implemented assessment-after-full-understanding revision; hosted release pending. See the [implementation evidence](../doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md) and [model evaluation](transfer-final-assessment-evaluation-record.md) for separate validation results.
+Constitution reference: [phishing_tutor_constitution 1.0](constitution.md); adopted principles and priorities are unchanged.
+Grounding review: resolved on 2026-10-13 against constitution 1.0 and the user's explicit Partial-only decision. The contextual interpretation is recorded beside the assessment rule below and in T09.1 of the [behavior specification](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle).
+Implementation source: [assessment-api](../../supabase/functions/assessment-api/index.ts), [TypeScript transitions](../../src/services/learningProgressTransitions.ts), and the [SQL release candidate](../../supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql).
 Evidence basis: [production learner review](../../../output/production-learning-coverage-2026-10-03/review.md).
 
 ## Input and decision order
@@ -57,7 +58,65 @@ The Edge Function makes one model call per target, then combines supported event
 Ineligible or repeated non-assessment events leave the state unchanged. An empty array leaves every item unchanged. Protection and correction flags can defer a new assessment; they do not themselves change progress. Guard mode defers progression in the trusted database.
 If both full-understanding events seem possible, use `spontaneous_transfer` when the learner applies the principle to a situation different from the one named in the target and prior discussion; use `demonstrated_understanding` for the current target situation.
 
-`covered` means sufficient evidence for that particular item. The stored event kind identifies whether the evidence was direct understanding, transfer, or an assessment pass. Coverage does not by itself claim long-term retention or observed real-world behavior.
+`covered/good` means sufficient understanding has been demonstrated. When reached from Partial through `demonstrated_understanding`, the item still requires its final assessment and remains the active learning item until that assessment passes. Direct Pending → Covered through `demonstrated_understanding` completes the item without assessment because the learner has already demonstrated the target. Completion is derived from accepted evidence and assessment lifecycle, not from the progress pair alone. Spontaneous transfer retains its existing direct-verification exception. Coverage does not claim long-term retention or observed real-world behavior.
+
+## Learning target state machine
+
+This diagram describes the revised behavior for one learning target. Each `status / understanding_level` pair is one stored progress state. The phases inside `covered / good` distinguish assessment readiness, an open assessment, and completion; they are derived from evidence and assessment lifecycle, not additional progress states.
+
+```mermaid
+stateDiagram-v2
+    direction TB
+    state "pending / none" as Pending
+    state "partially_covered / basic" as Partial
+    state "needs_review / basic" as Review
+
+    state "covered / good" as Covered {
+        state "Assessment due / draft review" as Ready
+        state "Assessment open" as Assessing
+        state "Item complete" as Complete
+
+        Ready --> Assessing: Teacher sends eligible reviewed assessment
+        Assessing --> Assessing: First incorrect answer; one attempt remains
+        Assessing --> Complete: assessment_pass on either attempt
+    }
+
+    [*] --> Pending
+    Pending --> Partial: initial_signal
+    Pending --> Complete: demonstrated_understanding
+    Partial --> Ready: demonstrated_understanding
+    Review --> Partial: post_repair_signal
+
+    Pending --> Complete: spontaneous_transfer
+    Partial --> Complete: spontaneous_transfer
+    Review --> Complete: spontaneous_transfer
+
+    Partial --> Review: contradiction
+    Covered --> Review: contradiction
+    Assessing --> Review: assessment_fail on second incorrect answer
+```
+
+An eligible teacher request prepares the assessment draft; teacher delivery opens it. Protection, correction, Guard, another open assessment, or required feedback can delay preparation while the assessment remains due. No qualifying evidence leaves progress unchanged. A later contradiction can reopen even a completed item. Same-situation recovery follows `needs_review` → `partially_covered` → `covered` before a new assessment.
+
+## Assessment after full understanding
+
+**T09.1 interpretation and authority.** [P2](constitution.md#principles-and-ownership) assigns assessment of demonstrated knowledge and adaptive progression to the development of learner understanding. It supports using an assessment to check whether the learner can apply what tutoring developed; it does not prescribe a particular progress state or require a quiz after every demonstration. The timing is a contextual product decision supplied by the user in this conversation: “assessment should happen after the student shows a full understanding after development or tutoring”, followed by the explicit proposal “Partial --> Covered: demonstrated_understanding”. Thus partial evidence continues development, while full understanding reached from Partial makes the final application check due. The meaningfully different situation comes from existing [T09.2](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle). [P4/H4](constitution.md#non-negotiable-constraints) requires recording this actual decision basis instead of presenting the exact trigger as constitutionally mandated.
+
+**Adopted trigger:** an accepted `demonstrated_understanding` transition from `partially_covered/basic` to `covered/good` makes that target due for assessment. On the next eligible teacher request, prepare one assessment in a meaningfully different situation. `initial_signal` and `post_repair_signal` continue tutoring; they do not trigger assessment. A covered pair without the qualifying evidence and lifecycle does not create assessment eligibility.
+
+**Adopted boundary — direct Pending → Covered:** on 2026-10-13 the user chose “partial only”, explaining that “pending to full understanding means students know it already” and another assessment would annoy them. A direct `pending/none` → `covered/good` transition through `demonstrated_understanding` therefore completes the item without assessment. This is a contextual interpretation of [P2](constitution.md#principles-and-ownership)'s adaptation to demonstrated knowledge, constrained by P3's constructive engagement: adding repetition solely to extend the conversation does not serve learning. The prior-state distinction is a user-selected product policy, not a proof that learning occurred during a particular turn. The agent's earlier both-states recommendation was not adopted.
+
+Protection, correction, Guard, an open assessment, and required feedback retain priority. Deferral preserves the outstanding assessment requirement while the evidence remains valid; a later request must not require a duplicate full-understanding transition merely because a blocker delayed preparation. Delivery revalidates the target and lifecycle. Passing resolves that requirement, and replay does not create another assessment for the same learning cycle. A later contradiction invalidates readiness and reopens tutoring.
+
+The priority for imminent-risk protection derives from [R2](constitution.md#conditional-priority-rules); correction and Guard retain their existing [T01/G01 and T09.1](tutor-behavior-specification.md) rules. Deferral persistence is the engineering consequence of an outstanding final-check requirement, not a new constitutional principle. The pass/fail recovery below implements the user's “unless the assessment failed” condition under P2's revision of understanding and [R3](constitution.md#conditional-priority-rules)'s supported challenge. The existing spontaneous-transfer exception derives from T09.1/T09.5: independent application already supplies the application evidence the assessment would seek. P2 is compatible with that exception but does not itself mandate it.
+
+| Assessment result for a covered target | Progress and next action |
+| --- | --- |
+| Correct on either permitted attempt | Record `assessment_pass` once, keep `covered/good`, and complete the item. Result feedback may close the turn; further development of the same item is unnecessary. |
+| First incorrect attempt | Keep `covered/good`, keep the same assessment open, and allow the remaining attempt. |
+| Second incorrect attempt | Record `assessment_fail` once, move to `needs_review/basic`, and resume tutoring. Corrected evidence produces `post_repair_signal` to partial; a later `demonstrated_understanding` returns to covered and triggers a new assessment in a different context. |
+
+Assessment pass/fail must be accepted from `covered/good` with a valid assessment lifecycle, even though pass preserves the pair. Terminal history must still record the result exactly once. Assessment pass/fail from partial, pending, or review is invalid under this revision. Unsent, rejected, stale, or assisted assessments do not count as passes; existing teacher-review and assistance rules still govern their handling.
 
 ## Boundary examples
 
@@ -68,4 +127,4 @@ If both full-understanding events seem possible, use `spontaneous_transfer` when
 
 These are interpretation examples, not exact-word matching rules. Human review and comparable model evaluation remain necessary to establish classification quality.
 
-The staging and production runs, including the unresolved transfer-versus-repair classification, are recorded in [the release record](../doc_update_record/documentation_update_record_v2026_10_04_direct_understanding_status.md). Passing assessment runs do not establish a model accuracy rate across other targets and learner responses.
+Historical staging and production runs are recorded in [the release record](../doc_update_record/documentation_update_record_v2026_10_04_direct_understanding_status.md); they predate this revision and do not validate it. Decision provenance and downstream validation needs are recorded in [the design update](../doc_update_record/documentation_update_record_v2026_10_13_final_assessment_provenance.md).

@@ -27,16 +27,34 @@ async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMe
   const items = await query(client, 'checklist_items', '*', 'checklist_id', checklist.id);
   const target = items.find(item => item.area_text === targets[0]);
   assert(target, 'Transfer target was not initialized');
+  const focus = (await query(client, 'messages', 'content,created_at', 'id', focusMessageId))[0];
+  const partialMessage = await insert(client, 'messages', {
+    room_id: roomId, user_id: studentId, user_role: 'student',
+    content: 'I should verify the sender, but I do not know how.',
+    created_at: new Date(Date.parse(focus.created_at) - 1000).toISOString(),
+  });
+  const { error: partialError } = await client.rpc('apply_transfer_message_analysis_v1', {
+    p_room_id: roomId, p_message_id: partialMessage.id, p_actor_id: tutorId, p_request_id: requestId(),
+    p_analysis: {
+      events: [{ item_id: target.id, kind: 'initial_signal', evidence_type: 'action',
+        evidence_message_id: partialMessage.id, evidence_quote: partialMessage.content,
+        explanation: 'The learner names verification but has not supplied the method.' }],
+      requires_protection: false, requires_correction: false,
+    },
+  });
+  if (partialError) throw new Error(`Transfer fixture initial signal: ${partialError.message}`);
   const { error: analysisError } = await client.rpc('apply_transfer_message_analysis_v1', {
     p_room_id: roomId, p_message_id: focusMessageId, p_actor_id: tutorId, p_request_id: requestId(),
     p_analysis: {
-      events: [{ item_id: target.id, kind: 'initial_signal', explanation: 'The learner chose independent verification.' }],
+      events: [{ item_id: target.id, kind: 'demonstrated_understanding', evidence_type: 'action',
+        evidence_message_id: focusMessageId, evidence_quote: focus.content,
+        explanation: 'The learner now supplies the independent verification method.' }],
       requires_protection: false, requires_correction: false
     }
   });
   if (analysisError) throw new Error(`Transfer fixture signal: ${analysisError.message}`);
-  target.status = 'partially_covered';
-  target.understanding_level = 'basic';
+  target.status = 'covered';
+  target.understanding_level = 'good';
   return { checklist, items };
 }
 

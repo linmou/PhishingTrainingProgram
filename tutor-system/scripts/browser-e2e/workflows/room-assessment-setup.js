@@ -111,27 +111,6 @@ module.exports = async function roomAssessmentSetup(ctx) {
     await observerContext.close();
   }
 
-  const focusContent = 'I will open the official app myself instead of using the warning link.';
-  await sendStudentMessage(studentPage, focusContent);
-  const focus = (await query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id))
-    .filter(row => row.user_id === ctx.student.id && row.content === focusContent)
-    .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
-  assert(focus?.id, 'Learner evidence message was not persisted');
-  const { error: signalError } = await client.rpc('apply_learning_event_v1', {
-    p_event: {
-      event_id: requestId(),
-      dedupe_key: `room-assessment-setup:${focus.id}`,
-      kind: 'initial_signal',
-      room_id: room.id,
-      student_id: ctx.student.id,
-      item_id: item.id,
-      source_message_id: focus.id,
-      source_evidence_message_ids: [focus.id],
-      evidence_text: 'Learner chose independent verification.',
-      classified_by: 'trusted_backend',
-    },
-  });
-  if (signalError) throw new Error(`Assessment fixture signal: ${signalError.message}`);
   const { error: understandingError } = await client.rpc('edit_room_checklist_v1', {
     p_room_id: room.id,
     p_actor_id: ctx.tutor.id,
@@ -141,6 +120,28 @@ module.exports = async function roomAssessmentSetup(ctx) {
     p_payload: { understanding_level: 'basic' },
   });
   if (understandingError) throw new Error(`Assessment fixture understanding: ${understandingError.message}`);
+
+  const focusContent = 'I compared the sender domain with the real service domain. They differ, so I cannot trust the displayed sender name.';
+  await sendStudentMessage(studentPage, focusContent);
+  const focus = (await query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id))
+    .filter(row => row.user_id === ctx.student.id && row.content === focusContent)
+    .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
+  assert(focus?.id, 'Learner evidence message was not persisted');
+  const { error: signalError } = await client.rpc('apply_learning_event_v1', {
+    p_event: {
+      event_id: requestId(),
+      dedupe_key: `room-assessment-setup:${focus.id}`,
+      kind: 'demonstrated_understanding',
+      room_id: room.id,
+      student_id: ctx.student.id,
+      item_id: item.id,
+      source_message_id: focus.id,
+      source_evidence_message_ids: [focus.id],
+      evidence_text: focusContent,
+      classified_by: 'trusted_backend',
+    },
+  });
+  if (signalError) throw new Error(`Assessment fixture signal: ${signalError.message}`);
 
   // Exercise the real tutor AI action in the newly created room. The previous
   // fixture delivery path bypassed this UI/API boundary entirely.
@@ -180,7 +181,7 @@ module.exports = async function roomAssessmentSetup(ctx) {
   );
   const evidence = {
     room_id: room.id, tutor_id: ctx.tutor.id, learner_id: ctx.student.id,
-    checklist_id: checklist.id, item_id: item.id, persisted_status: 'partially_covered',
+    checklist_id: checklist.id, item_id: item.id, persisted_status: 'covered',
     learner_message_count: (await query(client, 'messages', 'id', 'room_id', room.id)).length,
     assessment_id: delivered.assessment_id,
     assessment_result_persisted: true,

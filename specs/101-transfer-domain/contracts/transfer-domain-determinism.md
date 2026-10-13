@@ -2,7 +2,9 @@
 
 **Intent**: Define the pure function and fixture obligations for W2 implementation and downstream consumption.
 **Date**: 2026-09-11  
-**Revised**: 2026-09-30
+**Revised**: 2026-10-13
+
+Policy authority: [Partial-only final assessment contract](../../../tutor-system/docs/ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding).
 
 ## Pure Boundaries
 
@@ -21,21 +23,25 @@
 2. `parser`: explicit label normalization, exact option text, Unicode/full-width forms, ambiguity, content help, and malformed input.
 3. `grader`: all 16 A-D subsets, duplicate/order normalization, single and multiple keys, and empty selection.
 4. `rendering`: option order, instruction selection, 80/81 segment boundary, two/three sentence boundary, exactly four options.
-5. `reducer`: all 28 state/event cells and invalid state pairs.
+5. `reducer`: all 32 state/event cells, including demonstrated understanding, applied pass with unchanged covered pair, and invalid state pairs.
 6. `orchestrator`: correct-first, incorrect-correct, incorrect-incorrect, duplicate at each stage, terminal third submission, reload/tab-equivalent snapshot, undelivered, clarification, assistance, repair, contradiction, spontaneous transfer, stale, Guard, and no-chain sequences.
 
 ## Sequence Expectations
 
-- **Pass first**: signal -> delivered question at `open/0` -> correct labels -> `passed/1` and `covered/good` -> private feedback retained but learner disclosure forbidden -> tutoring feedback -> no retest.
-- **Retry then pass**: signal -> wrong -> `open/1`, progress unchanged, no terminal feedback -> correct -> `passed/2` and `covered/good` -> private feedback retained but learner disclosure forbidden.
-- **Fail/recover**: signal -> wrong -> retry -> wrong -> `failed/2` and `needs_review/basic` -> learner terminal feedback authorized -> repair -> new learner signal -> different context -> pass.
+- **Pass first**: initial signal -> Partial -> tutoring -> demonstrated understanding -> Covered with assessment due -> delivered question at `open/0` -> correct labels -> `passed/1`, `covered/good` retained, terminal event recorded once -> private feedback retained but learner disclosure forbidden -> result feedback -> item complete without retest.
+- **Retry then pass**: Partial -> demonstrated understanding -> Covered with assessment due -> delivered question -> wrong -> `open/1`, progress stays covered, no terminal feedback -> correct -> `passed/2`, covered retained -> private feedback retained but learner disclosure forbidden.
+- **Fail/recover**: Partial -> demonstrated understanding -> Covered -> assessment -> wrong -> retry -> wrong -> `failed/2` and `needs_review/basic` -> learner terminal feedback authorized -> repair to Partial -> later demonstrated understanding to Covered -> assessment in a different context -> pass.
 - **No repair**: terminal fail -> acknowledgment -> remain `needs_review/basic`.
 - **Clarification**: question -> `B or D?` -> unchanged/open -> format help -> clear labels -> pass.
-- **Assistance**: question -> content help -> assisted/cancelled, no failure -> fresh signal -> different question.
+- **Assistance**: question -> content help -> assisted/cancelled, no failure or completion credit -> fresh eligible reviewed question under the assistance rules; cancellation cannot be counted as a pass.
 - **Correct-with-reason**: correct labels plus inaccurate optional learner input prose -> pass once; no same-message downgrade.
 - **Regression**: covered -> distinct later contradiction -> `needs_review/basic`.
 - **Spontaneous**: changed-context application -> `covered/good` without generated question.
-- **Multi-target**: three initial signals -> all partial/basic -> one assessment; other targets remain eligible.
+- **Direct understanding**: Pending -> demonstrated understanding -> Covered and complete without a question.
+- **Partial evidence**: initial signal or post-repair signal -> Partial -> continue tutoring without a question.
+- **Multi-target**: three Partial → Covered understanding events -> all covered with outstanding assessments -> one assessment; other targets remain due for later eligible requests.
+- **Deferral**: Partial → Covered understanding -> protection, correction, Guard, open-assessment, or feedback blocker -> later eligible request -> assessment, without a repeated understanding event.
+- **Invalidated readiness**: assessment due -> later contradiction -> review -> no stale draft delivery; repair and later full understanding establish a new cycle.
 - **Guard**: valid answer under Guard -> no protected progression write; reviewed recovery -> deferred event applies once when still valid.
 - **Races/stale**: duplicate send, duplicate answer at attempt one or two, retry, terminal third answer, stale draft/manual update -> no extra attempt, question, progress, or feedback effect.
 - **Disclosure**: unresolved and retryable results contain neither key nor learner-safe explanation; passed results mark learner feedback unauthorized even if private feedback is retained; only second-incorrect failed results authorize learner key/explanation disclosure.

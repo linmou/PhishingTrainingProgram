@@ -75,11 +75,12 @@ export function applyLearningEvent(
         ? { disposition: 'apply', next: { status: 'needs_review', understanding_level: 'basic' } }
         : unchanged(current);
     case 'assessment_pass':
-      return current.status === 'partially_covered'
+      // A terminal pass must be applied and recorded even though Covered stays Covered.
+      return current.status === 'covered'
         ? { disposition: 'apply', next: { status: 'covered', understanding_level: 'good' } }
         : { disposition: 'reject', error_code: 'INVALID_TRANSITION' };
     case 'assessment_fail':
-      return current.status === 'partially_covered'
+      return current.status === 'covered'
         ? { disposition: 'apply', next: { status: 'needs_review', understanding_level: 'basic' } }
         : { disposition: 'reject', error_code: 'INVALID_TRANSITION' };
     case 'no_change':

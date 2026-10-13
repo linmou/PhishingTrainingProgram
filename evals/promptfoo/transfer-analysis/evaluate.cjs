@@ -45,7 +45,14 @@ function targetState(kind, current) {
   return { status: next, understanding_level: states[next] };
 }
 
-function eligible(state, event, flags) {
+function eligible(prior, state, event, flags) {
+  // Project new readiness only; persistence and later deferral are verified by the SQL lifecycle tests.
+  return prior.status === 'partially_covered' && prior.understanding_level === 'basic' &&
+    state.status === 'covered' && state.understanding_level === 'good' &&
+    event === 'demonstrated_understanding' && !flags.protection && !flags.correction;
+}
+
+function baselineEligible(_prior, state, event, flags) {
   return state.status === 'partially_covered' && state.understanding_level === 'basic' &&
     ['initial_signal', 'post_repair_signal'].includes(event) && !flags.protection && !flags.correction;
 }
@@ -108,24 +115,74 @@ function auditExisting() {
   });
 }
 
-function freeze(runDir) {
+function freeze(runDir, comparisonMode = 'routing', freshHoldouts = null) {
   if (fs.existsSync(runDir)) throw new Error('Freeze requires a new run directory');
   const snapshot = json(path.join(sourceDir, 'production-edge.json'));
   const production = loadProduction(snapshot);
   const exported = json(path.join(sourceDir, 'production-export.json'));
   const development = json(path.join(__dirname, 'development.json'));
   const holdouts = json(path.join(__dirname, 'holdouts.json'));
-  const cases = buildCases(exported, development, holdouts);
+  const retained = buildCases(exported, development, holdouts);
+  const revision = json(path.join(__dirname, 'final-assessment-cases.json'));
+  const independent = json(path.join(__dirname, 'final-assessment-holdouts.json'));
+  const independentCases = independent.cases.map(c => {
+    const item = synthetic(c, 'independent_holdout');
+    item.provenance = { ...item.provenance, author: independent.author, exposure: independent.exposure, holdout_eligible: comparisonMode === 'routing', created_at: independent.created_at };
+    if (comparisonMode === 'prompt') {
+      item.suite = 'refinement_regression';
+      item.provenance.exposure = 'Exposed by final-assessment-comparison-01; retained as regression for prompt clarification';
+    }
+    return item;
+  });
+  const cases = [...retained, ...revision.cases.map(c => synthetic(c, 'revision')), ...independentCases];
+  if (comparisonMode === 'prompt') {
+    const fresh = json(path.join(__dirname, 'final-assessment-refinement-holdouts.json'));
+    for (const c of fresh.cases) {
+      const item = synthetic(c, freshHoldouts ? 'prior_refinement_regression' : 'independent_holdout');
+      item.provenance = { ...item.provenance, author: fresh.author, exposure: freshHoldouts ? 'Exposed by final-assessment-prompt-01; preserved as regression' : fresh.exposure, holdout_eligible: !freshHoldouts, created_at: fresh.created_at };
+      cases.push(item);
+    }
+    if (freshHoldouts) {
+      const replacement = json(path.join(__dirname, freshHoldouts));
+      for (const c of replacement.cases) {
+        const item = synthetic(c, 'independent_holdout');
+        item.provenance = { ...item.provenance, author: replacement.author, exposure: replacement.exposure, holdout_eligible: true, created_at: replacement.created_at };
+        cases.push(item);
+      }
+    }
+  }
+  for (const c of cases) {
+    c.expected.assessment_due = c.input.items[0].status === 'partially_covered' && c.expected.kind === 'demonstrated_understanding' && !c.expected.protection && !c.expected.correction;
+    if (c.suite === 'holdout') {
+      c.provenance.holdout_eligible = false;
+      c.provenance.exposure = 'Exposed by historical baseline-01; retained as regression, not unseen validation';
+    }
+  }
+  const candidateSnapshot = { ...snapshot, files: snapshot.files.map(f => ({ ...f, content: fs.readFileSync(path.join(root, 'tutor-system', f.name), 'utf8') })) };
+  const candidate = loadProduction(candidateSnapshot);
+  if (comparisonMode === 'routing' && candidate.evaluationPrompt !== production.evaluationPrompt) throw new Error('This routing-only comparison requires an unchanged analysis prompt');
   const settings = { model: 'qwen3.5-flash', temperature: 0, max_tokens: 600, enable_thinking: false, response_format: { type: 'json_object' }, repetitions: 2, seed: null, timeout_ms: 90000, target_attempts: 1, num_workers: 4, evaluator: 'deterministic gold-label comparison', human_label_review: 'pending', model_judge: null };
-  const paths = ['tutor-system/docs/ai-behaviors/constitution.md', 'tutor-system/docs/ai-behaviors/tutor-behavior-specification.md', 'tutor-system/docs/ai-behaviors/transfer-status-response-contract.md', 'tutor-system/docs/ai-behaviors/transfer-analysis-evaluation-plan.md', 'evals/promptfoo/transfer-analysis/development.json', 'evals/promptfoo/transfer-analysis/holdouts.json', 'evals/promptfoo/transfer-analysis/evaluate.cjs'];
+  const paths = ['tutor-system/docs/ai-behaviors/constitution.md', 'tutor-system/docs/ai-behaviors/tutor-behavior-specification.md', 'tutor-system/docs/ai-behaviors/transfer-status-response-contract.md', 'tutor-system/docs/ai-behaviors/transfer-analysis-evaluation-plan.md', 'evals/promptfoo/transfer-analysis/development.json', 'evals/promptfoo/transfer-analysis/holdouts.json', 'evals/promptfoo/transfer-analysis/final-assessment-cases.json', 'evals/promptfoo/transfer-analysis/final-assessment-holdouts.json', 'evals/promptfoo/transfer-analysis/evaluate.cjs'];
+  if (comparisonMode === 'prompt') paths.push('evals/promptfoo/transfer-analysis/final-assessment-refinement-holdouts.json');
+  if (freshHoldouts) paths.push(path.posix.join('evals/promptfoo/transfer-analysis', freshHoldouts));
   const artifacts = paths.map(file => ({ path: file, sha256: hash(fs.readFileSync(path.join(root, file), 'utf8')), content: fs.readFileSync(path.join(root, file), 'utf8') }));
-  const frozen = { run_id: path.basename(runDir), frozen_at: new Date().toISOString(), baseline: 'unchanged production assessment-api v9; prompt and handler from MCP snapshot', candidate: null, settings, metrics: metricIds, expected_generations: cases.length * settings.repetitions, thresholds: { raw_event: 0.8, applied_state: 0.8, safety_flags: 1, assessment_route: 0.8, validity: 1 }, required_suites: [...new Set(cases.map(c => c.suite))], required_partitions: [...new Set(cases.map(c => c.partition))], prompt: production.evaluationPrompt, prompt_sha256: hash(production.evaluationPrompt), cases, artifacts, production_snapshot: snapshot, production_functions: json(path.join(sourceDir, 'production-functions.json')), source_export_sha256: hash(exported), applicability_audit: auditExisting(), git_revision: execFileSync('git', ['rev-parse','HEAD'], { cwd: root, encoding: 'utf8' }).trim(), git_status: execFileSync('git', ['status','--short'], { cwd: root, encoding: 'utf8' }), grounding_review: 'Resolved under adopted constitution 1.0; independent blind review agrees, notes correction-threshold ambiguity avoided by clear cases', label_review: 'Agent-authored policy-grounded gold labels; responsible human has requested gold-label method but has not reviewed individual labels. Diagnostic freeze, acceptance blocked pending review.' };
+  const frozen = { run_id: path.basename(runDir), frozen_at: new Date().toISOString(), baseline: 'unchanged production assessment-api v9; prompt and handler from MCP snapshot; historical Partial-state route', candidate: 'working-tree handler and reducer; unchanged analysis prompt; Partial-to-Covered route', comparison: 'One real target generation replayed through both frozen handlers; both routes scored against revised policy. No prompt effect claimed.', candidate_snapshot: candidateSnapshot, settings, metrics: metricIds, expected_generations: cases.length * settings.repetitions, thresholds: { raw_event: 0.8, applied_state: 0.8, safety_flags: 1, assessment_route: 0.8, validity: 1 }, required_suites: [...new Set(cases.map(c => c.suite))], required_partitions: [...new Set(cases.map(c => c.partition))], prompt: production.evaluationPrompt, prompt_sha256: hash(production.evaluationPrompt), cases, artifacts, production_snapshot: snapshot, production_functions: json(path.join(sourceDir, 'production-functions.json')), source_export_sha256: hash(exported), applicability_audit: [...auditExisting(), ...retained.map(c => ({ case_id: c.id, classification: 'refine', preserved_assertions: ['raw_event', 'applied_state', 'safety_flags', 'validity'], changed_assertion: 'assessment_route', reason: 'Same input and classification gold; route now follows approved Partial-to-Covered policy. Original baseline remains immutable.' }))], git_revision: execFileSync('git', ['rev-parse','HEAD'], { cwd: root, encoding: 'utf8' }).trim(), git_status: execFileSync('git', ['status','--short'], { cwd: root, encoding: 'utf8' }), grounding_review: 'Resolved under adopted constitution 1.0 and explicit human Partial-only decision', label_review: 'Agent-authored policy-grounded gold labels; human review pending. Diagnostic freeze, acceptance blocked pending review.' };
+  frozen.comparison_mode = comparisonMode;
+  frozen.candidate_prompt = candidate.evaluationPrompt;
+  frozen.candidate_prompt_sha256 = hash(candidate.evaluationPrompt);
+  if (comparisonMode === 'prompt') {
+    frozen.baseline = 'Production analysis prompt/handler with revised Partial-to-Covered routing';
+    frozen.candidate = freshHoldouts ? 'Short event-selection clarification after sufficiency judgment; same revised routing and independent safety checks' : 'One prompt clarification: compare concrete contexts before choosing full-coverage kind; same revised routing';
+    frozen.comparison = 'Separate fresh baseline and candidate model generations on identical cases, settings, and checks; sequences propagate each variant independently.';
+    frozen.expected_provider_calls = frozen.expected_generations * 2;
+    frozen.applicability_audit.push(...independentCases.map(c => ({ case_id: c.id, classification: 'reuse', preserved_assertions: metricIds, reason: 'First-round independent holdout is now exposed regression; all assertions unchanged.' })));
+  }
   write(path.join(runDir, 'frozen.json'), frozen);
   write(path.join(runDir, 'command-freeze.json'), { command: process.argv, completed_at: new Date().toISOString(), exit_code: 0, case_count: cases.length, expected_generations: frozen.expected_generations });
   console.log(JSON.stringify({ frozen: runDir, cases: cases.length, generations: frozen.expected_generations, prompt_sha256: frozen.prompt_sha256, label_review: 'pending' }));
 }
 
-async function executeTarget(c, production, transport, state) {
+async function executeTarget(c, production, transport, state, route = eligible) {
   const input = structuredClone(c.input);
   if (state) Object.assign(input.items[0], state);
   let applied = null;
@@ -148,7 +205,7 @@ async function executeTarget(c, production, transport, state) {
   const prior = { status: input.items[0].status, understanding_level: input.items[0].understanding_level };
   const transition = production.applyLearningEvent(prior, appliedEvent || 'no_change');
   const next = transition.next || prior;
-  return { input, calls, parsed, applied, http_status: response.status, envelope, prior_state: prior, next_state: next, applied_event: appliedEvent, projected_assessment_due: applied ? eligible(next, appliedEvent, { protection: applied.requires_protection, correction: applied.requires_correction }) : null };
+  return { input, calls, parsed, applied, http_status: response.status, envelope, prior_state: prior, next_state: next, applied_event: appliedEvent, projected_assessment_due: applied ? route(prior, next, appliedEvent, { protection: applied.requires_protection, correction: applied.requires_correction }) : null };
 }
 
 function score(c, result) {
@@ -160,7 +217,7 @@ function score(c, result) {
     ['raw_event', c.expected.kind, actualKind, raw !== null && actualKind !== undefined],
     ['applied_state', expectedState, result.next_state, valid],
     ['safety_flags', { protection: c.expected.protection, correction: c.expected.correction }, raw ? { protection: raw.requires_protection, correction: raw.requires_correction } : null, valid],
-    ['assessment_route', eligible(expectedState, c.expected.kind, c.expected), result.projected_assessment_due, valid],
+    ['assessment_route', c.expected.assessment_due ?? eligible(c.input.items[0], expectedState, c.expected.kind, c.expected), result.projected_assessment_due, valid],
     ['validity', true, valid, true],
   ];
   return checks.map(([metric, expected, actual, evaluable]) => ({ metric, method: 'deterministic', status: !evaluable ? 'error' : JSON.stringify(expected) === JSON.stringify(actual) ? 'pass' : 'fail', expected, actual: actual === undefined ? null : actual, reason: !evaluable ? 'Target output could not be consumed; inspect preserved provider/handler evidence' : 'Exact comparison against frozen expected label/state' }));
@@ -180,6 +237,7 @@ async function run(runDir, numWorkers) {
   const frozen = json(path.join(runDir, 'frozen.json'));
   if (hash(fs.readFileSync(__filename, 'utf8')) !== frozen.artifacts.find(a => a.path.endsWith('evaluate.cjs')).sha256) throw new Error('Runner changed since freeze');
   const production = loadProduction(frozen.production_snapshot);
+  const candidate = loadProduction(frozen.candidate_snapshot);
   const config = credential();
   const session = { started_at: new Date().toISOString(), command: process.argv, num_workers: numWorkers, endpoint: config.endpoint, credential_env: 'REACT_APP_OAI_API_KEY (existing local legacy name)', model: frozen.settings.model, exit_code: null };
   const jobs = [];
@@ -188,8 +246,8 @@ async function run(runDir, numWorkers) {
     for (const id of new Set(frozen.cases.filter(c => c.sequence_id).map(c => c.sequence_id))) jobs.push({ rep, cases: frozen.cases.filter(c => c.sequence_id === id).sort((a,b) => a.sequence_step-b.sequence_step) });
   }
   let cursor = 0, complete = 0;
-  const transport = async request => {
-    if (request.model !== frozen.settings.model || request.temperature !== 0 || request.max_tokens !== 600 || request.enable_thinking !== false || hash(request.messages[0].content) !== frozen.prompt_sha256) throw new Error('Production request drift');
+  const transportFor = promptHash => async request => {
+    if (request.model !== frozen.settings.model || request.temperature !== 0 || request.max_tokens !== 600 || request.enable_thinking !== false || hash(request.messages[0].content) !== promptHash) throw new Error('Frozen request drift');
     const started = new Date().toISOString();
     try {
       const response = await fetch(`${config.endpoint}/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${config.key}` }, body: JSON.stringify(request), signal: AbortSignal.timeout(frozen.settings.timeout_ms) });
@@ -198,19 +256,31 @@ async function run(runDir, numWorkers) {
       return { request, endpoint: config.endpoint, started_at: started, ended_at: new Date().toISOString(), status: response.status, response: payload };
     } catch (error) { return { request, endpoint: config.endpoint, started_at: started, ended_at: new Date().toISOString(), error: error.message }; }
   };
+  const transport = transportFor(frozen.prompt_sha256);
+  const candidateTransport = transportFor(frozen.candidate_prompt_sha256);
   async function worker() {
     while (cursor < jobs.length) {
-      const job = jobs[cursor++]; let state = null;
+      const job = jobs[cursor++]; let state = null, baselineState = null;
       for (const c of job.cases) {
         const file = path.join(runDir, 'generations', `${c.id}-r${job.rep}.json`);
         let generation;
         if (fs.existsSync(file)) generation = json(file);
         else {
-          const result = await executeTarget(c, production, transport, state);
-          generation = { case_id: c.id, version: c.version, suite: c.suite, partition: c.partition, repetition: job.rep, generation_id: `${frozen.run_id}/${c.id}/r${job.rep}`, timestamp: new Date().toISOString(), result, checks: score(c, result) };
+          const promptComparison = frozen.comparison_mode === 'prompt';
+          const baseline = await executeTarget(c, production, transport, promptComparison ? baselineState : state, promptComparison ? eligible : baselineEligible);
+          let replayIndex = 0;
+          const replay = async request => {
+            const call = baseline.calls[replayIndex++];
+            if (!call || JSON.stringify(call.request) !== JSON.stringify(request)) throw new Error('Candidate request differs from preserved baseline request');
+            return structuredClone(call);
+          };
+          const result = await executeTarget(c, candidate, promptComparison ? candidateTransport : replay, state);
+          if (!promptComparison && replayIndex !== baseline.calls.length) throw new Error('Candidate did not consume all baseline provider calls');
+          if (!promptComparison && JSON.stringify(baseline.next_state) !== JSON.stringify(result.next_state)) throw new Error('Analysis state changed in a routing-only comparison');
+          generation = { case_id: c.id, version: c.version, suite: c.suite, partition: c.partition, repetition: job.rep, generation_id: `${frozen.run_id}/${c.id}/r${job.rep}`, timestamp: new Date().toISOString(), baseline: { result: baseline, checks: score(c, baseline) }, result, checks: score(c, result) };
           write(file, generation);
         }
-        if (c.sequence_id) state = generation.result.next_state;
+        if (c.sequence_id) { state = generation.result.next_state; baselineState = generation.baseline.result.next_state; }
         complete++; console.log(`[${complete}/${frozen.expected_generations}] ${c.id} r${job.rep}: ${generation.checks.filter(x => x.status !== 'pass').map(x=>`${x.metric}:${x.status}`).join(', ') || 'pass'}`);
       }
     }
@@ -248,8 +318,20 @@ function summarize(frozen, generations) {
     return {suite,expected:cases.length*frozen.settings.repetitions,...counts};
   });
   const failures=generations.filter(g=>g.checks.some(c=>c.status!=='pass')).map(g=>({case_id:g.case_id,repetition:g.repetition,checks:g.checks.filter(c=>c.status!=='pass')}));
+  const routeInteractions = frozen.required_suites.map(suite => {
+    const cases = frozen.cases.filter(c=>c.suite===suite);
+    const counts = { both_pass:0, state_only:0, route_only:0, both_fail:0, unevaluable:0 };
+    for (const c of cases) for(let rep=0;rep<frozen.settings.repetitions;rep++) {
+      const g=generations.find(g=>g.case_id===c.id&&g.repetition===rep);
+      const a=g?.checks.find(k=>k.metric==='applied_state')?.status;
+      const b=g?.checks.find(k=>k.metric==='assessment_route')?.status;
+      const key=!a||!b||a==='error'||b==='error'?'unevaluable':a==='pass'?(b==='pass'?'both_pass':'state_only'):(b==='pass'?'route_only':'both_fail');
+      counts[key]++;
+    }
+    return {suite,expected:cases.length*frozen.settings.repetitions,...counts};
+  });
   const behavioralFailure=rows.some(r=>r.verdict==='fail')||pairs.some(p=>!p.pass);
-  return { run_id:frozen.run_id, verdict:behavioralFailure?'failed':'incomplete', grounding:'resolved', gold_label_review:'pending human review', acceptance:'blocked by pending human label review', release:'outside scope', rows, pairs, interactions, failures, missing_generations:frozen.expected_generations-generations.length, usage:generations.reduce((a,g)=>{for(const call of g.result.calls){const u=call.response?.usage||{};a.prompt_tokens+=u.prompt_tokens||0;a.completion_tokens+=u.completion_tokens||0;}return a;},{prompt_tokens:0,completion_tokens:0}) };
+  return { run_id:frozen.run_id, verdict:behavioralFailure?'failed':'incomplete', grounding:'resolved', gold_label_review:'pending human review', acceptance:'Semantic benchmark acceptance requires reviewed labels and all gates; exact routing policy is already human-approved.', release:'outside scope', rows, pairs, interactions, route_interactions:routeInteractions, failures, missing_generations:frozen.expected_generations-generations.length, usage:generations.reduce((a,g)=>{for(const call of g.result.calls){const u=call.response?.usage||{};a.prompt_tokens+=u.prompt_tokens||0;a.completion_tokens+=u.completion_tokens||0;}return a;},{prompt_tokens:0,completion_tokens:0}) };
 }
 
 function report(runDir) {
@@ -257,16 +339,28 @@ function report(runDir) {
   const dir=path.join(runDir,'generations');
   const generations=fs.existsSync(dir)?fs.readdirSync(dir).filter(f=>f.endsWith('.json')).map(f=>json(path.join(dir,f))):[];
   const result=summarize(frozen,generations);
+  if (generations.some(g => g.baseline)) {
+    result.baseline = summarize(frozen, generations.map(g => ({ ...g, ...g.baseline })));
+    result.comparison = result.rows.map(row => { const before = result.baseline.rows.find(r => r.metric === row.metric && r.group === row.group); return { metric: row.metric, group: row.group, baseline_passed: before.passed, candidate_passed: row.passed, expected: row.expected, delta: row.passed - before.passed, non_regression: row.passed >= before.passed }; });
+    result.new_failures = generations.flatMap(g => g.checks.filter(c => c.status !== 'pass' && g.baseline?.checks.some(b => b.metric === c.metric && b.status === 'pass')).map(c => ({ case_id: g.case_id, repetition: g.repetition, metric: c.metric, expected: c.expected, actual: c.actual })));
+    result.non_regression_verdict = result.comparison.every(c=>c.non_regression) ? 'pass' : 'fail';
+    if (result.non_regression_verdict === 'fail') result.verdict = 'failed';
+    result.total_provider_usage = frozen.comparison_mode === 'prompt' ? { prompt_tokens: result.usage.prompt_tokens + result.baseline.usage.prompt_tokens, completion_tokens: result.usage.completion_tokens + result.baseline.usage.completion_tokens } : result.usage;
+    result.holdout_coverage = { historical_exposed: frozen.cases.filter(c=>c.suite==='holdout').length, independent_eligible_at_freeze: frozen.cases.filter(c=>c.provenance.holdout_eligible).length, exposure_after_run: 'Fresh cases become exposed regression material after this validation; no prompt tuning performed.' };
+  }
   const file=path.join(runDir,`summary-${Date.now()}.json`); write(file,result);
   console.log(JSON.stringify({summary:file,verdict:result.verdict,overall:result.rows.filter(r=>r.group==='overall'),pairs:result.pairs.filter(p=>p.pass).length+'/'+result.pairs.length,missing:result.missing_generations,usage:result.usage}));
   return result;
 }
 
-module.exports={loadProduction,targetState,eligible,buildCases,executeTarget,score,summarize};
+module.exports={loadProduction,targetState,eligible,baselineEligible,buildCases,executeTarget,score,summarize};
 if(require.main===module){
   const [command,dir,...args]=process.argv.slice(2);
   const runDir=path.resolve(root,dir||'output/transfer-analysis-eval-20261013/baseline-01');
   const numWorkers=args.includes('--num_workers')?Number(args[args.indexOf('--num_workers')+1]):4;
   if(!Number.isInteger(numWorkers)||numWorkers<1||numWorkers>8)throw new Error('num_workers must be 1–8');
-  Promise.resolve().then(()=>command==='freeze'?freeze(runDir):command==='run'?run(runDir,numWorkers):command==='report'?report(runDir):Promise.reject(new Error('Use freeze, run, or report'))).catch(error=>{console.error(error.stack);process.exitCode=1;});
+  const comparisonMode=args.includes('--comparison')?args[args.indexOf('--comparison')+1]:'routing';
+  if (!['routing','prompt'].includes(comparisonMode)) throw new Error('comparison must be routing or prompt');
+  const freshHoldouts=args.includes('--fresh_holdouts')?args[args.indexOf('--fresh_holdouts')+1]:null;
+  Promise.resolve().then(()=>command==='freeze'?freeze(runDir,comparisonMode,freshHoldouts):command==='run'?run(runDir,numWorkers):command==='report'?report(runDir):Promise.reject(new Error('Use freeze, run, or report'))).catch(error=>{console.error(error.stack);process.exitCode=1;});
 }

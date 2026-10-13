@@ -82,7 +82,7 @@ function dependencies(
 
 function context(acceptedAttemptCount: 0 | 1) {
   return {
-    progress: { status: "partially_covered", understanding_level: "basic" },
+    progress: { status: "covered", understanding_level: "good" },
     participation_mode: "tutoring",
     progress_snapshot_hash: "snapshot-1",
     feedback_required: false,

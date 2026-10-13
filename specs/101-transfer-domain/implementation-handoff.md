@@ -4,6 +4,8 @@
 **Date**: 2026-09-22
 **Implementation commit ID**: `91d8036`
 
+**2026-10-13 policy follow-up**: this dated handoff preserves the earlier implementation evidence. The active [domain specification](spec.md) now makes assessment due only after Partial → Covered demonstrated understanding; repair alone continues tutoring. Terminal assessment grading starts from Covered. See the [current implementation record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md) for local test evidence and hosted-release status.
+
 ## Current Implementation (2026-09-22)
 
 The two-attempt transfer lifecycle is implemented in the pure component 101 domain boundary. The resolver accepts a server-owned `TransferAttemptSnapshot`, validates lifecycle invariants, and returns immutable result snapshots. Component 102 remains responsible for persistence, concurrency, idempotency, API DTOs, and role-safe projection. `transferAssessmentService.ts`, Supabase migrations/functions, React/UI code, provider calls, and evaluation/release surfaces were not changed.

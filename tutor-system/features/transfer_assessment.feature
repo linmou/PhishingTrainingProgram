@@ -17,13 +17,27 @@ Feature: Transfer assessment lifecycle
     And the transfer context must change the meaningful situation rather than only the brand
 
   @T09 @U01 @U02
-  Scenario: Eligible learner evidence updates progress and prepares an assessment draft
-    Given the learner has given a correct explanation for a configured concept
+  Scenario: Developed full understanding prepares a final assessment draft
+    Given the learner has developed a partial concept into full understanding
     And the learner has not already demonstrated transfer for that concept
     And analysis has identified one fully eligible transfer target
     When the teacher requests the next AI-generated response
-    Then the learner progress pair for that concept becomes partially_covered with understanding_level basic
+    Then the learner progress pair for that concept becomes covered with understanding_level good
     And the teacher receives one assessment draft for review
+
+  @T09 @U03 @U07
+  Scenario Outline: Evidence outside developed full understanding continues normal tutoring
+    Given the target starts at <status> with understanding_level <level>
+    When analysis accepts <event> and the teacher requests the next response
+    Then the target remains at <next_status> with understanding_level <next_level>
+    And the teacher receives a normal tutor response without an assessment draft
+
+    Examples:
+      | status            | level | event                      | next_status       | next_level |
+      | pending           | none  | initial_signal             | partially_covered | basic      |
+      | needs_review      | basic | post_repair_signal         | partially_covered | basic      |
+      | pending           | none  | demonstrated_understanding | covered           | good       |
+      | partially_covered | basic | spontaneous_transfer       | covered           | good       |
 
   @T09 @U03 @U07
   Scenario: Protection and correction precede transfer assessment
@@ -55,7 +69,7 @@ Feature: Transfer assessment lifecycle
     Given a delivered single-answer assessment has answer key B and two attempts available
     When the learner submits A as the first valid selection
     Then the assessment remains open with one attempt remaining
-    And the learner progress pair remains partially_covered with understanding_level basic
+    And the learner progress pair remains covered with understanding_level good
     And no answer key or terminal explanation is disclosed
 
   @T09 @U14 @D02 @D05 @D06

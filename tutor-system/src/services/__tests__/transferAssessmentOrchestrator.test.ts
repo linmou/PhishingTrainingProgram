@@ -48,7 +48,7 @@ function assessment(overrides: Partial<TransferAssessment> = {}): TransferAssess
 
 function context(overrides: Partial<TransferLifecycleContext> = {}): TransferLifecycleContext {
   return {
-    progress: PARTIALLY_COVERED,
+    progress: COVERED,
     participation_mode: 'tutoring',
     progress_snapshot_hash: SNAPSHOT_HASH,
     feedback_required: false,
@@ -107,12 +107,28 @@ function authoritativeAnswer(
 }
 
 describe('transfer assessment orchestrator', () => {
+  // transferAssessmentOrchestrator.ts: invalid progress must not consume either answer attempt.
+  it.each([
+    { status: 'pending', understanding_level: 'none' },
+    PARTIALLY_COVERED,
+    { status: 'needs_review', understanding_level: 'basic' },
+    { status: 'covered', understanding_level: 'basic' },
+  ])('does not grade outside Covered/good: %s', (progress) => {
+    for (const content of ['B', 'A']) {
+      const initial = context({ progress: progress as TransferProgress });
+      const result = resolveTransferAnswer(initial, answer(content));
+
+      expect(result).toMatchObject({ disposition: 'duplicate', progress, applied_transition: null });
+      expect(result.attempt_snapshot).toEqual(initial.attempt_snapshot);
+    }
+  });
+
   it('does not grade an undelivered question', () => {
     const result = resolveTransferAnswer(context(), answer('B', { delivered: false }));
 
     expect(result).toMatchObject({
       disposition: 'not_delivered',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'await_learner_answer',
       assessment_id: 'assessment-1',
@@ -138,7 +154,7 @@ describe('transfer assessment orchestrator', () => {
 
     expect(result).toMatchObject({
       disposition: 'unresolved',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'await_learner_answer',
       assessment_id: 'assessment-1',
@@ -152,7 +168,7 @@ describe('transfer assessment orchestrator', () => {
 
     expect(result).toMatchObject({
       disposition: 'retryable',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'await_learner_answer',
       assessment_id: 'assessment-1',
@@ -207,7 +223,7 @@ describe('transfer assessment orchestrator', () => {
 
     expect(result).toMatchObject({
       disposition: 'assisted',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'cancel_question',
       assessment_id: 'assessment-1',
@@ -227,7 +243,7 @@ describe('transfer assessment orchestrator', () => {
 
     expect(result).toMatchObject({
       disposition: 'stale',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'await_learner_answer',
       assessment_id: 'assessment-1',
@@ -271,7 +287,7 @@ describe('transfer assessment orchestrator', () => {
 
     expect(second.disposition).toBe('duplicate');
     expect(second.applied_transition).toBeNull();
-    expect(second.progress).toEqual(PARTIALLY_COVERED);
+    expect(second.progress).toEqual(COVERED);
   });
 
   it('does not chain a second assessment while feedback is required', () => {
@@ -292,7 +308,7 @@ describe('transfer assessment orchestrator', () => {
 
     expect(result).toMatchObject({
       disposition: 'guard_deferred',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       feedback_required: false,
       next_action: 'defer_to_protective_response',
       assessment_id: 'assessment-1',
@@ -304,14 +320,14 @@ describe('transfer assessment orchestrator', () => {
     const result = resolveTransferAnswer(context(), answer('A'));
 
     expect(result.disposition).toBe('retryable');
-    expect(result.progress).toEqual(PARTIALLY_COVERED);
+    expect(result.progress).toEqual(COVERED);
   });
 
   it('never grades without an open delivered assessment', () => {
     const result = resolveTransferAnswer(context({ unresolved_assessment: null }), answer('B', { assessment: null }));
 
     expect(result.disposition).toBe('duplicate');
-    expect(result.progress).toEqual(PARTIALLY_COVERED);
+    expect(result.progress).toEqual(COVERED);
     expect(result.applied_transition).toBeNull();
   });
 
@@ -467,7 +483,7 @@ describe('server-authoritative two-attempt lifecycle', () => {
 
     expect(result).toMatchObject({
       disposition: 'retryable',
-      progress: PARTIALLY_COVERED,
+      progress: COVERED,
       remaining_attempts: 1,
       applied_transition: null,
       attempt_snapshot: {

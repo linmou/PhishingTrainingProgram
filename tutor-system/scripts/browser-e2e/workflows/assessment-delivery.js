@@ -9,6 +9,8 @@ const { startStatusJourney } = require('./transfer-status-events');
 
 module.exports = async function assessmentDelivery(ctx) {
   const journey = await startStatusJourney(ctx);
+  await journey.observe('testdrive.info is not the social media platform address. I would go to the real site myself instead of using that link.',
+    journey.explanation, 'demonstrated_understanding', 'covered', 'good');
   const focus = journey.observations.at(-1).message;
   writeJson(path.join(ctx.evidenceDir, 'assessment-delivery-fixture.json'), {
     room_id: journey.room.id, checklist_id: journey.checklist_id,
@@ -81,7 +83,7 @@ module.exports = async function assessmentDelivery(ctx) {
   const assessedItem = beforeAssessment.find(item => item.id === privateAssessment[0]?.item_id);
   assert.equal(privateAssessment[0]?.item_id, prepared.response?.data?.item_id,
     'Delivered assessment differs from the prepared target');
-  assert.equal(assessedItem?.status, 'partially_covered', 'Assessment did not target a partially covered template item');
+  assert.equal(assessedItem?.status, 'covered', 'Final assessment did not target a fully understood template item');
   const assessmentEvents = await managementQuery(ctx.config,
     `select event_kind,event_payload,processing_state from private.learning_event_inbox where room_id='${journey.room.id}'::uuid and event_kind='assessment_pass' and event_payload->>'assessment_id'='${questionMessage.assessment_id}'`);
   assert(assessmentEvents.some(row => row.processing_state === 'applied'), 'Assessment pass event was not applied');

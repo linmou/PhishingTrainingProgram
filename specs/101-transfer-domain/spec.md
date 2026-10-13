@@ -2,7 +2,7 @@
 
 **Feature Branch**: `101-transfer-domain`  
 **Created**: 2026-09-11  
-**Revised**: 2026-09-30
+**Revised**: 2026-10-13
 **Status**: Ready for implementation  
 **Input**: Upgrade the deterministic transfer domain for two server-authoritative attempts and an editable learner-safe explanation.
 
@@ -14,7 +14,11 @@ This component defines deterministic assessment, grading, progress, and disclosu
 
 Transfer assessment content is a `TransferAssessmentDraft` with `reason`, `target_item_id`, and `assessment: PrivateAssessment`. It has no tutor mode, teaching instruction, or duplicate response. Assessment preparation and review use this assessment-only draft; the shared tutor chooses only tutoring or Guard. The existing pure transition matrix, exact-set grading, private key, and two-attempt lifecycle remain authoritative.
 
-An eligible target is a current room-approved checklist item at `partially_covered/basic` with learner-owned evidence and no open assessment, feedback, repair, protection, correction, or Guard blocker. Eligibility requires the next AI-generated response to be an assessment draft; it is not another tutor decision. Spontaneous transfer can verify the target without a quiz.
+An eligible target is a current room-approved checklist item at `covered/good` with an outstanding assessment requirement created by an accepted `demonstrated_understanding` transition from `partially_covered/basic`. Initial and post-repair signals continue tutoring. Direct Pending → Covered understanding and spontaneous transfer complete the target without a quiz. An outstanding assessment keeps a covered item active until it passes; the progress pair alone does not establish completion.
+
+On the next request without an open assessment, required feedback, protection, correction, or Guard blocker, preparation returns an assessment draft. Blockers defer the outstanding requirement without requiring a duplicate understanding transition. A later contradiction invalidates readiness and resumes tutoring. Delivery revalidates the evidence and lifecycle.
+
+Authority: [T09.1 and its upstream rationale](../../tutor-system/docs/ai-behaviors/tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) implements the user's Partial-only decision under P2 adaptive learning and P3 constructive engagement. The [decision record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_13_final_assessment_provenance.md) explains why developed understanding receives a final check while already-demonstrated knowledge avoids repetition.
 
 ## Clarifications
 
@@ -35,7 +39,7 @@ A learner may make up to two valid option selections for one delivered transfer 
 **Acceptance Scenarios**:
 
 1. **Given** a current delivered question with no accepted attempts, **When** the learner submits an incorrect valid selection, **Then** the result is retryable, progress is unchanged, one attempt remains, and no key or learner-safe explanation is disclosed.
-2. **Given** a current delivered question with zero or one accepted attempts, **When** the learner submits the exact correct selection, **Then** the question passes exactly once and progress becomes `covered/good`.
+2. **Given** a current delivered question for a covered target with zero or one accepted attempts, **When** the learner submits the exact correct selection, **Then** the question passes exactly once, progress stays `covered/good`, and the outstanding assessment requirement is resolved.
 3. **Given** a current delivered question with one prior incorrect attempt, **When** the learner submits a second incorrect valid selection, **Then** the question fails exactly once, progress becomes `needs_review/basic`, and terminal correct-answer feedback is available to the authorized downstream projection.
 4. **Given** a question is passed or failed, **When** any later submission arrives, **Then** no third attempt, progress transition, or feedback chain is created.
 5. **Given** an already processed answer identity is replayed, **When** it is resolved against the same lifecycle state, **Then** the result is duplicate and neither attempt count nor progress changes.
@@ -68,11 +72,13 @@ The learning workflow applies evidence and assessment outcomes to the existing `
 **Acceptance Scenarios**:
 
 1. **Given** `pending/none`, **When** initial learner evidence is accepted, **Then** progress becomes `partially_covered/basic`.
-2. **Given** `partially_covered/basic`, **When** either valid attempt passes, **Then** progress becomes `covered/good` exactly once.
-3. **Given** `partially_covered/basic`, **When** the first valid attempt is incorrect, **Then** progress remains unchanged; only a second incorrect attempt changes progress to `needs_review/basic`.
+2. **Given** `partially_covered/basic`, **When** full understanding is accepted, **Then** progress becomes `covered/good` and a final assessment becomes due; passing it records `assessment_pass` once while retaining that pair.
+3. **Given** `covered/good` with an open assessment, **When** the first valid attempt is incorrect, **Then** progress remains covered and the assessment remains open; only a second incorrect attempt changes progress to `needs_review/basic`.
 4. **Given** a learner demonstrates valid spontaneous transfer in a changed context, **When** the evidence is accepted, **Then** progress becomes `covered/good` without a generated quiz.
 5. **Given** `covered/good` or `partially_covered/basic`, **When** a later contradiction is classified, **Then** progress reopens as `needs_review/basic`.
-6. **Given** `needs_review/basic` after failure, **When** a repair signal and later learner evidence arrive, **Then** the learner may return to `partially_covered/basic` and a different context may be assessed.
+6. **Given** `needs_review/basic` after failure, **When** a repair signal arrives, **Then** the learner returns to `partially_covered/basic` for tutoring; only later full understanding returns the target to covered and makes an assessment in a different context due.
+7. **Given** `pending/none`, **When** full understanding is accepted directly, **Then** progress becomes `covered/good` and the item completes without an assessment.
+8. **Given** an outstanding assessment delayed by a blocker, **When** a later eligible request arrives with the evidence still valid, **Then** it prepares the assessment without another understanding transition; a later contradiction instead invalidates readiness.
 
 ### User Story 4 - Validate and render one inspectable assessment draft (Priority: P1)
 
@@ -103,7 +109,7 @@ The tutoring workflow handles delivery, learner answers, feedback-first follow-u
 
 1. **Given** a valid assessment draft, **When** it is reviewed and delivered, **Then** the learner receives one assessment question and the room does not enter a separate assessment participation mode.
 2. **Given** a correct answer on either attempt, **When** resolution completes, **Then** tutoring feedback is required before another assessment is eligible.
-3. **Given** one wrong answer, **When** resolution completes, **Then** the assessment remains open; only a second wrong answer begins `needs_review` -> repair -> new learner signal -> different context, and failure alone does not enter Guard.
+3. **Given** one wrong answer, **When** resolution completes, **Then** the assessment remains open on a covered target; only a second wrong answer begins `needs_review` -> repair to Partial -> full understanding to Covered -> assessment in a different context, and failure alone does not enter Guard.
 4. **Given** a clarification, assistance request, spontaneous transfer, contradiction, duplicate message, or stale message, **When** it is handled, **Then** the documented outcome occurs without creating a second assessment chain.
 5. **Given** an explicit rejection or dirty/stale draft, **When** the teacher has not reconfirmed it, **Then** no assessment is delivered or graded and automatic re-proposal is suppressed.
 
@@ -137,18 +143,19 @@ The tutoring workflow handles delivery, learner answers, feedback-first follow-u
 - **FR-005**: Answer interpretation MUST recognize only explicit option labels or exact option text. It MUST apply the specified case, Unicode, punctuation, order, and duplicate normalization without guessing semantic answers, and MUST distinguish ambiguous alternatives, content questions, and unrecognized prose from a valid selection.
 - **FR-006**: The grader MUST return pass only for exact set equality after deduplication and order normalization; it MUST return fail for every other selection and MUST require no explanation or confidence value.
 - **FR-007**: Rendering and validation MUST enforce exactly four options, the correct selection instruction, a maximum of two stem sentences, and a maximum of 80 word-like segments, with deterministic boundary errors.
-- **FR-008**: Transfer behavior MUST preserve only the approved `status`/`understanding_level` pairs and define the outcome for every supported progress state and learning event, including initial evidence, repair evidence, spontaneous transfer, contradiction, pass, fail, and no change.
+- **FR-008**: Transfer behavior MUST preserve only the approved `status`/`understanding_level` pairs and define the outcome for every supported progress state and learning event, including initial evidence, demonstrated understanding, repair evidence, spontaneous transfer, contradiction, pass, fail, and no change.
 - **FR-009**: The current assessment state MUST distinguish the assessment identity, accepted-attempt count (`0`, `1`, or `2`), resolution (`open`, `passed`, or `failed`), and previously processed answer identities so duplicate submissions have no new effect. The concrete state representation is defined in the [data model](data-model.md).
 - **FR-010**: Only a valid selection against the current delivered, non-stale, open assessment MUST consume an attempt; clarification, assistance, malformed, undelivered, stale, duplicate, and Guard-deferred inputs MUST consume none.
 - **FR-011**: The first incorrect valid selection MUST return a `retryable` result, accepted-attempt count one, unchanged progress, one remaining attempt, no learning transition, and no terminal feedback.
 - **FR-012**: A correct valid selection on attempt one or two MUST pass exactly once, apply the passing progress outcome once, require feedback, report no remaining attempts, and forbid learner disclosure of any retained key or explanation.
 - **FR-013**: A second incorrect valid selection MUST fail exactly once, apply the failure progress outcome once, require repair, report no remaining attempts, and include terminal feedback; only this outcome authorizes disclosure of the answer and explanation to the learner.
 - **FR-014**: Duplicate submissions and submissions against a passed, failed, or exhausted snapshot MUST not increment attempts, emit a learning transition, or create another feedback chain.
-- **FR-015**: The learning-progress behavior MUST retain the approved four progress pairs and seven event kinds; the attempt lifecycle MUST control when progress changes without changing the approved outcomes.
-- **FR-016**: Wrong-answer recovery MUST begin only after terminal failure and MUST require repair and new learner evidence before selecting a different transfer context; an incorrect attempt or terminal failure alone MUST NOT enter Guard.
+- **FR-015**: The learning-progress behavior MUST retain the approved four progress pairs and eight event kinds. Assessment pass/fail MUST require a valid lifecycle on `covered/good`; pass MUST record the terminal event once even though the pair stays unchanged, and fail MUST move it to `needs_review/basic`. Other starting states MUST reject assessment outcomes.
+- **FR-016**: Wrong-answer recovery MUST begin only after terminal failure and MUST require repair to Partial followed by later demonstrated understanding to Covered before selecting a different transfer context; an incorrect attempt or terminal failure alone MUST NOT enter Guard.
 - **FR-017**: Evidence for this behavior MUST cover valid and invalid decisions, explanation presence and privacy, answer interpretation boundaries, exact answer matching, rendering limits, progress outcomes, and correct-first, incorrect-correct, incorrect-incorrect, duplicate, stale, reload/tab-equivalent, and third-submission behavior.
 - **FR-018**: The shared assessment, attempt, result, feedback, and progress behavior MUST be available to downstream capabilities through one stable domain contract. The concrete exported types and location are specified by the [implementation plan](plan.md) and linked contracts.
 - **FR-019**: This capability MUST determine domain outcomes independently of persistence, authorization, API transport, provider calls, room rendering, evaluation tooling, or release-browser behavior. Those boundaries are specified and verified separately.
+- **FR-020**: Only accepted Partial → Covered `demonstrated_understanding` MUST create an outstanding assessment requirement. Initial/repair signals MUST continue tutoring; direct Pending → Covered understanding and spontaneous transfer MUST complete without assessment. A blocker MUST preserve the outstanding requirement while evidence remains valid, and contradiction MUST invalidate it. Completion and replay handling MUST use evidence and assessment lifecycle as well as the progress pair.
 
 ### Key Entities
 
@@ -169,7 +176,7 @@ The tutoring workflow handles delivery, learner answers, feedback-first follow-u
 
 ### Measurable Outcomes
 
-- **SC-001**: Every one of the 28 approved progress-state/event combinations has a defined result, with no unsupported transition silently accepted.
+- **SC-001**: Every one of the 32 approved progress-state/event combinations has a defined result, with no unsupported transition silently accepted.
 - **SC-002**: Every possible selection of options A-D is graded against representative single- and multiple-answer keys, and only an exact answer set passes.
 - **SC-003**: Answer interpretation and question rendering preserve all documented boundaries: Unicode and format normalization, ambiguity, exact option text, 80 versus 81 word-like segments, and two versus three stem sentences.
 - **SC-004**: Every accepted assessment draft includes a non-empty learner-safe explanation, and every unresolved learner-visible question excludes the key, explanation, transfer basis, rationale, and raw model output. The API and transport representation is covered by the linked contract.

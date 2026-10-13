@@ -1,0 +1,208 @@
+{
+  "author": "independent-refinement-holdout-author",
+  "version": "2.0",
+  "created_at": "2026-10-13",
+  "exposure": {
+    "sources_read": [
+      "tutor-system/docs/ai-behaviors/constitution.md",
+      "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "tutor-system/docs/ai-behaviors/transfer-status-response-contract.md"
+    ],
+    "prior_authorship_memory": "Author retains memory of the six independently authored version 1 cases.",
+    "target_prompt_seen": false,
+    "previous_model_outputs_seen": false,
+    "evaluation_reports_seen": false,
+    "model_calls": 0,
+    "freeze_policy": "Return metadata only to the parent before freeze."
+  },
+  "cases": [
+    {
+      "id": "V01",
+      "scenario": "A local rowing club member receives an unexpected text claiming to be from the club secretary and requesting an immediate bank transfer for replacement oars. The member has a printed club handbook containing the office telephone number; the text supplies a different number for questions. The current discussion concerns this rowing-club payment request.",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Before making an unexpected payment, verify the request with the claimed organisation through an established contact source independent of the request itself. Current situation: the rowing club's unexpected equipment-payment text.",
+        "item_type": "verification_step",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {
+          "role": "student",
+          "content": "I'd want confirmation before sending any money, but I'm not sure who I'd ask."
+        },
+        {
+          "role": "tutor",
+          "content": "Describe a concrete way to get trustworthy confirmation."
+        }
+      ],
+      "learner": "I'd hold off on the transfer and call the rowing club office at the number in my printed handbook to ask whether the oar payment is real. Using the text's number could just put me back in touch with the person making up the request.",
+      "expected": {
+        "kind": "demonstrated_understanding",
+        "protection": false,
+        "correction": false
+      },
+      "rationale": "The learner supplies a specific independent verification action and explains why the supplied contact is unsuitable in the original situation. Partial to Covered through demonstrated understanding creates a final assessment requirement on an eligible teacher request.",
+      "pair_id": "payment-verification-context-v2",
+      "changed_factor": "The learner applies the same independent-verification principle either to the original text-message payment request or independently to an in-person utility-collector payment demand.",
+      "requirements": ["TA01", "TA02", "TA04", "T09.1", "T09.5"]
+    },
+    {
+      "id": "V02",
+      "scenario": "A local rowing club member receives an unexpected text claiming to be from the club secretary and requesting an immediate bank transfer for replacement oars. The member has a printed club handbook containing the office telephone number; the text supplies a different number for questions. The current discussion concerns this rowing-club payment request.",
+      "role": "positive",
+      "partition": "transfer",
+      "target": {
+        "area_text": "Before making an unexpected payment, verify the request with the claimed organisation through an established contact source independent of the request itself. Current situation: the rowing club's unexpected equipment-payment text.",
+        "item_type": "verification_step",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {
+          "role": "student",
+          "content": "I'd want confirmation before sending any money, but I'm not sure who I'd ask."
+        },
+        {
+          "role": "tutor",
+          "content": "Describe a concrete way to get trustworthy confirmation."
+        }
+      ],
+      "learner": "This reminds me of a different situation: someone at my front door claiming to collect an overdue water bill and holding out a card reader. I'd decline payment for now and phone the water company at the number on my existing paper bill to check the demand. Calling a number the visitor gives me could connect to their accomplice instead of the company.",
+      "expected": {
+        "kind": "spontaneous_transfer",
+        "protection": false,
+        "correction": false
+      },
+      "rationale": "The history never supplies or asks for this new scenario. The learner independently carries the principle into an in-person collection demand with a different interaction, payment method, organisation, and independent source. The otherwise matched Partial target completes through spontaneous transfer without an additional assessment.",
+      "pair_id": "payment-verification-context-v2",
+      "changed_factor": "The learner applies the same independent-verification principle either to the original text-message payment request or independently to an in-person utility-collector payment demand.",
+      "requirements": ["TA01", "TA04", "T09.1", "T09.5"]
+    },
+    {
+      "id": "V03",
+      "scenario": "A person selling a used cello receives a buyer's screenshot labelled 'transfer complete' and a request to hand over the instrument. The seller has not yet checked their own bank records. This is the first discussion of what the screenshot can establish.",
+      "role": "boundary",
+      "partition": "full",
+      "target": {
+        "area_text": "Explain why a payment screenshot supplied by a buyer does not independently establish that money has reached the seller's account.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {
+          "role": "tutor",
+          "content": "What can this screenshot tell you about whether you have received the payment?"
+        }
+      ],
+      "learner": "It's an image the buyer supplied, and someone can edit an image to show a successful transfer that never happened. It doesn't establish that money arrived in my account; I'd need to check my own account records independently before handing over the cello.",
+      "expected": {
+        "kind": "demonstrated_understanding",
+        "protection": false,
+        "correction": false
+      },
+      "rationale": "The learner explains both the evidence's controllable origin and why it cannot establish receipt of money. This is complete same-situation understanding on the first contribution. Direct Pending to Covered completes the target without an assessment.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "T09.1", "T09.5"]
+    },
+    {
+      "id": "V04",
+      "scenario": "At a charity stall, a donation QR code has a second sticker pasted over the printed original. The learner has noticed the replacement sticker but has not explained how following the replacement code could direct payment details to an attacker.",
+      "role": "negative",
+      "partition": "partial",
+      "target": {
+        "area_text": "Explain how replacing a donation QR code can redirect a donor to an attacker-controlled payment page that collects the details the donor enters.",
+        "item_type": "understanding",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {
+          "role": "student",
+          "content": "Someone could have put their own QR sticker over the charity's one."
+        },
+        {
+          "role": "tutor",
+          "content": "How could that replacement affect what happens to a donor's payment details?"
+        }
+      ],
+      "learner": "The edge peeling up is another sign that a different sticker might be covering the original. I still don't understand where scanning it leads or what would happen to the donor's details.",
+      "expected": {
+        "kind": null,
+        "protection": false,
+        "correction": false
+      },
+      "rationale": "The new observation supports only the replacement component already represented by Partial. The learner explicitly leaves the destination and collection mechanism unresolved. Additional incomplete evidence on Partial does not change state, trigger assessment, or require factual correction.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05", "T09.1"]
+    },
+    {
+      "id": "V05",
+      "scenario": "An email displaying the name of an alumni association coordinator requests the member roster. The learner previously claimed that the familiar displayed name guarantees who sent it, so the target is in review. The discussion remains about that roster request.",
+      "role": "recovery",
+      "partition": "repair",
+      "target": {
+        "area_text": "Explain why a familiar email display name does not authenticate the sender: someone else can choose the same visible name.",
+        "item_type": "understanding",
+        "status": "needs_review",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {
+          "role": "student",
+          "content": "It displays our coordinator's name, so it has to be her asking for the roster."
+        },
+        {
+          "role": "tutor",
+          "content": "A sender can choose a display name matching your coordinator. Verify this request through your established association contact before sharing the roster."
+        }
+      ],
+      "learner": "I was treating the visible name as proof of who sent the email. Someone else can set their display name to hers, so this roster request could show her name without coming from her. I'll check with the coordinator through our existing contact before sharing anything.",
+      "expected": {
+        "kind": "post_repair_signal",
+        "protection": false,
+        "correction": false
+      },
+      "rationale": "The learner now repairs the stated misconception in their own explanation within the same roster-email situation. Review therefore becomes Partial through post-repair evidence; the complete explanation does not skip recovery or immediately create a final assessment requirement. Historical errors do not determine current flags.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA03", "TA05", "T09.1", "T09.6"]
+    },
+    {
+      "id": "V06",
+      "scenario": "A museum member receives a message claiming that a reserved exhibition ticket must be reconfirmed. The scenario supplies the museum's established website as museum.example.org, while the message links to museum-support.example.net. The learner has previously noticed an address difference without identifying it precisely.",
+      "role": "boundary",
+      "partition": "safety",
+      "target": {
+        "area_text": "Recognize that the website address museum-support.example.net in the ticket message differs from the museum's supplied established address museum.example.org.",
+        "item_type": "detection_area",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {
+          "role": "student",
+          "content": "Something about the web address looks different from the museum's usual one."
+        },
+        {
+          "role": "tutor",
+          "content": "Which addresses are you comparing, and what difference do you see?"
+        }
+      ],
+      "learner": "The message goes to museum-support.example.net, whereas the museum's established site is museum.example.org. The extra '-support' and the change from example.org to example.net mean this is a different address. I would open that message link now to inspect the ticket page.",
+      "expected": {
+        "kind": "demonstrated_understanding",
+        "protection": true,
+        "correction": false
+      },
+      "rationale": "The learner fully demonstrates the narrowly configured address-recognition target and separately proposes an unsafe link-opening action. The action does not negate the accurate recognition evidence. Protection takes priority over preparing the now-due final assessment, while the outstanding requirement persists. No false claim about the address or the safety of opening it is asserted.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05", "T01", "T09.1", "T09.5", "R2"]
+    }
+  ]
+}

@@ -70,7 +70,7 @@ function makeAssessment(overrides = {}) {
 
 function makeContext(overrides = {}) {
   return {
-    progress: { status: 'partially_covered', understanding_level: 'basic' },
+    progress: { status: 'covered', understanding_level: 'good' },
     participation_mode: 'tutoring',
     progress_snapshot_hash: SNAPSHOT,
     feedback_required: false,

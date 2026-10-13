@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const {loadProduction,executeTarget,score,summarize,targetState,eligible}=require('./evaluate.cjs');
+const {loadProduction,executeTarget,score,summarize,targetState,eligible,baselineEligible}=require('./evaluate.cjs');
 const snapshot=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../output/transfer-analysis-eval-20261013/production-edge.json')));
 const production=loadProduction(snapshot);
 function fixture(type='understanding') {
@@ -23,7 +23,8 @@ test('gold full understanding traverses actual handler and reducer and excludes 
   assert.equal(result.calls[0].request.temperature,0);assert.equal(result.calls[0].request.max_tokens,600);assert.equal(result.calls[0].request.enable_thinking,false);
 });
 test('wrong kind fails even with a fluent explanation and valid JSON',async()=>{
-  const c=fixture();const result=await executeTarget(c,production,transport(analysis('initial_signal')));
+  const c=fixture();Object.assign(c.input.items[0],{status:'partially_covered',understanding_level:'basic'});
+  const result=await executeTarget(c,production,transport(analysis('initial_signal')));
   const checks=score(c,result);assert.equal(checks.find(c=>c.metric==='raw_event').status,'fail');assert.equal(checks.find(c=>c.metric==='assessment_route').status,'fail');
 });
 test('legacy detection-area action filtering is measured separately from raw decision',async()=>{
@@ -44,11 +45,28 @@ test('sequence state is consumed rather than resetting to gold prior state',asyn
   const result=await executeTarget(fixture(),production,transport(analysis()),{status:'needs_review',understanding_level:'basic'});
   assert.equal(result.applied.rejected_events[0].rejection_reason,'INELIGIBLE_TRANSITION');assert.equal(result.next_state.status,'needs_review');
 });
-test('safety flags block otherwise eligible partial evidence',()=>{
-  const state=targetState('initial_signal',{status:'pending',understanding_level:'none'});
-  assert.equal(eligible(state,'initial_signal',{protection:false,correction:false}),true);
-  assert.equal(eligible(state,'initial_signal',{protection:true,correction:false}),false);
-  assert.equal(eligible(state,null,{protection:false,correction:false}),false);
+// evaluate.cjs: only developed full understanding starts a final assessment, subject to safety priority.
+test('only Partial to Covered full understanding is eligible and safety flags defer it',()=>{
+  const pending={status:'pending',understanding_level:'none'};
+  const partial={status:'partially_covered',understanding_level:'basic'};
+  const review={status:'needs_review',understanding_level:'basic'};
+  const covered={status:'covered',understanding_level:'good'};
+  const safe={protection:false,correction:false};
+  assert.equal(eligible(partial,covered,'demonstrated_understanding',safe),true);
+  assert.equal(eligible(pending,covered,'demonstrated_understanding',safe),false);
+  assert.equal(eligible(pending,partial,'initial_signal',safe),false);
+  assert.equal(eligible(review,partial,'post_repair_signal',safe),false);
+  assert.equal(eligible(partial,covered,'spontaneous_transfer',safe),false);
+  assert.equal(eligible(covered,covered,null,safe),false);
+  assert.equal(eligible(partial,covered,'demonstrated_understanding',{...safe,protection:true}),false);
+  assert.equal(eligible(partial,covered,'demonstrated_understanding',{...safe,correction:true}),false);
+});
+// evaluate.cjs and assessment-api/index.ts: real handler input must retain the prior state for routing.
+test('full understanding after development reaches Covered and projects assessment readiness',async()=>{
+  const c=fixture();Object.assign(c.input.items[0],{status:'partially_covered',understanding_level:'basic'});
+  const result=await executeTarget(c,production,transport(analysis()));
+  assert.equal(result.http_status,200);assert.equal(result.projected_assessment_due,true);
+  assert.ok(score(c,result).every(check=>check.status==='pass'));
 });
 test('gate includes missing generations and failed pair members',async()=>{
   const c=fixture();c.pair_id='pair';const second={...c,id:'test-2'};
@@ -63,4 +81,16 @@ test('all passing scores cannot confer human label approval',async()=>{
   const result=await executeTarget(c,production,transport(analysis()));
   const summary=summarize(frozen,[{case_id:c.id,repetition:0,result,checks:score(c,result)}]);
   assert.ok(summary.rows.every(r=>r.verdict==='pass'));assert.equal(summary.verdict,'incomplete');
+});
+
+// evaluate.cjs: compare the old and revised routes against one explicit revised gold expectation.
+test('paired routing isolates the timing change without improving semantic scores artificially',async()=>{
+  const c=fixture();Object.assign(c.input.items[0],{status:'partially_covered',understanding_level:'basic'});
+  c.expected.assessment_due=true;
+  const old=await executeTarget(c,production,transport(analysis()),null,baselineEligible);
+  const revised=await executeTarget(c,production,transport(analysis()),null,eligible);
+  assert.equal(score(c,old).find(k=>k.metric==='assessment_route').status,'fail');
+  assert.equal(score(c,revised).find(k=>k.metric==='assessment_route').status,'pass');
+  assert.deepEqual(score(c,old).filter(k=>k.metric!=='assessment_route'),score(c,revised).filter(k=>k.metric!=='assessment_route'));
+  assert.deepEqual(old.calls[0].request,revised.calls[0].request);
 });

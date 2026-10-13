@@ -46,8 +46,8 @@ const expected: Record<LearningEventKind, Array<TransferProgress | 'reject' | 's
     'same',
     { status: 'needs_review', understanding_level: 'basic' },
   ],
-  assessment_pass: ['reject', { status: 'covered', understanding_level: 'good' }, 'reject', 'reject'],
-  assessment_fail: ['reject', { status: 'needs_review', understanding_level: 'basic' }, 'reject', 'reject'],
+  assessment_pass: ['reject', 'reject', 'reject', { status: 'covered', understanding_level: 'good' }],
+  assessment_fail: ['reject', 'reject', 'reject', { status: 'needs_review', understanding_level: 'basic' }],
   no_change: ['same', 'same', 'same', 'same'],
 };
 

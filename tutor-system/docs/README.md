@@ -5,6 +5,7 @@ Document the current tutor-system architecture and development workflows, includ
 - Updated: 2026-10-13
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
+- Final-assessment policy implementation base commit: `7737cfb`.
 
 # Tutor-System Documentation Hub
 
@@ -33,6 +34,8 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Transfer status response contract](./ai-behaviors/transfer-status-response-contract.md)** - Item-level evidence, direct coverage, transfer, and open classification limits
 - **[Transfer analysis evaluation](./ai-behaviors/transfer-analysis-evaluation-record.md)** - Production-grounded gold-label baseline, per-class results, consumer effects, and label-review limits
 - **[Transfer analysis evaluation plan](./ai-behaviors/transfer-analysis-evaluation-plan.md)** - Classification metrics, production provenance, holdouts, repetitions, and frozen gates
+- **[Final assessment evaluation](./ai-behaviors/transfer-final-assessment-evaluation-record.md)** - Partial-only routing comparison, preserved model outputs, and remaining conformance gaps
+- **[Final assessment implementation](./doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md)** - Local SQL/application validation and pending hosted release
 - **[Direct understanding release record](./doc_update_record/documentation_update_record_v2026_10_04_direct_understanding_status.md)** - Staging and production deployment evidence and unresolved status-event issue
 - **[Transfer refactor documentation record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_refactor.md)** - Updated behavior docs, staging migration status, and verification evidence
 - **[Transfer refactor merge record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_merge.md)** - Merged contracts, migration history, and integration checks
@@ -60,6 +63,7 @@ This directory contains comprehensive architectural and implementation documenta
 ### Testing & Quality Assurance
 - **[Browser E2E testing](./browser-e2e-testing.md)** - Test layers, staging setup, live journeys, and evidence retention
 - **[supabase-release-workflow.md](./supabase-release-workflow.md)** - Database migration validation and Edge Function release checks across local, staging, and production
+- **[Transfer assessment room QA guide](./transfer-assessment-qa-guide.md)** - Human-readable setup, workflows, privacy checks, grading paths, recovery cases, and evidence requirements
 - **[Live snapshot/restore update](./doc_update_record/documentation_update_record_v2026_09_28_live_snapshot_restore.md)** - Snapshot and restore evidence, corrected local setup steps, and remaining migration parity gates
 - **[Staging schema sync update](./doc_update_record/documentation_update_record_v2026_09_29_staging_schema_sync.md)** - Schema-only staging bootstrap and the production assessment RPC mismatch
 - **[testing-strategy.md](./testing-strategy.md)** - Complete testing documentation for Tasks 1-3, including test coverage, execution instructions, and maintenance guidelines

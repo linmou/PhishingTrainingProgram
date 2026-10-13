@@ -2,7 +2,9 @@
 
 **Intent**: Define the assessment, attempt, result, progress, and fixture records shared by deterministic implementation and downstream consumers.
 **Date**: 2026-09-22
-**Revised**: 2026-09-30
+**Revised**: 2026-10-13
+
+Policy authority: [Partial-only final assessment contract](../../tutor-system/docs/ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding), including its upstream principle rationale and human decision provenance.
 
 ## Contract Records
 
@@ -65,24 +67,26 @@ Valid pairs are closed and exhaustive:
 | Status | Understanding level | Meaning |
 |---|---|---|
 | `pending` | `none` | No transfer-policy evidence accepted. |
-| `partially_covered` | `basic` | Initial or post-repair evidence exists; transfer check may be eligible. |
+| `partially_covered` | `basic` | Initial or post-repair evidence exists; tutoring continues. |
 | `needs_review` | `basic` | Transfer failed or later contradiction reopened the concept. |
-| `covered` | `good` | The local transfer criterion was met; not permanent mastery. |
+| `covered` | `good` | Full understanding exists; an assessment is still required if reached from Partial through `demonstrated_understanding`. |
 
 No other pair, `excellent`, parallel mastery field, or legacy reinterpretation is valid for `transfer_v1`.
 
 ## Complete Reducer Matrix
 
-The seven event kinds produce 28 required cells. `apply` and `no_change` preserve the pair shape; `reject` is reserved for invalid state/event combinations.
+The eight event kinds produce 32 required cells. `apply` and `no_change` preserve the pair shape; `reject` is reserved for invalid state/event combinations. Assessment pass is an applied terminal event even though its next pair equals its prior pair.
 
-| Current pair | `initial_signal` | `post_repair_signal` | `spontaneous_transfer` | `contradiction` | `assessment_pass` | `assessment_fail` | `no_change` |
-|---|---|---|---|---|---|---|---|
-| `pending/none` | apply -> `partially_covered/basic` | no change | apply -> `covered/good` | no change | reject | reject | no change |
-| `partially_covered/basic` | no change | no change | apply -> `covered/good` | apply -> `needs_review/basic` | apply -> `covered/good` | apply -> `needs_review/basic` | no change |
-| `needs_review/basic` | no change | apply -> `partially_covered/basic` | apply -> `covered/good` | no change | reject | reject | no change |
-| `covered/good` | no change | no change | no change | apply -> `needs_review/basic` | reject | reject | no change |
+| Current pair | `initial_signal` | `demonstrated_understanding` | `post_repair_signal` | `spontaneous_transfer` | `contradiction` | `assessment_pass` | `assessment_fail` | `no_change` |
+|---|---|---|---|---|---|---|---|---|
+| `pending/none` | apply -> `partially_covered/basic` | apply -> `covered/good` | no change | apply -> `covered/good` | no change | reject | reject | no change |
+| `partially_covered/basic` | no change | apply -> `covered/good` | no change | apply -> `covered/good` | apply -> `needs_review/basic` | reject | reject | no change |
+| `needs_review/basic` | no change | no change | apply -> `partially_covered/basic` | apply -> `covered/good` | no change | reject | reject | no change |
+| `covered/good` | no change | no change | no change | no change | apply -> `needs_review/basic` | apply -> `covered/good` | apply -> `needs_review/basic` | no change |
 
 The table is the expected deterministic behavior to encode in fixtures and tests. Invalid serialized state pairs are rejected before matrix dispatch.
+
+Readiness and completion are derived from accepted evidence and assessment lifecycle. A Partial → Covered understanding event creates a due assessment; direct Pending → Covered understanding and spontaneous transfer complete without one. Covered plus a due or open assessment remains active. Deferral preserves the due requirement, passing resolves it exactly once, and contradiction invalidates it. The trusted lifecycle validates assessment scope and prior terminal application before invoking the reducer.
 
 ## Answer Resolution Outcomes
 

@@ -86,7 +86,7 @@ function hasCommittedOutcome(
 function attemptContext(acceptedAttemptCount: 0 | 1) {
   const assessmentId = "assessment-1";
   return {
-    progress: { status: "partially_covered", understanding_level: "basic" },
+    progress: { status: "covered", understanding_level: "good" },
     participation_mode: "tutoring",
     progress_snapshot_hash: "snapshot-1",
     feedback_required: false,
@@ -170,6 +170,9 @@ for (const testCase of CASES) {
         }),
       },
       rpc: async (name, args) => {
+        if (name === "join_room_v1") {
+          return { data: { room_role: "student" }, error: null };
+        }
         rpcCalls.push({ name, args });
         if (name === "get_transfer_assessment_processing_context_v1") {
           return { data: { context, assessment, answer }, error: null };
