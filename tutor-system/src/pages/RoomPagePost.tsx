@@ -687,16 +687,25 @@ const RoomPagePost: React.FC = () => {
             return;
         }
         let active = true;
-        const checklistRequest = user.current_role === 'tutor'
-            ? ChecklistService.getActiveTransferChecklistForRoom(currentRoom.id)
-            : ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
-        checklistRequest
-            .then(checklist => {
-                if (active) setWaitingForTargets(!checklist ||
-                    checklist.detection_areas.length + checklist.verification_steps.length === 0);
-            })
-            .catch(() => { if (active) setWaitingForTargets(true); });
-        return () => { active = false; };
+        let retryTimer: number | undefined;
+        const checkTargets = async () => {
+            let waiting = true;
+            try {
+                const checklist = user.current_role === 'tutor'
+                    ? await ChecklistService.getActiveTransferChecklistForRoom(currentRoom.id)
+                    : await ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
+                waiting = !checklist || checklist.detection_areas.length + checklist.verification_steps.length === 0;
+            } catch {
+                // Keep the waiting state and retry while learner target setup is unavailable.
+            }
+            if (!active) return;
+            setWaitingForTargets(waiting);
+            if (waiting && user.current_role === 'student') {
+                retryTimer = window.setTimeout(checkTargets, 3000);
+            }
+        };
+        void checkTargets();
+        return () => { active = false; window.clearTimeout(retryTimer); };
     }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, messages.length, showChecklist]);
     useEffect(() => {
         if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'tutor' || !showChecklist) {
