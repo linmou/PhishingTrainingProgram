@@ -8,6 +8,7 @@ export const ASSESSMENT_API_OPERATIONS = [
   'analyze_message',
   'prepare_turn',
   'send_reviewed',
+  'read_review',
   'process_message',
 ] as const;
 

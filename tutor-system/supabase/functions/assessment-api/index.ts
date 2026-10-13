@@ -14,7 +14,7 @@ import type { LearningEventKind, TransferProgress } from '../../../src/services/
 
 const OPERATIONS = new Set([
   'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
-  'prepare_turn', 'send_reviewed', 'process_message',
+  'prepare_turn', 'send_reviewed', 'read_review', 'process_message',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
 const PROVIDER_MODEL = 'qwen3.5-flash';
@@ -565,6 +565,14 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
     try {
       let data: unknown;
       switch (body.operation) {
+        case 'read_review':
+          assertTeacher(principal);
+          data = await rpc(deps, 'get_transfer_assessment_review_v1', {
+            p_room_id: assertRoom(principal, body.room_id),
+            p_assessment_id: requiredString(body.assessment_id),
+            p_actor_id: principal.application_user_id,
+          });
+          break;
         case 'join_room':
           data = await rpc(deps, 'join_room_v1', {
             p_room_id: requiredString(body.room_id),

@@ -128,6 +128,12 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
         options: options.map((option) => ({ id: option.id, text: option.text.trim() })),
         correct_option_ids: uniqueSelections(correctOptionIds),
         learner_safe_explanation: explanation.trim(),
+        transfer_basis: {
+          ...initialAssessment.transfer_basis,
+          changed_context: stem.trim() === initialAssessment.stem.trim()
+            ? initialAssessment.transfer_basis.changed_context
+            : stem.trim(),
+        },
       },
     };
 
@@ -166,6 +172,13 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
       </header>
 
       <div className="assessment-draft-editor__body">
+        <details>
+          <summary>Transfer context</summary>
+          <p><strong>Concept:</strong> {initialAssessment.transfer_basis.concept_rule}</p>
+          <p><strong>Original context:</strong> {initialAssessment.transfer_basis.source_context}</p>
+          <p><strong>New context:</strong> {stem.trim() === initialAssessment.stem.trim()
+            ? initialAssessment.transfer_basis.changed_context : stem}</p>
+        </details>
         <label className="assessment-draft-editor__field">
           <span>Question</span>
           <textarea
