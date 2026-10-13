@@ -12,4 +12,6 @@ Tutor notes on a transfer checklist use the trusted `edit_learning_progress` ope
 
 The expanded item now exposes an **Understanding** selector. It submits `set_understanding` and is disabled by the Guard progression lock. On 2026-10-13, live policy inspection confirmed transfer targets allow only none, basic, and good; the selector now omits excellent for transfer targets. Ordinary targets retain excellent. Focused tests cover both sets of choices.
 
+Trusted edits apply the returned status and understanding pair together, so automatic normalization by the database is visible immediately in the item and completion summary.
+
 Validation: focused checklist hook and component suites cover retry recovery, synchronization after learner join, concurrent refreshes, note rejection, understanding edits, and Guard locking. Live database acceptance and browser verification remain part of the parent QA run; these frontend tests do not establish a deployment result.
