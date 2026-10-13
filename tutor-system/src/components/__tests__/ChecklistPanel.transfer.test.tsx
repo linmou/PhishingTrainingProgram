@@ -156,7 +156,7 @@ describe('useChecklist transfer progress ownership', () => {
         enabled: true,
         studentId,
       }),
-      { initialProps: { studentId: null } },
+      { initialProps: { studentId: null as string | null } },
     );
     await act(async () => undefined);
     rerender({ studentId: LEARNER_A_ID });
@@ -166,11 +166,11 @@ describe('useChecklist transfer progress ownership', () => {
         { area_text: 'Check the sender', item_type: 'detection_area', priority: 'important' },
         { area_text: 'Use the official support channel', item_type: 'verification_step', priority: 'important' },
       ]));
-    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
+    await waitFor(() => expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull());
   });
 
-  // useChecklist.ts: target submission stays local-first even when a learner ID is already known.
-  it('keeps a local draft visible before learner-owned synchronization', async () => {
+  // useChecklist.ts: submitting targets with a learner present synchronizes without remounting.
+  it('synchronizes newly submitted targets when the learner is already present', async () => {
     const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID, {
       enabled: true,
       studentId: LEARNER_A_ID,
@@ -180,9 +180,9 @@ describe('useChecklist transfer progress ownership', () => {
       await result.current.handleManualSubmit(['Check the sender'], ['Use the official channel']);
     });
 
-    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toContain('Check the sender');
-    expect(result.current.checklist?.id).toBe(`draft-${TRANSFER_ROOM_ID}`);
-    expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
+    expect(result.current.checklist?.id).toBe(CHECKLIST_ID);
+    expect(checklistApi.initializeTransferChecklistForStudent).toHaveBeenCalledTimes(1);
   });
 
   // useChecklist.ts: a failed promotion must retain the tutor's usable draft for a later retry.
@@ -193,7 +193,7 @@ describe('useChecklist transfer progress ownership', () => {
         enabled: true,
         studentId,
       }),
-      { initialProps: { studentId: null } },
+      { initialProps: { studentId: null as string | null } },
     );
 
     await act(async () => {
@@ -205,6 +205,69 @@ describe('useChecklist transfer progress ownership', () => {
     expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toContain('Check the sender');
     expect(result.current.checklist?.id).toBe(`draft-${TRANSFER_ROOM_ID}`);
     await waitFor(() => expect(result.current.error).toMatch(/learner session not ready/i));
+  });
+
+  // useChecklist.ts: repeated refresh clicks cannot submit duplicate initialization calls.
+  it('keeps one synchronization request in flight and preserves the draft until it succeeds', async () => {
+    window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
+      detectionAreas: ['Check the sender'], verificationSteps: [],
+    }));
+    let completeSync!: (value: typeof transferChecklist) => void;
+    checklistApi.initializeTransferChecklistForStudent.mockImplementationOnce(() => new Promise(resolve => {
+      completeSync = resolve;
+    }));
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID, { enabled: true, studentId: LEARNER_A_ID }));
+    await act(async () => {
+      await Promise.all([result.current.refreshChecklist(), result.current.refreshChecklist()]);
+    });
+    expect(checklistApi.initializeTransferChecklistForStudent).toHaveBeenCalledTimes(1);
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).not.toBeNull();
+    await act(async () => { completeSync(transferChecklist); });
+    expect(result.current.checklist?.id).toBe(CHECKLIST_ID);
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
+  });
+
+  // useChecklist.ts: a slow request from an old room or learner cannot block or overwrite the new scope.
+  it.each(['room', 'learner'])('ignores a delayed initialization after changing %s', async (changedScope) => {
+    const nextRoom = changedScope === 'room' ? 'room-b' : TRANSFER_ROOM_ID;
+    const nextLearner = changedScope === 'learner' ? LEARNER_B_ID : LEARNER_A_ID;
+    for (const room of [TRANSFER_ROOM_ID, nextRoom]) {
+      window.localStorage.setItem(`room-learning-target-draft:${room}`, JSON.stringify({
+        detectionAreas: ['Check the sender'], verificationSteps: [],
+      }));
+    }
+    let finishOld!: (value: typeof transferChecklist) => void;
+    let finishNew!: (value: typeof transferChecklist) => void;
+    checklistApi.initializeTransferChecklistForStudent
+      .mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve; }))
+      .mockImplementationOnce(() => new Promise(resolve => { finishNew = resolve; }));
+    const { result, rerender } = renderHook(({ room, student }) => useChecklist(room, {
+      enabled: true, studentId: student,
+    }), { initialProps: { room: TRANSFER_ROOM_ID as string, student: LEARNER_A_ID as string } });
+    rerender({ room: nextRoom, student: nextLearner });
+    expect(checklistApi.initializeTransferChecklistForStudent).toHaveBeenCalledTimes(2);
+    await act(async () => { finishOld(transferChecklist); });
+    expect(result.current.checklist?.id).not.toBe(CHECKLIST_ID);
+    expect(result.current.loading).toBe(true);
+    expect(window.localStorage.getItem(`room-learning-target-draft:${nextRoom}`)).not.toBeNull();
+    const nextChecklist = buildChecklist({ id: 'next-checklist', room_id: nextRoom, student_id: nextLearner });
+    await act(async () => { finishNew(nextChecklist); });
+    expect(result.current.checklist?.id).toBe('next-checklist');
+    expect(result.current.checklist?.student_id).toBe(nextLearner);
+    expect(result.current.loading).toBe(false);
+  });
+
+  // useChecklist.ts: empty persisted drafts cannot create a learner-owned checklist.
+  it('does not initialize an empty saved draft', async () => {
+    window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
+      detectionAreas: ['  '], verificationSteps: [],
+    }));
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID, {
+      enabled: true, studentId: LEARNER_A_ID,
+    }));
+    await act(async () => { await result.current.refreshChecklist(); });
+    expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(false);
   });
 
   // useChecklist.ts: an ownerless server projection cannot hide a valid tutor-local draft.
@@ -246,6 +309,12 @@ describe('useChecklist transfer progress ownership', () => {
     expect(await screen.findByText('Check the sender')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText(/saved locally/i)).toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Retry sync' })).toBeInTheDocument();
+    checklistApi.initializeTransferChecklistForStudent.mockResolvedValueOnce(transferChecklist);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry sync' }));
+    await screen.findByText('Verify payment requests');
+    expect(checklistApi.initializeTransferChecklistForStudent).toHaveBeenCalledTimes(2);
+    expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retry sync' })).not.toBeInTheDocument();
   });
 
   it('fails closed when the server returns transfer progress for a different learner', async () => {
@@ -317,7 +386,8 @@ describe('useChecklist transfer progress ownership', () => {
     }));
   });
 
-  it('still allows a non-progress transfer item edit such as a tutor note', async () => {
+  // useChecklist.ts: notes must use the trusted writer just like target metadata.
+  it('saves a tutor note through the trusted edit API without changing progress', async () => {
     const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID));
     await act(async () => {
       await result.current.refreshChecklist();
@@ -327,7 +397,25 @@ describe('useChecklist transfer progress ownership', () => {
       await result.current.updateItem(CHECKLIST_ITEM_ID, { tutor_notes: 'Revisit next session' });
     });
 
-    expect(checklistApi.update).toHaveBeenCalledWith(CHECKLIST_ITEM_ID, { tutor_notes: 'Revisit next session' });
+    expect(checklistApi.update).not.toHaveBeenCalled();
+    expect(transferAssessmentService.editLearningProgress).toHaveBeenCalledWith({
+      roomId: TRANSFER_ROOM_ID, itemId: CHECKLIST_ITEM_ID, action: 'edit_item',
+      updates: { tutor_notes: 'Revisit next session' },
+    });
+    expect(result.current.checklist?.detection_areas[0]).toMatchObject({
+      tutor_notes: 'Revisit next session', status: 'partially_covered', understanding_level: 'basic',
+    });
+  });
+
+  // useChecklist.ts: a rejected trusted write keeps saved notes and surfaces the error.
+  it('preserves existing notes when the trusted edit is rejected', async () => {
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID));
+    await act(async () => { await result.current.refreshChecklist(); });
+    (transferAssessmentService.editLearningProgress as jest.Mock).mockRejectedValueOnce(new Error('Progress is locked'));
+    await act(async () => { await result.current.updateItem(CHECKLIST_ITEM_ID, { tutor_notes: 'Unsaved note' }); });
+    expect(result.current.checklist?.detection_areas[0].tutor_notes).toBe('');
+    expect(result.current.error).toBe('Progress is locked');
+    expect(checklistApi.update).not.toHaveBeenCalled();
   });
 
   it('leaves legacy room-shared progress writes unchanged', async () => {
@@ -374,6 +462,19 @@ describe('ChecklistPanel transfer presentation', () => {
 
     expect(container.querySelector('.status-select')).toBeInTheDocument();
     expect(container.querySelector('.status-select')).toHaveValue('partially_covered');
+  });
+
+  // ChecklistPanel.tsx: a visible understanding control writes through the trusted API.
+  it('lets the tutor set understanding on the assessment checklist', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
+    renderPanel();
+    await expandFirstItem();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Understanding:' }), { target: { value: 'good' } });
+    await waitFor(() => expect(transferAssessmentService.editLearningProgress).toHaveBeenCalledWith({
+      roomId: TRANSFER_ROOM_ID, itemId: CHECKLIST_ITEM_ID, action: 'set_understanding',
+      updates: { understanding_level: 'good' },
+    }));
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Understanding:' })).toHaveValue('good'));
   });
 
   it('lets the tutor edit and reprioritize a shared assessment target', async () => {
@@ -433,6 +534,7 @@ describe('ChecklistPanel transfer presentation', () => {
 
     expect(screen.getAllByRole('status').some(node => /Guard Mode is active/i.test(node.textContent || ''))).toBe(true);
     expect(container.querySelector('.priority-select')).toBeDisabled();
+    expect(screen.getByRole('combobox', { name: 'Understanding:' })).toBeDisabled();
     expect(screen.getByText('Verify payment requests')).toBeInTheDocument();
   });
 

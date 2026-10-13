@@ -36,6 +36,7 @@ interface ChecklistPanelProps {
 interface ChecklistItemComponentProps {
   item: ChecklistItem;
   onStatusChange: (itemId: string, newStatus: ChecklistItem['status']) => void;
+  onUnderstandingChange: (itemId: string, level: ChecklistItem['understanding_level']) => void;
   onPriorityChange: (itemId: string, newPriority: ChecklistItem['priority']) => void;
   onAddNote: (itemId: string, note: string) => void;
   onViewEvidence: (itemId: string) => void;
@@ -68,6 +69,7 @@ const serializeChecklistItem = (item: ChecklistItem) => ({
 const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   item,
   onStatusChange,
+  onUnderstandingChange,
   onPriorityChange,
   onAddNote,
   onViewEvidence,
@@ -173,8 +175,9 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
         <div className="checklist-item-details">
           <div className="checklist-item-controls-expanded">
             <div className="control-group">
-              <label>Status:</label>
+              <label htmlFor={`status-${item.id}`}>Status:</label>
               <select
+                id={`status-${item.id}`}
                 value={item.status}
                 onChange={(e) => onStatusChange(item.id, e.target.value as ChecklistItem['status'])}
                 className="status-select"
@@ -184,6 +187,22 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 <option value="partially_covered">Partially Covered</option>
                 <option value="covered">Covered</option>
                 <option value="needs_review">Needs Review</option>
+              </select>
+            </div>
+
+            <div className="control-group">
+              <label htmlFor={`understanding-${item.id}`}>Understanding:</label>
+              <select
+                id={`understanding-${item.id}`}
+                value={item.understanding_level || 'none'}
+                onChange={(e) => onUnderstandingChange(item.id, e.target.value as ChecklistItem['understanding_level'])}
+                className="understanding-select"
+                disabled={progressLocked}
+              >
+                <option value="none">None</option>
+                <option value="basic">Basic</option>
+                <option value="good">Good</option>
+                <option value="excellent">Excellent</option>
               </select>
             </div>
 
@@ -350,6 +369,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     } catch (err) {
       console.error('Failed to update priority:', err);
     }
+  };
+
+  const handleUnderstandingChange = async (itemId: string, level: ChecklistItem['understanding_level']) => {
+    if (progressControlsLocked) return;
+    await updateItem(itemId, { understanding_level: level });
   };
 
   const handleAddNote = async (itemId: string, note: string) => {
@@ -654,6 +678,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       key={item.id}
                       item={item}
                       onStatusChange={handleStatusChange}
+                      onUnderstandingChange={handleUnderstandingChange}
                       onPriorityChange={handlePriorityChange}
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
@@ -674,6 +699,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       key={item.id}
                       item={item}
                       onStatusChange={handleStatusChange}
+                      onUnderstandingChange={handleUnderstandingChange}
                       onPriorityChange={handlePriorityChange}
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
@@ -694,6 +720,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
                       key={item.id}
                       item={item}
                       onStatusChange={handleStatusChange}
+                      onUnderstandingChange={handleUnderstandingChange}
                       onPriorityChange={handlePriorityChange}
                       onAddNote={handleAddNote}
                       onViewEvidence={handleViewEvidence}
