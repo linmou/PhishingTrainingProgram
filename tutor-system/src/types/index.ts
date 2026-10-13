@@ -279,6 +279,7 @@ export interface RoomContextType {
         checklistId: string;
         itemId: string;
         focusStudentMessageId: string;
+        itemLabel?: string;
     } | null;
     confirmTransferDraft: (decision: TransferAssessmentDraft) => Promise<void>;
     finalMode: TutorResponseMode;

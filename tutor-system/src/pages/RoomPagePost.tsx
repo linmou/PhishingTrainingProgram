@@ -999,6 +999,7 @@ const RoomPagePost: React.FC = () => {
                 {user?.current_role === 'tutor' && canUseAI && transferDraft && (
                     <AssessmentDraftEditor
                         decision={transferDraft.decision}
+                        itemLabel={transferDraft.itemLabel}
                         onSubmit={confirmTransferDraft}
                         // Discarding is UI-local: there is no draft row, so nothing is persisted.
                         onCancel={clearAISuggestion}

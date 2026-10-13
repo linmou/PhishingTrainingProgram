@@ -34,6 +34,8 @@ import {
   reviewedDelivery,
   transferChecklist,
   transferRoom,
+  deliveredAnswerRow,
+  deliveredQuestionRow,
 } from '../../test-support/transferRoomFixtures';
 import type { TransferAssessmentDraft } from '../../types/assessment';
 
@@ -113,6 +115,15 @@ describe('RoomContext teacher transfer review lifecycle', () => {
                 { id: LEARNER_A_ID, display_name: 'Learner A', current_role: 'student' },
               ],
               error: null,
+            }),
+          }),
+        };
+      }
+      if (table === 'ai_suggestion_feedback') {
+        return {
+          select: jest.fn().mockReturnValue({
+            eq: jest.fn().mockReturnValue({
+              order: jest.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         };
@@ -199,6 +210,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.studentId).toBe(LEARNER_A_ID);
     expect(room!.transferDraft!.checklistId).toBe(CHECKLIST_ID);
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
+    expect(room!.transferDraft!.itemLabel).toBe('Verify payment requests');
     expect(generateTutorSuggestion).not.toHaveBeenCalled();
   });
 
@@ -218,6 +230,45 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
     expect(room!.transferDraft).toBeNull();
     expect(generateTutorSuggestion).toHaveBeenCalledTimes(1);
+  });
+
+  // RoomContext must route persisted graded answers to tutor feedback, including
+  // answers restored after reload, without running ordinary evidence analysis.
+  it.each(['B', 'A'])('drafts feedback for a persisted assessment answer %s', async (answer) => {
+    mockTables([
+      learnerAMessageRow,
+      deliveredQuestionRow,
+      { ...deliveredAnswerRow, content: answer },
+    ]);
+    (transferAssessmentService.analyzeMessage as jest.Mock).mockRejectedValue(new Error('INVALID_SCOPE'));
+    (generateTutorSuggestion as jest.Mock).mockResolvedValue({
+      success: true,
+      suggestion: 'Tutor feedback',
+      decision: { mode: 'tutoring', instruction: 'correction', suggested_response: 'Tutor feedback' },
+      contextMessages: [deliveredAnswerRow.id],
+    });
+    await mountRoom();
+
+    await act(async () => { await room!.generateAIResponse(); });
+
+    expect(transferAssessmentService.analyzeMessage).not.toHaveBeenCalled();
+    expect(prepareAssessment).not.toHaveBeenCalled();
+    expect(room!.transferDraft).toBeNull();
+    expect(room!.aiDecision?.instruction).toBe('correction');
+    expect(generateTutorSuggestion).toHaveBeenCalledWith(
+      TRANSFER_ROOM_ID, 'tutor-1', undefined, { focusStudentMessage: answer }
+    );
+
+    // Realtime replay of the persisted answer must retain its assessment identity.
+    await act(async () => {
+      messageInsertHandler!({ new: { ...deliveredAnswerRow, content: answer } });
+      room!.clearAISuggestion();
+    });
+    await act(async () => { await room!.generateAIResponse(undefined, deliveredAnswerRow.id); });
+    expect(room!.messages.filter(message => message.id === deliveredAnswerRow.id)).toHaveLength(1);
+    expect(transferAssessmentService.analyzeMessage).not.toHaveBeenCalled();
+    expect(prepareAssessment).not.toHaveBeenCalled();
+    expect(generateTutorSuggestion).toHaveBeenCalledTimes(2);
   });
 
   it('sends the edited decision with the prepared scope exactly once', async () => {
@@ -276,7 +327,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.messages.map((message) => message.id)).toContain('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
     expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
     expect(Array.from(new Set((supabase.from as jest.Mock).mock.calls.map(([table]) => table))).sort())
-      .toEqual(['messages', 'rooms', 'users']);
+      .toEqual(['ai_suggestion_feedback', 'messages', 'rooms', 'users']);
   });
 
   it('refuses an assessment turn with no checklist item before calling the service', async () => {

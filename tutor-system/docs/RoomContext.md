@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-04. Prior implementation commit: 2988dd0. -->
+<!-- Updated: 2026-10-12. Baseline commit: e67a509e16a15521d8d8b2c3d6e96e3bb452d749. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -29,6 +29,12 @@ const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
 The AI review state contains `rawDecision`, `finalMode`, and `finalResponse` in addition to the legacy `aiSuggestion` display value. Tutors can edit wording and rectify the mode independently. A reviewed send uses one `send_reviewed_tutor_response` RPC, adopts the returned message and room state, and clears the review only after success; a failed send leaves the draft and review state intact.
 
 Room mode updates are received through the room realtime subscription. Historical message identity is derived from each message's persisted `response_mode`, so a prior Guard response remains `Security Supervisor` after the room returns to tutoring. Realtime message insertion is de-duplicated by message ID because an atomic send can be received both from the RPC response and the subscription.
+
+### Feedback after transfer answers
+
+When the selected learner message carries a persisted assessment ID, AI generation routes directly to the tutor suggestion workflow. Assessment answers have already entered grading and must not be sent to ordinary evidence analysis or assessment preparation, which reject that message scope. This routing also applies after reload and duplicate realtime delivery. Ordinary learner messages continue through evidence analysis and assessment preparation.
+
+Prepared review drafts carry the selected learning target's label from the loaded checklist so the editor identifies the target being assessed.
 
 ### Message Processing Pipeline
 
