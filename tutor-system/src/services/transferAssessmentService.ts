@@ -32,6 +32,7 @@ export interface TutorAssessmentReview {
 }
 
 export interface PublicMessageDTO {
+  assessment_lifecycle?: string | null;
   id: string;
   room_id: string;
   user_id: string;
@@ -191,6 +192,7 @@ export function toPublicMessageDTO(value: unknown): PublicMessageDTO {
     ai_response_time_ms: typeof source.ai_response_time_ms === 'number' ? source.ai_response_time_ms : null,
     parent_message_id: nullableString(source.parent_message_id),
     response_mode: nullableString(source.response_mode),
+    assessment_lifecycle: nullableString(source.assessment_lifecycle),
     assessment: assessmentValue == null ? null : publicAssessment(assessmentValue),
     created_at: requiredString(source.created_at),
   };

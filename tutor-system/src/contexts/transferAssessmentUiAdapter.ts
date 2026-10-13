@@ -37,6 +37,7 @@ export interface PublicQuestionView {
   stem: string;
   options: AssessmentOption[];
   selectionType: AssessmentSelectionType;
+  lifecycle?: 'delivered' | 'passed' | 'failed' | 'cancelled' | 'legacy_incomplete';
 }
 
 /**
@@ -199,6 +200,8 @@ export function publicQuestionFromStoredRow(
     stem: assessment.stem,
     options: orderedOptions(assessment.options) as AssessmentOption[],
     selectionType: assessment.selection_type,
+    ...(['delivered', 'passed', 'failed', 'cancelled', 'legacy_incomplete'].includes(String(source.assessment_lifecycle))
+      ? { lifecycle: source.assessment_lifecycle as PublicQuestionView['lifecycle'] } : {}),
   };
 }
 

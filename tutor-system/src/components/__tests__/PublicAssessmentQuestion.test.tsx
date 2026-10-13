@@ -35,6 +35,23 @@ const processedAnswer = (overrides: Partial<ProcessedMessageDTO> = {}) => answer
 });
 
 describe('PublicAssessmentQuestion', () => {
+  it('restores a cancelled question without allowing another answer or revealing a key', () => {
+    const view = projectRoomMessage({ ...deliveredQuestionRow, assessment_lifecycle: 'cancelled' }, deliveredPublicAssessment);
+    render(<PublicAssessmentQuestion question={view.publicQuestion!} canAnswer />);
+    expect(screen.getByRole('status')).toHaveTextContent('No attempt was counted.');
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+    expect(screen.queryByText(/Correct option/)).not.toBeInTheDocument();
+  });
+
+  it('keeps ambiguous answers open and explains the non-consuming retry', () => {
+    const view = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    render(<PublicAssessmentQuestion question={view.publicQuestion!} canAnswer answerLifecycle={processedAnswer({
+      processing_state: 'rejected', answer_outcome: null, code: 'AMBIGUOUS_SELECTION', terminal: false,
+      attempts_used: 0, attempts_remaining: 2,
+    })} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('No attempt was counted.');
+    expect(screen.getAllByRole('radio')[0]).toBeEnabled();
+  });
   it('renders the stem, the single-choice instruction, and the four options in order', () => {
     const view = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
 
