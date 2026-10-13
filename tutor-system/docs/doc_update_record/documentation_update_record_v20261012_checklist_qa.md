@@ -10,6 +10,6 @@ The room now also checks target readiness for tutors and displays a setup remind
 
 Tutor notes on a transfer checklist use the trusted `edit_learning_progress` operation with action `edit_item`, as do other target metadata edits. A rejected write preserves the displayed saved value and shows the error. Legacy checklist writes retain their existing service.
 
-The expanded item now exposes an **Understanding** selector for none, basic, good, and excellent. It submits `set_understanding` and is disabled by the Guard progression lock.
+The expanded item now exposes an **Understanding** selector. It submits `set_understanding` and is disabled by the Guard progression lock. On 2026-10-13, live policy inspection confirmed transfer targets allow only none, basic, and good; the selector now omits excellent for transfer targets. Ordinary targets retain excellent. Focused tests cover both sets of choices.
 
 Validation: focused checklist hook and component suites cover retry recovery, synchronization after learner join, concurrent refreshes, note rejection, understanding edits, and Guard locking. Live database acceptance and browser verification remain part of the parent QA run; these frontend tests do not establish a deployment result.

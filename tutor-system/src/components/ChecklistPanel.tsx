@@ -202,7 +202,7 @@ const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
                 <option value="none">None</option>
                 <option value="basic">Basic</option>
                 <option value="good">Good</option>
-                <option value="excellent">Excellent</option>
+                {!transferPolicy && <option value="excellent">Excellent</option>}
               </select>
             </div>
 

@@ -377,12 +377,12 @@ describe('useChecklist transfer progress ownership', () => {
     });
 
     await act(async () => {
-      await result.current.updateItem(CHECKLIST_ITEM_ID, { understanding_level: 'excellent' });
+      await result.current.updateItem(CHECKLIST_ITEM_ID, { understanding_level: 'good' });
     });
 
     expect(checklistApi.update).not.toHaveBeenCalled();
     expect(transferAssessmentService.editLearningProgress).toHaveBeenCalledWith(expect.objectContaining({
-      roomId: TRANSFER_ROOM_ID, itemId: CHECKLIST_ITEM_ID, updates: { understanding_level: 'excellent' },
+      roomId: TRANSFER_ROOM_ID, itemId: CHECKLIST_ITEM_ID, updates: { understanding_level: 'good' },
     }));
   });
 
@@ -475,6 +475,25 @@ describe('ChecklistPanel transfer presentation', () => {
       updates: { understanding_level: 'good' },
     }));
     await waitFor(() => expect(screen.getByRole('combobox', { name: 'Understanding:' })).toHaveValue('good'));
+  });
+
+  // ChecklistPanel.tsx: transfer understanding choices must satisfy the live progress policy.
+  it('offers only none, basic, and good understanding for transfer targets', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
+    renderPanel();
+    await expandFirstItem();
+    const control = screen.getByRole('combobox', { name: 'Understanding:' }) as HTMLSelectElement;
+    expect(Array.from(control.options, option => option.value)).toEqual(['none', 'basic', 'good']);
+  });
+
+  // ChecklistPanel.tsx: ordinary checklist understanding retains its existing excellent option.
+  it('retains excellent understanding for ordinary targets', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    checklistApi.read.mockResolvedValue(legacyChecklist);
+    renderPanel();
+    await expandFirstItem();
+    const control = screen.getByRole('combobox', { name: 'Understanding:' }) as HTMLSelectElement;
+    expect(Array.from(control.options, option => option.value)).toEqual(['none', 'basic', 'good', 'excellent']);
   });
 
   it('lets the tutor edit and reprioritize a shared assessment target', async () => {
