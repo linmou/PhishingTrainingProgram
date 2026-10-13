@@ -13,6 +13,20 @@ const assessment = {
 };
 
 describe('transfer assessment DTO projections', () => {
+  it('preserves retryability from a non-2xx error envelope', async () => {
+    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: {
+      message: 'Edge Function returned a non-2xx status code',
+      context: { json: async () => ({ ok: false, error: { code: 'PERSISTENCE_FAILED', message: 'Persistence failed', retryable: true } }) },
+    } }) } });
+    await expect(service.readReview('room', 'assessment')).rejects.toMatchObject({ code: 'PERSISTENCE_FAILED', retryable: true });
+  });
+
+  it('retains transport failures when the HTTP body is not JSON', async () => {
+    const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: {
+      message: 'Bad gateway', context: { json: async () => { throw new Error('Unexpected token'); } },
+    } }) } });
+    await expect(service.readReview('room', 'assessment')).rejects.toThrow('Assessment API request failed: Bad gateway');
+  });
   it('returns a stem-only public delivery with exact target metadata', async () => {
     const result = await serviceWith({
       message: {

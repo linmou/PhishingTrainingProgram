@@ -65,7 +65,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   const reviewStatus = saving ? 'saving' : errorKind || (dirty ? 'dirty' : 'ready');
 
   const clearServerFailure = () => {
-    if (errorKind && errorKind !== 'validating') {
+    if (errorKind && errorKind !== 'validating' && errorKind !== 'superseded') {
       setError(null);
       setErrorKind(null);
     }
@@ -94,6 +94,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (errorKind === 'superseded') return;
     setError(null);
     setErrorKind(null);
     const validation = validateAssessmentRendering({ stem, selection_type: selectionType, options });
@@ -272,7 +273,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
               : reviewStatus === 'validating'
                 ? 'Review the highlighted validation error.'
               : reviewStatus === 'superseded'
-                ? 'This candidate is no longer current.'
+                ? 'This candidate is no longer current. Discard it and generate a new candidate.'
               : reviewStatus === 'unavailable'
                 ? 'Transfer assessments are unavailable.'
               : reviewStatus === 'unauthorized'
@@ -294,7 +295,7 @@ const AssessmentDraftEditor: React.FC<AssessmentDraftEditorProps> = ({
               Discard candidate
             </button>
           )}
-          <button className="assessment-draft-editor__send" type="button" onClick={handleSubmit} disabled={saving}>
+          <button className="assessment-draft-editor__send" type="button" onClick={handleSubmit} disabled={saving || errorKind === 'superseded'}>
             <Send size={16} aria-hidden="true" />
             {saving ? 'Sending…' : 'Send assessment'}
           </button>
