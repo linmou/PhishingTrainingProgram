@@ -9,6 +9,7 @@ import {
   buildTransferAssessmentRequest,
 } from '../../../src/services/ecologicalTutorCall.ts';
 import { validateAssessmentDraft } from '../../../src/services/assessmentValidation.ts';
+import { parseAssessmentAnswer } from '../../../src/services/assessmentAnswerParser.ts';
 import { applyLearningEvent, isValidTransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
@@ -177,6 +178,7 @@ function projectMessage(value: unknown): Record<string, unknown> {
     ai_response_time_ms: source.ai_response_time_ms ?? null,
     parent_message_id: source.parent_message_id ?? null,
     response_mode: source.response_mode ?? null,
+    assessment_lifecycle: source.assessment_lifecycle ?? null,
     assessment: source.assessment == null ? null : projectAssessment(source.assessment),
     created_at: source.created_at,
   };
@@ -494,16 +496,32 @@ async function processMessage(
     const assessment = asRecord(stored.assessment);
     const answer = asRecord(stored.answer);
     const snapshot = asRecord(context.attempt_snapshot);
+    if (stored.lifecycle === 'cancelled' && stored.authoritative_result) {
+      return projectProcessed(stored.authoritative_result);
+    }
+    const content = answer.selected_option_ids == null
+      ? requiredString(answer.content)
+      : selectedIds(answer.selected_option_ids).join(',');
     const result = deps.resolveAnswer(context, {
       delivered: true,
       answer_message_id: messageId,
-      content: selectedIds(answer.selected_option_ids).join(','),
+      content,
       assessment,
       references_message_id: answer.references_message_id ?? null,
     });
 
     if (result.disposition === 'duplicate' && stored.authoritative_result) {
       return projectProcessed({ ...asRecord(stored.authoritative_result), processing_state: 'duplicate', already_processed: true });
+    }
+    if (result.disposition === 'assisted') {
+      const cancelled = asRecord(await rpc(deps, 'cancel_transfer_assessment_v1', {
+        p_assessment_id: assessmentId,
+        p_message_id: messageId,
+        p_actor_id: principal.application_user_id,
+        p_request_id: requestId,
+      }));
+      if (cancelled.code === 'CONCURRENT_MODIFICATION') continue;
+      return projectProcessed(cancelled);
     }
     const answerOutcome = result.disposition === 'retryable'
       ? 'retry'
@@ -521,6 +539,10 @@ async function processMessage(
         already_processed: result.disposition === 'duplicate', terminal_failure_feedback: null,
       });
     }
+    const parsed = answer.selected_option_ids == null
+      ? parseAssessmentAnswer(content, assessment.selection_type, assessment.options)
+      : { kind: 'selection' as const, option_ids: selectedIds(answer.selected_option_ids) };
+    if (parsed.kind !== 'selection') throw new Error('ITEM_VALIDATION_FAILED');
     const committed = asRecord(await rpc(deps, 'process_assessment_message_v2', {
       p_assessment_id: assessmentId,
       p_message_id: messageId,
@@ -529,7 +551,7 @@ async function processMessage(
       p_expected_attempt_count: snapshot.accepted_attempt_count,
       p_expected_resolution: snapshot.resolution,
       p_answer_outcome: answerOutcome,
-      p_selected_option_ids: selectedIds(answer.selected_option_ids),
+      p_selected_option_ids: parsed.option_ids,
       p_next_progress: result.progress,
       p_applied_transition: result.applied_transition,
     }));
@@ -618,7 +640,7 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
             p_content: requiredString(body.content),
             p_parent_message_id: body.parent_message_id ?? null,
             p_assessment_id: body.assessment_id ?? null,
-            p_selected_option_ids: body.assessment_id ? selectedIds(body.selected_option_ids) : null,
+            p_selected_option_ids: body.assessment_id && body.selected_option_ids != null ? selectedIds(body.selected_option_ids) : null,
             p_actor_id: principal.application_user_id,
             p_request_id: body.request_id,
           });

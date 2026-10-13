@@ -11,3 +11,11 @@ Delivered assessment messages offer tutors an explicit answer-key/context read. 
 Deployment dependency: the new RPC requires live schema inspection, migration, and verification before this Edge operation can succeed. The UI displays a recoverable error until it is available; this work alone does not complete browser QA.
 
 Verification: component coverage includes edited-context preservation, private reads only on explicit tutor action, hiding loaded private content after account/role changes, and denied-read recovery. Edge tests cover unauthorized room/role refusal before any RPC and use of verified actor identity.
+
+## QA09 integration follow-up — 2026-10-13
+
+Based on merged commit bc4ba50, linked free-text answers now reach the existing deterministic assessment parser through the trusted Edge handler. Ambiguous selections return a non-consuming clarification. A parsed non-selection follows the existing assisted disposition and calls `cancel_transfer_assessment_v1(p_assessment_id, p_message_id, p_actor_id, p_request_id)`. The database owns cancellation, concurrent changes, and duplicate responses. Explicit selection controls retain their existing path; text selections pass the parsed IDs to the grading RPC.
+
+The public question projection preserves the persisted assessment lifecycle, allowing reloads to disable cancelled and resolved questions. Cancelled questions show that no attempt was counted; ambiguous responses retain enabled choices. Cancelled processing context returns its authoritative response before parsing or grading.
+
+Verification: 32 Edge handler tests passed, including real-parser ambiguous/assisted/punctuation selection paths and cancellation replay; 52 frontend/service projection tests passed. SQL deployment remains coordinated with the backend migration.

@@ -2,6 +2,7 @@
 // Test responsibility: verify the trusted handler's authorization, projection, provider, and CAS boundaries.
 
 import { createAssessmentApiHandler, type AssessmentApiDependencies } from './index.ts';
+import { resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts';
 
 function assert(condition: unknown, message = 'assertion failed'): asserts condition {
   if (!condition) throw new Error(message);
@@ -63,6 +64,69 @@ function providerScope(): Record<string, unknown> {
     },
   };
 }
+
+for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
+  Deno.test(`raw assessment answer lifecycle: ${content}`, async () => {
+    const writes: Array<{ name: string; args: Record<string, unknown> }> = [];
+    const handler = createAssessmentApiHandler(dependencies({
+      resolveAnswer: resolveTransferAnswer,
+      rpc: async (name, args) => {
+        if (name === 'get_transfer_assessment_processing_context_v1') return { data: {
+          context: { progress: { status: 'partially_covered', understanding_level: 'basic' },
+            participation_mode: 'tutoring', progress_snapshot_hash: 'h', feedback_required: false,
+            eligible_assessment_item_ids: ['item-1'], unresolved_assessment: { id: 'a' },
+            pending_repair_message_id: null,
+            attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open', processed_answer_message_ids: [] } },
+          assessment: { id: 'a', item_id: 'item-1', selection_type: 'single', progress_snapshot_hash: 'h',
+            options: ['A', 'B', 'C', 'D'].map(id => ({ id, text: `Option ${id}` })),
+            correct_option_ids: ['B'], learner_safe_explanation: 'Use an independent channel.' },
+          answer: { content, selected_option_ids: null, references_message_id: 'q' },
+        }, error: null };
+        writes.push({ name, args });
+        return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'applied',
+          answer_outcome: name === 'cancel_transfer_assessment_v1' ? null : 'passed',
+          terminal: true, code: name === 'cancel_transfer_assessment_v1' ? 'assisted' : null,
+          attempts_used: name === 'cancel_transfer_assessment_v1' ? 0 : 1, attempts_remaining: 0 }, error: null };
+      },
+    }));
+    const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'm' }));
+    const payload = await response.json();
+    assertEquals(response.status, 200);
+    if (content === 'B or D') {
+      assertEquals(writes, []);
+      assertEquals(payload.data.code, 'AMBIGUOUS_SELECTION');
+      assertEquals(payload.data.attempts_used, 0);
+      assertEquals(payload.data.terminal, false);
+    } else if (content === 'B?') {
+      assertEquals(writes[0].name, 'process_assessment_message_v2');
+      assertEquals(writes[0].args.p_selected_option_ids, ['B']);
+    } else {
+      assertEquals(writes[0].name, 'cancel_transfer_assessment_v1');
+      assertEquals(payload.data.code, 'assisted');
+      assertEquals(payload.data.attempts_used, 0);
+      assertEquals(payload.data.terminal, true);
+      assertEquals(payload.data.answer_outcome, null);
+    }
+    assertEquals(payload.data.terminal_failure_feedback, null);
+  });
+}
+
+Deno.test('cancelled assessment replay bypasses grading and writes', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    resolveAnswer: () => { throw new Error('must not grade cancelled question'); },
+    rpc: async name => {
+      assertEquals(name, 'get_transfer_assessment_processing_context_v1');
+      return { data: { lifecycle: 'cancelled', authoritative_result: { message_id: 'm', assessment_id: 'a',
+        processing_state: 'duplicate', terminal: true, code: 'assisted', attempts_used: 0, attempts_remaining: 0,
+        already_processed: true } }, error: null };
+    },
+  }));
+  const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'm' }));
+  const payload = await response.json();
+  assertEquals(payload.data.code, 'assisted');
+  assertEquals(payload.data.terminal, true);
+  assertEquals(payload.data.already_processed, true);
+});
 
 Deno.test('private review reads require a tutor and the authorized room', async () => {
   for (const canReview of [false, true]) {

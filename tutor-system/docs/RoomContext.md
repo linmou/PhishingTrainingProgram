@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-12. Baseline commit: e67a509e16a15521d8d8b2c3d6e96e3bb452d749. -->
+<!-- Updated: 2026-10-13. Baseline commit: bc4ba50. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -37,6 +37,10 @@ When the selected learner message carries a persisted assessment ID, AI generati
 The review must provide a verified resolution (`open`, `passed`, or `failed`), message lifecycle (`delivered`, `passed`, `failed`, or `cancelled`), attempt count, and feedback requirement. Missing or unrecognized lifecycle data blocks feedback generation with a retryable error. Cancellation does not imply failure and can retain an open attempt snapshot. The provider receives these facts with the public question; the answer key and safe explanation are included only for terminal results. Private transfer rationale is not included in this feedback input or copied into message state. Deployment requires the matching `read_review` backend contract.
 
 Prepared review drafts carry the selected learning target's label from the loaded checklist so the editor identifies the target being assessed.
+
+### Free-text replies during an assessment
+
+Learner textbox messages link to that learner's latest delivered, unresolved assessment and pass through trusted answer processing. The browser sends the original text without inferring option IDs, so ambiguity and requests for assistance remain server decisions. An explicit reply to another message stays ordinary chat. Persisted passed, failed, cancelled, or incomplete questions do not capture later text.
 
 ### Message Processing Pipeline
 

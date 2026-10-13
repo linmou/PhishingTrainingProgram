@@ -44,7 +44,8 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
   const latestAnswer = attempts[attempts.length - 1];
   const currentLifecycle = answerLifecycle ?? latestAnswer?.lifecycle;
   const pendingAnswer = latestAnswer && (!latestAnswer.lifecycle || latestAnswer.lifecycle.processingState === 'deferred');
-  const resolved = currentLifecycle?.answerOutcome === 'passed' || currentLifecycle?.answerOutcome === 'failed';
+  const resolved = currentLifecycle?.answerOutcome === 'passed' || currentLifecycle?.answerOutcome === 'failed' ||
+    Boolean(question.lifecycle && question.lifecycle !== 'delivered');
   const disabled = !canAnswer || submitting || pendingAnswer || currentLifecycle?.terminal === true || resolved;
 
   const toggle = (id: AssessmentOptionId) => {
@@ -146,6 +147,9 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
         </p>
       )}
       {displayedLifecycle?.answerOutcome === 'passed' && <p role="status">Correct.</p>}
+      {(question.lifecycle === 'cancelled' || (displayedLifecycle?.code === 'assisted' && displayedLifecycle.terminal)) && (
+        <p role="status">This question is closed so your tutor can help. No attempt was counted.</p>
+      )}
       {displayedLifecycle?.answerOutcome === 'failed' && displayedLifecycle.terminalFailureFeedback && (
         <div role="status">
           <p>{displayedLifecycle.terminalFailureFeedback.learner_safe_explanation}</p>
@@ -155,8 +159,12 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
       {displayedLifecycle?.processingState === 'deferred' && displayedLifecycle.answerOutcome === null && (
         <p role="status">Your answer is still processing.</p>
       )}
-      {displayedLifecycle?.processingState === 'rejected' && displayedLifecycle.answerOutcome === null && (
-        <p role="alert">This answer was rejected. Please try again.</p>
+      {displayedLifecycle?.processingState === 'rejected' && displayedLifecycle.answerOutcome === null && displayedLifecycle.code !== 'assisted' && (
+        <p role="alert">{displayedLifecycle.terminal
+          ? 'This question is closed.'
+          : displayedLifecycle.code === 'AMBIGUOUS_SELECTION'
+            ? 'Your selection is unclear. Choose the options you intend to submit. No attempt was counted.'
+            : 'This answer was rejected. Please try again.'}</p>
       )}
     </div>
   );
