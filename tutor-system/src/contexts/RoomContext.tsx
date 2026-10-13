@@ -683,12 +683,28 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         if (user.current_role === 'student' && !currentSuggestionContext && currentRoom.transfer_learning_enabled &&
             transferChecklist?.progress_policy_version === 'transfer_v1') {
+            const activeQuestion = [...messages].reverse().find(message => {
+                const question = (message as Partial<RoomMessageView>).publicQuestion;
+                return question?.studentId === user.id &&
+                    question.lifecycle === 'delivered' &&
+                    !readAnswerLifecycle(message)?.terminal;
+            }) as RoomMessageView | undefined;
+            // Free-text replies to the active question use the same trusted parser
+            // as answer controls. Explicit replies to other messages remain chat.
+            const answerOptions = options?.assessmentId || !activeQuestion ||
+                (options?.replyToMessageId && options.replyToMessageId !== activeQuestion.id)
+                ? options
+                : {
+                    ...options,
+                    assessmentId: activeQuestion.publicQuestion!.id,
+                    replyToMessageId: activeQuestion.id,
+                };
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,
-                replyToMessageId: options?.replyToMessageId,
-                assessmentId: options?.assessmentId,
-                selectedOptionIds: options?.selectedOptionIds,
+                replyToMessageId: answerOptions?.replyToMessageId,
+                assessmentId: answerOptions?.assessmentId,
+                selectedOptionIds: answerOptions?.selectedOptionIds,
             });
             const storedRow = result.message as Record<string, unknown> | undefined;
             if (!storedRow) {
@@ -706,15 +722,15 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         console.warn('Transfer evidence analysis unavailable; message was stored:', analysisError);
                     }
                 };
-                if (options?.assessmentId) {
+                if (answerOptions?.assessmentId) {
                     const processed = await transferAssessmentService.processMessage(
                         storedMessage.id,
-                        options.assessmentId
+                        answerOptions.assessmentId
                     );
                     if (
                         processed.message_id !== storedMessage.id ||
-                        processed.assessment_id !== options.assessmentId ||
-                        storedMessage.parent_message_id !== options.replyToMessageId
+                        processed.assessment_id !== answerOptions.assessmentId ||
+                        storedMessage.parent_message_id !== answerOptions.replyToMessageId
                     ) {
                         throw new Error('Assessment processing returned mismatched answer, assessment, or parent identity');
                     }

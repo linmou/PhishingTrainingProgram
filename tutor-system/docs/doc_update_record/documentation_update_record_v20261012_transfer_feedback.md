@@ -15,3 +15,9 @@ Follow-up on 2026-10-12 (baseline f63838d):
 - Provider input carries the persisted resolution, attempts, feedback requirement, and public question. Terminal results additionally carry the safe answer explanation; open attempts carry no key.
 - Added retry/unresolved and unavailable-lifecycle integration cases plus a provider-boundary assertion on structured inputs.
 - Backend RPC deployment and browser verification remain separate release requirements.
+
+QA09 follow-up on 2026-10-13 (baseline bc4ba50):
+
+- Learner textbox replies now preserve the active assessment and parent question identity for trusted text parsing.
+- Explicit replies elsewhere and ordinary chat after terminal or cancelled questions retain evidence analysis.
+- RoomProvider regression cases verify ambiguous and assisted results consume no attempt and apply no invented failure transition.

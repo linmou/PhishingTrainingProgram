@@ -13,6 +13,7 @@ import React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { RoomProvider, useRoom } from '../RoomContext';
+import { readAnswerLifecycle } from '../transferAssessmentUiAdapter';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
@@ -271,6 +272,7 @@ describe('RoomContext learner answer path', () => {
   });
 
   it('sends ordinary student messages through evidence analysis without calling assessment processing', async () => {
+    initialMessages = [learnerAMessageRow];
     await mountRoom();
 
     await act(async () => {
@@ -280,6 +282,74 @@ describe('RoomContext learner answer path', () => {
     expect(processMessage).not.toHaveBeenCalled();
     expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
   });
+
+  // RoomContext links textbox replies to the learner's active assessment without
+  // locally interpreting ambiguous or assisted text or consuming an attempt.
+  it.each([
+    { content: 'B or D', code: 'AMBIGUOUS_ANSWER', terminal: false },
+    { content: 'What does independent mean?', code: 'assisted', terminal: true },
+  ])('routes free text $code through trusted processing', async ({ content, code, terminal }) => {
+    processMessage.mockResolvedValue({
+      message_id: DELIVERED_ANSWER_ID, assessment_id: DELIVERED_QUESTION_ID,
+      processing_state: 'rejected', answer_outcome: null,
+      attempt_number: null, attempts_used: 0, attempts_remaining: terminal ? 0 : 2,
+      selected_option_ids: null, transition: null, feedback_required: false,
+      code, already_processed: false, terminal, terminal_failure_feedback: null,
+    });
+    await mountRoom();
+    await act(async () => { await room!.sendMessage(content); });
+    expect(postMessage).toHaveBeenCalledWith({
+      roomId: TRANSFER_ROOM_ID, content,
+      replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID,
+      selectedOptionIds: undefined,
+    });
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    expect(analyzeMessage).not.toHaveBeenCalled();
+    expect(readAnswerLifecycle(room!.messages.find(message => message.id === DELIVERED_QUESTION_ID)))
+      .toMatchObject({ attemptsUsed: 0, answerOutcome: null, transition: null, terminal });
+    expectNoPrivateAssessmentFields(room!.messages);
+    if (terminal) {
+      await act(async () => { await room!.sendMessage('A new observation after help'); });
+      expect(processMessage).toHaveBeenCalledTimes(1);
+      expect(analyzeMessage).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  // Explicit unrelated reply targets must not become assessment answers.
+  it('preserves chat explicitly addressed to another message', async () => {
+    await mountRoom();
+    await act(async () => {
+      await room!.sendMessage('About the earlier example', { replyToMessageId: learnerAMessageRow.id });
+    });
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      replyToMessageId: learnerAMessageRow.id, assessmentId: undefined,
+    }));
+    expect(processMessage).not.toHaveBeenCalled();
+    expect(analyzeMessage).toHaveBeenCalled();
+  });
+
+  // An active assessment for another learner must not capture this learner's text.
+  it('keeps another learner assessment outside the textbox reply scope', async () => {
+    initialMessages = [learnerAMessageRow, {
+      ...deliveredQuestionRow,
+      assessment: { ...deliveredQuestionRow.assessment, student_id: 'other-learner' },
+    }];
+    await mountRoom();
+    await act(async () => { await room!.sendMessage('B'); });
+    expect(processMessage).not.toHaveBeenCalled();
+    expect(analyzeMessage).toHaveBeenCalled();
+  });
+
+  // Persisted terminal/cancelled questions must not capture later ordinary chat.
+  it.each(['passed', 'failed', 'cancelled', 'legacy_incomplete'])(
+    'does not attach free text to a persisted %s question', async (lifecycle) => {
+      initialMessages = [learnerAMessageRow, { ...deliveredQuestionRow, assessment_lifecycle: lifecycle }];
+      await mountRoom();
+      await act(async () => { await room!.sendMessage('A new observation'); });
+      expect(processMessage).not.toHaveBeenCalled();
+      expect(analyzeMessage).toHaveBeenCalled();
+    }
+  );
 
   it('keeps an unresolved answer server-authoritative instead of inventing a selection', async () => {
     processMessage.mockResolvedValue({
