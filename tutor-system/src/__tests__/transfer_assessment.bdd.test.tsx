@@ -2,7 +2,7 @@
 // Test responsible for executable bindings to features/transfer_assessment.feature, excluding only its explicitly non-feasible scenario.
 
 import React from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { defineFeature, loadFeature } from 'jest-cucumber';
@@ -73,8 +73,8 @@ jest.mock('../services/checklistService', () => ({
   },
 }));
 
-jest.mock('../components/ChecklistPanel', () => function MockChecklistPanel() {
-  return <div data-testid="checklist-panel" />;
+jest.mock('../components/ChecklistPanel', () => function MockChecklistPanel({ isVisible }: { isVisible: boolean }) {
+  return isVisible ? <div data-testid="checklist-panel" /> : null;
 });
 jest.mock('../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
   return <div data-testid="ai-settings-modal" />;
@@ -233,6 +233,14 @@ function configureRoomBackend(messages: Array<Record<string, unknown>>, checklis
           }),
         }),
       };
+    }
+    if (table === 'sessions') {
+      const query = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        not: jest.fn().mockResolvedValue({ data: [{ student_id: preparedTurnResult.student_id }], error: null }),
+      };
+      return query;
     }
     throw new Error('Unexpected Supabase table ' + table);
   });
@@ -823,8 +831,12 @@ defineFeature(feature, (test) => {
         page: true,
       });
     });
-    then('the room shows the learning-target setup reminder', () => {
-      expect(screen.getByRole('status')).toHaveTextContent(/learning targets/i);
+    // RoomPagePost.tsx: tutors get an actionable reminder before opening the setup panel.
+    then('the room shows the learning-target setup reminder', async () => {
+      expect(await screen.findByRole('status')).toHaveTextContent(/learning targets/i);
+      expect(screen.queryByTestId('checklist-panel')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Open Learning Targets' }));
+      expect(await screen.findByTestId('checklist-panel')).toBeInTheDocument();
     });
     and('no transfer assessment is prepared', () => {
       expect(state.prepareSpy).not.toHaveBeenCalled();

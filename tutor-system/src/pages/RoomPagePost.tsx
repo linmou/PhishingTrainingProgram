@@ -681,19 +681,23 @@ const RoomPagePost: React.FC = () => {
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
     const firstPersistedStudentId = findFirstPersistedStudentId(messages);
     useEffect(() => {
-        if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'student') {
+        if (!currentRoom?.transfer_learning_enabled || !user ||
+            (user.current_role !== 'student' && user.current_role !== 'tutor')) {
             setWaitingForTargets(false);
             return;
         }
         let active = true;
-        ChecklistService.getChecklistForStudent(currentRoom.id, user.id)
+        const checklistRequest = user.current_role === 'tutor'
+            ? ChecklistService.getActiveTransferChecklistForRoom(currentRoom.id)
+            : ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
+        checklistRequest
             .then(checklist => {
                 if (active) setWaitingForTargets(!checklist ||
                     checklist.detection_areas.length + checklist.verification_steps.length === 0);
             })
             .catch(() => { if (active) setWaitingForTargets(true); });
         return () => { active = false; };
-    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, messages.length]);
+    }, [currentRoom?.id, currentRoom?.transfer_learning_enabled, user?.id, user?.current_role, messages.length, showChecklist]);
     useEffect(() => {
         if (!currentRoom?.transfer_learning_enabled || user?.current_role !== 'tutor' || !showChecklist) {
             setTransferStudentId(null);
@@ -1192,7 +1196,14 @@ const RoomPagePost: React.FC = () => {
             )}
 
             {/* Checklist Panel - Only for tutors */}
-            {waitingForTargets && <p role="status">Waiting for the tutor to set up learning targets.</p>}
+            {waitingForTargets && user?.current_role === 'student' &&
+                <p role="status">Waiting for the tutor to set up learning targets.</p>}
+            {waitingForTargets && user?.current_role === 'tutor' && !showChecklist && (
+                <div role="status">
+                    <p>Set up learning targets before preparing a transfer assessment.</p>
+                    <button type="button" onClick={() => setShowChecklist(true)}>Open Learning Targets</button>
+                </div>
+            )}
             {roomId && user?.current_role === 'tutor' && (
                 <ChecklistPanel 
                     roomId={roomId} 
