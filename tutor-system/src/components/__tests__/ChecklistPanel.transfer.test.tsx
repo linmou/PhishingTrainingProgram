@@ -42,7 +42,9 @@ jest.mock('../../services/checklistGenerationContext', () => ({
   assessChecklistGenerationContext: jest.fn(),
 }));
 jest.mock('../../services/transferAssessmentService', () => ({
-  transferAssessmentService: { editLearningProgress: jest.fn().mockResolvedValue({}) },
+  transferAssessmentService: { editLearningProgress: jest.fn().mockResolvedValue({
+    status: 'partially_covered', understanding_level: 'basic',
+  }) },
 }));
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 
@@ -108,6 +110,9 @@ describe('useChecklist transfer progress ownership', () => {
     jest.clearAllMocks();
     window.localStorage.clear();
     setUser('tutor');
+    (transferAssessmentService.editLearningProgress as jest.Mock).mockResolvedValue({
+      item_id: CHECKLIST_ITEM_ID, status: 'partially_covered', understanding_level: 'basic',
+    });
     checklistApi.update.mockResolvedValue(undefined);
     checklistApi.initializeTransferChecklistForStudent.mockResolvedValue(transferChecklist);
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
@@ -377,12 +382,12 @@ describe('useChecklist transfer progress ownership', () => {
     });
 
     await act(async () => {
-      await result.current.updateItem(CHECKLIST_ITEM_ID, { understanding_level: 'excellent' });
+      await result.current.updateItem(CHECKLIST_ITEM_ID, { understanding_level: 'good' });
     });
 
     expect(checklistApi.update).not.toHaveBeenCalled();
     expect(transferAssessmentService.editLearningProgress).toHaveBeenCalledWith(expect.objectContaining({
-      roomId: TRANSFER_ROOM_ID, itemId: CHECKLIST_ITEM_ID, updates: { understanding_level: 'excellent' },
+      roomId: TRANSFER_ROOM_ID, itemId: CHECKLIST_ITEM_ID, updates: { understanding_level: 'good' },
     }));
   });
 
@@ -445,6 +450,9 @@ describe('ChecklistPanel transfer presentation', () => {
     jest.clearAllMocks();
     window.localStorage.clear();
     setUser('tutor');
+    (transferAssessmentService.editLearningProgress as jest.Mock).mockResolvedValue({
+      item_id: CHECKLIST_ITEM_ID, status: 'partially_covered', understanding_level: 'basic',
+    });
     checklistApi.update.mockResolvedValue(undefined);
     checklistApi.initializeTransferChecklistForStudent.mockResolvedValue(transferChecklist);
   });
@@ -467,6 +475,9 @@ describe('ChecklistPanel transfer presentation', () => {
   // ChecklistPanel.tsx: a visible understanding control writes through the trusted API.
   it('lets the tutor set understanding on the assessment checklist', async () => {
     checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
+    (transferAssessmentService.editLearningProgress as jest.Mock).mockResolvedValueOnce({
+      item_id: CHECKLIST_ITEM_ID, status: 'covered', understanding_level: 'good',
+    });
     renderPanel();
     await expandFirstItem();
     fireEvent.change(screen.getByRole('combobox', { name: 'Understanding:' }), { target: { value: 'good' } });
@@ -475,6 +486,39 @@ describe('ChecklistPanel transfer presentation', () => {
       updates: { understanding_level: 'good' },
     }));
     await waitFor(() => expect(screen.getByRole('combobox', { name: 'Understanding:' })).toHaveValue('good'));
+    expect(screen.getByRole('combobox', { name: 'Status:' })).toHaveValue('covered');
+  });
+
+  // useChecklist.ts: status changes display the server's paired understanding and summary immediately.
+  it('applies both authoritative fields after a manual status change', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
+    (transferAssessmentService.editLearningProgress as jest.Mock).mockResolvedValueOnce({
+      item_id: CHECKLIST_ITEM_ID, status: 'covered', understanding_level: 'good',
+    });
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID));
+    await act(async () => { await result.current.refreshChecklist(); });
+    await act(async () => { await result.current.updateItem(CHECKLIST_ITEM_ID, { status: 'covered' }); });
+    expect(result.current.checklist?.detection_areas[0]).toMatchObject({ status: 'covered', understanding_level: 'good' });
+    expect(result.current.progress).toMatchObject({ covered_areas: 1, completion_percentage: 100 });
+  });
+
+  // ChecklistPanel.tsx: transfer understanding choices must satisfy the live progress policy.
+  it('offers only none, basic, and good understanding for transfer targets', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(transferChecklist);
+    renderPanel();
+    await expandFirstItem();
+    const control = screen.getByRole('combobox', { name: 'Understanding:' }) as HTMLSelectElement;
+    expect(Array.from(control.options, option => option.value)).toEqual(['none', 'basic', 'good']);
+  });
+
+  // ChecklistPanel.tsx: ordinary checklist understanding retains its existing excellent option.
+  it('retains excellent understanding for ordinary targets', async () => {
+    checklistApi.getActiveTransferChecklistForRoom.mockResolvedValue(null);
+    checklistApi.read.mockResolvedValue(legacyChecklist);
+    renderPanel();
+    await expandFirstItem();
+    const control = screen.getByRole('combobox', { name: 'Understanding:' }) as HTMLSelectElement;
+    expect(Array.from(control.options, option => option.value)).toEqual(['none', 'basic', 'good', 'excellent']);
   });
 
   it('lets the tutor edit and reprioritize a shared assessment target', async () => {

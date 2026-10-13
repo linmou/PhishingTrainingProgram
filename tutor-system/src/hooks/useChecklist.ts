@@ -604,7 +604,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     try {
       console.log('📝 Updating checklist item:', itemId, updates);
       if (trustedTransferEdit) {
-        await transferAssessmentService.editLearningProgress({
+        const saved = await transferAssessmentService.editLearningProgress({
           roomId,
           itemId,
           action: Object.prototype.hasOwnProperty.call(updates, 'status')
@@ -618,10 +618,14 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
                   : 'edit_item',
           updates: updates as Record<string, unknown>,
         });
+        const savedProgress = {
+          status: saved.status as ChecklistItem['status'],
+          understanding_level: saved.understanding_level as ChecklistItem['understanding_level'],
+        };
         setChecklist((current) => {
           if (!current) return current;
           const updateItemValue = (item: ChecklistItem) => item.id === itemId
-            ? { ...item, ...updates, updated_at: new Date() }
+            ? { ...item, ...updates, ...savedProgress, updated_at: new Date() }
             : item;
           const next = {
             ...current,
