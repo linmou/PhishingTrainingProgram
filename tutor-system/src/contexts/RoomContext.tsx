@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
-import type { AssessmentOptionId } from '../types/assessment';
+import type { AssessmentOptionId, TutorAssessmentFeedback } from '../types/assessment';
 import type { LearningTargetInput } from '../types/checklist';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
@@ -979,6 +979,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('No student message found to respond to');
             }
 
+            let assessmentFeedback: TutorAssessmentFeedback | undefined;
             let transferChecklist: Awaited<ReturnType<typeof ChecklistService.getActiveTransferChecklistForRoom>> | null = null;
             try {
                 const checklistService = ChecklistService as typeof ChecklistService & {
@@ -1011,7 +1012,34 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 parentMessageContent = checklistOwnerMessage.content;
                 // Assessment answers already belong to the grading lifecycle. Re-analyzing
                 // them as ordinary learning evidence is rejected by the trusted API.
-                const isAssessmentAnswer = Boolean(readAssessmentId(checklistOwnerMessage));
+                const assessmentId = readAssessmentId(checklistOwnerMessage);
+                const isAssessmentAnswer = Boolean(assessmentId);
+                if (assessmentId) {
+                    const review = await transferAssessmentService.readReview(currentRoom.id, assessmentId);
+                    if (!['open', 'passed', 'failed'].includes(review.resolution || '') ||
+                        !['delivered', 'passed', 'failed', 'cancelled'].includes(review.lifecycle || '') ||
+                        !Number.isInteger(review.attempt_count) || review.attempt_count! < 0 ||
+                        review.attempt_count! > 2 || typeof review.feedback_required !== 'boolean') {
+                        throw createTransferPreparationError(
+                            'ASSESSMENT_FEEDBACK_UNAVAILABLE',
+                            'The assessment result is unavailable. Refresh the room and retry.',
+                            true
+                        );
+                    }
+                    assessmentFeedback = {
+                        assessment_id: assessmentId,
+                        resolution: review.resolution as TutorAssessmentFeedback['resolution'],
+                        lifecycle: review.lifecycle as TutorAssessmentFeedback['lifecycle'],
+                        attempt_count: review.attempt_count!,
+                        feedback_required: review.feedback_required,
+                        stem: review.assessment.stem,
+                        options: review.assessment.options,
+                        terminal_feedback: review.resolution === 'open' ? null : {
+                            correct_option_ids: review.assessment.correct_option_ids,
+                            learner_safe_explanation: review.assessment.learner_safe_explanation,
+                        },
+                    };
+                }
                 if (!isAssessmentAnswer) {
                     await transferAssessmentService.analyzeMessage(parentMessageId, currentRoom.id);
                 }
@@ -1055,7 +1083,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 parameterOverrides,
                 {
                     // Same student line the tutor is responding to in the UI
-                    focusStudentMessage: parentMessageContent || prompt
+                    focusStudentMessage: parentMessageContent || prompt,
+                    ...(assessmentFeedback ? { assessmentFeedback } : {}),
                 }
             );
 

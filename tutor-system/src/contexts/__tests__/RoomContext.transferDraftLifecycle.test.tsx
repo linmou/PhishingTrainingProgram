@@ -174,6 +174,14 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(transferChecklist);
 
     jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
+    jest.spyOn(transferAssessmentService, 'readReview').mockResolvedValue({
+      item_label: 'Verify payment requests',
+      assessment: preparedCandidate.assessment,
+      resolution: 'passed',
+      lifecycle: 'passed',
+      attempt_count: 1,
+      feedback_required: true,
+    });
     prepareAssessment = jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(preparedTurnResult);
     sendReviewed = jest.spyOn(transferAssessmentService, 'sendReviewed').mockResolvedValue(reviewedDelivery);
   });
@@ -212,6 +220,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft!.itemId).toBe(CHECKLIST_ITEM_ID);
     expect(room!.transferDraft!.itemLabel).toBe('Verify payment requests');
     expect(generateTutorSuggestion).not.toHaveBeenCalled();
+    expect(transferAssessmentService.readReview).not.toHaveBeenCalled();
   });
 
   it('routes an explicit no-assessment result to the ordinary tutor', async () => {
@@ -234,7 +243,19 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
   // RoomContext must route persisted graded answers to tutor feedback, including
   // answers restored after reload, without running ordinary evidence analysis.
-  it.each(['B', 'A'])('drafts feedback for a persisted assessment answer %s', async (answer) => {
+  it.each([
+    { answer: 'B', resolution: 'passed', lifecycle: 'passed', attemptCount: 1, feedbackRequired: true },
+    { answer: 'A', resolution: 'failed', lifecycle: 'failed', attemptCount: 2, feedbackRequired: true },
+    { answer: 'A', resolution: 'open', lifecycle: 'delivered', attemptCount: 1, feedbackRequired: false },
+    { answer: 'B or D', resolution: 'open', lifecycle: 'delivered', attemptCount: 0, feedbackRequired: false },
+    { answer: 'Please help', resolution: 'open', lifecycle: 'cancelled', attemptCount: 0, feedbackRequired: false },
+  ])('drafts feedback using persisted $resolution state after $attemptCount attempts', async ({
+    answer, resolution, lifecycle, attemptCount, feedbackRequired,
+  }) => {
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+      item_label: 'Verify payment requests', assessment: preparedCandidate.assessment,
+      resolution, lifecycle, attempt_count: attemptCount, feedback_required: feedbackRequired,
+    });
     mockTables([
       learnerAMessageRow,
       deliveredQuestionRow,
@@ -256,7 +277,19 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(room!.transferDraft).toBeNull();
     expect(room!.aiDecision?.instruction).toBe('correction');
     expect(generateTutorSuggestion).toHaveBeenCalledWith(
-      TRANSFER_ROOM_ID, 'tutor-1', undefined, { focusStudentMessage: answer }
+      TRANSFER_ROOM_ID, 'tutor-1', undefined, {
+        focusStudentMessage: answer,
+        assessmentFeedback: {
+          assessment_id: deliveredAnswerRow.assessment_id,
+          resolution, lifecycle, attempt_count: attemptCount, feedback_required: feedbackRequired,
+          stem: preparedCandidate.assessment.stem,
+          options: preparedCandidate.assessment.options,
+          terminal_feedback: resolution === 'open' ? null : {
+            correct_option_ids: preparedCandidate.assessment.correct_option_ids,
+            learner_safe_explanation: preparedCandidate.assessment.learner_safe_explanation,
+          },
+        },
+      }
     );
 
     // Realtime replay of the persisted answer must retain its assessment identity.
@@ -269,7 +302,23 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(transferAssessmentService.analyzeMessage).not.toHaveBeenCalled();
     expect(prepareAssessment).not.toHaveBeenCalled();
     expect(generateTutorSuggestion).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(room!.messages)).not.toContain('correct_option_ids');
   });
+
+  // RoomContext must not infer grading from answer text when the trusted read fails.
+  it.each([{}, { resolution: 'unknown', attempt_count: 1, feedback_required: true }])(
+    'refuses tutor feedback without a verified lifecycle %j', async (lifecycle) => {
+      mockTables([learnerAMessageRow, deliveredQuestionRow, deliveredAnswerRow]);
+      (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+        item_label: 'Verify payment requests', assessment: preparedCandidate.assessment, ...lifecycle,
+      });
+      await mountRoom();
+      await expect(act(async () => { await room!.generateAIResponse(); }))
+        .rejects.toThrow('ASSESSMENT_FEEDBACK_UNAVAILABLE');
+      expect(generateTutorSuggestion).not.toHaveBeenCalled();
+      expect(prepareAssessment).not.toHaveBeenCalled();
+    }
+  );
 
   it('sends the edited decision with the prepared scope exactly once', async () => {
     const callOrder: string[] = [];

@@ -1,12 +1,16 @@
 # aiService.ts - AI Assistant Functionality
 
+<!-- Intent: explain AI request configuration and trusted tutor feedback inputs. Updated: 2026-10-12. Baseline commit: f63838d. -->
+
 ## Purpose
 Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Production requests use Qwen3.5 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key.
 
 ## Update Metadata
 
-- Updated: 2026-09-01
-- Commit ID: pending at update time
+- Updated: 2026-10-12
+- Baseline commit: f63838d
+
+For an assessment answer, RoomContext supplies verified assessment feedback facts through `generateTutorSuggestion` options. The service includes that structured state in the system context so the model follows the recorded resolution and attempt count. Open assessments omit the answer key and terminal explanation. Missing backend lifecycle data blocks generation at RoomContext before the provider is called.
 
 ## Architecture Overview
 

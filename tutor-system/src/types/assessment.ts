@@ -50,6 +50,18 @@ export interface TransferTerminalFeedback {
   learner_safe_explanation: string;
 }
 
+/** Server-reviewed facts supplied only to the tutor's feedback generation. */
+export interface TutorAssessmentFeedback {
+  assessment_id: string;
+  resolution: 'open' | 'passed' | 'failed';
+  lifecycle: 'delivered' | 'passed' | 'failed' | 'cancelled';
+  attempt_count: number;
+  feedback_required: boolean;
+  stem: string;
+  options: AssessmentOption[];
+  terminal_feedback: TransferTerminalFeedback | null;
+}
+
 export type TransferAttemptResultNextAction =
   | 'await_learner_answer'
   | 'await_tutor_feedback'
