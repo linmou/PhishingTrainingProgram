@@ -48,6 +48,8 @@ Map each behavior requirement to stable metrics, choosing deterministic checks f
 
 Use a separate evaluation-plan artifact to declare method, checked output, applicability, expected evidence, snapshots, and thresholds. Validate deterministic check logic and expected labels; calibrate LLM judges before baseline evaluation. Do not substitute either method silently when the other is unavailable.
 
+For classification decisions, use the evaluation contract's [classification metrics](references/evaluation-contract.md#classification-metrics) instead of a generic acceptance rate. Predeclare a task-appropriate primary metric and class-specific gates; an individual classifier's threshold may be as low as 70%, with ensemble performance evaluated separately when used.
+
 Identify requirements that can apply together, including across behavior specs sharing the same response or state. Record known dependencies, tensions, and adopted priority rules; unresolved contradictions remain design gaps. Declare any joint acceptance checks before freezing; later exploratory interaction analysis does not create a new gate.
 
 **Complete when:** every requirement has a mapped metric or supporting check, allowed evaluator inputs, pass/fail/boundary examples, and a defined result format; check-validation and judge-calibration evidence or an explicit unrun status is recorded.
@@ -68,13 +70,15 @@ Build a manifest containing full inputs/prior state, case versions, source and r
 
 ## 5. Baseline, then refine
 
-Inspect the production call, harness commands, and executable gate. Register every new metric and verify the gate's coverage/error/regression handling. Obtain missing target/judge settings from project configuration examples or the user; semantic evaluation requires a semantic judge.
+Inspect the production call, harness commands, and executable gate. Register every new metric and verify the gate's coverage/error/regression handling. Obtain missing target/judge settings from project configuration examples or the user. Metrics assigned an LLM rubric require the configured semantic judge; classification against frozen reference labels uses deterministic scoring.
 
 Run the unchanged production prompt on the full frozen development/regression set before prompt edits. An already-passing baseline needs no manufactured failure. For each iteration record observed failures, explanation, prompt diff, other changed experimental factors, and results. Diagnose grader/provider/harness errors separately from behavior failures.
 
+For every refinement of the tested AI system, including prompt versions, delegate an independent [refinement audit](references/evaluation-contract.md#independent-refinement-audit) to an agent that did not author the change. Resolve its findings before advancing the candidate. Preserve the audit against the exact candidate hash, and keep unseen holdouts isolated from the refinement author.
+
 Focused runs support diagnosis; acceptance candidates require the complete existing and expanded suite. Freeze the candidate before independent holdout validation, comparing baseline and candidate on the same holdouts under the reference's exposure rules. Preserve production settings and raw responses except for explicitly declared experimental changes. Contract/check/case changes require new versions and a fresh comparable baseline.
 
-**Complete when:** immutable baseline/candidate evidence exists for every required comparison, or an execution blocker is recorded. Continue evidence-backed iterations through step 6 within the authorized budget; unavailable configuration, exhausted budget, or no defensible next experiment leaves evaluation incomplete or failed.
+**Complete when:** immutable baseline/candidate evidence and independent refinement audits exist for every required comparison, or an execution blocker is recorded. Continue evidence-backed iterations through step 6 within the authorized budget; unavailable configuration, exhausted budget, or no defensible next experiment leaves evaluation incomplete or failed.
 
 ## 6. Decide acceptance
 

@@ -16,16 +16,18 @@ Experimental changes: <prompt diff/reference and other changed factors; evidence
 
 Evaluation verdict: <accepted / failed / incomplete>
 Grounding verdict: <resolved / pending / inconsistent; based on requirement-level annotations in the design snapshot>
+Refinement audit: <clear / changes_required / incomplete / not applicable; auditor identity, candidate hash, evidence link, and finding dispositions>
 Release verdict: <verified / incomplete / outside scope>
 Blocking evidence: <case/check IDs, errors, or none>
 
 ## Result summary
 
-| Metric / method | Suite / partition | Passed / expected | Errors / missing | Threshold | Baseline delta | Verdict |
+| Metric / method | Suite / partition | Value / sample count; passed / expected for pass-rate metrics | Errors / missing | Threshold | Baseline delta | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| <metric> | <scope> | <n/N> | <n/N> | <frozen gate> | <percentage points or not applicable> | <pass/fail/incomplete> |
+| <metric> | <scope> | <native metric value and N; n/N for pass-rate metrics> | <n/N> | <frozen gate> | <metric delta or not applicable> | <pass/fail/incomplete> |
 
 Supporting-check results: <validity/operational failures and evidence>
+Classification results, when applicable: <confusion matrices, class support, per-class precision/recall/F1, primary aggregate and averaging, coverage/abstentions; separate component and measured ensemble performance with shared-error evidence>
 New-metric failures: <case/assertion IDs and evidence>
 Existing-metric regressions: <case/assertion IDs and evidence>
 Missing results and evaluation/provider/parsing/judge errors: <details or none>

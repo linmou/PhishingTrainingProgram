@@ -23,9 +23,17 @@ Evaluate both methods against the same preserved target generation and declared 
 
 Preserve per-check case/version, metric/check ID, method, status (`pass`, `fail`, `error`, or `missing`), raw score when supplied, evidence/reason, and expected versus actual values for deterministic comparisons. Retain judge output and settings for rubric results. Invalid target output and evaluator errors are distinct from an ordinary behavior failure; downstream unevaluable checks remain visible rather than disappearing.
 
-In reports and viewers, label each metric's method and show passed/expected, errors/missing, threshold, and verdict by suite/partition, alongside comparable baseline/candidate deltas. Derive expected counts from frozen applicability and repetitions, not returned components. Only predeclared `not_applicable` checks leave the denominator. Keep raw/mean scores separate from pass rates: graded scores need a declared per-case pass rule, and a score sum is not a pass count. Show supporting validity/execution issues separately; neither a high score nor a missing component can erase them.
+In reports and viewers, label each metric's method and show its value, applicable sample count, errors/missing, threshold, and verdict by suite/partition, alongside comparable baseline/candidate deltas. Include passed/expected for pass-rate metrics; retain native classification statistics rather than presenting F1 as a pass count. Derive expected counts from frozen applicability and repetitions, not returned components. Only predeclared `not_applicable` checks leave the denominator. Keep raw/mean scores separate from pass rates: graded scores need a declared per-case pass rule, and a score sum is not a pass count. Show supporting validity/execution issues separately; neither a high score nor a missing component can erase them.
 
 Preserve the target generation ID and repetition/turn identity with each check so jointly applicable metrics can be joined on the same output. Final reports use [the final analysis reference](final-analysis.md) to investigate joint outcomes and requirement conflicts. Missing join evidence is an analysis gap; aggregate metric rates cannot reconstruct joint counts. Joint acceptance rules require predeclared applicability and thresholds under the same freeze/version rules as other checks.
+
+## Classification metrics
+
+When the AI predicts categories, define the label space, single-label or multilabel task, reference-label provenance, class support, and false-positive/false-negative consequences. Report a confusion matrix (per-label matrices for multilabel tasks), per-class precision, recall, and F1, and the selected aggregate. Choose the primary metric from the task: accuracy for suitably balanced, equal-cost decisions; macro-F1 or balanced accuracy when class imbalance matters; precision/recall gates for consequential classes. Declare averaging, decision thresholds, zero-denominator handling, and abstention rules before runs. Report abstention coverage and conditional performance together; malformed or missing predictions remain visible under the error gate.
+
+An individual classifier may use a predeclared primary threshold as low as 0.70 (70%), including when it is intended as an ensemble component. This is an available task-specific acceptance criterion, not a universal default or a retrospective relaxation. Record the metric, rationale, required partitions, and any class-specific minimums; preserve stricter established requirements and hard-constraint gates. A generic rubric pass rate does not substitute for classification performance.
+
+If the implementation uses an ensemble, freeze its members, sampling settings, aggregation, tie/abstention rules, and deployed system thresholds. Evaluate its actual combined predictions on the same eligible cases and report component and ensemble metrics separately. Inspect shared errors: repeated calls can fail together, so a component score alone cannot establish an ensemble gain. Planned ensemble use can justify a component target, but deployed-system acceptance requires measured evidence for the implemented ensemble.
 
 ## Case coverage and provenance
 
@@ -43,6 +51,16 @@ An independent person or authorized separate agent authors holdouts from the fro
 
 Withhold content and detailed failures from the prompt author until the candidate is frozen. An independent validation round evaluates baseline and candidate on the same held-out set. If holdout feedback informs tuning, retain its provenance and failures, mark it exposed, keep it in development/regression coverage, and independently author replacements. Run both baseline and candidate on the replacement set. Previously viewed synthetic cases remain useful tests but cannot count toward eligible unseen-holdout coverage.
 
+## Independent refinement audit
+
+Use one independent audit agent for each refinement iteration, including changes to prompts, model settings, decision logic, or ensemble rules. The auditor must not author the candidate. Give it the adopted spec, baseline and candidate snapshots/diffs, changed-factor record, development/regression input-output evidence, and evaluation plan. Ask it to assess the change from these artifacts without supplying the author's desired verdict.
+
+The auditor checks whether each changed rule follows the intended behavior and has evidence of generalization. Reject explanations based only on superficial correlations, such as wording, length, names, or cue counts unrelated to the requirement. Reject hard-coded evaluation examples, case IDs, expected-answer lookups, and case-specific exceptions added to fit the evaluation set. Distinguish legitimate domain rules and representative few-shot teaching examples from memorized test solutions by tracing them to requirements and testing varied scenarios.
+
+For material suspected shortcuts, request the smallest controlled check: vary an irrelevant surface feature while keeping the expected decision fixed, or hold surface features steady while changing the decisive fact and expected decision. Preserve the resulting inputs, outputs, and changed factors. Proposed checks without execution remain unresolved evidence, not demonstrated generalization. Use development cases for this audit; inspection of holdout failures followed by refinement triggers the holdout exposure/replacement rules.
+
+Record auditor identity, exact candidate hash, inspected artifacts, findings with evidence, and a `clear`, `changes_required`, or `incomplete` verdict. Resolve findings and obtain an updated audit for the revised hash before advancing the candidate. A clear audit supports experimental integrity; it does not replace the full evaluation. If independent delegation is unavailable, record the audit as incomplete rather than substituting author self-review.
+
 ## Acceptance gates
 
 Freeze thresholds, required partitions, repetitions, and seed policy before runs. Thresholds follow the requirement's consequence, not the evaluator: a deterministic behavioral accuracy metric need not require perfection, while an LLM-judged hard constraint may require 100%. Use these defaults unless a different user/project requirement was specified before evaluation; retain stricter established gates.
@@ -50,14 +68,15 @@ Freeze thresholds, required partitions, repetitions, and seed policy before runs
 | Gate | Passing condition |
 | --- | --- |
 | Constitutional grounding | Pinned human-adopted constitution with explicit decision evidence and resolved spec-grounding review; evaluation scores do not establish either. |
-| Each new and existing behavior metric, deterministic or LLM-judged | At least 80% overall and independently in ecological, eligible synthetic-holdout, and each required applicable partition, unless a stricter gate below applies. |
-| Existing-metric non-regression | Rate does not decline against the unchanged-prompt baseline on the same cases, assertions, settings, and partitions. |
+| Refinement integrity, when the tested system was refined | Independent audit is clear for the exact candidate hash, with findings resolved and evidence preserved. |
+| Each new and existing behavior metric, deterministic or LLM-judged | At least 80% overall and independently in ecological, eligible synthetic-holdout, and each required applicable partition, unless a stricter gate below applies. Classification uses its predeclared task-specific metric and gates; an individual classifier's primary threshold may be as low as 70% under the classification rules above. |
+| Existing-metric non-regression | The declared metric does not worsen against the unchanged-prompt baseline on the same cases, assertions, settings, and partitions. |
 | Required validity checks, exact transitions, declared safety-critical, and applicable constitutional hard-constraint checks | 100%, whether represented as behavior metrics or supporting checks. |
 | Semantic pairs | 100% of pairs; both members satisfy their expected assertions. |
 | Manifest coverage | Every expected case/assertion/metric/suite/partition has a result. |
 | Evaluation, API, parsing, and judge errors | Zero unresolved errors; missing/error results cannot be omitted from denominators. |
 
-Compare exact fractions. Keep unchanged regression slices visible when adding cases; extra easy cases cannot conceal a decline. A 95% to 81% drop fails non-regression despite clearing 80%. Report every newly failing case/assertion for review; a universal 100% case gate applies only when specified.
+Compare unrounded metric values, using exact fractions for rates. For classification, apply non-regression to the same predeclared metric, averaging, classes, and partitions. Keep unchanged regression slices visible when adding cases; extra easy cases cannot conceal a decline. A 95% to 81% drop fails non-regression despite clearing 80%. Report every newly failing case/assertion for review; a universal 100% case gate applies only when specified.
 
 Aggregate every predeclared repetition instead of selecting the luckiest run. A legitimate requirement or grader correction receives a new behavior-design snapshot or evaluation-plan revision and comparable baseline; observed failures alone cannot justify lowering the gate. Benchmark acceptance requires complete immutable evidence, not merely a passing summary or overwritten `latest` report.
 
@@ -69,6 +88,7 @@ Preserve successes and failures as they occur. Each immutable run directory cont
 - Prompt content or immutable reference; constitution, behavior-design, response-contract, case, rubric, and manifest snapshots/hashes, plus grounding-review evidence.
 - Target/judge models, endpoints without credentials, temperature, limits, seed/repetition policy, and provider options.
 - Typed per-check results under the shared contract, deterministic expected/actual evidence, raw and parsed judge output where applicable, aggregates, supporting-check failures, missing results, errors, thresholds, and verdict.
+- Independent refinement audits with candidate hashes and finding dispositions; classification label/prediction pairs, class support, confusion matrices, and component/ensemble results when applicable.
 - Commands, exit codes, start/end times, token usage when available, git revision, and worktree changes.
 
 Redact credentials and personal identifiers without altering tested meaning. Mark unavailable metadata explicitly. The executed run record summarizes these runs and links to them; it does not replace full input-output pairs or intermediate evidence.
