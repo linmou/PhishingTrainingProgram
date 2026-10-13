@@ -87,6 +87,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         checklistId: string;
         itemId: string;
         focusStudentMessageId: string;
+        itemLabel?: string;
     } | null>(null);
     const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
     const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
@@ -1008,8 +1009,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 parentMessageId = checklistOwnerMessage.id;
                 parentMessageContent = checklistOwnerMessage.content;
-                await transferAssessmentService.analyzeMessage(parentMessageId, currentRoom.id);
-                const prepared = await transferAssessmentService.prepareAssessment({
+                // Assessment answers already belong to the grading lifecycle. Re-analyzing
+                // them as ordinary learning evidence is rejected by the trusted API.
+                const isAssessmentAnswer = Boolean(readAssessmentId(checklistOwnerMessage));
+                if (!isAssessmentAnswer) {
+                    await transferAssessmentService.analyzeMessage(parentMessageId, currentRoom.id);
+                }
+                const prepared = isAssessmentAnswer ? null : await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
                   checklistId: transferChecklist.id,
@@ -1030,6 +1036,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         checklistId: candidate.scope.checklistId,
                         itemId: candidate.scope.itemId,
                         focusStudentMessageId: candidate.scope.focusStudentMessageId,
+                        itemLabel: [
+                            ...transferChecklist.detection_areas,
+                            ...transferChecklist.verification_steps,
+                        ].find(item => item.id === candidate.scope.itemId)?.area_text,
                     });
                     setAiSuggestion(candidate.decision.assessment.rendered_text);
                     setAiDecision(null);
