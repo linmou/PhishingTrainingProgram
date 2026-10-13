@@ -4,6 +4,8 @@ Intent: record the tutor checklist behavior corrected after transfer-assessment 
 
 Learning targets saved before a learner joins synchronize when the learner becomes available. Targets entered after the learner joins synchronize immediately. A failed synchronization retains the local draft; **Retry sync** submits initialization again. Concurrent refreshes share the active request.
 
+Requests are scoped to the active room and learner. Switching either allows its new initialization immediately; completion of an old request cannot overwrite the new checklist, clear its draft, or reset its loading state. Empty saved drafts are not initialized. Deferred-response tests cover both room and learner switches.
+
 Tutor notes on a transfer checklist use the trusted `edit_learning_progress` operation with action `edit_item`, as do other target metadata edits. A rejected write preserves the displayed saved value and shows the error. Legacy checklist writes retain their existing service.
 
 The expanded item now exposes an **Understanding** selector for none, basic, good, and excellent. It submits `set_understanding` and is disabled by the Guard progression lock.

@@ -159,13 +159,21 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // New modal states
   const [showGenerationModal, setShowGenerationModal] = useState<GenerationModalState | null>(null);
   const [showManualInput, setShowManualInput] = useState(false);
-  const transferPromotionInFlight = useRef(false);
+  const transferScope = `${roomId}:${transferStudentId}:${transferEnabled}:${user?.current_role}`;
+  const currentTransferScope = useRef(transferScope);
+  currentTransferScope.current = transferScope;
+  const transferPromotionInFlight = useRef<{ scope: string } | null>(null);
+  useEffect(() => () => { transferPromotionInFlight.current = null; }, [transferScope]);
 
   const syncTransferDraft = useCallback(async () => {
     if (!transferEnabled || !transferStudentId || user?.current_role !== 'tutor') return;
     const draft = readLearningTargetDraft(roomId);
-    if (!draft || transferPromotionInFlight.current) return;
-    transferPromotionInFlight.current = true;
+    if (!draft || draft.detectionAreas.length + draft.verificationSteps.length === 0
+      || transferPromotionInFlight.current?.scope === transferScope) return;
+    const request = { scope: transferScope };
+    transferPromotionInFlight.current = request;
+    const isCurrentRequest = () => currentTransferScope.current === transferScope
+      && transferPromotionInFlight.current === request;
     setLoading(true);
     setError(null);
     const items: LearningTargetInput[] = [
@@ -180,20 +188,24 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     ];
     try {
       const saved = await RoomFeaturesService.checklist.initializeTransferChecklistForStudent(roomId, transferStudentId, items);
+      if (!isCurrentRequest()) return;
       window.localStorage.removeItem(draftStorageKey(roomId));
       setChecklist(saved);
       setProgress(progressForChecklist(saved));
     } catch (err) {
+      if (!isCurrentRequest()) return;
       const message = err instanceof Error ? err.message : 'Failed to sync learning targets';
       const localChecklist = draftChecklist(roomId, draft);
       setChecklist(localChecklist);
       setProgress(progressForChecklist(localChecklist));
       setError(`Learning targets remain saved locally. Sync failed: ${message}`);
     } finally {
-      transferPromotionInFlight.current = false;
-      setLoading(false);
+      if (isCurrentRequest()) {
+        transferPromotionInFlight.current = null;
+        setLoading(false);
+      }
     }
-  }, [roomId, transferEnabled, transferStudentId, user?.current_role]);
+  }, [roomId, transferEnabled, transferStudentId, user?.current_role, transferScope]);
 
   // Generate new checklist using TDD system prompt detection with template fallback
   const generateChecklist = useCallback(async (templateName: string) => {
@@ -648,7 +660,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
   // Refresh checklist data - reload existing data without clearing
   const refreshChecklist = useCallback(async () => {
     if (!roomId) return;
-    if (transferPromotionInFlight.current) return;
+    if (transferPromotionInFlight.current?.scope === transferScope) return;
     if (transferEnabled && transferStudentId && user?.current_role === 'tutor' && readLearningTargetDraft(roomId)) {
       await syncTransferDraft();
       return;
@@ -742,7 +754,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
     } finally {
       setLoading(false);
     }
-  }, [roomId, user, transferEnabled, transferStudentId, syncTransferDraft]);
+  }, [roomId, user, transferEnabled, transferStudentId, syncTransferDraft, transferScope]);
 
   useEffect(() => {
     void syncTransferDraft();

@@ -227,6 +227,49 @@ describe('useChecklist transfer progress ownership', () => {
     expect(window.localStorage.getItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`)).toBeNull();
   });
 
+  // useChecklist.ts: a slow request from an old room or learner cannot block or overwrite the new scope.
+  it.each(['room', 'learner'])('ignores a delayed initialization after changing %s', async (changedScope) => {
+    const nextRoom = changedScope === 'room' ? 'room-b' : TRANSFER_ROOM_ID;
+    const nextLearner = changedScope === 'learner' ? LEARNER_B_ID : LEARNER_A_ID;
+    for (const room of [TRANSFER_ROOM_ID, nextRoom]) {
+      window.localStorage.setItem(`room-learning-target-draft:${room}`, JSON.stringify({
+        detectionAreas: ['Check the sender'], verificationSteps: [],
+      }));
+    }
+    let finishOld!: (value: typeof transferChecklist) => void;
+    let finishNew!: (value: typeof transferChecklist) => void;
+    checklistApi.initializeTransferChecklistForStudent
+      .mockImplementationOnce(() => new Promise(resolve => { finishOld = resolve; }))
+      .mockImplementationOnce(() => new Promise(resolve => { finishNew = resolve; }));
+    const { result, rerender } = renderHook(({ room, student }) => useChecklist(room, {
+      enabled: true, studentId: student,
+    }), { initialProps: { room: TRANSFER_ROOM_ID as string, student: LEARNER_A_ID as string } });
+    rerender({ room: nextRoom, student: nextLearner });
+    expect(checklistApi.initializeTransferChecklistForStudent).toHaveBeenCalledTimes(2);
+    await act(async () => { finishOld(transferChecklist); });
+    expect(result.current.checklist?.id).not.toBe(CHECKLIST_ID);
+    expect(result.current.loading).toBe(true);
+    expect(window.localStorage.getItem(`room-learning-target-draft:${nextRoom}`)).not.toBeNull();
+    const nextChecklist = buildChecklist({ id: 'next-checklist', room_id: nextRoom, student_id: nextLearner });
+    await act(async () => { finishNew(nextChecklist); });
+    expect(result.current.checklist?.id).toBe('next-checklist');
+    expect(result.current.checklist?.student_id).toBe(nextLearner);
+    expect(result.current.loading).toBe(false);
+  });
+
+  // useChecklist.ts: empty persisted drafts cannot create a learner-owned checklist.
+  it('does not initialize an empty saved draft', async () => {
+    window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
+      detectionAreas: ['  '], verificationSteps: [],
+    }));
+    const { result } = renderHook(() => useChecklist(TRANSFER_ROOM_ID, {
+      enabled: true, studentId: LEARNER_A_ID,
+    }));
+    await act(async () => { await result.current.refreshChecklist(); });
+    expect(checklistApi.initializeTransferChecklistForStudent).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(false);
+  });
+
   // useChecklist.ts: an ownerless server projection cannot hide a valid tutor-local draft.
   it('keeps the local draft when the server returns ownerless transfer progress', async () => {
     window.localStorage.setItem(`room-learning-target-draft:${TRANSFER_ROOM_ID}`, JSON.stringify({
