@@ -2,11 +2,11 @@
 
 Intent: record the inspected causes, reproducible local checks, and staged release of the browser QA fixes.
 
-Date: 2026-10-13. Implementation baseline: `bc4ba50`. Status: **staging workflow verified; production SQL applied and verified; production Edge/browser verification pending**.
+Date: 2026-10-13. Implementation baseline: `bc4ba50`. Status: **production verified**. The matching SQL, Edge, and browser workflow passed on both projects.
 
 ## Artifact and environment
 
-- Candidate: repository-root `output/qa-transfer-remediation-2026-10-13/20261013000000_transfer_qa_repairs.sql`, SHA-256 `1f05bf8f41cf8c05a434c280fe3d65fbff65defdbb3492436919fabec9f48b35`. Keep this exact artifact until both hosted workflows pass, then archive it. Two older SQL files already present in `supabase/migrations/` have separate unfinished release records; this repair does not claim their earlier semantic validation passed.
+- Archived artifact: `supabase/archived_migrations/20261013000000_transfer_qa_repairs.sql`, SHA-256 `1f05bf8f41cf8c05a434c280fe3d65fbff65defdbb3492436919fabec9f48b35`, byte-identical to the tested/applied repository-root `output/qa-transfer-remediation-2026-10-13/20261013000000_transfer_qa_repairs.sql`. The output copy is retained. Two older SQL files already present in `supabase/migrations/` have separate unfinished release records; this repair does not claim their earlier semantic validation passed.
 - Production `zgbufaxooqxeabewktzd`: PostgreSQL 17.4, inspected through official read-only Supabase MCP with the refreshed token. Staging `ciubrzggdqesgvfkpolj`: PostgreSQL 17.6. Local isolated PostgreSQL 17.11, socket `/Users/admin/.transfer-assessment-pg17/migration-validation/socket`, port `55433`.
 - Configured fresh `pd_dump.sh` and `scripts/database/pg_dump_roles.sh` succeeded. Application archive `/Users/admin/.transfer-assessment-pg17/phishingtutor.dump`, created 2026-10-13 00:10:19 EDT, SHA-256 `9e182dbd931ebcbf44a754d25db163c0132e609c594207f03793e54cf78412f5`; roles SHA-256 `e152cdd9c0c69e38d2e2bedcd19975913e72b1ca1dde4d88085dd39f75df3e6d`. Archive listing and decode checks passed.
 - Resume evidence: `/Users/admin/.transfer-assessment-pg17/runs/transfer_qa_repairs/20261013_041019/local-and-staging-evidence.json`. Query files, captured production/staging catalogs, setup SQL, exact candidate, staging runner, and concurrency scripts are in repository-root `output/qa-transfer-remediation-2026-10-13/`.
@@ -52,4 +52,8 @@ Production's immediate MCP precheck at 04:39:16 UTC exactly matched the previous
 
 Fresh production MCP at 04:39:38 UTC confirms every public/private function definition hash, owner, ACL, table/RLS flag, policy, index, and default ACL matches the tested final local database after normalizing ACL array order. The cleanup/permission query found zero SQL fixture rooms, service-role access to both new RPCs, and no anon/authenticated access. Evidence: `/Users/admin/.transfer-assessment-pg17/runs/transfer_qa_repairs/20261013_041019/production-evidence.json`.
 
-The SQL remains unarchived until production's matching Edge deployment and browser verification pass. Root owns that final gate and its browser evidence. The supplied Edge source manifest is `24df7e0093052f39de57382b20d76d651dcdbc320cd251900eebd6d15a9da1f1`.
+Root verified the matching Edge source on staging version **52** and production version **9**, source manifest `24df7e0093052f39de57382b20d76d651dcdbc320cd251900eebd6d15a9da1f1`. Production Chrome DevTools checks passed private tutor review, paired manual edits, notes-only save, formerly failing second-room initialization, real-provider draft delivery, raw `C?` correct-first grading, and subsequent tutoring feedback generation/delivery.
+
+Independent production MCP inspection at 04:44:47 UTC confirms room `487be6b8-f18d-4d1a-98c9-997e59ff7544` now has active transfer checklist `12e95588-6d30-4d1d-ba9d-4add97dd90cd`; target `e21d48f8-eed3-4936-b94f-d18b2b4cccda` is covered/good. Assessment `c5885986-69d8-453a-9694-e3929405240f` is passed with one accepted attempt, answer `0d17c02b-b791-420d-b191-cd466de46c05`. Tutor feedback `062e9d0d-106e-4b0d-8f07-ec5853faa387` is a tutoring message linked to that terminal answer and persisted after closure. The room stays in tutoring mode. Sanitized evidence is retained in `production-browser-evidence.json` in the run directory; root retains the Chrome evidence and QA rooms for review.
+
+After both application workflows passed, the exact SQL was archived with the same hash. SQL assertion fixtures rolled back on both projects; browser QA fixtures remain intentionally retained. No previous migration files or browser rooms were removed.
