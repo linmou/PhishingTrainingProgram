@@ -15,6 +15,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../RoomPagePost';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
+import { ChecklistService } from '../../services/checklistService';
 import {
   answerLifecycleFromProcessed,
   projectRoomMessage,
@@ -32,6 +33,7 @@ import {
   learnerAMessageRow,
   preparedCandidate,
   transferRoom,
+  transferChecklist,
 } from '../../test-support/transferRoomFixtures';
 import type { Message } from '../../types';
 
@@ -144,6 +146,40 @@ describe('RoomPagePost transfer lifecycle states', () => {
 
   afterEach(() => {
     alertSpy.mockRestore();
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+
+  // RoomPagePost.tsx: targets synchronized after learner join clear waiting without a reload or new message.
+  it('refreshes learner target readiness and stops polling when targets arrive', async () => {
+    jest.useFakeTimers();
+    const readTargets = jest.spyOn(ChecklistService, 'getChecklistForStudent')
+      .mockResolvedValueOnce(null).mockResolvedValueOnce(transferChecklist as never);
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    mount();
+    await act(async () => undefined);
+    expect(screen.getByRole('status')).toHaveTextContent('Waiting for the tutor');
+    await act(async () => { jest.advanceTimersByTime(3000); });
+    expect(screen.queryByText('Waiting for the tutor to set up learning targets.')).not.toBeInTheDocument();
+    expect(readTargets).toHaveBeenCalledTimes(2);
+    await act(async () => { jest.advanceTimersByTime(9000); });
+    expect(readTargets).toHaveBeenCalledTimes(2);
+  });
+
+  // RoomPagePost.tsx: failed readiness reads retry, but leaving the room cancels scheduled checks.
+  it('retries failed learner readiness reads and cancels polling on unmount', async () => {
+    jest.useFakeTimers();
+    const readTargets = jest.spyOn(ChecklistService, 'getChecklistForStudent')
+      .mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValue(null);
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const { unmount } = mount();
+    await act(async () => undefined);
+    expect(screen.getByRole('status')).toHaveTextContent('Waiting for the tutor');
+    await act(async () => { jest.advanceTimersByTime(3000); });
+    expect(readTargets).toHaveBeenCalledTimes(2);
+    unmount();
+    await act(async () => { jest.advanceTimersByTime(9000); });
+    expect(readTargets).toHaveBeenCalledTimes(2);
   });
 
   it('shows a preparing state while a transfer turn is being prepared', () => {
