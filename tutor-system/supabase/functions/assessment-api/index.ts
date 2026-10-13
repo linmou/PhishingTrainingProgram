@@ -497,7 +497,7 @@ async function processMessage(
     const answer = asRecord(stored.answer);
     const snapshot = asRecord(context.attempt_snapshot);
     if (stored.lifecycle === 'cancelled' && stored.authoritative_result) {
-      return projectProcessed(stored.authoritative_result);
+      return projectProcessed({ ...asRecord(stored.authoritative_result), processing_state: 'duplicate', already_processed: true });
     }
     const content = answer.selected_option_ids == null
       ? requiredString(answer.content)

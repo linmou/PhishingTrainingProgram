@@ -128,6 +128,31 @@ Deno.test('cancelled assessment replay bypasses grading and writes', async () =>
   assertEquals(payload.data.already_processed, true);
 });
 
+Deno.test('accepted retry replay after cancellation keeps its grade and marks it duplicate', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    resolveAnswer: () => { throw new Error('must not grade a replay'); },
+    rpc: async name => {
+      assertEquals(name, 'get_transfer_assessment_processing_context_v1');
+      return { data: { lifecycle: 'cancelled', authoritative_result: {
+        message_id: 'first-answer', assessment_id: 'a', processing_state: 'applied',
+        answer_outcome: 'retry', attempt_number: 1, attempts_used: 1, attempts_remaining: 1,
+        selected_option_ids: ['A'], terminal: false, code: null, already_processed: false,
+      } }, error: null };
+    },
+  }));
+  const response = await handler(request('process_message', { assessment_id: 'a', message_id: 'first-answer' }));
+  const payload = await response.json();
+  assertEquals(payload.data.processing_state, 'duplicate');
+  assertEquals(payload.data.already_processed, true);
+  assertEquals(payload.data.answer_outcome, 'retry');
+  assertEquals(payload.data.attempt_number, 1);
+  assertEquals(payload.data.attempts_used, 1);
+  assertEquals(payload.data.attempts_remaining, 1);
+  assertEquals(payload.data.selected_option_ids, ['A']);
+  assertEquals(payload.data.terminal, false);
+  assertEquals(payload.data.terminal_failure_feedback, null);
+});
+
 Deno.test('private review reads require a tutor and the authorized room', async () => {
   for (const canReview of [false, true]) {
     let calls = 0;
