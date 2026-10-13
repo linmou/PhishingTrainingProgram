@@ -19,3 +19,5 @@ Based on merged commit bc4ba50, linked free-text answers now reach the existing 
 The public question projection preserves the persisted assessment lifecycle, allowing reloads to disable cancelled and resolved questions. Cancelled questions show that no attempt was counted; ambiguous responses retain enabled choices. Cancelled processing context returns its authoritative response before parsing or grading.
 
 Verification: 32 Edge handler tests passed, including real-parser ambiguous/assisted/punctuation selection paths and cancellation replay; 52 frontend/service projection tests passed. SQL deployment remains coordinated with the backend migration.
+
+Follow-up from staging QA on 2026-10-13 (base dc7021c): replaying an accepted answer after cancellation now marks the response `duplicate` / `already_processed: true` while retaining its original grade, attempt counts, selection, and terminal flag. The Edge regression checks that the resolver and write operations are not called.
