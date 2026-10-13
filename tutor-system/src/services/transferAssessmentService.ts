@@ -3,7 +3,7 @@
 import { supabase } from './supabase';
 import type { Room } from '../types';
 import type { LearningTargetInput } from '../types/checklist';
-import type { AssessmentOption, AssessmentOptionId, TransferAssessmentDraft } from '../types/assessment';
+import type { AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
 import {
   PUBLIC_ASSESSMENT_DTO_KEYS,
   type AssessmentApiEnvelope,
@@ -20,6 +20,14 @@ export interface PublicAssessmentDTO {
   selection_type: 'single' | 'multiple';
   stem: string;
   options: AssessmentOption[];
+}
+
+export interface TutorAssessmentReview {
+  item_label: string;
+  assessment: PrivateAssessment;
+  resolution?: string;
+  attempt_count?: number;
+  feedback_required?: boolean;
 }
 
 export interface PublicMessageDTO {
@@ -293,6 +301,10 @@ export class TransferAssessmentService {
 
   joinRoom(roomId: string): Promise<{ room_id: string; learner_id: string | null; room_role: 'student' | 'observer' }> {
     return this.request('join_room', { room_id: roomId });
+  }
+
+  readReview(roomId: string, assessmentId: string): Promise<TutorAssessmentReview> {
+    return this.request('read_review', { room_id: roomId, assessment_id: assessmentId });
   }
 
   editLearningProgress(input: {

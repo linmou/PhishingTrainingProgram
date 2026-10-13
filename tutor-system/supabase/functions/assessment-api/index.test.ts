@@ -64,6 +64,33 @@ function providerScope(): Record<string, unknown> {
   };
 }
 
+Deno.test('private review reads require a tutor and the authorized room', async () => {
+  for (const canReview of [false, true]) {
+    let calls = 0;
+    const handler = createAssessmentApiHandler(dependencies({
+      verifier: { verify: async () => ({ principal_id: 'p', application_user_id: 'actor',
+        allowed_room_ids: ['room-1'], can_review_assessment: canReview }) },
+      rpc: async () => { calls += 1; return { data: {}, error: null }; },
+    }));
+    const result = await handler(request('read_review', { room_id: canReview ? 'other-room' : 'room-1', assessment_id: 'assessment-1' }));
+    assert(result.status >= 400);
+    assertEquals(calls, 0);
+  }
+});
+
+Deno.test('private review reads pass verified actor and scope to the private RPC', async () => {
+  const calls: unknown[] = [];
+  const handler = createAssessmentApiHandler(dependencies({ rpc: async (name, args) => {
+    calls.push({ name, args });
+    return { data: { item_label: 'Target', assessment: { correct_option_ids: ['B'] } }, error: null };
+  } }));
+  const result = await handler(request('read_review', { room_id: 'room-1', assessment_id: 'assessment-1', actor_id: 'spoofed' }));
+  assertEquals(result.status, 200);
+  assertEquals(calls, [{ name: 'get_transfer_assessment_review_v1', args: {
+    p_room_id: 'room-1', p_assessment_id: 'assessment-1', p_actor_id: 'teacher-1',
+  } }]);
+});
+
 function validProviderPayload(): Record<string, unknown> {
   return {
     choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({

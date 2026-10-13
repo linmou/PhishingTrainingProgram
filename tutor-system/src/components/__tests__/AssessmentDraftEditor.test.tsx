@@ -60,6 +60,9 @@ describe('AssessmentDraftEditor', () => {
     const submitted = onSubmit.mock.calls[0][0] as TransferAssessmentDraft;
     expect(submitted.target_item_id).toBe(preparedCandidate.target_item_id);
     expect(submitted.assessment.stem).toBe(editedQuestion);
+    expect(submitted.assessment.transfer_basis.changed_context).toBe(editedQuestion);
+    expect(submitted.assessment.transfer_basis.source_context).toBe(preparedCandidate.assessment.transfer_basis.source_context);
+    expect(submitted.assessment.transfer_basis.source_evidence_message_ids).toEqual(preparedCandidate.assessment.transfer_basis.source_evidence_message_ids);
     expect(submitted.assessment.correct_option_ids).toEqual(['B']);
     expect(submitted.assessment.learner_safe_explanation).toBe(
       preparedCandidate.assessment.learner_safe_explanation

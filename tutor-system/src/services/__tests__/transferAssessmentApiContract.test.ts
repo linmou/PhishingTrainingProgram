@@ -126,12 +126,12 @@ describe('assessment API contract', () => {
     expect(configuredRpcForwardsResult(source)).toBe(true);
   });
 
-  it('keeps exactly six stable operations and versioned envelopes', () => {
+  it('keeps the explicit operation allowlist and versioned envelopes', () => {
     expect(ASSESSMENT_API_OPERATIONS).toEqual([
-      'initialize_checklist', 'post_message', 'analyze_message',
-      'prepare_turn', 'send_reviewed', 'process_message',
+      'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
+      'prepare_turn', 'send_reviewed', 'read_review', 'process_message',
     ]);
-    expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(6);
+    expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(ASSESSMENT_API_OPERATIONS.length);
     ASSESSMENT_API_OPERATIONS.forEach((operation) => expect(isAssessmentApiOperation(operation)).toBe(true));
     expect(isAssessmentApiOperation('grade_locally')).toBe(false);
     expect(successEnvelope({ id: 'x' })).toEqual({ ok: true, data: { id: 'x' } });

@@ -8,6 +8,7 @@ import type { AssessmentAnswerAttempt } from './PublicAssessmentQuestion';
 import { readAnswerLifecycle, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 import { resolveMessagePresentation } from '../utils/messagePresentation';
 import type { AssessmentOptionId } from '../types/assessment';
+import { transferAssessmentService, type TutorAssessmentReview } from '../services/transferAssessmentService';
 import './PostComment.css';
 
 interface PostCommentProps {
@@ -67,6 +68,24 @@ const PostComment: React.FC<PostCommentProps> = ({
         : null;
     const hasTransferAssessment = Boolean(publicQuestion || answerLifecycle);
     const [assessmentExpanded, setAssessmentExpanded] = useState(true);
+    const [review, setReview] = useState<{ ownerId: string; assessmentId: string; data: TutorAssessmentReview } | null>(null);
+    const [reviewLoading, setReviewLoading] = useState(false);
+    const [reviewError, setReviewError] = useState<string | null>(null);
+    const tutorReview = currentUserRole === 'tutor' && review && review.ownerId === currentUserId &&
+        review.assessmentId === publicQuestion?.id ? review.data : null;
+    const loadReview = async () => {
+        if (currentUserRole !== 'tutor' || !currentUserId || !publicQuestion || reviewLoading) return;
+        setReviewLoading(true);
+        setReviewError(null);
+        try {
+            const data = await transferAssessmentService.readReview(message.room_id, publicQuestion.id);
+            setReview({ ownerId: currentUserId, assessmentId: publicQuestion.id, data });
+        } catch {
+            setReviewError('Could not load the tutor review. Try again.');
+        } finally {
+            setReviewLoading(false);
+        }
+    };
     const assessmentContentId = `assessment-content-${message.id}`;
     // State for two-step feedback system
     const [showRating, setShowRating] = useState<'like' | 'dislike' | null>(null);
@@ -213,6 +232,25 @@ const PostComment: React.FC<PostCommentProps> = ({
                                             : undefined}
                                       />
                                     : presentation.body}
+                                {publicQuestion && currentUserRole === 'tutor' && (
+                                    <section aria-label="Tutor assessment review">
+                                        {tutorReview ? (
+                                            <>
+                                                <p><strong>Target:</strong> {tutorReview.item_label}</p>
+                                                <p><strong>Correct answer:</strong> {tutorReview.assessment.correct_option_ids.join(', ')}</p>
+                                                <p><strong>Explanation:</strong> {tutorReview.assessment.learner_safe_explanation}</p>
+                                                <p><strong>Concept:</strong> {tutorReview.assessment.transfer_basis.concept_rule}</p>
+                                                <p><strong>Original context:</strong> {tutorReview.assessment.transfer_basis.source_context}</p>
+                                                <p><strong>New context:</strong> {tutorReview.assessment.transfer_basis.changed_context}</p>
+                                            </>
+                                        ) : (
+                                            <button type="button" disabled={reviewLoading} onClick={loadReview}>
+                                                {reviewLoading ? 'Loading tutor review…' : 'View tutor answer key and context'}
+                                            </button>
+                                        )}
+                                        {reviewError && <p role="alert">{reviewError}</p>}
+                                    </section>
+                                )}
                                 {answerLifecycle?.state === 'rejected' && answerLifecycle.code === 'ANSWER_FORMAT_UNRESOLVED' && (
                                     <p className="answer-clarification" role="status">
                                         Choose one of the displayed options and submit again.
