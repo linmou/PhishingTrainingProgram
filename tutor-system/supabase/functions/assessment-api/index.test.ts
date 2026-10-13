@@ -96,7 +96,8 @@ Deno.test('room entry grants the first student the learner seat and returns obse
   assertEquals(response.status, 200);
   assertEquals((await response.json()).data.room_role, 'observer');
   assertEquals(calls.length, 1);
-  assertEquals(calls[0].args.p_actor_id, 'student-2');
+  assertEquals(calls[0].name, 'join_room_v1');
+  assertEquals(calls[0].args.p_student_id, 'student-2');
 });
 
 Deno.test('tutor status judgment is submitted under the verified actor identity', async () => {
@@ -109,13 +110,14 @@ Deno.test('tutor status judgment is submitted under the verified actor identity'
   }));
 
   const response = await handler(request('edit_learning_progress', {
-    room_id: 'room-1', item_id: 'item-1', action: 'set_status', status: 'needs_review',
+    room_id: 'room-1', item_id: 'item-1', action: 'set_status', updates: { status: 'needs_review' },
   }));
   assertEquals(response.status, 200);
   assertEquals((await response.json()).data.status, 'needs_review');
   assertEquals(calls.length, 1);
   assertEquals(calls[0].args.p_actor_id, 'teacher-1');
   assertEquals(calls[0].args.p_action, 'set_status');
+  assertEquals(calls[0].args.p_payload, { status: 'needs_review' });
 });
 
 Deno.test('observer cannot post a message or answer through the trusted API', async () => {
@@ -202,6 +204,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       operations.push(name);
+      if (name === 'join_room_v1') return { data: { room_role: 'student' }, error: null };
       if (name === 'initialize_transfer_checklist_v1') {
         assertEquals(args.p_items, [{ area_text: 'Verify independently', item_type: 'verification_step', priority: 'critical' }]);
         approved = true;
@@ -564,12 +567,13 @@ Deno.test('forged actor and cross-room request cannot bypass verified scope', as
     room_id: 'room-1', content: 'Hello', actor_id: 'other-user',
   }));
   assertEquals(forged.status, 200);
-  assertEquals(calls[0].p_actor_id, 'teacher-1');
+  assertEquals(calls[0].p_student_id, 'teacher-1');
+  assertEquals(calls[1].p_actor_id, 'teacher-1');
   const crossRoom = await handler(request('post_message', {
     room_id: 'other-room', content: 'Hello', actor_id: 'teacher-1',
   }));
   assertEquals(crossRoom.status, 403);
-  assertEquals(calls.length, 1);
+  assertEquals(calls.length, 2);
 });
 
 Deno.test('returns the exact public assessment target and strips private fields', async () => {
@@ -891,8 +895,10 @@ Deno.test('preserves the trusted ordinary-message branch and rejects tutoring th
   }));
   const payload = await reviewed.json();
   assertEquals(payload.error.code, 'ITEM_VALIDATION_FAILED');
-  assertEquals(calls[0].args.p_assessment_id, null);
-  assertEquals(calls.length, 1);
+  assertEquals(calls[0].name, 'join_room_v1');
+  assertEquals(calls[1].name, 'post_assessment_message_v2');
+  assertEquals(calls[1].args.p_assessment_id, null);
+  assertEquals(calls.length, 2);
 });
 
 Deno.test('retries a stale CAS snapshot and returns the committed authoritative result', async () => {
@@ -904,6 +910,7 @@ Deno.test('retries a stale CAS snapshot and returns the committed authoritative 
       allowed_room_ids: ['room-1'], can_review_assessment: false,
     }) },
     rpc: async (name) => {
+      if (name === 'join_room_v1') return { data: { room_role: 'student' }, error: null };
       if (name === 'get_transfer_assessment_processing_context_v1') {
         contextReads += 1;
         return { data: {
