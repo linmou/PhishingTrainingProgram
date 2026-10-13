@@ -48,7 +48,7 @@ Map each behavior requirement to stable metrics, choosing deterministic checks f
 
 Use a separate evaluation-plan artifact to declare method, checked output, applicability, expected evidence, snapshots, and thresholds. Validate deterministic check logic and expected labels; calibrate LLM judges before baseline evaluation. Do not substitute either method silently when the other is unavailable.
 
-For classification decisions, use the evaluation contract's [classification metrics](references/evaluation-contract.md#classification-metrics) instead of a generic acceptance rate. Predeclare a task-appropriate primary metric and class-specific gates; an individual classifier's threshold may be as low as 70%, with ensemble performance evaluated separately when used.
+For classification decisions, use the evaluation contract's [classification metrics](references/evaluation-contract.md#classification-metrics) instead of a generic acceptance rate. Formal evaluation uses three target repetitions per case and reports individual, two-member, and three-member ensemble metrics. Predeclare a task-appropriate primary metric and class-specific gates; an individual classifier's threshold may be as low as 70%, while the three-member ensemble's primary metric must exceed 90% in each required evaluation partition.
 
 Identify requirements that can apply together, including across behavior specs sharing the same response or state. Record known dependencies, tensions, and adopted priority rules; unresolved contradictions remain design gaps. Declare any joint acceptance checks before freezing; later exploratory interaction analysis does not create a new gate.
 

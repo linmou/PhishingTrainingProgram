@@ -27,7 +27,8 @@ Blocking evidence: <case/check IDs, errors, or none>
 | <metric> | <scope> | <native metric value and N; n/N for pass-rate metrics> | <n/N> | <frozen gate> | <metric delta or not applicable> | <pass/fail/incomplete> |
 
 Supporting-check results: <validity/operational failures and evidence>
-Classification results, when applicable: <confusion matrices, class support, per-class precision/recall/F1, primary aggregate and averaging, coverage/abstentions; separate component and measured ensemble performance with shared-error evidence>
+Classification results, when applicable: <confusion matrices, class support, per-class precision/recall/F1, primary aggregate and averaging, coverage/abstentions; each repetition and pooled individual metrics, two-member [1,2] and three-member [1,2,3] metrics by required partition; baseline deltas, aggregation/tie rules, generation-linked predictions, and shared-error evidence>
+Three-member classification verdict: <primary metric strictly >0.90 overall and in each required partition; unrounded values, sample counts, and pass/fail/incomplete, or not applicable>
 New-metric failures: <case/assertion IDs and evidence>
 Existing-metric regressions: <case/assertion IDs and evidence>
 Missing results and evaluation/provider/parsing/judge errors: <details or none>
