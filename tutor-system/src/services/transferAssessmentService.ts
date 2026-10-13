@@ -28,6 +28,7 @@ export interface TutorAssessmentReview {
   resolution?: string;
   attempt_count?: number;
   feedback_required?: boolean;
+  lifecycle?: string;
 }
 
 export interface PublicMessageDTO {

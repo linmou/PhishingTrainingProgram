@@ -32,7 +32,9 @@ Room mode updates are received through the room realtime subscription. Historica
 
 ### Feedback after transfer answers
 
-When the selected learner message carries a persisted assessment ID, AI generation routes directly to the tutor suggestion workflow. Assessment answers have already entered grading and must not be sent to ordinary evidence analysis or assessment preparation, which reject that message scope. This routing also applies after reload and duplicate realtime delivery. Ordinary learner messages continue through evidence analysis and assessment preparation.
+When the selected learner message carries a persisted assessment ID, AI generation reads the tutor-only assessment review before entering the tutor suggestion workflow. Assessment answers have already entered grading and must not be sent to ordinary evidence analysis or assessment preparation, which reject that message scope. This routing also applies after reload and duplicate realtime delivery. Ordinary learner messages continue through evidence analysis and assessment preparation.
+
+The review must provide a verified resolution (`open`, `passed`, or `failed`), message lifecycle (`delivered`, `passed`, `failed`, or `cancelled`), attempt count, and feedback requirement. Missing or unrecognized lifecycle data blocks feedback generation with a retryable error. Cancellation does not imply failure and can retain an open attempt snapshot. The provider receives these facts with the public question; the answer key and safe explanation are included only for terminal results. Private transfer rationale is not included in this feedback input or copied into message state. Deployment requires the matching `read_review` backend contract.
 
 Prepared review drafts carry the selected learning target's label from the loaded checklist so the editor identifies the target being assessed.
 
