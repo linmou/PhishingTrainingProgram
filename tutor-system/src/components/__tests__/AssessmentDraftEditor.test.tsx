@@ -14,6 +14,7 @@ import '@testing-library/jest-dom';
 import AssessmentDraftEditor from '../AssessmentDraftEditor';
 import { preparedCandidate } from '../../test-support/transferRoomFixtures';
 import type { TransferAssessmentDraft } from '../../types/assessment';
+import { TransferAssessmentService } from '../../services/transferAssessmentService';
 
 const optionInputs = (): HTMLInputElement[] =>
   Array.from(document.querySelectorAll('input[name="assessment-correct-option"]')) as HTMLInputElement[];
@@ -27,6 +28,30 @@ const selectKey = (label: string) => {
 };
 
 describe('AssessmentDraftEditor', () => {
+  it('keeps a non-retryable stale HTTP response blocked until a new candidate arrives', async () => {
+    const invoke = jest.fn().mockResolvedValue({ data: null, error: {
+      message: 'Edge Function returned a non-2xx status code',
+      context: { json: async () => ({ ok: false, error: {
+        code: 'ASSESSMENT_NOT_ELIGIBLE', message: 'ASSESSMENT_NOT_ELIGIBLE', retryable: false,
+      } }) },
+    } });
+    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    const submit = (decision: TransferAssessmentDraft) => service.sendReviewed({
+      reviewedPayload: decision, roomId: 'room', studentId: 'student', checklistId: 'checklist',
+      itemId: decision.target_item_id, focusStudentMessageId: 'focus',
+    }).then(() => undefined);
+    const { rerender } = render(<AssessmentDraftEditor decision={preparedCandidate} onSubmit={submit} onCancel={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('ASSESSMENT_NOT_ELIGIBLE');
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'superseded');
+    expect(screen.getByRole('button', { name: 'Send assessment' })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Question'), { target: { value: 'Edited stale question' } });
+    expect(screen.getByRole('button', { name: 'Send assessment' })).toBeDisabled();
+    expect(invoke).toHaveBeenCalledTimes(1);
+    rerender(<AssessmentDraftEditor decision={{ ...preparedCandidate }} onSubmit={submit} />);
+    expect(screen.getByRole('button', { name: 'Send assessment' })).toBeEnabled();
+    expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'ready');
+  });
   it('renders the compact review controls without learner preview or confirmation controls', () => {
     const { container } = render(
       <AssessmentDraftEditor decision={preparedCandidate} itemLabel="Verify payment requests" onSubmit={jest.fn()} />
@@ -289,7 +314,7 @@ describe('AssessmentDraftEditor', () => {
   });
 
   it.each(['question', 'option A', 'option B', 'option C', 'option D', 'selection', 'key'] as const)(
-    'clears a failed send when editing %s and allows a direct retry', async (field) => {
+    'keeps a superseded candidate blocked when editing %s', async (field) => {
       const onSubmit = jest.fn()
         .mockRejectedValueOnce(new Error('ASSESSMENT_ALREADY_OPEN'))
         .mockResolvedValue(undefined);
@@ -315,11 +340,10 @@ describe('AssessmentDraftEditor', () => {
         selectKey('C');
       }
 
-      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'dirty');
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByTestId('assessment-review-status')).toHaveAttribute('data-review-status', 'superseded');
+      expect(screen.getByRole('button', { name: 'Send assessment' })).toBeDisabled();
       fireEvent.click(screen.getByRole('button', { name: 'Send assessment' }));
-      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
     }
   );
 });

@@ -107,7 +107,7 @@ export interface TransferAssessmentApi {
     body: Record<string, unknown>
   ) => Promise<{
     data: AssessmentApiEnvelope<unknown> | null;
-    error: { message: string } | null;
+    error: { message: string; context?: { json: () => Promise<unknown> } } | null;
   }>;
 }
 
@@ -288,9 +288,23 @@ export class TransferAssessmentService {
 
   private async request<T>(operation: AssessmentApiOperation, payload: Record<string, unknown>): Promise<T> {
     const { data, error } = await this.api.invoke({ operation, request_id: this.requestId(), ...payload });
+    if (error?.context && typeof error.context.json === 'function') {
+      let body: unknown;
+      try {
+        body = await error.context.json();
+      } catch {
+        // Non-JSON network errors retain the transport failure below.
+      }
+      const envelope = asRecord(body);
+      const failure = asRecord(envelope.error);
+      if (envelope.ok === false && typeof failure.code === 'string' &&
+          typeof failure.message === 'string' && typeof failure.retryable === 'boolean') {
+        throw new AssessmentApiRequestError({ code: failure.code, message: failure.message, retryable: failure.retryable });
+      }
+    }
+    if (data?.ok === false) throw new AssessmentApiRequestError(data.error);
     if (error) throw new Error(`Assessment API request failed: ${error.message}`);
     if (!data) throw new Error('Assessment API returned no response');
-    if (!data.ok) throw new AssessmentApiRequestError(data.error);
     return data.data as T;
   }
 
