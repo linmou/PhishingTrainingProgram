@@ -33,6 +33,8 @@ BEGIN
     END IF;
 
     -- No persisted checklist exists yet: the browser target was created locally before join.
+    -- A pooled PostgreSQL connection retains an empty custom-setting placeholder after a transaction.
+    PERFORM set_config('app.transfer_operation', '', true);
     v_result := public.initialize_transfer_checklist_v1(v_room, v_learner, v_targets, v_tutor);
     v_checklist := (v_result->>'checklist_id')::uuid;
     IF v_checklist IS NULL OR NOT EXISTS (
