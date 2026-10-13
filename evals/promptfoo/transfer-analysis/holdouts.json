@@ -1,0 +1,350 @@
+{
+  "author": "independent agent analysis_holdouts",
+  "version": "1.0",
+  "created_at": "2026-10-13",
+  "exposure": "spec-and-contract-only; no target prompt or development dialogues",
+  "cases": [
+    {
+      "id": "H01",
+      "scenario": "An art-club invitation uses the club chair's display name but an unrelated sender address.",
+      "role": "negative",
+      "partition": "none",
+      "target": {
+        "area_text": "Explain why the chair's familiar display name does not prove who sent the art-club invitation.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "What does the sender information tell you?"},
+        {"role": "others", "speaker": "other", "content": "The display name can be copied even if the address is different."}
+      ],
+      "learner": "\"The display name can be copied even if the address is different\" is what Priya said. What does that mean?",
+      "expected": {"kind": null, "protection": false, "correction": false},
+      "rationale": "The learner explicitly attributes the explanation to another participant and asks for clarification. The quotation is not their own demonstrated understanding, and the question asserts no misconception.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05"]
+    },
+    {
+      "id": "H02",
+      "scenario": "A campus printing email threatens to erase the learner's printing credit unless they sign in through its link in ten minutes.",
+      "role": "positive",
+      "partition": "partial",
+      "target": {
+        "area_text": "Explain how the printing-credit deadline pressures a learner into giving their password to a fake sign-in page.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "How might the ten-minute deadline help the sender?"}
+      ],
+      "learner": "The timer makes you rush and click before thinking. I'm still not sure what happens to the password after that.",
+      "expected": {"kind": "initial_signal", "protection": false, "correction": false},
+      "rationale": "The learner explains the pressure component but leaves the credential-theft outcome unresolved. General description of how pressure works is not a stated intention to click.",
+      "pair_id": "HP01",
+      "changed_factor": "Prior progress state only: pending/none versus partially_covered/basic, with the same incomplete learner evidence.",
+      "requirements": ["TA01", "TA02", "TA05"]
+    },
+    {
+      "id": "H03",
+      "scenario": "A campus printing email threatens to erase the learner's printing credit unless they sign in through its link in ten minutes.",
+      "role": "boundary",
+      "partition": "partial",
+      "target": {
+        "area_text": "Explain how the printing-credit deadline pressures a learner into giving their password to a fake sign-in page.",
+        "item_type": "understanding",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {"role": "tutor", "content": "How might the ten-minute deadline help the sender?"}
+      ],
+      "learner": "The timer makes you rush and click before thinking. I'm still not sure what happens to the password after that.",
+      "expected": {"kind": null, "protection": false, "correction": false},
+      "rationale": "Identical incomplete evidence cannot change an already partial target. The learner's uncertainty adds no factual error requiring correction.",
+      "pair_id": "HP01",
+      "changed_factor": "Prior progress state only: pending/none versus partially_covered/basic, with the same incomplete learner evidence.",
+      "requirements": ["TA01", "TA02", "TA05"]
+    },
+    {
+      "id": "H04",
+      "scenario": "A tutoring-service email displays the familiar name StudyNest; the sender can freely choose that display name.",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Explain why a familiar sender display name alone cannot authenticate this StudyNest email.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "What do you make of the name at the top?"}
+      ],
+      "learner": "Anyone sending it can type StudyNest there, so the name doesn't prove it's them.",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "A short answer to an open question supplies the complete mechanism for this narrow target. Neither extra detail nor a new situation is needed.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02"]
+    },
+    {
+      "id": "H05",
+      "scenario": "A marketplace post advertises a new pottery wheel for $18; the supplied shop listing for the same model is $480.",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Recognize an implausibly low price as a warning sign in the pottery-wheel offer.",
+        "item_type": "detection_area",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {"role": "tutor", "content": "The shop listing says this model is $480 new. How does that compare with this post?"}
+      ],
+      "learner": "Eighteen bucks for the same new wheel that costs 480? That huge discount is a red flag.",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "The learner owns the comparison and explicitly connects its implausibility to the target warning sign. The conclusion is suspicion, not an unsupported claim of certain fraud.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02"]
+    },
+    {
+      "id": "H06",
+      "scenario": "The learner has already explained why an aquarium-membership email's copied logo cannot authenticate the sender.",
+      "role": "regression",
+      "partition": "full",
+      "target": {
+        "area_text": "Explain why the aquarium logo in this email does not prove the email came from the aquarium.",
+        "item_type": "understanding",
+        "status": "covered",
+        "understanding_level": "good"
+      },
+      "history": [
+        {"role": "student", "speaker": "focus", "content": "Someone else could copy the aquarium's logo into an email, so the logo doesn't prove who sent it."},
+        {"role": "tutor", "content": "That explains the limit of using a logo as proof."}
+      ],
+      "learner": "Right, the picture can be copied, so having their logo still doesn't identify the sender.",
+      "expected": {"kind": null, "protection": false, "correction": false},
+      "rationale": "The learner repeats sound understanding without a contradiction. Covered progress has no further eligible non-assessment event. This is a synthetic regression invariant with no claimed historical failure provenance.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA03"]
+    },
+    {
+      "id": "H07",
+      "scenario": "An unverified meal-plan warning email asks the learner to sign in through its link; the learner has the college dining app installed.",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Check the meal-plan warning by independently opening the official college dining app instead of using the email link.",
+        "item_type": "verification_step",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "How would you check whether your meal plan really needs attention?"}
+      ],
+      "learner": "I'll leave that email link alone and open the college dining app from my phone to check my account.",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "The specific independent check and explicit avoidance of the unverified link satisfy the narrow action target in its original situation.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05"]
+    },
+    {
+      "id": "H08",
+      "scenario": "An unverified gym-membership warning email asks the learner to sign in through its link; the learner has the gym's official app installed.",
+      "role": "negative",
+      "partition": "none",
+      "target": {
+        "area_text": "Explain how entering a password into a fake gym sign-in page can give that password to the attacker who controls the page.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "What would you do with this membership warning?"}
+      ],
+      "learner": "I'll skip its link and check my membership by opening the gym app myself.",
+      "expected": {"kind": null, "protection": false, "correction": false},
+      "rationale": "A safe action does not state the password-capture mechanism required by this explanation target, even partially. The omission is not a misconception.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05"]
+    },
+    {
+      "id": "H09",
+      "scenario": "A scholarship email threatens to cancel an award unless the learner signs in through its linked portal before a short deadline.",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Explain how the scholarship email's deadline could rush someone into entering their password on an attacker-controlled portal.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "Let's look at this scholarship email. What could that short deadline get someone to do?"}
+      ],
+      "learner": "In this scholarship email, the deadline pushes you to sign in before checking the site. If the linked page is a fake, whoever runs it gets the password you type.",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "The learner explains pressure and credential capture in the current scholarship situation without expressing an intention to follow the link.",
+      "pair_id": "HP02",
+      "changed_factor": "Application situation only: the current scholarship email versus an independently introduced train-ticket refund text; the mechanism and remaining wording are identical.",
+      "requirements": ["TA01", "TA02", "TA04", "TA05"]
+    },
+    {
+      "id": "H10",
+      "scenario": "A scholarship email threatens to cancel an award unless the learner signs in through its linked portal before a short deadline.",
+      "role": "positive",
+      "partition": "transfer",
+      "target": {
+        "area_text": "Explain how the scholarship email's deadline could rush someone into entering their password on an attacker-controlled portal.",
+        "item_type": "understanding",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "Let's look at this scholarship email. What could that short deadline get someone to do?"}
+      ],
+      "learner": "In a train-ticket refund text, the deadline pushes you to sign in before checking the site. If the linked page is a fake, whoever runs it gets the password you type.",
+      "expected": {"kind": "spontaneous_transfer", "protection": false, "correction": false},
+      "rationale": "The learner independently introduces a different concrete transaction and communication setting, then applies the entire pressure-to-credential-capture mechanism. This changes the application situation beyond merely renaming a scholarship sender.",
+      "pair_id": "HP02",
+      "changed_factor": "Application situation only: the current scholarship email versus an independently introduced train-ticket refund text; the mechanism and remaining wording are identical.",
+      "requirements": ["TA01", "TA04", "TA05"]
+    },
+    {
+      "id": "H11",
+      "scenario": "The learner previously treated a library email's copied seal as proof of authenticity and now responds to the tutor's explanation in the same situation.",
+      "role": "recovery",
+      "partition": "repair",
+      "target": {
+        "area_text": "Explain why the library seal in this overdue-book email does not authenticate its sender.",
+        "item_type": "understanding",
+        "status": "needs_review",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {"role": "student", "speaker": "focus", "content": "It has the library seal, so it has to come from the library."},
+        {"role": "tutor", "content": "A sender can copy a public seal into an email. What does that mean for your earlier conclusion?"}
+      ],
+      "learner": "I jumped to that conclusion. The sender could've pasted the library's seal, so that picture doesn't prove the library sent this overdue notice.",
+      "expected": {"kind": "post_repair_signal", "protection": false, "correction": false},
+      "rationale": "The current learner corrects the earlier misconception with its consequence for the same notice. Needs-review recovery first becomes partial under the explicit contract even though the explanation is sufficient in content.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA03", "TA04", "TA05"]
+    },
+    {
+      "id": "H12",
+      "scenario": "The current discussion concerns an apartment-maintenance email; the learner previously assumed its printed phone number was an independent verification channel.",
+      "role": "recovery",
+      "partition": "transfer",
+      "target": {
+        "area_text": "Verify the apartment-maintenance request through contact details obtained independently of the suspicious email, because the sender can control contact details inside it.",
+        "item_type": "verification_step",
+        "status": "needs_review",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {"role": "student", "speaker": "focus", "content": "Calling the number in the maintenance email must be a separate check."},
+        {"role": "tutor", "content": "The sender can choose that number too. Use the contact details on your existing lease to reach the maintenance office."}
+      ],
+      "learner": "That also fits a text claiming my theater booking is canceled. I'd call the theater using the number on my saved ticket receipt, not the text's number, because whoever made up the text could put their own number in it.",
+      "expected": {"kind": "spontaneous_transfer", "protection": false, "correction": false},
+      "rationale": "The learner independently applies the contact-source principle, with sound reasoning and a concrete safe action, to a new theater-booking situation. Different-situation transfer directly covers a review target rather than following same-situation repair.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA03", "TA04", "TA05"]
+    },
+    {
+      "id": "H13",
+      "scenario": "A student-society email carries a familiar logo. The learner earlier explained that copied branding cannot identify its sender.",
+      "role": "regression",
+      "partition": "contradiction",
+      "target": {
+        "area_text": "Explain why the student society's logo alone cannot prove that it sent this email.",
+        "item_type": "understanding",
+        "status": "covered",
+        "understanding_level": "good"
+      },
+      "history": [
+        {"role": "student", "speaker": "focus", "content": "People can copy that logo, so seeing it doesn't tell us who sent the email."},
+        {"role": "tutor", "content": "Now consider the same email again."}
+      ],
+      "learner": "Actually I changed my mind. Only the real society can put its logo in an email, so the logo proves this one came from them.",
+      "expected": {"kind": "contradiction", "protection": false, "correction": true},
+      "rationale": "The current false mechanism directly contradicts the learner's covered understanding and requires correction. There is no stated unsafe action. This is a synthetic regression invariant with no claimed historical failure provenance.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA03", "TA05"]
+    },
+    {
+      "id": "H14",
+      "scenario": "A suspicious cloud-storage warning includes its own sign-in link; the learner previously identified opening the installed official app as a safer check.",
+      "role": "boundary",
+      "partition": "contradiction",
+      "target": {
+        "area_text": "Check the cloud-storage account through the independently opened official app instead of the warning message's unverified sign-in link.",
+        "item_type": "verification_step",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {"role": "student", "speaker": "focus", "content": "I could check in the storage app."},
+        {"role": "tutor", "content": "Would using the warning's own link provide that independent check?"}
+      ],
+      "learner": "Yeah, the warning's link is an independent check because it's clickable. I'd tell my roommate to open it and type their storage password there.",
+      "expected": {"kind": "contradiction", "protection": true, "correction": true},
+      "rationale": "The learner contradicts the safe verification principle, asserts a false reason after a focused question, and proposes unsafe sign-in advice. The hypothetical advice triggers protection as well as correction.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA03", "TA05"]
+    },
+    {
+      "id": "H15",
+      "scenario": "A secondhand instrument seller has an unfamiliar profile, and the learner is being introduced to account-history checks.",
+      "role": "negative",
+      "partition": "none",
+      "target": {
+        "area_text": "Recognize a recently created seller profile with no prior selling activity as a reason to be cautious about the instrument listing.",
+        "item_type": "detection_area",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [
+        {"role": "tutor", "content": "What could the seller's profile history tell you?"}
+      ],
+      "learner": "Where do I find how old their profile is? I've never looked at that bit before.",
+      "expected": {"kind": null, "protection": false, "correction": false},
+      "rationale": "A navigation question names an account attribute without interpreting it as suspicious. No target-specific recognition, unsafe intention, or false claim is established.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05"]
+    },
+    {
+      "id": "H16",
+      "scenario": "A suspicious camera-sale post offers a new camera for $12; the supplied manufacturer price for that model is $650, and the post contains an unverified checkout link.",
+      "role": "boundary",
+      "partition": "safety",
+      "target": {
+        "area_text": "Recognize the implausibly low price as a warning sign in this camera-sale post.",
+        "item_type": "detection_area",
+        "status": "partially_covered",
+        "understanding_level": "basic"
+      },
+      "history": [
+        {"role": "tutor", "content": "The manufacturer lists this same new model at $650. What does the post's $12 price tell you?"}
+      ],
+      "learner": "Twelve dollars when the same new camera is 650 is wildly low, so that price is a warning sign. I'm opening the suspicious checkout link now anyway, just to see it.",
+      "expected": {"kind": "demonstrated_understanding", "protection": true, "correction": false},
+      "rationale": "The learner fully demonstrates the narrow price-recognition target while separately announcing an unsafe action. The unsafe choice requires protection without negating the demonstrated price comparison or introducing an explicit factual misconception.",
+      "pair_id": null,
+      "changed_factor": null,
+      "requirements": ["TA01", "TA02", "TA05"]
+    }
+  ]
+}
