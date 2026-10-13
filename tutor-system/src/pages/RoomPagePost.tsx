@@ -681,8 +681,8 @@ const RoomPagePost: React.FC = () => {
     const isAIEnabled = Boolean(currentRoom?.ai_assistant_enabled);
     const firstPersistedStudentId = findFirstPersistedStudentId(messages);
     useEffect(() => {
-        if (!currentRoom?.transfer_learning_enabled || !user ||
-            (user.current_role !== 'student' && user.current_role !== 'tutor')) {
+        if (!currentRoom?.transfer_learning_enabled || !user?.id ||
+            (user?.current_role !== 'student' && user?.current_role !== 'tutor')) {
             setWaitingForTargets(false);
             return;
         }
