@@ -2,7 +2,7 @@
 
 Intent: record the inspected causes, reproducible local checks, and staged release of the browser QA fixes.
 
-Date: 2026-10-13. Implementation baseline: `bc4ba50`. Status: **staging SQL applied and verified; matching Edge/browser verification pending**. Production remains unchanged by this repair at this record's creation.
+Date: 2026-10-13. Implementation baseline: `bc4ba50`. Status: **staging workflow verified; production SQL applied and verified; production Edge/browser verification pending**.
 
 ## Artifact and environment
 
@@ -43,3 +43,13 @@ All psql assertions used `-X -v ON_ERROR_STOP=1` on port 55433 as postgres, with
 Fresh MCP inspection at 2026-10-13 04:26:50 UTC confirmed staging schema fingerprints were unchanged. Root authorized staging application. The Management API accepted the exact candidate with HTTP 201 at 04:27:10 UTC. The seven rollback QA scenarios then succeeded with HTTP 201 at 04:27:54 UTC; assertion bundle SHA-256 `3a2855200b70a9809d0f8b037a445d0461dbfcc6bd723b47793b5c0f4fa819d5`.
 
 Post-application MCP confirmed all eight affected/new function definitions, owners, and ACLs exactly match the tested final local database. Root owns the dependent Edge deployment and Chrome DevTools browser verification. Stop before production until that matching staging workflow passes; recheck production preconditions before applying this same SQL. No migration-history row is claimed from the raw Management API query operation.
+
+## Production application
+
+Root confirmed the matching staging browser workflows, including private tutor review and learner denial, feedback generation/delivery acknowledgement, persisted manual edits, ambiguous multiple-choice text without attempt consumption, assisted cancellation after one retry with preserved history, and raw `C?` grading as a correct second answer. Staging assessment `d9970537-12e3-4fba-9cfe-3554d653fab3` resolved passed at attempt two; root authorized production SQL application after that result.
+
+Production's immediate MCP precheck at 04:39:16 UTC exactly matched the previously inspected/exported baseline. The exact candidate SHA above applied through the Management API with HTTP 201 at 04:39:25 UTC. The identical seven-scenario rollback assertion bundle passed with HTTP 201 at 04:39:34 UTC.
+
+Fresh production MCP at 04:39:38 UTC confirms every public/private function definition hash, owner, ACL, table/RLS flag, policy, index, and default ACL matches the tested final local database after normalizing ACL array order. The cleanup/permission query found zero SQL fixture rooms, service-role access to both new RPCs, and no anon/authenticated access. Evidence: `/Users/admin/.transfer-assessment-pg17/runs/transfer_qa_repairs/20261013_041019/production-evidence.json`.
+
+The SQL remains unarchived until production's matching Edge deployment and browser verification pass. Root owns that final gate and its browser evidence. The supplied Edge source manifest is `24df7e0093052f39de57382b20d76d651dcdbc320cd251900eebd6d15a9da1f1`.
