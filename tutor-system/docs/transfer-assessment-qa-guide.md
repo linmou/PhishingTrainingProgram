@@ -120,6 +120,7 @@ Expected result:
 - The learner does not see `correct_option_ids`, the transfer basis, model rationale, raw provider output, or private payload fields in the rendered message.
 - The tutor can see the review context and answer key.
 - The room participation mode remains **tutoring**; the message itself is marked as an assessment turn.
+- While the learner's assessment is open, the comment composer and generic Reply actions are disabled. The learner must use the displayed answer controls; another learner's question does not lock their chat.
 
 ### QA-TA-05: Correct First Answer
 
@@ -128,11 +129,12 @@ Expected result:
 
 Expected result:
 
-- The answer is accepted by the selected option ID, including harmless surrounding text such as `B?`.
+- The answer is accepted through the displayed option control and **Submit answer**, with both the assessment ID and question-message parent recorded.
 - The learner sees **Correct.**
 - The assessment resolves once and controls become unavailable.
 - The target remains `covered / good`; passing resolves its outstanding assessment requirement and completes the item.
 - Replaying the same answer does not create another grade or attempt.
+- Ordinary chat and Reply become available again, including after reload.
 
 ### QA-TA-06: Incorrect First Answer And Retry
 
@@ -145,6 +147,7 @@ Expected result:
 - The assessment remains open for one more valid selection.
 - Progress remains `covered / good`; the item remains active while the assessment is open.
 - The answer key and terminal explanation are not disclosed.
+- Ordinary chat and Reply remain disabled during the retry; option controls remain available for the remaining attempt.
 
 ### QA-TA-07: Correct Second Answer
 
@@ -171,17 +174,32 @@ Expected result:
 - The failure transition is applied once.
 - Resume tutoring. Corrected evidence moves Review to Partial; only later full understanding moves Partial to Covered and makes a new assessment in a different context due.
 
-### QA-TA-09: Multiple Answers, Ambiguity, And Assistance
+### QA-TA-09: Option Gate And Multiple Answers
 
 1. Deliver a multiple-answer assessment with two correct options.
-2. Submit an ambiguous response such as “B or D” rather than selecting the controls.
-3. Separately test a response that is assisted by content revealing the answer.
+2. Verify ordinary chat and generic Reply are disabled before selecting anything.
+3. Select the required displayed options and submit once.
+4. Verify the stored answer has the question's parent ID, its separate assessment ID, and the selected option IDs.
 
 Expected result:
 
-- Ambiguous format remains unresolved and the tutor may ask the learner to use the displayed options.
-- Assisted content cancels the assessment without issuing a failing grade.
-- Neither case should create a false pass or false failure.
+- An empty selection cannot be submitted. Text-only, foreign, stale, duplicate or unknown-option submissions are rejected by the shared send path before a message is saved.
+- Multiple selections are accepted only for a multiple-answer question; selected options are graded by the trusted backend.
+- First incorrect feedback keeps the gate active; a terminal result restores ordinary tutoring input.
+
+### QA-TA-09A: Tutoring Across Two Knowledge Points
+
+1. Tutor the URL-domain target while it is Partial, provide full understanding, and complete its final assessment through option controls.
+2. Send tutor feedback replying to that assessment's terminal answer, then tutor Official Support while it is Partial, provide full understanding, and complete its assessment and feedback.
+3. Reload between cycles and after the second answer.
+
+Expected result:
+
+- Each assessment references its own target and has distinct question-message and assessment IDs.
+- Normal tutoring resumes between assessments; each new open assessment restores the option gate.
+- Each answer records an authoritative attempt, each completed assessment closes, and neither cycle leaves an open assessment blocking the next target.
+- Tutor feedback references the terminal answer and is stored after the assessment closes; a reply to the next topic does not satisfy that feedback requirement.
+- Persisted progress is checked per target. The full live journey requires the hosted final-assessment policy matching this guide.
 
 ### QA-TA-10: Reload And Duplicate Tabs
 

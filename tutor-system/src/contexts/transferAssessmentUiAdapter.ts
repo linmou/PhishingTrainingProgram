@@ -301,6 +301,22 @@ export function readPublicQuestion(message: Message | null | undefined): PublicQ
   return candidate && typeof candidate === 'object' ? candidate : null;
 }
 
+/** Find the learner's delivered question until its authoritative lifecycle closes it. */
+export function findOpenLearnerAssessment(messages: Message[], studentId: string): RoomMessageView | null {
+  return [...messages].reverse().find(message => {
+    const question = readPublicQuestion(message);
+    if (question?.studentId !== studentId || question.lifecycle !== 'delivered') return false;
+    return !messages.some(candidate => {
+      const lifecycle = readAnswerLifecycle(candidate);
+      const belongsToQuestion = candidate.id === message.id ||
+        (candidate.parent_message_id === message.id && candidate.user_id === studentId &&
+          lifecycle?.assessmentId === question.id);
+      return belongsToQuestion && lifecycle &&
+        (lifecycle.terminal || lifecycle.answerOutcome === 'passed' || lifecycle.answerOutcome === 'failed');
+    });
+  }) as RoomMessageView | undefined ?? null;
+}
+
 /**
  * Build the teacher's review candidate from component 102's `prepareAssessment` result. Returns null
  * when required identity is missing, so a page cannot render an unidentified review surface.

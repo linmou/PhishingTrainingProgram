@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-13. Baseline commit: bc4ba50. -->
+<!-- Updated: 2026-10-14. Baseline commit: ecee681. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -38,9 +38,9 @@ The review must provide a verified resolution (`open`, `passed`, or `failed`), m
 
 Prepared review drafts carry the selected learning target's label from the loaded checklist so the editor identifies the target being assessed.
 
-### Free-text replies during an assessment
+### Option submission during an assessment
 
-Learner textbox messages link to that learner's latest delivered, unresolved assessment and pass through trusted answer processing. The browser sends the original text without inferring option IDs, so ambiguity and requests for assistance remain server decisions. An explicit reply to another message stays ordinary chat. Persisted passed, failed, cancelled, or incomplete questions do not capture later text.
+While a learner has a delivered, unresolved assessment, ordinary chat and generic Reply are disabled. The learner selects the displayed option controls and submits the question. The shared send path requires the current assessment ID, its separate question-message parent ID, and a nonempty valid selection; single-answer questions accept one option. It rejects text-only and mismatched submissions before persistence. The first incorrect answer keeps the gate active for a retry. Passed, failed, cancelled, or incomplete questions release the gate, and another learner's assessment never gates the current learner. Server grading remains authoritative.
 
 ### Message Processing Pipeline
 
@@ -115,11 +115,11 @@ its matching question. If concurrent results arrive in either order, an accepted
 remains the question state when a later result is rejected or has no accepted attempt; each answer
 retains its own processing result. On student reload or reconnect, the context re-reads only stored
 answers whose assessment ID matches the targeted question through the idempotent `processMessage`
-facade. Ordinary replies to the question remain discussion messages and are not graded. A failed
+facade. Previously stored ordinary replies remain discussion messages and are not graded. A failed
 re-read leaves the room visible without inventing feedback. Message merges
 retain the projected question and server lifecycle when polling replaces a local view with a fresh
 database row. Student messages without an assessment identity use evidence analysis directly. The
-browser does not grade answers or write progress.
+browser does not grade answers or write progress. Active-assessment selection checks run before both trusted and legacy posting paths, so a missing checklist projection cannot turn a displayed question's text reply into ordinary chat.
 
 The learner's assessment submissions appear in answer history within the question, including
 pending submissions and their later server feedback. Other room participants retain the normal

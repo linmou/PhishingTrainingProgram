@@ -24,7 +24,7 @@ import '../components/RoomPagePost.css';
 import type { AssessmentOptionId } from '../types/assessment';
 import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
 import type { Message } from '../types';
-import { readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import { findOpenLearnerAssessment, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
 
@@ -215,6 +215,9 @@ const RoomPagePost: React.FC = () => {
     };
 
     const visibleMessages = dueMessages.filter(message => !isHeldByPairStagger(message));
+    const openAssessment = user?.current_role === 'student'
+        ? findOpenLearnerAssessment(messages, user.id)
+        : null;
     const assessmentAttempts = new Map<string, AssessmentAnswerAttempt[]>();
     const embeddedAnswerIds = new Set<string>();
     if (user?.current_role === 'student') {
@@ -402,7 +405,7 @@ const RoomPagePost: React.FC = () => {
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!messageText.trim() || sendingMessage) return;
+        if (!messageText.trim() || sendingMessage || openAssessment) return;
 
         if (pendingPlayback) return;
 
@@ -577,6 +580,7 @@ const RoomPagePost: React.FC = () => {
     };
 
     const handleMessageReply = (messageId: string) => {
+        if (openAssessment) return;
         const message = messages.find(m => m.id === messageId);
         if (message) {
             setReplyingTo({
@@ -967,6 +971,7 @@ const RoomPagePost: React.FC = () => {
                                         message={message}
                                         onLike={handleMessageLike}
                                         onReply={handleMessageReply}
+                                        replyDisabled={Boolean(openAssessment)}
                                         likeCount={engagement.likeCount}
                                         dislikeCount={engagement.dislikeCount}
                                         isLiked={engagement.userLiked}
@@ -1073,6 +1078,9 @@ const RoomPagePost: React.FC = () => {
                 {/* Comment Input with AI Button */}
                 {canSendMessages ? (
                     <div className="comment-composer">
+                        {openAssessment && (
+                            <p role="status">Choose an option in your assessment and submit your answer to continue the discussion.</p>
+                        )}
                         <StudentAIToneControl />
                         <div className="comment-input-with-ai">
                             <CommentInput
@@ -1084,7 +1092,7 @@ const RoomPagePost: React.FC = () => {
                                 onTyping={startTyping}
                                 onStopTyping={stopTyping}
                                 placeholder="Write a comment..."
-                                disabled={sendingMessage}
+                                disabled={sendingMessage || Boolean(openAssessment)}
                                 submitBlocked={pendingPlayback}
                                 isLoading={sendingMessage}
                                 replyingTo={replyingTo}

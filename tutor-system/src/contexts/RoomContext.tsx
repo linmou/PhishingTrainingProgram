@@ -33,6 +33,7 @@ import {
   answerLifecycleFromProcessed,
   assertDeliverableReview,
   createReviewCandidate,
+  findOpenLearnerAssessment,
   mergeRoomMessages,
     participationModeFromRoom,
     projectRoomMessage,
@@ -666,8 +667,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('Observers cannot send messages');
         }
 
-        // Transfer-policy messages use the trusted API boundary. If this room
-        // has no owner-scoped transfer checklist, retain the legacy path.
+        if (user.current_role === 'student') {
+            const activeQuestion = findOpenLearnerAssessment(messages, user.id);
+            if (activeQuestion || options?.assessmentId || options?.selectedOptionIds) {
+                const question = activeQuestion?.publicQuestion;
+                const selected = options?.selectedOptionIds;
+                const canonicalSelection = question?.options
+                    .filter(option => selected?.includes(option.id))
+                    .map(option => option.id);
+                if (!question || options?.assessmentId !== question.id ||
+                    options?.replyToMessageId !== activeQuestion?.id || !selected?.length ||
+                    canonicalSelection?.length !== selected.length ||
+                    canonicalSelection.some((id, index) => id !== selected[index]) ||
+                    (question.selectionType === 'single' && selected.length !== 1)) {
+                    throw new Error('ASSESSMENT_OPTIONS_REQUIRED: Choose an option in your assessment and submit your answer.');
+                }
+            }
+        }
+
+        // Assessment answers always use the trusted API boundary. Ordinary messages
+        // retain the legacy path when there is no owner-scoped transfer checklist.
         let transferChecklist = null;
         try {
             const checklistService = ChecklistService as typeof ChecklistService & {
@@ -681,24 +700,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (currentRoom.transfer_learning_enabled) throw transferError;
             console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
         }
-        if (user.current_role === 'student' && !currentSuggestionContext && currentRoom.transfer_learning_enabled &&
-            transferChecklist?.progress_policy_version === 'transfer_v1') {
-            const activeQuestion = [...messages].reverse().find(message => {
-                const question = (message as Partial<RoomMessageView>).publicQuestion;
-                return question?.studentId === user.id &&
-                    question.lifecycle === 'delivered' &&
-                    !readAnswerLifecycle(message)?.terminal;
-            }) as RoomMessageView | undefined;
-            // Free-text replies to the active question use the same trusted parser
-            // as answer controls. Explicit replies to other messages remain chat.
-            const answerOptions = options?.assessmentId || !activeQuestion ||
-                (options?.replyToMessageId && options.replyToMessageId !== activeQuestion.id)
-                ? options
-                : {
-                    ...options,
-                    assessmentId: activeQuestion.publicQuestion!.id,
-                    replyToMessageId: activeQuestion.id,
-                };
+        if (user.current_role === 'student' && (options?.assessmentId ||
+            (currentRoom.transfer_learning_enabled && transferChecklist?.progress_policy_version === 'transfer_v1'))) {
+            const answerOptions = options;
             const result = await transferAssessmentService.postMessage({
                 roomId: currentRoom.id,
                 content,

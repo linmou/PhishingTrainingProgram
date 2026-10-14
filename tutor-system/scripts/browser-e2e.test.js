@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // File: scripts/browser-e2e.js and browser-e2e/browser-e2e-support.js. Purpose: verify project selection, workflow cleanup, and learner message submission.
+// Also covers assessment-browser-checks.js binding/gates and assessment-delivery.js policy preflight.
 'use strict';
 
 const test = require('node:test');
@@ -11,6 +12,8 @@ const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
+const { assertAssessmentGate, assertBoundAnswers } = require('./browser-e2e/workflows/assessment-browser-checks');
+const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
 
 const env = (target = 'staging') => ({
   E2E_APP_URL: 'http://localhost:3001',
@@ -265,4 +268,75 @@ test('independent learner fixture keeps public question ID separate from assessm
   assert.deepEqual(payload.p_reviewed_payload.assessment.correct_option_ids, ['B']);
   assert.equal(delivered.question_message_id, 'question-message');
   assert.equal(delivered.assessment_id, 'private-assessment');
+});
+
+test('assessment binding rejects missing IDs, duplicate rows, wrong selections and unbound learner text', () => {
+  const answer = { id: 'answer', user_id: 'student', assessment_id: 'assessment', parent_message_id: 'question',
+    assessment_selected_option_ids: ['B'] };
+  const verify = rows => assertBoundAnswers(rows, 'student', 'assessment', 'question', [['B']], []);
+  assert.deepEqual(verify([answer]), [answer]);
+  for (const broken of [
+    { ...answer, assessment_id: null },
+    { ...answer, parent_message_id: null },
+    { ...answer, assessment_selected_option_ids: null },
+    { ...answer, assessment_selected_option_ids: ['A'] }
+  ]) assert.throws(() => verify([broken]));
+  assert.throws(() => verify([answer, { ...answer, id: 'duplicate' }]), /duplicate/);
+  assert.throws(() => verify([answer, { id: 'free-text', user_id: 'student', content: 'A' }]), /unbound/);
+  assert.deepEqual(verify([answer, { id: 'foreign', user_id: 'another-student', content: 'A' }]), [answer]);
+  const multi = { ...answer, assessment_selected_option_ids: ['D', 'A'] };
+  assert.deepEqual(assertBoundAnswers([multi], 'student', 'assessment', 'question', [['A', 'D']], []), [multi]);
+});
+
+test('assessment gate checks every generic Reply and restores terminal composer access', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    for (const disabled of [true, false]) {
+      await page.setContent(`<textarea class="comment-input-field" ${disabled ? 'disabled' : ''}></textarea>
+        <button ${disabled ? 'disabled' : ''}>Reply</button><button ${disabled ? 'disabled' : ''}>Reply</button>`);
+      const gate = await assertAssessmentGate(page, disabled);
+      assert.equal(gate.reply_count, 2);
+      assert.equal(gate.composer_disabled, disabled);
+      await assert.rejects(assertAssessmentGate(page, !disabled), /composer/);
+    }
+    await page.setContent('<textarea class="comment-input-field" disabled></textarea><button disabled>Reply</button><button>Reply</button>');
+    await assert.rejects(assertAssessmentGate(page, true), /Generic Reply/);
+    await page.setContent('<textarea class="comment-input-field" disabled></textarea>');
+    await assert.rejects(assertAssessmentGate(page, true), /No generic Reply/);
+  } finally { await browser.close(); }
+});
+
+test('two-target assessment delivery rejects old hosted scheduling before creating fixtures', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-e2e-policy-'));
+  const originalFetch = global.fetch;
+  let fixtureTouched = false;
+  try {
+    global.fetch = async () => ({ ok: true, json: async () => [{ final_policy_helper: false, preparation_uses_final_policy: false }] });
+    await assert.rejects(assessmentDelivery({
+      evidenceDir: dir, config: { projectRef: 'test-project', accessToken: 'test-token' },
+      existingRoom: async () => { fixtureTouched = true; throw new Error('Fixture must remain untouched'); }
+    }), /Live prerequisite mismatch/);
+    assert.equal(fixtureTouched, false);
+    const evidence = JSON.parse(fs.readFileSync(path.join(dir, 'assessment-delivery-policy-prerequisite.json'), 'utf8'));
+    assert.equal(evidence.project_ref, 'test-project');
+    assert.equal(evidence.live_policy[0].final_policy_helper, false);
+  } finally {
+    global.fetch = originalFetch;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('assessment delivery requires feedback on the terminal answer after closure before the next target', () => {
+  const assessment = { terminal_answer_message_id: 'terminal-answer', closed_at: '2026-10-14T15:00:00.000Z' };
+  const feedback = { parent_message_id: 'terminal-answer', response_mode: 'tutoring', created_at: '2026-10-14T15:00:01.000Z' };
+  assert.doesNotThrow(() => assessmentDelivery.assertTutorFeedback(feedback, assessment));
+  assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, parent_message_id: 'support-observation' }, assessment),
+    /terminal learner answer/);
+  assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, response_mode: 'guard' }, assessment),
+    /wrong response mode/);
+  for (const created_at of ['2026-10-14T14:59:59.000Z', assessment.closed_at]) {
+    assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, created_at }, assessment),
+      /after the assessment closes/);
+  }
 });

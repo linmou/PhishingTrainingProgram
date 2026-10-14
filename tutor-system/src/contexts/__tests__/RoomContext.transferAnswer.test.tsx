@@ -13,7 +13,6 @@ import React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { RoomProvider, useRoom } from '../RoomContext';
-import { readAnswerLifecycle } from '../transferAssessmentUiAdapter';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
@@ -27,6 +26,7 @@ import {
   TRANSFER_ROOM_ID,
   deliveredAnswerRow,
   deliveredQuestionRow,
+  deliveredMultipleQuestionRow,
   learnerAMessageRow,
   multipleSelectionOptionIds,
   processedAlreadyTerminalReplay,
@@ -222,6 +222,7 @@ describe('RoomContext learner answer path', () => {
   });
 
   it('posts canonical multiple option IDs with the delivered assessment and parent identities', async () => {
+    initialMessages = [learnerAMessageRow, deliveredMultipleQuestionRow];
     await mountRoom();
 
     await act(async () => {
@@ -248,7 +249,7 @@ describe('RoomContext learner answer path', () => {
     await mountRoom();
 
     await act(async () => {
-      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID });
+      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'] });
     });
 
     expectNoPrivateAssessmentFields(room!.messages);
@@ -259,7 +260,7 @@ describe('RoomContext learner answer path', () => {
     await mountRoom();
 
     await act(async () => {
-      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID });
+      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'] });
     });
 
     // The only checklist surface the context may touch is the owner-scoped read used to detect
@@ -283,49 +284,39 @@ describe('RoomContext learner answer path', () => {
     expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
   });
 
-  // RoomContext links textbox replies to the learner's active assessment without
-  // locally interpreting ambiguous or assisted text or consuming an attempt.
+  // RoomContext.tsx: open assessments block typed answers, help requests, and unrelated replies before persistence.
   it.each([
-    { content: 'B or D', code: 'AMBIGUOUS_ANSWER', terminal: false },
-    { content: 'What does independent mean?', code: 'assisted', terminal: true },
-  ])('routes free text $code through trusted processing', async ({ content, code, terminal }) => {
-    processMessage.mockResolvedValue({
-      message_id: DELIVERED_ANSWER_ID, assessment_id: DELIVERED_QUESTION_ID,
-      processing_state: 'rejected', answer_outcome: null,
-      attempt_number: null, attempts_used: 0, attempts_remaining: terminal ? 0 : 2,
-      selected_option_ids: null, transition: null, feedback_required: false,
-      code, already_processed: false, terminal, terminal_failure_feedback: null,
-    });
-    await mountRoom();
-    await act(async () => { await room!.sendMessage(content); });
-    expect(postMessage).toHaveBeenCalledWith({
-      roomId: TRANSFER_ROOM_ID, content,
-      replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID,
-      selectedOptionIds: undefined,
-    });
-    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
-    expect(analyzeMessage).not.toHaveBeenCalled();
-    expect(readAnswerLifecycle(room!.messages.find(message => message.id === DELIVERED_QUESTION_ID)))
-      .toMatchObject({ attemptsUsed: 0, answerOutcome: null, transition: null, terminal });
-    expectNoPrivateAssessmentFields(room!.messages);
-    if (terminal) {
-      await act(async () => { await room!.sendMessage('A new observation after help'); });
-      expect(processMessage).toHaveBeenCalledTimes(1);
-      expect(analyzeMessage).toHaveBeenCalledTimes(1);
-    }
-  });
-
-  // Explicit unrelated reply targets must not become assessment answers.
-  it('preserves chat explicitly addressed to another message', async () => {
+    { content: 'A', options: undefined },
+    { content: 'What does independent mean?', options: undefined },
+    { content: 'A', options: { replyToMessageId: DELIVERED_QUESTION_ID } },
+    { content: 'About the earlier example', options: { replyToMessageId: learnerAMessageRow.id } },
+  ])('blocks ordinary response $content while the learner assessment is open', async ({ content, options }) => {
     await mountRoom();
     await act(async () => {
-      await room!.sendMessage('About the earlier example', { replyToMessageId: learnerAMessageRow.id });
+      await expect(room!.sendMessage(content, options)).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
     });
-    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
-      replyToMessageId: learnerAMessageRow.id, assessmentId: undefined,
-    }));
+    expect(postMessage).not.toHaveBeenCalled();
     expect(processMessage).not.toHaveBeenCalled();
-    expect(analyzeMessage).toHaveBeenCalled();
+    expect(analyzeMessage).not.toHaveBeenCalled();
+  });
+
+  // RoomContext.tsx: dedicated submissions must retain current ownership, parent, and canonical selections.
+  it.each([
+    { assessmentId: 'stale-assessment', replyToMessageId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A'] },
+    { assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: learnerAMessageRow.id, selectedOptionIds: ['A'] },
+    { assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: DELIVERED_QUESTION_ID },
+    { assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: DELIVERED_QUESTION_ID, selectedOptionIds: [] },
+    { assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: DELIVERED_QUESTION_ID, selectedOptionIds: ['Z'] },
+    { assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A', 'A'] },
+    { assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A', 'B'] },
+  ])('rejects invalid option submission %# before persistence', async (options) => {
+    await mountRoom();
+    await act(async () => {
+      await expect(room!.sendMessage('A', options as Parameters<NonNullable<typeof room>['sendMessage']>[1]))
+        .rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+    });
+    expect(postMessage).not.toHaveBeenCalled();
+    expect(processMessage).not.toHaveBeenCalled();
   });
 
   // An active assessment for another learner must not capture this learner's text.
@@ -338,6 +329,40 @@ describe('RoomContext learner answer path', () => {
     await act(async () => { await room!.sendMessage('B'); });
     expect(processMessage).not.toHaveBeenCalled();
     expect(analyzeMessage).toHaveBeenCalled();
+  });
+
+  // RoomContext.tsx: another learner's question cannot be submitted with forged assessment options.
+  it('rejects selected answers for another learner', async () => {
+    initialMessages = [{
+      ...deliveredQuestionRow,
+      assessment: { ...deliveredQuestionRow.assessment, student_id: 'other-learner' },
+    }];
+    await mountRoom();
+    await act(async () => {
+      await expect(room!.sendMessage('A', {
+        replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A'],
+      })).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+    });
+    expect(postMessage).not.toHaveBeenCalled();
+    expect(processMessage).not.toHaveBeenCalled();
+  });
+
+  // RoomContext.tsx: an already-delivered assessment must never lose binding through a legacy-message fallback.
+  it('keeps selected answers on the trusted API when the checklist policy changes', async () => {
+    (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue({
+      ...transferChecklist, progress_policy_version: 'legacy_v1',
+    });
+    await mountRoom();
+    await act(async () => {
+      await room!.sendMessage('B', {
+        replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'],
+      });
+    });
+    expect(postMessage).toHaveBeenCalledWith(expect.objectContaining({
+      assessmentId: DELIVERED_QUESTION_ID, replyToMessageId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'],
+    }));
+    expect(processMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, DELIVERED_QUESTION_ID);
+    expect(analyzeMessage).not.toHaveBeenCalled();
   });
 
   // Persisted terminal/cancelled questions must not capture later ordinary chat.
@@ -374,6 +399,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B or D', {
         replyToMessageId: DELIVERED_QUESTION_ID,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -461,6 +487,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B', {
         replyToMessageId: DELIVERED_QUESTION_ID,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -522,6 +549,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B', {
         replyToMessageId: DELIVERED_QUESTION_ID,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -561,6 +589,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B', {
         replyToMessageId: questionMessageId,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -644,7 +673,7 @@ describe('RoomContext learner answer path', () => {
     const replyId = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
     initialMessages = [
       deliveredQuestionRow,
-      deliveredAnswerRow,
+      { ...deliveredAnswerRow },
       {
         ...deliveredAnswerRow,
         id: replyId,
@@ -787,6 +816,7 @@ describe('RoomContext learner answer path', () => {
         await room!.sendMessage('B', {
           replyToMessageId: DELIVERED_QUESTION_ID,
           assessmentId: DELIVERED_QUESTION_ID,
+          selectedOptionIds: ['B'],
         });
       } catch (error) {
         processingError = error;
@@ -823,6 +853,7 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B or D', {
         replyToMessageId: DELIVERED_QUESTION_ID,
         assessmentId: DELIVERED_QUESTION_ID,
+        selectedOptionIds: ['B'],
       });
     });
 
@@ -834,6 +865,7 @@ describe('RoomContext learner answer path', () => {
   });
 
   it('keeps an ordinary learner message on the legacy path when the room has no transfer checklist', async () => {
+    initialMessages = [learnerAMessageRow];
     (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue({
       ...transferChecklist,
       progress_policy_version: 'legacy_v1',
@@ -844,6 +876,47 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('Just chatting', {});
     });
 
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  // RoomContext.tsx: retry retains the option gate, then accepted pass releases normal tutoring.
+  it('requires selected options through retry and resumes evidence analysis after a pass', async () => {
+    processMessage.mockResolvedValueOnce(processedFirstIncorrectRetry).mockResolvedValueOnce(processedCorrectTerminal);
+    await mountRoom();
+    await act(async () => {
+      await room!.sendMessage('A', {
+        replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A'],
+      });
+    });
+    await act(async () => {
+      await expect(room!.sendMessage('My next observation')).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+    });
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await room!.sendMessage('B', {
+        replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'],
+      });
+    });
+    await act(async () => { await room!.sendMessage('My next observation'); });
+    expect(processMessage).toHaveBeenCalledTimes(2);
+    expect(analyzeMessage).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await expect(room!.sendMessage('A', {
+        replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['A'],
+      })).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+    });
+    expect(postMessage).toHaveBeenCalledTimes(3);
+  });
+
+  // RoomContext.tsx: multiple selection accepts only the canonical option order supplied by the controls.
+  it('rejects reversed multiple selections before persistence', async () => {
+    initialMessages = [learnerAMessageRow, deliveredMultipleQuestionRow];
+    await mountRoom();
+    await act(async () => {
+      await expect(room!.sendMessage('D,B', {
+        replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['D', 'B'],
+      })).rejects.toThrow('ASSESSMENT_OPTIONS_REQUIRED');
+    });
     expect(postMessage).not.toHaveBeenCalled();
   });
 });

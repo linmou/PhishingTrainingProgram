@@ -15,6 +15,7 @@ interface PostCommentProps {
     message: Message;
     onLike?: (messageId: string, isLike: boolean) => void;
     onReply?: (messageId: string) => void;
+    replyDisabled?: boolean;
     onGenerateAIResponse?: (messageId: string) => void;
     onFlag?: (messageId: string) => void;
     likeCount?: number;
@@ -41,6 +42,7 @@ const PostComment: React.FC<PostCommentProps> = ({
     message,
     onLike,
     onReply,
+    replyDisabled = false,
     onGenerateAIResponse,
     onFlag,
     likeCount = 0,
@@ -306,6 +308,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                             {/* Reply Button */}
                             <button
                                 onClick={() => onReply?.(message.id)}
+                                disabled={replyDisabled}
                                 className="comment-action-btn"
                                 title="Reply to this comment"
                             >

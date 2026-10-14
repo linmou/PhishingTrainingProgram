@@ -51,9 +51,6 @@ jest.mock('../../components/StudentAIToneControl', () => function MockStudentAIT
 jest.mock('../../components/RoomPost', () => function MockRoomPost() {
   return <div data-testid="room-post" />;
 });
-jest.mock('../../components/CommentInput', () => function MockCommentInput() {
-  return <div data-testid="comment-input" />;
-});
 jest.mock('../../components/AISuggestionBox', () => function MockAISuggestionBox() {
   return <div data-testid="ai-suggestion-box" />;
 });
@@ -280,6 +277,13 @@ describe('RoomPagePost transfer lifecycle states', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
     mount({ messages: [question], sendMessage });
 
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'A' } });
+    fireEvent.submit(screen.getByRole('textbox'));
+    expect(sendMessage).not.toHaveBeenCalled();
+
     fireEvent.click(screen.getByRole('radio', { name: /A\./ }));
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
@@ -317,7 +321,31 @@ describe('RoomPagePost transfer lifecycle states', () => {
 
     expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
+    expect(screen.getAllByRole('radio')[0]).toBeEnabled();
   });
+
+  // RoomPagePost.tsx: only the assessment owner is gated; tutors and other learners can continue discussion.
+  it.each(['student', 'tutor'] as const)('leaves the composer available for a different %s', (role) => {
+    (useAuth as jest.Mock).mockReturnValue({
+      user: { ...learnerAUser, id: 'another-user', current_role: role }, loading: false,
+    });
+    mount({ messages: [projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment)] });
+    expect(screen.getByRole('textbox')).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
+  });
+
+  // RoomPagePost.tsx: persisted terminal question state releases discussion after a reload.
+  it.each(['passed', 'failed', 'cancelled', 'legacy_incomplete'] as const)(
+    'restores discussion when the saved question is %s', (lifecycle) => {
+      (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+      mount({ messages: [projectRoomMessage({ ...deliveredQuestionRow, assessment_lifecycle: lifecycle }, deliveredPublicAssessment)] });
+      expect(screen.getByRole('textbox')).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+    }
+  );
 
   it('shows saved learner submissions inside their question instead of separate comments', () => {
     const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
@@ -365,6 +393,8 @@ describe('RoomPagePost transfer lifecycle states', () => {
     expect(container.querySelectorAll('.post-comment')).toHaveLength(1);
     expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
     expect(screen.getByText('Correct.')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: 'Previous answer' }));
     expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
   });
@@ -392,6 +422,8 @@ describe('RoomPagePost transfer lifecycle states', () => {
     expect(screen.getByText('Answer 1 of 1')).toBeInTheDocument();
     expect(screen.getByText('Your answer is still processing.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    expect(screen.getAllByRole('button', { name: 'Reply' }).every(button => (button as HTMLButtonElement).disabled)).toBe(true);
   });
 
   it('clears a previous lifecycle state when a new preparation starts and succeeds', async () => {

@@ -2,6 +2,8 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
+Updated: 2026-10-14. Baseline commit: ecee681.
+
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
 ## Supabase Projects
@@ -85,14 +87,16 @@ The recorder reuses the `assessment-delivery` staging copy of the production `Tr
 | `room-assessment-setup` | Create a room through the tutor UI, enable in-room assessment, have a learner join without posting, and verify Generate Learning Targets is enabled. |
 | `checklist-management` | Manual creation, status/priority/text edits, and persistence after reload. |
 | `checklist-coverage` | Learner message, real coverage call, stored progress, and the next tutor request. Ordinary learner sends invoke analysis after persistence; tutor requests read current progress without replacing the authored prompt. |
-| `assessment-delivery` | One staging room journey: initializes every persisted detection and verification target from the assessment room's AI config, checks direct understanding and a partial signal, then verifies provider preparation, tutor review/send, learner answer, and `assessment_pass` changing the selected partial target to covered. |
-| `assessment-answer` | Learner pass and retry/failure in separate template rooms, persisted outcome, and reload. |
+| `assessment-delivery` | One room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback, closed assessments and target-local progress. Checks hosted final-assessment policy before fixture mutations. |
+| `assessment-answer` | Learner pass and retry/failure in separate template rooms; disabled chat/Reply during the assessment, selected-option submissions, persisted identities/attempts, terminal chat recovery and reload. |
 | `transfer-status-events` | Real transfer analysis against the full persisted room target inventory: direct understanding, initial signal, later full understanding, spontaneous transfer, no evidence, and contradiction. Checks Edge responses, private event kinds, stored progress, and learner/tutor screenshots. Shares the opening learner journey with `assessment-delivery`, then tests the remaining events in the same empty assessment-delivery fixture. |
 | `guard-mode` | One student-tutor Guard journey: manual mode confirmation, locked checklist controls, real LLM Guard entry and persistence, recovery to tutoring, and response-mode audit rows. |
 
 For a quick local check of the target button without a browser or database, run `npm test -- --watchAll=false --runInBand --runTestsByPath src/components/__tests__/ChecklistPanel.transfer.test.tsx -t 'allows target generation before a learner has posted'` from `tutor-system/`.
 
 Each workflow has its own result. The full command continues after an individual workflow failure. The Guard workflow reuses the existing `Demo: Lock Icon Myth — Correct Reasoning` staging template room; it does not create a room. Cleanup resets response mode before deleting checklist rows, then verifies zero messages, checklists, sessions, feedback, assessments, and provider attempts. A direct database check found all seven rooms back at baseline response-mode state after the 2026-09-30 run.
+
+The updated assessment delivery journey requires `private.transfer_assessment_due_event(uuid)` and a preparation function that uses it. A missing hosted final-assessment policy fails that workflow with prerequisite evidence; it does not switch to the earlier Partial/basic trigger. Historical browser results do not validate this newer policy or the option gate.
 
 ## Test Data And Evidence
 

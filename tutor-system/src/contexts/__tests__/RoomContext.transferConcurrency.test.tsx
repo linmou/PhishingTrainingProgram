@@ -259,6 +259,7 @@ describe('RoomContext transfer concurrency', () => {
   });
 
   it('does not reprocess a resolved answer into a second message', async () => {
+    messagesForJoin = [learnerAMessageRow, deliveredQuestionRow];
     (useAuth as jest.Mock).mockReturnValue({ user: learnerUser, loading: false });
     jest.spyOn(transferAssessmentService, 'postMessage').mockResolvedValue({
       message: { ...deliveredAnswerRow },
@@ -274,7 +275,7 @@ describe('RoomContext transfer concurrency', () => {
       await room!.joinRoom(TRANSFER_ROOM_ID);
     });
     await act(async () => {
-      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID });
+      await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'] });
     });
 
     expect(room!.messages.filter((message) => message.id === DELIVERED_ANSWER_ID)).toHaveLength(1);
