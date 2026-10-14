@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * Test file: src/components/PostComment.tsx
- * Purpose: lock role/mode message presentation to the exact mixed-case "AI chatbot" tutor badge.
+ * Purpose: verify role/mode presentation and the student's unselected, selected, and stored rating states.
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import PostComment from '../PostComment';
-import { Message } from '../../types';
+import { Message, MessageFeedbackStats } from '../../types';
 
 describe('PostComment role badges', () => {
     const buildMessage = (overrides: Partial<Message> = {}): Message => ({
@@ -24,6 +24,73 @@ describe('PostComment role badges', () => {
         display_name: 'Training Tutor',
         avatar_url: null,
         ...overrides
+    });
+
+    it.each([
+        ['like', 'Like this comment', 'How helpful was this?', 'Slightly helpful', 1],
+        ['dislike', 'Dislike this comment', 'How unhelpful was this?', 'Extremely unhelpful', 5],
+    ] as const)('keeps a new %s rating neutral through hover until a star is clicked', async (feedbackType, actionTitle, prompt, level, rating) => {
+        const onSubmitFeedback = jest.fn().mockResolvedValue(undefined);
+        render(
+            <PostComment
+                message={buildMessage()}
+                currentUserId="student-1"
+                currentUserRole="student"
+                onSubmitFeedback={onSubmitFeedback}
+            />
+        );
+
+        fireEvent.click(screen.getByTitle(actionTitle));
+        const star = screen.getByTitle(`Rate ${rating} star${rating === 1 ? '' : 's'}`);
+        const submit = screen.getByRole('button', { name: 'Submit Rating' });
+        expect(screen.getByText(prompt)).toBeInTheDocument();
+        expect(submit).toBeDisabled();
+        fireEvent.mouseEnter(star);
+        expect(screen.getByText(prompt)).toBeInTheDocument();
+        expect(screen.queryByText(level)).not.toBeInTheDocument();
+        fireEvent.click(submit);
+        expect(onSubmitFeedback).not.toHaveBeenCalled();
+
+        fireEvent.click(star);
+        fireEvent.mouseLeave(star);
+        expect(screen.getByText(level)).toBeInTheDocument();
+        expect(submit).toBeEnabled();
+        fireEvent.click(submit);
+        await waitFor(() => expect(onSubmitFeedback).toHaveBeenCalledWith('message-1', feedbackType, rating));
+    });
+
+    it.each([
+        ['like', 'Very helpful', 'Somewhat helpful'],
+        ['dislike', 'Very unhelpful', 'Somewhat unhelpful'],
+    ] as const)('preserves the saved %s rating and allows editing it', async (feedbackType, label, editedLabel) => {
+        const onSubmitFeedback = jest.fn().mockResolvedValue(undefined);
+        const feedbackStats: MessageFeedbackStats = {
+            message_id: 'message-1',
+            total_feedback_count: 1,
+            like_count: feedbackType === 'like' ? 1 : 0,
+            dislike_count: feedbackType === 'dislike' ? 1 : 0,
+            average_like_rating: feedbackType === 'like' ? 4 : null,
+            average_dislike_rating: feedbackType === 'dislike' ? 4 : null,
+            overall_average_rating: 4,
+            user_feedback: { feedback_type: feedbackType, rating: 4 },
+        };
+        render(
+            <PostComment
+                message={buildMessage()}
+                currentUserId="student-1"
+                currentUserRole="student"
+                feedbackStats={feedbackStats}
+                onSubmitFeedback={onSubmitFeedback}
+            />
+        );
+
+        fireEvent.click(screen.getByTitle('You rated this 4/5 stars'));
+        expect(screen.getByText(label)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Submit Rating' })).toBeEnabled();
+        fireEvent.click(screen.getByTitle('Rate 2 stars'));
+        expect(screen.getByText(editedLabel)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Submit Rating' }));
+        await waitFor(() => expect(onSubmitFeedback).toHaveBeenCalledWith('message-1', feedbackType, 2));
     });
 
     it('renders the tutor badge as AI chatbot for a non-student viewer', () => {

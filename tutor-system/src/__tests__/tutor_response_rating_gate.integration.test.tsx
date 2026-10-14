@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * File: src/pages/RoomPagePost.tsx
- * Purpose: verify the mocked room UI requires a rating before the next reply.
+ * Purpose: verify the room UI's rating gate, unselected prompt, and persisted submission.
  */
 
 import React from 'react';
@@ -205,7 +205,8 @@ describe('student Tutor-response rating gate', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
     fireEvent.mouseEnter(within(dialog).getByRole('button', { name: '5 stars' }));
-    expect(within(dialog).getByText('Extremely helpful')).toBeInTheDocument();
+    expect(within(dialog).getByText('How helpful was this?')).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Submit rating' })).toBeDisabled();
     fireEvent.click(within(dialog).getByRole('button', { name: '5 stars' }));
     fireEvent.mouseLeave(within(dialog).getByRole('button', { name: '5 stars' }));
     expect(within(dialog).getByText('Extremely helpful')).toBeInTheDocument();
@@ -285,6 +286,31 @@ describe('student Tutor-response rating gate', () => {
     await waitFor(() => {
       expect(sendMessage).toHaveBeenCalledWith('My preserved reply', { replyToMessageId: undefined });
     });
+  });
+
+  it.each([
+    ['Helpful', 'like', 'How helpful was this?', 'Slightly helpful', 1],
+    ['Not helpful', 'dislike', 'How unhelpful was this?', 'Extremely unhelpful', 5],
+  ] as const)('keeps %s neutral before a student clicks a star', async (choice, feedbackType, prompt, level, rating) => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    renderRoom();
+    enterReplyAndSubmit('Student reply');
+    const dialog = screen.getByRole('alertdialog');
+
+    fireEvent.click(within(dialog).getByRole('button', { name: choice }));
+    const star = within(dialog).getByRole('button', { name: `${rating} star${rating === 1 ? '' : 's'}` });
+    expect(within(dialog).getByText(prompt)).toBeInTheDocument();
+    fireEvent.mouseEnter(star);
+    expect(within(dialog).getByText(prompt)).toBeInTheDocument();
+    expect(within(dialog).queryByText(level)).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Submit rating' })).toBeDisabled();
+    expect(submitMessageFeedback).not.toHaveBeenCalled();
+
+    fireEvent.click(star);
+    fireEvent.mouseLeave(star);
+    expect(within(dialog).getByText(level)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating' }));
+    await waitFor(() => expect(submitMessageFeedback).toHaveBeenCalledWith('tutor-latest', feedbackType, rating));
   });
 
   it('does not apply the student-only gate to a Tutor', async () => {

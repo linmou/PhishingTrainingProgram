@@ -1179,7 +1179,7 @@ const RoomPagePost: React.FC = () => {
                                 <p>
                                     {getRatingLabel(
                                         ratingFeedbackType === 'like',
-                                        ratingHoveredValue || ratingValue
+                                        ratingValue > 0 ? ratingHoveredValue || ratingValue : 0
                                     )}
                                 </p>
                                 <div className="rating-reminder-stars" aria-label="Rating">
