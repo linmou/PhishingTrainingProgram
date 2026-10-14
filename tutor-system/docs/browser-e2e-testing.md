@@ -2,7 +2,7 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-Updated: 2026-10-14. Workflow revision baseline commit: `2bd3143`; assessment release browser baseline: `88b3ccd`.
+Updated: 2026-10-14. Workflow revision baseline commit: `73f5908`; assessment release browser baseline: `88b3ccd`.
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
@@ -21,7 +21,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
-| `test:e2e:staging` / `test:e2e:production` | Nine selectable Playwright tutor, room setup, checklist, assessment, status-event, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain; the new-room workflow deletes its tagged room | Explicit live suite against the selected project. |
+| `test:e2e:staging` / `test:e2e:production` | Ten selectable Playwright tutor, room setup, checklist, assessment, status-event, early-message, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain; the new-room workflow deletes its tagged room | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
@@ -29,9 +29,11 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 
 The only GitHub Actions workflow is a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
 
+The [early-message browser record](doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_browser.md) verifies automatic replay after manual goal creation in the merged app against staging, including reload and duplicate prevention.
+
 ## Select The Release Checks
 
-Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all nine workflows; use it when the combined change affects shared behavior that cannot be bounded.
+Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all ten workflows; use it when the combined change affects shared behavior that cannot be bounded.
 
 | Changed behavior | Relevant existing browser checks |
 | --- | --- |
@@ -41,6 +43,7 @@ Use the [verification scope](supabase-release-workflow.md#verification-scope) an
 | Tutor suggestion and reviewed ordinary send | `tutor-response` |
 | Room assessment setup | `room-assessment-setup` |
 | Checklist generation, editing or coverage | Corresponding `checklist-generation`, `checklist-management` or `checklist-coverage` workflow |
+| Rechecking learner messages when goals are created | `early-message-recheck` |
 | Guard entry/recovery | `guard-mode` |
 
 Run focused deterministic tests first, including applicable provider failures, gates and permission cases. For example, from `tutor-system/` use `rtk npm run test:e2e:unit` for runner checks, then `rtk npm run test:e2e:staging -- --workflow=assessment-answer` for a change confined to answer controls. After batch promotion, the matching production command is `rtk npm run test:e2e:production -- --workflow=assessment-answer`. These commands require the selected app/project environment described below; the unit command has no hosted/provider dependency.
@@ -110,6 +113,7 @@ The recorder reuses the `assessment-delivery` staging copy of the production `Tr
 | `assessment-delivery` | One full-template room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback. Drains all scheduler-selected ready targets before moving to the next topic; asserts both named targets complete and every delivered assessment closes. Checks hosted policy before fixture mutations. |
 | `assessment-answer` | Learner pass and retry/failure in separate template rooms; disabled chat/Reply during the assessment, selected-option submissions, persisted identities/attempts, terminal chat recovery and reload. |
 | `transfer-status-events` | Real transfer analysis against the full persisted room target inventory: direct understanding, initial signal, later full understanding, spontaneous transfer, no evidence, and contradiction. Checks Edge responses, private event kinds, stored progress, and learner/tutor screenshots. Shares the opening learner journey with `assessment-delivery`, then tests the remaining events in the same empty assessment-delivery fixture. |
+| `early-message-recheck` | Two learner posts before any goals exist, then manual goal creation through the tutor UI. Verifies chronological real analysis, one backend completion marker per post, visible covered progress, server completion confirmations, an unrelated later post without duplicate effects, and persistence after reload. Captures request/response bodies and database states before cleanup. Reuses the empty assessment-delivery fixture and waits for the tutor panel's learner lookup before entering goals. |
 | `guard-mode` | One student-tutor Guard journey: manual mode confirmation, locked checklist controls, real LLM Guard entry and persistence, recovery to tutoring, and response-mode audit rows. |
 
 For a quick local check of the target button without a browser or database, run `npm test -- --watchAll=false --runInBand --runTestsByPath src/components/__tests__/ChecklistPanel.transfer.test.tsx -t 'allows target generation before a learner has posted'` from `tutor-system/`.

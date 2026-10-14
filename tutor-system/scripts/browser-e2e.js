@@ -20,7 +20,8 @@ const workflows = {
   'guard-mode': require('./browser-e2e/workflows/guard-mode'),
   'assessment-delivery': require('./browser-e2e/workflows/assessment-delivery'),
   'assessment-answer': require('./browser-e2e/workflows/assessment-answer'),
-  'transfer-status-events': require('./browser-e2e/workflows/transfer-status-events')
+  'transfer-status-events': require('./browser-e2e/workflows/transfer-status-events'),
+  'early-message-recheck': require('./browser-e2e/workflows/early-message-recheck')
 };
 
 function selectWorkflows(argv) {
