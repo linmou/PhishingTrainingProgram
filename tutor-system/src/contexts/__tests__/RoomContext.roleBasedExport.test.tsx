@@ -117,9 +117,9 @@ describe('RoomContext - Role-based Export Filtering', () => {
         );
     };
 
-    const renderJoinedRoom = async (user: User, createAIInteraction = false) => {
+    const renderJoinedRoom = async (user: User, createAIInteraction = false, roomMessages = mockMessages) => {
         mockRoomResponse = mockRoom;
-        mockMessagesResponse = mockMessages;
+        mockMessagesResponse = roomMessages;
         const student: User = {
             id: 'student-123',
             display_name: 'Student',
@@ -307,6 +307,59 @@ describe('RoomContext - Role-based Export Filtering', () => {
     });
 
     describe('TXT Export', () => {
+        // RoomContext.tsx / roomExportBuilder.ts: exported feedback totals count rated messages, including zero/all-rated boundaries.
+        it.each([0, 2, 6])('counts only %i rated messages in a six-message download', async (ratedCount) => {
+            const tutorUser: User = {
+                id: 'tutor-123',
+                display_name: 'Test Tutor',
+                current_role: 'tutor',
+                status: 'active',
+                created_at: '2024-01-01T00:00:00Z',
+                updated_at: '2024-01-01T00:00:00Z',
+            };
+            const sixMessages = Array.from({ length: 6 }, (_, index) => ({
+                ...mockMessages[index % 2],
+                id: `msg-${index + 1}`,
+            }));
+            const feedbackEntryCount = ratedCount > 1 ? ratedCount + 1 : ratedCount;
+            (getMessageFeedbackStats as jest.Mock).mockImplementation(async (messageId: string) => {
+                const isRated = Number(messageId.replace('msg-', '')) <= ratedCount;
+                const entryCount = isRated ? messageId === 'msg-2' ? 2 : 1 : 0;
+                return {
+                    message_id: messageId,
+                    total_feedback_count: entryCount,
+                    like_count: entryCount,
+                    dislike_count: 0,
+                    overall_average_rating: isRated ? 4 : null,
+                };
+            });
+            (getRoomFeedbackSummary as jest.Mock).mockResolvedValue({
+                total_messages_with_feedback: ratedCount,
+                total_feedback_count: feedbackEntryCount,
+            });
+
+            const { result } = await renderJoinedRoom(tutorUser, false, sixMessages);
+            expect(Object.keys(result.current.messageFeedbackStats)).toHaveLength(6);
+            mockDownloadDom();
+            await act(async () => {
+                await result.current.downloadChatHistory('txt');
+                await result.current.downloadChatHistory('json');
+            });
+
+            const blobCalls = (global.Blob as jest.Mock).mock.calls;
+            const exportedText = blobCalls[0][0][0];
+            const exportedJson = JSON.parse(blobCalls[1][0][0]);
+            expect(exportedJson.messages).toHaveLength(6);
+            expect(exportedJson.feedback_summary.total_messages_with_feedback).toBe(ratedCount);
+            if (ratedCount > 0) {
+                expect(exportedText).toContain(`Messages with feedback: ${ratedCount}`);
+                expect(exportedText).toContain(`Total feedback entries: ${feedbackEntryCount}`);
+            } else {
+                expect(exportedText).not.toContain('Feedback Summary:');
+                expect(exportedText).not.toContain('Messages with feedback:');
+            }
+        });
+
         it('should include AI summary for tutors', async () => {
             const tutorUser: User = {
                 id: 'tutor-123',

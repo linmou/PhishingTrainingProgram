@@ -208,7 +208,8 @@ export const buildRoomTextExport = ({
     ...aiInteractions.map(buildTutorInteractionText),
   ] : [];
 
-  const messagesWithFeedback = Object.keys(messageFeedbackStats).length;
+  const messagesWithFeedback = Object.values(messageFeedbackStats)
+    .filter((stats) => stats.total_feedback_count > 0).length;
   const totalFeedbackCount = Object.values(messageFeedbackStats)
     .reduce((sum, stats) => sum + stats.total_feedback_count, 0);
   const feedbackSummary = messagesWithFeedback > 0 ? [
