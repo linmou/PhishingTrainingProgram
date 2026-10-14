@@ -3,6 +3,7 @@ Provide a human-readable QA guide for the transfer-assessment room workflow, inc
 
 ## Metadata
 - Updated: 2026-10-14
+- Release baseline commit: `83690fe`; queued-assessment verification added during hosted release.
 - Source of truth: `features/transfer_assessment.feature` and the [Partial-only final assessment contract](ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding).
 - Policy provenance: [T09.1](ai-behaviors/tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) connects P2 adaptive learning and P3 constructive engagement to the user's decision: verify understanding developed through tutoring, while avoiding a redundant quiz for knowledge shown directly from Pending.
 
@@ -193,6 +194,8 @@ Expected result:
 2. Send tutor feedback replying to that assessment's terminal answer, then tutor Official Support while it is Partial, provide full understanding, and complete its assessment and feedback.
 3. Reload between cycles and after the second answer.
 
+When a learner message makes other targets ready too, follow the server's priority order and complete those queued assessments and their terminal feedback before moving to the next topic. Retain the full target inventory; the number of questions can exceed two.
+
 Expected result:
 
 - Each assessment references its own target and has distinct question-message and assessment IDs.
@@ -200,6 +203,7 @@ Expected result:
 - Each answer records an authoritative attempt, each completed assessment closes, and neither cycle leaves an open assessment blocking the next target.
 - Tutor feedback references the terminal answer and is stored after the assessment closes; a reply to the next topic does not satisfy that feedback requirement.
 - Persisted progress is checked per target. The full live journey requires the hosted final-assessment policy matching this guide.
+- Both URL Domain Check and Official Support complete; all additional delivered questions also have distinct identities, authoritative attempts, terminal feedback and closed lifecycles.
 
 ### QA-TA-10: Reload And Duplicate Tabs
 

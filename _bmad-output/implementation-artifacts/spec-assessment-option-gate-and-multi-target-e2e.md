@@ -20,7 +20,7 @@ context:
 
 Always scope the gate to the current learner's nonterminal delivered assessment, preserve retry behavior and authoritative grading, and use distinct question-message and assessment identities in regression evidence. Match existing single/multiple selection contracts. Reuse the established browser fixtures and retain input/output, progress, provider and lifecycle evidence. Keep implementation small and maintain current target scheduling policy.
 
-The change covers the frontend and browser harness. Hosted policy releases are separate from this frontend gate; a deployed-policy mismatch must be reported as a failed prerequisite rather than silently changing the expected cycle. Validate actual hosted configuration before running a live suite. Keep test-owned fixture cleanup bounded to generated records and preserve evidence before cleanup.
+The user's 2026-10-14 follow-up extends this task through release and live verification. Deliver the inherited final-assessment SQL and matching assessment-api to staging, verify the browser journey, then release and verify the same backend on production. Resolve a deployed-policy mismatch as task work. Keep test-owned fixture cleanup bounded to generated records and preserve evidence before cleanup.
 
 ## I/O & Edge-Case Matrix
 
@@ -57,6 +57,11 @@ The change covers the frontend and browser harness. Hosted policy releases are s
 - [x] Extend the delivery journey through tutoring and assessment of two distinct targets; assert target-local progression and lifecycle identity.
 - [x] Run affected Jest, browser harness and TypeScript checks; run the live journey when its hosted prerequisites match; record exact results and limitations.
 - [x] Update nearest relevant behavior and browser documentation; review final changes with independent reviewers.
+- [x] Refresh the hosted baseline and validate the exact SQL, existing-row disposition, and Edge source locally.
+- [x] Apply SQL and deploy the matching assessment-api to staging; verify hosted RPC behavior and source parity.
+- [x] Pass live staging multi-target delivery and option-answer/retry workflows with cleanup evidence.
+- [x] Apply the same SQL and Edge source to production after staging passes; verify matching live workflows and cleanup.
+- [x] Record both release results and archive the exact SQL after verification.
 
 Given an open learner assessment, when ordinary text posting is attempted, then no message is persisted. Given selected options, when the learner submits, then the stored reply and grading result reference the same assessment and question. Given a completed first cycle, when tutoring develops another target, then a new assessment can complete without a stale open assessment blocking it.
 
@@ -66,11 +71,12 @@ Run focused `RoomContext.transferAnswer`, concurrency, page lifecycle/decision a
 
 ## Spec Change Log
 
+- 2026-10-14 user follow-up: make development, deployment and live verification one task. Reopened completion and included the inherited backend release. Fresh-baseline tests reproduced incompatible historical open questions; the migration now cancels those questions without changing attempts, completed results or learner progress.
 - 2026-10-14 review patches: preserve actual tutor generation while each target is Partial, and send feedback parented to each assessment's terminal answer before moving to the next target. This makes the multi-target test exercise the existing feedback-priority contract rather than stranding the next assessment. Preserve frontend gating, target-local assertions, identity checks and explicit hosted-policy preflight.
 
 ## Results
 
-Completed repository implementation and review. Passed 195 frontend tests and 20 browser-harness checks; changed TypeScript files have zero diagnostics. Full TypeScript checking retains 454 errors in untouched files. Chrome DevTools observed the new gate on the original room's real student state. The live staging delivery run failed its final-policy prerequisite before room fixtures or provider calls; neither multi-target cycle has a live passing result. Hosted release remains separate. See [validation record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_assessment_option_gate.md).
+Completed implementation, review, deployment and live verification. Final regression passes 199 frontend tests, 20 browser-harness checks and 39 Edge/domain tests. Full TypeScript checking retains diagnostics in untouched files. Staging assessment-api 54 and production 10 use identical source manifests; the inherited SQL is applied and archived. Playwright against the local app and real hosted backends passes answer/retry/failure plus full-inventory delivery on both environments: seven staging and eight production assessment cycles, including both required tutoring topics, bound answers, gates/reloads, feedback, progress and cleanup. Chrome DevTools confirms the original room is unblocked with no attempt counted. Earlier failures and intermittent invalid analysis-output limitations remain in the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md); the [initial validation record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_assessment_option_gate.md) preserves the pre-release evidence.
 
 ## Suggested Review Order
 

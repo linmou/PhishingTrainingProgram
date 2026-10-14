@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: verify tutoring and two target-specific transfer assessment cycles in one room.
+// Purpose: verify tutoring and queued target-specific transfer assessments across multiple knowledge points.
 'use strict';
 
 const assert = require('node:assert/strict');
@@ -197,6 +197,43 @@ async function tutoringStep(ctx, journey, options) {
   return evidence;
 }
 
+async function completeAssessmentQueue(ctx, journey, label) {
+  const cycles = [];
+  const feedback = [];
+  const readiness = [];
+  for (let ordinal = 1; ordinal <= journey.template_target_count + 1; ordinal += 1) {
+    const focus = journey.observations.at(-1).message;
+    const { data, error } = await ctx.client.rpc('prepare_transfer_assessment_context_v1', {
+      p_room_id: journey.room.id, p_focus_student_message_id: focus.id,
+      p_checklist_id: journey.checklist_id, p_actor_id: ctx.tutor.id,
+      p_request_id: require('node:crypto').randomUUID()
+    });
+    if (error) throw new Error(`Assessment queue inspection: ${error.message}`);
+    readiness.push(data);
+    writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-queue.json`), readiness);
+    if (data.no_assessment_due) return { cycles, feedback, readiness };
+    assert(ordinal <= journey.template_target_count, 'Assessment queue did not terminate within the target inventory');
+    const target = data.context.checklist_items.find(item => item.id === data.selected_target_item_id);
+    assert(target && data.context.eligible_assessment_item_ids.includes(target.id), 'Scheduler chose an ineligible target');
+    assert(!cycles.some(cycle => cycle.assessed_item.id === target.id), 'Completed target became due again without new learning');
+    if (cycles.length > 0) {
+      // A learner acknowledgement supplies the next ordinary-message focus after terminal feedback.
+      const previous = cycles.at(-1).assessed_item;
+      await journey.observe('I am ready for the next practice question.', previous, null, 'covered', 'good');
+    }
+    const cycle = await assessmentCycle(ctx, journey, target, `${label}-${ordinal}`);
+    cycles.push(cycle);
+    writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-${ordinal}-result.json`), cycle);
+    feedback.push(await tutoringStep(ctx, journey, {
+      label: `${label}-${ordinal}-terminal-feedback`,
+      focusMessageId: cycle.private_assessment[0].terminal_answer_message_id,
+      expectedAssessmentCount: cycle.room_assessments.length,
+      target: null, terminalAssessment: cycle.private_assessment[0]
+    }));
+  }
+  throw new Error('Assessment queue exceeded the room target inventory');
+}
+
 module.exports = async function assessmentDelivery(ctx) {
   const policy = await managementQuery(ctx.config, `select
     to_regprocedure('private.transfer_assessment_due_event(uuid)') is not null as final_policy_helper,
@@ -215,12 +252,9 @@ module.exports = async function assessmentDelivery(ctx) {
   });
   await journey.observe('testdrive.info is not the social media platform address. I would go to the real site myself instead of using that link.',
     journey.explanation, 'demonstrated_understanding', 'covered', 'good');
-  const first = await assessmentCycle(ctx, journey, journey.explanation, 'domain');
-  writeJson(path.join(ctx.evidenceDir, 'assessment-delivery-domain-result.json'), first);
-  const firstFeedback = await tutoringStep(ctx, journey, {
-    label: 'domain-terminal-feedback', focusMessageId: first.private_assessment[0].terminal_answer_message_id,
-    expectedAssessmentCount: 1, target: null, terminalAssessment: first.private_assessment[0]
-  });
+  const firstQueue = await completeAssessmentQueue(ctx, journey, 'domain');
+  const first = firstQueue.cycles.find(cycle => cycle.assessed_item.id === journey.explanation.id);
+  assert(first, 'URL-domain learning did not complete its assessment');
   const items = await query(ctx.client, 'checklist_items', 'id,area_text,status,understanding_level', 'checklist_id', journey.checklist_id);
   const secondTarget = items.find(item => item.area_text.startsWith('Official Support:'));
   assert(secondTarget?.id && secondTarget.id !== first.assessed_item.id, 'Missing distinct Official Support target');
@@ -229,29 +263,27 @@ module.exports = async function assessmentDelivery(ctx) {
     secondTarget, 'initial_signal', 'partially_covered', 'basic');
   const between = await tutoringStep(ctx, journey, {
     label: 'support-tutoring', focusMessageId: journey.observations.at(-1).message.id,
-    expectedAssessmentCount: 1, target: secondTarget, terminalAssessment: null
+    expectedAssessmentCount: firstQueue.cycles.length, target: secondTarget, terminalAssessment: null
   });
   await journey.observe('For official support, I would open the platform app myself and use its Help or Support page to contact them. I would not use the phone number or contact link supplied by this warning because it may reach the scammer.',
     secondTarget, 'demonstrated_understanding', 'covered', 'good');
-  const second = await assessmentCycle(ctx, journey, secondTarget, 'support');
-  const secondFeedback = await tutoringStep(ctx, journey, {
-    label: 'support-terminal-feedback', focusMessageId: second.private_assessment[0].terminal_answer_message_id,
-    expectedAssessmentCount: 2, target: null, terminalAssessment: second.private_assessment[0]
-  });
-  assert.equal(second.room_assessments.length, 2, 'Journey created unexpected assessment lifecycles');
+  const secondQueue = await completeAssessmentQueue(ctx, journey, 'support');
+  const second = secondQueue.cycles.find(cycle => cycle.assessed_item.id === secondTarget.id);
+  assert(second, 'Official Support learning did not complete its assessment');
+  const cycles = [...firstQueue.cycles, ...secondQueue.cycles];
+  assert.equal(cycles.at(-1).room_assessments.length, cycles.length, 'Journey created unexpected assessment lifecycles');
+  assert.equal(new Set(cycles.map(cycle => cycle.assessment_id)).size, cycles.length);
   assert.notEqual(first.assessment_id, second.assessment_id, 'Second target reused the first assessment');
   assert.notEqual(first.private_assessment[0].item_id, second.private_assessment[0].item_id);
   const finalProgress = await query(ctx.client, 'checklist_items', '*', 'checklist_id', journey.checklist_id);
-  for (const cycle of [first, second]) {
+  for (const cycle of cycles) {
     const progress = finalProgress.find(item => item.id === cycle.assessed_item.id);
     assert.equal(progress?.status, 'covered');
     assert.equal(progress?.understanding_level, 'good');
   }
-  writeJson(path.join(ctx.evidenceDir, 'assessment-delivery-support-result.json'), second);
   return { room_id: journey.room.id, checklist_id: journey.checklist_id,
-    template_target_count: journey.template_target_count, cycles: [first, second],
-    first_target_tutoring: firstTutoring, first_terminal_feedback: firstFeedback,
-    second_terminal_feedback: secondFeedback,
+    template_target_count: journey.template_target_count, cycles,
+    first_target_tutoring: firstTutoring, assessment_queues: [firstQueue, secondQueue],
     between_cycles: between, status_observations: journey.observations, final_progress: finalProgress };
 };
 

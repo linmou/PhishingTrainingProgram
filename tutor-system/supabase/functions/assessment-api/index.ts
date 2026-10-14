@@ -413,13 +413,14 @@ async function prepareAssessment(
   const context = buildTransferTutorRequestContextV3(rawContext as any);
   const userMessage = buildTransferAssessmentRequest(context, targetItemId);
   const provider = providerConfig(deps);
+  let formatError = '';
 
   for (let ordinal = 1; ordinal <= 2; ordinal += 1) {
     const requestPayload = {
       model: provider.model,
       messages: [
         { role: 'system', content: TRANSFER_ASSESSMENT_SYSTEM_PROMPT },
-        { role: 'user', content: ordinal === 1 ? userMessage : `${userMessage}\nReturn valid JSON matching the same contract.` },
+        { role: 'user', content: ordinal === 1 ? userMessage : `${userMessage}\nReturn valid JSON matching the same contract.\n${JSON.stringify({ format_repair: { validation_error: formatError } })}` },
       ],
       temperature: 0.3,
       max_tokens: PROVIDER_MAX_TOKENS,
@@ -458,7 +459,8 @@ async function prepareAssessment(
         knownItemIds: [targetItemId],
         knownMessageIds: context.checklist_items.find(item => item.id === targetItemId)?.relevant_evidence_message_ids || [],
       });
-    } catch {
+    } catch (error) {
+      formatError = error instanceof Error ? error.message : 'Invalid assessment format';
       await recordProviderAttempt(deps, scope, requestId, ordinal, provider, requestPayload,
         payload, finishReason, 'invalid', 'AI_OUTPUT_INVALID');
       if (ordinal === 2) throw new Error('AI_OUTPUT_INVALID');

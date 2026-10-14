@@ -1,5 +1,13 @@
 # Repository Guidelines
 
+Intent: define application development conventions and connect them to the repository's delivery requirements.
+
+Updated: 2026-10-14. Baseline commit: `83690fe`.
+
+## Server Delivery
+
+Follow [Mandatory Server Delivery](../AGENTS.md#mandatory-server-delivery) for server behavior changes, including backend dependencies inherited from other branches. Development, deployment, and live verification are one task. Use [the Supabase release workflow](docs/supabase-release-workflow.md) before marking that task complete.
+
 ## Project Structure & Module Organization
 - Source in `src/`: `components/`, `pages/`, `services/` (Supabase, AI helpers), `contexts/`, `hooks/`, `types/`, `utils/`.
 - Tests in `src/__tests__/` (unit/integration) and BDD specs in `features/*.feature` with step defs in `src/__tests__/step_definitions/`.

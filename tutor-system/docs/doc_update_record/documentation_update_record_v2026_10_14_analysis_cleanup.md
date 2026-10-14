@@ -2,6 +2,8 @@
 
 Intent: distinguish deployed SQL from incomplete release verification, and record the remaining assessment/evaluation cleanup.
 
+Release follow-up (2026-10-14, baseline commit `88b3ccd`): the final-assessment SQL and flag-removal Edge source have since been applied and verified on both environments; SQL is archived. See the [final release record](documentation_update_record_v2026_10_14_final_assessment_release.md). The reconciliation below records the earlier state; it is historical.
+
 Updated: 2026-10-14. Base commit: `80ed973608b3d568af8f103230a4e74605c003ef`; changes uncommitted.
 
 ## Hosted inspection

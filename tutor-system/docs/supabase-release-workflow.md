@@ -2,7 +2,23 @@
 
 Intent: validate database migrations and Edge Function changes locally, then release and verify them on staging before production.
 
-Updated: 2026-10-03
+Updated: 2026-10-14. Baseline commit: `83690fe`.
+
+## Task Completion
+
+[Mandatory Server Delivery](../../AGENTS.md#mandatory-server-delivery) makes this workflow part of every Supabase server behavior change, including Edge-only changes and inherited release dependencies. Start it during the development task and carry it through production verification unless the user explicitly sets a narrower endpoint. Record release work in the task's acceptance criteria before implementation. A local implementation workflow, commit, or merge is an intermediate stage.
+
+Use the existing dated release record to track the following evidence for the exact SQL and function source being delivered:
+
+| Stage | Evidence required to advance |
+| --- | --- |
+| Local validation | Applicable function/domain tests and SQL behavior/permission tests pass against the required baseline; commands and results are recorded |
+| Staging deployed | Project ref, application time, exact SQL hash when applicable, and deployed function version/source hash are recorded; SQL dependencies are verified before dependent functions deploy |
+| Staging verified | The matching live application or browser journey passes against staging; relevant provider results, persisted state, and fixture cleanup are recorded |
+| Production deployed | Production preconditions are rechecked and the same tested SQL/function source is applied; resulting versions are recorded |
+| Production verified | The matching live workflow and cleanup pass against production; final state and evidence are recorded |
+
+Mark the feature task complete only after every applicable stage passes. If a stage fails, correct and repeat it before advancing; when an external blocker prevents progress, preserve the incomplete task and record the exact blocker and next action. Do not turn a missing deployment prerequisite into a passing or skipped acceptance criterion. A user-directed local-only or staging-only endpoint must be recorded with the instruction that set it.
 
 ## Local Database Setup
 

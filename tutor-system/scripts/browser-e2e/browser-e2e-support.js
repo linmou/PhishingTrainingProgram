@@ -147,17 +147,17 @@ async function sendStudentMessage(page, content) {
 
   if (await reminder.isVisible()) await completeRating();
   await input.fill(content);
-  await send.click();
-  await page.waitForFunction(() =>
-    document.querySelector('textarea.comment-input-field')?.value === '' ||
-    document.querySelector('[data-testid="rating-reminder-backdrop"]') !== null,
-  null, { timeout: TIMEOUT });
-  if (await reminder.isVisible()) {
-    await completeRating();
+  const deadline = Date.now() + TIMEOUT;
+  while (Date.now() < deadline) {
+    if (await reminder.isVisible()) await completeRating();
     await send.click();
-    await page.waitForFunction(() => document.querySelector('textarea.comment-input-field')?.value === '',
-      null, { timeout: TIMEOUT });
+    await page.waitForFunction(() =>
+      document.querySelector('textarea.comment-input-field')?.value === '' ||
+      document.querySelector('[data-testid="rating-reminder-backdrop"]') !== null,
+    null, { timeout: Math.max(1, deadline - Date.now()) });
+    if (await input.inputValue() === '') return;
   }
+  throw new Error('Learner reply remained blocked by required response ratings');
 }
 
 async function existingRoom(client, kind, tutorId) {
@@ -283,8 +283,8 @@ async function managementQuery(config, sql) {
 }
 
 async function screenshot(page, dir, name) {
-  const file = path.join(dir, `${name}.png`);
-  await page.screenshot({ path: file, fullPage: true });
+  const file = path.join(dir, `${name}.jpg`);
+  await page.screenshot({ path: file, type: 'jpeg', quality: 75, fullPage: true });
   return path.basename(file);
 }
 

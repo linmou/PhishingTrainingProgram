@@ -49,6 +49,7 @@ async function runWorkflows(selected, context, report, evidenceDir, registry = w
     }
     const usedRooms = [...new Set(report.room_ids.slice(roomCount))];
     report.results[name].cleanup = [];
+    if (usedRooms.length > 0 && context.detachRooms) await context.detachRooms();
     for (const roomId of usedRooms) {
       try {
         if (context.cleanupRoom) await context.cleanupRoom(roomId);
@@ -112,6 +113,9 @@ async function main(argv = process.argv.slice(2)) {
     const context = {
       tutorPage, studentPage, client, config, appUrl: config.appUrl, tutor, student, runId, evidenceDir,
       createdRooms: new Set(),
+      detachRooms: async () => {
+        await Promise.all([tutorPage.goto('about:blank'), studentPage.goto('about:blank')]);
+      },
       existingRoom: async (kind) => {
         const room = await support.existingRoom(client, kind, tutor.id);
         report.room_ids.push(room.id);

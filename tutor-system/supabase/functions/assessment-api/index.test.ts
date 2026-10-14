@@ -834,6 +834,36 @@ Deno.test('returns a valid second response after one format repair', async () =>
   assert(!JSON.stringify(payload).includes('raw_response'));
 });
 
+// Test responsibility: assessment-api/index.ts supplies validator feedback to the single format repair attempt.
+Deno.test('format repair forwards a rendering violation without accepting the invalid draft', async () => {
+  const requests: Array<{ messages: Array<{ content: string }> }> = [];
+  const audits: Record<string, unknown>[] = [];
+  const invalid = validProviderPayload() as { choices: Array<{ message: { content: string } }> };
+  const draft = JSON.parse(invalid.choices[0].message.content);
+  draft.assessment.stem = 'There is a new warning. It asks for a response. What should you do?';
+  invalid.choices[0].message.content = JSON.stringify(draft);
+  const handler = createAssessmentApiHandler(dependencies({
+    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string,string>)[name],
+    rpc: async (name, args) => {
+      if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
+      if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
+      return { data: 'audit', error: null };
+    },
+    fetch: async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify(requests.length === 1 ? invalid : validProviderPayload()), { status: 200 });
+    }
+  }));
+  const response = await handler(request('prepare_turn', {
+    room_id: 'room-1', checklist_id: 'checklist-1', focus_student_message_id: 'focus-1'
+  }));
+  assertEquals(response.status, 200);
+  assertEquals(requests.length, 2);
+  const repair = JSON.parse(requests[1].messages[1].content.split('\n').at(-1)!);
+  assert(typeof repair.format_repair.validation_error === 'string' && repair.format_repair.validation_error.length > 0);
+  assertEquals(audits.map(entry => entry.p_validation_outcome), ['invalid','valid']);
+});
+
 Deno.test('performs one format-only repair and rejects a second invalid result', async () => {
   let providerCalls = 0;
   const audits: Record<string, unknown>[] = [];

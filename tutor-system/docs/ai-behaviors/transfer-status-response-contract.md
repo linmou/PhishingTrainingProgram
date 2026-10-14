@@ -2,11 +2,11 @@
 
 Intent: define how learner-message analysis reports item-level evidence and how each event changes learning progress.
 
-Updated: 2026-10-14
-Status: locally implemented assessment-after-full-understanding revision; hosted release pending. See the [implementation evidence](../doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md) and [model evaluation](transfer-final-assessment-evaluation-record.md) for separate validation results.
+Updated: 2026-10-14. Release baseline commit: `88b3ccd`.
+Status: assessment-after-full-understanding revision deployed to staging and production on 2026-10-14. See the [release evidence](../doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md), [implementation evidence](../doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md), and [model evaluation](transfer-final-assessment-evaluation-record.md) for separate validation results.
 Constitution reference: [phishing_tutor_constitution 1.0](constitution.md); adopted principles and priorities are unchanged.
 Grounding review: resolved on 2026-10-13 against constitution 1.0 and the user's explicit Partial-only decision. The contextual interpretation is recorded beside the assessment rule below and in T09.1 of the [behavior specification](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle).
-Implementation source: [assessment-api](../../supabase/functions/assessment-api/index.ts), [TypeScript transitions](../../src/services/learningProgressTransitions.ts), and the [SQL release candidate](../../supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql).
+Implementation source: [assessment-api](../../supabase/functions/assessment-api/index.ts), [TypeScript transitions](../../src/services/learningProgressTransitions.ts), and the [released SQL](../../supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql).
 Evidence basis: [production learner review](../../../output/production-learning-coverage-2026-10-03/review.md).
 
 ## Input and decision order

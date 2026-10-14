@@ -2,7 +2,7 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-Updated: 2026-10-14. Baseline commit: ecee681.
+Updated: 2026-10-14. Release browser baseline commit: `88b3ccd`.
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
@@ -27,7 +27,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
 | `scripts/record-transfer-learning-demo-video.js` | Two real browser contexts, staging provider, and timestamped chapters | Reuses the assessment template room; all generated rows are cleaned afterward | Explicit recording run. |
 
-The only GitHub Actions workflow is a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI.
+The only GitHub Actions workflow is a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
 
 ## Run The Live Suite
 
@@ -87,7 +87,7 @@ The recorder reuses the `assessment-delivery` staging copy of the production `Tr
 | `room-assessment-setup` | Create a room through the tutor UI, enable in-room assessment, have a learner join without posting, and verify Generate Learning Targets is enabled. |
 | `checklist-management` | Manual creation, status/priority/text edits, and persistence after reload. |
 | `checklist-coverage` | Learner message, real coverage call, stored progress, and the next tutor request. Ordinary learner sends invoke analysis after persistence; tutor requests read current progress without replacing the authored prompt. |
-| `assessment-delivery` | One room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback, closed assessments and target-local progress. Checks hosted final-assessment policy before fixture mutations. |
+| `assessment-delivery` | One full-template room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback. Drains all scheduler-selected ready targets before moving to the next topic; asserts both named targets complete and every delivered assessment closes. Checks hosted policy before fixture mutations. |
 | `assessment-answer` | Learner pass and retry/failure in separate template rooms; disabled chat/Reply during the assessment, selected-option submissions, persisted identities/attempts, terminal chat recovery and reload. |
 | `transfer-status-events` | Real transfer analysis against the full persisted room target inventory: direct understanding, initial signal, later full understanding, spontaneous transfer, no evidence, and contradiction. Checks Edge responses, private event kinds, stored progress, and learner/tutor screenshots. Shares the opening learner journey with `assessment-delivery`, then tests the remaining events in the same empty assessment-delivery fixture. |
 | `guard-mode` | One student-tutor Guard journey: manual mode confirmation, locked checklist controls, real LLM Guard entry and persistence, recovery to tutoring, and response-mode audit rows. |
@@ -97,6 +97,10 @@ For a quick local check of the target button without a browser or database, run 
 Each workflow has its own result. The full command continues after an individual workflow failure. The Guard workflow reuses the existing `Demo: Lock Icon Myth — Correct Reasoning` staging template room; it does not create a room. Cleanup resets response mode before deleting checklist rows, then verifies zero messages, checklists, sessions, feedback, assessments, and provider attempts. A direct database check found all seven rooms back at baseline response-mode state after the 2026-09-30 run.
 
 The updated assessment delivery journey requires `private.transfer_assessment_due_event(uuid)` and a preparation function that uses it. A missing hosted final-assessment policy fails that workflow with prerequisite evidence; it does not switch to the earlier Partial/basic trigger. Historical browser results do not validate this newer policy or the option gate.
+
+One learner message may make several targets ready. The delivery journey follows the server's priority queue rather than assuming a fixed first target or exactly two total questions. Each queued answer receives terminal feedback before the next learner acknowledgement or topic. Learner submission handles consecutive required-rating prompts; the answer fixture waits for the browser-created active learner session. Before deleting fixture rows, the runner navigates both browser pages away from rooms so realtime room entry cannot recreate sessions during cleanup.
+
+Workflow screenshots use full-page JPEG at quality 75 to bound evidence size during long queued-assessment journeys. Earlier runs retain their original PNG files.
 
 ## Test Data And Evidence
 

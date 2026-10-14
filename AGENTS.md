@@ -1,5 +1,21 @@
 # Repository Guidelines
 
+Intent: define the implementation and delivery requirements for work in this repository.
+
+Updated: 2026-10-14. Baseline commit: `83690fe`.
+
+## Mandatory Server Delivery
+
+A task that changes deployed server behavior includes **development → deployment → live verification**. This covers backend APIs, Edge Functions, database schema/RPCs/policies, and server runtime configuration. The user's standing instruction authorizes the required release to the repository's configured staging and production projects after the applicable checks pass; a separate deployment request is not required. An explicit user request for local-only work or a narrower release target overrides this default. Documentation-only and test-only changes do not require deployment.
+
+At planning time, include local validation, staging deployment and live verification, then production deployment and live verification in the task's acceptance criteria. Include previously merged or inherited backend changes required for the requested behavior; assign an owner for their release rather than treating them as an external prerequisite.
+
+Before marking a server task `done`, closing its acceptance checklist, or reporting the feature complete, verify the matching behavior on both deployed environments and record the deployed source/version, database changes, test results, and cleanup evidence. Local tests, a commit, a merge, or a successful deployment response establish intermediate progress only. Commits and merges may happen before release, but do not end the task.
+
+For Supabase changes, execute [supabase-release-workflow.md](tutor-system/docs/supabase-release-workflow.md), including its SQL-before-dependent-Edge order and required live checks. A coding workflow's local-only implementation step ends before this release phase; it does not remove the delivery requirement or permit a spec to redefine completion as local-only.
+
+If a check fails, fix it and rerun before advancing to the next environment. If an external blocker cannot be resolved within available authorization or access, keep the task incomplete and report the exact failing action, evidence, current deployed state, and next required action. A failed deployment prerequisite is work to resolve, not a completed verification step.
+
 ## Tool Restrictions
 
 Do not start, stop, inspect, or use Docker. Do not use Docker in any situation.

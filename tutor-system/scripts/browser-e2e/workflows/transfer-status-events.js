@@ -72,7 +72,12 @@ async function startStatusJourney(ctx) {
     const analysis = calls.find(call => call.request?.operation === 'analyze_message');
     const rows = await managementQuery(ctx.config,
       `select event_kind,event_payload,processing_state from private.learning_event_inbox where room_id='${room.id}'::uuid and source_message_id='${message.id}'::uuid order by created_at`);
-    const observation = { room_id: room.id, message, item_id: item.id, expected_kind: expectedKind, function_calls: calls, inbox: rows };
+    const context = await ctx.client.rpc('get_transfer_message_analysis_context_v1', {
+      p_room_id: room.id, p_message_id: message.id, p_actor_id: ctx.tutor.id
+    });
+    const observation = { room_id: room.id, message, item_id: item.id, expected_kind: expectedKind,
+      function_calls: calls, inbox: rows, analysis_context: context.data,
+      analysis_context_error: context.error ? { code: context.error.code, message: context.error.message } : null };
     observations.push(observation);
     writeJson(path.join(ctx.evidenceDir, 'transfer-status-events.json'), observations);
     assert.equal(analysis?.status, 200, `Analysis failed for ${message.id}: ${JSON.stringify(analysis?.response)}`);

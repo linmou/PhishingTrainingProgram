@@ -3,7 +3,7 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { insert, query, sendStudentMessage, openRoom, requestId } = require('../browser-e2e-support');
+const { insert, query, sendStudentMessage, openRoom, requestId, waitForMatch } = require('../browser-e2e-support');
 
 const TRANSFER_LEARNER_DIALOGUE = Object.freeze({
   introduction: 'I want to know if this warning is real.',
@@ -55,12 +55,18 @@ async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMe
   if (analysisError) throw new Error(`Transfer fixture signal: ${analysisError.message}`);
   target.status = 'covered';
   target.understanding_level = 'good';
-  return { checklist, items };
+  return { checklist, items: [target, ...items.filter(item => item.id !== target.id)] };
 }
 
 async function assessmentRoom(ctx) {
   const room = await ctx.existingRoom(ctx.kind);
   await openRoom(ctx.studentPage, ctx.appUrl, room.id);
+  const sessions = await waitForMatch(
+    () => query(ctx.client, 'sessions', '*', 'room_id', room.id),
+    rows => rows.some(row => row.status === 'active' && row.student_id === ctx.student.id),
+    'browser-created current learner session'
+  );
+  const session = sessions.find(row => row.status === 'active' && row.student_id === ctx.student.id);
   const content = TRANSFER_LEARNER_DIALOGUE.evidence;
   const priorMessageIds = new Set((await query(ctx.client, 'messages', 'id', 'room_id', room.id)).map((row) => row.id));
   await sendStudentMessage(ctx.studentPage, content);
@@ -69,9 +75,6 @@ async function assessmentRoom(ctx) {
     .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at))
     .at(-1);
   assert(focus?.id && focus.content, 'Learner focus message was not persisted');
-  const session = await insert(ctx.client, 'sessions', {
-    room_id: room.id, tutor_id: room.tutor_id, student_id: ctx.student.id, status: 'active'
-  });
   return { room, focus, session, ...await seedTransferChecklist(ctx.client, room.id, ctx.student.id, ctx.tutor.id, focus.id) };
 }
 

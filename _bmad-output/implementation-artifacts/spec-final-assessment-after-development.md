@@ -73,6 +73,8 @@ Run focused Jest reducer/orchestrator/BDD tests, Deno handler checks, TypeScript
 
 Completed: 175 Jest, 41 Deno, 23 Node/browser-harness, 10 evaluation-harness checks, and 17 real SQL lifecycle scenarios plus role checks passed; scoped TypeScript passed. The real-model evaluation completed three experiments with 682 calls. Its benchmark failed and both prompt candidates were rejected; the original prompt remains. Local task completion does not confer model acceptance or hosted-release readiness. The [implementation record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md) and [evaluation record](../../tutor-system/docs/ai-behaviors/transfer-final-assessment-evaluation-record.md) preserve the evidence and limitations.
 
+Release follow-up (2026-10-14, baseline commit `88b3ccd`): the inherited SQL and matching assessment-api are now deployed and verified on staging and production, with full-inventory browser delivery, option-answer/retry/failure, and cleanup evidence. The exact SQL is archived. See the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md). This hosted workflow verification does not change the failed semantic benchmark result.
+
 ## Suggested Review Order
 
 **Policy and persistence**
@@ -80,11 +82,11 @@ Completed: 175 Jest, 41 Deno, 23 Node/browser-harness, 10 evaluation-harness che
 - Read the approved boundary and its upstream rationale.
   [transfer-status-response-contract.md:99](../../tutor-system/docs/ai-behaviors/transfer-status-response-contract.md#L99)
 - Trace readiness from accepted before/after evidence.
-  [20261014000000_final_assessment_after_understanding.sql:12](../../tutor-system/supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql#L12)
+  [20261014000000_final_assessment_after_understanding.sql:12](../../tutor-system/supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql#L12)
 - Check stale-question cancellation and preserved metadata edits.
-  [20261014000000_final_assessment_after_understanding.sql:139](../../tutor-system/supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql#L139)
+  [20261014000000_final_assessment_after_understanding.sql:139](../../tutor-system/supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql#L139)
 - Verify terminal grading and deferred replay use the correct learning cycle.
-  [20261014000000_final_assessment_after_understanding.sql:373](../../tutor-system/supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql#L373)
+  [20261014000000_final_assessment_after_understanding.sql:373](../../tutor-system/supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql#L373)
 
 **Shared behavior and evidence**
 

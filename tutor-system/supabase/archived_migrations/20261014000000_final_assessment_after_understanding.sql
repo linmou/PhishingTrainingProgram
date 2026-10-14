@@ -1,7 +1,7 @@
 --!/usr/bin/env psql
 -- Purpose: assess only full understanding developed from Partial; retain deferred readiness and record terminal results from Covered.
--- Baseline: live production definitions inspected through Supabase MCP on 2026-10-13.
--- Release candidate: reconcile the pre-existing migration queue before staging/production release.
+-- Baseline: production/staging catalogs rechecked on 2026-10-14; fresh production snapshot validated locally.
+-- Release: cancel incompatible old open questions while preserving attempts, completed results, and progress.
 BEGIN;
 
 -- The most recent effective progress row identifies the current learning cycle.
@@ -643,5 +643,19 @@ BEGIN
   PERFORM set_config('app.transfer_operation',v_setting,true);
   RETURN NEW;
 END $function$;
+
+-- Existing Partial-policy questions cannot be graded under the new readiness/hash contract.
+-- Close only incompatible open lifecycles; preserve every question, answer, attempt and target state.
+WITH cancelled AS (
+  UPDATE private.transfer_assessments a
+  SET lifecycle = 'cancelled', closed_at = clock_timestamp(), updated_at = clock_timestamp()
+  WHERE a.lifecycle = 'open'
+    AND (private.transfer_assessment_due_event(a.item_id) IS NULL
+      OR a.progress_snapshot_hash IS DISTINCT FROM private.transfer_item_hash(a.item_id))
+  RETURNING question_message_id, closed_at
+)
+UPDATE public.messages m
+SET assessment_lifecycle = 'cancelled', assessment_closed_at = c.closed_at
+FROM cancelled c WHERE m.id = c.question_message_id;
 
 COMMIT;

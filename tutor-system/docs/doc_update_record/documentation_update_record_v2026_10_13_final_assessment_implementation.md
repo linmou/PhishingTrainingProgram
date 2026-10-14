@@ -5,7 +5,7 @@ Intent: record implementation and verification of the approved Partial → Cover
 Date: 2026-10-13
 Source baseline commit: `7737cfb7026910e53684c6ad739c2f3005af3f54`.
 Policy authority: [user decision and principle provenance](documentation_update_record_v2026_10_13_final_assessment_provenance.md).
-Status: local implementation and evaluation execution complete; model benchmark failed; hosted release pending.
+Release follow-up (2026-10-14, baseline commit `88b3ccd`): SQL and matching Edge source applied and verified on staging and production; exact SQL archived. See the [final release record](documentation_update_record_v2026_10_14_final_assessment_release.md). The model benchmark remains failed. The remaining sections preserve the original local implementation evidence and pre-release status.
 
 ## Implementation
 
@@ -17,7 +17,7 @@ Actual target/progress changes cancel obsolete open questions in both private li
 
 Guard replay now treats the analysis-complete marker as metadata instead of replaying it as a learning event. New history timestamps use wall-clock insertion time so multiple transitions in one transaction retain causal order.
 
-SQL artifact: [release candidate](../../supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql). On 2026-10-14, live reconciliation confirmed both older SQL changes are applied. Both were archived; direct understanding's failed production status workflow remains tracked in its release record. The candidate remains in `migration-candidates/` and has not been applied to staging or production. See the [reconciliation record](documentation_update_record_v2026_10_14_analysis_cleanup.md).
+SQL artifact: [released SQL](../../supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql). On 2026-10-14, live reconciliation confirmed both older SQL changes are applied. Both were archived; direct understanding's failed production status workflow remains tracked in its release record. The candidate remains in `migration-candidates/` and has not been applied to staging or production. See the [reconciliation record](documentation_update_record_v2026_10_14_analysis_cleanup.md).
 
 ## Local database evidence
 

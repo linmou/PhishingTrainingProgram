@@ -2,7 +2,9 @@
 
 <!-- Intent: freeze the six browser-facing operations and their role-safe request/response DTOs. -->
 
-This contract describes the component-102 Edge Function in the repository. The production database inventory does not establish that this Edge Function contract is deployed or used by production.
+Updated: 2026-10-14. Baseline commit: `88b3ccd`.
+
+This contract describes the component-102 Edge Function in the repository. The matching assessment-api is deployed as staging version 54 and production version 10. The [release record](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) records source hashes and live workflow evidence.
 
 ## Envelope and Identity
 
@@ -39,7 +41,9 @@ Errors contain safe text only. They never contain a key, explanation, transfer b
 
 Refactor revision (2026-09-29): `initialize_checklist` takes approved `items` with `area_text`, `item_type`, and `priority`; the server owns IDs and progress. `analyze_message` semantically applies idempotent learner evidence. The unchanged `prepare_turn` operation is exposed by the browser as `prepareAssessment()` and returns one assessment-only candidate when due, `null` only when no assessment is due, or an explicit error. `send_reviewed` accepts only an assessment draft and rechecks eligibility before atomic delivery.
 
-Final-assessment revision (2026-10-13, local implementation; hosted release pending): `prepare_turn` uses trusted Partial → Covered `demonstrated_understanding` history to select an outstanding final check. Initial/repair signals continue tutoring; direct Pending → Covered and spontaneous transfer complete without assessment. Guard, open-question and feedback deferrals preserve readiness. Notes/priority edits preserve it; target/progress invalidation cancels obsolete questions without grading. Terminal pass from Covered records completion even though the progress pair is unchanged. The [response contract](../../../tutor-system/docs/ai-behaviors/transfer-status-response-contract.md) owns the full policy; public operation shapes and per-target analysis calls remain unchanged. The 2026-10-14 analysis contract returns `events` and `explanation`; private combined results also contain `rejected_events`.
+Final-assessment revision (2026-10-13, deployed 2026-10-14): `prepare_turn` uses trusted Partial → Covered `demonstrated_understanding` history to select an outstanding final check. Initial/repair signals continue tutoring; direct Pending → Covered and spontaneous transfer complete without assessment. Guard, open-question and feedback deferrals preserve readiness. Notes/priority edits preserve it; target/progress invalidation cancels obsolete questions without grading. Terminal pass from Covered records completion even though the progress pair is unchanged. The [response contract](../../../tutor-system/docs/ai-behaviors/transfer-status-response-contract.md) owns the full policy; public operation shapes and per-target analysis calls remain unchanged. The 2026-10-14 analysis contract returns `events` and `explanation`; private combined results also contain `rejected_events`.
+
+Assessment generation retains one format-only repair attempt. Its user input includes `format_repair.validation_error` from the rejected first draft; the same validation applies to the second draft. Neither invalid draft is deliverable. Analysis calls continue to fail closed on invalid provider output.
 
 | Operation | Required body fields | Authorized caller | Result |
 |---|---|---|---|

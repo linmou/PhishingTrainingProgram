@@ -170,6 +170,7 @@ test('cleanup runs after a workflow failure and its failure fails the workflow',
     const context = {
       tutorPage: { screenshot: async () => {} },
       studentPage: { screenshot: async () => {} },
+      detachRooms: async () => { cleaned.push('detached'); },
       cleanupRoom: async (id) => { cleaned.push(id); throw new Error('cleanup failed'); }
     };
     const report = { room_ids: [], results: {} };
@@ -177,16 +178,22 @@ test('cleanup runs after a workflow failure and its failure fails the workflow',
       broken: async () => { report.room_ids.push('room-id'); throw new Error('workflow failed'); }
     });
     assert.equal(passed, false);
-    assert.deepEqual(cleaned, ['room-id']);
+    assert.deepEqual(cleaned, ['detached', 'room-id']);
     assert.equal(report.results.broken.status, 'fail');
     assert.match(report.results.broken.cleanup[0].error, /cleanup failed/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('learner sends once with a prior, prompted, or no required rating', async () => {
+test('learner sends once with prior, prompted, consecutive, or no required ratings', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const initiallyOpen of [true, false, null]) {
+    for (const { initiallyOpen, requiredRatings } of [
+      { initiallyOpen: true, requiredRatings: 1 },
+      { initiallyOpen: false, requiredRatings: 1 },
+      { initiallyOpen: false, requiredRatings: 0 },
+      { initiallyOpen: false, requiredRatings: 2 },
+      { initiallyOpen: true, requiredRatings: 2 }
+    ]) {
       const page = await browser.newPage();
       await page.setContent(`
         <style>.rating-reminder-backdrop { position: fixed; inset: 0; background: white; z-index: 1; }</style>
@@ -208,7 +215,8 @@ test('learner sends once with a prior, prompted, or no required rating', async (
         <script>
           window.sent = [];
           window.submitAttempts = 0;
-          window.rated = ${initiallyOpen === null};
+          window.ratingsRemaining = ${requiredRatings};
+          window.rated = window.ratingsRemaining === 0;
           window.showRating = () => {
             if (document.querySelector('[data-testid="rating-reminder-backdrop"]')) return;
             const reminder = document.querySelector('#reminder-template').content.firstElementChild.cloneNode(true);
@@ -219,7 +227,11 @@ test('learner sends once with a prior, prompted, or no required rating', async (
               button.onclick = () => { stars = index + 1; };
             });
             reminder.querySelector('.rating-reminder-submit').onclick = () => {
-              if (useful && stars === 4) { window.rated = true; reminder.remove(); }
+              if (useful && stars === 4) {
+                window.ratingsRemaining -= 1;
+                window.rated = window.ratingsRemaining === 0;
+                reminder.remove();
+              }
             };
             document.body.append(reminder);
           };
@@ -238,7 +250,7 @@ test('learner sends once with a prior, prompted, or no required rating', async (
       const result = await page.evaluate(() => ({ sent: window.sent, rated: window.rated, attempts: window.submitAttempts }));
       assert.deepEqual(result.sent, ['Check the official app.']);
       assert.equal(result.rated, true);
-      assert.equal(result.attempts, initiallyOpen === false ? 2 : 1);
+      assert.equal(result.attempts, requiredRatings + (initiallyOpen ? 0 : 1));
       await page.close();
     }
   } finally { await browser.close(); }

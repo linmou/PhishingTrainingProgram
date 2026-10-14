@@ -4,7 +4,7 @@ Intent: record the approved analysis contract, assessment routing change, and ev
 
 Updated: 2026-10-14
 Base commit: `80ed973608b3d568af8f103230a4e74605c003ef`
-Release status: draft; scoped local behavior verified. Hosted release remains pending.
+Release follow-up: applied and verified on staging and production on 2026-10-14, baseline commit `88b3ccd`. See the [final release record](documentation_update_record_v2026_10_14_final_assessment_release.md) for exact SQL/source hashes, versions, browser runs and limitations. The remaining sections preserve the earlier local-only evidence and status at that time.
 
 ## Decision and implementation
 
@@ -41,7 +41,7 @@ Full command metadata, intermediate failures, SQL output, evaluator output, and 
 
 ## SQL and release boundary
 
-Candidate: [20261014000000_final_assessment_after_understanding.sql](../../supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql).
+Candidate: [20261014000000_final_assessment_after_understanding.sql](../../supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql).
 SHA-256: `fc9cbf8eb9a580db0f3f914dbcd3ef3431759615dc0c806d3dc69bbf30a6343b`.
 
 Local PostgreSQL socket: `/Users/admin/.transfer-assessment-pg17/migration-validation/socket`, port `55433`; executor `postgres`. A new `analysis_flags_green_20261014` database was cloned from the retained `final_assessment_red_20261013` production-derived baseline, with source database ACLs and `app.settings.jwt_exp=3600` restored. The complete candidate applied in its own transaction before the tests. The Red check used `final_assessment_final_20261013`, which retains the earlier final-assessment implementation.

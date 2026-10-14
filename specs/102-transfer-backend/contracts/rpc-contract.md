@@ -4,7 +4,9 @@
 
 ## Final-assessment revision — 2026-10-13
 
-The relevant live definitions were inspected through Supabase MCP before preparing the [local release candidate](../../../tutor-system/supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql). Current paths use `prepare_transfer_assessment_context_v1`, `send_reviewed_transfer_assessment_v1` → `send_reviewed_tutor_response_v4`, and `process_assessment_message_v2` → `apply_learning_event_v1`. The candidate changes eligibility to outstanding Partial → Covered demonstrated understanding and terminal grading to Covered, preserving same-pair pass history and deferred readiness. It is not deployed. [Local evidence and release boundaries](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md) supersede the earlier inventory for this revision.
+Updated: 2026-10-14. Release baseline commit: `88b3ccd`.
+
+The relevant live definitions were inspected through Supabase MCP before preparing the [released SQL](../../../tutor-system/supabase/archived_migrations/20261014000000_final_assessment_after_understanding.sql). Current paths use `prepare_transfer_assessment_context_v1`, `send_reviewed_transfer_assessment_v1` → `send_reviewed_tutor_response_v4`, and `process_assessment_message_v2` → `apply_learning_event_v1`. The SQL changes eligibility to outstanding Partial → Covered demonstrated understanding and terminal grading to Covered, preserving same-pair pass history and deferred readiness. It is applied and verified on staging and production; incompatible historical open questions are cancelled without counting attempts. The [release record](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) supersedes earlier deployment status for this revision.
 
 ## Production inspection snapshot — 2026-09-28
 
