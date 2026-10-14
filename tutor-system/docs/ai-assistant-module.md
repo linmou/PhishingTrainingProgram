@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-09-27 (Multi-agent mode deprecated; AI comment presentation restored in commit adac01b)
+Last updated: 2026-10-14 (Quick Adjust display labels; baseline commit 83690fe)
 
 ## Overview
 
@@ -96,6 +96,7 @@ Quick Adjust persistence:
 - Regenerating a suggestion returns the effective applied config
 - The app persists that config immediately
 - Reopening Quick Adjust or AI Assistant Settings reflects the saved role and parameter values instead of default values
+- Quick Adjust section names, parameter names, option text, and information headings use readable labels such as `Communication Style`, `Teen Slang`, and `Trusted Adult`. Configuration keys and the saved `low`/`high` values retain their internal form.
 
 Student-selected AI role lock:
 - In an AI-enabled room with exactly one student, the student-facing control is

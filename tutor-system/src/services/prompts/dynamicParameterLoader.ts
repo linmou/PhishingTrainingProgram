@@ -52,9 +52,11 @@ export const getAvailableParameters = () => {
   return parameters;
 };
 
+const formatParameterLabel = (name: string): string =>
+  name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
 /**
- * Generate parameter metadata dynamically from the loaded modules
- * Uses original parameter names and descriptions from the parameter files
+ * Generate readable display metadata while retaining parameter keys and descriptions.
  */
 export const generateParameterMetadata = () => {
   const metadata: any = {};
@@ -62,13 +64,16 @@ export const generateParameterMetadata = () => {
   // Generate metadata for all parameter modules using the same pattern
   Object.entries(PARAMETER_MODULES).forEach(([moduleKey, moduleConfig]) => {
     metadata[moduleKey] = {
-      label: moduleKey,
+      label: formatParameterLabel(moduleKey),
       parameters: Object.entries(moduleConfig).reduce((acc, [paramKey, paramConfig]) => {
         acc[paramKey] = {
-          label: paramKey, // Use original parameter name
+          label: formatParameterLabel(paramKey),
           low: paramConfig.low, // Use original low description
           high: paramConfig.high, // Use original high description
-          labels: paramConfig.labels || { low: 'low', high: 'high' } // Use custom labels or default to low/high
+          labels: {
+            low: formatParameterLabel(paramConfig.labels?.low || 'low'),
+            high: formatParameterLabel(paramConfig.labels?.high || 'high')
+          }
         };
         return acc;
       }, {} as Record<string, any>)
