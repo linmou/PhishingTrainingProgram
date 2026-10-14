@@ -48,7 +48,7 @@ const FeedbackRating: React.FC<FeedbackRatingProps> = ({
             
             <div className="feedback-rating-content">
                 <p className="feedback-rating-description">
-                    {getRatingLabel(isLike, displayRating)}
+                    {getRatingLabel(isLike, selectedRating > 0 ? displayRating : 0)}
                 </p>
                 
                 <div className="feedback-rating-stars">

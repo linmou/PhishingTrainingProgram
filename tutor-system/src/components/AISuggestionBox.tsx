@@ -188,7 +188,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                         <div className="ai-info-section">
                             {sectionMeta.parameters && Object.entries(sectionMeta.parameters).map(([paramKey, paramInfo]: [string, any]) => (
                                 <div key={paramKey} className="ai-info-parameter">
-                                    <h4>{paramKey}</h4>
+                                    <h4>{paramInfo.label}</h4>
                                     <div className="ai-info-option">
                                         <strong>Low:</strong> {paramInfo.low}
                                     </div>

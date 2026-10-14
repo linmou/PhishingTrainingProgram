@@ -612,6 +612,13 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   return (
     <div className="checklist-panel">
       <div className="checklist-header">
+        <div className="checklist-title">
+          <Settings size={16} />
+          <span>Learning Progress</span>
+        </div>
+        <button className="checklist-close" onClick={onToggleVisibility} aria-label="Close Learning Progress">
+          <EyeOff size={16} />
+        </button>
         {progressLocked && (
           <div role="status" className="checklist-guard-notice">
             Learning progression is locked while Guard Mode is active. Corrective messages remain enabled.
@@ -622,13 +629,6 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             Transfer policy is active. Progress is derived from recorded learner evidence or an explicit teacher confirmation.
           </div>
         )}
-        <div className="checklist-title">
-          <Settings size={16} />
-          <span>Learning Progress</span>
-        </div>
-        <button className="checklist-close" onClick={onToggleVisibility}>
-          <EyeOff size={16} />
-        </button>
       </div>
 
       {draftSyncError && (

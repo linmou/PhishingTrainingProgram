@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-14. Baseline commit: ecee681. -->
+<!-- Updated: 2026-10-14. Baseline commit: 83690fe. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -193,6 +193,7 @@ Assessment candidates stay outside the legacy suggestion mode toggle.
 - 5-star rating system
 - Statistical aggregation
 - User-specific feedback tracking
+- The inline comment popup and mandatory reply dialog keep their question above the stars until a star is clicked, including while hovering. Reopening an existing comment rating still displays the saved level and allows editing it.
 
 **Student reply gate**:
 - Before sending, students must rate the latest persisted AI-generated or Tutor response if they have not personally rated it yet.
