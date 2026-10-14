@@ -52,6 +52,7 @@ jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
 
 jest.mock('../../services/checklistService', () => ({
   ChecklistService: {
+    analyzeStudentMessages: jest.fn(),
     getActiveTransferChecklistForRoom: jest.fn(),
     getChecklistForStudent: jest.fn(),
   },
@@ -71,6 +72,8 @@ describe('RoomContext transfer turn modes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation((roomId, _studentId, focusId) =>
+      transferAssessmentService.analyzeMessage(focusId, roomId));
     room = null;
     (useAuth as jest.Mock).mockReturnValue({
       user: {

@@ -721,7 +721,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (user.current_role === 'student') {
                 const analyzeEvidence = async () => {
                     try {
-                        await transferAssessmentService.analyzeMessage(storedMessage.id, currentRoom.id);
+                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id);
                     } catch (analysisError) {
                         console.warn('Transfer evidence analysis unavailable; message was stored:', analysisError);
                     }
@@ -875,16 +875,24 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ));
             if (user.current_role === 'student') {
                 try {
-                    await ChecklistService.processStudentMessage(
-                        currentRoom.id,
-                        content,
-                        persistedMessage.id,
-                        messages.filter(message => !message.id.startsWith('temp-')).map(message => ({
-                            role: message.user_role === 'student' ? 'user' : 'assistant',
-                            content: message.content,
-                            timestamp: Math.floor(new Date(message.created_at).getTime() / 1000)
-                        }))
-                    );
+                    // Targets can be initialized while this earlier ordinary insert is in flight.
+                    if (currentRoom.transfer_learning_enabled && !transferChecklist) {
+                        transferChecklist = await ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
+                    }
+                    if (currentRoom.transfer_learning_enabled && transferChecklist?.progress_policy_version === 'transfer_v1') {
+                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, persistedMessage.id);
+                    } else {
+                        await ChecklistService.processStudentMessage(
+                            currentRoom.id,
+                            content,
+                            persistedMessage.id,
+                            messages.filter(message => !message.id.startsWith('temp-')).map(message => ({
+                                role: message.user_role === 'student' ? 'user' : 'assistant',
+                                content: message.content,
+                                timestamp: Math.floor(new Date(message.created_at).getTime() / 1000)
+                            }))
+                        );
+                    }
                 } catch (analysisError) {
                     console.warn('Checklist analysis unavailable; message was stored:', analysisError);
                 }
@@ -1061,7 +1069,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     };
                 }
                 if (!isAssessmentAnswer) {
-                    await transferAssessmentService.analyzeMessage(parentMessageId, currentRoom.id);
+                    await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId);
                 }
                 const prepared = isAssessmentAnswer ? null : await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,

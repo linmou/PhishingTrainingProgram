@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-14. Baseline commit: 83690fe. -->
+<!-- Updated: 2026-10-14. Baseline commit: 88b3ccd. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -141,6 +141,26 @@ Tutor target setup resolves the sole active learner session when the checklist i
 learner may join before posting a message. Enabling transfer assessment keeps the active legacy
 checklist visible as previous progress while new transfer targets are being prepared; transfer
 initialization still requires an identified learner owner.
+
+After transfer targets are initialized, `ChecklistService` rechecks the owner's saved ordinary
+student messages in the same room, oldest first with message ID as the tie-breaker. It pages
+through the full history, excludes assessment answers, and awaits the existing trusted analysis
+API for each message before rereading progress. Saving targets before a learner joins uses the
+same path when the local draft is promoted. Inventory, analysis, and final-read failures retain
+the local target draft and expose Retry sync. The server's completed-message deduplication makes
+retries safe after partial analysis, and its Guard policy remains authoritative.
+
+Ordinary learner sends and tutor AI focus requests use that same ordered prefix through the
+selected message. This prevents a new message from overtaking older pending evidence while target
+setup is replaying history, including across browser clients. Missing focus IDs fail explicitly
+before analysis. If targets appear while an ordinary learner insert is in flight, the send path
+rechecks the owner-scoped checklist after persistence and includes that stored message in the prefix.
+
+Each room/learner pair keeps a session cache of IDs explicitly confirmed complete by the server's
+`already_processed: true` response. Initial goal replay confirms new completions once to prime that
+cache; subsequent live messages normally require one or two analysis requests regardless of earlier
+history length. Deferred evidence remains retryable. Cache corruption or unavailable browser storage
+falls back to the actual server analysis, and partial failures retain already-confirmed IDs.
 
 Room participation remains `tutoring` or `guard`; assessment is only a turn decision. Manual Guard
 changes use the room-mode service directly. Recovering from a Guard suggestion requires the tutor to

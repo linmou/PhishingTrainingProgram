@@ -68,6 +68,7 @@ jest.mock('../contexts/AuthContext', () => ({ useAuth: jest.fn() }));
 
 jest.mock('../services/checklistService', () => ({
   ChecklistService: {
+    analyzeStudentMessages: jest.fn(),
     getActiveTransferChecklistForRoom: jest.fn(),
     getChecklistForStudent: jest.fn(),
   },
@@ -292,6 +293,8 @@ async function mountTeacherRoom(
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation((roomId, _studentId, focusId) =>
+    transferAssessmentService.analyzeMessage(focusId, roomId));
 });
 
 afterEach(() => {
