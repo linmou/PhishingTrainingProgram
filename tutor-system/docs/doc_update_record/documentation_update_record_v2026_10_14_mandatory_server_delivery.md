@@ -4,6 +4,8 @@ Intent: preserve the user's requirement that server development continues throug
 
 Updated: 2026-10-14. Baseline commit: `83690fe`.
 
+Workflow follow-up (2026-10-14, baseline `2bd3143`): the user approved [scoped verification and production batches](documentation_update_record_v2026_10_14_scoped_release_batches.md). Staging-verified features may await a recorded batch; production verification remains the completion gate. The decision below records the earlier rule.
+
 ## Decision
 
 The user instructed: “please make the development - deploy - verification flow compulsory , dont stop at development next time”. The user selected repository instructions and local workflow documents as the enforcement surface.

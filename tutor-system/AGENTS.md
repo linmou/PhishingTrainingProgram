@@ -2,11 +2,11 @@
 
 Intent: define application development conventions and connect them to the repository's delivery requirements.
 
-Updated: 2026-10-14. Baseline commit: `83690fe`.
+Updated: 2026-10-14. Workflow revision baseline commit: `2bd3143`.
 
 ## Server Delivery
 
-Follow [Mandatory Server Delivery](../AGENTS.md#mandatory-server-delivery) for server behavior changes, including backend dependencies inherited from other branches. Development, deployment, and live verification are one task. Use [the Supabase release workflow](docs/supabase-release-workflow.md) before marking that task complete.
+Follow [Mandatory Server Delivery](../AGENTS.md#mandatory-server-delivery) for server behavior changes, including inherited backend dependencies. Select tests by changed behavior using [the Supabase release workflow](docs/supabase-release-workflow.md#verification-scope). Ordinary features may wait in a recorded production batch after staging deployment and verification; report `staging verified — awaiting production release` and keep production acceptance open. Complete delivery only after the exact batch is released and its selected production checks pass.
 
 ## Project Structure & Module Organization
 - Source in `src/`: `components/`, `pages/`, `services/` (Supabase, AI helpers), `contexts/`, `hooks/`, `types/`, `utils/`.

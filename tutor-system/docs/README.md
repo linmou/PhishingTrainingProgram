@@ -7,6 +7,7 @@ Document the current tutor-system architecture and development workflows, includ
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
 - Final-assessment policy implementation base commit: `7737cfb`.
+- Scoped release workflow revision base commit: `2bd3143`.
 
 # Tutor-System Documentation Hub
 
@@ -38,6 +39,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Final assessment evaluation](./ai-behaviors/transfer-final-assessment-evaluation-record.md)** - Partial-only routing comparison, preserved model outputs, and remaining conformance gaps
 - **[Final assessment implementation](./doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md)** - Local SQL/application validation and model evaluation boundaries
 - **[Final assessment release](./doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md)** - Verified staging/production SQL and Edge delivery, full-inventory browser journeys, option gates, and cleanup
+- **[Scoped verification and production batches](./doc_update_record/documentation_update_record_v2026_10_14_scoped_release_batches.md)** - Behavior-based checks, staging-verified waiting state, coherent batches and production completion gates
 - **[Direct understanding release record](./doc_update_record/documentation_update_record_v2026_10_04_direct_understanding_status.md)** - Staging and production deployment evidence and unresolved status-event issue
 - **[Transfer refactor documentation record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_refactor.md)** - Updated behavior docs, staging migration status, and verification evidence
 - **[Transfer refactor merge record](./doc_update_record/documentation_update_record_v2026_09_29_transfer_merge.md)** - Merged contracts, migration history, and integration checks

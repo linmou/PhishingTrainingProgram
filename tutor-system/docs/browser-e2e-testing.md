@@ -2,7 +2,7 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-Updated: 2026-10-14. Release browser baseline commit: `88b3ccd`.
+Updated: 2026-10-14. Workflow revision baseline commit: `2bd3143`; assessment release browser baseline: `88b3ccd`.
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
@@ -28,6 +28,26 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | `scripts/record-transfer-learning-demo-video.js` | Two real browser contexts, staging provider, and timestamped chapters | Reuses the assessment template room; all generated rows are cleaned afterward | Explicit recording run. |
 
 The only GitHub Actions workflow is a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
+
+## Select The Release Checks
+
+Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all nine workflows; use it when the combined change affects shared behavior that cannot be bounded.
+
+| Changed behavior | Relevant existing browser checks |
+| --- | --- |
+| Assessment option controls, binding or retry/terminal chat gate | `assessment-answer` |
+| Assessment scheduling, eligibility or tutoring across targets | `assessment-delivery`, plus `assessment-answer` if answer/lifecycle behavior changes |
+| Learner evidence judgments or status transitions | `transfer-status-events`; add the relevant semantic evaluation cases |
+| Tutor suggestion and reviewed ordinary send | `tutor-response` |
+| Room assessment setup | `room-assessment-setup` |
+| Checklist generation, editing or coverage | Corresponding `checklist-generation`, `checklist-management` or `checklist-coverage` workflow |
+| Guard entry/recovery | `guard-mode` |
+
+Run focused deterministic tests first, including applicable provider failures, gates and permission cases. For example, from `tutor-system/` use `rtk npm run test:e2e:unit` for runner checks, then `rtk npm run test:e2e:staging -- --workflow=assessment-answer` for a change confined to answer controls. After batch promotion, the matching production command is `rtk npm run test:e2e:production -- --workflow=assessment-answer`. These commands require the selected app/project environment described below; the unit command has no hosted/provider dependency.
+
+Run selected staging journeys after the affected change, and revalidate combined interactions before promoting a batch. Production checks must cover the changed behavior and resulting state/cleanup; use the full affected journey for lifecycle/security changes and the affected smoke/API check for isolated changes. A successful deployment, health response, or staging result alone cannot close production acceptance. API-only behavior may use an integrated API check instead of an unrelated browser workflow.
+
+Each selected workflow still requires complete evidence and fixture cleanup. Run workflows sharing a fixture sequentially. Real-provider failures remain in the record even if a later attempt passes. Reuse evidence only while the tested source, dependencies, configuration and target preconditions remain valid; rerun affected checks after relevant changes. Full-inventory assessment delivery is reserved for changes to scheduling or cooperation across targets, rather than every UI edit.
 
 ## Run The Live Suite
 

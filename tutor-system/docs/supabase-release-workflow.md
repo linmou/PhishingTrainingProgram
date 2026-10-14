@@ -1,12 +1,12 @@
 # Supabase Release Workflow
 
-Intent: validate database migrations and Edge Function changes locally, then release and verify them on staging before production.
+Intent: match verification cost to changed behavior, verify changes on staging, and promote coherent batches to production with evidence.
 
-Updated: 2026-10-14. Baseline commit: `83690fe`.
+Updated: 2026-10-14. Workflow revision baseline commit: `2bd3143`.
 
 ## Task Completion
 
-[Mandatory Server Delivery](../../AGENTS.md#mandatory-server-delivery) makes this workflow part of every Supabase server behavior change, including Edge-only changes and inherited release dependencies. Start it during the development task and carry it through production verification unless the user explicitly sets a narrower endpoint. Record release work in the task's acceptance criteria before implementation. A local implementation workflow, commit, or merge is an intermediate stage.
+[Mandatory Server Delivery](../../AGENTS.md#mandatory-server-delivery) makes this workflow part of every Supabase server behavior change, including Edge-only changes and inherited dependencies. Record the changed behavior, verification scope and release acceptance criteria before implementation. Ordinary features may accumulate after staging verification; production verification remains required for completion unless the user explicitly sets a narrower endpoint.
 
 Use the existing dated release record to track the following evidence for the exact SQL and function source being delivered:
 
@@ -14,11 +14,39 @@ Use the existing dated release record to track the following evidence for the ex
 | --- | --- |
 | Local validation | Applicable function/domain tests and SQL behavior/permission tests pass against the required baseline; commands and results are recorded |
 | Staging deployed | Project ref, application time, exact SQL hash when applicable, and deployed function version/source hash are recorded; SQL dependencies are verified before dependent functions deploy |
-| Staging verified | The matching live application or browser journey passes against staging; relevant provider results, persisted state, and fixture cleanup are recorded |
+| Staging verified | The selected live application/API/browser checks pass; relevant provider results, persisted state and fixture cleanup are recorded |
+| Awaiting production release | Batch name, member changes, release owner, exact artifacts, outstanding checks and release trigger are recorded; feature production acceptance stays open |
 | Production deployed | Production preconditions are rechecked and the same tested SQL/function source is applied; resulting versions are recorded |
-| Production verified | The matching live workflow and cleanup pass against production; final state and evidence are recorded |
+| Production verified | The selected production checks and cleanup pass for the exact promoted batch; final state and evidence are recorded |
 
-Mark the feature task complete only after every applicable stage passes. If a stage fails, correct and repeat it before advancing; when an external blocker prevents progress, preserve the incomplete task and record the exact blocker and next action. Do not turn a missing deployment prerequisite into a passing or skipped acceptance criterion. A user-directed local-only or staging-only endpoint must be recorded with the instruction that set it.
+Report `staging verified — awaiting production release` when a feature is waiting for its recorded batch. Mark it complete only after every applicable release stage passes. A failed stage blocks promotion; record the failure, correct it and rerun affected checks. An external blocker remains incomplete with its exact action, evidence and next step recorded. Preserve failed runs when a rerun passes; a passing rerun alone does not establish that an intermittent failure was fixed. Record any user-directed narrower endpoint.
+
+## Verification Scope
+
+Select checks from observable behavior, consumer contracts and affected dependencies, rather than lines changed or feature count. Record the selection and why it covers the change in the task/release record. When several rows apply, take their combined scope. If the affected scope is uncertain, broaden verification.
+
+| Change | Local and staging acceptance | Production acceptance |
+| --- | --- | --- |
+| Documentation or tests only | Relevant document/harness checks | No deployment required |
+| Isolated UI behavior | Focused component tests and the affected staging browser interaction | Affected browser smoke check when the frontend is released |
+| Server behavior within an existing contract | Focused deterministic unit/integration tests, failure cases and affected live staging API/application check | Affected behavior, persisted result and cleanup |
+| Eligibility, grading, lifecycle, identity or permissions | Relevant deterministic lifecycle/permission cases and full affected staging journey | Full affected live journey and permission/state assertions |
+| Database migration | Fresh-baseline Red/Green migration, existing-data, permission and atomicity checks; affected staging API/application journey | Recheck baseline/preconditions, apply exact SQL, verify objects/permissions/data and affected live journey |
+| Interacting changes or shared orchestration | Combined integration checks and complete affected staging journeys across changed components | Combined affected journeys; run the broader workflow suite if shared behavior cannot be isolated |
+
+Use controlled provider responses for routine branching, retries, gates and lifecycle regressions. Use real-provider checks when provider requests, prompts, decoding or model behavior change, and for lifecycle journeys that depend on the provider. Add relevant semantic evaluation cases when learner judgments or tutoring behavior change; transport/schema tests alone cannot validate those judgments. Display-copy changes with unchanged behavior may use focused UI checks. Full-inventory real-model E2E is required when target scheduling or cooperation across targets changes; it is not the default for unrelated edits. Select existing commands/workflows in [browser-e2e-testing.md](browser-e2e-testing.md#select-the-release-checks).
+
+Reuse successful evidence for unchanged artifacts and dependencies within the batch. Before promotion, recheck deployed source, configuration and relevant database preconditions. Any relevant change invalidates the corresponding evidence and requires rerunning those checks. Do not repeat broad unchanged suites solely because another independent feature was added.
+
+## Production Batches
+
+Use a dated release record under `docs/doc_update_record/` for each active batch. Record its member task/commit IDs, release owner, changed contracts, combined verification scope, exact SQL/function/frontend artifacts, staging evidence, outstanding production checks and concrete release trigger. Ordinary features may wait only with this record and open production acceptance criteria; an unspecified future release is not a handoff.
+
+Release when the named batch's listed features and dependencies are verified together on staging. This is the default trigger, without a fixed feature-count threshold; record a user-requested milestone or schedule when applicable. At promotion, freeze the artifact set and deploy those exact artifacts, preserving unrelated production configuration/data. Recheck target preconditions, including production fixes made while the batch waited. Do not copy a staging database wholesale or treat a different per-project Edge version counter as source divergence.
+
+Production incident fixes, security fixes and explicit release requests proceed through staging to production promptly. A change that requires coordinated SQL, Edge and frontend rollout must ship those dependencies together in the required order. A failed member blocks the batch; narrowing the batch requires verifying that the remaining artifact set is independently deployable and rerunning affected checks. Keep at most one pending SQL migration; release it before introducing another pending migration. Preserve staged SQL hashes and archive only after production verification.
+
+The release record's production evidence closes acceptance for each included feature. Until then, those features remain staging-verified and awaiting release. These rules govern agent execution; existing browser commands remain manually invoked.
 
 ## Local Database Setup
 
@@ -30,7 +58,7 @@ The local PostgreSQL clusters are under `/Users/admin/.transfer-assessment-pg17/
 | Isolated validation cluster | `migration-validation/data/`, socket `migration-validation/socket/`, port `55433`, log `migration-validation/server.log` |
 | Custom-format dump output | `phishingtutor.dump` |
 
-The shared cluster may contain unrelated databases and roles. Use the isolated cluster for validation. The dump name does not establish the database name; inspect its archive header before choosing a target. Replace the dump with a fresh export before each run.
+The shared cluster may contain unrelated databases and roles. Use the isolated cluster for validation. The dump name does not establish the database name; inspect its archive header before choosing a target. Capture a fresh export per migration-validation cycle. Reuse that verified baseline for disposable Red/Green/scenario databases within the cycle; refresh it if migration-relevant source preconditions change. Edge-only, UI, documentation and test changes do not require an export/restore.
 
 Check `supabase/config.toml` and the target database for their current PostgreSQL versions. The Supabase CLI's Docker-backed stack is separate from this custom cluster and is not required for local SQL validation. Use a fresh hosted export as the local baseline.
 
@@ -48,11 +76,11 @@ Local snapshots do not need to be retained after the cycle. Keep baseline metada
 
 ## Edge Function Release
 
-Use this sequence for an Edge Function change. If it needs SQL, complete the local Red-Green checks in the upgrade sequence above first. For an Edge-only change, start with the function tests; there is no SQL migration to apply or archive.
+Use this sequence for an Edge Function change with the selected verification scope and production batch above. If it needs SQL, complete the local Red-Green checks in the upgrade sequence first. For an Edge-only change, start with the function tests; inspect its live database contract as needed, without an export/restore or migration archive step.
 
-1. **Test locally.** Run the changed Edge Function's Deno tests, including request validation, permission boundaries, provider failure, and the affected database contract. Record the command and result. Mocked provider tests do not replace a live provider check.
-2. **Release to staging.** Apply and verify any required SQL on staging first. Check that the function's required Edge secrets are configured without recording their values. Deploy the function to staging using an API-based path that does not start Docker, then run the relevant database assertions and live application or browser workflow against staging. Confirm expected function responses, provider-attempt outcome, visible application result, and test-data cleanup. Stop and fix failures before production.
-3. **Release to production.** Recheck schema and required Edge secret names. Apply and verify the same SQL on production if needed, then deploy the same function source there. Run the matching live workflow against a dedicated test fixture and verify its cleanup. A successful deployment or HTTP response alone does not establish that the workflow passed.
+1. **Test locally.** Run applicable Edge Function/domain tests, including affected request validation, permission, provider failure and database-contract cases. Record commands and results. Controlled provider tests cover branches; add real-provider verification where required by the scope above.
+2. **Release to staging.** Apply and verify required SQL first. Check required Edge secret names without recording values. Deploy through the API, then run the selected database and live application/API/browser checks. Record expected responses, relevant provider outcomes, persisted/visible results and cleanup. Stop and fix failures. An ordinary feature may now wait in its recorded production batch with production acceptance open.
+3. **Release the production batch.** Verify the combined staging scope against the frozen artifacts. Recheck production schema, configuration and secret names. Apply and verify the same SQL if needed, then deploy the same function source. Run the selected production checks against dedicated fixtures and verify cleanup. Deployment or HTTP success alone does not establish workflow acceptance.
 4. **Record and close.** Record both project refs, SQL hash when applicable, function version or hash, test commands and results, provider and application evidence, cleanup results, and any failures and reruns in a dated `docs/doc_update_record/` file. Archive the SQL only after both projects pass. Keep browser setup and commands in [browser-e2e-testing.md](browser-e2e-testing.md).
 
 ## Acceptance Gates
