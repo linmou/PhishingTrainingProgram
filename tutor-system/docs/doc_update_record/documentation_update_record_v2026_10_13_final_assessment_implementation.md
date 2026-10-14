@@ -17,7 +17,7 @@ Actual target/progress changes cancel obsolete open questions in both private li
 
 Guard replay now treats the analysis-complete marker as metadata instead of replaying it as a learning event. New history timestamps use wall-clock insertion time so multiple transitions in one transaction retain causal order.
 
-SQL artifact: [release candidate](../../supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql). The existing migration queue contains two older tracked files; this change preserves them and keeps its candidate separate until that queue is reconciled under the release workflow. The candidate has not been applied to staging or production.
+SQL artifact: [release candidate](../../supabase/migration-candidates/20261014000000_final_assessment_after_understanding.sql). On 2026-10-14, live reconciliation confirmed both older SQL changes are applied. Both were archived; direct understanding's failed production status workflow remains tracked in its release record. The candidate remains in `migration-candidates/` and has not been applied to staging or production. See the [reconciliation record](documentation_update_record_v2026_10_14_analysis_cleanup.md).
 
 ## Local database evidence
 

@@ -385,7 +385,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
           events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
             evidence_quote: 'verify through the official app', explanation: 'Uses an independent source.' }],
-          requires_protection: false, requires_correction: false, explanation: 'Initial understanding.',
+          explanation: 'Initial understanding.',
         }) } }] }), { status: 200 });
       }
       assert(prompt.includes('item-1'));
@@ -426,7 +426,7 @@ Deno.test('accepts direct understanding evidence for the current learner message
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
         evidence_quote: 'I will open the real app', explanation: 'The learner names the independent action and why the link is unsafe.' }],
-      requires_protection: false, requires_correction: false, explanation: 'Complete target evidence.',
+      explanation: 'Complete target evidence.',
     }) } }] }), { status: 200 }),
   });
   deps.rpc = async (name, args) => {
@@ -452,6 +452,7 @@ Deno.test('accepts direct understanding evidence for the current learner message
   assertEquals(response.status, 200);
   assertEquals(payload.data.applied[0].status, 'covered');
   assertEquals((stored as unknown as { events: Array<{ kind: string }> }).events[0].kind, 'demonstrated_understanding');
+  assertEquals(Object.keys(stored!).sort(), ['events', 'explanation', 'rejected_events']);
 });
 
 // Test responsible for assessment-api/index.ts: classify overlapping targets independently before applying events.
@@ -470,7 +471,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
         events: [{ item_id: itemId, kind: itemId === 'action-1' ? 'demonstrated_understanding' : 'initial_signal',
           evidence_type: 'action', evidence_message_id: 'focus-1', evidence_quote: 'I will open the app',
           explanation: 'The learner states the action.' }],
-        requires_protection: false, requires_correction: false, explanation: 'Target evaluated.',
+        explanation: 'Target evaluated.',
       }) } }] }), { status: 200 });
     },
   });
@@ -513,7 +514,7 @@ Deno.test('rejects action-only evidence for detection areas', async () => {
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
         evidence_quote: 'I will open the official app', explanation: 'The learner chooses a safe action.' }],
-      requires_protection: false, requires_correction: false, explanation: 'Action evidence only.',
+      explanation: 'Action evidence only.',
     }) } }] }), { status: 200 }),
   });
   deps.rpc = async (name, args) => {
@@ -548,7 +549,7 @@ Deno.test('records and omits ineligible transitions and wrong evidence forms', a
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind, evidence_type: 'action', evidence_message_id: 'focus-1',
           evidence_quote: 'I will check the app', explanation: 'The learner describes a check.' }],
-        requires_protection: false, requires_correction: false, explanation: 'Evidence evaluated.',
+        explanation: 'Evidence evaluated.',
       }) } }] }), { status: 200 }),
     });
     deps.rpc = async (name, args) => {
@@ -588,7 +589,7 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: evidenceMessageId,
           evidence_quote: 'I clicked the link.', explanation: 'The learner clicked the link.' }],
-        requires_protection: false, requires_correction: false, explanation: 'Evidence from history.',
+        explanation: 'Evidence from history.',
       }) } }] }), { status: 200 }),
     });
     deps.rpc = async (name) => {
@@ -917,7 +918,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
           events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
             evidence_quote: 'verify through the official app', explanation: 'Learner verifies independently.' }],
-          requires_protection: false, requires_correction: false, explanation: 'Relevant evidence.',
+          explanation: 'Relevant evidence.',
         }) } }] }), { status: 200 });
       }
       assessmentCalls += 1;

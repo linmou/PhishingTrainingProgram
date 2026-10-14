@@ -40,11 +40,11 @@ Feature: Transfer assessment lifecycle
       | partially_covered | basic | spontaneous_transfer       | covered           | good       |
 
   @T09 @U03 @U07
-  Scenario: Protection and correction precede transfer assessment
-    Given the learner is about to open a suspicious link
+  Scenario: Guard mode defers transfer assessment
+    Given the room is in Guard mode
     When the tutor evaluates the next turn
-    Then the tutor protects or corrects the learner before proposing an assessment
-    And the assessment cannot be the first response to the imminent unsafe action
+    Then the tutor receives a Guard response without an assessment draft
+    And the room remains in Guard mode
 
   @T09 @U08 @D01 @D03
   Scenario: Teacher reviews and delivers an assessment as a tutor turn
@@ -147,7 +147,7 @@ Feature: Transfer assessment lifecycle
   @T09 @routing
   Scenario: An eligible assessment bypasses the shared tutor
     Given approved room targets and learner-owned evidence make one target eligible
-    And no Guard, protection, correction, feedback, or repair blocker applies
+    And no Guard, open assessment, or feedback blocker applies
     When the teacher requests the next AI-generated response
     Then TransferLearning prepares one assessment-only draft
     And the shared tutor is not called

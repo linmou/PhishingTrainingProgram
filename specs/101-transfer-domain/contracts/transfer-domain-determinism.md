@@ -40,7 +40,7 @@ Policy authority: [Partial-only final assessment contract](../../../tutor-system
 - **Direct understanding**: Pending -> demonstrated understanding -> Covered and complete without a question.
 - **Partial evidence**: initial signal or post-repair signal -> Partial -> continue tutoring without a question.
 - **Multi-target**: three Partial → Covered understanding events -> all covered with outstanding assessments -> one assessment; other targets remain due for later eligible requests.
-- **Deferral**: Partial → Covered understanding -> protection, correction, Guard, open-assessment, or feedback blocker -> later eligible request -> assessment, without a repeated understanding event.
+- **Deferral**: Partial → Covered understanding -> Guard, open-assessment, or feedback blocker -> later eligible request -> assessment, without a repeated understanding event.
 - **Invalidated readiness**: assessment due -> later contradiction -> review -> no stale draft delivery; repair and later full understanding establish a new cycle.
 - **Guard**: valid answer under Guard -> no protected progression write; reviewed recovery -> deferred event applies once when still valid.
 - **Races/stale**: duplicate send, duplicate answer at attempt one or two, retry, terminal third answer, stale draft/manual update -> no extra attempt, question, progress, or feedback effect.

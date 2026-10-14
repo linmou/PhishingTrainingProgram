@@ -1,4 +1,5 @@
 {
+  "policy_revision": "2026-10-14-item-events-only",
   "author": "independent-refinement-holdout-author",
   "version": "2.0",
   "created_at": "2026-10-13",
@@ -39,9 +40,7 @@
       ],
       "learner": "I'd hold off on the transfer and call the rowing club office at the number in my printed handbook to ask whether the oar payment is real. Using the text's number could just put me back in touch with the person making up the request.",
       "expected": {
-        "kind": "demonstrated_understanding",
-        "protection": false,
-        "correction": false
+        "kind": "demonstrated_understanding"
       },
       "rationale": "The learner supplies a specific independent verification action and explains why the supplied contact is unsuitable in the original situation. Partial to Covered through demonstrated understanding creates a final assessment requirement on an eligible teacher request.",
       "pair_id": "payment-verification-context-v2",
@@ -71,9 +70,7 @@
       ],
       "learner": "This reminds me of a different situation: someone at my front door claiming to collect an overdue water bill and holding out a card reader. I'd decline payment for now and phone the water company at the number on my existing paper bill to check the demand. Calling a number the visitor gives me could connect to their accomplice instead of the company.",
       "expected": {
-        "kind": "spontaneous_transfer",
-        "protection": false,
-        "correction": false
+        "kind": "spontaneous_transfer"
       },
       "rationale": "The history never supplies or asks for this new scenario. The learner independently carries the principle into an in-person collection demand with a different interaction, payment method, organisation, and independent source. The otherwise matched Partial target completes through spontaneous transfer without an additional assessment.",
       "pair_id": "payment-verification-context-v2",
@@ -99,9 +96,7 @@
       ],
       "learner": "It's an image the buyer supplied, and someone can edit an image to show a successful transfer that never happened. It doesn't establish that money arrived in my account; I'd need to check my own account records independently before handing over the cello.",
       "expected": {
-        "kind": "demonstrated_understanding",
-        "protection": false,
-        "correction": false
+        "kind": "demonstrated_understanding"
       },
       "rationale": "The learner explains both the evidence's controllable origin and why it cannot establish receipt of money. This is complete same-situation understanding on the first contribution. Direct Pending to Covered completes the target without an assessment.",
       "pair_id": null,
@@ -131,14 +126,12 @@
       ],
       "learner": "The edge peeling up is another sign that a different sticker might be covering the original. I still don't understand where scanning it leads or what would happen to the donor's details.",
       "expected": {
-        "kind": null,
-        "protection": false,
-        "correction": false
+        "kind": null
       },
       "rationale": "The new observation supports only the replacement component already represented by Partial. The learner explicitly leaves the destination and collection mechanism unresolved. Additional incomplete evidence on Partial does not change state, trigger assessment, or require factual correction.",
       "pair_id": null,
       "changed_factor": null,
-      "requirements": ["TA01", "TA02", "TA05", "T09.1"]
+      "requirements": ["TA01", "TA02", "T09.1"]
     },
     {
       "id": "V05",
@@ -163,14 +156,12 @@
       ],
       "learner": "I was treating the visible name as proof of who sent the email. Someone else can set their display name to hers, so this roster request could show her name without coming from her. I'll check with the coordinator through our existing contact before sharing anything.",
       "expected": {
-        "kind": "post_repair_signal",
-        "protection": false,
-        "correction": false
+        "kind": "post_repair_signal"
       },
-      "rationale": "The learner now repairs the stated misconception in their own explanation within the same roster-email situation. Review therefore becomes Partial through post-repair evidence; the complete explanation does not skip recovery or immediately create a final assessment requirement. Historical errors do not determine current flags.",
+      "rationale": "The learner now repairs the stated misconception in their own explanation within the same roster-email situation. Review therefore becomes Partial through post-repair evidence; the complete explanation does not skip recovery or immediately create a final assessment requirement. Historical errors supply context for the repair.",
       "pair_id": null,
       "changed_factor": null,
-      "requirements": ["TA01", "TA03", "TA05", "T09.1", "T09.6"]
+      "requirements": ["TA01", "TA03", "T09.1", "T09.6"]
     },
     {
       "id": "V06",
@@ -196,13 +187,12 @@
       "learner": "The message goes to museum-support.example.net, whereas the museum's established site is museum.example.org. The extra '-support' and the change from example.org to example.net mean this is a different address. I would open that message link now to inspect the ticket page.",
       "expected": {
         "kind": "demonstrated_understanding",
-        "protection": true,
-        "correction": false
+        "assessment_due": true
       },
-      "rationale": "The learner fully demonstrates the narrowly configured address-recognition target and separately proposes an unsafe link-opening action. The action does not negate the accurate recognition evidence. Protection takes priority over preparing the now-due final assessment, while the outstanding requirement persists. No false claim about the address or the safety of opening it is asserted.",
+      "rationale": "The learner fully demonstrates the narrowly configured address-recognition target and separately proposes an unsafe link-opening action. The action does not negate the accurate recognition evidence. Partial to Covered makes the final assessment due because the unsafe action does not negate this narrow recognition target.",
       "pair_id": null,
       "changed_factor": null,
-      "requirements": ["TA01", "TA02", "TA05", "T01", "T09.1", "T09.5", "R2"]
+      "requirements": ["TA01", "TA02", "T09.1", "T09.5", "R2"]
     }
   ]
 }

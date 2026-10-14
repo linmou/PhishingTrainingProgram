@@ -1,4 +1,5 @@
 {
+  "policy_revision": "2026-10-14-item-events-only",
   "author": "independent-refinement-holdout-author",
   "version": "1.0",
   "created_at": "2026-10-13",
@@ -39,9 +40,7 @@
       ],
       "learner": "Before paying, I'd phone the supplier using the number on our old paper contract and ask whether they changed banks. I wouldn't use the email's new number, because whoever sent the request could also control that number.",
       "expected": {
-        "kind": "demonstrated_understanding",
-        "protection": false,
-        "correction": false
+        "kind": "demonstrated_understanding"
       },
       "rationale": "The learner supplies the complete independent-contact action and its reason in the established supplier situation. Accepted Partial to Covered evidence makes the final assessment due on an eligible teacher request; this answer is not a new-situation transfer.",
       "pair_id": "independent-contact-context",
@@ -71,9 +70,7 @@
       ],
       "learner": "That also fits a different problem: a browser page claiming my work laptop is infected and giving a support phone number. Before following its repair instructions, I'd contact our IT desk through the number in my printed staff directory. I wouldn't phone the number on the warning, because the person showing that page could control the supposed support line too.",
       "expected": {
-        "kind": "spontaneous_transfer",
-        "protection": false,
-        "correction": false
+        "kind": "spontaneous_transfer"
       },
       "rationale": "With the same target, prior Partial state, and history as R01, the learner independently applies the contact-verification principle to a browser-support scare. The medium, claimed problem, requested intervention, and trusted contact source change materially. Valid spontaneous transfer completes the item without a final assessment.",
       "pair_id": "independent-contact-context",
@@ -99,9 +96,7 @@
       ],
       "learner": "Eighteen dollars for a new kiln that normally costs eighteen hundred is only one hundredth of its usual price. That huge gap makes the offer suspicious; a low price alone doesn't prove it is a scam.",
       "expected": {
-        "kind": "demonstrated_understanding",
-        "protection": false,
-        "correction": false
+        "kind": "demonstrated_understanding"
       },
       "rationale": "The first response fully demonstrates the narrow recognition target using supplied facts and calibrated uncertainty. Direct Pending to Covered completes the item without a final assessment under the adopted prior-state boundary.",
       "pair_id": null,
@@ -131,14 +126,12 @@
       ],
       "learner": "I mixed up appearance with running instructions. If I enable this spreadsheet's macros, code supplied by whoever made it could execute on my computer, so I'll leave them disabled and ask our theatre contact for the timetable another way.",
       "expected": {
-        "kind": "post_repair_signal",
-        "protection": false,
-        "correction": false
+        "kind": "post_repair_signal"
       },
-      "rationale": "The current learner contribution explicitly repairs the earlier misconception with accurate same-situation reasoning. Recovery from Review first returns to Partial even though this answer is detailed; it does not yet make an assessment due. The historical misconception is not a current correction or protection flag.",
+      "rationale": "The current learner contribution explicitly repairs the earlier misconception with accurate same-situation reasoning. Recovery from Review first returns to Partial even though this answer is detailed; it does not yet make an assessment due. Only current learner evidence determines this transition.",
       "pair_id": null,
       "changed_factor": null,
-      "requirements": ["TA01", "TA03", "TA05", "T09.1", "T09.6"]
+      "requirements": ["TA01", "TA03", "T09.1", "T09.6"]
     },
     {
       "id": "R05",
@@ -159,14 +152,12 @@
       ],
       "learner": "I also got an unexpected invoice attachment yesterday. I left that one unopened and asked the sender for a paper invoice. For the grant form I'd ask for paper too, but I still don't know what enabling macros actually does.",
       "expected": {
-        "kind": null,
-        "protection": false,
-        "correction": false
+        "kind": null
       },
       "rationale": "The safer alternative and additional concrete attachment situation are related to the topic but demonstrate no part of the specific execution mechanism. Neither full understanding, initial mechanism evidence, nor spontaneous transfer may be invented from those actions. Explicit uncertainty is not a factual misconception and creates no assessment eligibility.",
       "pair_id": null,
       "changed_factor": null,
-      "requirements": ["TA01", "TA02", "TA04", "TA05", "T09.1"]
+      "requirements": ["TA01", "TA02", "TA04", "T09.1"]
     },
     {
       "id": "R06",
@@ -192,13 +183,12 @@
       "learner": "The timer makes me afraid of losing the scholarship, so I might rush into applying instead of checking with the music school first. That pressure is how the sender can get past my normal checks. I would click the message's application link now to see what it asks for.",
       "expected": {
         "kind": "demonstrated_understanding",
-        "protection": true,
-        "correction": false
+        "assessment_due": true
       },
-      "rationale": "The learner accurately explains the narrow urgency mechanism in the original situation, while separately stating an unsafe click intention. Coverage and protection are independent: Partial to Covered creates an outstanding final-check requirement, but immediate protective instruction delays assessment preparation. The learner does not assert a false factual claim about urgency or link safety, so a correction flag is not required.",
+      "rationale": "The learner accurately explains the narrow urgency mechanism in the original situation, while separately stating an unsafe click intention. The separate unsafe intention does not undermine the narrow mechanism explanation. Partial to Covered makes its final assessment due.",
       "pair_id": null,
       "changed_factor": null,
-      "requirements": ["TA01", "TA02", "TA05", "T01", "T09.1", "T09.5", "R2"]
+      "requirements": ["TA01", "TA02", "T09.1", "T09.5", "R2"]
     }
   ]
 }

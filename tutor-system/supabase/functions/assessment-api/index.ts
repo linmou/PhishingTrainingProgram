@@ -44,10 +44,9 @@ const TRANSFER_ANALYSIS_SYSTEM_PROMPT = [
   '- spontaneous_transfer: the learner independently applies the target principle with sound reasoning in a materially different concrete situation beyond the original target or discussion. This makes it covered. When the message uses the principle in a situation different from the one named in the target and prior discussion, choose spontaneous_transfer over demonstrated_understanding.',
   '- contradiction: a partially_covered or covered item has new conflicting or unsafe learner evidence. This makes it needs_review.',
   'Use each item current status when choosing an event. Do not return an event if it cannot change that status: incomplete evidence on an already partially_covered item is not a new initial_signal; post_repair_signal requires needs_review. Omit items without supported status-changing evidence. Use an empty events array when the learner only agrees, gives an unsupported verdict, asks a question, or supplies no target evidence.',
-  'requires_protection is true only when the message calls for an immediate safety response. requires_correction is true only when a factual mistake calls for immediate correction. Either flag defers a new assessment; neither flag changes status.',
   'Every event must include evidence_message_id equal to the current message ID and evidence_quote copied exactly from the current message. Use the shortest quote that actually states the target-specific claim. Set evidence_type to action, recognition, or explanation for that quote. Never cite another speaker or an earlier message as evidence.',
-  'Return exactly one JSON object in this shape: {"events":[{"item_id":"ID from items","kind":"demonstrated_understanding","evidence_type":"action","evidence_message_id":"current message ID","evidence_quote":"exact words from current message","explanation":"what this learner evidence demonstrates for this target"}],"requires_protection":false,"requires_correction":false,"explanation":"brief overall reason"}.',
-  'Replace the example values with your judgment. Use only item IDs from items and one of the five defined kinds and three defined evidence types. Include all four top-level fields, with boolean flags and a nonempty explanation. Return JSON only, without markdown.',
+  'Return exactly one JSON object in this shape: {"events":[{"item_id":"ID from items","kind":"demonstrated_understanding","evidence_type":"action","evidence_message_id":"current message ID","evidence_quote":"exact words from current message","explanation":"what this learner evidence demonstrates for this target"}],"explanation":"brief overall reason"}.',
+  'Replace the example values with your judgment. Use only item IDs from items and one of the five defined kinds and three defined evidence types. Include both top-level fields: events and a nonempty explanation. Return JSON only, without markdown.',
 ].join('\n');
 
 export interface VerifiedPrincipal {
@@ -361,8 +360,7 @@ async function analyzeMessage(
         typeof evidence.evidence_quote !== 'string' || !evidence.evidence_quote.trim() ||
         typeof message.content !== 'string' || !message.content.includes(evidence.evidence_quote) ||
         typeof evidence.explanation !== 'string' || !evidence.explanation.trim();
-    }) || typeof analysis.requires_protection !== 'boolean' ||
-        typeof analysis.requires_correction !== 'boolean' ||
+    }) ||
         typeof analysis.explanation !== 'string' || !analysis.explanation.trim()) {
       throw new Error('AI_OUTPUT_INVALID');
     }
@@ -373,19 +371,14 @@ async function analyzeMessage(
       : applyLearningEvent(item as TransferProgress, event.kind as LearningEventKind).disposition !== 'apply'
       ? 'INELIGIBLE_TRANSITION' : null);
     return {
-      ...analysis,
       events: reason ? [] : analysis.events,
       rejected_events: reason ? [{ ...event, rejection_reason: reason }] : [],
-      requires_protection: analysis.requires_protection,
-      requires_correction: analysis.requires_correction,
       explanation: analysis.explanation,
     };
   }));
   const analysis = {
     events: analyses.flatMap((result) => result.events),
     rejected_events: analyses.flatMap((result) => result.rejected_events),
-    requires_protection: analyses.some((result) => result.requires_protection),
-    requires_correction: analyses.some((result) => result.requires_correction),
     explanation: analyses.map((result) => result.explanation).join(' '),
   };
   return asRecord(await rpc(deps, 'apply_transfer_message_analysis_v1', {

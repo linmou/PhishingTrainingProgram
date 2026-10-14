@@ -2,7 +2,7 @@
 Provide a human-readable QA guide for the transfer-assessment room workflow, including setup, tutor review, learner answers, progress changes, privacy, and recovery behavior.
 
 ## Metadata
-- Updated: 2026-10-13
+- Updated: 2026-10-14
 - Source of truth: `features/transfer_assessment.feature` and the [Partial-only final assessment contract](ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding).
 - Policy provenance: [T09.1](ai-behaviors/tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) connects P2 adaptive learning and P3 constructive engagement to the user's decision: verify understanding developed through tutoring, while avoiding a redundant quiz for knowledge shown directly from Pending.
 
@@ -86,7 +86,7 @@ Expected result:
 - The tutor sees **Review transfer assessment** with the target label.
 - The draft contains a question, answer type, four choices labelled A-D, a correct answer selection, and a learner-safe explanation.
 - The room remains usable while the draft is being prepared.
-- A Guard, protection, correction, feedback, or repair requirement takes precedence over a new assessment.
+- Guard, another open assessment, or required feedback defers a new assessment. Repair evidence continues tutoring until a later full-understanding transition makes assessment due.
 - The target is `covered / good` but remains active while its final assessment is due or open.
 - A blocker delays the outstanding assessment; a later eligible request can prepare it without another understanding transition.
 

@@ -2,6 +2,8 @@
 
 Intent: define the room dialogue and evidence contract used when judging one learner message.
 
+Updated: 2026-10-14
+
 Status decisions and the structured output rules are defined in [the transfer status response contract](ai-behaviors/transfer-status-response-contract.md).
 
 ## Input
@@ -33,13 +35,11 @@ Qwen returns JSON in this shape:
 ```json
 {
   "events": [{ "item_id": "item UUID", "kind": "initial_signal", "evidence_type": "explanation", "evidence_message_id": "current message UUID", "evidence_quote": "exact words from current learner text", "explanation": "brief reason" }],
-  "requires_protection": false,
-  "requires_correction": false,
   "explanation": "brief overall reason"
 }
 ```
 
-`kind` is one of `initial_signal`, `demonstrated_understanding`, `post_repair_signal`, `spontaneous_transfer`, or `contradiction`. An empty `events` array means the message supplies no new status evidence.
+`kind` is one of `initial_signal`, `demonstrated_understanding`, `post_repair_signal`, `spontaneous_transfer`, or `contradiction`. An empty `events` array means the message supplies no new status evidence. The top-level result contains `events` and a nonempty `explanation`; the server adds private `rejected_events` when combining target results.
 
 The Edge Function rejects malformed IDs, quotes, kinds, evidence types, or explanations. It omits well-formed events whose evidence type does not support the item or whose current status makes the event ineligible, recording them in private `rejected_events`. It combines supported events into one `apply_transfer_message_analysis_v1` call. Historical dialogue informs interpretation but cannot itself create a new status event. Assessment option answers use the separate assessment-processing path.
 

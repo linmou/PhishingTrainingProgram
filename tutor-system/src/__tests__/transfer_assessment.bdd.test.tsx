@@ -414,11 +414,11 @@ defineFeature(feature, (test) => {
     });
   });
 
-  test('Protection and correction precede transfer assessment', ({ given, and, when, then }) => {
+  test('Guard mode defers transfer assessment', ({ given, and, when, then }) => {
     const state = makeState();
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
-    given('the learner is about to open a suspicious link', () => {
+    given('the room is in Guard mode', () => {
       state.lifecycle = { ...state.lifecycle, participation_mode: 'guard' };
     });
     when('the tutor evaluates the next turn', async () => {
@@ -444,13 +444,12 @@ defineFeature(feature, (test) => {
         response: state.room!.aiSuggestion || '',
       };
     });
-    then('the tutor protects or corrects the learner before proposing an assessment', () => {
+    then('the tutor receives a Guard response without an assessment draft', () => {
       expect(state.tutorTurn).toMatchObject({ mode: 'guard', instruction: 'protective_instruction' });
       expect(state.prepareSpy).toHaveBeenCalledTimes(1);
       expect(state.room?.transferDraft).toBeNull();
     });
-    and('the assessment cannot be the first response to the imminent unsafe action', () => {
-      expect(state.tutorTurn?.response).toMatch(/stop|verify/i);
+    and('the room remains in Guard mode', () => {
       expect(state.room?.finalMode).toBe('guard');
     });
   });
@@ -887,12 +886,13 @@ defineFeature(feature, (test) => {
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('approved room targets and learner-owned evidence make one target eligible', () => {
       state.progress = COVERED_PROGRESS;
+      state.lifecycle = { ...state.lifecycle, progress: COVERED_PROGRESS, unresolved_assessment: null };
       expect(createReviewCandidate(preparedTurnResult)?.scope.itemId).toBe(CHECKLIST_ITEM_ID);
     });
-    and('no Guard, protection, correction, feedback, or repair blocker applies', () => {
+    and('no Guard, open assessment, or feedback blocker applies', () => {
       expect(state.lifecycle.participation_mode).toBe('tutoring');
       expect(state.lifecycle.feedback_required).toBe(false);
-      expect(state.lifecycle.pending_repair_message_id).toBeNull();
+      expect(state.lifecycle.unresolved_assessment).toBeNull();
     });
     when('the teacher requests the next AI-generated response', async () => {
       await mountTeacherRoom(state);

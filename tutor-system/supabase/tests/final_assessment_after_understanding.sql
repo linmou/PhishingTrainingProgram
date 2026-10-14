@@ -5,7 +5,7 @@ BEGIN;
 
 CREATE FUNCTION pg_temp.analyze_final_target(
   room_id uuid, student_id uuid, tutor_id uuid, item_id uuid,
-  kind text, protection boolean, correction boolean
+  kind text
 ) RETURNS uuid LANGUAGE plpgsql AS $function$
 DECLARE
   message_id uuid := gen_random_uuid();
@@ -20,7 +20,6 @@ BEGIN
         'evidence_message_id', message_id, 'evidence_quote', evidence,
         'explanation', 'Accepted fixture evidence for the requested transition.'
       )) END,
-      'requires_protection', protection, 'requires_correction', correction,
       'explanation', 'Deterministic fixture analysis.'
     )
   );
@@ -108,8 +107,7 @@ BEGIN
 
     IF scenario IN ('existing_knowledge', 'spontaneous') THEN
       focus := pg_temp.analyze_final_target(room, student, tutor, item,
-        CASE WHEN scenario = 'existing_knowledge' THEN 'demonstrated_understanding' ELSE 'spontaneous_transfer' END,
-        false, false);
+        CASE WHEN scenario = 'existing_knowledge' THEN 'demonstrated_understanding' ELSE 'spontaneous_transfer' END);
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, scenario);
       IF NOT EXISTS (SELECT 1 FROM public.checklist_items WHERE id = item AND status = 'covered' AND understanding_level = 'good') THEN
         RAISE EXCEPTION '% did not complete directly', scenario;
@@ -118,7 +116,7 @@ BEGIN
       CONTINUE;
     END IF;
 
-    focus := pg_temp.analyze_final_target(room, student, tutor, item, 'initial_signal', false, false);
+    focus := pg_temp.analyze_final_target(room, student, tutor, item, 'initial_signal');
     PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'initial signal continues tutoring');
     IF scenario = 'partial' THEN
       denied := false;
@@ -132,7 +130,7 @@ BEGIN
 
     IF scenario IN ('guard', 'guard_changed_target') THEN
       UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = room;
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'Guard defers understanding and assessment');
       IF NOT EXISTS (SELECT 1 FROM public.checklist_items WHERE id = item AND status = 'partially_covered') THEN
         RAISE EXCEPTION 'Guard changed progress before replay';
@@ -148,13 +146,13 @@ BEGIN
           OR NOT EXISTS (SELECT 1 FROM public.checklist_items WHERE id = item AND status = 'partially_covered') THEN
           RAISE EXCEPTION 'Guard replay applied prior evidence to an edited target';
         END IF;
-        focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL, false, false);
+        focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL);
         PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'edited target has no readiness from deferred evidence');
         RAISE NOTICE 'PASS: guard_changed_target';
         CONTINUE;
       END IF;
       UPDATE public.rooms SET active_response_mode = 'tutoring' WHERE id = room;
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL, false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL);
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'Guard replay preserves final assessment requirement');
       IF (SELECT count(*) FROM public.checklist_updates u JOIN private.learning_event_inbox e ON e.event_id = u.event_id
         WHERE u.item_id = item AND e.event_kind = 'demonstrated_understanding') <> 1 THEN
@@ -164,13 +162,15 @@ BEGIN
       CONTINUE;
     END IF;
 
-    focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding',
-      scenario = 'protection', scenario = 'correction');
+    focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding');
     evidence := focus;
     IF scenario IN ('protection', 'correction') THEN
-      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, scenario || ' blocks assessment');
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL, false, false);
-      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, scenario || ' deferral survives later no-event message');
+      -- Existing stored analysis metadata must not block current assessment preparation.
+      UPDATE private.learning_event_inbox
+      SET event_payload = jsonb_set(event_payload, '{analysis}', event_payload->'analysis' ||
+        jsonb_build_object('requires_protection', scenario = 'protection', 'requires_correction', scenario = 'correction'))
+      WHERE dedupe_key = 'analysis:' || focus::text;
+      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, scenario || ' metadata permits assessment');
       result := pg_temp.deliver_final_assessment(room, student, checklist, item, focus, evidence, tutor, 'Payment warning text');
       IF result->'message'->>'id' IS NULL THEN RAISE EXCEPTION 'Deferred assessment was not delivered'; END IF;
       RAISE NOTICE 'PASS: %', scenario;
@@ -194,7 +194,7 @@ BEGIN
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'priority preserves readiness');
     END IF;
     IF scenario = 'contradiction' THEN
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'contradiction invalidates readiness');
       denied := false;
       BEGIN
@@ -203,9 +203,9 @@ BEGIN
       IF NOT denied OR EXISTS (SELECT 1 FROM private.transfer_assessments WHERE item_id = item) THEN
         RAISE EXCEPTION 'Stale assessment draft survived contradiction';
       END IF;
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'repair alone does not resurrect old readiness');
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'spontaneous_transfer', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'spontaneous_transfer');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'spontaneous recovery bypasses final assessment');
       RAISE NOTICE 'PASS: contradiction';
       CONTINUE;
@@ -229,14 +229,14 @@ BEGIN
     END IF;
 
     IF scenario = 'stale_open' THEN
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction');
       IF NOT EXISTS (SELECT 1 FROM private.transfer_assessments WHERE id = assessment AND lifecycle = 'cancelled')
         OR NOT EXISTS (SELECT 1 FROM public.messages WHERE id = question AND assessment_lifecycle = 'cancelled') THEN
         RAISE EXCEPTION 'Changed target left an open stale question';
       END IF;
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'repair after cancelled question continues tutoring');
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'cancelled question does not block new learning cycle');
       PERFORM pg_temp.deliver_final_assessment(room, student, checklist, item, focus, focus, tutor, 'New delivery warning');
       RAISE NOTICE 'PASS: stale_open';
@@ -264,7 +264,7 @@ BEGIN
     IF scenario IN ('guard_terminal', 'guard_stale_terminal') THEN
       UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = room;
       IF scenario = 'guard_stale_terminal' THEN
-        focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction', false, false);
+        focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction');
       END IF;
       result := public.post_assessment_message_v2(room, 'B', question, assessment, ARRAY['B'], student, gen_random_uuid());
       answer := (result->'message'->>'id')::uuid;
@@ -339,16 +339,16 @@ BEGIN
     END IF;
     INSERT INTO public.messages(room_id, user_id, user_role, content, parent_message_id, response_mode, created_at)
     VALUES (room, tutor, 'tutor', 'Assessment feedback.', answer, 'tutoring', clock_timestamp() + interval '1 second');
-    focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL, false, false);
+    focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL);
     PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'terminal grading clears prior readiness');
 
     IF scenario = 'failure_repair' THEN
       IF NOT EXISTS (SELECT 1 FROM public.checklist_items WHERE id = item AND status = 'needs_review' AND understanding_level = 'basic') THEN
         RAISE EXCEPTION 'Second incorrect answer did not require review';
       END IF;
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'repair continues tutoring');
-      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding', false, false);
+      focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'later full understanding starts a new assessment cycle');
       denied := false;
       BEGIN

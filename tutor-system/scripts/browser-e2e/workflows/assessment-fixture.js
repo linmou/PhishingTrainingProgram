@@ -39,7 +39,7 @@ async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMe
       events: [{ item_id: target.id, kind: 'initial_signal', evidence_type: 'action',
         evidence_message_id: partialMessage.id, evidence_quote: partialMessage.content,
         explanation: 'The learner names verification but has not supplied the method.' }],
-      requires_protection: false, requires_correction: false,
+      explanation: 'Verification method remains incomplete.',
     },
   });
   if (partialError) throw new Error(`Transfer fixture initial signal: ${partialError.message}`);
@@ -49,7 +49,7 @@ async function seedTransferChecklist(client, roomId, studentId, tutorId, focusMe
       events: [{ item_id: target.id, kind: 'demonstrated_understanding', evidence_type: 'action',
         evidence_message_id: focusMessageId, evidence_quote: focus.content,
         explanation: 'The learner now supplies the independent verification method.' }],
-      requires_protection: false, requires_correction: false
+      explanation: 'Independent verification is demonstrated.'
     }
   });
   if (analysisError) throw new Error(`Transfer fixture signal: ${analysisError.message}`);

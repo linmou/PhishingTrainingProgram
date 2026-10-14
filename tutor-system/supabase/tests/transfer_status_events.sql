@@ -69,7 +69,6 @@ BEGIN
           'item_id', v_item, 'kind', v_kind, 'evidence_message_id', v_message,
           'evidence_quote', v_text, 'explanation', 'Learner evidence supports this event.'
         )) END,
-        'requires_protection', false, 'requires_correction', false,
         'explanation', 'Current learner message evaluated.'
       )
     );

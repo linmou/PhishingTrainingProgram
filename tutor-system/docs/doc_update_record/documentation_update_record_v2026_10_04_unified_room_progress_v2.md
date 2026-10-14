@@ -6,7 +6,7 @@ Updated: 2026-10-04. Implementation commit: `3573cea`. The migration and assessm
 
 ## Migration
 
-- Pending SQL: `supabase/migrations/20261005000000_unified_room_progress.sql`
+- Archived SQL: `supabase/archived_migrations/20261005000000_unified_room_progress.sql` (archived 2026-10-14 after live reconciliation).
 - SHA-256: `abc57d1336a8a632df1b16a5ba912d5ecb347db1a5a2fcf1fdd488edbb4ac7d1`
 - Status: staging and production applied successfully; the complete unified room progress SQL assertion passed on both hosted projects.
 - Staging and production `assessment-api` deployments passed smoke validation. Staging version: `50`, hash: `d015ce1735c39936aaa0cc4f0de37e9e86946b5ada3e7a6df341a02cf4f2cd61`. Production version: `8`, hash: `93c6d3ee11c81de0bc7c9a9d5771e87d809b4dcb9dd41715eaca76ae82b88a2f`.

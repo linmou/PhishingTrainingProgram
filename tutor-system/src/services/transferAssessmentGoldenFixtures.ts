@@ -854,7 +854,7 @@ export const TRANSFER_LIFECYCLE_FIXTURES: LifecycleFixtureRecord[] = [
   lifecycle('assistance_cancels', 'Assistance boundary', 'Content help cancels the question without a failing grade.', 'baseline', [
     { step_id: 'help', learner_message: 'What does compromised mean?', expected_disposition: 'assisted', expected_progress: COVERED, expected_feedback_required: false, expected_next_action: 'cancel_question' },
   ]),
-  lifecycle('guard_defers', 'Guard/protection priority', 'An independently required protective response defers assessment processing.', 'guard_pending', [
+  lifecycle('guard_defers', 'Guard mode priority', 'Active Guard mode defers assessment processing.', 'guard_pending', [
     { step_id: 'answer_under_guard', learner_message: 'B', expected_disposition: 'guard_deferred', expected_progress: COVERED, expected_feedback_required: false, expected_next_action: 'defer_to_protective_response' },
   ]),
   lifecycle('stale_snapshot', 'Current snapshot', 'A mismatched snapshot must not create a second effect.', 'stale_snapshot', [

@@ -1,37 +1,40 @@
 # Transfer analysis evaluation plan
 
-Intent: preserve the production-baseline classification plan and define routing checks for the revised final-assessment policy.
+Intent: define the current item-event scorecard and preserve the provenance of historical evaluation results.
 
-Updated: 2026-10-13. The baseline configuration and its historical results remain unchanged; the revision checks below require separate execution and cannot inherit a baseline acceptance result.
+Updated: 2026-10-14. Current policy follows the user's approved removal of analysis flags and their assessment blockers. Historical results retain their original frozen contract and metrics.
 
-## Final assessment revision checks
+## Current analysis and assessment checks
 
-Authority: [T09.1](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) and the [Partial-only contract](transfer-status-response-contract.md#assessment-after-full-understanding), which trace the rule to P2/P3 and the user's decision. Assess developed understanding; avoid a redundant quiz for knowledge demonstrated directly from Pending.
+Authority: TA01–TA04 and [T09.1](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle), with the [Partial-only contract](transfer-status-response-contract.md#assessment-after-full-understanding). The model returns item-level `events` and an overall `explanation`. The server validates each target independently and combines accepted events for one database application.
 
-For a revision run, retain the classification and safety-flag metrics below and replace the historical `assessment_route` oracle with accepted Partial → Covered `demonstrated_understanding` plus the outstanding assessment lifecycle. Freeze the actual revised handler and SQL used for that run through Git and record its own inputs, outputs, labels, and validation results. The changed factors are assessment routing, completion semantics, and terminal progress handling; per-target model calls and the `events` contract remain in force.
+| Requirements | Metric | Method | Threshold |
+| --- | --- | --- | --- |
+| TA01–TA04 | `raw_event` | Raw model event kind versus the declared gold label | 80% overall, each suite and evidence partition |
+| TA01–TA04 | `applied_state` | Actual handler filtering and shared reducer versus expected progress | 80% overall, each suite and evidence partition |
+| T09.1 | `assessment_route` | Accepted Partial → Covered `demonstrated_understanding` versus expected readiness | 80% overall, each suite and evidence partition |
+| Contract | `validity` | Handler accepts the response's JSON, evidence scope, quotes, types, and explanations | 100% |
 
-The executable comparison uses one fresh real model generation per case/repetition and replays that exact response through the frozen production and candidate handlers. Both old and revised routing decisions are compared with the revised gold expectation. Requests and resulting analysis states must match; disagreement fails execution instead of silently attributing a model change to routing. Retain all 51 historical cases and their classification/flag/validity assertions; four added cases isolate Pending versus Partial on identical words, repair-first behavior, and repeated understanding on Covered. The applicability audit records the changed routing assertion for every retained case. Historical holdouts are exposed regression cases. An independent agent authors six fresh synthetic holdouts from constitution/spec/contract only, without production prompt or development examples; freeze and compare both variants on that same set before inspecting its results.
+Manifest completeness and semantic pairs require 100%; errors or missing results prevent acceptance. Keep two repetitions, model `qwen3.5-flash`, temperature 0, max_tokens 600, enable_thinking false, JSON object output, and no semantic retry. No free-text explanation judge is used. Human gold-label review remains a separate pending gate.
 
-Classification and routing use deterministic gold labels, as the user requested for the existing evaluation. Free-text explanation quality is outside this scorecard; no semantic judge is substituted with text matching. Individual human label review remains pending, so results are diagnostic and cannot establish benchmark acceptance. Preserve the existing 80% overall/per-suite/per-partition behavior thresholds, 100% safety/validity/pair gates, two repetitions, and zero-error/missing-result gate. Exact state/lifecycle checks require 100% in the separate integrated SQL/domain verification. Existing-metric non-regression is checked on identical generations and common cases; no new prompt factor is introduced.
+Changed factors for this revision: the analysis prompt/output shape, Edge and SQL validation, assessment blocker logic, the metric inventory, and assessment-route gold expectations. Learner text, targets, histories, event labels, event transitions, model settings, and behavioral thresholds are retained. Cases H16, N06, R06, and V06 demonstrate accurate narrow-target understanding alongside an unrelated unsafe choice; Partial → Covered makes an assessment due in those cases.
 
-### Evidence-backed prompt clarification
+The current case files contain event labels and optional explicit assessment expectations. Historical freezes and run records retain their original fields and results. Existing cases are exposed regression material, including holdouts authored for earlier runs; editing expected output fields does not make them unseen again.
 
-The first routing comparison exposed a repeatable dependency: independent changed-context application was classified as `demonstrated_understanding`, making an assessment due when `spontaneous_transfer` should bypass it. The next candidate adds only an explicit context-comparison decision before selecting the full-coverage event; the response shape, thresholds, model settings, and existing cases/assertions stay fixed. This is clarification of TA04's existing exception, not a new requirement.
+The default freeze includes all 73 existing cases, including both refinement rounds (R01–R06 and V01–V06). Previously evaluated holdouts are marked as exposed regression cases. `--fresh_holdouts` adds a separately authored set and rejects IDs already present in the default cases; the author must still establish that new cases have not been exposed.
 
-For this prompt comparison, both baseline and candidate use the revised Partial-only route. Generate fresh baseline and candidate responses separately on the same complete expanded set; propagate each variant's observed sequence states independently. The original production prompt is the baseline. The first six new holdouts, including the observed failure, become exposed regression cases. An independent author prepares six replacement holdouts using only the frozen policy documents, before candidate output inspection. Freeze both prompts and all cases before execution, retain every response and failed check, and apply per-suite/per-partition non-regression to every metric. A focused improvement cannot replace the full-suite verdict or waive unrelated hard-check failures.
-
-If the first clarification introduces collateral regression, test one shorter clarification limited to choosing between the two full-coverage event kinds after sufficiency has been judged. Preserve every earlier case, mark used holdouts exposed, and add six further independent holdouts. Keep the original prompt if this narrower candidate cannot preserve the regression gates; do not expand this scheduling change into a redesign of unrelated analysis behavior.
+Use `evals/promptfoo/transfer-analysis/evaluate.cjs freeze <new-run-directory> --comparison prompt` to freeze the historical production snapshot and current working-tree handler, their prompts, revised cases, settings, metric thresholds, and source hashes. Prompt comparison is the default because this revision changes the prompt and consumer contract. Generate separate fresh baseline and candidate responses on identical inputs/settings, propagate each variant's observed sequence state independently, and preserve every input, raw response, applied result, error, and score. Resume completed generations without resampling them; CLI `--num_workers` controls concurrency. Historical production snapshots and ecological exports must be available before freezing. A run is diagnostic until labels are reviewed.
 
 Required routing and lifecycle boundaries:
 
 - Initial and post-repair signals leave the item partial and continue tutoring.
 - Partial → Covered demonstrated understanding makes an assessment due; Pending → Covered demonstrated understanding and spontaneous transfer complete without one.
-- A covered pair alone is insufficient. The qualifying event's prior state and unresolved assessment requirement determine eligibility.
-- Protection, correction, Guard, another open assessment, and required feedback defer an existing requirement; a later eligible request prepares it without a repeated understanding event. Contradiction invalidates readiness.
-- Pass from covered records terminal evidence/history once and retains covered progress. First wrong leaves it covered/open; second wrong moves it to review. Results from other progress states are rejected.
-- Repair to Partial does not reassess immediately; later full understanding must establish a new covered cycle. Replays and resolved cycles do not generate another assessment.
+- A covered pair alone is insufficient. The accepted event's prior state and outstanding assessment lifecycle determine eligibility.
+- Guard, another open assessment, and required feedback defer readiness; a later eligible request prepares it without a repeated understanding event. Contradiction invalidates readiness.
+- Correct on either attempt records one terminal pass and retains Covered. First wrong leaves Covered/open; second wrong moves to Review. Results from other progress states are rejected.
+- Repair to Partial continues tutoring; later full understanding establishes a new covered cycle. Replays and resolved cycles do not generate another assessment.
 
-Use stateful integration checks for these lifecycle boundaries, including deferred preparation and grading replay. A single-target eligibility projection cannot establish persistence, concurrency, or whole-room routing behavior. Preserve historical labels and scores under their original policy; do not relabel an executed baseline as evidence for this revision.
+Use stateful SQL integration tests for blocker persistence, delivery, grading, recovery, replay, and permission boundaries. The single-target evaluation projection holds other lifecycle blockers false; it does not establish whole-room routing, concurrency, model quality, or hosted release conformance.
 
 ## Historical production baseline plan
 

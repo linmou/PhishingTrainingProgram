@@ -6,6 +6,8 @@ Date: 2026-10-04 UTC
 Source commit: `3c0234901429081210aa3129c99a4eb1b3ad1696` plus uncommitted changes
 Status: production SQL and Edge applied; assessment verified; transfer-status event gate failed
 
+2026-10-14 reconciliation: live inspection confirms the SQL target remains applied on staging and production. Following the user's archive request, the exact SQL was moved to [archived_migrations](../../supabase/archived_migrations/20261004000000_direct_understanding_status.sql). The failed production workflow remains an open issue below. The later unified-room migration supersedes its learning-event function; replaying the old SQL would overwrite that newer definition. See the [current reconciliation record](documentation_update_record_v2026_10_14_analysis_cleanup.md). The October 4 entries below preserve the release state at that time.
+
 ## Open issue: broad target credit
 
 The 18-target staging recording at `tmp/browser_demo_runs/staging-template-20261004081925-833cb9a1/` showed one safe-action learner message producing 12 `demonstrated_understanding` events and 3 `initial_signal` events. The quote did not name several credited target steps, including URL-domain inspection and login-activity review. The browser run passed its selected status and assessment checks, but its overall progress count was not a measure of classification accuracy. The production sync must carry this issue as open until a fresh live run and a human-calibrated target-by-target evaluation establish the remaining error rate.

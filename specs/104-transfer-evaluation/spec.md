@@ -10,7 +10,7 @@
 
 ## TransferLearning Refactor Contract
 
-Evaluation must cover semantic learner-evidence classification, target selection from two rooms with different approved targets, mandatory eligible assessment preparation, protection/correction/Guard and lifecycle blockers, and assessment-item quality. Eligible routing asserts zero shared-tutor calls, including provider-error cases. The request builder used in evaluation must match production's assessment-only request. Retain shared-tutor tutoring/Guard regression coverage and preserve immutable historical run artifacts and hashes.
+Evaluation must cover semantic learner-evidence classification, target selection from two rooms with different approved targets, mandatory eligible assessment preparation, Guard and lifecycle blockers, and assessment-item quality. Eligible routing asserts zero shared-tutor calls, including provider-error cases. The request builder used in evaluation must match production's assessment-only request. The analysis scorecard measures `raw_event`, `applied_state`, `assessment_route`, and `validity`. Retain shared-tutor tutoring/Guard regression coverage and preserve immutable historical run artifacts and hashes.
 
 ## Scope and Authority
 

@@ -1,13 +1,13 @@
 # Production Data Model: Transfer Assessment Backend
 
-<!-- Intent: preserve the production assessment storage inspection from 2026-09-28 and state the current final-assessment policy requirements. Updated: 2026-10-13. -->
+<!-- Intent: preserve the production assessment storage inspection from 2026-09-28 and state the current final-assessment policy requirements. Updated: 2026-10-14. -->
 
 ## Current Final Assessment Policy
 
 The [Partial-only contract](../../tutor-system/docs/ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding) supersedes the historical partial-trigger eligibility and grading requirements below. Its upstream rationale and exact human-selected boundary are recorded in the linked contract and decision record. This policy section defines required behavior; the dated schema observations below remain historical evidence.
 
 - An accepted `demonstrated_understanding` event from Partial to Covered creates an outstanding assessment requirement. Initial and repair signals continue tutoring. Direct Pending → Covered understanding and spontaneous transfer complete without an assessment.
-- Readiness must retain the qualifying event's prior state and causal identity. A covered pair alone is insufficient. Protection, correction, Guard, another open assessment, and required feedback defer preparation without losing the outstanding requirement.
+- Readiness must retain the qualifying event's prior state and causal identity. A covered pair alone is insufficient. Guard, another open assessment, and required feedback defer preparation without losing the outstanding requirement.
 - Preparation and delivery must revalidate current covered progress, qualifying evidence, and assessment lifecycle. A later contradiction invalidates readiness and resumes tutoring. Duplicate preparation, delivery, or result replay must not create another assessment cycle.
 - The target remains active while assessment is due or open. Terminal pass retains `covered/good` but writes the causal pass event, evidence/history, and lifecycle result exactly once. First wrong retains covered progress and one remaining attempt; second wrong records failure once and moves the target to `needs_review/basic`.
 - Grading and deferred terminal-event replay require covered progress and a valid assessment lifecycle. Replay retains the original event ID and dedupe key, records the terminal evidence/history once even for a pass with unchanged progress, and rejects invalidated transitions. Pending, Partial, and Review cannot accept assessment pass/fail under this policy.
