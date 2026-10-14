@@ -2,7 +2,8 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-10-13
+- Updated: 2026-10-14
+- Learning Progress layout update base commit: `83690fe`.
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
 - Final-assessment policy implementation base commit: `7737cfb`.
@@ -145,6 +146,7 @@ npm test src/services/__tests__/database.test.ts
 - **Template library**: Reusable educational scenarios
 - **Analytics foundation**: Complete audit trails for learning effectiveness
 - **Tutor export**: Learning Progress can be exported as JSON from the checklist panel, including summary counts and serialized checklist items
+- **Progress panel layout**: The desktop room reserves space for Learning Progress beside the discussion. At widths of 1100px or less, the panel follows the discussion so the tutor's AI button stays accessible. Guard and transfer notices use full-width rows below the panel title; the panel remains scrollable during manual setup.
 
 ### 5. Context + Service Layer Pattern
 - **React Context**: Global state management for auth and room state

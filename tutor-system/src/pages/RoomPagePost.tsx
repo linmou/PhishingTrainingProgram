@@ -848,7 +848,7 @@ const RoomPagePost: React.FC = () => {
     }
 
     return (
-        <div className="room-post-layout">
+        <div className={`room-post-layout${user?.current_role === 'tutor' && showChecklist ? ' room-post-layout-with-checklist' : ''}`}>
             {/* Navigation Header */}
             <div className="room-post-nav">
                 <div className="room-post-nav-content">
