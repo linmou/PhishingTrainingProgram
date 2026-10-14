@@ -90,6 +90,8 @@ Final results: 185 Jest tests passed across 12 suites, 33 existing API contract 
 
 ## Suggested Review Order
 
+Merged into `no_sign_up` as `7582916`. Post-merge verification passed 185 Jest tests, 34 current API contract tests, application TypeScript, and the production build. See the [merge record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_merge.md).
+
 - Follow goal initialization through historical evidence recovery and refreshed progress.
   [checklistService.ts:104](../../tutor-system/src/services/checklistService.ts#L104)
 - Inspect the ordered prefix and server-confirmed completion cache.

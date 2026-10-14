@@ -4,6 +4,7 @@ Intent: record the goal-setup evidence recovery change and its verification.
 
 Date: 2026-10-14. Baseline commit: `88b3ccd`.
 Branch: `fix/recheck-messages-after-goals`.
+Merged into `no_sign_up` as `7582916`; see the [post-merge verification](documentation_update_record_v2026_10_14_early_message_recheck_merge.md).
 
 ## Change
 
