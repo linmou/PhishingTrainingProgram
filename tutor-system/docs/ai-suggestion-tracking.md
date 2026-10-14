@@ -1,8 +1,8 @@
 # AI Suggestion Tracking Implementation
 
 > Intent: Document how AI suggestions are displayed, transferred to the composer, and tracked after the Guard Mode UI update.
-> Updated: 2026-09-13
-> Commit ID: `31cf4e4`
+> Updated: 2026-10-14
+> Commit ID (baseline): `83690fe59f26b8b4edd89255d410775bd2424d1d`
 
 ## Overview
 This implementation modifies the AI assistant to only provide suggestions (not create posts), tracks how tutors interact with these suggestions, and records the Guard Mode decision separately from the reviewed wording.
@@ -58,6 +58,7 @@ The download feature now supports two formats:
 
 #### TXT Format
 - Includes all messages in chronological order
+- Counts only messages with at least one feedback entry in the feedback summary; unrated messages remain in the transcript and do not increase the rated-message count
 - Adds AI interaction summary at the end
 - Shows acceptance/rejection rates
 - Tutor exports include raw mode, raw instruction, concise reason, final mode, and whether the tutor changed the mode
