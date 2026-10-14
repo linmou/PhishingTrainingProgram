@@ -121,7 +121,79 @@ export class ChecklistService {
     if (!checklist || checklist.id !== result.checklist_id) {
       throw new Error('Transfer checklist was created but could not be read for its owner');
     }
-    return checklist;
+
+    await this.analyzeStudentMessages(roomId, studentId);
+
+    const updatedChecklist = await this.getChecklistForStudent(roomId, studentId);
+    if (!updatedChecklist || updatedChecklist.id !== result.checklist_id) {
+      throw new Error('Transfer checklist could not be refreshed after checking earlier messages');
+    }
+    return updatedChecklist;
+  }
+
+  /** Analyze a learner's chronological history, optionally stopping at the selected message. */
+  static async analyzeStudentMessages(
+    roomId: string,
+    studentId: string,
+    focusMessageId?: string
+  ): Promise<void> {
+    // Every browser writer awaits the same prefix. Server completion markers make concurrent
+    // replays safe and prevent a newer live message from overtaking older saved evidence.
+    const pageSize = 500;
+    const messageIds: string[] = [];
+    for (let offset = 0; ; offset += pageSize) {
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('room_id', roomId)
+        .eq('user_id', studentId)
+        .eq('user_role', 'student')
+        .is('assessment_id', null)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(offset, offset + pageSize - 1);
+
+      if (error) {
+        throw new Error(`Failed to read earlier learner messages: ${error.message}`);
+      }
+      messageIds.push(...(messages || []).map(message => message.id));
+      if (!messages || messages.length < pageSize) break;
+    }
+
+    const focusIndex = focusMessageId === undefined ? messageIds.length - 1 : messageIds.indexOf(focusMessageId);
+    if (focusMessageId !== undefined && focusIndex < 0) {
+      throw new Error('Learning evidence focus message was not found for this learner');
+    }
+    const cacheKey = `confirmed-learning-evidence:${roomId}:${studentId}`;
+    // Cache only explicit server completion markers; deferred evidence must remain retryable.
+    const completedIds = new Set<string>();
+    try {
+      const storedIds: unknown = JSON.parse(window.sessionStorage.getItem(cacheKey) || '[]');
+      if (!Array.isArray(storedIds) || !storedIds.every(id => typeof id === 'string')) {
+        throw new Error('Invalid completed-message cache');
+      }
+      storedIds.forEach(id => completedIds.add(id));
+    } catch (cacheError) {
+      console.warn('Completed-message cache unavailable; checking evidence with the server:', cacheError);
+    }
+
+    try {
+      for (const messageId of messageIds.slice(0, focusIndex + 1)) {
+        if (completedIds.has(messageId)) continue;
+        let result = await transferAssessmentService.analyzeMessage(messageId, roomId);
+        // Initial goal replay primes the cache; live analysis confirms new IDs on the next pass.
+        if (focusMessageId === undefined && result.already_processed !== true && result.deferred !== true) {
+          result = await transferAssessmentService.analyzeMessage(messageId, roomId);
+        }
+        if (result.already_processed === true) completedIds.add(messageId);
+      }
+    } finally {
+      try {
+        window.sessionStorage.setItem(cacheKey, JSON.stringify(Array.from(completedIds)));
+      } catch (cacheError) {
+        console.warn('Completed-message cache could not be saved:', cacheError);
+      }
+    }
   }
 
   /**

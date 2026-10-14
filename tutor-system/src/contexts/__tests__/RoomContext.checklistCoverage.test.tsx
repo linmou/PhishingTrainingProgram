@@ -19,6 +19,7 @@ jest.mock('../../services/aiService', () => ({
 }));
 jest.mock('../../services/checklistService', () => ({ ChecklistService: {
   getChecklistForStudent: jest.fn().mockResolvedValue(null),
+  analyzeStudentMessages: jest.fn(),
   processStudentMessage: jest.fn().mockResolvedValue({ updatedItems: [] }),
 } }));
 
@@ -37,6 +38,8 @@ describe('ordinary learner checklist coverage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(null);
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockResolvedValue(undefined);
     roomRecord = room;
     (useAuth as jest.Mock).mockReturnValue({ user: { id: 'student-1', current_role: 'student', display_name: 'Learner' } });
     insertResult = { data: { id: 'stored-1', room_id: room.id, user_id: 'student-1',
@@ -74,6 +77,27 @@ describe('ordinary learner checklist coverage', () => {
     insertResult = { data: null, error: new Error('insert failed') };
     await expect(act(async () => { await api.sendMessage('I would open the official app.'); })).rejects.toThrow('insert failed');
     expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
+  });
+
+  it('checks the stored message when transfer goals appear during an ordinary send', async () => {
+    roomRecord = { ...room, transfer_learning_enabled: true };
+    (ChecklistService.getChecklistForStudent as jest.Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ student_id: 'student-1', progress_policy_version: 'transfer_v1' });
+    await mount();
+    await act(async () => { await api.sendMessage('I would open the official app.'); });
+    expect(ChecklistService.getChecklistForStudent).toHaveBeenCalledTimes(2);
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1');
+    expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
+    expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
+  });
+
+  it('keeps an ordinary message stored when transfer goals still do not exist', async () => {
+    roomRecord = { ...room, transfer_learning_enabled: true };
+    await mount();
+    await act(async () => { await api.sendMessage('I would open the official app.'); });
+    expect(ChecklistService.analyzeStudentMessages).not.toHaveBeenCalled();
+    expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
   });
 
   it('keeps the saved message when analysis fails', async () => {

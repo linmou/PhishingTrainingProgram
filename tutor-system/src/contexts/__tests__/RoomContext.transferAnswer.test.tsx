@@ -61,6 +61,7 @@ jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
 
 jest.mock('../../services/checklistService', () => ({
   ChecklistService: {
+    analyzeStudentMessages: jest.fn(),
     getActiveTransferChecklistForRoom: jest.fn(),
     getChecklistForStudent: jest.fn(),
   },
@@ -83,6 +84,8 @@ describe('RoomContext learner answer path', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation((roomId, _studentId, focusId) =>
+      transferAssessmentService.analyzeMessage(focusId, roomId));
     room = null;
     initialMessages = [learnerAMessageRow, deliveredQuestionRow];
 
@@ -263,9 +266,10 @@ describe('RoomContext learner answer path', () => {
       await room!.sendMessage('B', { replyToMessageId: DELIVERED_QUESTION_ID, assessmentId: DELIVERED_QUESTION_ID, selectedOptionIds: ['B'] });
     });
 
-    // The only checklist surface the context may touch is the owner-scoped read used to detect
-    // the transfer policy; the mocked module exposes nothing that could write progress.
+    // The context uses owner-scoped reads and trusted analysis; the mocked module exposes
+    // no direct browser progress writer.
     expect(Object.keys(ChecklistService).sort()).toEqual([
+      'analyzeStudentMessages',
       'getActiveTransferChecklistForRoom',
       'getChecklistForStudent',
     ]);
@@ -282,6 +286,7 @@ describe('RoomContext learner answer path', () => {
 
     expect(processMessage).not.toHaveBeenCalled();
     expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, DELIVERED_ANSWER_ID);
   });
 
   // RoomContext.tsx: open assessments block typed answers, help requests, and unrelated replies before persistence.

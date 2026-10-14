@@ -61,6 +61,7 @@ jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
 
 jest.mock('../../services/checklistService', () => ({
   ChecklistService: {
+    analyzeStudentMessages: jest.fn(),
     getActiveTransferChecklistForRoom: jest.fn(),
     getChecklistForStudent: jest.fn(),
   },
@@ -134,6 +135,8 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation((roomId, _studentId, focusId) =>
+      transferAssessmentService.analyzeMessage(focusId, roomId));
     room = null;
     messageInsertHandler = null;
 
@@ -214,6 +217,9 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
       checklistId: CHECKLIST_ID,
     });
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID);
+    expect((ChecklistService.analyzeStudentMessages as jest.Mock).mock.invocationCallOrder[0])
+      .toBeLessThan(prepareAssessment.mock.invocationCallOrder[0]);
     expect(room!.transferDraft!.decision).toEqual(preparedCandidate);
     expect(room!.transferDraft!.studentId).toBe(LEARNER_A_ID);
     expect(room!.transferDraft!.checklistId).toBe(CHECKLIST_ID);
@@ -273,6 +279,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     await act(async () => { await room!.generateAIResponse(); });
 
     expect(transferAssessmentService.analyzeMessage).not.toHaveBeenCalled();
+    expect(ChecklistService.analyzeStudentMessages).not.toHaveBeenCalled();
     expect(prepareAssessment).not.toHaveBeenCalled();
     expect(room!.transferDraft).toBeNull();
     expect(room!.aiDecision?.instruction).toBe('correction');
