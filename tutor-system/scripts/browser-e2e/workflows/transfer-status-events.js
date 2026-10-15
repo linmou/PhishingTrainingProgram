@@ -23,6 +23,9 @@ function templateChecklistItems(promptConfig) {
 }
 
 async function startStatusJourney(ctx) {
+  const analysisTimeoutMs = Number(process.env.E2E_ANALYSIS_TIMEOUT_MS || 90000);
+  assert(Number.isInteger(analysisTimeoutMs) && analysisTimeoutMs >= 90000 && analysisTimeoutMs <= 600000,
+    'E2E_ANALYSIS_TIMEOUT_MS must be an integer from90000to600000');
   const room = await ctx.existingRoom('assessment-delivery');
   await insert(ctx.client, 'sessions', {
     room_id: room.id, tutor_id: room.tutor_id, student_id: ctx.student.id, status: 'active'
@@ -55,16 +58,28 @@ async function startStatusJourney(ctx) {
   async function observe(content, item, expectedKind, expectedStatus, expectedLevel) {
     const before = new Set((await query(ctx.client, 'messages', 'id', 'room_id', room.id)).map(row => row.id));
     const stop = await captureResponses(ctx.studentPage, response => response.url().includes('/functions/v1/assessment-api'));
+    const requests = [];
+    const captureRequest = request => {
+      if (request.url().includes('/functions/v1/assessment-api') && request.method() === 'POST') {
+        requests.push({ url: request.url(), body: request.postDataJSON() });
+      }
+    };
+    ctx.studentPage.on('request', captureRequest);
     let calls;
     try {
       await Promise.all([
         sendStudentMessage(ctx.studentPage, content),
         ctx.studentPage.waitForResponse(response =>
           response.url().includes('/functions/v1/assessment-api') &&
-          response.request().postDataJSON()?.operation === 'analyze_message', { timeout: 90000 })
+          response.request().postDataJSON()?.operation === 'analyze_message', { timeout: analysisTimeoutMs })
       ]);
     } finally {
+      ctx.studentPage.off('request', captureRequest);
       calls = await stop();
+      writeJson(path.join(ctx.evidenceDir, `transfer-status-provider-${observations.length + 1}.json`), {
+        learner_message: content, target: item, expected_kind: expectedKind,
+        analysis_timeout_ms: analysisTimeoutMs, requests, calls
+      });
     }
     const message = (await query(ctx.client, 'messages', 'id,content,user_id', 'room_id', room.id))
       .find(row => !before.has(row.id) && row.user_id === ctx.student.id && row.content === content);

@@ -455,6 +455,7 @@ Deno.test('accepts direct understanding evidence for the current learner message
   assertEquals(Object.keys(stored!).sort(), ['events', 'explanation', 'rejected_events']);
 });
 
+
 // Test responsible for assessment-api/index.ts: classify overlapping targets independently before applying events.
 Deno.test('keeps one target evidence from advancing a related target', async () => {
   const analyzedIds: string[] = [];
@@ -944,6 +945,11 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
     fetch: async (_input, init) => {
       const body = JSON.parse(String(init?.body));
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
+        assertEquals(body.model, 'qwen3.5-flash');
+        assertEquals(body.temperature, 0);
+        assertEquals(body.max_tokens, 600);
+        assertEquals(body.enable_thinking, false);
+        assertEquals(body.response_format, { type: 'json_object' });
         analysisCalls += 1;
         return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
           events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',

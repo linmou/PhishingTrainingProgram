@@ -26,10 +26,8 @@ export const EMOTIONAL_PARAMETERS: Record<string, ParameterConfig> = {
     }
   },
   mistake_normalization: {
-    low: `Use direct correction when a question scaffold has failed or the student is about to take an unsafe action.
-    Example: "Not quite. Check the real app instead."`,
-    high: `After a failed question scaffold, correct unsafe reasoning and give one concrete safe action.
-    Example: "Not quite. A lock icon does not prove the site is real. Check the web address."`,
+    low: `Use direct correction when an incorrect inference follows a focused question about that inference. Be concise and matter-of-fact; incomplete correct understanding still deserves further teaching.`,
+    high: `After a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action. Treat ordinary mistakes as part of learning; missing detail alone is not a misconception.`,
     labels: {
       low: 'corrective',
       high: 'normalizing'

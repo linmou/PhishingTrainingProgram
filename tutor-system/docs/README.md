@@ -2,13 +2,14 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-10-14
+- Updated: 2026-10-15
 - Learning Progress layout update base commit: `83690fe`; final assessment release baseline: `88b3ccd`.
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
 - Final-assessment policy implementation base commit: `7737cfb`.
 - Scoped release workflow revision base commit: `2bd3143`.
 - Early-message browser verification base commit: `73f5908`.
+- Selected AI candidates release baseline: `8dc7271`.
 
 # Tutor-System Documentation Hub
 
@@ -17,6 +18,7 @@ This directory contains comprehensive architectural and implementation documenta
 ## 🏗️ **Architecture Documentation**
 
 ### Core System Architecture
+- **[Selected AI candidates release](./doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md)** - Tutor candidate07 and transfer candidate02 with non-thinking settings, source identities, explicit known-error acceptance and staging/production verification.
 - **[AuthContext.md](./AuthContext.md)** - Simplified authentication system with deterministic user IDs
 - **[RoomContext.md](./RoomContext.md)** - Real-time messaging with WebSocket + polling hybrid approach  
 - **[supabase-service.md](./supabase-service.md)** - Database service layer with type-safe operations
@@ -58,6 +60,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[v1 case review](./ai-behaviors/tutor-behavior-case-review.md)** - All 43 cases / 173 assertions mapped to revised rubrics, with provenance checks, proposed refinements and grouped label decisions
 - **[Historical evaluation evidence](./ai-behaviors/tutor-behavior-evaluation-record.md)** - Saved-run findings, metric-interaction limitations, and review evidence
 - **[Tutor refinement run record](./ai-behaviors/tutor-behavior-refinement-record.md)** - Candidate 11 evaluation, human selection, simulated multi-turn evidence, remaining formal-gate exceptions, and production verification
+- **[Tutor shortcut-removal experiment](../../evals/promptfoo/refinement-20261014/README.md)** - Controlled baseline comparisons, evaluation completeness repairs, independent audits, and fresh holdout protocol
 - **[Candidate 11 documentation update](./doc_update_record/documentation_update_record_v2026_09_08_candidate_11_production.md)** - Production prompt/contract integration, local verification, and release-evidence boundary
 - **[Web test-room E2E update](./doc_update_record/documentation_update_record_v2026_09_08_web_test_rooms_e2e.md)** - Real-browser room creation, provider-backed suggestions, and legacy heuristic boundary
 - **[Transfer assessment W0 documentation update](./doc_update_record/documentation_update_record_v2026_09_11_transfer_assessment_w0.md)** - Canonical T09, aligned contract/evaluation plan, applicability audit, and BDD lifecycle

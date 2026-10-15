@@ -1,14 +1,18 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain AI request configuration and trusted tutor feedback inputs. Updated: 2026-10-12. Baseline commit: f63838d. -->
+<!-- Intent: explain AI request configuration and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 8dc7271. -->
 
 ## Purpose
 Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Production requests use Qwen3.5 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key.
 
 ## Update Metadata
 
-- Updated: 2026-10-12
-- Baseline commit: f63838d
+- Updated: 2026-10-15
+- Baseline commit: 8dc7271
+
+The selected tutor policy is candidate07 with the approved Guard response pattern. Tutor requests use temperature0.3, max_tokens100 and enable_thinkingfalse, including the bounded JSON repair attempt. These settings override stored room temperature/token values; `appliedConfig` reports the settings actually sent. Room role, style and target inventories still configure the generated base prompt.
+
+Transfer analysis uses the exact candidate02 prompt with temperature0, max_tokens600 and enable_thinkingfalse. Thinking was disabled after a staging worker timeout. The user explicitly authorized release with its observed semantic errors, including credit for unmentioned actions. This selection does not establish benchmark acceptance. Assessment-question generation remains a separate call with its existing settings. See [release evidence](doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md).
 
 For an assessment answer, RoomContext supplies verified assessment feedback facts through `generateTutorSuggestion` options. The service includes that structured state in the system context so the model follows the recorded resolution and attempt count. Open assessments omit the answer key and terminal explanation. Missing backend lifecycle data blocks generation at RoomContext before the provider is called.
 
@@ -303,8 +307,8 @@ import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 - **Fallback speed**: Dummy service provides sub-second responses
 
 ### Cost Management
-- **Token limits**: Conservative max_tokens settings (100-150)
-- **Model selection**: Balance capability vs. cost (GPT-4o vs GPT-4)
+- **Tutor token limit**: max_tokens100 for the selected candidate07 configuration
+- **Model selection**: qwen3.5-flash
 - **Context pruning**: Intelligent conversation history management
 - **Failure handling**: Graceful degradation to dummy service
 

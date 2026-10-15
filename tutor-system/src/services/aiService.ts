@@ -68,6 +68,11 @@ const appendTutorDecisionRepairInstruction = (
 
 const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
+const TUTOR_GENERATION_SETTINGS = {
+    temperature: 0.3,
+    max_tokens: 100,
+    enable_thinking: false
+} as const;
 const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
 /** Appended to the last user turn when the model returns an unparsable tutor decision. */
 export const TUTOR_DECISION_REPAIR_INSTRUCTION =
@@ -669,12 +674,6 @@ export class TutorSuggestionService {
                     interaction_mode: interactionMode
                 });
 
-            const temperature =
-                typeof config.temperature === 'number' ? config.temperature : 0.3;
-            const maxTokens = typeof config.max_tokens === 'number'
-                ? Math.min(config.max_tokens, 120)
-                : 100;
-
             let requestMessages = messages;
             let lastError: unknown;
 
@@ -682,9 +681,7 @@ export class TutorSuggestionService {
                 try {
                     const data = await invokeAiApi({
                         messages: requestMessages,
-                        temperature,
-                        max_tokens: maxTokens,
-                        enable_thinking: false,
+                        ...TUTOR_GENERATION_SETTINGS,
                         response_format: TUTOR_DECISION_RESPONSE_FORMAT
                     });
                     if (data.finish_reason === 'length') {
@@ -926,8 +923,8 @@ export const generateTutorSuggestion = async (
                 model_name: aiConfig.model_name,
                 system_prompt: aiConfig.system_prompt,
                 prompt_config: aiConfig.prompt_config ?? null,
-                temperature: aiConfig.temperature,
-                max_tokens: aiConfig.max_tokens,
+                temperature: TUTOR_GENERATION_SETTINGS.temperature,
+                max_tokens: TUTOR_GENERATION_SETTINGS.max_tokens,
                 is_active: aiConfig.is_active
             },
             contextMessages

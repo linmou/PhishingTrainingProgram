@@ -104,13 +104,15 @@ describe('ecologicalTutorCall', () => {
     expect(messages[1].content).toContain('student line');
   });
 
-  it('keeps the frozen candidate 11 text as the whole active agent prompt', () => {
+  it('loads selected candidate07 with the approved Guard-template addition', () => {
     const evaluatedPrompt = fs.readFileSync(
-      path.resolve(__dirname, '../../../../evals/promptfoo/v1/candidate-policy-11-contract-v2.md'),
+      path.resolve(__dirname, '../../../../evals/promptfoo/refinement-20261014/candidate-policy-07.md'),
       'utf8'
     ).trim();
-    // Multi-agent lives in its own prompt, so the evaluated policy is sent unchanged.
-    expect(ACTIVE_TUTOR_AGENT_PROMPT).toBe(evaluatedPrompt);
+    const guardTemplate = 'Use this response pattern with the actual observed behavior: “[Observable deliberate behavior] is preventing our task discussion/practice. Stop [that behavior] and make a relevant attempt or ask what you need clarified.” Describe intended conduct as planned rather than completed.';
+    expect(ACTIVE_TUTOR_AGENT_PROMPT).toBe(evaluatedPrompt.replace(
+      'GUARD RESPONSE\n\n', `GUARD RESPONSE\n\n${guardTemplate}\n\n`
+    ));
     expect(ACTIVE_TUTOR_AGENT_PROMPT).not.toContain('MULTI-AGENT');
   });
 

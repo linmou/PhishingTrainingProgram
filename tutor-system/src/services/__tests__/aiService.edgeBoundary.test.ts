@@ -98,6 +98,15 @@ describe('AI service Edge Function boundary', () => {
     expect(result.success).toBe(true);
     expect(result.suggestion).toBe(validDecision.response);
     expect(invoke).toHaveBeenCalledTimes(2);
+    for (const [name, options] of invoke.mock.calls) {
+      expect(name).toBe('ai-api');
+      expect(options.body).toMatchObject({
+        temperature: 0.3,
+        max_tokens: 100,
+        enable_thinking: false,
+        response_format: { type: 'json_object' },
+      });
+    }
     const retryMessages = invoke.mock.calls[1][1].body.messages;
     expect(retryMessages[retryMessages.length - 1].content)
       .toContain('Return exactly one valid JSON object');

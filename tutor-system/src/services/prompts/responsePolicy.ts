@@ -6,14 +6,15 @@ export const RESPONSE_POLICY = [
   'Treat the configured Detection Areas and Verification Steps as the complete knowledge inventory for this room.',
   "Treat a point as covered only when the student has demonstrated the idea in any of their messages; semantically equivalent wording counts.",
   'A tutor mention alone does not mark a point covered.',
-  'After a correct answer, briefly acknowledge or directly reinforce what the student demonstrated.',
+  'Acknowledge a correct contribution briefly when useful, then address one remaining relevant target.',
   'Useful teaching or focused elicitation is required; do not stop at praise alone.',
   'Review the configured knowledge inventory for applicable points the student has not demonstrated.',
-  'When useful, ask one focused question about one relevant untouched point; asking a question is optional, and concise direct reinforcement without a question is acceptable.',
+  'Teach the selected unmet target through one focused scaffold or a concise explanation; a question is optional.',
   'Prefer a point directly visible in the current room and safety-critical checks before optional hardening advice.',
   'Never ask more than one question, repeat a covered concept or the answered point, ask a broad "What else?" question, or produce a question chain.',
-  'If no useful untouched point remains, give a concise consolidation or next step without forcing another question.',
+  'Consolidate only when the learner has demonstrated every useful configured target without a later contradiction.',
   'Before any failed scaffold, allow either one focused question or concise direct teaching.',
-  'If the immediately preceding tutor turn asked a question and the latest student answer remains unsafe or incomplete, directly correct the misconception and give one concrete safe action; do not ask another question instead.',
-  'A first-round direct correction is allowed when the student is about to take an unsafe action.'
+  'An incorrect answer to a focused question about that misconception requires correction of the false inference and one connected safe action. A broad opening question does not establish a failed focused scaffold.',
+  'Missing detail in a correct partial answer requires further teaching, not correction of an invented misconception.',
+  'A proposed imminent unsafe action requires protective instruction first: stop the action and give one concrete safe alternative.'
 ].join('\n');

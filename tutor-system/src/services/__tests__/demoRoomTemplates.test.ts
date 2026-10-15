@@ -15,6 +15,8 @@ import {
 } from '../demoRoomTemplates';
 import fs from 'fs';
 import path from 'path';
+import { RESPONSE_POLICY } from '../prompts/responsePolicy';
+import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
 
 describe('demoRoomTemplates', () => {
   it('ships a dedicated Multi-agent-only test room seed', () => {
@@ -30,13 +32,13 @@ describe('demoRoomTemplates', () => {
     );
   });
 
-  it('builds an AI config with the improved tutoring markers', () => {
+  it('builds an AI config with the shared policy and selected peer role', () => {
     const config = buildCasualPeerAIConfig('Account Security Alert');
 
     expect(config.enabled).toBe(true);
     expect(config.preset).toBe('casual_peer');
-    expect(config.system_prompt).toContain('Ask at most one focused question');
-    expect(config.system_prompt).toContain('After a failed question scaffold');
+    expect(config.system_prompt).toContain(RESPONSE_POLICY);
+    expect(config.system_prompt).toContain(ROLE_PARAMETERS.role.low);
     expect(config.system_prompt).toMatch(/third-person|A person who/i);
     expect(config.prompt_config.detection_areas.length).toBeGreaterThan(0);
   });

@@ -49,16 +49,10 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     RESPONSE_POLICY,
 
     "## Reading Level:",
-    "Use simple language for younger or confused students:",
-    "- Use \"pressure words\" instead of \"urgency tactics\".",
-    "- Use \"fake web address\" or \"wrong website\" instead of \"illegitimate domain\".",
-    "- Use \"check in the real app\" instead of \"official account verification\".",
-    "- Use \"the lock does not prove the site is real\" instead of \"HTTPS encrypts the connection\".",
-    "- Use \"real company\" or \"real app\" instead of \"legitimate\".",
-    "- Use short sentences when the student sounds confused.",
+    "Use short sentences and familiar words for younger or confused students. Explain unfamiliar terms while preserving the factual meaning and the learner's reasoning task.",
 
-    "## Available Scaffolding Techniques:",
-    "Use these techniques based on what the student needs:",
+    "## Available Teaching Methods:",
+    "These are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:",
     Object.entries(SCAFFOLDING_TECHNIQUES).map(([key, technique]) =>
       `**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${technique.description}`
     ).join('\n'),
@@ -85,26 +79,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     "- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.",
     "- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.",
 
-    "Remember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support.",
-
-    "Here are some examples of the dialog whose tutoring style you should follow:",
-
-    "#Direct correction",
-    "Teen: It has a lock icon, so it is safe.",
-    "Bot: Not quite. A lock icon does not prove the site is real; fake sites can use one. Check the website name and open the real app instead.",
-
-    "#Concrete action",
-    "Teen: What should I do?",
-    "Bot: First, avoid the link in the post. Open the real website yourself, check whether the offer or warning exists there, and only continue if the source is clearly official.",
-
-    "#Vague student answer",
-    "Teen: It just seems weird.",
-    "Bot: That weird feeling is useful. Make it specific: does the post name the real company, show the real web address, and explain what happened? Do not click; open the real app yourself.",
-
-    "#Third-person example",
-    "Teen: Did this ever happen to you?",
-    "Bot: A common pattern is that a person follows a fake promotion, reaches a page asking for personal details, and gives the scammer useful information. The safer move is to verify through the real company site.",
-
+    "Remember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support."
   ];
 
   return sections.filter(Boolean).join('\n\n');
