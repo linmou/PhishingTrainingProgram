@@ -3,6 +3,7 @@ Provide a human-readable QA guide for the transfer-assessment room workflow, inc
 
 ## Metadata
 - Updated: 2026-10-14
+- Assessment input reminder baseline commit: `289cdfa`.
 - Release baseline commit: `83690fe`; queued-assessment verification added during hosted release.
 - Source of truth: `features/transfer_assessment.feature` and the [Partial-only final assessment contract](ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding).
 - Policy provenance: [T09.1](ai-behaviors/tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) connects P2 adaptive learning and P3 constructive engagement to the user's decision: verify understanding developed through tutoring, while avoiding a redundant quiz for knowledge shown directly from Pending.
@@ -122,6 +123,7 @@ Expected result:
 - The tutor can see the review context and answer key.
 - The room participation mode remains **tutoring**; the message itself is marked as an assessment turn.
 - While the learner's assessment is open, the comment composer and generic Reply actions are disabled. The learner must use the displayed answer controls; another learner's question does not lock their chat.
+- The disabled empty comment input displays: “select the correct option(s) to finish the assessments first”. After closure, the normal “Write a comment...” placeholder returns.
 
 ### QA-TA-05: Correct First Answer
 

@@ -1091,7 +1091,9 @@ const RoomPagePost: React.FC = () => {
                                 onSubmit={handleSendMessage}
                                 onTyping={startTyping}
                                 onStopTyping={stopTyping}
-                                placeholder="Write a comment..."
+                                placeholder={openAssessment
+                                    ? 'select the correct option(s) to finish the assessments first'
+                                    : 'Write a comment...'}
                                 disabled={sendingMessage || Boolean(openAssessment)}
                                 submitBlocked={pendingPlayback}
                                 isLoading={sendingMessage}
