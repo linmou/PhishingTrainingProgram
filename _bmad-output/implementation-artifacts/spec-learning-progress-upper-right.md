@@ -1,78 +1,48 @@
 ---
-title: Restore Learning Progress to the upper right
+title: Restore original Learning Progress placement
 type: bugfix
 created: 2026-10-14
 status: done
-baseline_commit: 8dc7271
+baseline_commit: 13c3d0b
 context: []
 ---
 
-Intent: keep the implementation and verification of the requested room layout correction reviewable.
-
-<frozen-after-approval reason="user requested implementation in an isolated worktree">
+Intent: preserve the user's clarified request to return Learning Progress to its original position.
 
 ## Intent
 
-**Problem:** Learning Progress moved below the discussion after the previous overlap repair. The user wants it at the upper-right corner, where it is easier to find.
+The user requested the original upper-right placement, as implemented before commit `22c569b`. Restore its fixed positioning and original toolbar/JSX arrangement. Keep the desktop sidebar clearance and full-width notice improvements.
 
-**Approach:** Restore the desktop upper-right trigger and sidebar. On compact screens, keep the trigger in the sticky header and open a right-side drawer with an accessible close control.
+## Implementation
 
-## Boundaries & Constraints
+- [x] Restore the fixed collapsed trigger at top/right 20px, z-index 999; use the original 10px offsets at widths <=768px.
+- [x] Restore the fixed panel at top/right zero, 400px wide and 100vh high; at <=768px, use the original full-width panel with left zero.
+- [x] Restore the checklist JSX after the discussion and original tutor toolbar icon with its existing AI-availability condition.
+- [x] Retain desktop 400px sidebar clearance, full-width notices, and scrolling for short manual setup.
+- [x] Restore original page-test assertions and verify final placement with real components in Chromium.
+- [x] Update documentation and record the focused followup.
 
-**Always:** Keep navigation, tutor controls, checklist notices, and manual target setup reachable. Reserve desktop sidebar space. Keep the change within this isolated worktree.
+## Acceptance
 
-## I/O & Edge-Case Matrix
-
-| Scenario | Input / State | Expected Output / Behavior |
-| --- | --- | --- |
-| Desktop | Open or collapsed checklist above 1100px | Sidebar or trigger appears at upper right; open sidebar has dedicated space. |
-| Compact | Open or collapsed checklist at 1100px or below | Trigger appears at header's upper right; opened drawer starts at viewport top/right and can close. |
-| Notices | Guard and transfer notices | Notices occupy separate full-width rows below title. |
-| Short screen | Manual target setup on 500px-high viewport | Form and submit controls are reachable by scrolling; close remains reachable. |
-| Scrolled room | Collapsed checklist while scrolling | Header keeps the trigger visible and navigation reachable. |
-
-</frozen-after-approval>
-
-## Code Map
-
-- `tutor-system/src/pages/RoomPagePost.tsx` — mounts the checklist and navigation.
-- `tutor-system/src/components/ChecklistPanel.css` — fixed panel and collapsed trigger geometry.
-- `tutor-system/src/components/RoomPagePost.css` — sidebar clearance and sticky navigation.
-- `tutor-system/docs/README.md` — current documented progress layout.
-
-## Tasks & Acceptance
-
-**Execution:**
-- [x] Move existing checklist into the sticky header and remove the duplicate icon trigger.
-- [x] Restore upper-right geometry with compact scrolling and desktop clearance.
-- [x] Verify responsive layout and interactions against real components in the offline browser fixture.
-- [x] Run focused component/page regressions, TypeScript, and frontend build.
-- [x] Update layout documentation and record evidence before the focused commit.
-
-**Acceptance Criteria:**
-- Given a tutor room, when progress is collapsed or reopened at 1440, 1280, 1100, 1024, 769, 768, 390, or 320px, then its control or panel is at the upper right and the document has no horizontal overflow.
-- Given a desktop sidebar, when the tutor generates an AI response, then the composer is outside the panel and its handler receives the click.
-- Given an opened compact drawer, when the tutor closes it, then navigation and composer controls regain access and the trigger remains reachable during scrolling.
-- Given a short viewport and manual setup, when the tutor scrolls to the form's submit button, then the button can be clicked and the drawer can be closed.
+- Given a collapsed progress panel, when the room is displayed or scrolled, then its fixed offsets match the original desktop/mobile rules.
+- Given an opened panel, when the room is viewed at desktop or compact widths, then its position and width follow the original fixed sidebar/full-width rules.
+- Given a desktop room with the panel open, when the AI button is clicked, then dedicated sidebar clearance prevents interception.
+- Given a short viewport with manual setup, when the user scrolls to the submit control, then it is reachable and the panel can close.
 
 ## Verification
 
-- Offline Chromium fixture: responsive geometry, hit testing, open/close, scrolling, notices, and manual setup; zero external requests.
-- Focused Jest component/page suites: 5 suites / 70 tests pass.
-- Runtime TypeScript check: pass. Full `tsc --noEmit`: 454 identical preexisting test diagnostics on base and modified tree; zero additions/removals.
-- CRA production build: pass, with existing lint and Browserslist warnings recorded.
-
-## Review
-
-Independent parent review found the runtime layout sound and requested adapting existing role tests to the actual progress trigger. Those tests now verify tutor open/close through the header and absence for student/observer roles. Browser checks and visual inspection pass after this adjustment.
+- Chromium: 16 width/Guard combinations at 1440, 1280, 1100, 1024, 769, 768, 390, and 320px plus 6 empty/manual setup cases at 500px height pass; zero external requests.
+- Original placement leaves inherited collapsed-button overlap with some navigation at 1024, 769, 768, and 320px. This is recorded in the evidence.
+- Focused Jest: 5 suites / 70 tests pass.
+- Runtime TypeScript check and CRA production build pass; existing lint/Browserslist warnings remain.
+- Full repository TypeScript previously reported 454 identical baseline/current test diagnostics; the followup restores the original TypeScript structure and page tests.
+- Evidence: `output/playwright/original-placement/layout-results.json`, screenshots in that directory, and `*-original.log` files in `output/playwright/`.
 
 ## Suggested Review Order
 
-- Existing progress component moves into the sticky header, keeping compact access visible while scrolling.
-  [RoomPagePost.tsx:846](../../tutor-system/src/pages/RoomPagePost.tsx#L846)
-- Fixed desktop trigger and compact drawer geometry preserve upper-right placement.
-  [ChecklistPanel.css:19](../../tutor-system/src/components/ChecklistPanel.css#L19)
-- Desktop sidebar clearance remains; compact screens use the drawer.
+- Fixed offsets and mobile width restore the original placement.
+  [ChecklistPanel.css:20](../../tutor-system/src/components/ChecklistPanel.css#L20)
+- Dedicated desktop space still protects the composer.
   [RoomPagePost.css:13](../../tutor-system/src/components/RoomPagePost.css#L13)
-- Existing page regressions cover tutor access and student/observer visibility.
-  [RoomPagePost.transferDecision.test.tsx:237](../../tutor-system/src/pages/__tests__/RoomPagePost.transferDecision.test.tsx#L237)
+- Followup record captures exact behavior and inherited overlap evidence.
+  [original-position record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_learning_progress_original_position.md)

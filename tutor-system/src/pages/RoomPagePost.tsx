@@ -15,7 +15,7 @@ import ChecklistPanel from '../components/ChecklistPanel';
 import { supabase } from '../services/supabase';
 import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
-import { Download, Settings, ArrowLeft, Trash2 } from 'lucide-react';
+import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
 import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
 import { getRatingLabel } from '../components/feedbackRatingLabels';
@@ -851,16 +851,6 @@ const RoomPagePost: React.FC = () => {
         <div className={`room-post-layout${user?.current_role === 'tutor' && showChecklist ? ' room-post-layout-with-checklist' : ''}`}>
             {/* Navigation Header */}
             <div className="room-post-nav">
-                {roomId && user?.current_role === 'tutor' && (
-                    <ChecklistPanel
-                        roomId={roomId}
-                        transferEnabled={currentRoom.transfer_learning_enabled === true}
-                        studentId={transferStudentId}
-                        isVisible={showChecklist}
-                        onToggleVisibility={() => setShowChecklist(!showChecklist)}
-                        progressLocked={currentRoom.active_response_mode === 'guard'}
-                    />
-                )}
                 <div className="room-post-nav-content">
                     <Link to="/" className="room-post-nav-back">
                         <ArrowLeft size={20} />
@@ -876,6 +866,15 @@ const RoomPagePost: React.FC = () => {
                                 title="Manually change Guard Mode"
                             >
                                 {currentRoom.active_response_mode === 'guard' ? 'Deactivate Guard' : 'Activate Guard'}
+                            </button>
+                        )}
+                        {user?.current_role === 'tutor' && canUseAI && (
+                            <button
+                                onClick={() => setShowChecklist(true)}
+                                className="btn btn-secondary btn-small"
+                                title="Learning Progress Checklist"
+                            >
+                                <CheckSquare size={16} />
                             </button>
                         )}
                         {/* AI Settings Button - Only for tutors */}
@@ -1223,6 +1222,16 @@ const RoomPagePost: React.FC = () => {
                     <p>Set up learning targets before preparing a transfer assessment.</p>
                     <button type="button" onClick={() => setShowChecklist(true)}>Open Learning Targets</button>
                 </div>
+            )}
+            {roomId && user?.current_role === 'tutor' && (
+                <ChecklistPanel
+                    roomId={roomId}
+                    transferEnabled={currentRoom.transfer_learning_enabled === true}
+                    studentId={transferStudentId}
+                    isVisible={showChecklist}
+                    onToggleVisibility={() => setShowChecklist(!showChecklist)}
+                    progressLocked={currentRoom.active_response_mode === 'guard'}
+                />
             )}
 
             {/* AI Settings Modal */}

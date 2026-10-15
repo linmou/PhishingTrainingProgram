@@ -3,7 +3,7 @@ Document the current tutor-system architecture and development workflows, includ
 
 ## Metadata
 - Updated: 2026-10-14
-- Learning Progress upper-right update base commit: `8dc7271`; final assessment release baseline: `88b3ccd`.
+- Learning Progress original-position restoration base commit: `13c3d0b`; final assessment release baseline: `88b3ccd`.
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
 - Final-assessment policy implementation base commit: `7737cfb`.
@@ -151,7 +151,7 @@ npm test src/services/__tests__/database.test.ts
 - **Template library**: Reusable educational scenarios
 - **Analytics foundation**: Complete audit trails for learning effectiveness
 - **Tutor export**: Learning Progress can be exported as JSON from the checklist panel, including summary counts and serialized checklist items
-- **Progress panel layout**: Learning Progress opens at the upper right. Desktop rooms reserve 400px beside the discussion for the sidebar. At widths of 1100px or less, the collapsed button stays in the sticky header's upper-right row and opens a scrollable drawer; closing it restores access to the discussion and toolbar. Guard and transfer notices use full-width rows below the title. See the [upper-right layout verification record](./doc_update_record/documentation_update_record_v2026_10_14_learning_progress_upper_right.md).
+- **Progress panel layout**: Learning Progress uses its original fixed upper-right position: the collapsed button sits 20px from the top/right, or 10px at widths of 768px or less. The opened panel is fixed at top/right zero, 400px wide, and becomes full-width at 768px or less. Desktop rooms retain reserved sidebar space; notices use full-width rows and manual setup scrolls. See the [original-position restoration record](./doc_update_record/documentation_update_record_v2026_10_14_learning_progress_original_position.md) for verification and inherited compact navigation overlap.
 
 ### 5. Context + Service Layer Pattern
 - **React Context**: Global state management for auth and room state

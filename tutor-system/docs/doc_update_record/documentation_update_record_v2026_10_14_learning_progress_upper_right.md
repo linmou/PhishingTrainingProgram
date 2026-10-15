@@ -1,48 +1,34 @@
 # Learning Progress Upper-Right Placement
 
-Intent: record the requested placement correction and evidence that responsive progress access preserves usable room controls.
+Intent: record the final upper-right placement and its verification.
 
-Date: 2026-10-14. Implementation base commit: `8dc7271`. Branch: `fix/learning-progress-upper-right`.
+Date: 2026-10-14. Latest implementation base commit: `13c3d0b`. Branch: `fix/learning-progress-upper-right`.
 
-## Behavior
+## Current Behavior
 
-The collapsed Learning Progress button and opened panel now appear at the upper right. The existing checklist component lives in the sticky room header. Its desktop button stays fixed at the upper-right corner, and the opened 400px sidebar retains dedicated room space so it cannot cover the tutor composer.
+Learning Progress uses its original fixed upper-right placement from before commit `22c569b`. The collapsed trigger sits 20px from the top and right, with the original 10px offsets at widths of 768px or less. The opened panel is fixed at top/right zero, 400px wide and 100vh high; at 768px or less it spans the viewport width.
 
-At viewport widths of 1100px or less, the collapsed button occupies a right-aligned header row above the navigation controls. Opening it displays a fixed right-side drawer, up to 400px wide and bounded by the viewport. Closing the drawer restores the toolbar and discussion controls. Manual target setup remains scrollable. The redundant icon-only toolbar trigger was removed; Guard and transfer notices retain their full-width rows.
+The checklist remains after the discussion in the JSX, with fixed CSS controlling its screen location. The original icon-only toolbar trigger and its tutor/AI-availability condition are restored. Desktop rooms retain 400px of reserved sidebar space, notices retain separate full-width rows, and the panel scrolls for short manual forms.
 
-This supersedes the bottom stacking described in the [previous layout repair](documentation_update_record_v2026_10_14_learning_progress_layout.md).
+This final behavior supersedes the temporary sticky-header implementation in `13c3d0b` and the bottom stacking described in the [previous layout repair](documentation_update_record_v2026_10_14_learning_progress_layout.md). The [original-position followup](documentation_update_record_v2026_10_14_learning_progress_original_position.md) records the clarification.
 
-## Validation
+## Verification
 
-The local offline browser fixture bundles the actual `RoomPagePost`, `ChecklistPanel`, and `ManualChecklistInput` components with mocked room/auth/checklist dependencies. Chromium passes 16 combinations of 1440, 1280, 1100, 1024, 769, 768, 390, and 320px widths with Guard enabled and disabled. Every combination verifies:
+An offline fixture bundles real `RoomPagePost`, `ChecklistPanel`, and `ManualChecklistInput` components with mocked dependencies. Chromium passes 16 combinations of 1440, 1280, 1100, 1024, 769, 768, 390, and 320px widths with Guard on/off, plus 6 empty/manual setup cases at 500px height. Checks cover original CSS offsets and stacking, panel geometry, close/reopen while scrolled, desktop AI clearance, reachable manual submission, full-width notices, and no horizontal document overflow. The fixture records zero external requests.
 
-- Upper-right collapsed trigger and opened panel, including a scrolled room.
-- Reachable navigation while collapsed, reachable close/reopen, and a working AI generation handler after closing.
-- Dedicated desktop composer clearance, separate full-width notice rows, and no horizontal document overflow.
+The original collapsed trigger overlaps Clear Chat History at 1024px; Settings, Download, and Clear Chat History at 769/768px; and part of Back to Dashboard at 320px. The original position is retained. The tested 390px and >=1100px layouts have no collapsed-trigger/navigation intersection.
 
-Another 6 cases check empty and manual target setup at 1024, 390, and 320px widths with a 500px-high viewport. Form controls and submit buttons remain reachable by scrolling, and the drawer closes successfully. The fixture records zero external requests.
+Five focused Jest suites pass all 70 tests: `ChecklistPanel`, `ChecklistPanel.transfer`, `RoomPagePost.transferDraft`, `RoomPagePost.transferDecision`, and `RoomPagePost.transferLifecycle`. Runtime TypeScript and the CRA production build pass with existing lint/Browserslist warnings. The earlier full TypeScript comparison found 454 identical preexisting test diagnostics; the final followup restores the original TypeScript structure and page tests.
 
-Five focused Jest suites pass all 70 tests: `ChecklistPanel`, `ChecklistPanel.transfer`, `RoomPagePost.transferDraft`, `RoomPagePost.transferDecision`, and `RoomPagePost.transferLifecycle`. The updated page tests verify tutor access through the header and hide progress for student and observer viewers.
+## Reproduction And Evidence
 
-The runtime-only TypeScript check passes. The repository-wide `tsc --noEmit` reports 454 preexisting test diagnostics on both the base workspace and this worktree, with identical diagnostic lines and no additions or removals. The CRA production build succeeds with existing lint warnings and an outdated Browserslist dataset warning.
-
-## Reproduction And Artifacts
-
-From this worktree root, start the fixture with:
+From the worktree root:
 
 ```sh
 rtk proxy env UI_FIX_APP_ROOT="$PWD/tutor-system" UI_FIX_PORT=3198 node output/playwright/layout-fixture.js
 rtk proxy env UI_FIX_BASE_URL=http://127.0.0.1:3198 node output/playwright/verify-layout.js
 ```
 
-From `tutor-system/`, run the focused regressions and build with offline client initialization values:
+Current browser geometry and screenshots are under `output/playwright/original-placement/`. Command evidence is saved in `output/playwright/browser-original.log`, `jest-original.log`, `types-runtime-original.log`, and `build-original.log`. Earlier screenshots/logs remain preserved separately.
 
-```sh
-rtk proxy env CI=true REACT_APP_SUPABASE_URL=https://offline.example.test REACT_APP_SUPABASE_ANON_KEY=offline-fixture npm test -- --watchAll=false --runInBand --silent --runTestsByPath src/components/__tests__/ChecklistPanel.test.tsx src/components/__tests__/ChecklistPanel.transfer.test.tsx src/pages/__tests__/RoomPagePost.transferDraft.test.tsx src/pages/__tests__/RoomPagePost.transferDecision.test.tsx src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx
-rtk proxy ./node_modules/.bin/tsc --noEmit --project ../output/tsconfig-runtime.json
-rtk proxy env REACT_APP_SUPABASE_URL=https://offline.example.test REACT_APP_SUPABASE_ANON_KEY=offline-fixture npm run build
-```
-
-Worktree-local evidence is under `output/playwright/`: `layout-results.json` contains geometry and interaction results; `browser.log`, `jest.log`, `types-runtime.log`, `types-full.log`, `types-baseline.log`, and `build.log` preserve command results. Screenshots use `collapsed-*`, `opened-*`, and `setup-*` names. The fixture and verifier remain there for replay. Visual inspection covered the desktop Guard sidebar, narrow collapsed header, narrow Guard drawer, and short manual form.
-
-Verification covers frontend placement and component interactions using mocked dependencies. No server behavior changes are involved.
+Verification covers frontend placement using mocked dependencies. No server behavior changes are involved.

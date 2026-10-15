@@ -13,7 +13,7 @@
     padding-right: 400px;
 }
 
-/* Compact screens use a drawer instead of reserving a second column. */
+/* Compact screens retain the original overlay without reserving a second column. */
 @media (max-width: 1100px) {
     .room-post-layout-with-checklist {
         padding-right: 0;
