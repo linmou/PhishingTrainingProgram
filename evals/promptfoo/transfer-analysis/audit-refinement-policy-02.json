@@ -1,0 +1,110 @@
+{
+  "intent": "Independently audit transfer candidate02 and diagnose candidate01 regressions before freezing a new prompt condition.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "implementation_author": "coordinating /root agent; auditor did not author either candidate prompt",
+  "verdict": "clear",
+  "scope": "Experimental integrity and adopted-spec alignment for diagnostic full-suite execution, not acceptance or a claim that candidate02 repairs candidate01.",
+  "identities": {
+    "evals/promptfoo/transfer-analysis/refinement-policy-02.md": "0ec2fd608e5425552c307030ca2f577ce5be847e894c1098265fad6b868505bc",
+    "effective_trimmed_candidate02_prompt": "9266debd11301743960684202116c9533cf57c0d9811b83d5ff2a89103b1c564",
+    "output/transfer-analysis-current/full-candidate01-20261015/comparison-1792053182389.json": "96a42695a58350e1347826ea967cee7ad495036c409517724017cf33e9160a67"
+  },
+  "candidate01_diagnosis": {
+    "newly_failed_assertions_against_baseline": 89,
+    "affected_cases": 21,
+    "new_failures_by_metric": {"raw_event": 47, "applied_state": 32, "assessment_route": 6, "validity": 4},
+    "independent_transport_non_200": 0,
+    "independent_transport_errors": 0,
+    "format_failures": {
+      "truncated": "af86353_NH07 repetitions1–3 have finish_reason:length and rejected output",
+      "missing_required_field": "N01 repetition3 has finish_reason:stop, correct raw event, and no top-level explanation; handler rejects it",
+      "interpretation": "Provider request transport succeeded. These four failures are generated-output contract failures, not transient API faults eligible for transport retry."
+    },
+    "regression_groups": [
+      {
+        "group": "Overcredit from broad topic, prerequisite or incomplete target step",
+        "case_ids": ["E04", "E09", "E10", "E11", "E13", "E20", "af86353_N01", "af86353_N03", "af86353_N07", "af86353_NH01", "af86353_NH09"],
+        "observation": "The model credits related security content, generic investigation or one target component as more than that target demonstrates. Examples include urgency reasoning for a two-factor target, password changes for a different account-security step, and safe action as partial mechanism explanation. Some explanations acknowledge that the requested step is absent but emit progress anyway.",
+        "authority": "TA01/TA02 require current target-specific content; the essential target is not an entire security topic. A real component can be partial, but a different action or broad intention is not a component merely because it is safe."
+      },
+      {
+        "group": "Ineligible state/event combinations",
+        "case_ids": ["D10", "H03", "af86353_N09"],
+        "observation": "Pending items receive contradiction, or a partially_covered item receives post_repair_signal. Some related-scope regressions also contain an ineligible contradiction.",
+        "authority": "TA02/TA03 and the current reducer allow contradiction only from partial/covered and repair only from needs_review; prior dialogue cannot silently replace the supplied current state."
+      },
+      {
+        "group": "Bare current agreement credited from historical specifics",
+        "case_ids": ["E14"],
+        "observation": "Current agreement referring to a previous claim receives full progress although the target-specific step is not newly demonstrated.",
+        "authority": "TA01 separates current contribution from historical context and rejects bare agreement."
+      },
+      {
+        "group": "Narrow contextual recognition underestimated",
+        "case_ids": ["E08", "E15"],
+        "observation": "Short contextual recognition is downgraded to partial although reviewed gold treats the narrow price/risk recognition as sufficient. Gold-label-review.md records these rationales; E08 has explicit prior human clarification.",
+        "authority": "TA01/TA02 permit short contextual answers and recognition targets without inventing a broader cost or mechanism requirement. E15 remains subject to pending human label review."
+      },
+      {
+        "group": "Admitted uncertainty treated as contradiction",
+        "case_ids": ["N03"],
+        "observation": "The learner retains the previously recognized component but admits not understanding the remaining relationship. Candidate01 emits contradiction rather than no new event on an already partial target.",
+        "authority": "TA02 says incomplete evidence on an already partial item does not change state. TA03 requires actual conflicting evidence; missing understanding alone is not such evidence."
+      },
+      {
+        "group": "Unrelated unsafe intention vetoes accurate explanation",
+        "case_ids": ["R06"],
+        "observation": "Correct target-specific pressure reasoning receives contradiction because of a separately unsafe action; the model expands explaining the mechanism into successfully resisting it.",
+        "authority": "TA01/TA02 preserve the target's actual scope. T01 still governs protective tutor intervention; the removed analysis safety flags must not reappear as a hidden progress veto."
+      },
+      {
+        "group": "Required output omitted or truncated",
+        "case_ids": ["N01", "af86353_NH07"],
+        "observation": "Three lengthy outputs truncate and one otherwise correct event omits its overall explanation. All saved failures remain part of the comparison.",
+        "authority": "Current consumer contract requires both events and nonempty overall explanation with valid JSON."
+      }
+    ],
+    "causal_limits": "These groups explain observable decision/property failures. They do not establish the model's hidden reasoning or isolate a causal contribution from any candidate01 sentence. Aggregate macro-F1 improvement does not excuse ecological, validity or per-partition regressions."
+  },
+  "candidate02_review": [
+    {
+      "change": "Serialize concise overall explanation before events and bound both explanations.",
+      "assessment": "Declared prompt-only formatting/procedure hypothesis. The required field inventory and consumer remain unchanged. Earlier output may reduce missing-field or reconsideration-driven length failures, but this is unproven; keep the 600-token budget and all invalid outputs visible."
+    },
+    {
+      "change": "Use explicit state/event allowlists before emission.",
+      "assessment": "Matches the current reducer and TA02/TA03. No new event, transition, retry or eligibility exception is introduced."
+    },
+    {
+      "change": "Require current own attribution, including quoted pronouns and the immediate question context.",
+      "assessment": "General TA01 evidence ownership rule; no case-specific entities, words, IDs or expected-answer lookups occur."
+    },
+    {
+      "change": "Separate actual target components from prerequisites, unrelated actions and topic overlap; preserve specific intended choices.",
+      "assessment": "Grounded in TA01/TA02 and the adopted contract's choice-versus-external-execution distinction. Partial credit remains possible for an actual incomplete component."
+    },
+    {
+      "change": "Compare concrete situations rather than whether both use the same general principle; prioritize qualifying transfer over same-situation repair.",
+      "assessment": "Matches TA04 and the current review recovery exception. A sound learner reason and materially different application remain required; changed names alone are insufficient."
+    },
+    {
+      "change": "Clarify that a false conditional relationship can itself be explanation evidence.",
+      "assessment": "A general semantic claim-type rule, not permission to relabel action or recognition to pass filtering. False explanatory content is usable for contradiction without being correct understanding. The prompt explicitly preserves evidence-type consumer restrictions."
+    }
+  ],
+  "residual_risks": [
+    "N03's uncertainty-versus-contradiction error may persist: state allowlists alone do not establish whether a current claim is actually false or conflicting. The new false-relationship criterion is aligned but untested.",
+    "Correct target-specific explanation alongside an unrelated unsafe intention must retain its scope. Recognition wording alone will not guarantee that the model preserves this boundary for explanation targets.",
+    "The retained E18 stored-type mismatch remains unresolved and must not be repaired by mislabeling evidence, modifying gold or removing the case. D06's claim-type boundary should be assessed from the actual quote, not the desired state change.",
+    "Explanation-first, word bounds, state allowlists, attribution and transfer clarification are a bundled intervention; any gains cannot be attributed to one factor from this comparison."
+  ],
+  "execution_conditions": [
+    "Freeze this exact reviewed prompt through the prompt-only snapshot helper and compare with the preserved complete full baseline.",
+    "Run all original73 plus added40 logical cases and five separate propagated sequence steps with unchanged consumer, cases, gold, model settings and gates.",
+    "Do not replace candidate01 failures or rerun candidate02 failures to seek better outcomes. Preserve every generation and report all non-regression, validity and pair failures.",
+    "Human label review and independent unseen validation remain pending; a clear integrity audit does not establish behavioral acceptance."
+  ],
+  "auditor_model_calls": 0,
+  "auditor_prompt_label_or_runtime_edits": 0
+}

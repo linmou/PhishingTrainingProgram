@@ -1,0 +1,58 @@
+{
+  "intent": "Independently verify one separately frozen transport-only recovery attempt without replacing completed model failures or concealing original errors.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "implementation_author": "coordinating /root agent; auditor did not author recover.cjs",
+  "verdict": "clear",
+  "scope": "Recovery-helper integrity. Each original run must complete before freezing its recovery arm; final paired comparability and recovery outcomes remain to be verified.",
+  "inspected_sha256": {
+    "evals/promptfoo/transfer-analysis/recover.cjs": "48bf1aed359ad86247061a9f6150b04777c2202eb00b55dd079db708e4cd8cd8",
+    "evals/promptfoo/transfer-analysis/recover.test.cjs": "f0fd209458a132dbecb0adb46296c377dc1a95388c22a17cccdefdea38ab7597"
+  },
+  "verified": [
+    "The source must have all expected logical records, pass frozen request/consumer replay validation, use one target attempt and the declared original 180-second timeout.",
+    "Retry eligibility is restricted to a single failed provider call with a network error or HTTP429/502/503/504. Eligibility does not inspect semantic grade, agreement, correctness, malformed model output or truncation.",
+    "HTTP200 model responses remain evidence even when semantically wrong, truncated or malformed. Permanent HTTP errors are not silently retried by this helper.",
+    "The endpoint must match the preserved source calls. Only transport timeout changes to 600 seconds; prompt, provider request bytes, consumer, gold, thresholds, repetitions and cases are inherited unchanged.",
+    "Original files remain immutable. The recovery manifest preserves every original source path/hash/generation identity and full prior call, including failed transport evidence.",
+    "All completed records are copied with source evidence, including semantic and output-contract failures. Canonical alias failures omit the corresponding aliases so the one new canonical call can be reused only within that repetition.",
+    "A transport failure in a propagated sequence is rejected rather than silently recovering with a different state trajectory.",
+    "The resulting shared runner performs at most one new call for each omitted independent request. Further recovery of a 600-second recovery arm is rejected by this helper's required 180-second source protocol.",
+    "Both original and cleaned arms must receive the same declared recovery policy and timeout before refine.cjs comparison; their prompts remain the only provider-request factor between those paired arms."
+  ],
+  "inspection_time_metadata": {
+    "thinking-baseline-20261015-01": {
+      "logical_records": 354,
+      "expected_logical_records": 354,
+      "independent_transport_errors": 3,
+      "observed_error_type": "Client operation aborted due to timeout",
+      "sequence_transport_errors": 0,
+      "completed_records_with_semantic_or_output_contract_failures": 28
+    },
+    "thinking-candidate02-20261015-01": {
+      "logical_records_at_inspection": 336,
+      "expected_logical_records": 354,
+      "independent_transport_errors_at_inspection": 10,
+      "sequence_transport_errors_at_inspection": 0,
+      "status": "Still running at inspection; these counts are provisional and cannot supply a complete recovery freeze."
+    }
+  },
+  "tests": {
+    "parent_report": "Structural transport-classification test passed before audit.",
+    "auditor_review": "Inspected classification predicate, freeze guards, alias omission, source provenance and manifest preservation; independently counted observed transport errors without model calls.",
+    "model_calls_by_auditor": 0
+  },
+  "reporting_requirements": [
+    "Report original-run transport failures separately from recovery results. A recovered valid output does not retroactively establish first-attempt validity.",
+    "Report the number of additional independent retry calls, their outcomes and original source error links. Total original-plus-recovery attempts exceed the recovered run's 348 associated canonical evidence calls by the number of retries.",
+    "The shared runner's actual_provider_calls field counts calls attached to retained final records; copied source records and retries require recovery-manifest accounting to describe actual new and cumulative attempts accurately.",
+    "Preserve any failed recovery, semantic failure, malformed response or truncation. Do not repeat recovery to obtain a better answer.",
+    "Apply complete per-partition, pair, classification and non-regression gates to final paired evidence, while retaining original transport error counts and both timeout policies.",
+    "Acceptance remains pending human label review and independent unseen validation; no production timeout or reasoning configuration is adopted by this diagnostic."
+  ],
+  "limits": [
+    "A transport retry may yield a new generation; it is permitted because the original request had no consumable provider response, not because the original semantic outcome was unfavorable.",
+    "This audit does not preapprove recovery of propagated-sequence failures or any change to provider request bytes.",
+    "The clear verdict applies only to the inspected helper hashes and stated one-recovery protocol."
+  ]
+}

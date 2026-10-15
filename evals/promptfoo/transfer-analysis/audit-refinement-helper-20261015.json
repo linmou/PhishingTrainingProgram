@@ -1,0 +1,53 @@
+{
+  "intent": "Independently verify full-baseline expansion, unchanged-output reuse and prompt-only comparison before generating missing baseline responses.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "verdict": "clear",
+  "scope": "Refinement helper and expanded baseline integrity only; a future candidate prompt requires its own independent review.",
+  "source_sha256": {
+    "evals/promptfoo/transfer-analysis/refine.cjs": "e6c2841663fb417cea70ff8f896c8fafc58d9f192cd36bdf694ae855560df6ac",
+    "evals/promptfoo/transfer-analysis/refine.test.cjs": "f13bc1bed535f71d4e244440ee2864869bdcce65f3b8aaef84f13d64e383bc17",
+    "output/transfer-analysis-current/full-baseline-20261015-02/frozen.json": "bb31a913ea492067f677ad026ed1beb003a61a743b23f1f15877a32030b0f625"
+  },
+  "baseline": {
+    "run": "output/transfer-analysis-current/full-baseline-20261015-02",
+    "source_run": "output/transfer-analysis-current/added-20261015-01",
+    "source_frozen_sha256": "6fd6ca9519b28ebe9adcfe037ac6c6f0776ad77fc88b15c61360789c10a9604b",
+    "prompt_sha256": "3d7adb68417498e44d16404ada5a0f10533480a7bee11accb349d13afcea4e92",
+    "logical_cases": 118,
+    "expected_logical_records": 354,
+    "total_associated_independent_provider_calls": 348,
+    "copied_logical_records": 120,
+    "copied_independent_calls": 114,
+    "remaining_new_independent_calls": 234,
+    "copied_records_with_failures": 41,
+    "copied_result_check_repetition_or_source_hash_mismatches": 0,
+    "validation": "Auditor ran validateManifest and generations locally using only preserved responses, then compared every copied result, check, repetition and source-file hash with its original evidence. No provider calls were made."
+  },
+  "verified": [
+    "Reuse selects every available identical fixed-input record when prompt, input and expected labels match. It does not filter by pass/fail or choose favorable repetitions.",
+    "All 120 original logical records, including all 41 failing records, are preserved with source evidence links and raw provider evidence; only new run identity metadata is added.",
+    "A changed prompt reuses no old target predictions. Current handler, reducer, sampling, coverage, gates, partitions, aliases and original regression slice must match before comparison.",
+    "Both baseline and candidate must have complete evidence. Candidate behavioral gates, semantic pairs, classification gates and per-group non-regression remain required; pending human labels and independent unseen validation are explicitly separate from benchmark conformance.",
+    "Prompt replacement now uses the exact TypeScript initializer span. Adjacent non-prompt declarations and consumer code survive normalization and cause comparison rejection.",
+    "compare checks the live refinement-helper hash against both frozen artifacts, while the shared runner verifies its own scorer/consumer/request evidence."
+  ],
+  "resolved_finding": {
+    "id": "broad_prompt_normalization",
+    "initial_reproduction": "The previous declaration-to-interface string replacement incorrectly accepted an inserted non-prompt constant before VerifiedPrincipal as a prompt-only change.",
+    "resolution": "AST initializer replacement preserves neighboring code. The auditor independently reran the insertion check against the updated helper and confirmed rejection. A source identity guard was added for the refinement comparator.",
+    "status": "resolved"
+  },
+  "tests": {
+    "coordinating_agent_result": "26 focused deterministic tests passed, including the new adjacent-code comparator regression.",
+    "auditor_checks": "Independent in-memory non-prompt drift rejection, all-copy provenance equality, manifest validation and frozen-handler replay of the 120 copied records.",
+    "model_calls": 0
+  },
+  "limitations": [
+    "This artifact authorizes no claim of model improvement; the missing full baseline and future candidate were unrun at review time.",
+    "Total associated provider calls include inherited calls. Only 234 new independent calls are required to finish this baseline; existing successes and failures must not be resampled.",
+    "Human gold-label review and independent unseen validation remain pending. Historical exposed cases do not establish unseen generalization.",
+    "full-baseline-20261015-01 remains an unrun superseded freeze; its preserved files are not counted as additional independent samples.",
+    "Material changes to these inspected sources invalidate this helper audit."
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "intent": "Independently review transfer03's general scope, transfer and current-contribution changes against adopted TA01–TA04 and the remaining thinking-enabled02 failures.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "author": "coordinating /root agent; auditor did not author the candidate prompt",
+  "verdict": "clear",
+  "scope": "Integrity review for a new full-suite diagnostic prompt condition; no target-model acceptance or gold-label revision.",
+  "identities": {
+    "evals/promptfoo/transfer-analysis/refinement-policy-03.md": "1bb98a19f1cf3a3c19403428e4d628afd1ad4a68326f5f1ae44db6dc5ca0482b",
+    "effective_trimmed_transfer03_prompt": "7ae34ca4897be8f52294cc88cd2ace10f5a7c7faf29f484b9c17dc3970906de6",
+    "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "d0d4674d6d7fa64700eca68c554a286d6d4bd2fa1ca522131fdb627d3c9d15d6"
+  },
+  "checked_evidence": {
+    "run": "output/transfer-analysis-current/thinking-candidate02-20261015-01",
+    "logical_records": 354,
+    "semantic_raw_failure_rows_excluding_transport": 13,
+    "semantic_raw_failure_cases": 7,
+    "transport_failure_rows_separate": 13,
+    "auditor_model_calls": 0
+  },
+  "failure_dispositions": [
+    {
+      "case_id": "H10",
+      "failed_rows": 3,
+      "observation": "All three outputs explicitly cite the different-object prohibition to reject a sound causal application in a materially different situation.",
+      "interpretation": "This is direct observable evidence of competing prompt instructions: literal target-object matching suppresses adopted TA04 transfer. Transfer03 correctly checks independent, reasoned transfer before excluding an unrelated object. No new case-specific exception is introduced."
+    },
+    {
+      "case_ids": ["E07", "E11", "af86353_N05"],
+      "failed_rows": 6,
+      "observation": "Broad headings, shared channels and incomplete operations are credited as full or partial target evidence: official-channel reading becomes support contact, or looking at an account substitutes for its required posting-history investigation.",
+      "interpretation": "TA01/TA02 require actual essential target content. Transfer03's distinction between performing a component of the requested operation and using the same channel for another operation preserves legitimate partial evidence without crediting a prerequisite or adjacent task."
+    },
+    {
+      "case_id": "E14",
+      "failed_rows": 2,
+      "observation": "An affirmation recalling a prior intention receives full progress by importing the substantive target claim from history.",
+      "interpretation": "TA01 permits reference resolution but rejects bare agreement and historical content as new evidence. Transfer03 states that distinction generally; no learner wording is hardcoded."
+    },
+    {
+      "case_id": "af86353_N02",
+      "failed_rows": 1,
+      "observation": "A specific correct intended action is downgraded because verification has not been externally completed.",
+      "interpretation": "The existing contract expressly permits specific intended choices and disclaims observed real-world behavior. Transfer03 retains that rule and clarifies that execution tense does not decide partial versus full."
+    },
+    {
+      "case_id": "af86353_NH03",
+      "failed_rows": 1,
+      "observation": "A clearly reported other person's choice is credited as the focus learner's choice despite the attribution boundary.",
+      "interpretation": "This remains model nonconformance to an already explicit TA01 rule, rather than a new design contradiction. Transfer03 must still be checked against the same negative label; no source or label is changed to erase it."
+    }
+  ],
+  "prompt_review": [
+    "The changes use target principle, essential components, claim ownership, actual operation and prior/current context. They contain no case IDs, case-specific utterances, expected-label lookups, named test solutions or superficial feature thresholds.",
+    "TA04 reasoned materially different application is evaluated before literal object exclusion. Ordinary answers about another object remain unsupported unless they actually qualify as transfer; changed names alone remain insufficient.",
+    "Full evidence still requires all essential target components. Partial evidence remains available for a genuine component; merely sharing a tool, location or safety purpose is insufficient.",
+    "History still resolves references and short answers. It cannot supply the entire substantive claim when the current message only affirms or recalls prior agreement. Current learner-owned recognition, action and explanation remain assessed by their own target criteria.",
+    "State allowlists, contradiction semantics, transfer-versus-repair precedence, truthful evidence types, exact quotes, no semantic retries, model configuration and consumer filtering are retained.",
+    "The existing E18 action/detection_area configuration boundary remains unresolved and cannot be repaired by relabeling evidence or omitting the case.",
+    "The revised rules are a declared bundle. Evidence supports the H10 instruction conflict and the scope/component errors; it does not isolate which sentence would cause any eventual score change."
+  ],
+  "execution_conditions": [
+    "Freeze the exact reviewed prompt and use all118 logical cases,354 records and348 independent requests under the declared reasoning-enabled8000-token configuration and600-second timeout.",
+    "Retain every original case, addition, semantic pair, source identity, label, threshold, classification/non-regression gate and five separate propagated sequence steps.",
+    "Preserve thinking02's13 transport errors separately from its13 semantic raw failures. Recovery outcomes must not retroactively establish first-attempt validity.",
+    "A recovered baseline combines180-second completed responses and transport-only600-second retries, while transfer03 starts with600 seconds. Provider request bodies remain comparable except for the prompt, but transport histories differ. Report those histories and cumulative attempts; do not claim a freshly sampled first-attempt600-second baseline or attribute every difference exclusively to prompt wording.",
+    "No completed same-condition response should be resampled. Any failure in the new condition remains evidence; new prompt revisions require new exact-hash review.",
+    "Human gold-label review, complete benchmark gates and independently authored unseen validation remain pending acceptance requirements."
+  ],
+  "remaining_general_contradictions": "No new material adopted-spec contradiction identified in transfer03. The scope-versus-transfer conflict in02 is repaired explicitly. Residual evidence-type/configuration boundaries and model failure to follow attribution must remain visible rather than being bypassed.",
+  "auditor_prompt_label_or_runtime_edits": 0
+}

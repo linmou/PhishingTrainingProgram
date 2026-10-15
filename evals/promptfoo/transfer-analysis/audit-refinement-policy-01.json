@@ -1,0 +1,74 @@
+{
+  "intent": "Independently review the first full-suite transfer prompt refinement against adopted evidence rules and preserved baseline failures before freezing or executing the candidate.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "author": "coordinating /root agent; auditor did not author the candidate prompt",
+  "verdict": "clear",
+  "scope": "Prompt refinement integrity for diagnostic full-suite execution; human label approval, all benchmark gates and independent unseen validation remain required for acceptance.",
+  "identities": {
+    "evals/promptfoo/transfer-analysis/refinement-policy-01.md": "91b806dde974c47a82ff9799f14a2b1c969efe0843228a85f450ed256a290c36",
+    "evals/promptfoo/refinement-20261014/continuation-20261015.md": "86eafce06a6ef5dcdcfd08af3d53debe9acdab1fa645aef65567732fa6b18599",
+    "output/transfer-analysis-current/full-baseline-20261015-02/frozen.json": "bb31a913ea492067f677ad026ed1beb003a61a743b23f1f15877a32030b0f625",
+    "output/transfer-analysis-current/full-baseline-20261015-02/summary-1792052777168.json": "4e7642fe3abb4a490e6a68318fb4134956f5acf5dbea6fcb09c3371f1f002b7d"
+  },
+  "grounding": [
+    {
+      "change": "Separate sufficiently specific intended action from observed external completion; retain essential target scope and no invented explanation.",
+      "authority": "TA01/TA02; transfer-status-response-contract.md lines 51,59,123 define a specific safe choice as full action evidence, disclaim observed real-world behavior and explicitly permit conditional intended action."
+    },
+    {
+      "change": "Constrain current-speaker attribution, short contextual answers and recognition to the actual question and target.",
+      "authority": "TA01 requires current learner-owned contribution and forbids credit from tutor/setup/other speakers or bare agreement. TA02 permits recognition for recognition targets without expanding scope."
+    },
+    {
+      "change": "Order contradiction, materially different transfer, same-situation repair, direct full understanding and partial evidence by their declared status conditions.",
+      "authority": "TA03 reopens partial/covered understanding after contradiction; TA04 transfers from any non-covered state and takes precedence over same-situation repair; TA02 defines pending/partial direct evidence. Existing contract preserves review-to-partial same-context recovery."
+    },
+    {
+      "change": "Replace labeled learner examples, named action lists and filled JSON example with generalized procedures and field definitions.",
+      "authority": "Same adopted output contract, event labels, evidence attribution and exact field types. No new event kind, eligibility exception or parser inference is added."
+    }
+  ],
+  "review": [
+    "No evaluator case IDs, case-specific exceptions, expected-label lookups, memorized learner utterances or synthetic identity rules occur in the candidate policy.",
+    "The clarified rules generalize by evidence ownership, target scope, claim type, prior state and meaningful situation change. They do not use punctuation, entity names, answer length or word overlap as evidence proxies.",
+    "Positive progress and contradiction evidence remain distinct. The prompt explicitly allows conflicting evidence to produce contradiction without pretending it demonstrates correct understanding.",
+    "Understanding items still require explanation evidence and detection_area rejects action-only evidence. The policy explicitly prohibits relabeling action evidence as explanation to bypass the consumer.",
+    "The intervention is a declared bundle, not an isolated causal estimate for the intended-action clarification. It also changes procedural ordering, attribution emphasis, recognition scope and example presentation.",
+    "The frozen snapshot helper changes only the analysis prompt initializer; the current handler, reducer, input cases, gold, sampling, thresholds, partitions and aliases must remain comparable to the complete full baseline.",
+    "The original 73 cases and 40 additions remain present, plus five separate propagated sequence cases. Added-case baseline outputs and failures are preserved rather than regenerated or selected by outcome."
+  ],
+  "baseline_evidence": {
+    "complete_logical_records": 354,
+    "associated_independent_calls": 348,
+    "new_calls_after_reuse": 234,
+    "raw_event_passed": 248,
+    "applied_state_passed": 259,
+    "assessment_route_passed": 332,
+    "validity_passed": 354,
+    "logical_denominator": 354,
+    "relevant_diagnosis": "diagnostic-added-current-20261015.json accounts for all 41 added-case logical failures. Full baseline also exposes retained type/configuration boundaries below."
+  },
+  "retained_configuration_boundaries": [
+    {
+      "case_id": "E18",
+      "baseline": "3/3 raw demonstrated_understanding decisions pass while 3/3 applied-state checks fail with EVIDENCE_TYPE_MISMATCH.",
+      "cause": "The target asks for a private-messaging action but is stored as detection_area. Truthful action evidence is rejected by that stored type.",
+      "disposition": "Existing retained configuration incompatibility, explicitly acknowledged by the adopted specification. Prompt-only work must not relabel the evidence, alter the target type, change gold or omit the case to obtain a pass. Correct raw interpretation and failed consumer application must remain separately visible."
+    },
+    {
+      "case_id": "D06",
+      "baseline": "3/3 contradiction kinds pass raw gold, but recognition evidence is rejected by the understanding-item consumer and applied state remains covered.",
+      "cause": "The false conditional inference may be an explanation of the learner's mistaken warrant, while the baseline labels it recognition. This is a claim-type boundary, not proof that every truthful output is unpassable.",
+      "disposition": "Do not force explanation type solely to satisfy the consumer. Inspect the emitted quote and its actual semantic work. If candidate retains a truthful recognition-only claim and the consumer rejects it, report that unresolved boundary rather than rewriting labels or allowing a hidden bypass."
+    }
+  ],
+  "remaining_gates": [
+    "Freeze the exact reviewed prompt, verify prompt-only comparability, and evaluate the full declared suite under unchanged settings.",
+    "Preserve every candidate response and failure, per-group non-regression, semantic pairs, evidence-type filtering, and raw-versus-applied disagreements.",
+    "All benchmark gates must pass before conformance is claimed. Human gold-label review and independently authored unseen validation remain separate pending acceptance gates.",
+    "Any material prompt revision requires a new exact-hash independent audit. A failed candidate is not repaired by repeating the same condition for a better outcome."
+  ],
+  "auditor_model_calls": 0,
+  "auditor_prompt_label_or_runtime_edits": 0
+}

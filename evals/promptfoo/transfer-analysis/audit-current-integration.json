@@ -1,0 +1,62 @@
+{
+  "intent": "Independently audit the added transfer-classification coverage and current-contract harness before diagnostic execution or inclusion in no_sign_up.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "implementation_author": "coordinating /root agent; auditor did not author current.cjs or the imported transfer cases",
+  "source_commit": "af86353863c60d5517b6bb6b3a4748554c64fd36",
+  "verdict": "clear",
+  "scope": "Integration integrity for the exact inspected sources; current events-only transfer contract and Partial-to-Covered readiness retained. No model-quality acceptance, hosted-release verification, or unseen-generalization claim.",
+  "inspected_sha256": {
+    "evals/promptfoo/transfer-analysis/current.cjs": "95477d356b7fd7ccfc2d01b2173358e52ed0b549cf0d5dfce1ab4a04716d87a2",
+    "evals/promptfoo/transfer-analysis/classification.cjs": "ae3470d3a608c5c872ccd8c2a458021c0cf8cfb0997bd5c3103b34727bbf0acd",
+    "evals/promptfoo/transfer-analysis/evaluate.cjs": "ecb29fec66b91eee0d075ef7d414ffacc550d7dc217c2b12fd2c1b20ca6ef560",
+    "evals/promptfoo/transfer-analysis/current.test.cjs": "efb3b707878477b79a0744567f494cab6d0f144353076d956cc4bd1c11957d56",
+    "evals/promptfoo/transfer-analysis/classification.test.cjs": "dd0abce587cfc4b7d405a08202ceed2cb392223843916edb664d96db82ced891",
+    "evals/promptfoo/transfer-analysis/evaluate.test.cjs": "76ff382961839e13e12a4204201a6087dff45591a896150c2338db208cd0c216",
+    "evals/promptfoo/transfer-analysis/negative-cases.json": "e48b9bb6dae2a2e4b36f9e60fb6dca4f7a392625a44c3007f51279641c8f0f7d",
+    "evals/promptfoo/transfer-analysis/surface-cases.json": "30bd797a8ae2735c3f4c488dcf2ab70f81efa86600b3b96ab6bd3d240ee6f876",
+    "evals/promptfoo/transfer-analysis/negative-holdouts-v2.json": "b8938906287beab2141ed6555680ca0b9cc66c43cbbe53e60269d7fbee68e93b",
+    "tutor-system/docs/ai-behaviors/transfer-analysis-evaluation-plan.md": "9b3e70d6e20277cab26a8dc7b79e50f897665dfea88097bfcbdc37c063d84131",
+    "tutor-system/supabase/functions/assessment-api/index.ts": "ce2dda8c88d1acbc4d83458ae7b92f0d55d2dd024ba2f5789f7cb1bfc86e4c88"
+  },
+  "verified": [
+    "All three imported case files byte-match af86353; learner text, targets, histories and gold event labels are preserved.",
+    "Case and pair IDs are namespaced; target-visible inputs contain only focus_student_id, evidence_message_id, message, items and dialogue_history. Expected labels, source provenance and pair metadata remain outside target inputs.",
+    "Obsolete safety flags remain historical provenance; current evaluation uses raw_event, applied_state, assessment_route and validity without restoring removed contract fields.",
+    "Added coverage contains 40 unique logical IDs, two exact same-input/same-gold aliases, 38 distinct requests and 114 independent provider calls across three fixed repetitions. Alias responses preserve canonical per-repetition call evidence.",
+    "Full coverage contains all 73 previous cases plus 40 additions and five separate propagated sequence steps: 118 logical cases, 354 logical records and 348 provider calls. Fixed-state classification and propagated operational sequences remain distinct.",
+    "Manifest guards preserve source and target content hashes, prompt identity, execution/scorer identity, exact repetitions and alias mappings. Resume and report reconstruct requests through the frozen handler, verify complete saved request equality and reconsume preserved responses without model calls.",
+    "Classification reads frozen thresholds, strictly exceeds the three-member ensemble threshold, includes invalid/missing members as blocking errors, and uses fixed voting with abstention. Current 80% event/state/route, 100% validity and semantic-pair gates remain present.",
+    "Logical and unique-input counts, dependent aliases and a unique-input classification diagnostic are explicit. Aliases are not described as independent additional samples.",
+    "The current transfer component is shared across the tutor candidates; the record does not claim that tutor-prompt cleanup improved transfer classification. Historical prompts remain separate evidence conditions.",
+    "Configured new-call transport uses OAI_API_KEY, OAI_BASE_URL and matching OAI_MODEL; provider credentials are excluded from saved request evidence. Sixteen-worker execution changes scheduling, not prompt or sampling settings."
+  ],
+  "resolved_findings": [
+    {
+      "id": "resume_request_identity",
+      "initial_evidence": "An in-memory audit reproduced validateGeneration accepting a cached wrong-model/wrong-system-prompt request when input, score and frozen identity matched.",
+      "resolution": "generations now reconstructs the exact request through the frozen handler, explicitly detects request exceptions swallowed by the handler, verifies call coverage and reconstructed consumer fields, and compares alias calls with their canonical evidence. New integration tests cover cached model drift and alias response drift.",
+      "status": "resolved"
+    },
+    {
+      "id": "alias_dependence_reporting",
+      "initial_evidence": "Forty logical cases initially appeared without explicit independent-input sample counts despite two request aliases.",
+      "resolution": "The report now declares logical_cases, unique_inputs and dependent_aliases, and includes a separate unique-input classification diagnostic. The evaluation plan records the dependent coverage rule before execution.",
+      "status": "resolved"
+    }
+  ],
+  "validation": {
+    "command": "rtk proxy node --test --test-reporter=dot evals/promptfoo/transfer-analysis/current.test.cjs evals/promptfoo/transfer-analysis/evaluate.test.cjs evals/promptfoo/transfer-analysis/classification.test.cjs",
+    "result": "23 tests passed; coordinating agent supplied the execution result after fixes. Auditor inspected the test sources and independently checked coverage counts, source-file equality and the initial cached-request failure in memory.",
+    "auditor_model_calls": 0,
+    "auditor_implementation_edits": 0
+  },
+  "remaining_limits": [
+    "Human gold-label review remains pending; completed runs remain diagnostic rather than accepted benchmark evidence.",
+    "All imported former holdouts are exposed regression cases. Acceptance or unseen-generalization claims require separately authored independent holdouts and applicable complete gates.",
+    "Current-prompt requests differ from saved historical transfer requests; those historical predictions cannot be relabeled as current-condition evidence. Historical answers remain reusable only under their recorded request identities.",
+    "The single-item assessment projection does not establish database permissions, whole-room lifecycle behavior or hosted release conformance.",
+    "This audit is valid only for the inspected source hashes; subsequent material harness, case, contract, or scoring changes require updated independent review."
+  ],
+  "holdout_handling": "No held-out case contents or detailed outcomes are reproduced in this audit; metadata and request identities were inspected only as necessary to verify provenance and coverage."
+}

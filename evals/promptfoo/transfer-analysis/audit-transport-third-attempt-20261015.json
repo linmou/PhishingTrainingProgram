@@ -1,0 +1,55 @@
+{
+  "intent": "Independently review a final bounded transport attempt for three still-unconsumed requests, preserving all completed answers and prior transport errors.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "verdict": "clear",
+  "scope": "Revised maximum-three-total-attempt protocol only; this explicitly extends the earlier one-recovery protocol without rewriting its history.",
+  "inspected_sha256": {
+    "evals/promptfoo/transfer-analysis/recover.cjs": "5f4c9435cac16d61e787861c9977b241e2b4efffbb4aa7acc19e50e2cc3c527e",
+    "evals/promptfoo/transfer-analysis/recover.test.cjs": "f0fd209458a132dbecb0adb46296c377dc1a95388c22a17cccdefdea38ab7597"
+  },
+  "verified_change": [
+    "The helper accepts an original180-second source as attempt2, or a600-second first-recovery source as attempt3 only when its recovery manifest references the matching SHA-256 of an original180-second freeze.",
+    "An explicit previous attempt_number other than2 is rejected. A third-attempt source also references a600-second predecessor and fails the required original180-second chain, preventing a fourth attempt.",
+    "Legacy first-recovery manifests without attempt_number remain eligible only through the original180-second reference/hash guard; arbitrary600-second runs cannot qualify.",
+    "The transport-only selection predicate, complete-source check, endpoint identity, sequence exclusion, alias linkage and immutable source-call provenance are unchanged.",
+    "Completed semantic failures, malformed provider responses and successful recoveries are retained. No correctness or agreement result controls retry selection.",
+    "The new manifest explicitly records attempt_number3 and maximum_total_attempts3. Provider requests, prompts, cases, consumer, labels and gates are unchanged."
+  ],
+  "independent_evidence": {
+    "baseline_first_recovery": {
+      "run": "output/transfer-analysis-current/thinking-baseline-recovered-20261015-01",
+      "logical_records": 354,
+      "independent_retries": 3,
+      "remaining_transport_failures": 0,
+      "new_baseline_calls_requested": 0
+    },
+    "candidate_first_recovery": {
+      "run": "output/transfer-analysis-current/thinking-candidate02-recovered-20261015-01",
+      "logical_records": 354,
+      "independent_retries": 13,
+      "remaining_transport_failures": 3,
+      "failed_requests": [
+        {"case_id":"E13","repetition":3,"error":"fetch failed","elapsed_seconds":302.399},
+        {"case_id":"H03","repetition":3,"error":"fetch failed","elapsed_seconds":302.385},
+        {"case_id":"af86353_N17","repetition":1,"error":"fetch failed","elapsed_seconds":302.516}
+      ],
+      "original_reference_hash_matches": true,
+      "remaining_error_requests_equal_original_request_hashes": true,
+      "all_remaining_errors_were_first_recovery_retry_records": true,
+      "preserved_logical_records_for_final_attempt": 351,
+      "new_independent_calls_requested": 3
+    },
+    "method": "Read-only comparison of recovery manifests, source-file hashes and complete failed-request objects. No model calls or implementation changes by auditor."
+  },
+  "reporting_requirements": [
+    "Keep original180-second errors, first recovery outcomes and third-attempt outcomes distinct. Do not claim first-attempt validity or overwrite a prior error with the final result.",
+    "The baseline has348 original independent attempts plus3 recovery attempts. Candidate02 has348 original attempts plus13 first recovery attempts and at most3 final attempts:364 cumulative attempts if all three are sent.",
+    "The recovered run's348 associated evidence calls are not its cumulative network-attempt count. Use both recovery manifests to account for actual attempts and source error lineage.",
+    "If any final attempt fails, preserve it and stop this protocol; no fourth attempt or semantic-failure reroll is authorized by the helper.",
+    "The approximately302-second fetch failures do not show exhaustion of a600-second client timeout. Their shared duration suggests another transport limit, but the saved message lacks a lower-level cause, so driver, proxy and provider causes remain unresolved.",
+    "Human label review, complete benchmark gates and independent unseen validation remain separate acceptance requirements."
+  ],
+  "test_scope": "The existing test checks transport-versus-completed-response eligibility. The new attempt bound was independently reviewed through its explicit attempt-number and original-reference/hash guards; no claim is made that the existing predicate test exercises the new chain guard.",
+  "auditor_model_calls": 0
+}

@@ -1,0 +1,151 @@
+{
+  "intent": "Separate residual target-model errors from ambiguous gold semantics and incompatible stored target types before further refinement.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "status": "diagnostic_native_labels_and_scores_preserved",
+  "auditor_model_calls": 0,
+  "evidence_scope": "Failed completed responses from recovered03 and original04; frozen cases, specification, response contract and consumer. Original04 transport failures and the separately running recovery are not semantic evidence.",
+  "frozen_sha256": {
+    "thinking-candidate03-recovered-20261015-01/frozen.json": "ec74a828816495b2727e0145cda754d16084f6f062c72ada8b97ced552e39c04",
+    "thinking-candidate04-20261015-01/frozen.json": "24079ef1dcb47f1b52250ed33b73897a494a0e239d829ca78006b46562f47d57",
+    "tutor-behavior-specification.md": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+    "transfer-status-response-contract.md": "0449810a9720966c2c25966750972fcb5b8eb94b9f26e0fee2bf6a4d34eb3ca0",
+    "assessment-api/index.ts": "7a6e1ca6514b224113cd059ee3a840bc8d1a362874ef1731a37dcfc61841deb1"
+  },
+  "case_identity_check": "All nine discussed case objects have identical SHA256 identities across frozen03 and04, including expected labels, input, target and rationale.",
+  "findings": [
+    {
+      "case_id": "E07",
+      "disposition": "Full-credit outputs are definite scope errors; no-event versus partial granularity is defensible but needs human confirmation.",
+      "expected": null,
+      "evidence": "Target requires contacting platform support through official channels; current learner proposes reading warnings on the company's website. Those are different operations.03 grants full credit in all three rows;04/r2 grants partial after explicitly identifying the missing contact operation.",
+      "assessment": "The no-event gold has a sound narrow-target rationale. Full coverage is unsupported. Partial coverage depends on whether official-channel access alone is an actual component or merely a shared channel/prerequisite; the prompt excludes the latter, while the adopted generic partial-component rule does not enumerate this granularity.",
+      "record": "thinking-candidate04-20261015-01/generations/E07-r2.json",
+      "record_sha256": "aeb16464e642c9fe1e41e0c57aa3c8da0d70662dadb00a6f478928a8ff08e917",
+      "grounding": "TA01/TA02; response contract lines17,50,51"
+    },
+    {
+      "case_id": "E08",
+      "disposition": "Human adjudication needed: visible target taxonomy conflicts with gold rationale.",
+      "expected": "demonstrated_understanding",
+      "evidence": "The stored detection_area text begins '[understanding]' and names implausible console pricing; the immediate tutor question asks why a legitimate company cannot charge that price. The learner says it is too cheap and cannot be sold that cheaply. Gold rationale calls this a narrow recognition target requiring no cost model.04/r2 instead requires an economic mechanism and emits no event.",
+      "assessment": "Recognition-only interpretation makes the gold defensible. Understanding/mechanism interpretation follows the visible prefix and preceding question and makes the response incomplete. The frozen contract's recognition examples distinguish a vague 'too good to be true' partial signal from an explicit normal-price comparison. Clarify the target's intended scope and evidence standard rather than treating this solely as prompt nonconformance. This is not a parser impossibility: detection_area can accept recognition or explanation.",
+      "record": "thinking-candidate04-20261015-01/generations/E08-r2.json",
+      "record_sha256": "ea98bd49dcdd00eec5265c6ef788018e48f36214fd4e7b8b06ccb5640cb6e291",
+      "grounding": "TA02; response contract lines20,51,121"
+    },
+    {
+      "case_id": "E11",
+      "disposition": "Partial gold is strongly defensible; at least one output is a definite reasoning-to-event inconsistency.",
+      "expected": "initial_signal",
+      "evidence": "Target requests checking the profile and posting history for other suspicious offers. Current learner says to look at the account or ask commenters.04/r2 explicitly says posting history is absent, then emits demonstrated_understanding.",
+      "assessment": "Account/profile inspection supplies a relevant component; posting-history investigation is not explicitly demonstrated. Full credit in04/r2 contradicts its own missing-component finding. Other rows interpreting 'look at the account' as implicitly including posting history warrant ordinary human label review, but the explicit omitted-component row needs no new gold rule to diagnose.",
+      "record": "thinking-candidate04-20261015-01/generations/E11-r2.json",
+      "record_sha256": "5822852f255b8f43b8760a56bf30555e9f00d513a707f2cfc194110642e6e36b",
+      "grounding": "TA01/TA02; response contract lines50,51,122"
+    },
+    {
+      "case_id": "H10",
+      "disposition": "Definite model error against adopted transfer precedence; gold is defensible.",
+      "expected": "spontaneous_transfer",
+      "evidence": "Learner independently gives a train-ticket refund-text application of deadline pressure causing unchecked sign-in and password capture. The target/prior discussion concern a scholarship email.04/r1 rejects the different object and missing explicit link back to the original scenario.",
+      "assessment": "The learner supplies the essential causal mechanism in a materially different transaction/communication setting. The contract explicitly permits a situation different from the one named in the target and prior discussion. Requiring literal original-object alignment or a phrase announcing transfer defeats that adopted exception.",
+      "record": "thinking-candidate04-20261015-01/generations/H10-r1.json",
+      "record_sha256": "54d754a6f5c124b7c8faa333ef4c63a01ff9157ac1faa16a4a999b9874208eac",
+      "grounding": "TA04; response contract line57"
+    },
+    {
+      "case_id": "af86353_N05",
+      "disposition": "Human adjudication needed on prerequisite versus genuine partial component.",
+      "expected": null,
+      "evidence": "Target requires contacting support through an independently opened official app. Learner proposes independently opening the app and reading its fake-notice help page.04/r3 explicitly credits the app-opening component as partial while recognizing that reading replaces contacting.",
+      "assessment": "No full-credit interpretation is supported. No-event gold follows the current prompt's rule that a prerequisite or different operation does not earn partial credit. However, independent app opening is also an explicitly named target constraint, so the generic adopted 'relevant component shown' rule permits a plausible initial_signal interpretation. Specify which target components are learning evidence and which are access prerequisites before further tuning to force the negative gold.",
+      "record": "thinking-candidate04-20261015-01/generations/af86353_N05-r3.json",
+      "record_sha256": "9a2c2b06987c0bffd31f95d5eb7c4206a0075e0ae3a2430508e47e9db1b631c8",
+      "grounding": "TA02; response contract lines17,50"
+    },
+    {
+      "case_id": "af86353_NH03",
+      "disposition": "Definite model attribution error; controlled-pair negative gold is defensible.",
+      "expected": null,
+      "evidence": "The tutor asks for the focus learner's own choice. The current message explicitly reports another learner's quoted app-check choice without endorsing it.03/r2 grants full action evidence 'despite attributing the choice to a character.'",
+      "assessment": "Knowledge of another person's safe choice does not establish the focus learner's own choice for this action target. First-person wording inside the quotation retains its quoted owner. TA01 forbids transferring another learner's evidence; no consumer or state constraint prevents an honest empty event here.",
+      "record": "thinking-candidate03-recovered-20261015-01/generations/af86353_NH03-r2.json",
+      "record_sha256": "9844471a5bd6ad6405b96a192247113da9e3010ef6f560af7c7733f3166c8054",
+      "grounding": "TA01/TA02"
+    },
+    {
+      "case_id": "H02",
+      "disposition": "Definite model failure to recognize partial mechanism evidence; gold is explicitly grounded.",
+      "expected": "initial_signal",
+      "evidence": "Learner explains timer pressure causing rushed clicking, while explicitly remaining uncertain about the password outcome.04/r3 refuses any event because the complete password-theft relationship is missing.",
+      "assessment": "The frozen contract explicitly states that naming urgency as pressure to click while unsure of the later credential outcome is partial evidence. Missing essential content defeats full coverage, not the already supplied relevant causal component.",
+      "record": "thinking-candidate04-20261015-01/generations/H02-r3.json",
+      "record_sha256": "3ad908c5cc4318b5f76f997e8a3a226804a53743bcbf6695cb869b0216dcd302",
+      "grounding": "TA02; response contract lines22,50"
+    },
+    {
+      "case_id": "E14",
+      "disposition": "Gold is defensible under the current-contribution and bare-agreement boundary.",
+      "expected": null,
+      "evidence": "Current words are 'yes of course, i said previosly i would check' after the tutor asks whether the learner will check the poster profile.03/r1 supplies the substantive profile-check content from context and grants full coverage.",
+      "assessment": "This current contribution refers back to earlier agreement rather than newly supplying the composite target operation. The adopted contract rejects bare agreement and historical evidence as new progress. Semantic short-answer resolution remains allowed, so distinguishing simple reassertion from new learner-owned evidence is a general review boundary; this fixture's explicit reference to earlier words supports its frozen negative rationale.",
+      "record": "thinking-candidate03-recovered-20261015-01/generations/E14-r1.json",
+      "record_sha256": "2af38d5b06695674e445bc593b4e573378844cd0e3ab97ca4fe3fb6a6898f1f3",
+      "grounding": "TA01; response contract lines16,20"
+    },
+    {
+      "case_id": "E18",
+      "disposition": "Definite consumer incompatibility when classified as action evidence; impossibility across all conforming evidence classifications is not established.",
+      "expected": "demonstrated_understanding",
+      "evidence": "Stored item_type is detection_area while area_text explicitly asks a behavior: use private messages to coordinate meetups. Current learner proposes a group chat.04/r1 emits the expected full event with truthful action evidence; the frozen consumer rejects it as EVIDENCE_TYPE_MISMATCH.",
+      "assessment": "The behavior target and action-shaped contribution support raw full understanding, but the stored detection_area prohibits action evidence. An event classified as action cannot satisfy applied-state gold. The later-inspected r3 counterexample below shows that explanation evidence can pass: whether this is a legitimate procedural how-answer or a mislabeled action depends on an underspecified taxonomy boundary. The earlier audit overstated the claim that no conforming output could pass. Do not infer that all explanation labels are dishonest, or select a label merely to satisfy the filter.",
+      "record": "thinking-candidate04-20261015-01/generations/E18-r1.json",
+      "record_sha256": "c74f54421be2ea847b950f91b79530ecd79cf00f2053a2b141fa5079ad4bb46f",
+      "grounding": "Response contract line44; frozen assessment-api/index.ts evidence-type guard"
+    }
+  ],
+  "sequence_route_note": "Original04 propagated_S02/r3 has correct full event/state but a route mismatch because its actual predecessor state is pending after the earlier transport failure; Pending→Covered correctly produces no assessment. Preserve this propagated consequence and evaluate the separately frozen recovery before attributing it to a semantic routing defect.",
+  "human_decisions": [
+    {
+      "case_id": "E08",
+      "proposed_question": "Should this target test recognition that the offered price is implausible, or an explanation of why legitimate pricing makes that offer implausible?",
+      "choices": [
+        "Recognition: the current full-credit gold is defensible. In a new case/target version, remove the competing understanding marker and state the recognition scope explicitly.",
+        "Explanation: retain an explicit how/why requirement in a new version and separately adjudicate whether the current response supplies a partial relationship or only recognition. Do not import an economic mechanism the learner did not supply."
+      ]
+    },
+    {
+      "case_id": "af86353_N05",
+      "proposed_question": "For 'contact support through the independently opened official app', does independently opening that app count as partial learning evidence when the learner then reads help pages instead of contacting support?",
+      "choices": [
+        "No: contacting support is the scored operation; app opening is only its access prerequisite. Preserve no-event gold and make this component boundary explicit in a reviewed general specification revision.",
+        "Yes: independent app opening is a scored component of a composite procedure. A new version can credit initial_signal, while full coverage still requires contacting support."
+      ],
+      "related_case": "Apply the same component-versus-shared-channel principle consistently when reviewing E07; do not decide solely from which interpretation raises model scores."
+    },
+    {
+      "case_id": "E18",
+      "proposed_question": "Can this learner's procedural how-answer legitimately be explanation evidence, or must it be action evidence? If action is required, should the target type or consumer contract change?",
+      "choices": [
+        "Taxonomy clarification: if explaining a method in response to a how-question legitimately counts as explanation evidence, retain the type and specify that boundary independently of whether a label passes this case. No data/consumer correction is then established as necessary by E18 alone.",
+        "If action-only classification is adopted, the smallest type correction is a new target/case version with item_type verification_step for the existing behavior text, retaining action evidence and the full-understanding expectation. Any production target-data correction and its affected lifecycle require separate verification.",
+        "Broader contract change: explicitly permit and validate action evidence for appropriate detection_area targets, update the adopted contract and consumer together, and verify the affected lifecycle through staging and production. This changes deployed behavior and is not a prompt-only fix."
+      ],
+      "preservation": "Keep the original frozen detection_area case, records, source hashes, native passes/failures and denominator intact. Run any approved correction as a separately versioned condition; do not substitute recognition/explanation labels merely to pass the current consumer."
+    }
+  ],
+  "E18_counterexample_addendum": {
+    "recorded": "2026-10-15",
+    "record": "thinking-candidate04-recovered-20261015-01/generations/E18-r3.json",
+    "record_sha256": "a545a7652fef36a4dbea7046bd48e794c37da01802e5df371341e2c91ada4455",
+    "original_record_sha256": "86328e9277b3606818a0c904ad945a7dd42f154b6f6771dcd01b9d51e11757ae",
+    "disposition": "Retained original response; no semantic retry or new E18/r3 target call.",
+    "observed": "The model emits demonstrated_understanding with evidence_type explanation and says the learner explains a method of private group-chat coordination. The frozen consumer accepts it and all four native checks pass.",
+    "taxonomy_assessment": "The learner answers a how-question with 'by' followed by a concrete coordination method. Calling that an explanation of a method is linguistically defensible. The frozen contract lists action/recognition/explanation but does not state whether a procedural how-answer can occupy both action and explanation categories. TA02's mechanism/reason requirement governs understanding targets; E18 is an action-shaped behavior target. The ban on crediting an unstated mechanism from a safe action does not by itself prohibit procedural explanation here.",
+    "consumer_limit": "The consumer validates the declared enum against item_type, not whether the quoted natural-language claim semantically warrants that evidence_type. Therefore this pass establishes structural compatibility, not an independently verified evidence taxonomy. It could represent legitimate method explanation or a semantic evidence-type gap; the current specification does not conclusively distinguish them.",
+    "corrected_claim": "Strict action evidence is unconditionally rejected for this stored detection_area. It is not established that every truthful conforming output must use action evidence or that every possible conforming output must fail.",
+    "next_review": "Independently adjudicate matched method-explanation versus bare intended-action contrasts before asserting that a type migration is required. Do not import the separate tutor instruction-realization rubric's broad procedural-explanation permission as if it already defined learner evidence_type."
+  },
+  "acceptance_implication": "Ecological and controlled-pair gate failures combine genuine model errors and material interpretation boundaries. Overall ensemble performance cannot settle them. Human adjudication should resolve E08, prerequisite/component granularity, and E18 action-versus-procedural-explanation taxonomy. E18 proves a rejection under action classification but does not alone prove a mandatory data-contract change. Preserve all cases, native labels, passes/failures and denominators in current evidence."
+}

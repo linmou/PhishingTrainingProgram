@@ -1,0 +1,69 @@
+{
+  "intent": "Independent audit of bounded transport recovery with actual sequence-state propagation, exact-request reuse and preserved failed evidence.",
+  "reviewed_at": "2026-10-15",
+  "status": "clear_for_freeze_and_bounded_recovery_execution",
+  "scope": "Sequence recovery helper only; no behavior adoption decision.",
+  "sha256": {
+    "sequence-recover.cjs": "d44ccbf7fecf97aa273f34d01e69e1635aee29057e5600be824ed9e7d93b2b3c",
+    "sequence-recover.test.cjs": "d40c98e686c2412bd6b47203ccd05e14b3c0fb6a7f59d02583de93a8c2038548",
+    "current.cjs": "95477d356b7fd7ccfc2d01b2173358e52ed0b549cf0d5dfce1ab4a04716d87a2",
+    "evaluate.cjs": "ecb29fec66b91eee0d075ef7d414ffacc550d7dc217c2b12fd2c1b20ca6ef560",
+    "original_frozen_json": "f050317c864bb32fdfb6629744c0e0d1b33a6f93410dd31c6eab49c4e31343fb"
+  },
+  "original_reference": "output/transfer-analysis-current/thinking-candidate03-20261015-01",
+  "verified_source_counts": {
+    "logical_records": 354,
+    "independent_original_calls": 348,
+    "transport_errors": 8,
+    "completed_independent_calls": 340,
+    "transport_errors_in_sequences": 1,
+    "sequence_error_identity": "propagated_S01/r1",
+    "timeout_ms": 600000,
+    "maximum_new_attempts_for_eight_original_failed_requests": 16,
+    "maximum_new_attempts_for_four_potentially_changed_sequence_requests": 12,
+    "conservative_maximum_new_attempts": 28,
+    "conservative_maximum_cumulative_attempts": 376
+  },
+  "verified_invariants": [
+    "The helper freezes the complete original source and every generation hash, endpoint, target snapshot and its own source hash.",
+    "Only original single-attempt 600-second conditions are accepted; prior recovery metadata or recovery manifests reject recursive budget resets.",
+    "Successful original provider calls are retained for exactly matching requests regardless of semantic score or malformed content. HTTP200 malformed content is not transport-retry eligible.",
+    "Exact identity includes the request body, endpoint and corresponding canonical case/repetition; independent repetitions remain independent, while declared exact aliases reuse their matching canonical repetition.",
+    "Sequences execute in step order with actual previous next_state. No expected label or target state supplies propagated input.",
+    "A changed downstream request becomes separately recorded new evidence. Original completed downstream evidence remains preserved and can be reused again after state/request reconvergence.",
+    "Original matching requests permit attempts2 and3 only. Changed requests permit attempts1 through3. All retry call evidence is stored separately from the single final call consumed by the handler.",
+    "Attempt-start metadata is written before network activity. An interrupted start without a saved outcome consumes that attempt and records an unknown outcome; it does not invent a provider response.",
+    "Transport identity and persistence failures are captured outside the production handler and rethrown before generation persistence or sequence-state propagation.",
+    "Resume reconstructs deterministic consumer behavior and compares saved generation provenance, calls, parsed content, state transitions and assessment routing.",
+    "Final accounting separately lists changed-request records, transport-retry records, unknown outcomes and a conservative cumulative attempt upper bound. Original first-attempt validity remains separately reported."
+  ],
+  "resolved_findings": [
+    {
+      "finding": "The production handler catches transport validation throws, potentially converting an integrity failure into a handler502.",
+      "resolution": "validationError is captured around the transport callback and rethrown after executeTarget before saving or propagating state."
+    },
+    {
+      "finding": "A prior interrupted recovery with completed generation files but no final recovery manifest could reset cumulative limits if accepted as a fresh original.",
+      "resolution": "freeze explicitly rejects before.recovery in addition to a recovery manifest."
+    }
+  ],
+  "validation": {
+    "command": "rtk proxy node --test --test-reporter=dot evals/promptfoo/transfer-analysis/sequence-recover.test.cjs",
+    "result": "3 tests passed independently, including mocked end-to-end recovery/resume and the real handler request boundary",
+    "covered": [
+      "Transport eligibility and malformed successful-response retention",
+      "Real handler request invalidation after propagated-state changes and exact-request reconvergence",
+      "Mocked recovery retains semantic failures, recovers the first sequence step, calls the changed second request and retains the reconverged third request",
+      "Completed recovery resume makes zero new calls",
+      "Corrupted retry request evidence throws outside the handler rather than becoming a saved handler error",
+      "An interrupted second-attempt start consumes its budget, only attempt3 is sent, and failed-cap resume makes zero new calls"
+    ],
+    "test_boundary": "The full runner integration stubs manifest/generation validation and consumer execution; separate real-handler structural coverage and direct source review cover those existing dependency boundaries."
+  },
+  "interpretation_limits": [
+    "This audit clears recovery protocol source, not a recovered result or a model acceptance decision.",
+    "Recovered summaries describe a separate bounded recovery condition; they must not replace the original run's transport-failure record or be described as first-attempt validity.",
+    "New downstream requests must be distinguished from retries of failed original requests. Associated final request counts do not equal cumulative network attempts.",
+    "A frozen recovery manifest must bind this exact helper revision before execution."
+  ]
+}

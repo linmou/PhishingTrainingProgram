@@ -1,0 +1,33 @@
+# Full transfer prompt refinement
+
+Intent: preserve full-suite evidence, transport recovery and remaining failures while removing prompt shortcuts.
+
+Updated: 2026-10-15. Source baseline: `8dc7271`. Added cases published to `origin/no_sign_up` at `8728a8a4b12694dae2c18437bd87c54a0208cb70`. No refined runtime prompt has been promoted.
+
+Every condition contains73 original cases,40 additions and five propagated sequence steps:118logical cases,354records and348independent requests. Two exact-input aliases reuse corresponding repetitions. Expected labels, state consumer, class gates and pair checks remain fixed; historical exposed holdouts are regression material. Human label review and unseen validation remain pending. Each run below lives under `output/transfer-analysis-current/`, with frozen source/case/settings snapshots and full per-case input/output evidence.
+
+| Condition | Raw event | Applied state | Route | Validity | Overall three-vote macroF1 |
+| --- | --- | --- | --- | --- | --- |
+| `full-baseline-20261015-02` |248/354|259/354|332/354|354/354|0.572587|
+| `full-candidate01-20261015` |269/354|282/354|341/354|350/354|0.705838|
+| `full-candidate02-20261015` |266/354|272/354|344/354|354/354|0.693978|
+| `thinking-baseline-recovered-20261015-01` |329/354|326/354|351/354|354/354|0.898779|
+| `thinking-candidate02-recovered-20261015-02` |340/354|337/354|354/354|354/354|0.955021|
+| `thinking-candidate03-recovered-20261015-01` |341/354|339/354|354/354|354/354|0.972053|
+| `thinking-candidate04-recovered-20261015-01` |345/354|343/354|354/354|354/354|0.977617|
+
+All conditions fail at least one required gate. Overall F1 alone is insufficient. Recovered03 has six failed paired rows, ecological three-vote F1=.610507, and negative-holdout no-event recall below its gate despite that partition's F1=.970370. Its comparison with the recovered thinking baseline has three metric regression rows, eight classification regression rows and six new failed assertions. Recovered04 reduces paired failures to three (`HP01`, `HP02`, `af86353_NP-contact`) and passes all thresholded raw/state/route/validity rows, but ecological three-vote F1=.629952 remains below the required>.9.04also has three metric regression rows, seven classification regression rows and eight new failed assertions against the baseline. Counts overlap; they are not distinct cases.
+
+The first three rows use temperature0, thinkingfalse,max_tokens600. The reasoning diagnostic changes thinkingtrue,max_tokens8000 and transport timeout180seconds in both baseline and02; all other model request fields remain fixed. Recovery uses600seconds.03starts with600seconds, so its transport history differs from the baseline's180second successes plus600second retries. Sixteen workers implement the requested4×parallelism. No completed semantic response is retried for its score.
+
+Baseline recovery adds three calls;02adds13then three calls, bounded at three attempts.03initially has eight transport errors. Its [audited sequence recovery](audit-sequence-recovery-20261015.json) adds nine calls: eight retries plus one changed S02 request after recovered S01 changes prior state. S03–S05 reconverge and reuse their original calls.339independent original rows remain unchanged, six aliases are reused, and nine rows receive new evidence. Cumulative03calls357; no interrupted/unknown attempt outcomes. Original errors and the superseded S02 answer remain in the original directory. `recovery-manifest.json` records every disposition and `calls/` retains the full attempt ledger.
+
+03's remaining errors include over-crediting a related channel instead of the required operation, omitting essential components, importing historical agreement, attributing someone else's choice to the learner, and partial/transfer under-credit. [Policy04](refinement-policy-04.md) requests an explicit observable evidence record within the existing explanation string and changes its allowance45→75words. It retains the rest of03 byte-for-byte. Its independently audited full run finishes354records, but35independent transport failures affect36records including an alias. Original counts are311raw,309state,317route and318valid; these incomplete transport results remain preserved.
+
+04recovery completes using the unchanged audited sequence helper,16workers and full attempt/resource logs. It retains312independent original records and six aliases.38new calls cover35transport failures (two require their final third attempt) and one changed downstream S02 request. Later sequence inputs reconverge. Cumulative calls386, unknown outcomes0. The initial S02route mismatch disappears after its predecessor recovers; it was a propagated transport consequence. Frozen identity `963117d2b16c2942077f305cd7c79315957bc8a7bdf6072ff584ae41bc9bd1e4`; comparison evidence is `thinking-candidate04-recovered-20261015-01/comparison-1792059922908.json`.
+
+Same-output raw-event/applied-state outcomes for04 are343both-pass,2raw-only,0state-only,9both-fail,0unevaluable, N354. The ecological slice is52/2/0/6/0, N60; both raw-only rows are E18. State/route outcomes are343both-pass and11route-only: correct routing does not establish correct learned-state selection. All48negative-holdout rows now jointly pass raw/state, compared with the earlier attribution failures. Overall improvement is observed under the changed explanation instruction/allowance; it does not isolate which phrase caused it or establish unseen generalization.
+
+The [independent residual audit](audit-transfer03-04-residual-gold.json) separates definite errors (missing target components, partial causal evidence, different-situation transfer and speaker attribution) from E08's recognition-versus-understanding ambiguity and E07/N05's prerequisite-versus-scored-component boundary. Human decisions on these boundaries and E18's target type are pending. Existing gold, scores and failure denominators remain unchanged. The original03/04 artifact audit is supplemented by the completed04recovery comparison above.
+
+E18 retains a target/evidence-type boundary: its behavior target is typed detection_area, which rejects action evidence in04/r1–r2.04/r3passes by calling the proposed group-chat method an explanation. The contract does not precisely define action versus procedural explanation or make them mutually exclusive; this is counterevidence to an unqualified impossibility claim. Honest action-typed evidence is rejected, while the legitimacy of procedural-explanation typing needs adjudication. The original target type, gold and all three scores remain unchanged; changing the evidence label merely to bypass a filter would not resolve that semantic question.

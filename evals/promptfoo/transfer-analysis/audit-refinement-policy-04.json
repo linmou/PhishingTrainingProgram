@@ -1,0 +1,58 @@
+{
+  "intent": "Independently audit transfer04's observable evidence-record intervention before full-suite diagnostic execution.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "author": "/root",
+  "verdict": "clear_for_full_suite_diagnostic",
+  "auditor_model_calls": 0,
+  "identities": {
+    "refinement-policy-03.md": "1bb98a19f1cf3a3c19403428e4d628afd1ad4a68326f5f1ae44db6dc5ca0482b",
+    "refinement-policy-04.md": "e6b1452c78f4e402befbada1729bd306d326f84a58b92ef4cc9dda0f26ae63fb",
+    "effective_trimmed_transfer04_prompt": "776bf1da0c9c16df1b87aa9c583a83f4de5393a3e913311222cb408c607518ff",
+    "refinement-20261014/continuation-round03-20261015.md": "88f335b19c2072ce691edef354b79cfa56109d77b367648a6ced5e505ab17a77",
+    "thinking-candidate03-recovered-20261015-01/frozen.json": "ec74a828816495b2727e0145cda754d16084f6f062c72ada8b97ced552e39c04",
+    "thinking-candidate03-recovered-20261015-01/recovery-manifest.json": "3f07ce848a8a4b5165e1828234eb3f936596720bb79f84d6df0e818b495b78ab"
+  },
+  "exact_change": {
+    "entire_body_after_first_blank_line_byte_identical": true,
+    "changed_location": "Opening top-level explanation instruction only",
+    "factors": [
+      "Require an observable record of claim ownership, required target operation/relationship, actually supplied component, essential missing component and eligible outcome instead of a generic alignment conclusion",
+      "Increase only the top-level explanation allowance from 45 to 75 words"
+    ],
+    "unchanged": "All evidence interpretation rules, state allowlists, transition precedence, event evidence types/quotes, output fields and per-event 25-word allowance remain identical to 03."
+  },
+  "fidelity_review": [
+    "Attribution and current-versus-historical contribution implement TA01 rather than adding a new threshold or expected-label lookup.",
+    "Required operation and actual essential components implement TA02's existing distinction between narrow action, recognition and understanding targets; intended correct actions remain eligible without external execution.",
+    "The record asks for observable evidence conclusions, not hidden deliberation. Missing evidence can be recorded as absent; no event is required merely to fill the explanation.",
+    "TA03/TA04 state and transfer rules remain unchanged. Required-operation wording must be interpreted with the retained reasoned-transfer exception, not as a new prohibition on different situations.",
+    "The 75-word allowance remains compatible with the contract's required nonempty brief overall explanation; parser/consumer behavior is unchanged.",
+    "The intervention contains no case identifiers, fixture utterances, answer templates for specific cases, surface-word heuristics, test-count thresholds or gold labels."
+  ],
+  "evidence_assessment": {
+    "reference": "output/transfer-analysis-current/thinking-candidate03-recovered-20261015-01",
+    "raw_event_failure_rows": 13,
+    "raw_event_failure_cases": 7,
+    "support": [
+      "E07/E11 explanations equate a general official-channel/account-check action with the target's actual operation or full set of required components.",
+      "af86353_N05 credits a different operation as partial based on the shared official-app channel.",
+      "E14 imports an earlier substantive intention into current affirmation.",
+      "af86353_NH03 credits another speaker's reported choice; one explanation explicitly acknowledges that attribution while still granting learner progress."
+    ],
+    "limits": [
+      "The reasons are observable symptoms. They do not prove that adding an evidence record will change the underlying classification procedure.",
+      "H02 partial-evidence and H10 principled-transfer failures remain; the 04 change may not repair them.",
+      "Evidence-record detail and increased word allowance are bundled factors. A score change cannot isolate their separate effects.",
+      "The previously documented E18 target-type/consumer boundary remains visible; 04 does not repair configuration by relabeling evidence."
+    ]
+  },
+  "execution_conditions": [
+    "Freeze the exact reviewed prompt and retain all 118 logical cases, 354 records, 348 independent requests, three corresponding repetitions and six alias records.",
+    "Keep the reasoning-enabled 8000-token model request, temperature, 600-second timeout, consumer, labels, partitions, pairs and formal gates fixed.",
+    "Compare with preserved recovered03 evidence and retain all new outcomes, including failures. Exact old requests must be reused if available; a new prompt changes the request identity throughout this condition.",
+    "Report recovered 03's 348 original calls plus 9 new calls separately: eight transport retries and one changed downstream sequence request, 357 cumulative, zero unknown outcomes. It is not a fresh first-attempt 357-sample condition.",
+    "Overall three-vote F1 does not waive ecological, negative-no-event, controlled-pair, state, route or validity gates. Human labels and independently authored unseen validation remain pending acceptance requirements."
+  ],
+  "required_documentation": "The inspected continuation-round03-20261015.md records the two changed factors, diagnostic hypothesis, unchanged evidence/consumer settings and full 118-case requirement."
+}

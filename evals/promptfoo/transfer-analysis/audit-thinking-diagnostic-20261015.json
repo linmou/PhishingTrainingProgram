@@ -1,0 +1,57 @@
+{
+  "intent": "Independently verify the declared reasoning/budget diagnostic and distinguish its scientific hypothesis from demonstrated model performance.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "author": "coordinating /root agent; auditor did not author the diagnostic helper",
+  "verdict": "clear",
+  "scope": "Configuration-integrity review before freezing and executing both diagnostic arms; no acceptance or deployment-setting adoption.",
+  "inspected_sha256": {
+    "evals/promptfoo/transfer-analysis/thinking.cjs": "e8c3e66ec56df339a395cd95ae897164a90877d964b52748bbb0397ff4313828",
+    "evals/promptfoo/transfer-analysis/thinking.test.cjs": "e53137553de4e7cd7b49b1bcc58b1177edb8dbb36cff1f3a9e9421917cf102ff",
+    "evals/promptfoo/transfer-analysis/reasoning-diagnostic-plan.md": "197bd40741ac2f4b88698359348eeeed9d4b5d304d7c3af43205d6fb45868daf"
+  },
+  "verified_configuration": {
+    "changed": {
+      "analysis_request.enable_thinking": {"before": false, "after": true},
+      "analysis_request.max_tokens": {"before": 600, "after": 8000},
+      "transport.timeout_ms": {"before": 90000, "after": 180000}
+    },
+    "fixed": ["model", "temperature", "JSON response format", "prompt within each configuration contrast", "case inputs", "gold labels", "event semantics", "consumer filtering", "reducer", "three repetition identities", "semantic pairs", "thresholds", "partitions", "sixteen-worker scheduling", "one target attempt"],
+    "source_patch": "AST traversal is restricted to analyzeMessage and requires exactly the two existing literal settings. Only their initializer text changes. The assessment-generation call and live repository handler are untouched.",
+    "independent_execution_check": "Auditor loaded the original frozen handler and an in-memory patched copy, captured both complete requests through injected local transports, and confirmed all fields identical except max_tokens and enable_thinking. The patched source equaled the original with exactly those two literal replacements.",
+    "model_calls_by_auditor": 0,
+    "new_calls_per_arm": 348,
+    "new_calls_for_both_arms": 696,
+    "reused_old_responses": 0,
+    "reuse_reason": "Changing request settings creates a new condition; existing 600-token reasoning-disabled responses cannot be relabeled as reasoning-enabled predictions. Existing conditions and all their failures remain immutable."
+  },
+  "comparison_design": [
+    "Run both the original transfer prompt and cleaned candidate02 under the same new reasoning/budget/timeout configuration.",
+    "The original-versus-cleaned contrast within the new configuration changes only the prompt; refine.cjs must verify identical cases, settings, consumer sources and gates.",
+    "The old and new configuration contrast holds each prompt fixed but changes reasoning, output budget and transport timeout together. It cannot isolate the effect of thinking alone, budget alone or prompt cleanup alone.",
+    "thinking.cjs is preserved as a frozen artifact. Actual execution uses the frozen patched handler; shared runner replay validates complete request equality, and compare separately validates its own frozen refinement-helper identity.",
+    "The full 118-case suite and all 354 logical records remain required; aliases reuse corresponding repetitions only, leaving 348 independent provider calls per arm."
+  ],
+  "diagnosis_assessment": {
+    "supported": [
+      "Candidate02 restored all 354 validity checks while raw/state conformance remained insufficient. Additional equivalent instructions have an uncertain expected benefit.",
+      "Observed candidate02 outputs still mistake a reported other person's choice for the focus learner's own choice, credit mechanism explanation toward an unrelated action target, and sometimes veto an accurate explanation because of a separate unsafe choice.",
+      "Candidate02 also repaired concrete previously observed problems: N03 uncertainty, NH07 unrelated-current-question context, NH14 transfer precedence and E08 narrow recognition were correct in the inspected repetitions. Thus prompt wording/procedure remains relevant; model incapacity has not been established.",
+      "A declared higher-budget reasoning condition is a defensible next diagnostic of whether the model can apply the existing procedure more consistently, especially with both original and cleaned prompts tested."
+    ],
+    "not_established": [
+      "Remaining errors are caused by disabled thinking or the 600-token budget.",
+      "The larger budget will improve accuracy, reduce shared errors or satisfy the strict ensemble gate.",
+      "Correctly stated explanations establish hidden model reasoning or guarantee the emitted event is correct.",
+      "A passing diagnostic would authorize changing production configuration or waive pending human gold-label review and independent unseen validation."
+    ],
+    "retained_boundary": "E18's stored-type/action mismatch remains a consumer/configuration issue and is not repaired by spending more reasoning tokens. All raw/applied disagreements remain visible."
+  },
+  "required_evidence": [
+    "Preserve exact patched source, prompts, settings, input-output pairs, provider metadata, timing, usage, errors and complete per-repetition identity in each new freeze/run.",
+    "Verify both frozen arms use the reviewed configuration and prompt-only comparability before interpreting their difference.",
+    "Retain every failure and no-event decision, with complete per-suite/partition, original-regression, semantic-pair and non-regression gates.",
+    "Report actual new-call usage separately from inherited historical evidence; these new settings require fresh requests but do not replace or erase earlier failed conditions.",
+    "Keep acceptance pending human label review, all benchmark gates and independent unseen validation."
+  ]
+}
