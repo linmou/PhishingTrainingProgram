@@ -1224,11 +1224,11 @@ const RoomPagePost: React.FC = () => {
                 </div>
             )}
             {roomId && user?.current_role === 'tutor' && (
-                <ChecklistPanel 
-                    roomId={roomId} 
+                <ChecklistPanel
+                    roomId={roomId}
                     transferEnabled={currentRoom.transfer_learning_enabled === true}
                     studentId={transferStudentId}
-                    isVisible={showChecklist}  
+                    isVisible={showChecklist}
                     onToggleVisibility={() => setShowChecklist(!showChecklist)}
                     progressLocked={currentRoom.active_response_mode === 'guard'}
                 />
