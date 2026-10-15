@@ -2,7 +2,7 @@
 
 Intent: apply the user's selected evaluated prompts and decoding settings, with exact source provenance and staging-before-production evidence.
 
-Date: 2026-10-15. Repository baseline: `8dc7271`. Release owner: Codex. Batch: selected-ai-candidates-20261015. Status: non-thinking release authorized with known semantic failures; operational verification continues.
+Date: 2026-10-15. Repository baseline: `8dc7271`. Release owner: Codex. Batch: selected-ai-candidates-20261015. Status: production released and operationally verified under explicit acceptance of known transfer semantic failures; benchmark acceptance remains failed.
 
 ## User selection and artifacts
 
@@ -45,3 +45,15 @@ Final staging assessment lifecycle passes in `staging-template-20261015140641-40
 Production promotion: required secret names and hashed qwen3.5-flash model rechecked; MCP confirmed assessment-api10 and ai-api2 before deployment. Production assessment-api10→11, updated_at1792073721018, bundle `f6b3142425c76e60bb1d82c36954b8c2c5785f96aca0dd5df87303c424fef1d7`. Source-manifest SHA256 `ef3f553cdc77ec681f42392cf79cc039695b2d71441902a791318bf315216035` exactly matches staging56. No SQL or ai-api deployment. Pending: matching production operational verification and cleanup. Prior thinking/transport conditions and their failures remain historical evidence; they are not the selected final settings.
 
 Initial production functions inspected through Supabase MCP: assessment-api version10, bundle `d56830586e0996ce4731f6420c1709ae44ae47f690a11b9c617734867061d888`; ai-api version2, bundle `20f6ee18f7192a1a6271f55b2ab7ff5c6cda57a25a75e669f58c8dbeba5f3210`. The production database confirms existing assistant configuration model/temperature/token/prompt columns. No stored room configuration has been rewritten.
+
+## Production verification
+
+Production tutor-response passes in `production-template-20261015141552-395b6de9`; Guard entry/persistence/recovery passes in `production-template-20261015141614-b5468bf4`. Actual tutor request confirms temperature0.3,max_tokens100,enable_thinkingfalse, the approved Guard instruction, HTTP200 and qwen3.5-flash with normal completion. Assessment lifecycle passes in `production-template-20261015141705-f4e2dc7e`, including both success/failure fixtures and cleanup. These runs use the updated frontend source at localhost3001 against production.
+
+Production transfer-status-events retains a native semantic failure in `production-template-20261015141755-115a4daf`: first official-account-check event is initial_signal rather than demonstrated_understanding. Both post_message and analyze_message return HTTP200; the result applies eight progress events and records analysis_complete. Complete inputs, outputs, explanations and applied inbox rows are saved in transfer-status-provider-1.json and transfer-status-events.json. Analysis context retrieval has no error. Fixture cleanup passes. The workflow stops at that assertion, so later semantic steps are unrun; this is the explicitly accepted known failure, not a passing full semantic journey.
+
+Post-deployment Supabase MCP retrieves production assessment-api11 and ten bundled source files. Every returned source file hashes identically to its local release source; bundle matches `f6b3142425c76e60bb1d82c36954b8c2c5785f96aca0dd5df87303c424fef1d7`. No provider or schema fallback is introduced. The additional staging server was stopped after staging verification; the user's production-connected dev server remains running.
+
+Regenerated-base production tutor and Guard checks pass in `production-template-20261015141833-4557c52f` and `production-template-20261015141847-d81a18fd`. Selected settings and the approved Guard instruction appear in the actual request. The temporary configuration is restored and read back successfully; backup `output/selected-ai-candidates-20261015/production-structured-fixture-1792073913151.json`. All workflow cleanup reports pass. Final MCP readback confirms zero messages, sessions, checklists, learning events, assessments and provider-attempt rows in all four dedicated fixtures, and the ordinary fixture's active prompt_config is null again. An initial supplemental cleanup query referenced a nonexistent transfer_checklist_enabled column; corrected read-only queries succeed, without any mutation.
+
+Final delivery: staging assessment-api56 and production assessment-api11 share the frozen source manifest; production ai-api2 remains unchanged. Tutor07+approved Guard uses0.3/100/nonthinking, exact transfer02 uses0/600/nonthinking. Local frontend source is applied and its production build passes; no external frontend publication is claimed. Production operational checks and restoration are complete. Known semantic failures and unrun later transfer assertions remain explicit limitations under the user's release override; no frozen gate has been changed or marked passing.

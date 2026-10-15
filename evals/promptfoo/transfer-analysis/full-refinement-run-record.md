@@ -2,7 +2,7 @@
 
 Intent: preserve full-suite evidence, transport recovery and remaining failures while removing prompt shortcuts.
 
-Updated: 2026-10-15. Source baseline: `8dc7271`. Added cases published to `origin/no_sign_up` at `8728a8a4b12694dae2c18437bd87c54a0208cb70`. No refined runtime prompt has been promoted.
+Updated: 2026-10-15. Source baseline: `8dc7271`. Added cases published to `origin/no_sign_up` at `8728a8a4b12694dae2c18437bd87c54a0208cb70`. Subsequent user-selected product release uses exact candidate02 nonthinking (temperature0,max_tokens600), following the thinking staging timeout. The user explicitly accepted known semantic errors; frozen benchmark results remain failed. See [production delivery evidence](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md).
 
 Every condition contains73 original cases,40 additions and five propagated sequence steps:118logical cases,354records and348independent requests. Two exact-input aliases reuse corresponding repetitions. Expected labels, state consumer, class gates and pair checks remain fixed; historical exposed holdouts are regression material. Human label review and unseen validation remain pending. Each run below lives under `output/transfer-analysis-current/`, with frozen source/case/settings snapshots and full per-case input/output evidence.
 
