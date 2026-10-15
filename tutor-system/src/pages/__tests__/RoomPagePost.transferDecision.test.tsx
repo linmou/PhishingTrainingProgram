@@ -5,7 +5,7 @@
  *
  * Responsibility: prove the page renders the structured review surface from the candidate, forwards
  * a structured decision on confirm, and keeps the copy-only legacy suggestion path for a room with
- * no transfer candidate.
+ * no transfer candidate. Also checks tutor-only Learning Progress access from the room header.
  */
 
 import React from 'react';
@@ -30,8 +30,15 @@ import type { TransferAssessmentDraft } from '../../types/assessment';
 
 jest.mock('../../contexts/AuthContext');
 jest.mock('../../contexts/RoomContext');
-jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel() {
-  return <div data-testid="checklist-panel" />;
+jest.mock('../../components/ChecklistPanel', () => function MockChecklistPanel(props: {
+  isVisible: boolean;
+  onToggleVisibility: () => void;
+}) {
+  return <div data-testid="checklist-panel">
+    <button onClick={props.onToggleVisibility}>
+      {props.isVisible ? 'Close Learning Progress' : 'Learning Progress'}
+    </button>
+  </div>;
 });
 jest.mock('../../components/AIAssistantSettings', () => function MockAIAssistantSettings() {
   return <div data-testid="ai-settings-modal" />;
@@ -231,7 +238,11 @@ describe('RoomPagePost structured decision consumption', () => {
     const downloadChatHistory = jest.fn();
     mount({ downloadChatHistory });
 
-    expect(screen.getByTitle('Learning Progress Checklist')).toBeInTheDocument();
+    const progressToggle = screen.getByRole('button', { name: 'Learning Progress', exact: true });
+    expect(progressToggle.closest('.room-post-nav')).toBeInTheDocument();
+    fireEvent.click(progressToggle);
+    fireEvent.click(screen.getByRole('button', { name: 'Close Learning Progress' }));
+    expect(screen.getByRole('button', { name: 'Learning Progress', exact: true })).toBeInTheDocument();
     fireEvent.click(screen.getByTitle('Download Chat History'));
     fireEvent.click(screen.getByRole('button', { name: 'Chat History (TXT)' }));
 
@@ -254,7 +265,8 @@ describe('RoomPagePost structured decision consumption', () => {
       });
       mount();
 
-      expect(screen.queryByTitle('Learning Progress Checklist')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Learning Progress', exact: true })).not.toBeInTheDocument();
+      expect(screen.queryByTestId('checklist-panel')).not.toBeInTheDocument();
       expect(screen.getByTitle('Download Chat History')).toBeInTheDocument();
     }
   );
