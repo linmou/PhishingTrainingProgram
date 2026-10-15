@@ -111,9 +111,9 @@ Return ONLY a valid JSON object with this structure:
 }
 
 UNDERSTANDING LEVELS:
-- basic: Student recognizes the concept but explanation is shallow
-- good: Student shows solid understanding with clear reasoning
-- excellent: Student demonstrates deep understanding and can explain to others
+- basic: Student supplies a relevant but incomplete part of the target
+- good: Student supplies sufficient evidence for the target as written; a specific safe choice or accurate recognition can suffice
+- excellent: Student applies the target accurately in a new situation or explains a requested relationship in depth
 
 If no understanding is demonstrated, return: {"detected_areas": [], "requires_review": false}
 `;
@@ -133,7 +133,8 @@ Your role is to:
 
 Key principles:
 - Be conservative: Only mark understanding if clearly demonstrated
-- Focus on reasoning, not just keyword mentions
+- Judge the target's actual requirements, using specific evidence rather than keyword mentions
+- A narrow action or recognition target can be satisfied by a specific correct choice or observation; require a reason only when the target asks for it
 - Consider progressive understanding levels (basic → good → excellent)
 - Provide specific quotes as evidence
 - Assign realistic confidence scores (60-95% typical range)
@@ -351,22 +352,6 @@ Your analysis directly impacts student learning paths, so accuracy is critical.`
       ...results,
       requires_tutor_review: results.analysis_confidence < 70
     };
-  }
-
-  /**
-   * Generate differentiated feedback for understanding vs behavior
-   */
-  static generateDifferentiatedFeedback(response: string, type: string): string {
-    if (type === 'understanding') {
-      return "Great understanding of the concept!";
-    }
-    if (type === 'behavior') {
-      return "Excellent action - that's exactly what you should do!";
-    }
-    if (type === 'both') {
-      return "Excellent! You showed great understanding of urgency tactics [understanding] AND you took the right verification action [behavior]. This is exactly how knowledge translates into safe behavior.";
-    }
-    return "Good work!";
   }
 
   /**

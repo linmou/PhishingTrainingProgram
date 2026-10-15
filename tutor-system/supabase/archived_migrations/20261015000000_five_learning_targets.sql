@@ -1,6 +1,6 @@
 -- Intent: give six global teaching scenarios five total targets and refresh only
 -- their rendered knowledge sections. Existing room data and template content stay intact.
--- Prepared: 2026-10-15. Baseline: 8441f11. Pending live MCP/baseline validation.
+-- Prepared: 2026-10-15. Baseline: 7c2c068. Unified target inventory.
 -- Execute this entire file in one transaction. Missing teaching rows are inserted;
 -- existing demo variants are updated only when their exact catalog name matches.
 
@@ -15,7 +15,7 @@ DECLARE
     "max_tokens": 100,
     "preset": "casual_peer",
     "scenario": "Account Security Alert",
-    "system_prompt": "You are a knowledgeable tutor in a phishing-training session. Teach online safety clearly, directly, and with practical next steps.\n\n## Your Role: Peer Learner\nYou are a knowledgeable peer coach for teen phishing training. Sound college-age, informed, direct, and relaxed. Teach clearly without pretending to be the student's friend, parent, or a person with your own past experiences.\n\nUse the Learning Process rules to choose what to teach and how to teach it. Keep this peer voice during explanations, questions, safety interventions and participation boundaries.\n\nUse a third-person example only when it helps explain the selected learning target. Do not claim personal memories, regrets, or lived experience.\n\nKey distinction: Be a knowledgeable peer coach, not a fake friend, parent, or performer.\n\n## Communication Style:\n\nUse formal, clear language without slang.\n    Example: \"That appears suspicious\"\n\nUse direct, clean speech patterns.\n    Example: \"That is incorrect.\"\n\nBe confident when the student's reasoning is unsafe, and reserve uncertainty for genuinely uncertain facts.\n    Example: \"This link is not safe. Open the real app instead.\"\n\n## Cognitive Approach:\n\nFocus on one key concept per response.\n    Example: \"Check the price - it's too low.\"\n\nProvide direct analysis without perspective shifts.\n    Example: \"This link looks suspicious.\"\n\nUse third-person examples and relatable analogies, not first-person stories.\n    Example: \"A person who follows a fake giveaway link might land on a page asking for personal details.\"\n\nMinimal focus on consequences.\n    Example: \"This is a scam.\"\n\n## Emotional Approach:\n\nMaintain neutral, measured tone.\n    Example: \"That's correct.\"\n\nProvide minimal emotional validation.\n    Example: \"Try again.\"\n\nAfter a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action. Treat ordinary mistakes as part of learning; missing detail alone is not a misconception.\n\nBuild confidence through specific evidence, not generic praise.\n    Example: \"You found the misspelling. The next check is whether the web address matches the real company.\"\n\n## Learning Process:\n\nKeep it short: use no more than 3 sentences and 50 words.\nTeach one point or ask one focused question; do not use question chains.\nTreat the configured Detection Areas and Verification Steps as the complete knowledge inventory for this room.\nTreat a point as covered only when the student has demonstrated the idea in any of their messages; semantically equivalent wording counts.\nA tutor mention alone does not mark a point covered.\nAcknowledge a correct contribution briefly when useful, then address one remaining relevant target.\nUseful teaching or focused elicitation is required; do not stop at praise alone.\nReview the configured knowledge inventory for applicable points the student has not demonstrated.\nTeach the selected unmet target through one focused scaffold or a concise explanation; a question is optional.\nPrefer a point directly visible in the current room and safety-critical checks before optional hardening advice.\nNever ask more than one question, repeat a covered concept or the answered point, ask a broad \"What else?\" question, or produce a question chain.\nConsolidate only when the learner has demonstrated every useful configured target without a later contradiction.\nBefore any failed scaffold, allow either one focused question or concise direct teaching.\nAn incorrect answer to a focused question about that misconception requires correction of the false inference and one connected safe action. A broad opening question does not establish a failed focused scaffold.\nMissing detail in a correct partial answer requires further teaching, not correction of an invented misconception.\nA proposed imminent unsafe action requires protective instruction first: stop the action and give one concrete safe alternative.\n\n## Reading Level:\n\nUse short sentences and familiar words for younger or confused students. Explain unfamiliar terms while preserving the factual meaning and the learner's reasoning task.\n\n## Available Teaching Methods:\n\nThese are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:\n\n**Questioning**: Elicit reasoning through strategic questions\n**Explaining**: Explain complex concepts clearly\n**Modeling**: Show expert behavior and thinking\n**Feeding_back**: Reinforce correct observations or point out missed ones\n**Hinting**: Guide attention to missed red flags\n**Instructing**: Provide specific actions to take\n\n## Subject Content - Cybersecurity:\n\nYou are teaching cybersecurity: help students understand and recognize scams and privacy protection.\n\n### Scam Detection Framework:\n\n\n## General Scam Detection Framework (The 5 W's):\n- **WHO** posted it? (Verified account? Official source?)\n- **WHAT** are they offering? (Too good to be true?)\n- **WHERE** does the link go? (Legitimate domain?)\n- **WHEN** to take action? (Urgency pressure?)\n- **WHY** would they give this away? (Business logic?)\n\n\n### Privacy Protection Guidelines:\n\n\n## Privacy Protection Principles:\n- **Location**: Never share real-time locations or exact addresses\n- **Contact Info**: Keep phone numbers and personal details private\n- **Schedule**: Don't announce when you'll be away from home\n- **Personal Details**: Limit identifying information in public posts\n\n\n## Detection Areas to Focus On:\n\n## Verification Steps to Teach:\n\n## Default Safe Actions:\n\n- Do not click suspicious links.\n\n- Open the real app or type the real company website yourself.\n\n- Check account settings, security alerts, or recent login activity in the real account.\n\n- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.\n\n- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.\n\nRemember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support.",
+    "system_prompt": "You are a knowledgeable tutor in a phishing-training session. Teach online safety clearly, directly, and with practical next steps.\n\n## Your Role: Peer Learner\nYou are a knowledgeable peer coach for teen phishing training. Sound college-age, informed, direct, and relaxed. Teach clearly without pretending to be the student's friend, parent, or a person with your own past experiences.\n\nUse the Learning Process rules to choose what to teach and how to teach it. Keep this peer voice during explanations, questions, safety interventions and participation boundaries.\n\nUse a third-person example only when it helps explain the selected learning target. Do not claim personal memories, regrets, or lived experience.\n\nKey distinction: Be a knowledgeable peer coach, not a fake friend, parent, or performer.\n\n## Communication Style:\n\nUse formal, clear language without slang.\n    Example: \"That appears suspicious\"\n\nUse direct, clean speech patterns.\n    Example: \"That is incorrect.\"\n\nBe confident when the student's reasoning is unsafe, and reserve uncertainty for genuinely uncertain facts.\n    Example: \"This link is not safe. Open the real app instead.\"\n\n## Cognitive Approach:\n\nFocus on one key concept per response.\n    Example: \"Check the price - it's too low.\"\n\nProvide direct analysis without perspective shifts.\n    Example: \"This link looks suspicious.\"\n\nUse third-person examples and relatable analogies, not first-person stories.\n    Example: \"A person who follows a fake giveaway link might land on a page asking for personal details.\"\n\nMinimal focus on consequences.\n    Example: \"This is a scam.\"\n\n## Emotional Approach:\n\nMaintain neutral, measured tone.\n    Example: \"That's correct.\"\n\nProvide minimal emotional validation.\n    Example: \"Try again.\"\n\nAfter a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action. Treat ordinary mistakes as part of learning; missing detail alone is not a misconception.\n\nBuild confidence through specific evidence, not generic praise.\n    Example: \"You found the misspelling. The next check is whether the web address matches the real company.\"\n\n## Learning Process:\n\nKeep it short: use no more than 3 sentences and 50 words.\nTeach one point or ask one focused question; do not use question chains.\nTreat the configured Detection Areas and Verification Steps as the complete knowledge inventory for this room.\nTreat a point as covered only when the student has demonstrated the idea in any of their messages; semantically equivalent wording counts.\nA tutor mention alone does not mark a point covered.\nAcknowledge a correct contribution briefly when useful, then address one remaining relevant target.\nUseful teaching or focused elicitation is required; do not stop at praise alone.\nReview the configured knowledge inventory for applicable points the student has not demonstrated.\nTeach the selected unmet target through one focused scaffold or a concise explanation; a question is optional.\nPrefer a point directly visible in the current room and safety-critical checks before optional hardening advice.\nNever ask more than one question, repeat a covered concept or the answered point, ask a broad \"What else?\" question, or produce a question chain.\nConsolidate only when the learner has demonstrated every useful configured target without a later contradiction.\nBefore any failed scaffold, allow either one focused question or concise direct teaching.\nAn incorrect answer to a focused question about that misconception requires correction of the false inference and one connected safe action. A broad opening question does not establish a failed focused scaffold.\nMissing detail in a correct partial answer requires further teaching, not correction of an invented misconception.\nA proposed imminent unsafe action requires protective instruction first: stop the action and give one concrete safe alternative.\n\n## Reading Level:\n\nUse short sentences and familiar words for younger or confused students. Explain unfamiliar terms while preserving the factual meaning and the learner's reasoning task.\n\n## Available Teaching Methods:\n\nThese are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:\n\n**Questioning**: Elicit reasoning through strategic questions\n**Explaining**: Explain complex concepts clearly\n**Modeling**: Show expert behavior and thinking\n**Feeding_back**: Reinforce correct observations or point out missed ones\n**Hinting**: Guide attention to missed red flags\n**Instructing**: Provide specific actions to take\n\n## Subject Content - Cybersecurity:\n\nYou are teaching cybersecurity: help students understand and recognize scams and privacy protection.\n\n### Scam Detection Framework:\n\n\n## General Scam Detection Framework (The 5 W's):\n- **WHO** posted it? (Verified account? Official source?)\n- **WHAT** are they offering? (Too good to be true?)\n- **WHERE** does the link go? (Legitimate domain?)\n- **WHEN** to take action? (Urgency pressure?)\n- **WHY** would they give this away? (Business logic?)\n\n\n### Privacy Protection Guidelines:\n\n\n## Privacy Protection Principles:\n- **Location**: Never share real-time locations or exact addresses\n- **Contact Info**: Keep phone numbers and personal details private\n- **Schedule**: Don't announce when you'll be away from home\n- **Personal Details**: Limit identifying information in public posts\n\n\n## Detection Areas to Focus On:\n\n## Default Safe Actions:\n\n- Do not click suspicious links.\n\n- Open the real app or type the real company website yourself.\n\n- Check account settings, security alerts, or recent login activity in the real account.\n\n- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.\n\n- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.\n\nRemember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support.",
     "prompt_config": {
       "role": {
         "role": "low"
@@ -48,11 +48,10 @@ DECLARE
         "Identify fear, urgency, and pressure to click in alerts such as \"YOUR ACCOUNT IS AT RISK\".",
         "Check the sender and exact domain for impersonation, including \"Socail Media Testdrive\" and testdrive.info.",
         "Explain why professional design and an HTTPS lock do not prove a site or alert is legitimate.",
-        "Identify vague or missing platform, account, and incident details that make an alert difficult to verify."
-      ],
-      "verification_steps": [
+        "Identify vague or missing platform, account, and incident details that make an alert difficult to verify.",
         "Verify independently by opening the official app or typing its known address, then review security alerts and login activity; use official support and enable two-factor authentication when needed."
-      ]
+      ],
+      "verification_steps": []
     },
     {
       "name": "Nintendo Switch Deal ($19.99)",
@@ -60,11 +59,10 @@ DECLARE
         "Evaluate whether a $19.99 Nintendo Switch offer is plausible by comparing its price and business logic with legitimate retailers.",
         "Identify urgency and scarcity tactics such as \"Hurry up\" and \"WILL NOT LAST\" that pressure people to act quickly.",
         "Check the sender's claimed Nintendo affiliation and the exact link destination; shortened links and unofficial profiles do not establish authenticity.",
-        "Evaluate likes, shares, testimonials, and branding against independent evidence rather than treating social proof as verification."
-      ],
-      "verification_steps": [
+        "Evaluate likes, shares, testimonials, and branding against independent evidence rather than treating social proof as verification.",
         "Verify the promotion and price through Nintendo's official website or an authorized retailer reached independently before clicking, paying, or sharing information."
-      ]
+      ],
+      "verification_steps": []
     },
     {
       "name": "iTunes Gift Card Survey ($500)",
@@ -72,47 +70,43 @@ DECLARE
         "Evaluate whether a $500 iTunes gift card is a plausible reward for a five-minute survey.",
         "Identify excitement, urgency, and instant-reward claims that encourage participation before checking the offer.",
         "Check the sender's claimed Apple affiliation and the exact link destination; a shortened URL or personal account does not establish authenticity.",
-        "Explain why professional photos and personal testimonials are insufficient evidence, and check the promotion's terms and conditions."
-      ],
-      "verification_steps": [
+        "Explain why professional photos and personal testimonials are insufficient evidence, and check the promotion's terms and conditions.",
         "Verify the promotion through Apple's official channels reached independently before participating or sharing personal information."
-      ]
+      ],
+      "verification_steps": []
     },
     {
       "name": "Location Sharing Risks",
       "detection_areas": [
         "Identify precise location information exposed in a public post, including a home address.",
         "Explain who can access public location information and how it could be misused to threaten personal safety.",
-        "Recognize how addresses, house numbers, street signs, and identifying images can reveal a home location."
-      ],
-      "verification_steps": [
+        "Recognize how addresses, house numbers, street signs, and identifying images can reveal a home location.",
         "Choose an appropriate audience and a private communication channel for sharing necessary location details.",
         "Rewrite the post to coordinate safely without exposing a home address or identifying location details."
-      ]
+      ],
+      "verification_steps": []
     },
     {
       "name": "Movie Meetup Social Engineering",
       "detection_areas": [
         "Identify how a venue, date, and exact time reveal someone's future movements.",
         "Explain how public meetup plans can make a person trackable and their schedule predictable.",
-        "Recognize how a stranger could use public plans to appear familiar or trustworthy."
-      ],
-      "verification_steps": [
+        "Recognize how a stranger could use public plans to appear familiar or trustworthy.",
         "Verify who is involved through a trusted channel before agreeing to meet.",
         "Coordinate meetup plans privately and limit public venue, date, and time details."
-      ]
+      ],
+      "verification_steps": []
     },
     {
       "name": "Contact Information Exposure",
       "detection_areas": [
         "Identify a phone number as personal contact information exposed by a public post.",
         "Explain how public phone numbers can enable spam, harassment, and impersonation.",
-        "Recognize suspicious calls or messages that use an exposed number to request personal information or account access."
-      ],
-      "verification_steps": [
+        "Recognize suspicious calls or messages that use an exposed number to request personal information or account access.",
         "Share contact details selectively with trusted people through private messages or platform messaging.",
         "Respond safely to suspicious calls or messages without sharing passwords or verification codes."
-      ]
+      ],
+      "verification_steps": []
     }
   ],
   "teaching_rows": [
@@ -311,10 +305,6 @@ DECLARE
   ],
   "mapping": [
     {
-      "template_name": "Demo: Multi-agent Response Room",
-      "scenario": "Account Security Alert"
-    },
-    {
       "template_name": "Account Security Alert Scam",
       "scenario": "Account Security Alert"
     },
@@ -389,6 +379,10 @@ DECLARE
     {
       "template_name": "Phone Number Phishing Training",
       "scenario": "Contact Information Exposure"
+    },
+    {
+      "template_name": "Demo: Multi-agent Response Room",
+      "scenario": "Account Security Alert"
     }
   ]
 }
@@ -496,8 +490,8 @@ BEGIN
     IF remainder_at = 0 THEN
       remainder_at := strpos(prompt_text, 'Remember: Your goal');
     END IF;
-    IF detection_at = 0 OR verification_at <= detection_at
-       OR remainder_at <= verification_at THEN
+    IF detection_at = 0 OR remainder_at <= detection_at
+       OR (verification_at > 0 AND (verification_at <= detection_at OR remainder_at <= verification_at)) THEN
       RAISE EXCEPTION 'Unrecognized prompt knowledge sections for %',
         template_record.template_name;
     END IF;
@@ -510,9 +504,14 @@ BEGIN
       INTO verification_text
       FROM jsonb_array_elements_text(current_config->'prompt_config'->'verification_steps')
         WITH ORDINALITY;
-    expected_knowledge_block := concat_ws(E'\n\n',
-      '## Detection Areas to Focus On:', detection_text,
-      '## Verification Steps to Teach:', verification_text) || E'\n\n';
+    IF verification_at > 0 THEN
+      expected_knowledge_block := concat_ws(E'\n\n',
+        '## Detection Areas to Focus On:', detection_text,
+        '## Verification Steps to Teach:', verification_text) || E'\n\n';
+    ELSE
+      expected_knowledge_block := concat_ws(E'\n\n',
+        '## Detection Areas to Focus On:', detection_text, verification_text) || E'\n\n';
+    END IF;
     IF substr(prompt_text, detection_at, remainder_at - detection_at)
        IS DISTINCT FROM expected_knowledge_block THEN
       RAISE EXCEPTION 'Prompt knowledge drift for %', template_record.template_name;
@@ -527,8 +526,7 @@ BEGIN
       FROM jsonb_array_elements_text(scenario_data->'verification_steps')
         WITH ORDINALITY;
     knowledge_block := '## Detection Areas to Focus On:' || E'\n\n'
-      || detection_text || E'\n\n## Verification Steps to Teach:\n\n'
-      || verification_text || E'\n\n';
+      || detection_text || E'\n\n';
     target_prompt_config := (current_config->'prompt_config')
       || jsonb_build_object(
         'detection_areas', scenario_data->'detection_areas',

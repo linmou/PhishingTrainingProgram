@@ -153,17 +153,15 @@ describe('Checklist Management System', () => {
       expect(result.verification_steps.every((item) => item.status === 'pending')).toBe(true);
     });
 
-    it('extracts learning prefixes through the current async extraction API', async () => {
+    it('passes the unified learning-target list through the async extraction API', async () => {
       (LLMExtractionService.extractFromSystemPrompt as jest.Mock).mockResolvedValue({
-        understanding: ['URL verification techniques'],
-        behavior: ['Hover over links before clicking']
+        detection_areas: ['URL verification techniques', 'Hover over links before clicking']
       });
 
       await expect(ChecklistIntegration.extractFromSystemPromptAsync(
         'Teach students how to inspect suspicious links.'
       )).resolves.toEqual({
-        understanding: ['[understanding] URL verification techniques'],
-        behavior: ['[behavior] Hover over links before clicking']
+        detection_areas: ['URL verification techniques', 'Hover over links before clicking']
       });
     });
 

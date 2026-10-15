@@ -67,10 +67,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     PRIVACY_PROTECTION_RULES,
 
     "## Detection Areas to Focus On:",
-    ...config.detection_areas.map(area => `- ${area}`),
-
-    "## Verification Steps to Teach:",
-    ...config.verification_steps.map(step => `- ${step}`),
+    ...[...config.detection_areas, ...config.verification_steps].map(area => `- ${area}`),
 
     "## Default Safe Actions:",
     "- Do not click suspicious links.",

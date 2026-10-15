@@ -140,16 +140,6 @@ Feature: AI Checklist Integration
     And should say something like: "Great job recognizing the red flags! Now let's practice the specific steps you should take when you spot these signs."
     And should prioritize behavioral items in responses
 
-  Scenario: Learner receives feedback on understanding and action
-    Given a student demonstrates both cognitive understanding and behavioral application
-    When the student explains "I recognized the urgency language and then verified by going to the official website"
-    Then the learner should receive feedback that acknowledges both dimensions:
-      """
-      Excellent! You showed great understanding of urgency tactics [understanding] 
-      AND you took the right verification action [behavior]. This is exactly 
-      how knowledge translates into safe behavior.
-      """
-
   @non_feasible
   Scenario: AI handles incorrect understanding gracefully
     Given the "[understanding] Business logic evaluation" item was marked as "covered"

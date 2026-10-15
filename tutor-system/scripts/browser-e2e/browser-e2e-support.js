@@ -257,14 +257,14 @@ async function captureResponses(page, predicate) {
 
 function extractedTargets(calls) {
   for (const call of calls) {
-    if (call.status !== 200 || !JSON.stringify(call.request).includes('Extract cybersecurity learning content')) continue;
+    if (call.status !== 200 || !JSON.stringify(call.request).includes('Extract the cybersecurity learning targets')) continue;
     const content = call.response?.data?.content;
     if (typeof content !== 'string') continue;
     try {
-      const parsed = JSON.parse(content.trim().replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, ''));
-      const items = [...(Array.isArray(parsed.understanding) ? parsed.understanding : []),
-        ...(Array.isArray(parsed.behavior) ? parsed.behavior : [])];
-      if (items.length >= 2 && items.every((item) => typeof item === 'string' && !/\]\s*none$/i.test(item))) return items;
+      const parsed = JSON.parse(content);
+      const items = parsed?.detection_areas;
+      if (Object.keys(parsed).length === 1 && Array.isArray(items) && items.length > 0 &&
+          items.every((item) => typeof item === 'string' && item.trim())) return [...new Set(items.map(item => item.trim()))];
     } catch { /* Invalid provider output is not an extraction result. */ }
   }
   return [];

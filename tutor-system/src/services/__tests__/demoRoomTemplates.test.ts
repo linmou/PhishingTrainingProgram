@@ -43,7 +43,8 @@ describe('demoRoomTemplates', () => {
       expect(seed.test_only).toBe(false);
       expect(config.detection_areas).toEqual(scenario.detection_areas);
       expect(config.verification_steps).toEqual(scenario.verification_steps);
-      expect([...config.detection_areas, ...config.verification_steps]).toHaveLength(5);
+      expect(config.detection_areas).toHaveLength(5);
+      expect(config.verification_steps).toEqual([]);
     }
   });
 
@@ -205,7 +206,7 @@ describe('demoRoomTemplates', () => {
       expect(seed.test_only).toBe(true);
       expect(seed.ai_config_template.model_name).toBe('qwen3.5-flash');
       expect(seed.ai_config_template.prompt_config.detection_areas.length).toBeGreaterThan(0);
-      expect(seed.ai_config_template.prompt_config.verification_steps.length).toBeGreaterThan(0);
+      expect(seed.ai_config_template.prompt_config.verification_steps).toEqual([]);
     });
   });
 

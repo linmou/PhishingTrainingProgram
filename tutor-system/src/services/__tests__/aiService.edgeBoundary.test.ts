@@ -118,8 +118,7 @@ describe('AI service Edge Function boundary', () => {
     invoke.mockResolvedValue({
       data: {
         content: JSON.stringify({
-          understanding: ['[understanding] Suspicious domains'],
-          behavior: ['[behavior] Verify through the official app'],
+          detection_areas: ['Suspicious domains', 'Verify through the official app'],
         }),
         model: 'qwen3.5-flash',
         finish_reason: 'stop',
@@ -130,8 +129,7 @@ describe('AI service Edge Function boundary', () => {
     const { LLMExtractionService } = await import('../llmExtractionService');
     await expect(LLMExtractionService.extractFromSystemPrompt('## Detection Areas\n- Suspicious domains'))
       .resolves.toEqual({
-        understanding: ['[understanding] Suspicious domains'],
-        behavior: ['[behavior] Verify through the official app'],
+        detection_areas: ['Suspicious domains', 'Verify through the official app'],
       });
     expect(invoke).toHaveBeenCalled();
 

@@ -79,7 +79,7 @@ SELECT :'red_state' = 'P0001' AS red_failed_as_expected \gset
 \quit 1
 \endif
 
-\ir ../migrations/20261015000000_five_learning_targets.sql
+\ir ../archived_migrations/20261015000000_five_learning_targets.sql
 
 DO $$
 BEGIN
@@ -90,9 +90,8 @@ BEGIN
     SELECT 1 FROM public.room_templates
     WHERE tutor_id = '00000000-0000-0000-0000-000000000000'
       AND template_name <> 'Unrelated global'
-      AND (jsonb_array_length(ai_config_template->'prompt_config'->'detection_areas')
-        + jsonb_array_length(ai_config_template->'prompt_config'->'verification_steps'))
-        IS DISTINCT FROM 5
+      AND (jsonb_array_length(ai_config_template->'prompt_config'->'detection_areas') IS DISTINCT FROM 5
+        OR ai_config_template->'prompt_config'->'verification_steps' IS DISTINCT FROM '[]'::jsonb)
   ) THEN RAISE EXCEPTION 'Supported template does not have five targets'; END IF;
 
   IF EXISTS (
@@ -125,7 +124,7 @@ END $$;
 \echo 'PASS five-target migration and preservation'
 
 CREATE TEMP TABLE after_templates AS SELECT * FROM public.room_templates;
-\ir ../migrations/20261015000000_five_learning_targets.sql
+\ir ../archived_migrations/20261015000000_five_learning_targets.sql
 DO $$
 BEGIN
   IF EXISTS (
@@ -139,7 +138,7 @@ SAVEPOINT duplicate_case;
 INSERT INTO public.room_templates (tutor_id, template_name, title_template)
 VALUES ('00000000-0000-0000-0000-000000000000', 'Nintendo Switch Deal Scam', 'Duplicate');
 \set ON_ERROR_STOP off
-\ir ../migrations/20261015000000_five_learning_targets.sql
+\ir ../archived_migrations/20261015000000_five_learning_targets.sql
 \set duplicate_state :SQLSTATE
 \set ON_ERROR_STOP on
 ROLLBACK TO SAVEPOINT duplicate_case;
@@ -155,7 +154,7 @@ UPDATE public.room_templates SET ai_config_template = jsonb_set(
   ai_config_template, '{system_prompt}', '"Unrecognized authored prompt"')
 WHERE template_name = 'Phone Number Phishing Training';
 \set ON_ERROR_STOP off
-\ir ../migrations/20261015000000_five_learning_targets.sql
+\ir ../archived_migrations/20261015000000_five_learning_targets.sql
 \set malformed_state :SQLSTATE
 \set ON_ERROR_STOP on
 ROLLBACK TO SAVEPOINT malformed_case;
@@ -174,7 +173,7 @@ UPDATE public.room_templates SET ai_config_template = jsonb_set(
 WHERE template_name = 'Nintendo Switch Deal Scam'
   AND tutor_id = '00000000-0000-0000-0000-000000000000';
 \set ON_ERROR_STOP off
-\ir ../migrations/20261015000000_five_learning_targets.sql
+\ir ../archived_migrations/20261015000000_five_learning_targets.sql
 \set drift_state :SQLSTATE
 \set ON_ERROR_STOP on
 ROLLBACK TO SAVEPOINT drift_case;
@@ -189,7 +188,7 @@ SAVEPOINT null_demo_case;
 UPDATE public.room_templates SET ai_config_template = NULL
 WHERE template_name = 'Demo: Phase 0 — Lock Icon Myth';
 \set ON_ERROR_STOP off
-\ir ../migrations/20261015000000_five_learning_targets.sql
+\ir ../archived_migrations/20261015000000_five_learning_targets.sql
 \set null_demo_state :SQLSTATE
 \set ON_ERROR_STOP on
 ROLLBACK TO SAVEPOINT null_demo_case;

@@ -57,7 +57,7 @@ For contradiction, the current false relationship or unsafe understanding is the
 
 EVENT CONTRACT
 Each event contains item_id, kind, evidence_type, evidence_message_id, evidence_quote and explanation, all nonempty strings. item_id and evidence_message_id must match the supplied target and current message. evidence_quote must occur verbatim in the current message and preserve the attribution and claim being credited. Do not clip away a quotation's owner to change whose choice it is. Event explanation is a final evidence-to-event conclusion, at most25 words.
-kind is exactly initial_signal, demonstrated_understanding, post_repair_signal, spontaneous_transfer or contradiction. evidence_type describes the actual quoted claim: action, recognition or explanation. An understanding item requires explanation evidence; a detection_area item cannot consume action-only evidence. Never mislabel evidence to bypass these constraints. Top-level explanation and events must agree. Output no additional fields or markdown.`;
+kind is exactly initial_signal, demonstrated_understanding, post_repair_signal, spontaneous_transfer or contradiction. evidence_type describes the actual quoted claim: action, recognition or explanation. Judge sufficiency against the target's text. Top-level explanation and events must agree. Output no additional fields or markdown.`;
 
 export interface VerifiedPrincipal {
   principal_id: string;
@@ -376,10 +376,7 @@ async function analyzeMessage(
       throw new Error('AI_OUTPUT_INVALID');
     }
     const event = analysis.events[0];
-    const reason = event && ((item.item_type === 'understanding' && event.evidence_type !== 'explanation') ||
-      (item.item_type === 'detection_area' && event.evidence_type === 'action')
-      ? 'EVIDENCE_TYPE_MISMATCH'
-      : applyLearningEvent(item as TransferProgress, event.kind as LearningEventKind).disposition !== 'apply'
+    const reason = event && (applyLearningEvent(item as TransferProgress, event.kind as LearningEventKind).disposition !== 'apply'
       ? 'INELIGIBLE_TRANSITION' : null);
     return {
       events: reason ? [] : analysis.events,

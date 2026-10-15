@@ -75,11 +75,13 @@ test('blocks production requests before browser navigation can write there', asy
 });
 
 test('requires usable provider extraction rather than a fallback', () => {
-  const request = { messages: [{ content: 'Extract cybersecurity learning content' }] };
+  const request = { messages: [{ content: 'Extract the cybersecurity learning targets' }] };
   const response = (content) => ({ status: 200, request, response: { ok: true, data: { content } } });
   assert.deepEqual(extractedTargets([response('not JSON')]), []);
-  assert.deepEqual(extractedTargets([response('{"understanding":["[understanding] None"],"behavior":["[behavior] None"]}')]), []);
-  assert.equal(extractedTargets([response('{"understanding":["[understanding] Urgent wording"],"behavior":["[behavior] Open the official app"]}')]).length, 2);
+  assert.deepEqual(extractedTargets([response('{"detection_areas":[]}')]), []);
+  assert.deepEqual(extractedTargets([response('{"detection_areas":[null]}')]), []);
+  assert.deepEqual(extractedTargets([response('{"detection_areas":["Repeated","Repeated"]}')]), ['Repeated']);
+  assert.equal(extractedTargets([response('{"detection_areas":["Urgent wording","Open the official app"]}')]).length, 2);
 });
 
 test('transfer status checklist preserves every persisted room target', () => {
@@ -90,11 +92,11 @@ test('transfer status checklist preserves every persisted room target', () => {
   assert.deepEqual(templateChecklistItems(config), [
     { area_text: 'Urgent warning', item_type: 'detection_area', priority: 'important' },
     { area_text: 'Suspicious URL', item_type: 'detection_area', priority: 'important' },
-    { area_text: 'Do not click', item_type: 'verification_step', priority: 'critical' },
-    { area_text: 'Open the official app', item_type: 'verification_step', priority: 'critical' }
+    { area_text: 'Do not click', item_type: 'detection_area', priority: 'important' },
+    { area_text: 'Open the official app', item_type: 'detection_area', priority: 'important' }
   ]);
-  assert.throws(() => templateChecklistItems({ detection_areas: [], verification_steps: ['Only one'] }),
-    /detection areas/);
+  assert.equal(templateChecklistItems({ detection_areas: ['Only one'], verification_steps: [] }).length, 1);
+  assert.throws(() => templateChecklistItems({ detection_areas: [], verification_steps: [] }), /no learning targets/);
 });
 
 test('existing room selection validates template and owner without inserting', async () => {

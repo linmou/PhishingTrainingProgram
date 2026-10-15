@@ -9,6 +9,8 @@ context: []
 
 Intent: implement the user's approved consolidation of scenario knowledge into at most five learning targets, with matching maintained and persisted room templates.
 
+Current implementation intent: [unified learning targets](spec-unified-learning-targets.md), following the user's revised single-inventory design. This file preserves the earlier approved design and evidence.
+
 <frozen-after-approval reason="user approved the proposed targets and file scope before requesting implementation">
 
 ## Intent
@@ -101,7 +103,7 @@ and evidence are in the dated release record.
 - Check prompt-condition preservation for controlled comparisons.
   [demoRoomTemplates.ts:518](../../tutor-system/src/services/demoRoomTemplates.ts#L518)
 - Inspect scoped migration updates and drift checks before release.
-  [20261015000000_five_learning_targets.sql:464](../../tutor-system/supabase/migrations/20261015000000_five_learning_targets.sql#L464)
+  [20261015000000_five_learning_targets.sql:464](../../tutor-system/supabase/archived_migrations/20261015000000_five_learning_targets.sql#L464)
 - Check privacy seeding rejects incompatible existing configurations.
   [seed-behavior-demo-templates.js:95](../../tutor-system/scripts/seed-behavior-demo-templates.js#L95)
 - Verify the real seed-to-checklist configuration path.

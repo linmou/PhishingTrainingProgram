@@ -64,7 +64,7 @@ export function buildCasualPeerAIConfig(
   const prompt_config: SystemPromptConfig = {
     ...PRESET_CONFIGS.casual_peer,
     detection_areas: scenarioData.detection_areas,
-    verification_steps: scenarioData.verification_steps
+    verification_steps: []
   };
 
   return {
@@ -506,9 +506,7 @@ function buildPhase0PromptWithCurrentTargets(config: SystemPromptConfig): string
 
   const knowledge = [
     '## Detection Areas to Focus On:',
-    ...config.detection_areas.map((area) => `- ${area}`),
-    '## Verification Steps to Teach:',
-    ...config.verification_steps.map((step) => `- ${step}`)
+    ...config.detection_areas.map((area) => `- ${area}`)
   ].join('\n\n');
 
   return `${phase0Prompt.system_prompt.slice(0, start)}${knowledge}\n\n${phase0Prompt.system_prompt.slice(end)}`;

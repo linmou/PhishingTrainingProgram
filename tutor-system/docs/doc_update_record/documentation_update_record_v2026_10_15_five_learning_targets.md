@@ -4,6 +4,9 @@ Intent: record the approved target consolidation, exact artifacts, verification 
 
 Updated: 2026-10-15. Baseline commit: `8441f11eba0331e2481265f3807fe51732218764`.
 
+The current design and pending release are tracked in the [unified target record](documentation_update_record_v2026_10_15_unified_learning_targets.md).
+This record preserves evidence for the earlier unreleased candidate.
+
 ## Scope and acceptance
 
 Batch: `five-learning-targets-20261015`. Release owner: implementing Codex agent.

@@ -469,9 +469,9 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
       const itemId = input.items[0].id;
       analyzedIds.push(itemId);
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-        events: [{ item_id: itemId, kind: itemId === 'action-1' ? 'demonstrated_understanding' : 'initial_signal',
+        events: itemId === 'action-1' ? [{ item_id: itemId, kind: 'demonstrated_understanding',
           evidence_type: 'action', evidence_message_id: 'focus-1', evidence_quote: 'I will open the app',
-          explanation: 'The learner states the action.' }],
+          explanation: 'The learner states the action.' }] : [],
         explanation: 'Target evaluated.',
       }) } }] }), { status: 200 });
     },
@@ -482,8 +482,8 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student',
         content: 'I will open the app instead of using this link.' },
       items: [
-        { id: 'action-1', area_text: 'Check the app', status: 'pending', understanding_level: 'none' },
-        { id: 'reason-1', area_text: 'Explain the scam', item_type: 'understanding',
+        { id: 'action-1', area_text: 'Check the app', item_type: 'detection_area', status: 'pending', understanding_level: 'none' },
+        { id: 'reason-1', area_text: 'Explain the scam', item_type: 'detection_area',
           status: 'pending', understanding_level: 'none' },
       ],
       dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1',
@@ -502,13 +502,11 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
   assertEquals(analyzedIds, ['action-1', 'reason-1']);
   assertEquals((applied as unknown as { events: Array<{ item_id: string }> }).events.map(event => event.item_id), ['action-1']);
   assertEquals((applied as unknown as { rejected_events: Array<{ item_id: string; rejection_reason: string }> }).rejected_events,
-    [{ item_id: 'reason-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
-      evidence_quote: 'I will open the app', explanation: 'The learner states the action.',
-      rejection_reason: 'EVIDENCE_TYPE_MISMATCH' }]);
+    []);
 });
 
-// Test responsible for assessment-api/index.ts: action evidence cannot fully cover a detection-area target.
-Deno.test('rejects action-only evidence for detection areas', async () => {
+// Test responsible for assessment-api/index.ts: unified targets accept relevant action evidence.
+Deno.test('accepts action evidence for a detection-area target', async () => {
   let stored: Record<string, any> | null = null;
   const deps = dependencies({
     env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
@@ -522,7 +520,7 @@ Deno.test('rejects action-only evidence for detection areas', async () => {
     if (name === 'get_transfer_message_analysis_context_v1') return { data: {
       room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I will open the official app.' },
-      items: [{ id: 'item-1', area_text: 'Suspicious URL', item_type: 'detection_area', status: 'pending', understanding_level: 'none' }],
+      items: [{ id: 'item-1', area_text: 'Open the official app independently', item_type: 'detection_area', status: 'pending', understanding_level: 'none' }],
       dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', content: 'I will open the official app.' }],
     }, error: null };
     stored = args.p_analysis as Record<string, any>;
@@ -530,17 +528,15 @@ Deno.test('rejects action-only evidence for detection areas', async () => {
   };
   const response = await createAssessmentApiHandler(deps)(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assertEquals(response.status, 200);
-  assertEquals((stored as unknown as { events: unknown[] }).events, []);
-  assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
-    'EVIDENCE_TYPE_MISMATCH');
+  assertEquals((stored as unknown as { events: Array<{ evidence_type: string }> }).events[0].evidence_type, 'action');
+  assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events, []);
 });
 
 // Test responsible for assessment-api/index.ts: preserve valid analysis while recording unsupported proposals.
-Deno.test('records and omits ineligible transitions and wrong evidence forms', async () => {
+Deno.test('records and omits ineligible transitions for unified targets', async () => {
   for (const [status, level, kind, itemType] of [
-    ['partially_covered', 'basic', 'initial_signal', 'verification_step'],
-    ['pending', 'none', 'post_repair_signal', 'verification_step'],
-    ['pending', 'none', 'initial_signal', 'understanding'],
+    ['partially_covered', 'basic', 'initial_signal', 'detection_area'],
+    ['pending', 'none', 'post_repair_signal', 'detection_area'],
   ]) {
     let applyCalls = 0;
     let stored: Record<string, any> | null = null;
@@ -574,7 +570,7 @@ Deno.test('records and omits ineligible transitions and wrong evidence forms', a
     assertEquals((stored as unknown as { events: unknown[] }).events, []);
     assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 1);
     assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
-      itemType === 'understanding' ? 'EVIDENCE_TYPE_MISMATCH' : 'INELIGIBLE_TRANSITION');
+      'INELIGIBLE_TRANSITION');
     assertEquals(applyCalls, 1);
   }
 });
