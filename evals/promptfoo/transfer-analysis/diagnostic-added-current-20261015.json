@@ -1,0 +1,113 @@
+{
+  "intent": "Diagnose all added-case classification failures against the current adopted evidence rules without changing prompts or gold labels.",
+  "recorded": "2026-10-15",
+  "analyst": "/root/eval_shortcuts",
+  "verdict": "Observed model/prompt conformance failures; no material branch-gold/current-requirement contradiction identified in the inspected failures. Human gold-label review remains pending.",
+  "evidence": {
+    "run": "output/transfer-analysis-current/added-20261015-01",
+    "frozen_sha256": "6fd6ca9519b28ebe9adcfe037ac6c6f0776ad77fc88b15c61360789c10a9604b",
+    "summary": "output/transfer-analysis-current/added-20261015-01/summary-1792051937397.json",
+    "summary_sha256": "cd406e4e176857122df1bd65f31cfa260a06ed56048a63d727f24692ebaac25b",
+    "current_prompt_sha256": "3d7adb68417498e44d16404ada5a0f10533480a7bee11accb349d13afcea4e92",
+    "specification_sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+    "response_contract_sha256": "0449810a9720966c2c25966750972fcb5b8eb94b9f26e0fee2bf6a4d34eb3ca0",
+    "raw_pairs_policy": "Full target inputs, outputs and provider metadata stay in the immutable output run; this artifact records dispositions and aggregate evidence only."
+  },
+  "execution_and_leakage": {
+    "logical_records": 120,
+    "independent_provider_calls": 114,
+    "non_200_calls": 0,
+    "provider_error_records": 0,
+    "non_stop_finishes": 0,
+    "validity_passed": 120,
+    "missing_or_error_metric_rows": 0,
+    "actual_target_user_keys": ["dialogue_history", "evidence_message_id", "focus_student_id", "items", "message"],
+    "unexpected_target_shape_count": 0,
+    "evaluator_annotation_key_leaks": 0,
+    "namespaced_case_id_leaks": 0,
+    "annotation_scan": ["expected", "rationale", "pair_id", "requirements", "provenance", "source_commit", "source_file", "original_id", "partition", "suite", "classification_applicable"],
+    "limitation": "The scan verifies structural evaluator metadata and case-ID separation; it is not a general semantic prompt-injection detector."
+  },
+  "observed_scores": {
+    "raw_event_passed": 79,
+    "applied_state_passed": 79,
+    "assessment_route_passed": 120,
+    "validity_passed": 120,
+    "logical_denominator": 120,
+    "raw_event_failed_logical_rows": 41,
+    "raw_event_failed_independent_rows": 35,
+    "failed_logical_cases": 14,
+    "failed_unique_inputs": 12,
+    "ensemble_three_macro_f1": 0.39273689273689266,
+    "route_interpretation": "Route success does not establish event correctness. The failed positive examples mostly begin Pending, so both wrongly Partial and correctly Covered paths avoid a Partial-to-Covered assessment transition. Wrong transfer-as-repair likewise creates no demonstrated-understanding readiness."
+  },
+  "failure_dispositions": [
+    {
+      "class": "Specific intended safe actions downgraded to partial",
+      "cases": ["af86353_N02", "af86353_N04", "af86353_N08", "af86353_V01", "af86353_V02", "af86353_V03", "af86353_V04"],
+      "logical_failed_rows": 21,
+      "independent_failed_rows": 15,
+      "expected": "demonstrated_understanding",
+      "actual": "initial_signal in all repetitions",
+      "requirements": ["TA01", "TA02"],
+      "evidence": "Outputs acknowledge that the specific target step is identified, but require completed execution, reported outcomes, a broader verification process or an extra explanation before full credit. Surface variants preserve the same downgrade.",
+      "interpretation": "Model adds an unsupported evidence burden. Contract lines 51,59,123 define full action evidence as a specific safe choice, disclaim observed real-world behavior, and explicitly allow conditional intended action to cover a narrow target. TA02 does not require completion outside the conversation."
+    },
+    {
+      "class": "Unsupported credit from related action, attribution or stale context",
+      "cases": ["af86353_N05", "af86353_N17", "af86353_NH03", "af86353_NH07"],
+      "logical_failed_rows": 11,
+      "independent_failed_rows": 11,
+      "expected": "none",
+      "actual": "N05/NH03 demonstrated_understanding in 3/3; N17 initial_signal in 3/3; NH07 initial_signal in 2/3",
+      "requirements": ["TA01", "TA02"],
+      "evidence": "Reading help is credited as contacting support; checking a profile photo is credited toward group membership; a reported other person's choice is credited as the learner's own choice; a current answer to an unrelated question reuses an earlier target context.",
+      "interpretation": "Gold boundaries follow current attribution and target-specific evidence rules. The current prompt already distinguishes exact steps and current-turn contribution; the outputs violate those rules rather than expose a new policy contradiction."
+    },
+    {
+      "class": "Unrelated unsafe choice vetoes accurate narrow recognition",
+      "cases": ["af86353_NH16"],
+      "logical_failed_rows": 3,
+      "independent_failed_rows": 3,
+      "expected": "demonstrated_understanding",
+      "actual": "none in all repetitions",
+      "requirements": ["TA01", "TA02"],
+      "evidence": "The outputs recognize that the learner correctly identifies the target urgency cue, but invent an additional safe-response requirement for that recognition target.",
+      "interpretation": "Target scope is expanded. TA02 permits recognition evidence for recognition targets; the unrelated unsafe choice still requires a protective tutor intervention under T01, but does not negate the correctly identified cue. Removal of analysis safety flags did not make unrelated unsafe choices a progress veto."
+    },
+    {
+      "class": "Explicit contradiction receives no state-changing event",
+      "cases": ["af86353_NH06"],
+      "logical_failed_rows": 3,
+      "independent_failed_rows": 3,
+      "expected": "contradiction",
+      "actual": "none in all repetitions",
+      "requirements": ["TA03"],
+      "evidence": "The learner reverses the decisive previously demonstrated relation. Provider explanations repeatedly identify the contradiction and conclude that a contradiction event should be emitted, while events remains empty.",
+      "interpretation": "There is observable disagreement between emitted decision and its explanation. This does not establish hidden model reasoning. The adopted state-transition requirement is clear; broad empty-event instructions may be competing with the contradiction path."
+    },
+    {
+      "class": "Materially different reasoned application treated as same-context repair",
+      "cases": ["af86353_NH14"],
+      "logical_failed_rows": 3,
+      "independent_failed_rows": 3,
+      "expected": "spontaneous_transfer",
+      "actual": "post_repair_signal in all repetitions",
+      "requirements": ["TA03", "TA04"],
+      "evidence": "The message applies the principle with sound reasoning in a different communication modality, institutional context and request, but the outputs prioritize needs_review status and prior correction.",
+      "interpretation": "Current TA04 explicitly permits transfer from any non-covered state; the contract prioritizes a materially different application over same-situation repair. This is a precedence failure, not a reason to remove the recovery exception."
+    }
+  ],
+  "smallest_supported_next_hypothesis": {
+    "hypothesis": "The current prompt leaves an operational gap between naming the exact safe action and marking full understanding: the model imports external completion or broader-process requirements. Explicitly distinguishing demonstrated choice from observed execution may fix the largest shared failure class while preserving target-specific negative boundaries.",
+    "status": "Hypothesis only; no prompt or label changed and no new model calls made by this analyst.",
+    "controlled_validation": "Before any future refinement, predeclare a narrow action/recognition versus broader explanation contrast, varying intended versus reported-completed phrasing while holding the relevant target-specific choice fixed. Correct specific intended choices and completed descriptions should not differ solely because of tense; related but missing steps, other-person attribution and unsupported agreement must still fail. Reuse preserved current outputs as baseline; any authorized next refinement requires the full frozen suite and independent audit, not only these failures.",
+    "other_independent_failures": "Attribution/scope, contradiction and transfer precedence remain separate failure classes. Do not claim the action-completion clarification alone resolves them, and do not weaken no-event or safety requirements to improve scores."
+  },
+  "limits": [
+    "This diagnosis examines all observed failures, not a complete human adjudication of every gold label.",
+    "Former holdouts are already exposed regression material; this diagnosis supplies no unseen-generalization evidence.",
+    "Labels remain pending human review, and the current failed benchmark is preserved without reruns selected for better outcomes.",
+    "No target prompt, implementation, expected label or threshold was edited during diagnosis."
+  ]
+}

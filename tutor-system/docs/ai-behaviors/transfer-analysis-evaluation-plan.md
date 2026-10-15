@@ -2,7 +2,21 @@
 
 Intent: define the current item-event scorecard and preserve the provenance of historical evaluation results.
 
-Updated: 2026-10-14. Current policy follows the user's approved removal of analysis flags and their assessment blockers. Historical results retain their original frozen contract and metrics.
+Updated: 2026-10-15. Source baseline: `8dc7271`; added cases: `af86353`. Current policy follows the user's approved removal of analysis flags and their assessment blockers. Historical results retain their original frozen contract and metrics.
+
+## Added-case continuation and subsequent full suites
+
+The user requested the 40 branch additions for the current candidates after completing the tutor runs, reusing saved evidence. `current.cjs freeze DIR --coverage added` freezes only those cases against the current transfer handler/reducer. This component is identical across the tutor candidates; one transfer run supplies shared component evidence. Older transfer runs use different prompts and remain historical evidence.
+
+Imported files preserve learner text, targets, histories and event labels. Case/pair IDs use an `af86353_` namespace; new synthetic inputs use shared identities. Existing inputs retain historical identities. Historical flag labels remain in provenance; current checks follow TA01–TA04 and T09.1. All additions are exposed regression material, including former branch holdouts. Human label review remains pending, so this diagnostic cannot establish acceptance or unseen generalization.
+
+Freeze three independent generations per distinct input, indexed 1–3, with existing model/sampling settings and no seed or semantic retry. Macro-F1 averages reference-supported classes; zero-denominator precision/recall/F1 is zero. Individual and pooled macro-F1 require at least 70%; fixed three-member majority must strictly exceed 90% overall, per suite and per evidence partition. No-event recall requires 90% wherever supported. Two-member votes are diagnostic; ties abstain and count as misses. Invalid/missing members block acceptance even when other members agree. Preserve the existing 80% raw-event/state/route and 100% validity/pair gates.
+
+Two surface-reference cases exactly duplicate other added inputs and gold. Freeze aliases before execution; reuse corresponding repetitions: 38 unique inputs, 114 provider calls, 120 logical records. Report aliases as dependent observations and retain a unique-input classification diagnostic. Resume retains successes and failures. `--num_workers 16` raises four-worker concurrency fourfold, changing scheduling only; monitor progress and resources throughout execution. Use the configured `OAI_API_KEY`, `OAI_BASE_URL` and `OAI_MODEL`.
+
+Any next refinement uses `--coverage full`: all 73 prior cases plus all 40 additions. Five original sequence steps use fixed prior states for classification; five additional `sequence_replay` cases preserve actual output propagation and transition checks, excluded from ensembles. This gives 118 logical cases and 354 records. Keep the original-case classification slice visible. Compare future baseline/candidate results on identical inputs, contracts, settings and gates; reuse unchanged component evidence. Changed tutor prompts additionally require the full tutor suite.
+
+Changed measurement factors: additions, three repetitions, classification/ensemble reporting, new-case identity normalization and concurrency. Current transfer prompt, handler, event policy, sampling parameters and existing thresholds are fixed. The two-repetition entry point described below remains the historical comparison workflow.
 
 ## Current analysis and assessment checks
 

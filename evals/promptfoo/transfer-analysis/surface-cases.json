@@ -1,0 +1,83 @@
+{
+  "author": "Independent refinement auditor /root/refinement_audit",
+  "created_at": "2026-10-14",
+  "provenance": "Development diagnostics derived from exposed N08 and N04. Test invariance to capitalization and punctuation with target, history, meaning and gold label fixed. These are not independent holdouts.",
+  "cases": [
+    {
+      "id": "V01",
+      "scenario": "Login security",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Enable two-factor authentication on your account",
+        "item_type": "verification_step",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [{"role": "tutor", "content": "What account-security change would you make?"}],
+      "learner": "id switch on the thing that asks for a code from my authenticator as well as my password",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "The learner explicitly proposes enabling an authenticator code in addition to a password. Informal spelling does not remove this full action evidence.",
+      "pair_id": "VP-contraction-invariance",
+      "changed_factor": "Reference member: N08 learner text, target and history reproduced unchanged; V02 changes only initial id to I'd.",
+      "requirements": ["TA01", "TA02"]
+    },
+    {
+      "id": "V02",
+      "scenario": "Login security",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Enable two-factor authentication on your account",
+        "item_type": "verification_step",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [{"role": "tutor", "content": "What account-security change would you make?"}],
+      "learner": "I'd switch on the thing that asks for a code from my authenticator as well as my password",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "The authenticator action is identical to V01; capitalization and the contraction apostrophe cannot change the expected classification.",
+      "pair_id": "VP-contraction-invariance",
+      "changed_factor": "Only the initial token id becomes I'd; all remaining words, target, history and expected decision are fixed.",
+      "requirements": ["TA01", "TA02"]
+    },
+    {
+      "id": "V03",
+      "scenario": "Unfamiliar seller",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Inspect when the seller's profile was created",
+        "item_type": "verification_step",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [{"role": "tutor", "content": "What would help you judge this seller?"}],
+      "learner": "i would investigate how long that profile has existed first",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "The learner proposes precisely the profile-age check. Its status does not depend on writing mechanics.",
+      "pair_id": "VP-writing-mechanics-invariance",
+      "changed_factor": "Reference member: N04 learner text, target and history reproduced unchanged; V04 changes initial capitalization and terminal punctuation only.",
+      "requirements": ["TA01", "TA02"]
+    },
+    {
+      "id": "V04",
+      "scenario": "Unfamiliar seller",
+      "role": "positive",
+      "partition": "full",
+      "target": {
+        "area_text": "Inspect when the seller's profile was created",
+        "item_type": "verification_step",
+        "status": "pending",
+        "understanding_level": "none"
+      },
+      "history": [{"role": "tutor", "content": "What would help you judge this seller?"}],
+      "learner": "I would investigate how long that profile has existed first.",
+      "expected": {"kind": "demonstrated_understanding", "protection": false, "correction": false},
+      "rationale": "This states the same complete profile-age check as V03 with conventional capitalization and punctuation.",
+      "pair_id": "VP-writing-mechanics-invariance",
+      "changed_factor": "Only initial i becomes I and a terminal period is added; words, target, history and expected decision are fixed.",
+      "requirements": ["TA01", "TA02"]
+    }
+  ]
+}
