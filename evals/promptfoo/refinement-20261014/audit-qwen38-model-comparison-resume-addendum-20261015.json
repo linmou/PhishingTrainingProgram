@@ -1,0 +1,25 @@
+{
+  "intent": "Review the isolated cross-VM replay validation fix and reuse provenance before resuming the same model comparison with more workers.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "verdict": "clear",
+  "verdict_scope": "Integrity of the resume fix and preserved evidence; no benchmark acceptance claim.",
+  "driver_sha256": "9ee992a924c4ffa1dfd6982170665631396a26b76d2d1e276309ec77abe8e813",
+  "manifest": "output/model-comparison-20261015/paired-04/manifest.json",
+  "manifest_sha256_json_serialization": "3ad24d07d42d8e4124cf0e9e08c78dd9743fcf794c798776b0588c81fb4c53ea",
+  "previous_valid_evidence": "output/model-comparison-20261015/paired-03",
+  "review": {
+    "driver_diff": "Exactly one source line changes: replay consumer values are compared by SHA-256 of their JSON serialization instead of strict deep equality across VM prototypes. The compared fields and frozen handler execution remain the same.",
+    "rationale": "JSON is the actual preserved evidence boundary. Equal serialized handler values from another VM can have different prototypes; prototype inequality is not a model or consumer behavior failure. The existing current.generations helper already uses serialized hashing for these same fields.",
+    "source_and_manifest_validation": "Passed independently against the exact driver and paired-04 manifest.",
+    "experimental_factor_equality": "Independently confirmed model, judge model, tutor snapshot, transfer snapshot, candidate model snapshot, rubrics, evaluator manifest and baseline evidence lists are identical between paired-03 and paired-04.",
+    "reuse": "Independently checked all 713 source and destination SHA-256 entries in reuse-manifest.json. Every JSON artifact is equal after removing only experiment_fingerprint metadata. Inputs, outputs, requests, checks and judge evidence are preserved, including failures.",
+    "tests": "Independently reran model-comparison.test.js: 4 passed, 0 failed, including actual frozen-handler serialization/replay.",
+    "operational_change": "Resume with 48 bounded workers instead of 32. Model sampling, token limits, prompts, cases, validators and judge settings are unchanged."
+  },
+  "remaining_limits": [
+    "Prior model-pin correction and original audit reporting limitations remain applicable.",
+    "Already recorded schema/evidence errors remain model failures and must not be erased during resume.",
+    "Paired-03 was interrupted with incomplete overall coverage; derive final totals only after the remaining requests finish in paired-04."
+  ]
+}

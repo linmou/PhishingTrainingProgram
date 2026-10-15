@@ -70,7 +70,7 @@ const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_GENERATION_SETTINGS = {
     temperature: 0.3,
-    max_tokens: 100,
+    max_tokens: 600,
     enable_thinking: false
 } as const;
 const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;

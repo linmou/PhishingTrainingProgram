@@ -19,6 +19,7 @@ This directory contains comprehensive architectural and implementation documenta
 
 ### Core System Architecture
 - **[Selected AI candidates release](./doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md)** - Tutor candidate07 and transfer candidate02 with non-thinking settings, source identities, explicit known-error acceptance and staging/production verification.
+- **[Candidate11 and Qwen3.8 release](./doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md)** - Exact full tutor candidate11 at600tokens with thinking disabled, benchmark findings, explicit release selection and current environment verification.
 - **[AuthContext.md](./AuthContext.md)** - Simplified authentication system with deterministic user IDs
 - **[RoomContext.md](./RoomContext.md)** - Real-time messaging with WebSocket + polling hybrid approach  
 - **[supabase-service.md](./supabase-service.md)** - Database service layer with type-safe operations

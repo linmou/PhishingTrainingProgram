@@ -1,0 +1,17 @@
+{
+  "intent": "Resolve judge-format errors on preserved outputs without changing model behavior scores or retrying valid semantic failures.",
+  "id": "qwen38-judge-schema-recovery-v1",
+  "date": "2026-10-15",
+  "reference_manifest_sha256": "3ad24d07d42d8e4124cf0e9e08c78dd9743fcf794c798776b0588c81fb4c53ea",
+  "native_report_sha256": "c75e46aa3ca870cc1e41cb7dd149e7cd5f10cdcd4467e37bbc90061ccce3e979",
+  "eligibility": "Any error/missing judge result in either model arm after native attempts; no valid pass/fail result is eligible.",
+  "extra_format_attempts": 1,
+  "judge_model": "qwen3.5-flash",
+  "temperature": 0,
+  "max_tokens": 8000,
+  "enable_thinking": true,
+  "transport_attempts": 3,
+  "timeout_ms": 180000,
+  "method": "Append a schema-only reminder naming the exact required root key to the last original judge request. Preserve target, rubric, evidence and all provider settings. Parse only the exact required root key with the existing checkedResult validator; no aliases, inferred verdicts or manual grades.",
+  "evidence": "Keep native reports and malformed judge replies unchanged. Save supplemental raw calls and a separate postprocessed report naming this policy and evidence hashes. This is an additional declared format attempt beyond the original frozen two-attempt policy."
+}

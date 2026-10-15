@@ -1,0 +1,46 @@
+{
+  "intent": "Independently close the narrowed Tutor11 staging acceptance review before exact production promotion, retaining failed benchmark and inherited transfer diagnostics.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "staging_verdict": "clear for the explicitly authorized narrowed tutor/extraction release",
+  "production_verdict": "pending deployment and live verification",
+  "benchmark_verdict": "failed; unchanged under the user's explicit deployment override",
+  "transfer_semantic_diagnostic": "failed; preserved, not included as a passing staging claim",
+  "acceptance_artifact": "output/candidate11-release-20261015/staging-verified.json",
+  "acceptance_artifact_sha256": "b4c9e76f4f4e92b1e6e54cb86b80cec9a939bde87406442d6744644ac0a31d3e",
+  "accepted_scope": "Exact full Tutor11 policy/base with Qwen3.8 tutor/extraction and0.3/600/nonthinking tutor decoding; preserved Qwen3.5 transfer/assessment behavior and actual terminal-answer integration.",
+  "deployed_artifacts": {
+    "staging_project": "ciubrzggdqesgvfkpolj",
+    "assessment_api_version": 60,
+    "assessment_source_manifest_sha256": "a516340360fca59fc749fbef9df06208d91c681016e6f8cc6aedc399b5ba27de",
+    "ai_api_version": 4,
+    "ai_api_source_manifest_sha256": "d74a6cf37a4624b7c4d41a8f994a00aee8598d8fd818dae80ef1f1c664d94cda",
+    "source_verification": "Independently checked all9 frozen runtime source hashes and the deployment evidence manifest/version."
+  },
+  "verified_reports": [
+    {"run":"20261015220628-a18b4542","workflow":"legacy tutor response","status":"pass","cleanup":"pass"},
+    {"run":"20261015220651-f18b66b7","workflow":"legacy Guard entry/persistence/recovery","status":"pass","cleanup":"pass"},
+    {"run":"20261015220751-00830870","workflow":"real checklist generation","status":"pass","cleanup":"pass"},
+    {"run":"20261015222357-7a889b70","workflow":"ordinary coverage with narrowed assessment model","status":"pass","cleanup":"pass"},
+    {"run":"20261015222211-7c0d99c0","workflow":"assessment pass/retry/terminal failure/reload and actual terminal tutor feedback","status":"pass","cleanup":"both fixtures pass"},
+    {"run":"20261015221940-55344e8a","workflow":"configured-base tutor response","status":"pass","cleanup":"pass; prompt_config restored"},
+    {"run":"20261015222506-59ae8561","workflow":"configured-base Guard entry/persistence/recovery","status":"pass","cleanup":"pass; prompt_config restored"}
+  ],
+  "independent_checks": {
+    "report_integrity": "Verified all7 report raw hashes against the acceptance artifact, staging project identity, pass statuses and nonempty passing cleanup arrays.",
+    "configured_base": "Independently generated the expected base from each saved configured object and verified its exact inclusion plus the exact full11 policy suffix in actual captured system messages. Both restoration records are true.",
+    "generation_settings": "Checked actual tutor and Guard requests: temperature0.3,max_tokens600,enable_thinkingfalse; API-reported model qwen3.8-flash and HTTP200.",
+    "configured_guard_decisions": ["guard","guard","tutoring"],
+    "terminal_tutor_integration": "Independently inspected real terminal tutor calls after pass in1attempt and failure in2attempts. Both use Qwen3.8/0.3/600/nonthinking, persist tutoring mode on the correct terminal-answer parent after assessment closed_at, and include verified assessment ID/resolution/lifecycle/attempt count/correct key. No analyze_message or prepare_turn treats those answers as ordinary learning evidence.",
+    "test_extension": "The assessment-answer workflow adds structural/consumer checks through existing tutoringStep; it retains previous pass/failure/retry/reload checks and does not add semantic wording checks or weaken assertions.",
+    "assessment_answer_workflow_sha256": "5ed3b4a1943ffa159c177c4a3441f854a5049e32e53f4099da6f31c26442b9e8",
+    "cleanup_readback": "Independently inspected staging-cleanup-final.json:4fixture rows, all32 counts across8 public/private tables zero, all modes tutoring with reset change metadata, ordinary prompt_config null and assessment fixture configs equal the original reference inventory."
+  },
+  "limits": [
+    "Fresh AI assessment-question generation is not claimed: the changed-path answer journey uses reviewed fixed fixture questions with real answer handling and terminal tutoring. Unchanged generation implementation/request parity is separately recorded; unavailable historical raw evidence is not claimed as inspected.",
+    "The broad Qwen3.8 transfer attempt, restored3.5 staging semantic diagnostic and unchanged productionv12 semantic control remain failed. Scope/independence rationale is retained in audit-candidate11-tutor-release-scope-20261015.json.",
+    "Staging verification is an intermediate state. Promote the same two source manifests, verify route-specific models and selected live workflows on production, and confirm production fixture/config cleanup before declaring release complete."
+  ],
+  "auditor_model_calls": 0,
+  "auditor_host_mutations": 0
+}

@@ -1,0 +1,44 @@
+{
+  "intent": "Independently audit the narrowed release that applies Qwen3.8 to Tutor11 and extraction while preserving the existing production assessment/transfer model after a new live regression.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "source_integration_verdict": "clear",
+  "release_verdict": "pending rerun of affected staging analysis/lifecycle checks and exact production promotion/verification",
+  "benchmark_verdict": "failed; unchanged under the user's explicit Tutor11 deployment override",
+  "previous_audit": "evals/promptfoo/refinement-20261014/audit-candidate11-qwen38-release-shared-model-addendum-20261015.json",
+  "new_live_failure": {
+    "run": "tmp/browser_demo_runs/staging-template-20261015220918-9954b5e5",
+    "independently_checked_report": "transfer-status-events failed because a safe-action statement advanced the unrelated explanation target to covered instead of pending. The analysis request returned HTTP200 and persisted14 target events plus an analysis_complete event. Cleanup passed.",
+    "disposition": "Preserve the failed Qwen3.8 transfer run. Do not call it passing, weaken the assertion, retune its prompt or claim that the user's Tutor11 benchmark override accepts this new inherited-transfer regression."
+  },
+  "declared_narrowed_model_configuration": {
+    "tutor_and_extraction_ai_api": "qwen3.8-flash selected explicitly through the shared frontend/default catalog.",
+    "transfer_and_assessment_api": "qwen3.5-flash selected explicitly through a local PROVIDER_MODEL constant, preserving the model previously deployed with productionv12.",
+    "configuration_behavior": "Both functions require existing API key/base values. Both ignore the unused OAI_MODEL project secret; neither silently falls back based on errors or secret values. Client model fields cannot override either route.",
+    "prompts_and_decoding": "Tutor11 full policy/base and0.3/600/nonthinking remain unchanged. Inherited unified-target transfer prompt remains unchanged at SHA9f9c9eacb81790a48bf917eb208b2b6cad86a1c5739a201f7039b8005868bc6e; transfer remains0/600/nonthinking and assessment question generation0.3/1200/nonthinking.",
+    "scope": "Qwen3.8 is the app's tutor/extraction default, not the model for every specialized server operation. Release documentation and final reporting must disclose the route-specific models."
+  },
+  "exact_sources": {
+    "assessment_entry_sha256": "e6c2e342382197bed03c9503699c0fc579dcb7d5f1cc415f21aaf261d8dc0171",
+    "assessment_source_manifest_sha256": "a516340360fca59fc749fbef9df06208d91c681016e6f8cc6aedc399b5ba27de",
+    "unchanged_ai_api_entry_sha256": "7b1ce41d663ee5ae7be91990cbf2ecdc67eb66a7033d1900948b0835f8e59a21",
+    "unchanged_ai_api_source_manifest_sha256": "d74a6cf37a4624b7c4d41a8f994a00aee8598d8fd818dae80ef1f1c664d94cda",
+    "unchanged_active_tutor_file_sha256": "2219d183d3e4fd1a4fda4bf44a8bfa798e9deb12e5d73fd6d21d0416c6a19e6e",
+    "unchanged_tutor_service_sha256": "f8ca52c11201295b314cda18a00a5c1c5f106f3917718d7f5a640d225ed5e3e1"
+  },
+  "independent_verification": {
+    "source_review": "Assessment change restores explicit production model3.5 and retains the key/base-only source configuration. ai-api/catalog remain3.8. No transfer prompt, gold case, assertion, evidence parser or lifecycle change accompanies the model split.",
+    "dry_runs": "Ran existing deployment helper in dry-run mode for both functions. Exact source manifests match the declared hashes and each function is independently bundleable from its own source dependencies. No remote calls or deployment were made.",
+    "integrated_tests": "Independently ran actual-handler Deno tests: ai-api shared-model/stale-secret/client-override test passed; assessment preserved-model/different-secret/JSON-budget/private-audit test passed. Both test files type-checked.",
+    "local_regressions": "Root owns the full42Deno rerun and any affected frontend checks before staging acceptance.",
+    "auditor_model_calls": 0,
+    "auditor_host_mutations": 0
+  },
+  "remaining_acceptance": [
+    "Deploy the narrowed assessment artifact to staging and rerun affected transfer analysis, persisted-state, assessment delivery/grading/retry/failure and cleanup journeys. The failed3.8 transfer evidence cannot validate3.5.",
+    "Recheck ordinary checklist coverage where the changed assessment model participates. Reuse prior tutor/Guard evidence only while its actual inputs, dependencies and target preconditions remain valid.",
+    "Complete the configured-base Tutor11 witness in addition to legacy stored-base compatibility.",
+    "Verify provider model identity per route and preserve both exact manifests during production promotion. Unexpected contract, identity, lifecycle or cleanup failures remain blockers.",
+    "Keep all original benchmark scores, failed intermediate runs and prior audits immutable."
+  ]
+}

@@ -88,7 +88,7 @@ Deno.test('fails closed when server provider settings are missing', async () => 
   assertEquals(providerCalls, 0);
 });
 
-Deno.test('uses server configuration and projects the provider response', async () => {
+Deno.test('uses the shared model despite a stale model secret or client override and projects the provider response', async () => {
   let providerRequest: ProviderRequest | null = null;
   const handler = createAiApiHandler(dependencies({
     env: (name) => ({
@@ -111,12 +111,12 @@ Deno.test('uses server configuration and projects the provider response', async 
   const response = await handler(request({ ...validBody, model: 'attacker-selected-model' }));
   const payload = await response.json();
   assertEquals(response.status, 200);
-  assertEquals(payload.data, { content: '{"ok":true}', model: 'qwen3.5-flash', finish_reason: 'stop' });
+  assertEquals(payload.data, { content: '{"ok":true}', model: 'qwen3.8-flash', finish_reason: 'stop' });
   assert(providerRequest);
   const capturedProviderRequest = providerRequest as ProviderRequest;
   assertEquals(capturedProviderRequest.url, 'https://provider.invalid/v1/chat/completions');
   assertEquals(capturedProviderRequest.authorization, 'Bearer server-secret');
-  assertEquals(capturedProviderRequest.body.model, 'qwen3.5-flash');
+  assertEquals(capturedProviderRequest.body.model, 'qwen3.8-flash');
   assertEquals(capturedProviderRequest.body.messages, validBody.messages);
   assertEquals(capturedProviderRequest.body.temperature, 0.2);
   assertEquals(capturedProviderRequest.body.max_tokens, 800);

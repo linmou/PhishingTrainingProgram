@@ -1,6 +1,8 @@
 #!/usr/bin/env -S deno run --allow-env --allow-net
 // Purpose: proxy application LLM requests with server-only provider credentials.
 
+import { DEFAULT_AI_MODEL } from '../../../src/services/aiModels.ts';
+
 type ChatRole = 'system' | 'user' | 'assistant';
 
 interface ChatMessage {
@@ -101,9 +103,8 @@ function parseChatRequest(value: unknown): ChatRequest {
 function providerConfig(deps: AiApiDependencies): { key: string; baseUrl: string; model: string } {
   const key = deps.env('OAI_API_KEY');
   const baseUrl = deps.env('OAI_BASE_URL');
-  const model = deps.env('OAI_MODEL');
-  if (!key || !baseUrl || !model) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
-  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
+  if (!key || !baseUrl) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
+  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model: DEFAULT_AI_MODEL };
 }
 
 function providerPayload(request: ChatRequest, model: string): Record<string, unknown> {

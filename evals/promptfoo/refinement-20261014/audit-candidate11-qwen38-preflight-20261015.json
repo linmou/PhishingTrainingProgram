@@ -1,0 +1,54 @@
+{
+  "intent": "Independently audit the full historical Tutor11 Qwen3.8 nonthinking experiment before provider execution and conditional release decisions.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "verdict": "clear",
+  "scope": "Experimental integrity and readiness to execute; does not confer benchmark acceptance or deployment approval.",
+  "candidate": {
+    "driver": "evals/promptfoo/v1/candidate11-qwen38.js",
+    "driver_sha256": "7720a52684ca36a230e62f2c4599b8ed172c692ba1e341b6d3824af1e3de8fec",
+    "manifest": "output/candidate11-qwen38-20261015/full-02/manifest.json",
+    "manifest_sha256_json_serialization": "11759bf61829083d52bc0ad40b3a3e8ab8b0495431605d3b3f9af609bda3b806",
+    "policy_sha256": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050",
+    "historical_reference": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate11-thinking-preflight",
+    "baseline": "output/model-comparison-20261015/paired-04/tutor/qwen3.8-flash"
+  },
+  "declared_factors": {
+    "comparison": "Historical full Tutor11 prompt bundle versus historical frozen Tutor07 on the same Qwen3.8 target model. This is not a model-only comparison or the compact-context Tutor11 variant.",
+    "target": "qwen3.8-flash, temperature 0.3, max_tokens 100, thinking false; same as preserved Tutor07 Qwen3.8 baseline.",
+    "historical_reference_difference": "Historical Tutor11 was Qwen3.5 thinking with 8000 tokens. Historical outputs supply only exact frozen initial messages, not candidate performance or candidate judgments.",
+    "judge": "Fixed qwen3.5-flash, temperature 0, max_tokens 8000, thinking true. Same evaluator and judge settings as the completed Tutor07 comparison.",
+    "operational": "Bounded 48-worker execution versus prior 24-worker tutor metadata. Only concurrency metadata is normalized for comparison; raw request values remain preserved.",
+    "base_changes": [
+      {"file":"tutor-system/src/services/prompts/index.ts","change":"Final goal instruction scopes teaching to tutoring and participation restoration to Guard."},
+      {"file":"tutor-system/src/services/prompts/responsePolicy.ts","change":"Prepends teaching-rules scope after tutoring selection; Guard follows participation correction."},
+      {"file":"tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts","change":"Scopes Learning Process guidance to tutoring and Guard to participation correction."}
+    ],
+    "guard_template": "The exact historical Tutor11 policy already contains the approved two-sentence Guard pattern. No later paragraph is silently appended."
+  },
+  "verification": {
+    "manifest_validation": "Independently passed full-02 source/reference/baseline/cache hash validation.",
+    "cases": "All 61 frozen cases are identical to the prior comparison; three repetitions preserve 183 identities per arm.",
+    "target_inputs": "All 183 stored initial messages match their historical full11 source record, including the complete frozen base context. No current runtime composition substitutes for the historical bundle.",
+    "baseline_reuse": "All 183 completed Tutor07 Qwen3.8 target and current-evaluator judgment records are preserved by raw file hashes. Existing outcomes are not resampled or selectively omitted.",
+    "judge_cache": "3598 historical fixed-judge exact-request cache keys are pinned. Reuse requires the hash of messages and complete fixed judge settings. Cached malformed responses remain visible to the existing schema/retry logic.",
+    "native_checks": "Uses unchanged assess, classification.classify/compare and analyze, including semantic pairs, partitions, non-regression, three repetitions, majority/abstention handling and joint outcomes.",
+    "request_validation": "Actual first and optional production repair requests must match frozen messages, model, decoding and response format exactly. No semantic repair is added.",
+    "tests": "Independently reran candidate11-qwen38.test.js: 3 passed, 0 failed. Covers all 183 frozen message identities, decoding/prompt drift, and preservation of invalid first output with exactly one production format repair.",
+    "resource_monitor": "Driver starts a resource monitor and waits for its first disk/memory/load record before model calls.",
+    "auditor_model_calls": 0,
+    "sealed_holdout_contents_inspected": false
+  },
+  "resolved_finding": {
+    "issue": "First driver report implementation generated a new completed_at timestamp and then strictly compared against an existing immutable final report, breaking completed-run report/resume.",
+    "resolution": "Superseding driver reuses the preserved completion timestamp. full-01 remains a superseded no-call preparation; full-02 pins the corrected driver."
+  },
+  "shortcut_assessment": "No case-specific policy additions, expected-answer lookups, case selection, reduced denominators, semantic-failure retries or gate relaxation were introduced. Prompt changes are the already audited historical Tutor11 policy and three general Guard-scope base changes.",
+  "remaining_requirements": [
+    "Run and reconcile all 183 candidate outputs and every applicable check; errors cannot be omitted or converted to passes.",
+    "Additional judge-format recovery beyond frozen limits requires a declared uniform error/missing-only policy and preserved native evidence; no semantic score retry is authorized by this audit.",
+    "Apply all native thresholds and partition/non-regression gates, including strict greater-than-90% ensemble gates. An 80% aggregate or better marginal metrics alone is not passing.",
+    "Existing cases are exposed regression/development coverage. Required independent unseen validation and unresolved adoption/label prerequisites remain separate acceptance conditions.",
+    "User conditional release authorization applies only if the applicable acceptance and product release checks pass. Promote the tested full prompt bundle, not a mixture of historical11 policy with07 base, if a release later becomes eligible."
+  ]
+}

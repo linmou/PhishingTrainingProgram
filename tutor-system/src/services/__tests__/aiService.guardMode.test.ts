@@ -149,8 +149,8 @@ describe('Guard Mode AI decision contract', () => {
         expect(invokeMock).toHaveBeenCalledWith('ai-api', expect.objectContaining({ body: expect.any(Object) }));
         const request = invokeMock.mock.calls[0][1].body;
         expect(request.temperature).toBe(0.3);
-        expect(request.max_tokens).toBe(100);
-        expect(result.appliedConfig).toMatchObject({ temperature: 0.3, max_tokens: 100 });
+        expect(request.max_tokens).toBe(600);
+        expect(result.appliedConfig).toMatchObject({ temperature: 0.3, max_tokens: 600 });
         expect(request.messages[0].role).toBe('system');
         expect(request.messages[0].content).toContain('Use the room phishing-training guidance.');
         expect(request.messages[0].content).toContain('CURRENT LEARNING PROGRESS');

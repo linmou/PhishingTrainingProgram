@@ -143,7 +143,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     expect(result.suggestion).not.toContain('[agent:riley]');
 
     const firstRequest = requestBody(fetchMock, 0);
-    expect(firstRequest.max_tokens).toBe(100);
+    expect(firstRequest.max_tokens).toBe(600);
     expect(firstRequest.messages[1].content).toContain('"interaction_mode":"single_agent"');
     expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
   });
@@ -206,7 +206,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
     const request = requestBody(fetchMock, 0);
-    expect(request.max_tokens).toBe(100);
+    expect(request.max_tokens).toBe(600);
     expect(request.messages[0].content).not.toContain('MULTI-AGENT MODE');
     expect(request.messages[1].content).toContain('"interaction_mode":"single_agent"');
   });

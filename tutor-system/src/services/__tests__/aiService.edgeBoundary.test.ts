@@ -102,7 +102,7 @@ describe('AI service Edge Function boundary', () => {
       expect(name).toBe('ai-api');
       expect(options.body).toMatchObject({
         temperature: 0.3,
-        max_tokens: 100,
+        max_tokens: 600,
         enable_thinking: false,
         response_format: { type: 'json_object' },
       });

@@ -288,3 +288,4 @@ module.exports = async function assessmentDelivery(ctx) {
 };
 
 module.exports.assertTutorFeedback = assertTutorFeedback;
+module.exports.tutoringStep = tutoringStep;

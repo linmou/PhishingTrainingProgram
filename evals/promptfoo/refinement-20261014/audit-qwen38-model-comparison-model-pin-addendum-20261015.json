@@ -1,0 +1,45 @@
+{
+  "intent": "Correct the earlier incomplete provider-model injection audit and review the experiment-only model pin change against the actual frozen transfer handler.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "previous_audit": "evals/promptfoo/refinement-20261014/audit-qwen38-model-comparison-20261015.json",
+  "previous_verdict_correction": "The previous clear verdict missed the frozen handler's PROVIDER_MODEL allowlist check. Environment injection alone was insufficient. Preserve that audit and the failed harness run; neither establishes candidate model performance.",
+  "verdict": "clear",
+  "verdict_scope": "Corrected experiment integrity and execution readiness only; benchmark acceptance remains unmeasured.",
+  "candidate": {
+    "driver": "evals/promptfoo/v1/model-comparison.js",
+    "driver_sha256": "0c5ca4e687e858672a45561c350889455232cc7049318807182a33fdad1a1eb2",
+    "manifest": "output/model-comparison-20261015/paired-03/manifest.json",
+    "manifest_sha256_json_serialization": "a032f05ca3f0d7fc52102d68ca2f6b367825fa4dd4110f81bd81dc46a3e4d1ba",
+    "candidate_transfer_entry_sha256": "f79393526c86c4edb66909e72652531e835b2b787fc75acab8db98f3617562ce",
+    "baseline_transfer_entry_sha256": "8a5d4c609698a3570da52ba0e33ab02562a7bed881695796ef3c50d750d7d6ce",
+    "unchanged_transfer_prompt_sha256": "9266debd11301743960684202116c9533cf57c0d9811b83d5ff2a89103b1c564"
+  },
+  "invalid_harness_evidence": {
+    "directory": "output/model-comparison-20261015/paired-02",
+    "independently_checked_transfer_records": 348,
+    "actual_transfer_provider_calls": 0,
+    "observed_handler_http_status": 503,
+    "disposition": "Invalid model-injection harness condition, excluded from model-performance comparison. Preserve the interrupted run and its raw evidence."
+  },
+  "change_review": {
+    "rule": "modelSnapshot clones the frozen snapshot, requires exactly one original PROVIDER_MODEL initializer, changes only its value to the candidate model, and recomputes the changed file hash. fixedModel separately injects the same model through deps.env.",
+    "independent_exact_diff_check": "Passed: the candidate assessment-api source equals the baseline source with exactly the PROVIDER_MODEL initializer substitution. Every other frozen file is byte-identical. The evaluation prompt hash is unchanged.",
+    "runtime_scope": "Only the copied experimental snapshot changes. Deployed and checked-in application runtime source are untouched by this transformation.",
+    "shortcut_assessment": "No case IDs, expected labels, target-specific exceptions, message mutation, scoring changes or case selection are introduced. The added transformation enables the single declared target-model factor to reach the actual frozen handler's provider request."
+  },
+  "verification": {
+    "command": "node --test evals/promptfoo/v1/model-comparison.test.js",
+    "result": "4 passed, 0 failed, independently rerun by auditor.",
+    "integrated_frozen_handler_test": "Actual frozen handler executes with candidate model injection and transformed provider pin, builds one qwen3.8-flash request with max_tokens 600 and thinking false, and returns HTTP 200 when supplied an existing valid saved provider response. No external model call is made by this test.",
+    "manifest_validation": "Passed independently for paired-03, including source and preserved baseline record hashes.",
+    "model_calls_by_auditor": 0,
+    "sealed_holdout_inspection_by_auditor": false
+  },
+  "cache_reuse_condition": "Only exact request-identical, fixed-judge baseline cache entries may be reused from paired-02 with explicit source and destination hashes. This does not permit reusing the invalid transfer records. The author's judge-reuse-manifest.json records the reuse provenance.",
+  "remaining_reporting_limits": [
+    "All prior audit reporting limitations remain in force, including frozen Tutor07 scope, exposed regression coverage and separate classification gate review.",
+    "Use paired-03 for candidate transfer performance and preserve paired-02 as a harness failure.",
+    "The integrated test proves handler/model configuration and consumer execution with a saved response. The live run must still establish actual provider responses and benchmark performance."
+  ]
+}

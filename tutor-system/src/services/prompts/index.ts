@@ -67,7 +67,10 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     PRIVACY_PROTECTION_RULES,
 
     "## Detection Areas to Focus On:",
-    ...[...config.detection_areas, ...config.verification_steps].map(area => `- ${area}`),
+    ...config.detection_areas.map(area => `- ${area}`),
+
+    "## Verification Steps to Teach:",
+    ...config.verification_steps.map(step => `- ${step}`),
 
     "## Default Safe Actions:",
     "- Do not click suspicious links.",
@@ -76,7 +79,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     "- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.",
     "- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.",
 
-    "Remember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support."
+    "During tutoring, help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support. During Guard, restore participation using the tutor decision policy."
   ];
 
   return sections.filter(Boolean).join('\n\n');

@@ -18,6 +18,7 @@ const OPERATIONS = new Set([
   'prepare_turn', 'send_reviewed', 'read_review', 'process_message',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
+// Preserve the deployed assessment/transfer model; Qwen3.8 tutoring is selected separately by ai-api.
 const PROVIDER_MODEL = 'qwen3.5-flash';
 const PROVIDER_MAX_TOKENS = 1200;
 
@@ -286,9 +287,8 @@ async function recordProviderAttempt(
 function providerConfig(deps: AssessmentApiDependencies): { key: string; baseUrl: string; model: string } {
   const key = deps.env('OAI_API_KEY');
   const baseUrl = deps.env('OAI_BASE_URL');
-  const model = deps.env('OAI_MODEL');
-  if (!key || !baseUrl || model !== PROVIDER_MODEL) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
-  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model };
+  if (!key || !baseUrl) throw new Error('AI_PROVIDER_NOT_CONFIGURED');
+  return { key, baseUrl: baseUrl.replace(/\/$/, ''), model: PROVIDER_MODEL };
 }
 
 

@@ -316,7 +316,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   const deps: AssessmentApiDependencies = {
     ...dependencies(),
     env: (name) => ({
-      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       operations.push(name);
@@ -421,7 +421,7 @@ Deno.test('accepts direct understanding evidence for the current learner message
   let stored: Record<string, unknown> | null = null;
   const deps = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
@@ -462,7 +462,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
   let applied: Record<string, unknown> | null = null;
   const deps = dependencies({
     env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
       assertEquals(input.items.length, 1);
@@ -509,7 +509,7 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
 Deno.test('accepts action evidence for a detection-area target', async () => {
   let stored: Record<string, any> | null = null;
   const deps = dependencies({
-    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
         evidence_quote: 'I will open the official app', explanation: 'The learner chooses a safe action.' }],
@@ -542,7 +542,7 @@ Deno.test('records and omits ineligible transitions for unified targets', async 
     let stored: Record<string, any> | null = null;
     const deps = dependencies({
       env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
-        OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+        OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind, evidence_type: 'action', evidence_message_id: 'focus-1',
           evidence_quote: 'I will check the app', explanation: 'The learner describes a check.' }],
@@ -581,7 +581,7 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
     let applyCalls = 0;
     const deps = dependencies({
       env: (name) => ({
-        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
       } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: evidenceMessageId,
@@ -729,16 +729,15 @@ Deno.test('returns the exact public assessment target and strips private fields'
   assert(!JSON.stringify(payload).includes('learner_safe_explanation'));
 });
 
-Deno.test('requires every configured provider setting with no model fallback', async () => {
+Deno.test('requires provider credentials before any provider or audit call', async () => {
   const configured = {
-    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
   };
-  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
+  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL']) {
     let providerCalls = 0;
     let auditCalls = 0;
     const settings = { ...configured } as Record<string, string | undefined>;
-    if (missing === 'wrong_model') settings.OAI_MODEL = 'other-model';
-    else settings[missing] = undefined;
+    settings[missing] = undefined;
     const handler = createAssessmentApiHandler(dependencies({
       env: (name) => settings[name],
       rpc: async (name) => {
@@ -762,12 +761,12 @@ Deno.test('requires every configured provider setting with no model fallback', a
   }
 });
 
-Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and private audit', async () => {
+Deno.test('preserves the assessment model despite a different model secret, 1200-token budget, JSON mode, and private audit', async () => {
   const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -802,7 +801,7 @@ Deno.test('returns a valid second response after one format repair', async () =>
   const requests: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -840,7 +839,7 @@ Deno.test('format repair forwards a rendering violation without accepting the in
   draft.assessment.stem = 'There is a new warning. It asks for a response. What should you do?';
   invalid.choices[0].message.content = JSON.stringify(draft);
   const handler = createAssessmentApiHandler(dependencies({
-    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string,string>)[name],
+    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string,string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -865,7 +864,7 @@ Deno.test('performs one format-only repair and rejects a second invalid result',
   let providerCalls = 0;
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -889,7 +888,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
   for (const scenario of ['truncated', 'http', 'network']) {
     let providerCalls = 0;
     const handler = createAssessmentApiHandler(dependencies({
-      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
       rpc: async (name) => name === 'prepare_transfer_turn_v1'
         ? { data: providerScope(), error: null }
         : { data: 'audit', error: null },
@@ -912,7 +911,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
 Deno.test('fails preparation without retry when provider audit persistence fails', async () => {
   let providerCalls = 0;
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     rpc: async (name) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       return { data: null, error: { message: 'audit insert failed' } };
@@ -936,7 +935,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
   let assessmentCalls = 0;
   const base = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const body = JSON.parse(String(init?.body));
@@ -1007,7 +1006,7 @@ Deno.test('explicit no-assessment result avoids the provider, while an eligible 
 
   const failing = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     fetch: async () => { calls += 1; throw new Error('offline'); },
   });

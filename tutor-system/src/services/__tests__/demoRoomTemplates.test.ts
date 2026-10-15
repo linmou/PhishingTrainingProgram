@@ -204,7 +204,7 @@ describe('demoRoomTemplates', () => {
 
     [clickCorrect!, lockCorrect!].forEach((seed) => {
       expect(seed.test_only).toBe(true);
-      expect(seed.ai_config_template.model_name).toBe('qwen3.5-flash');
+      expect(seed.ai_config_template.model_name).toBe('qwen3.8-flash');
       expect(seed.ai_config_template.prompt_config.detection_areas.length).toBeGreaterThan(0);
       expect(seed.ai_config_template.prompt_config.verification_steps).toEqual([]);
     });

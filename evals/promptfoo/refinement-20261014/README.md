@@ -1,5 +1,7 @@
 # Tutor prompt shortcut removal experiment
 
+The [Qwen3.8 Flash comparison](qwen38-model-comparison-20261015.md) tests a target-model change with frozen tutor07/transfer02 prompts and fixed Qwen3.5 semantic judging; it is separate from production release and prior prompt-refinement scores.
+
 Intent: remove development-case solutions and scoring accommodations while measuring the unchanged and revised tutor policies with complete, comparable evidence.
 
 Prepared: 2026-10-14. Updated: 2026-10-15. Source baseline: `8dc7271`. Status: evaluation complete for the latest conditions; acceptance failed and human interpretation of disputed cases is pending. Candidate11 fullv1.3 comparison fails19overlapping gate issues. Both comparable arms contain183 records/2706 assertions; baselinev1.3-r2 has two pair failures. All candidate11 targets are reused from preflight. Its compact-context diagnostic also fails preflight. The approved Guard template is retained. Transfer refinements use the full118-case suite including the40 additions; recovered04completes345correct events and354valid outputs, but fails ecological/pair/nonregression gates. The proposedv1.4rubric is rejected after87/91calibration versus91/91current. No cleaned candidate is accepted. See the [executed-run record](run-record.md), [latest factors and results](continuation-round03-20261015.md), and [full transfer record](../transfer-analysis/full-refinement-run-record.md). Earlier entries below preserve historical chronology.

@@ -1,16 +1,18 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain AI request configuration, scenario learning targets and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 7c2c068. -->
+<!-- Intent: explain AI request configuration, scenario learning targets and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 2f63749. -->
 
 ## Purpose
-Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Production requests use Qwen3.5 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key.
+Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. The selected model is Qwen3.8 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key. Current environment verification is recorded in the [candidate11 release record](doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md).
 
 ## Update Metadata
 
 - Updated: 2026-10-15
-- Baseline commit: 7c2c068
+- Baseline commit: 2f63749
 
-The selected tutor policy is candidate07 with the approved Guard response pattern. Tutor requests use temperature0.3, max_tokens100 and enable_thinkingfalse, including the bounded JSON repair attempt. These settings override stored room temperature/token values; `appliedConfig` reports the settings actually sent. Room role, style and target inventories still configure the generated base prompt.
+The selected tutor policy is full candidate11, including the approved Guard response pattern and its evaluated base-prompt composition. Tutor requests use temperature0.3, max_tokens600 and enable_thinkingfalse, including the bounded JSON repair attempt. These settings override stored room temperature/token values; `appliedConfig` reports the settings actually sent. Room role, style and target inventories still configure the generated base prompt. The user explicitly selected release despite the recorded benchmark failures.
+
+React and `ai-api` import `DEFAULT_AI_MODEL` from `src/services/aiModels.ts`, selecting Qwen3.8. Transfer analysis and assessment generation retain the existing Qwen3.5 provider in `assessment-api`, because their broader Qwen3.8 staging check advanced unrelated targets. Provider credentials remain required server secrets; the application no longer reads the old project OAI_MODEL secret. The similarly named local setting is only for offline evaluations.
 
 Transfer analysis uses the candidate02 policy with target-text evidence rules at temperature0, max_tokens600 and enable_thinkingfalse. The current unified-target revision is tracked in the [unified release record](doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md). The earlier candidate selection and its observed semantic errors are recorded in [candidate release evidence](doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md). Assessment-question generation remains a separate call with its existing settings.
 
@@ -71,7 +73,7 @@ interface ParameterOverrides {
 - **Role**: `supportive_adult` preset (high authority, encouraging tone)
 - **Detection areas**: `['Suspicious links', 'Urgent language', 'Unexpected requests']`
 - **Verification steps**: `['Check sender authenticity', 'Verify through official channels', 'Think before clicking']`
-- **Model**: `qwen3.5-flash` (`DEFAULT_AI_MODEL`, the only selectable model)
+- **Model**: `qwen3.8-flash` (`DEFAULT_AI_MODEL`, the only selectable model)
 - **Transport**: `supabase.functions.invoke('ai-api')` from the localStorage/offline-user session; the Edge Function calls the provider with `enable_thinking: false`. Supabase Auth sign-in is not required.
 - **Response policy**: prompt-controlled maximum of three sentences and 50 words; runtime output is not clipped or rewritten
 
@@ -143,7 +145,7 @@ HTTP and network failures remain visible provider errors.
 The ecological prompt includes semantic Guard activation, persistence, exit, and tone-safety rules. The production UI consumes `decision.suggested_response`; the raw decision and final tutor edits are persisted through the Guard review flow.
 
 ### `QwenService` Class
-**Purpose**: Production Qwen3.5 Flash API integration
+**Purpose**: Production Qwen3.8 Flash API integration
 
 #### `generateResponse` (Lines 246-310)
 **Process**:
@@ -155,7 +157,7 @@ The ecological prompt includes semantic Guard activation, persistence, exit, and
 **Configuration**:
 - **Context window**: Last 10 messages for conversation context
 - **Streaming**: Not implemented (educational use prioritizes simplicity)
-- **Model**: Always `qwen3.5-flash`; legacy room model values are normalized before use
+- **Model**: Always `qwen3.8-flash`; legacy room model values are normalized before use
 
 ### `TutorSuggestionService` Class (Lines 316-406)
 **Purpose**: Specialized tutor suggestion generation
@@ -337,8 +339,8 @@ tracked in the [unified release record](doc_update_record/documentation_update_r
 - **Fallback speed**: Dummy service provides sub-second responses
 
 ### Cost Management
-- **Tutor token limit**: max_tokens100 for the selected candidate07 configuration
-- **Model selection**: qwen3.5-flash
+- **Tutor token limit**: max_tokens600 for the selected candidate11 configuration
+- **Model selection**: qwen3.8-flash
 - **Context pruning**: Intelligent conversation history management
 - **Failure handling**: Graceful degradation to dummy service
 
@@ -358,7 +360,7 @@ tracked in the [unified release record](doc_update_record/documentation_update_r
 ## Security Considerations
 
 ### API Key Management
-- **Environment variables**: `OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` are server-only Supabase Edge Function secrets
+- **Environment variables**: `OAI_API_KEY` and `OAI_BASE_URL` are mandatory server-only Supabase Edge Function secrets; the application model is selected by the shared catalog
 - **Conditional logic**: Graceful operation without API access
 - **No key exposure**: Client-side code never exposes sensitive keys
 

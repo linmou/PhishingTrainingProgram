@@ -100,7 +100,7 @@ describe('AI Service provider failure behavior', () => {
         expect(result.success).toBe(true);
         expect(result.suggestion).toBe('What makes the sender address look suspicious to you?');
         expect(result.appliedConfig).toMatchObject({
-            model_name: 'qwen3.5-flash',
+            model_name: 'qwen3.8-flash',
             system_prompt: 'Use room-level tutor guidance.'
         });
     });

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: verify learner pass, retry, failure, persistence, and reload in staging.
+// Test responsibility: verify assessment answer identity, retry/terminal state, reload, and the real tutor response consuming verified terminal feedback.
 'use strict';
 
 const assert = require('node:assert/strict');
@@ -7,6 +7,7 @@ const path = require('node:path');
 const { openRoom, query, waitForMatch, captureResponses, managementQuery, screenshot, writeJson, TIMEOUT } = require('../browser-e2e-support');
 const { assessmentRoom, deliverFixedAssessment } = require('./assessment-fixture');
 const { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers } = require('./assessment-browser-checks');
+const { tutoringStep } = require('./assessment-delivery');
 
 async function answer(ctx, label, selections, expectedStatus) {
   const fixture = await assessmentRoom({ ...ctx, kind: `assessment-answer-${label}` });
@@ -52,7 +53,7 @@ async function answer(ctx, label, selections, expectedStatus) {
     `${label} persisted assessment result`
   );
   const privateRows = await managementQuery(ctx.config,
-    `select id,lifecycle,terminal_result,attempt_count from private.transfer_assessments where id = '${delivered.assessment_id}'::uuid`);
+    `select id,lifecycle,terminal_result,attempt_count,closed_at from private.transfer_assessments where id = '${delivered.assessment_id}'::uuid`);
   writeJson(path.join(ctx.evidenceDir, `assessment-answer-${label}-persisted.json`), { messages, private_assessment: privateRows });
   assert(privateRows.some((row) => row.terminal_result === expectedStatus && row.attempt_count === selections.length),
     'Private assessment result or attempt count does not match the learner answers');
@@ -67,10 +68,29 @@ async function answer(ctx, label, selections, expectedStatus) {
     assert.deepEqual(attempt.selected_option_ids, [selections[index]]);
     assert(answers.some(row => row.id === attempt.answer_message_id), 'Attempt references a different learner answer');
   }
+  const terminalAnswer = answers.at(-1);
+  const terminalTutor = await tutoringStep(ctx, { room: fixture.room }, {
+    label: `answer-${label}-terminal-tutor`, focusMessageId: terminalAnswer.id,
+    expectedAssessmentCount: 1,
+    terminalAssessment: { terminal_answer_message_id: terminalAnswer.id, closed_at: privateRows[0].closed_at }
+  });
+  const tutorCall = terminalTutor.function_calls.find(call => call.url.includes('/ai-api') && call.status === 200);
+  assert(tutorCall?.response?.data?.content, 'Terminal assessment feedback did not reach the real tutor provider');
+  assert(!terminalTutor.function_calls.some(call => ['analyze_message', 'prepare_turn'].includes(call.request?.operation)),
+    'Assessment answer was incorrectly treated as ordinary learning evidence');
+  const feedback = tutorCall.request.messages.flatMap(message => message.content.split('\n')).flatMap(line => {
+    try { return [JSON.parse(line)]; } catch { return []; }
+  }).find(value => value?.assessment_id === delivered.assessment_id);
+  assert(feedback, 'Tutor request omitted verified assessment feedback');
+  assert.equal(feedback.resolution, expectedStatus);
+  assert.equal(feedback.lifecycle, expectedStatus);
+  assert.equal(feedback.attempt_count, selections.length);
+  assert.deepEqual(feedback.terminal_feedback.correct_option_ids, ['B']);
   return {
     room_id: fixture.room.id, question_message_id: delivered.question_message_id,
     assessment_id: delivered.assessment_id, selections, function_calls: calls,
     public_messages: messages, private_assessment: privateRows, private_attempts: attempts, input_gates: inputGates,
+    terminal_tutor: terminalTutor, verified_feedback: feedback,
     screenshot: await screenshot(ctx.studentPage, ctx.evidenceDir, `assessment-answer-${label}`)
   };
 }

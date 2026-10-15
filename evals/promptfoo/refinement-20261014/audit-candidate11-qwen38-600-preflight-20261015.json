@@ -1,0 +1,44 @@
+{
+  "intent": "Independently audit the separately authorized600-token full Tutor11 condition before execution, preserving the failed100-token experiment and conditional release gates.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "integrity_verdict": "clear",
+  "execution_readiness": "Ready after root reported the user's disk cleanup and20GiB free; initial audit writes failed under disk pressure and no calls were started before persistence.",
+  "candidate": {
+    "driver": "evals/promptfoo/v1/candidate11-qwen38-high-cap.js",
+    "driver_sha256": "f8e7989ec9bda60b378f26865ffb8e66ea4dc3873f7bd78b27f40f0f101b198e",
+    "manifest": "output/candidate11-qwen38-20261015/high-cap-600-01/manifest.json",
+    "manifest_sha256_json_serialization": "9f2149ab73fc2178f2e4eb2388a5dd81a2773ce1e67483e7f951bf385a17e245",
+    "target_settings": {"model":"qwen3.8-flash","temperature":0.3,"max_tokens":600,"enable_thinking":false},
+    "judge_settings": {"model":"qwen3.5-flash","temperature":0,"max_tokens":8000,"enable_thinking":true}
+  },
+  "changed_factors": {
+    "comparison": "Whole-configuration comparison: historical full Tutor11 policy, its three general Guard-scope base changes and600-token budget versus preserved Tutor07/Qwen3.8/100-token outputs. This does not isolate a prompt-only causal effect.",
+    "prior_condition": "Full Tutor11/Qwen3.8/100-token condition remains immutable with its failed verdict, raw truncated outputs and complete audit.",
+    "normalization": "Only declared target_max_tokens600→100 and operational request_concurrency48→24 are normalized for the existing comparator. Deep equality then rejects every other settings difference. Actual600-token candidate settings are separately frozen and reported.",
+    "unchanged": "All61cases, three repetitions, target model and temperature, nonthinking mode, formatting/transport attempt budgets, judge settings, evaluator/rubrics, thresholds, semantic pairs and classification aggregation remain unchanged."
+  },
+  "cache_review": {
+    "source_entries": 5441,
+    "unique_actual_judge_requests": 5418,
+    "identity": "Hash of complete actual provider request: model, exact messages, temperature, max_tokens, enable_thinking and response_format. Target-budget metadata does not prevent reuse of identical judge calls.",
+    "collision_policy": "Frozen rank0 paired-04 before rank1 full-02, then lexical filename; first source selected independent of pass/fail/error. Every duplicate source and raw file hash is preserved.",
+    "failure_preservation": "Selected cache includes failed transport responses and malformed judgments. No outcome preference, failed-grade filtering, target resampling or semantic retry is introduced.",
+    "independent_verification": "Integrated test independently rechecks every grouped source request hash, deterministic source ordering and inclusion of errors. All source hashes are validated before execution."
+  },
+  "verification": {
+    "manifest_validation": "Passed independently both before disk exhaustion and after cleanup for exact driver/manifest, all183frozen input identities, historical references, reused baseline judgments and cache source hashes.",
+    "tests": "Independently reran candidate11-qwen38-high-cap.test.js after cleanup:4passed,0failed. Covers complete frozen/cache provenance, complete judge-request identity, rejection of undeclared comparison changes, actual600-token requests and preservation of bounded invalid-output repair.",
+    "native_gate_review": "Uses unchanged assess and classification.compare/classify, retaining all native partitions, regression views, transitions, pairs, hard constraints and error handling; analyze preserves joint outcomes.",
+    "resource_gate": "run requires at least512MiB free before any provider call and starts a monitor that emits a first disk/memory/load record.",
+    "auditor_model_calls": 0,
+    "sealed_holdout_inspection": false
+  },
+  "remaining_conditions": [
+    "Do not reinterpret or overwrite the prior100-token failure as fixed merely because this new condition completes.",
+    "Every expected target generation and applicable check must be reconciled. Errors and invalid outputs remain visible under frozen gates.",
+    "Any judge-format recovery beyond existing budgets requires an explicit uniform error/missing-only addendum, with native evidence preserved.",
+    "User conditional deployment still requires all applicable native gates, independent unseen/adoption prerequisites and product release verification. Better aggregate metrics alone are insufficient.",
+    "No live600-token evidence or acceptance is claimed by this preflight audit."
+  ]
+}
