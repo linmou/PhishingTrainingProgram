@@ -1,44 +1,29 @@
 /**
- * Predefined detection areas and verification steps for phishing training
- * Based on the structured examples from raw instructions
+ * Predefined recognition and safe-action learning targets for phishing training.
+ * Named teaching scenarios have five total targets across both lists.
  */
 
 // Scam Detection Areas Templates
 export const SCAM_DETECTION_AREAS = {
   nintendo_switch_deal: [
-    '"Too Good to Be True" Pricing: $19.99 for a $300+ gaming console',
-    'Urgency Language: "Hurry up, this offer WILL NOT LAST"',
-    'Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)',
-    'ALL CAPS Warning: "WILL NOT LAST" creates false urgency',
-    'No Official Branding: Missing Nintendo verification or official company messaging',
-    'Generic Username: "Lucy Simms" doesn\'t suggest official Nintendo account',
-    'Social Proof Manipulation: Limited engagement (only 3 likes) despite "amazing deal"',
-    'Business Logic Flaw: No explanation of how/why Nintendo would offer this loss-making deal'
+    'Evaluate whether a $19.99 Nintendo Switch offer is plausible by comparing its price and business logic with legitimate retailers.',
+    'Identify urgency and scarcity tactics such as "Hurry up" and "WILL NOT LAST" that pressure people to act quickly.',
+    'Check the sender\'s claimed Nintendo affiliation and the exact link destination; shortened links and unofficial profiles do not establish authenticity.',
+    'Evaluate likes, shares, testimonials, and branding against independent evidence rather than treating social proof as verification.'
   ],
   
   itunes_gift_card: [
-    'Excessive Value Promise: $500 for a "5 minute survey"',
-    'Urgency/Excitement Language: "crazy deal!!" with multiple exclamation points',
-    'Suspicious URL: http://bit.ly/FREEGIFTS (shortened link, not official Apple/iTunes)',
-    '"Instant" Reward Claims: "got instantly" suggests unrealistic immediate gratification',
-    'Generic Account: "Emma Garcia" not affiliated with Apple or iTunes',
-    'Professional Photo Quality: Uses actual iTunes gift card photo to appear legitimate',
-    'Believable Personal Story: "I filled in a 5 minute survey" sounds like peer testimony',
-    'Lack of Official Apple Branding: No Apple logo, iTunes official messaging, or verification',
-    'No Terms/Conditions: Legitimate promotions always include fine print and restrictions'
+    'Evaluate whether a $500 iTunes gift card is a plausible reward for a five-minute survey.',
+    'Identify excitement, urgency, and instant-reward claims that encourage participation before checking the offer.',
+    'Check the sender\'s claimed Apple affiliation and the exact link destination; a shortened URL or personal account does not establish authenticity.',
+    'Explain why professional photos and personal testimonials are insufficient evidence, and check the promotion\'s terms and conditions.'
   ],
   
   account_security_alert: [
-    'Fear-Based Urgency: "YOUR ACCOUNT IS AT RISK" in large, alarming text',
-    'Suspicious URL: http://testdrive.info/youraccount (not official platform domain)',
-    'Generic Source: "Socail Media Testdrive" (note spelling error) not a recognizable platform',
-    'Panic-Inducing Language: "!!&$!ALERT!&$!!" with symbols and urgency',
-    'Immediate Action Pressure: "Click here to resolve" without explanation',
-    'Professional Design: Well-designed graphic could appear legitimate',
-    'Vague Platform Reference: Doesn\'t specify which account/platform is at risk',
-    'No Specific Account Information: Real security alerts include account-specific details',
-    'Spelling Error: "Socail" instead of "Social" in account name',
-    'No Alternative Contact Method: Legitimate alerts provide multiple ways to verify'
+    'Identify fear, urgency, and pressure to click in alerts such as "YOUR ACCOUNT IS AT RISK".',
+    'Check the sender and exact domain for impersonation, including "Socail Media Testdrive" and testdrive.info.',
+    'Explain why professional design and an HTTPS lock do not prove a site or alert is legitimate.',
+    'Identify vague or missing platform, account, and incident details that make an alert difficult to verify.'
   ],
   
   // Generic templates for custom scenarios
@@ -59,34 +44,15 @@ export const SCAM_DETECTION_AREAS = {
 // Verification Steps Templates
 export const VERIFICATION_STEPS = {
   nintendo_switch_deal: [
-    'URL Analysis: Don\'t click the shortened link - check if it redirects to nintendo.com or authorized retailer',
-    'Account Verification: Click on "Lucy Simms" profile - check account creation date, follower count, posting history',
-    'Cross-Reference Checking: Visit nintendo.com directly to check for this promotion',
-    'Official Social Media: Check Nintendo\'s official social media accounts for this deal',
-    'Price Reality Check: Search current Nintendo Switch prices on legitimate retailers',
-    'Business Logic: Ask "Why would Nintendo sell at 93% loss?"',
-    'News Verification: Search major gaming news sites for coverage of this deal'
+    'Verify the promotion and price through Nintendo\'s official website or an authorized retailer reached independently before clicking, paying, or sharing information.'
   ],
   
   itunes_gift_card: [
-    'Official Source Verification: Visit apple.com or itunes.com directly',
-    'Apple Social Media: Check Apple\'s official social media for any current promotions',
-    'Press Release Check: Look for press releases about legitimate gift card promotions',
-    'URL Analysis: Don\'t click bit.ly link - legitimate Apple promotions use apple.com domains',
-    'Account Investigation: Check Emma Garcia\'s profile and posting history for other suspicious offers',
-    'Logic Check: Ask "Why would Apple give away $500 for 5 minutes of work?"',
-    'Cost Analysis: Calculate how much Apple would lose daily if this were real'
+    'Verify the promotion through Apple\'s official channels reached independently before participating or sharing personal information.'
   ],
   
   account_security_alert: [
-    'Do NOT Click: Never click security alert links directly',
-    'Manual Login: Type the actual platform\'s URL manually into browser',
-    'Official Account Check: Log into your real account separately to check for security notifications',
-    'Platform Verification: Check which social media platforms you actually use',
-    'URL Domain Check: Notice "testdrive.info" is not a legitimate social media domain',
-    'Official Support: Contact platform support through official channels if concerned',
-    'Security Review: Enable two-factor authentication through official platform settings',
-    'Login Activity: Review recent login activity in official account security settings'
+    'Verify independently by opening the official app or typing its known address, then review security alerts and login activity; use official support and enable two-factor authentication when needed.'
   ],
   
   // Generic verification steps
@@ -105,20 +71,21 @@ export const VERIFICATION_STEPS = {
 // Privacy Risk Detection Areas
 export const PRIVACY_DETECTION_AREAS = {
   location_sharing: [
-    'Real-time location sharing: Announcing specific places and times',
-    'Predictable schedule: Giving exact times and locations',
-    'Social engineering vulnerability: Revealing when away from home',
-    'Safety risks: Making yourself trackable to strangers',
-    'Property exposure: Showing identifying features of your home',
-    'Address visibility: Posting exact addresses publicly'
+    'Identify precise location information exposed in a public post, including a home address.',
+    'Explain who can access public location information and how it could be misused to threaten personal safety.',
+    'Recognize how addresses, house numbers, street signs, and identifying images can reveal a home location.'
+  ],
+
+  movie_meetup: [
+    'Identify how a venue, date, and exact time reveal someone\'s future movements.',
+    'Explain how public meetup plans can make a person trackable and their schedule predictable.',
+    'Recognize how a stranger could use public plans to appear familiar or trustworthy.'
   ],
   
   contact_information: [
-    'Phone number exposure: Sharing personal contact information publicly',
-    'Identity theft potential: Phone numbers used for account verification',
-    'Harassment risk: Number accessible to anyone who sees the post',
-    'Social engineering target: Phone numbers used for scams or impersonation',
-    'Spam vulnerability: Public numbers lead to unwanted calls and messages'
+    'Identify a phone number as personal contact information exposed by a public post.',
+    'Explain how public phone numbers can enable spam, harassment, and impersonation.',
+    'Recognize suspicious calls or messages that use an exposed number to request personal information or account access.'
   ],
   
   personal_details: [
@@ -133,19 +100,18 @@ export const PRIVACY_DETECTION_AREAS = {
 // Privacy Protection Steps
 export const PRIVACY_PROTECTION_STEPS = {
   location_sharing: [
-    'Use private messages: Coordinate meetups via DM instead of public posts',
-    'Be vague about locations: Say "downtown" or "my neighborhood" instead of exact addresses',
-    'Avoid real-time posting: Share experiences after you\'ve left the location',
-    'Check privacy settings: Ensure only friends can see location-based posts',
-    'Remove identifying features: Avoid showing house numbers, street signs, or landmarks'
+    'Choose an appropriate audience and a private communication channel for sharing necessary location details.',
+    'Rewrite the post to coordinate safely without exposing a home address or identifying location details.'
+  ],
+
+  movie_meetup: [
+    'Verify who is involved through a trusted channel before agreeing to meet.',
+    'Coordinate meetup plans privately and limit public venue, date, and time details.'
   ],
   
   contact_information: [
-    'Keep numbers private: Share contact info only with close friends directly',
-    'Use platform messaging: Communicate through the app\'s built-in messaging',
-    'Create group chats: Use private group messages for planning events',
-    'Be selective: Only give your number to people you trust',
-    'Monitor usage: Watch for unusual activity if your number gets shared'
+    'Share contact details selectively with trusted people through private messages or platform messaging.',
+    'Respond safely to suspicious calls or messages without sharing passwords or verification codes.'
   ],
   
   general_privacy: [
@@ -208,6 +174,11 @@ export const SCENARIO_TEMPLATES = {
   'Location Sharing Risks': {
     detection_areas: PRIVACY_DETECTION_AREAS.location_sharing,
     verification_steps: PRIVACY_PROTECTION_STEPS.location_sharing,
+    type: 'privacy'
+  },
+  'Movie Meetup Social Engineering': {
+    detection_areas: PRIVACY_DETECTION_AREAS.movie_meetup,
+    verification_steps: PRIVACY_PROTECTION_STEPS.movie_meetup,
     type: 'privacy'
   },
   'Contact Information Exposure': {

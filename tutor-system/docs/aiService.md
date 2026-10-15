@@ -1,6 +1,6 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Intent: explain AI request configuration and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 8dc7271. -->
+<!-- Intent: explain AI request configuration, scenario learning targets and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 8441f11. -->
 
 ## Purpose
 Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. Production requests use Qwen3.5 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key.
@@ -8,7 +8,7 @@ Comprehensive AI integration service providing intelligent tutoring suggestions,
 ## Update Metadata
 
 - Updated: 2026-10-15
-- Baseline commit: 8dc7271
+- Baseline commit: 8441f11
 
 The selected tutor policy is candidate07 with the approved Guard response pattern. Tutor requests use temperature0.3, max_tokens100 and enable_thinkingfalse, including the bounded JSON repair attempt. These settings override stored room temperature/token values; `appliedConfig` reports the settings actually sent. Room role, style and target inventories still configure the generated base prompt.
 
@@ -286,6 +286,32 @@ import { buildAIContextFromExistingData } from './simplifiedAIContext';
 ```typescript
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ```
+
+The six teaching scenarios use five learning targets each, counted across
+`detection_areas` and `verification_steps` together. Recognition targets use
+`detection_areas`; safe actions use `verification_steps`. Checklist initialization
+reads both lists from the room's persisted `prompt_config` before considering
+prompt extraction, so the combined inventory is the learner's target count.
+
+| Teaching template | Recognition targets | Safe-action targets |
+| --- | --- | --- |
+| Account Security Alert Scam | Pressure tactics; sender/domain impersonation; limits of design and HTTPS; missing alert details | Verify independently and review account security |
+| Nintendo Switch Deal Scam | Offer plausibility; urgency/scarcity; sender/link authenticity; social proof | Verify promotion and price through official sources |
+| iTunes Gift Card Survey Scam | Reward plausibility; excitement/instant-reward persuasion; sender/link authenticity; photos, testimonials and promotion terms | Verify through Apple's official channels |
+| Location Sharing Safety | Exposed location; audience and misuse; home-identifying details | Choose private communication; rewrite the post safely |
+| Movie Meetup Social Engineering | Exposed future movements; trackability; familiarity-based manipulation | Verify meetup participants; coordinate privately |
+| Phone Number Phishing Training | Exposed contact information; misuse risks; suspicious follow-up contact | Share selectively; respond without disclosing credentials or verification codes |
+
+Account-alert demo variants share the account-alert inventory. The Phase 0
+comparison keeps its historical tutor policy and examples, with only its knowledge
+sections refreshed to match the current targets. The frozen source prompt and
+historical evaluation datasets retain their original content. Custom inventories
+are not subject to the teaching catalog's five-target limit.
+
+Saved global templates must receive the matching knowledge configuration and
+prompt update before newly created hosted rooms inherit these targets. Existing
+rooms retain their authored inventories. Deployment status and verification are
+tracked in the [five-target release record](doc_update_record/documentation_update_record_v2026_10_15_five_learning_targets.md).
 
 **Available Scenarios**:
 - **Phishing detection**: Email scam identification

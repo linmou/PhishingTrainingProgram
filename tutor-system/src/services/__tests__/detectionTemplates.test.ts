@@ -1,7 +1,13 @@
-import { 
+/**
+ * File: src/services/detectionTemplates.ts
+ * Purpose: verify teaching inventories, category mappings, and unrestricted generic targets.
+ */
+import {
     SCAM_DETECTION_AREAS, 
     VERIFICATION_STEPS, 
     SCENARIO_TEMPLATES,
+    PRIVACY_DETECTION_AREAS,
+    PRIVACY_PROTECTION_STEPS,
     getDetectionAreas,
     getVerificationSteps 
 } from '../detectionTemplates';
@@ -11,23 +17,22 @@ describe('Detection Templates', () => {
         it('should have Nintendo Switch deal detection areas', () => {
             const areas = SCAM_DETECTION_AREAS.nintendo_switch_deal;
             
-            expect(areas).toContain('"Too Good to Be True" Pricing: $19.99 for a $300+ gaming console');
-            expect(areas).toContain('Urgency Language: "Hurry up, this offer WILL NOT LAST"');
-            expect(areas).toContain('Suspicious URL: http://goo.gl/FreeSwitch (shortened link, not official Nintendo domain)');
+            expect(areas).toBe(SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'].detection_areas);
+            expect(areas).toHaveLength(4);
         });
 
         it('should have iTunes gift card detection areas', () => {
             const areas = SCAM_DETECTION_AREAS.itunes_gift_card;
             
-            expect(areas).toContain('Excessive Value Promise: $500 for a "5 minute survey"');
-            expect(areas).toContain('Professional Photo Quality: Uses actual iTunes gift card photo to appear legitimate');
+            expect(areas).toBe(SCENARIO_TEMPLATES['iTunes Gift Card Survey ($500)'].detection_areas);
+            expect(areas).toHaveLength(4);
         });
 
         it('should have account security alert detection areas', () => {
             const areas = SCAM_DETECTION_AREAS.account_security_alert;
             
-            expect(areas).toContain('Fear-Based Urgency: "YOUR ACCOUNT IS AT RISK" in large, alarming text');
-            expect(areas).toContain('Spelling Error: "Socail" instead of "Social" in account name');
+            expect(areas).toBe(SCENARIO_TEMPLATES['Account Security Alert'].detection_areas);
+            expect(areas).toHaveLength(4);
         });
     });
 
@@ -35,19 +40,50 @@ describe('Detection Templates', () => {
         it('should have Nintendo Switch verification steps', () => {
             const steps = VERIFICATION_STEPS.nintendo_switch_deal;
             
-            expect(steps).toContain('URL Analysis: Don\'t click the shortened link - check if it redirects to nintendo.com or authorized retailer');
-            expect(steps).toContain('Business Logic: Ask "Why would Nintendo sell at 93% loss?"');
+            expect(steps).toBe(SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'].verification_steps);
+            expect(steps).toHaveLength(1);
         });
 
         it('should have account security verification steps', () => {
             const steps = VERIFICATION_STEPS.account_security_alert;
             
-            expect(steps).toContain('Do NOT Click: Never click security alert links directly');
-            expect(steps).toContain('Manual Login: Type the actual platform\'s URL manually into browser');
+            expect(steps).toBe(SCENARIO_TEMPLATES['Account Security Alert'].verification_steps);
+            expect(steps).toHaveLength(1);
         });
     });
 
     describe('SCENARIO_TEMPLATES', () => {
+        it.each([
+            'Nintendo Switch Deal ($19.99)',
+            'iTunes Gift Card Survey ($500)',
+            'Account Security Alert',
+            'Location Sharing Risks',
+            'Movie Meetup Social Engineering',
+            'Contact Information Exposure'
+        ] as const)('provides five unique nonempty recognition and action targets for %s', (name) => {
+            const scenario = SCENARIO_TEMPLATES[name];
+            const targets = [...scenario.detection_areas, ...scenario.verification_steps];
+            expect(targets).toHaveLength(5);
+            expect(targets.every((target) => target.trim().length > 0)).toBe(true);
+            expect(new Set(targets.map((target) => target.trim().toLowerCase())).size).toBe(5);
+            expect(scenario.detection_areas).toHaveLength(scenario.type === 'scam' ? 4 : 3);
+            expect(scenario.verification_steps).toHaveLength(scenario.type === 'scam' ? 1 : 2);
+        });
+
+        it('keeps home-location and future-meetup inventories distinct', () => {
+            const meetup = SCENARIO_TEMPLATES['Movie Meetup Social Engineering'];
+            expect(meetup.detection_areas).toBe(PRIVACY_DETECTION_AREAS.movie_meetup);
+            expect(meetup.verification_steps).toBe(PRIVACY_PROTECTION_STEPS.movie_meetup);
+            expect(meetup.detection_areas).not.toEqual(PRIVACY_DETECTION_AREAS.location_sharing);
+        });
+
+        it('retains generic inventories above five targets', () => {
+            for (const name of ['General Scam Indicators', 'Personal Details Protection'] as const) {
+                const scenario = SCENARIO_TEMPLATES[name];
+                expect([...scenario.detection_areas, ...scenario.verification_steps].length).toBeGreaterThan(5);
+            }
+        });
+
         it('should have complete Nintendo Switch scenario', () => {
             const scenario = SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'];
             
@@ -81,13 +117,15 @@ describe('Detection Templates', () => {
         it('should get detection areas by category', () => {
             const areas = getDetectionAreas('nintendo_switch_deal');
             expect(areas.length).toBeGreaterThan(0);
-            expect(areas[0]).toContain('$19.99 for a $300+');
+            expect(areas).toBe(SCAM_DETECTION_AREAS.nintendo_switch_deal);
+            expect(getDetectionAreas('movie_meetup')).toBe(PRIVACY_DETECTION_AREAS.movie_meetup);
         });
 
         it('should get verification steps by category', () => {
             const steps = getVerificationSteps('nintendo_switch_deal');
             expect(steps.length).toBeGreaterThan(0);
-            expect(steps[0]).toContain("Don't click the shortened link");
+            expect(steps).toBe(VERIFICATION_STEPS.nintendo_switch_deal);
+            expect(getVerificationSteps('movie_meetup')).toBe(PRIVACY_PROTECTION_STEPS.movie_meetup);
         });
 
         it('should return empty array for invalid category', () => {

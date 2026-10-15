@@ -36,12 +36,19 @@ export interface DemoRoomTemplateSeed {
   /** Stable id for eval/browser case mapping */
   case_id: string;
   template_name: string;
-  template_description: string;
+  template_description: string | null;
   title_template: string;
   description_template: string;
   image_url: string;
   pre_populated_dialogue: PrePopulatedMessage[];
   ai_config_template: DemoAIConfigTemplate;
+  op_config_template?: {
+    op_id: string | null;
+    op_avatar_url: string | null;
+    use_custom_op: boolean;
+    custom_op_name: string;
+    op_display_name: string;
+  };
   /**
    * When true, template is only offered on /tutor/test-rooms (not main Tutor create).
    * Classic teaching templates stay on the normal dashboard.
@@ -489,6 +496,24 @@ const COMPARISON_SOURCES: ComparisonSource[] = [
   { pairId: 'personal_story', sourceCaseId: 'webpage_demo_personal_story_trap', label: 'Personal Story' }
 ];
 
+/** Keep the frozen Phase 0 policy/examples while refreshing its scenario inventory. */
+function buildPhase0PromptWithCurrentTargets(config: SystemPromptConfig): string {
+  const start = phase0Prompt.system_prompt.indexOf('## Detection Areas to Focus On:');
+  const end = phase0Prompt.system_prompt.indexOf('Remember: Your goal', start);
+  if (start < 0 || end < 0) {
+    throw new Error('Frozen Phase 0 prompt is missing scenario knowledge boundaries');
+  }
+
+  const knowledge = [
+    '## Detection Areas to Focus On:',
+    ...config.detection_areas.map((area) => `- ${area}`),
+    '## Verification Steps to Teach:',
+    ...config.verification_steps.map((step) => `- ${step}`)
+  ].join('\n\n');
+
+  return `${phase0Prompt.system_prompt.slice(0, start)}${knowledge}\n\n${phase0Prompt.system_prompt.slice(end)}`;
+}
+
 /** Separate six-room catalog used only for controlled screenshot comparisons. */
 export function getPromptComparisonTemplateSeeds(): DemoRoomTemplateSeed[] {
   const coreSeeds = getDemoRoomTemplateSeeds();
@@ -529,7 +554,7 @@ export function getPromptComparisonTemplateSeeds(): DemoRoomTemplateSeed[] {
         ai_config_template: {
           ...refinedBase,
           system_prompt: version === 'phase0'
-            ? phase0Prompt.system_prompt
+            ? buildPhase0PromptWithCurrentTargets(promptConfig)
             : refinedBase.system_prompt,
           prompt_config: promptConfig
         },
@@ -539,6 +564,105 @@ export function getPromptComparisonTemplateSeeds(): DemoRoomTemplateSeed[] {
   });
 }
 
+/** Existing production privacy teaching content, with explicit scenario targets. */
+export function getPrivacyTeachingTemplateSeeds(): DemoRoomTemplateSeed[] {
+  return [
+    {
+      case_id: 'webpage_location_sharing_safety',
+      template_name: 'Location Sharing Safety',
+      template_description: null,
+      title_template: 'Location Sharing Safety',
+      description_template: "321 Jefferson Ave come hang out guys, I'm bored.",
+      image_url: '/images/room-presets/privacy_2.png',
+      pre_populated_dialogue: [
+        {
+          role: 'student',
+          message: "Come hang out! I'm so bored",
+          timestamp: '2025-08-20T06:21:49.877Z',
+          user_name: 'Jasmina Weatherly'
+        },
+        {
+          role: 'student',
+          message: "Maybe don't share your exact address publicly?",
+          timestamp: '2025-08-20T06:21:49.877Z',
+          user_name: 'Friend 1'
+        }
+      ],
+      ai_config_template: buildCasualPeerAIConfig('Location Sharing Risks'),
+      op_config_template: {
+        op_id: null,
+        op_avatar_url: null,
+        use_custom_op: true,
+        custom_op_name: 'Jasmina Weatherly',
+        op_display_name: 'Jasmina Weatherly'
+      },
+      test_only: false
+    },
+    {
+      case_id: 'webpage_movie_meetup_social_engineering',
+      template_name: 'Movie Meetup Social Engineering',
+      template_description: null,
+      title_template: 'Movie Meetup Social Engineering',
+      description_template: 'Gonna be at the Regal THIS FRIDAY to see the new Marvel movie! Meet me there at 8 🍿',
+      image_url: '/images/room-presets/privacy_1.png',
+      pre_populated_dialogue: [
+        {
+          role: 'student',
+          message: "I'll meet you there!",
+          timestamp: '2025-08-20T06:21:49.877Z',
+          user_name: 'Emily J'
+        },
+        {
+          role: 'student',
+          message: 'Sounds like fun!',
+          timestamp: '2025-08-20T06:21:49.877Z',
+          user_name: 'Connor McCormack'
+        }
+      ],
+      ai_config_template: buildCasualPeerAIConfig('Movie Meetup Social Engineering'),
+      op_config_template: {
+        op_id: null,
+        op_avatar_url: null,
+        use_custom_op: true,
+        custom_op_name: 'Ethan Kozloff',
+        op_display_name: 'Ethan Kozloff'
+      },
+      test_only: false
+    },
+    {
+      case_id: 'webpage_phone_number_phishing_training',
+      template_name: 'Phone Number Phishing Training',
+      template_description: null,
+      title_template: 'Phone Number Phishing Training',
+      description_template: 'new phone who dis? my new number is 607-252-6771',
+      image_url: '/images/room-presets/phishing_1.png',
+      pre_populated_dialogue: [
+        {
+          role: 'student',
+          message: "KK I'll txt you",
+          timestamp: '2025-08-20T06:21:49.877Z',
+          user_name: 'Vanessa Kemp'
+        },
+        {
+          role: 'student',
+          message: 'finally about time you got a new phone',
+          timestamp: '2025-08-20T06:21:49.877Z',
+          user_name: 'Zoe Goodall'
+        }
+      ],
+      ai_config_template: buildCasualPeerAIConfig('Contact Information Exposure'),
+      op_config_template: {
+        op_id: null,
+        op_avatar_url: null,
+        use_custom_op: true,
+        custom_op_name: 'Vanessa Kemp',
+        op_display_name: 'Vanessa Kemp'
+      },
+      test_only: false
+    }
+  ];
+}
+
 /** Templates that only appear on /tutor/test-rooms. */
 export function getTestOnlyDemoTemplateSeeds(): DemoRoomTemplateSeed[] {
   return getDemoRoomTemplateSeeds().filter((s) => s.test_only);
@@ -546,7 +670,10 @@ export function getTestOnlyDemoTemplateSeeds(): DemoRoomTemplateSeed[] {
 
 /** Classic teaching templates also usable from the main Tutor dashboard. */
 export function getNormalTeachingTemplateSeeds(): DemoRoomTemplateSeed[] {
-  return getDemoRoomTemplateSeeds().filter((s) => !s.test_only);
+  return [
+    ...getDemoRoomTemplateSeeds().filter((s) => !s.test_only),
+    ...getPrivacyTeachingTemplateSeeds()
+  ];
 }
 
 /** Ecological eval vars derived from the same dialogue the website seeds. */
@@ -580,7 +707,7 @@ export function toRoomTemplateInsertRow(seed: DemoRoomTemplateSeed) {
     image_url: seed.image_url,
     pre_populated_dialogue: seed.pre_populated_dialogue,
     ai_config_template: seed.ai_config_template,
-    op_config_template: null,
+    op_config_template: seed.op_config_template ?? null,
     password_config: null
   };
 }
