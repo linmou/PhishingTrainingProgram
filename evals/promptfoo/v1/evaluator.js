@@ -121,7 +121,7 @@ function judgeMessages(caseDefinition, output, rubrics) {
       output: id === 'decision_reasoning' || id.startsWith('v0:')
         ? output
         : id === 'instruction_realization'
-          ? { suggested_response: output.suggested_response, decision: output.decision }
+          ? { suggested_response: output.suggested_response, mode: output.mode, decision: output.decision }
           : { suggested_response: output.suggested_response }
     }
   ]));
@@ -267,8 +267,12 @@ async function judgeOne({
       calls: []
     };
   }
+  const instruction = normalized.decision?.instruction;
+  const validInstruction = [
+    'protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation'
+  ].includes(instruction) || (instruction === null && normalized.mode === 'guard');
   if (id === 'instruction_realization' && (
-    !normalized.decision || typeof normalized.decision.instruction !== 'string'
+    !normalized.decision || Array.isArray(normalized.decision) || !validInstruction
   )) {
     return {
       metric: id,

@@ -73,12 +73,29 @@ function assess(report, context = {}) {
     return verdict;
   }
 
+  for (const error of validateManifest(manifest, { cases })) {
+    verdict.issues.push(issue('manifest_coverage', { path: error.path, error: error.error }));
+  }
+
   const expected = buildExpectedRows({ cases, manifest });
   verdict.expected_rows = expected.length;
+  const expectedGenerations = new Map();
+  for (const item of expected) {
+    const key = `${item.case_id}:${item.repetition}`;
+    if (!expectedGenerations.has(key)) expectedGenerations.set(key, new Set());
+    expectedGenerations.get(key).add(item.metric);
+  }
   const evidence = new Map();
   for (const record of report.evidence) {
     const key = `${record.case_id}:${record.repetition}`;
     if (evidence.has(key)) verdict.issues.push(issue('duplicate_generation', { key }));
+    if (!expectedGenerations.has(key)) verdict.issues.push(issue('unexpected_generation', { key }));
+    const seen = new Set();
+    for (const result of record.results || []) {
+      if (seen.has(result.metric)) verdict.issues.push(issue('duplicate_result', { key, metric: result.metric }));
+      if (!expectedGenerations.get(key)?.has(result.metric)) verdict.issues.push(issue('unexpected_result', { key, metric: result.metric }));
+      seen.add(result.metric);
+    }
     evidence.set(key, record);
   }
 
@@ -88,7 +105,6 @@ function assess(report, context = {}) {
   verdict.issues.push(...secrets);
 
   const rows = new Map();
-  const rowKey = item => `${item.metric}|overall`;
   for (const item of expected) {
     const record = evidence.get(`${item.case_id}:${item.repetition}`);
     if (!record) {
@@ -141,10 +157,12 @@ function assess(report, context = {}) {
   }
   verdict.metrics = [...rows.values()];
 
-  const pairOutcome = evaluatePairs(cases, report.evidence);
-  verdict.pairs = pairOutcome.pairs;
-  for (const failure of pairOutcome.failures) {
-    verdict.issues.push(issue(failure.code === 'pair_member_failed' ? 'pair_member_failed' : 'pair', { ...failure }));
+  for (let repetition = 0; repetition < manifest.settings.repetitions; repetition++) {
+    const pairOutcome = evaluatePairs(cases, report.evidence.filter(record => record.repetition === repetition));
+    verdict.pairs.push(...pairOutcome.pairs.map(pair => ({ ...pair, repetition })));
+    for (const failure of pairOutcome.failures) {
+      verdict.issues.push(issue(failure.code === 'pair_member_failed' ? 'pair_member_failed' : 'pair', { ...failure, repetition }));
+    }
   }
 
   if (context.baseline) {
@@ -154,14 +172,36 @@ function assess(report, context = {}) {
       verdict.comparison = comparability;
     } else {
       const baseIndex = new Map(context.baseline.report.evidence.map(record => [`${record.case_id}:${record.repetition}`, record]));
+      const baselineKeys = new Set();
+      for (const base of context.baseline.report.evidence) {
+        const key = `${base.case_id}:${base.repetition}`;
+        if (baselineKeys.has(key)) verdict.issues.push(issue('duplicate_baseline_generation', { key }));
+        if (!expectedGenerations.has(key)) verdict.issues.push(issue('unexpected_baseline_generation', { key }));
+        baselineKeys.add(key);
+        const seen = new Set();
+        for (const result of base.results || []) {
+          if (seen.has(result.metric)) verdict.issues.push(issue('duplicate_baseline_result', { key, metric: result.metric }));
+          if (!expectedGenerations.get(key)?.has(result.metric)) verdict.issues.push(issue('unexpected_baseline_result', { key, metric: result.metric }));
+          if (result.method !== METHOD_BY_METRIC(result.metric)) verdict.issues.push(issue('baseline_method_mismatch', { key, metric: result.metric }));
+          seen.add(result.metric);
+        }
+      }
       for (const item of expected) {
         const record = evidence.get(`${item.case_id}:${item.repetition}`);
         const base = baseIndex.get(`${item.case_id}:${item.repetition}`);
-        if (!record || !base) continue;
+          if (!record || !base) {
+            if (!base) verdict.issues.push(issue('missing_baseline_generation', { case_id: item.case_id, repetition: item.repetition }));
+            continue;
+          }
+          if (base.case_version !== item.case_version) verdict.issues.push(issue('baseline_case_version_drift', { case_id: item.case_id, expected: item.case_version, actual: base.case_version }));
         {
           const candidateResult = (record.results || []).find(candidate => candidate.metric === item.metric);
           const baselineResult = (base.results || []).find(candidate => candidate.metric === item.metric);
-          if (!candidateResult || !baselineResult) continue;
+          if (!candidateResult || !baselineResult) {
+            if (!baselineResult) verdict.issues.push(issue('missing_baseline_result', { case_id: item.case_id, metric: item.metric, repetition: item.repetition }));
+            continue;
+          }
+          if (['error', 'missing'].includes(baselineResult.status)) verdict.issues.push(issue('errored_baseline_result', { case_id: item.case_id, metric: item.metric, repetition: item.repetition }));
           if (baselineResult.status !== 'not_applicable' && candidateResult.status === 'not_applicable') {
             verdict.applicability_changes.push({ case_id: item.case_id, metric: item.metric, before: baselineResult.status, after: candidateResult.status });
           }
@@ -174,7 +214,7 @@ function assess(report, context = {}) {
         }
       }
       for (const row of verdict.metrics) {
-        const comparable = expected.filter(item => item.metric === row.metric).flatMap(item => {
+        const comparable = expected.filter(item => item.metric === row.metric && (row.partition === 'overall' || item.partition === row.partition)).flatMap(item => {
           const record = evidence.get(`${item.case_id}:${item.repetition}`);
           const base = baseIndex.get(`${item.case_id}:${item.repetition}`);
           const candidateResult = record && (record.results || []).find(candidate => candidate.metric === item.metric);
@@ -197,10 +237,16 @@ function assess(report, context = {}) {
 }
 
 function tally(rows, item, status, policy, result = {}) {
-  const key = `${item.metric}|overall`;
+  for (const partition of new Set(['overall', item.partition])) {
+    tallyPartition(rows, item, partition, status, policy, result);
+  }
+}
+
+function tallyPartition(rows, item, partition, status, policy, result) {
+  const key = `${item.metric}|${partition}`;
   if (!rows.has(key)) {
     const hard = item.metric === HARD_SUPPORTING_CHECK || HARD_METRIC_IDS.includes(item.metric) || (policy.hard_metrics || []).includes(item.metric);
-    rows.set(key, { metric: item.metric, method: METHOD_BY_METRIC(item.metric), partition: 'overall', threshold: hard ? policy.hard_threshold : policy.semantic_default_threshold, expected: 0, applicable: 0, passed: 0, inapplicable: 0, missing: 0, error_rows: 0, verdict: 'unmeasured', fraction: '0/0' });
+    rows.set(key, { metric: item.metric, method: METHOD_BY_METRIC(item.metric), partition, threshold: hard ? policy.hard_threshold : policy.semantic_default_threshold, expected: 0, applicable: 0, passed: 0, inapplicable: 0, missing: 0, error_rows: 0, verdict: 'unmeasured', fraction: '0/0' });
   }
   const row = rows.get(key);
   row.expected += 1;

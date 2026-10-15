@@ -38,8 +38,8 @@ function configuration() {
     ? dotenv.parse(fs.readFileSync(envPath))
     : {};
   const env = { ...fileEnv, ...process.env };
-  if (!env.REACT_APP_OAI_API_KEY || !env.REACT_APP_OAI_BASE_URL) throw new Error('Missing project API configuration.');
-  return { key: env.REACT_APP_OAI_API_KEY, endpoint: env.REACT_APP_OAI_BASE_URL.replace(/\/+$/, '') };
+  if (!env.OAI_API_KEY || !env.OAI_BASE_URL) throw new Error('Missing OAI_API_KEY or OAI_BASE_URL from project configuration.');
+  return { key: env.OAI_API_KEY, endpoint: env.OAI_BASE_URL.replace(/\/+$/, '') };
 }
 async function call(messages, kind, settings) {
   const env = configuration();
@@ -59,13 +59,19 @@ async function call(messages, kind, settings) {
       const payload = JSON.parse(raw);
       return { request, endpoint: env.endpoint, attempts, payload, text: payload.choices?.[0]?.message?.content || '' };
     } catch (error) {
-      attempts.push({ started, completed: new Date().toISOString(), error: error.message });
+      attempts.push({ started, completed: new Date().toISOString(), error: error.message,
+        ...(error.cause ? { cause: { code: error.cause.code, message: error.cause.message } } : {}) });
       if (attempt + 1 === settings.transport_attempts) return { request, endpoint: env.endpoint, attempts, error: error.message };
+      await new Promise(resolve => setTimeout(resolve, settings.transport_retry_delay_ms || 2000));
     }
   }
 }
-function messagesFor(c, variant, policy, contractVersion = 'legacy') {
+function messagesFor(c, variant, policy, contractVersion = 'legacy', regenerateRoomPrompt = false) {
   if (!['legacy', 'v2'].includes(contractVersion) && !require('./evaluator').evaluatorExtension(contractVersion)) throw new Error('Unsupported contract version.');
+  if (variant === 'product') {
+    if (contractVersion !== 'v2') throw new Error('The production tutor uses contract v2.');
+    return require('./product-adapter').productionMessages(c, policy, regenerateRoomPrompt);
+  }
   if (variant === 'baseline') return c.baseline_messages;
   if (variant === 'aligned') {
     const schema = activeContract(contractVersion) + (contractVersion === 'v2'
@@ -85,6 +91,7 @@ function targetFormatValid(text,variant,contractVersion = 'legacy'){
   try{const p=JSON.parse(text);return p&&['tutoring','guard'].includes(p.mode)&&['mode_reason','suggested_response'].every(k=>typeof p[k]==='string'&&p[k].trim());}catch{return false;}
 }
 async function generateTarget(messages,variant,settings,replay,contractVersion = 'legacy'){
+  const productionContract = variant === 'product' || contractVersion === 'v2';
   const originalRequest=replay?.format_repair?.initial.request||replay?.request;
   if(replay&&sha(originalRequest.messages)!==sha(messages))throw new Error('Replay target request differs from this frozen prompt/case.');
   const calls=[];
@@ -95,12 +102,16 @@ async function generateTarget(messages,variant,settings,replay,contractVersion =
     const recovery=await limitedCall(target.request.messages,'target',{...settings,transport_attempts:remaining});calls.push(recovery);
     target={...recovery,attempts:[...target.attempts,...recovery.attempts],recovered_transport:target,...(target.format_repair?{format_repair:target.format_repair}:{})};
   }
-  if(target.error||targetFormatValid(target.text,variant,contractVersion)||target.format_repair||settings.target_format_attempts!==2)return {target,calls};
+  const valid = productionContract ? require('./product-adapter').productionValid(target) : targetFormatValid(target.text,variant,contractVersion);
+  if (productionContract && !valid && (target.format_repair || settings.target_format_attempts !== 2)) target.error ||= 'Production tutor decision remained invalid after its configured attempts.';
+  if(target.error||valid||target.format_repair||settings.target_format_attempts!==2)return {target,calls};
   const schema=variant==='baseline'?'Return exactly {"mode":"tutoring or guard","mode_reason":"nonempty evidence","suggested_response":"nonempty tutor message"}.':contractVersion === 'v2' ? contractV2+' Required shape: {"reason":"brief observable explanation","decision":{"mode":"tutoring","instruction":"scaffolding"},"response":"learner-facing text"}. Do not add top-level mode or mode_reason. A null instruction is JSON null, NOT the string "null".' : contract+' Required shape: {"reasoning":"brief observable explanation","mode":"tutoring","mode_reason":"brief participation evidence","decision":{"instruction":"scaffolding"},"suggested_response":"learner-facing text"}. suggested_response MUST be at the TOP LEVEL, not inside decision. A null instruction is JSON null, NOT the string "null".';
   const initial=target;
-  const repair=await limitedCall([...messages,{role:'assistant',content:initial.text||''},{role:'user',content:'Your output failed the required object format. Repair the format once, retaining the intended decisions and suggestion where valid. Do not change a valid decision just to retry it. '+schema}],'target',settings);
+  const repairMessages = productionContract ? require('./product-adapter').productionRepair(messages) : [...messages,{role:'assistant',content:initial.text||''},{role:'user',content:'Your output failed the required object format. Repair the format once, retaining the intended decisions and suggestion where valid. Do not change a valid decision just to retry it. '+schema}];
+  const repair=await limitedCall(repairMessages,'target',settings);
   calls.push(repair);
   target={...repair,format_repair:{initial,repair_attempts:1,reason:'Required target object validation failed; one production-shaped format repair, never a semantic-failure retry.'}};
+  if (productionContract && !require('./product-adapter').productionValid(target)) target.error ||= 'Production tutor decision remained invalid after two attempts.';
   return {target,calls};
 }
 function reusableJudgment(item,messages,settings){
@@ -109,13 +120,13 @@ function reusableJudgment(item,messages,settings){
 async function evaluateOfflineOutput(options) {
   return evaluateGeneratedOutput({ ...options, sha });
 }
-async function evaluate(c, variant, policy, settings, repetition, replay, contractVersion = 'legacy') {
-  const messages = messagesFor(c, variant, policy, contractVersion);
+async function evaluate(c, variant, policy, settings, repetition, replay, contractVersion = 'legacy', regenerateRoomPrompt = false) {
+  const messages = messagesFor(c, variant, policy, contractVersion, regenerateRoomPrompt);
   const generated=await generateTarget(messages,variant,settings,replay?.target,contractVersion);
   const target=generated.target;
   const evaluated = await evaluateOfflineOutput({
     caseDefinition: c,
-    rawOutput: target.text,
+    rawOutput: target.error ? '' : target.text,
     contractVersion,
     settings,
     judgeCall: limitedCall,
@@ -125,7 +136,7 @@ async function evaluate(c, variant, policy, settings, repetition, replay, contra
 }
 async function run(options) {
   const cases = read(options.cases);
-  const settings = read(path.join(__dirname, 'settings.json'));
+  const settings = read(options.settings || path.join(__dirname, 'settings.json'));
   const policy = options.policy ? fs.readFileSync(options.policy, 'utf8') : '';
   const contractVersion = options.contract_version || 'legacy';
   if (!['legacy', 'v2'].includes(contractVersion)) {
@@ -134,7 +145,18 @@ async function run(options) {
   }
   const rubrics = Object.fromEntries(cases.map(c => [c.id, rubricsFor(c)]));
   const sources = manifest.sources.map(source => ({...source, content:fs.readFileSync(path.join(root,source.path),'utf8')}));
-  const identity = { variant: options.variant, contract_version: contractVersion, cases, settings, policy, rubrics, manifest, sources, runner_sha256:sha(fs.readFileSync(__filename,'utf8')), replay_directory:options.replay||null };
+  const dependencies = ['runner.js', 'evaluator.js', 'product-adapter.js', '../rubrics/v0/response-length-rubric.js', '../rubrics/v1/decision-metrics.js'].map(file => ({ file, content: fs.readFileSync(path.join(__dirname, file), 'utf8') }));
+  if (options.variant === 'product' || contractVersion === 'v2') for (const file of ['tutor-system/src/services/ecologicalTutorCall.ts', 'tutor-system/src/services/prompts/activeTutorAgentPrompt.ts', 'tutor-system/src/services/aiService.ts', 'tutor-system/src/services/tutorDecisionContract.ts']) dependencies.push({ file, content: fs.readFileSync(path.join(root, file), 'utf8') });
+  if (options.regenerate_room_prompt === 'true') {
+    const bridge = 'tutor-system/src/services/systemPrompts.ts';
+    dependencies.push({ file: bridge, content: fs.readFileSync(path.join(root, bridge), 'utf8') });
+    const promptDirectory = path.join(root, 'tutor-system/src/services/prompts');
+    for (const name of fs.readdirSync(promptDirectory, { recursive: true }).filter(file => file.endsWith('.ts'))) {
+      const file = 'tutor-system/src/services/prompts/' + name;
+      if (!dependencies.some(item => item.file === file)) dependencies.push({ file, content: fs.readFileSync(path.join(root, file), 'utf8') });
+    }
+  }
+  const identity = { variant: options.variant, contract_version: contractVersion, cases, settings, policy, rubrics, manifest, sources, dependencies, runner_sha256:sha(fs.readFileSync(__filename,'utf8')), replay_directory:options.replay||null, replay_available:options.replay_available==='true', regenerate_room_prompt:options.regenerate_room_prompt==='true' };
   const fingerprint = sha(identity);
   fs.mkdirSync(options.out, { recursive: true });
   const snapshot = path.join(options.out, 'snapshot.json');
@@ -149,9 +171,9 @@ async function run(options) {
       if (fs.existsSync(file)) continue;
       const replayFile=options.replay?path.join(options.replay,c.id+'-'+rep+'.json'):null;
       if(replayFile&&options.wait_replay==='true')while(!fs.existsSync(replayFile))await new Promise(resolve=>setTimeout(resolve,10000));
-      const replay = replayFile ? read(replayFile) : null;
+      const replay = replayFile && (options.replay_available !== 'true' || fs.existsSync(replayFile)) ? read(replayFile) : null;
       if (replay && (replay.target.request.model !== settings.model || replay.target.request.temperature !== settings.target_temperature || replay.target.request.max_tokens !== settings.target_max_tokens || replay.target.request.enable_thinking !== Boolean(settings.target_enable_thinking))) throw new Error('Replay target settings changed.');
-      const result = await evaluate(c, options.variant, policy, settings, rep, replay, contractVersion);
+      const result = await evaluate(c, options.variant, policy, settings, rep, replay, contractVersion, options.regenerate_room_prompt === 'true');
       write(file, result);
       const failures = result.results.filter(r => !['pass','not_applicable'].includes(r.status)).length;
       console.log(`${c.id} repetition=${rep} checks=${result.results.length} nonpass=${failures}`);
@@ -165,7 +187,7 @@ async function run(options) {
 }
 if (require.main === module) {
   const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, i, all) => i % 2 ? pairs : [...pairs, [value.replace(/^--/, ''), all[i+1]]], []));
-  if (!args.cases || !args.out || !['baseline','aligned','candidate'].includes(args.variant)) throw new Error('Require --cases FILE --out DIR --variant baseline|aligned|candidate [--policy FILE] [--workers N] [--contract-version legacy|v2]');
+  if (!args.cases || !args.out || !['baseline','aligned','candidate','product'].includes(args.variant)) throw new Error('Require --cases FILE --out DIR --variant baseline|aligned|candidate|product [--policy FILE] [--settings FILE] [--workers N] [--contract_version legacy|v2]');
   run({ ...args, workers: Number(args.workers || 4) }).catch(error => { console.error(error); process.exitCode = 1; });
 }
 module.exports = { call, checkedResult, judgeMessages, messagesFor, rubricsFor, evaluateOfflineOutput, evaluate, run, contract, contractV2, sha,generateTarget,targetFormatValid,reusableJudgment,transportAttemptsRemaining };

@@ -1,13 +1,28 @@
 {
   "intent": "Own versioning and evaluator bookkeeping separately from clean LLM-facing rubric instructions.",
-  "version": "v1",
+  "version": "v1.3",
   "status": "frozen",
-  "recorded": "2026-09-07",
+  "recorded": "2026-10-15",
+  "revision": {
+    "previous_version": "v1.2",
+    "previous_manifest_sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99",
+    "changed_checks": [
+      "instruction_realization",
+      "persona_stability"
+    ],
+    "scope": "Clarify permitted honest disclosure and firm role-consistent correction; distinguish complete procedural teaching from focused learner inference. Preserve all labels, applicability, gates and other rubrics.",
+    "proposal": "evals/promptfoo/refinement-20261014/evaluator-inference-precedence-calibration.json",
+    "audit": "evals/promptfoo/refinement-20261014/audit-boundary-adoption-v1.3-20261015.json",
+    "calibration_status": "81/81 exact installed-text examples agree; zero unresolved errors. Earlier79/81 and80/81 conditions retained.",
+    "calibration_evidence": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-inference-precedence-calibration/summary.json",
+    "calibration_summary_sha256": "eec665a0de242c2c3b5892b6a4800b4677fa9a7ba0f7e1219c76338a5d1c3f63",
+    "comparison": "Rejudge every applicable persona_stability and instruction_realization check symmetrically on preserved baseline/candidate target outputs. Reuse unchanged exact requests regardless of outcome. No target regeneration."
+  },
   "contract_adaptation": {
     "version": "v2",
     "shape": "reason first; decision.mode and decision.instruction; response",
     "validator": "decision-metrics.contractValidityV2",
-    "status": "evaluation_only; production remains on the deployed legacy object"
+    "status": "v2 evaluated through the product adapter; release and broader runtime contracts require separate verification"
   },
   "human_direction": "2026-09-07: separate T01/T02; G02 participation-only; legacy v0/spec-derived v1; explicit decisions with deterministic metrics; keep rubric metadata only in the manifest. Subsequent approval: conditional T03/T04 applicability; G03 quality 80% and dignity 100%; T04 quality 80%, safety-critical factual partition 100% with constitutional accuracy retained; four clearer v1 names; audit every existing case and return ambiguous labels. Q1-Q4 resolved explicitly; user authorized full chatbot refinement while away.",
   "sources": [
@@ -17,15 +32,15 @@
     },
     {
       "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
-      "sha256": "06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e"
+      "sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd"
     },
     {
       "path": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
-      "sha256": "36f2570d0d36474cc907ee453f5203730f98d6f86d997f57e8e08398ca55493b"
+      "sha256": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a"
     },
     {
       "path": "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
-      "sha256": "8434e4f102c3ba4a4ce2ba98beb5d66370d485c2dd8d0d54a030bdb82c102ed5"
+      "sha256": "a9ba894e5cb9cb32244dd9daad43ae2e415d60f60c38aecdde4953bf6ce2fbe8"
     },
     {
       "path": "evals/promptfoo/rubrics/v0/manifest.json",
@@ -43,7 +58,7 @@
     },
     {
       "file": "decision-metrics.test.js",
-      "sha256": "6fe1d6878531fd56926718e841b496d53ec1d101fb7c2c4be349a60c43edec2c"
+      "sha256": "f984e97c86c2e776d99bbad4d83dfeb2fcef9e06689a62466ec9e8d8cd629601"
     },
     {
       "file": "decision_reasoning.md",
@@ -51,7 +66,7 @@
     },
     {
       "file": "instruction_realization.md",
-      "sha256": "86ec0bf0737a92ebe6270cb37f120244cd274d97e873c9b57b3e5d619bd79124"
+      "sha256": "573876259820c0efb04c4e15a34b1a0dbd77f5895239e2d395d9f0afa87b0d24"
     },
     {
       "file": "disruption_correction.md",
@@ -83,7 +98,7 @@
     },
     {
       "file": "persona_stability.md",
-      "sha256": "678e103175006b0c6937be0dfb831aab4cb7bcc53ad55da2442bc50b858343e2"
+      "sha256": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2"
     },
     {
       "file": "contextual_knowledge_quality.md",
@@ -126,13 +141,13 @@
         "T01"
       ],
       "method": "llm_rubric",
-      "checked_field": "suggested_response; decision.instruction",
+      "checked_field": "suggested_response; mode; decision.instruction",
       "file": "instruction_realization.md",
       "title": "Instruction realization",
       "intent": "Judge whether the suggestion performs the declared T01 action.",
-      "version": "v1",
+      "version": "v1.3",
       "role": "behavior",
-      "status": "calibrated_30_examples",
+      "status": "calibrated_81_examples_including_38_realization_and_10_persona",
       "label_review": "not_applicable",
       "previous_draft_id": "direct_correction",
       "threshold": 0.8,
@@ -226,9 +241,9 @@
       "file": "persona_stability.md",
       "title": "Configured role and voice",
       "intent": "judge T05 without importing neighboring requirement obligations.",
-      "version": "v1",
+      "version": "v1.3",
       "role": "behavior",
-      "status": "calibrated_30_examples",
+      "status": "calibrated_81_examples_including_38_realization_and_10_persona",
       "label_review": "not_applicable",
       "threshold": 0.8
     },
@@ -454,8 +469,8 @@
       "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-2.json"
     ]
   },
-  "evaluator_revision": 6,
-  "execution_revision": 7,
+  "evaluator_revision": 8,
+  "execution_revision": 8,
   "transfer_registry": {
     "intent": "Register the frozen W9-W10 transfer rubrics alongside the historical v0/v1 checks without altering any legacy meaning.",
     "owner": "component-104-transfer-evaluation",

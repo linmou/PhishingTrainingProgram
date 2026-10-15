@@ -188,6 +188,21 @@ codes.export_ecological = run('2/4 export product-template ecological cases', pr
   path.join(__dirname, 'export-ecological-cases.js')
 ]);
 
+// Freeze expected evidence before generation; returned components cannot define coverage.
+const yaml = require('js-yaml');
+const evaluationManifest = {
+  repetitions: 1,
+  cases: ['webpage-ecological.yaml', 'account-security-alert.yaml', 'guard-mode.yaml']
+    .flatMap(name => yaml.load(fs.readFileSync(path.join(repoRoot, 'evals/promptfoo/cases', name), 'utf8')))
+    .map(test => ({
+      case_id: test.vars.case_id,
+      source_type: test.vars.source_type,
+      scaffolding_status: test.vars.scaffolding_status,
+      metrics: test.assert.map(assertion => assertion.metric)
+    }))
+};
+fs.writeFileSync(path.join(runDir, 'evaluation-manifest.json'), JSON.stringify(evaluationManifest, null, 2), { flag: 'wx' });
+
 const promptfooArgs = [
   'promptfoo', 'eval',
   '-c', path.join(repoRoot, 'evals', 'promptfoo', 'promptfooconfig.yaml'),
@@ -200,13 +215,14 @@ codes.promptfoo = run('3/4 Promptfoo Qwen evaluation (no cache)', 'npx', promptf
 let report = {};
 if (fs.existsSync(rawJsonPath)) {
   report = JSON.parse(fs.readFileSync(rawJsonPath, 'utf8'));
-  fs.copyFileSync(rawJsonPath, path.join(resultsRoot, 'latest.json'));
   if (fs.existsSync(htmlPath)) fs.copyFileSync(htmlPath, path.join(resultsRoot, 'latest.html'));
 } else {
   console.error('Promptfoo did not write a JSON report.');
 }
 
+report.evaluation_manifest = evaluationManifest;
 fs.writeFileSync(gatedReportPath, JSON.stringify(report, null, 2));
+fs.copyFileSync(gatedReportPath, path.join(resultsRoot, 'latest.json'));
 const gateResult = spawnSync(process.execPath, [
   path.join(__dirname, 'check-promptfoo-quality-gate.js'), gatedReportPath, '0.8'
 ], { cwd: tutorRoot, env: process.env, encoding: 'utf8' });

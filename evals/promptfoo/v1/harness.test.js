@@ -42,6 +42,49 @@ test('zero-component failures and missing metrics remain blocking',()=>{
  const {snapshot,report}=fixture();report.results[0].results=[];
  assert(assess(report,snapshot).issues.some(i=>i.type==='missing_assertion'));
 });
+test('missing generations remain in the frozen summary denominator',()=>{
+ const {snapshot,report}=fixture(10);report.results.pop();
+ const row=assess(report,snapshot).metrics.find(r=>r.metric==='mode_selection'&&r.partition==='overall');
+ assert.equal(row.expected,10);assert.equal(row.applicable,10);assert.equal(row.passed,9);assert.equal(row.errors,1);
+});
+test('baseline corruption cannot establish a passing comparison',()=>{
+ for(const mutate of [
+  report=>report.results.push(structuredClone(report.results[0])),
+  report=>{report.results[0].input={changed:true};},
+  report=>{Object.assign(report.results[0].results[0],{status:'error',pass:false,score:0});},
+  report=>{report.results[0].target={error:'truncated'};}
+ ]){
+  const {snapshot,report}=fixture(),baseline=structuredClone(report);mutate(baseline);
+  const result=assess(report,snapshot,baseline,snapshot);
+  assert.equal(result.verdict,'failed');assert(result.issues.some(issue=>issue.side==='baseline'));
+ }
+});
+test('untrusted partition metadata cannot move failure out of a hard partition',()=>{
+ const {snapshot,report}=fixture(10);
+ snapshot.cases[0].partitions=['exact_transitions'];
+ Object.assign(report.results[0].results[0],{status:'fail',pass:false,score:0});
+ report.results[0].source_type='synthetic_development';report.results[0].partitions=[];
+ const result=assess(report,snapshot);
+ assert(result.issues.some(issue=>issue.type==='changed_partition_metadata'));
+ assert(result.issues.some(issue=>issue.type==='below_threshold'&&issue.partition==='exact_transitions'));
+});
+test('unknown statuses, incorrect methods and non-boolean passes cannot fit under an aggregate threshold',()=>{
+ for(const mutation of [{status:'unknown'},{method:'made_up'},{pass:'false'}]){
+  const {snapshot,report}=fixture(10);Object.assign(report.results[0].results[0],mutation);
+  assert.equal(assess(report,snapshot).verdict,'failed');
+ }
+});
+test('empty or duplicate execution definitions cannot be accepted',()=>{
+ for(const mutate of [
+  snapshot=>{snapshot.cases=[];},
+  snapshot=>{snapshot.settings.repetitions=0;},
+  snapshot=>{snapshot.cases[0].expected.checks=[];},
+  snapshot=>{snapshot.cases.push(snapshot.cases[0]);}
+ ]){
+  const {snapshot,report}=fixture();mutate(snapshot);
+  assert.equal(assess(report,snapshot).issues[0].type,'invalid_manifest');
+ }
+});
 test('80 percent does not hide same-case regression from 100 percent',()=>{
  const {snapshot,report}=fixture(10),baseline=JSON.parse(JSON.stringify(report));
  Object.assign(report.results[0].results[0],{status:'fail',pass:false,score:0});
@@ -59,6 +102,14 @@ test('judge errors remain in denominators',()=>{
 test('a required-content omission cannot become inapplicable',()=>{
  const {snapshot,report}=fixture();snapshot.cases[0].expected={checks:['contextual_knowledge_quality'],knowledge_required:true};report.results[0].input=snapshot.cases[0];report.results[0].results=[{metric:'contextual_knowledge_quality',method:'llm_rubric',status:'not_applicable',applicable:false,pass:null,score:null}];
  assert(assess(report,snapshot).issues.some(i=>i.type==='required_content_excluded'));
+});
+test('required baseline content cannot be excluded from comparison',()=>{
+ const {snapshot,report}=fixture();
+ snapshot.cases[0].expected={checks:['contextual_knowledge_quality'],knowledge_required:true};
+ report.results[0].results=[{metric:'contextual_knowledge_quality',method:'llm_rubric',status:'pass',pass:true,score:1,accuracy_pass:true}];
+ const baseline=structuredClone(report);
+ Object.assign(baseline.results[0].results[0],{status:'not_applicable',applicable:false,pass:null,score:null,accuracy_pass:null});
+ assert(assess(report,snapshot,baseline,snapshot).issues.some(issue=>issue.type==='required_content_excluded'&&issue.side==='baseline'));
 });
 test('accuracy hard failure blocks even a high quality rate',()=>{
  const {snapshot,report}=fixture(10);for(let i=0;i<10;i++){snapshot.cases[i].expected.checks=['contextual_knowledge_quality'];report.results[i].results=[{metric:'contextual_knowledge_quality',method:'llm_rubric',status:i?'pass':'fail',pass:!!i,score:i?1:0,accuracy_pass:!!i}];}
@@ -79,8 +130,8 @@ test('gate uses frozen thresholds, not a later working manifest',()=>{
  assert(assess(report,snapshot).issues.some(i=>i.type==='below_threshold'&&i.threshold===1));
 });
 test('target thinking is an explicit configured request factor, independent of judge thinking',async()=>{
- const originalFetch=global.fetch,originalKey=process.env.REACT_APP_OAI_API_KEY,originalUrl=process.env.REACT_APP_OAI_BASE_URL;
- process.env.REACT_APP_OAI_API_KEY='mock-test-key';process.env.REACT_APP_OAI_BASE_URL='https://not-called.invalid';
+ const originalFetch=global.fetch,originalKey=process.env.OAI_API_KEY,originalUrl=process.env.OAI_BASE_URL;
+ process.env.OAI_API_KEY='mock-test-key';process.env.OAI_BASE_URL='https://not-called.invalid';
  global.fetch=async()=>({ok:true,status:200,text:async()=>JSON.stringify({choices:[{message:{content:'{}'}}]})});
  try{
   const settings={model:'configured-model',target_temperature:0.3,judge_temperature:0,target_max_tokens:8000,judge_max_tokens:8000,target_enable_thinking:true,judge_enable_thinking:true,transport_attempts:1,timeout_ms:1000};
@@ -89,8 +140,8 @@ test('target thinking is an explicit configured request factor, independent of j
   assert.equal((await call([],'judge',{...settings,target_enable_thinking:false})).request.enable_thinking,true);
  }finally{
   global.fetch=originalFetch;
-  if(originalKey===undefined)delete process.env.REACT_APP_OAI_API_KEY;else process.env.REACT_APP_OAI_API_KEY=originalKey;
-  if(originalUrl===undefined)delete process.env.REACT_APP_OAI_BASE_URL;else process.env.REACT_APP_OAI_BASE_URL=originalUrl;
+  if(originalKey===undefined)delete process.env.OAI_API_KEY;else process.env.OAI_API_KEY=originalKey;
+  if(originalUrl===undefined)delete process.env.OAI_BASE_URL;else process.env.OAI_BASE_URL=originalUrl;
  }
 });
 test('judge output word limit never becomes a target reasoning requirement',()=>{
@@ -112,6 +163,32 @@ test('transport recovery respects total attempt budget and excludes semantic and
  assert.equal(transportAttemptsRemaining({error:'HTTP 401',attempts:[{status:401}]},settings),0);
  assert.equal(transportAttemptsRemaining({text:'valid but incorrect',attempts:[{status:200}]},settings),0);
 });
+
+// File: runner.js. Purpose: preserve network-error evidence and bound delayed retries, including exhaustion.
+test('network failures retain their cause and retry with the configured delay without exceeding the budget',async()=>{
+ const originalFetch=global.fetch,originalTimeout=global.setTimeout,originalKey=process.env.OAI_API_KEY,originalUrl=process.env.OAI_BASE_URL;
+ process.env.OAI_API_KEY='test-key';process.env.OAI_BASE_URL='https://example.invalid';
+ const delays=[];
+ global.setTimeout=(callback,delay,...args)=>{delays.push(delay);return originalTimeout(callback,0,...args);};
+ const settings={model:'m',target_temperature:0.3,target_max_tokens:100,target_enable_thinking:false,transport_attempts:3,transport_retry_delay_ms:123,timeout_ms:1000};
+ const networkError=()=>new TypeError('fetch failed',{cause:Object.assign(new Error('network unavailable'),{code:'ENETUNREACH'})});
+ try{
+  let requests=0;
+  global.fetch=async()=>{requests++;if(requests<3)throw networkError();return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{message:{content:'{}'}}]})};};
+  const recovered=await call([{role:'user',content:'test'}],'target',settings);
+  assert.equal(requests,3);assert.equal(recovered.text,'{}');assert.equal(recovered.error,undefined);
+  assert.deepEqual(delays,[123,123]);assert.equal(recovered.attempts[0].cause.code,'ENETUNREACH');
+  requests=0;delays.length=0;
+  global.fetch=async()=>{requests++;throw networkError();};
+  const exhausted=await call([{role:'user',content:'test'}],'target',settings);
+  assert.equal(requests,3);assert.equal(exhausted.error,'fetch failed');assert.equal(exhausted.attempts.length,3);
+  assert.deepEqual(delays,[123,123]);assert.equal(exhausted.attempts[2].cause.message,'network unavailable');
+ }finally{
+  global.fetch=originalFetch;global.setTimeout=originalTimeout;
+  if(originalKey===undefined)delete process.env.OAI_API_KEY;else process.env.OAI_API_KEY=originalKey;
+  if(originalUrl===undefined)delete process.env.OAI_BASE_URL;else process.env.OAI_BASE_URL=originalUrl;
+ }
+});
 test('judgment reuse requires exact evidence, criterion and provider request settings; failed grades are not selectively retried',()=>{
  const messages=[{role:'user',content:'same input and rubric'}],settings={model:'m',judge_temperature:0,judge_max_tokens:8000,judge_enable_thinking:true};
  const item={result:{pass:false},calls:[{request:{messages,model:'m',temperature:0,max_tokens:8000,enable_thinking:true}}]};
@@ -121,8 +198,8 @@ test('judgment reuse requires exact evidence, criterion and provider request set
  assert(!reusableJudgment(item,messages,{...settings,judge_enable_thinking:false}));
 });
 test('format repair preserves initial output, never retries valid wrong labels, and stops after one failed repair',async()=>{
- const originalFetch=global.fetch,originalKey=process.env.REACT_APP_OAI_API_KEY,originalUrl=process.env.REACT_APP_OAI_BASE_URL;
- process.env.REACT_APP_OAI_API_KEY='mock-test-key';process.env.REACT_APP_OAI_BASE_URL='https://not-called.invalid';
+ const originalFetch=global.fetch,originalKey=process.env.OAI_API_KEY,originalUrl=process.env.OAI_BASE_URL;
+ process.env.OAI_API_KEY='mock-test-key';process.env.OAI_BASE_URL='https://not-called.invalid';
  const settings={model:'m',target_temperature:0.3,target_max_tokens:8000,target_enable_thinking:true,target_format_attempts:2,transport_attempts:1,timeout_ms:1000};
  const messages=[{role:'user',content:'data'}],valid=JSON.stringify({reasoning:'Observable evidence.',mode:'guard',mode_reason:'Deliberate disruption.',decision:{instruction:null},suggested_response:'Stop interrupting.'});
  let requests=0;
@@ -139,7 +216,7 @@ test('format repair preserves initial output, never retries valid wrong labels, 
   await assert.rejects(generateTarget([{role:'user',content:'different'}],'candidate',settings,replay),/differs/);
  }finally{
   global.fetch=originalFetch;
-  if(originalKey===undefined)delete process.env.REACT_APP_OAI_API_KEY;else process.env.REACT_APP_OAI_API_KEY=originalKey;
-  if(originalUrl===undefined)delete process.env.REACT_APP_OAI_BASE_URL;else process.env.REACT_APP_OAI_BASE_URL=originalUrl;
+  if(originalKey===undefined)delete process.env.OAI_API_KEY;else process.env.OAI_API_KEY=originalKey;
+  if(originalUrl===undefined)delete process.env.OAI_BASE_URL;else process.env.OAI_BASE_URL=originalUrl;
  }
 });

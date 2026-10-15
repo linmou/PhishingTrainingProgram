@@ -97,17 +97,37 @@ function getComponents(result) {
 
 function emptySummary() {
   return {
-    current: Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, passRate: 0 }])),
+    current: Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, missing: 0, errors: 0, passRate: 0 }])),
     bySuite: {},
     directCorrectionByStatus: {}
   };
 }
 
-function summarizeReport(report) {
+function summarizeReport(report, manifest = report?.evaluation_manifest) {
   const summary = emptySummary();
   const unknownVariants = [];
+  const observed = getResults(report);
+  const completeManifest = manifest && Array.isArray(manifest.cases) && Number.isInteger(manifest.repetitions) && manifest.repetitions > 0;
+  const rows = completeManifest ? manifest.cases.flatMap(definition => {
+    const matches = observed.filter(result => result.testCase?.vars?.case_id === definition.case_id);
+    return Array.from({ length: manifest.repetitions }, (_, repetition) => {
+      const result = matches[repetition];
+      const available = getComponents(result).slice();
+      const components = (definition.metrics || []).map(metric => {
+        const index = available.findIndex(component => getAssertionMetric(component) === metric);
+        if (index < 0) return { metric, pass: false, status: 'missing' };
+        const component = available.splice(index, 1)[0];
+        if (result?.error || result?.response?.error || component.error || component.status === 'error' ||
+            (typeof component.pass !== 'boolean' && typeof component.success !== 'boolean' && !Number.isFinite(component.score))) {
+          return { metric, pass: false, status: 'error' };
+        }
+        return component;
+      });
+      return { ...(result || { promptIdx: 0 }), testCase: { vars: definition }, gradingResult: { componentResults: components } };
+    });
+  }) : observed;
 
-  getResults(report).forEach((result) => {
+  rows.forEach((result) => {
     const variant = getVariant(result);
     if (!variant) {
       unknownVariants.push(result?.testCase?.vars?.case_id || result?.description || 'unknown_result');
@@ -116,8 +136,8 @@ function summarizeReport(report) {
 
     const suite = result?.testCase?.vars?.source_type || 'unknown_suite';
     const status = result?.testCase?.vars?.scaffolding_status || 'unknown_status';
-    summary.bySuite[suite] ||= Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, passRate: 0 }]));
-    summary.directCorrectionByStatus[status] ||= { passed: 0, total: 0, passRate: 0 };
+    summary.bySuite[suite] ||= Object.fromEntries(METRICS.map((metric) => [metric, { passed: 0, total: 0, missing: 0, errors: 0, passRate: 0 }]));
+    summary.directCorrectionByStatus[status] ||= { passed: 0, total: 0, missing: 0, errors: 0, passRate: 0 };
     getComponents(result).forEach((component) => {
       const metric = getAssertionMetric(component);
       if (!METRICS.includes(metric)) {
@@ -129,9 +149,15 @@ function summarizeReport(report) {
       }
       summary.bySuite[suite][metric].total += 1;
       if (getAssertionPass(component)) summary.bySuite[suite][metric].passed += 1;
+      for (const entry of [summary[variant][metric], summary.bySuite[suite][metric]]) {
+        if (component.status === 'missing') entry.missing++;
+        if (component.status === 'error') entry.errors++;
+      }
       if (metric === 'direct_correction') {
         summary.directCorrectionByStatus[status].total += 1;
         if (getAssertionPass(component)) summary.directCorrectionByStatus[status].passed += 1;
+        if (component.status === 'missing') summary.directCorrectionByStatus[status].missing++;
+        if (component.status === 'error') summary.directCorrectionByStatus[status].errors++;
       }
     });
   });
@@ -149,9 +175,63 @@ function summarizeReport(report) {
   return { summary, unknownVariants };
 }
 
-function evaluateGate(report, threshold = DEFAULT_THRESHOLD) {
-  const { summary, unknownVariants } = summarizeReport(report);
+function reconcileCoverage(report, manifest) {
+  if (!manifest || !Array.isArray(manifest.cases) || !manifest.cases.length ||
+      !Number.isInteger(manifest.repetitions) || manifest.repetitions < 1) {
+    return ['Missing frozen evaluation manifest with cases, assertions, and repetitions'];
+  }
   const failures = [];
+  const expected = new Map();
+  for (const definition of manifest.cases) {
+    if (!definition.case_id || expected.has(definition.case_id) || !Array.isArray(definition.metrics) || !definition.metrics.length) {
+      failures.push(`Invalid or duplicate manifest case ${definition.case_id || '(missing id)'}`);
+      continue;
+    }
+    expected.set(definition.case_id, definition);
+  }
+  const actual = new Map();
+  for (const result of getResults(report)) {
+    const vars = result.testCase?.vars || {};
+    const definition = expected.get(vars.case_id);
+    if (!definition) {
+      failures.push(`Unexpected result case ${vars.case_id || '(missing id)'}`);
+      continue;
+    }
+    actual.set(vars.case_id, (actual.get(vars.case_id) || 0) + 1);
+    for (const field of ['source_type', 'scaffolding_status']) {
+      if (vars[field] !== definition[field]) failures.push(`${vars.case_id} changed ${field}`);
+    }
+    if (result.error || result.response?.error || result.gradingResult?.error || result.grading?.error) {
+      failures.push(`${vars.case_id} has an unresolved execution or grading error`);
+    }
+    const counts = new Map();
+    for (const component of getComponents(result)) {
+      const metric = getAssertionMetric(component);
+      if (component.error || ['error', 'missing'].includes(component.status) ||
+          (typeof component.pass !== 'boolean' && typeof component.success !== 'boolean' && !Number.isFinite(component.score))) {
+        failures.push(`${vars.case_id} has an unresolved or malformed ${metric} judgment`);
+      }
+      counts.set(metric, (counts.get(metric) || 0) + 1);
+    }
+    const required = new Map();
+    for (const metric of definition.metrics) required.set(metric, (required.get(metric) || 0) + 1);
+    for (const metric of new Set([...required.keys(), ...counts.keys()])) {
+      if ((counts.get(metric) || 0) !== (required.get(metric) || 0)) {
+        failures.push(`${vars.case_id} assertion count for ${metric}: expected ${required.get(metric) || 0}, received ${counts.get(metric) || 0}`);
+      }
+    }
+  }
+  for (const id of expected.keys()) {
+    if ((actual.get(id) || 0) !== manifest.repetitions) {
+      failures.push(`${id} generation count: expected ${manifest.repetitions}, received ${actual.get(id) || 0}`);
+    }
+  }
+  return failures;
+}
+
+function evaluateGate(report, threshold = DEFAULT_THRESHOLD, manifest = report?.evaluation_manifest) {
+  const { summary, unknownVariants } = summarizeReport(report, manifest);
+  const failures = reconcileCoverage(report, manifest);
 
   if (unknownVariants.length > 0) {
     failures.push(`Unable to classify ${unknownVariants.length} Promptfoo result(s) as the active current prompt`);
@@ -238,5 +318,6 @@ if (require.main === module) {
 module.exports = {
   METRICS,
   evaluateGate,
-  summarizeReport
+  summarizeReport,
+  reconcileCoverage
 };

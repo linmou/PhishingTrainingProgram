@@ -31,15 +31,19 @@ const row = (source_type: string, scaffolding_status: string, failed: string[] =
   }
 });
 
-const passingReport = () => ({
-  ecological_product_gate: { passed: true },
-  results: { results: [
+const passingReport = () => {
+  const results = [
     row('product_template', 'not_started'),
     row('product_template', 'failed'),
     row('synthetic_holdout', 'failed'),
     row('synthetic_holdout', 'not_started')
-  ] }
-});
+  ];
+  return {
+  ecological_product_gate: { passed: true },
+  evaluation_manifest: { repetitions: 1, cases: results.map(result => ({ ...result.testCase.vars, metrics })) },
+  results: { results }
+  };
+};
 
 describe('Promptfoo quality gate', () => {
   it('passes when one current prompt reaches 80% for every metric and suite/state', () => {

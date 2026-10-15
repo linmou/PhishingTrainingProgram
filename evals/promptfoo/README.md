@@ -2,9 +2,11 @@
 
 Intent: document how to review and run the local Promptfoo benchmark for tutor prompt behavior before spending live LLM calls or changing production prompts.
 
-Updated: 2026-08-31
+Updated: 2026-10-15
 
-Source baseline commit: `530bd59`
+Source baseline commit: `8dc7271`
+
+The [current shortcut-removal experiment](refinement-20261014/README.md) uses the specification-derived [v1 runner](v1/README.md), production request packaging and three repetitions. The legacy commands below retain their own scoring contract. Their quality gate now requires a frozen expected-case/assertion manifest and rejects missing, duplicate, malformed, or errored evidence. `npm run eval:prompts` writes that manifest before generation and includes it in `gated-report.json` and `latest.json`.
 
 This benchmark uses ecological webpage-shaped cases (generated from demo room templates) plus explicitly synthetic holdout account-security cases. The chat user turn matches the product room AI path (`buildEcologicalChatCompletionMessages` / `TutorSuggestionService`): draft the full tutor message, with room scenario + discussion history + latest student line.
 

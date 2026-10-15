@@ -5,7 +5,7 @@ const fs=require('node:fs'),path=require('node:path');
 const {assess}=require('./gate');
 const {sha}=require('./runner');
 const read=file=>JSON.parse(fs.readFileSync(file,'utf8'));
-const pairs=[['instruction_selection','instruction_realization'],['instruction_realization','learning_state_target'],['mode_selection','decision_reasoning'],['disruption_correction','guard_tone_safety'],['contextual_knowledge_quality','response_length']];
+const pairs=[['instruction_selection','instruction_realization'],['instruction_realization','learning_state_target'],['mode_selection','decision_reasoning'],['disruption_correction','guard_tone_safety'],['guard_tone_safety','persona_stability'],['learning_state_target','contextual_knowledge_quality'],['contextual_knowledge_quality','response_length']];
 function analyze(report,snapshot){
  const interactions=[];
  for(const [a,b] of pairs){
