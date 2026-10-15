@@ -1,0 +1,119 @@
+{
+  "intent": "Record check-logic and judge-calibration evidence separately from model behavior acceptance.",
+  "recorded_local_date": "2026-10-15",
+  "source_commit": "8dc7271",
+  "check_validation": [
+    {
+      "command": "rtk proxy node --test --test-reporter=dot tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/harness.test.js evals/promptfoo/v1/classification.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js evals/promptfoo/v1/analyze.test.js evals/promptfoo/rubrics/v1/decision-metrics.test.js evals/promptfoo/v1/generate.test.js evals/promptfoo/v1/evaluator-null-instruction.test.js",
+      "exit_code": 0,
+      "passed": 88,
+      "failed": 0,
+      "scope": "All prior checks plus legacy/v2 Guard-null semantic routing, missing/invalid fields, unavailable judge handling and unchanged gate denominators. The subsequent general rubric clarification separately passed22 focused checks and49 live calibration examples.",
+      "audit": "audit-null-instruction-v12.json"
+    },
+    {
+      "command": "rtk proxy node --test --test-reporter=dot tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/harness.test.js evals/promptfoo/v1/classification.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js evals/promptfoo/v1/analyze.test.js evals/promptfoo/rubrics/v1/decision-metrics.test.js evals/promptfoo/v1/generate.test.js",
+      "exit_code": 0,
+      "passed": 81,
+      "failed": 0,
+      "scope": "All previous checks plus every v2 adapter using strict production parsing, truncation rejection, production suffix repair and exhausted-replay failure handling.",
+      "audit": "audit-v2-adapter-parity.json"
+    },
+    {
+      "command": "rtk proxy node tutor-system/node_modules/typescript/bin/tsc --noEmit --skipLibCheck --target ES2019 --module commonjs --lib ES2020,DOM tutor-system/src/services/prompts/index.ts tutor-system/src/services/prompts/responsePolicy.ts tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "exit_code": 0,
+      "scope": "Type-check the changed TypeScript prompt modules and their imports; no Python code is changed, so mypy has no applicable modified modules."
+    },
+    {
+      "cwd": "tutor-system",
+      "result_path": "/tmp/shortcut-removal-candidate04-jest-final.json",
+      "exit_code": 1,
+      "passed": 77,
+      "failed": 1,
+      "scope": "Same seven product suites after candidate04 base clarifications; same pre-existing demo dialogue-prefix mismatch remains. Frozen semantic eval assertions are unchanged."
+    },
+    {
+      "command": "rtk proxy node --test --test-reporter=dot tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/harness.test.js evals/promptfoo/v1/classification.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js evals/promptfoo/v1/analyze.test.js evals/promptfoo/rubrics/v1/decision-metrics.test.js evals/promptfoo/v1/generate.test.js",
+      "exit_code": 0,
+      "passed": 80,
+      "failed": 0,
+      "scope": "Previous gate/adapter checks plus target-only product preflight, complete and partial resume integrity, zero-call rejection, and actual mocked production generation to strict replay for valid, repaired and failed targets.",
+      "audit": "audit-product-preflight.json"
+    },
+    {
+      "cwd": "tutor-system",
+      "command": "rtk proxy env CI=true npm test -- --watchAll=false --runInBand --silent --json --outputFile=/tmp/shortcut-removal-candidate03-jest-final.json --runTestsByPath src/services/__tests__/systemPrompts.test.ts src/services/__tests__/ecologicalTutorCall.test.ts src/services/__tests__/tutorDecisionContract.test.ts src/services/__tests__/aiService.guardMode.test.ts src/services/__tests__/promptfooQualityGate.test.ts src/services/__tests__/parameterEffectiveness.test.ts src/services/__tests__/demoRoomTemplates.test.ts",
+      "exit_code": 1,
+      "passed": 77,
+      "failed": 1,
+      "scope": "Candidate03 base policy composition and existing product integration checks. Removed wording-sensitive assumptions were changed to exact shared-constant composition checks; semantic acceptance remains in the unchanged evaluation.",
+      "remaining_failure": "Existing demoRoomTemplates derivation test expects identical seed dialogue prefixes, but the unchanged HEAD demoRoomTemplates.ts contains different source/correct-student histories. This source is outside the prompt change; the frozen evaluation cases remain unchanged."
+    },
+    {
+      "command": "rtk proxy node --test --test-reporter=dot tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/harness.test.js evals/promptfoo/v1/classification.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js evals/promptfoo/v1/analyze.test.js evals/promptfoo/rubrics/v1/decision-metrics.test.js",
+      "exit_code": 0,
+      "passed": 70,
+      "failed": 0,
+      "scope": "Completeness, typed evidence, frozen partitions, baseline comparability, classification, production request/parser/repair integration, explicit room-prompt regeneration, bounded delayed transport recovery/exhaustion, transfer aggregation, interactions and deterministic decision checks."
+    },
+    {
+      "cwd": "tutor-system",
+      "command": "rtk proxy env CI=true npm test -- --watchAll=false --runInBand --runTestsByPath src/services/__tests__/systemPrompts.test.ts src/services/__tests__/ecologicalTutorCall.test.ts src/services/__tests__/tutorDecisionContract.test.ts src/services/__tests__/aiService.guardMode.test.ts src/services/__tests__/promptfooQualityGate.test.ts",
+      "exit_code": 0,
+      "passed": 58,
+      "failed": 0,
+      "scope": "Five product integration suites covering generated room prompts, ecological packaging, v2 parsing, Guard service behavior and quality-gate consumers."
+    }
+  ],
+  "judge_calibration": {
+    "command": "rtk proxy node evals/promptfoo/v1/calibrate.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-calibration",
+    "exit_code": 0,
+    "agreed": 30,
+    "total": 30,
+    "model": "qwen3.5-flash",
+    "temperature": 0,
+    "enable_thinking": true,
+    "max_tokens": 8000,
+    "evidence": "../results/qwen3.5-flash/shortcut-removal-20261014-calibration/summary.json"
+  },
+  "known_unrelated_failure": {
+    "command": "rtk proxy node --test evals/promptfoo/v1/transfer/quality-gate.test.js",
+    "passed": 2,
+    "failed": 12,
+    "reason": "The historical transfer-v3 preflight expects TRANSFER_V3_SYSTEM_PROMPT, which no longer exists in the current split assessment/analysis implementation. The dedicated partition tests mock only this frozen source identity; they do not claim current transfer production parity or semantic acceptance."
+  },
+  "independent_audit": "audit-harness.json",
+  "candidate01_audit": "audit-candidate01.json",
+  "instruction_boundary_diagnostic": {
+    "proposal": "diagnostic-review-candidate01.json",
+    "harness_audit": "audit-calibration-instruction-boundaries.json",
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-instruction-calibration",
+    "original_agreement": "8/11",
+    "clarified_agreement": "11/11",
+    "unevaluable": 0,
+    "status": "diagnostic_only_live_rubric_unchanged_pending_complete_runs_and_versioned_rejudging"
+  },
+  "evaluator_v11_calibration": {
+    "rubric_sha256": "95fb099011f1355f6cd63b9b076265a76ade48063ab473b7754ab0a4b95ac83c",
+    "boundaries_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.1-boundaries",
+    "boundaries_agreement": "11/11",
+    "existing_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.1-calibration",
+    "existing_agreement": "30/30",
+    "exit_codes": [
+      0,
+      0
+    ],
+    "focused_checks_after_revision": "70/70 pass; manifest-version assertion updated and file hashes reconciled"
+  },
+  "evaluator_v12_calibration": {
+    "agreed": 49,
+    "total": 49,
+    "provider_attempts": 50,
+    "unresolved_errors": 0,
+    "initial_condition": "48/49; preserved D-C2 false-positive failure",
+    "audit": "audit-null-instruction-v12.json",
+    "rubric_sha256": "c1ee5e17767c08fd9b7e466590b5456d6ff273066cd190f600a5754c76eec6b3",
+    "manifest_raw_sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99"
+  },
+  "model_acceptance": "Full thinking v1.2 comparison completed:183 generations/2706 assertions per arm; baseline6 gate issues, candidate07 33 comparison issues plus20 classification regression rows. All366 target outputs and175 completed semantic records reused,2074 judgments preserved,zero target calls andzero unresolved evaluator errors. Added transfer coverage:120 records/114 calls,79/120 event/state pass,120/120 routing/validity,three-vote macro-F1 0.39273689273689266;failed. No cleaned candidate accepted. Historical interruptions and all earlier failed runs remain preserved. See run-record.md and ../transfer-analysis/current-added-run-record.md."
+}

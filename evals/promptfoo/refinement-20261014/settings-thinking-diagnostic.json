@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "target_max_tokens": 8000,
+  "target_enable_thinking": true,
+  "target_format_attempts": 2,
+  "judge_max_tokens": 8000,
+  "judge_enable_thinking": true,
+  "repetitions": 3,
+  "transport_attempts": 3,
+  "transport_retry_delay_ms": 10000,
+  "request_concurrency": 24,
+  "timeout_ms": 180000,
+  "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+  "changed_factors": "Diagnostic after four cleaned prompt candidates failed under target thinking=false/max_tokens=100. Use the repository v1/settings.json target thinking=true/max_tokens=8000 configuration, preserving r3 model, temperatures, three repetitions, repair/retry policy, concurrency, cases and v1.1 scoring. This jointly changes thinking and token budget, so it cannot isolate either cause or establish production-default performance. Acceptance requires a newly matched baseline and full semantic/holdout validation under these settings."
+}

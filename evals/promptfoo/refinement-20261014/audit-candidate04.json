@@ -1,0 +1,68 @@
+{
+  "intent": "Independently verify candidate04 policy and composed requests for requirement fidelity, declared factor changes and absence of development-case shortcuts before preflight.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_preflight",
+  "scope": "Prompt integrity only; no model-performance, benchmark-acceptance or release verdict.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-04.md",
+    "sha256": "8886a0c21912883a2b786182a8d7a7d47cde15093d9cae6cbd8b6627cf688116",
+    "composed_request_set_sha256": "45ea654d786cb711e63e500d93d611779e4a87cfffd9e23f95056444c4f4352c",
+    "request_digest_method": "SHA-256 of JSON.stringify of all61 frozen-case messagesFor(case, product, exact policy, v2, true) request arrays in frozen order."
+  },
+  "verification": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate03-preflight/snapshot.json and report.json",
+    "cases": 61,
+    "user_turns_unchanged": 61,
+    "inventories_preserved": 61,
+    "frozen_cases_unchanged": true,
+    "settings_unchanged": true,
+    "v1_1_manifest_unchanged": true,
+    "unexplained_system_differences": [],
+    "method": "Compared each current system request with candidate03's exact original target request after replacing only the declared reading-level block, teaching-method heading/explanation, peer third-person example sentence and appended policy. All61 requests match exactly. All scenario/history/current-message/prior-state user turns remain byte-identical, and every configured detection/verification item remains present.",
+    "changed_generator_dependencies": ["tutor-system/src/services/prompts/index.ts", "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts"],
+    "provider_calls": 0
+  },
+  "changed_factors_relative_to_candidate03": [
+    "Appended policy reorganizes the decision procedure into participation, selected change/target, first instructional action and contract. Protection, focused-inference correction, scaffolding/explanation alternatives, Guard recovery and full-useful-inventory consolidation retain their adopted meanings.",
+    "Base generator replaces fact-substitution reading advice with short familiar language that explicitly preserves factual meaning and the learner reasoning task.",
+    "Base generator names the umbrella taxonomy Teaching Methods and explicitly distinguishes those descriptions from decision.instruction labels.",
+    "Peer role no longer prescribes a fixed personal-example answer; third-person examples are conditional on explaining the selected target."
+  ],
+  "retained_controls": [
+    "Candidate03 RESPONSE_POLICY and both mistake_normalization changes remain byte-identical.",
+    "The earlier removal of four complete base dialogues remains in effect.",
+    "Frozen61 cases, all expected labels/checks, settings-r3, v1.1 manifest, deterministic gate and runner are unchanged."
+  ],
+  "spec_fidelity": {
+    "T01": "Protection precedes exploration for proposed unsafe action, including conditional/other-person advice. Focused-question misconception failure requires correction and connected safe action. Incomplete correct understanding remains eligible for teaching. Labels describe the first actual teaching action.",
+    "T02": "Learner-owned evidence updates all supported inventory items; one relevant unmet target is selected, contradictions reopen items, consolidation requires no useful gap and cannot imply lasting mastery.",
+    "G01_G02": "Unsafe genuine attempts remain tutoring; current deliberate obstruction controls Guard, known Guard persists through empty acknowledgment/promises, and genuine attempts/clarifications recover even when wrong. Guard describes conduct, shared-learning impact and participation change.",
+    "supervision_content_identity": "Contract retains separate reason/decision/response and evidence-linked target or participation purpose with material uncertainty/priority. Reply grounding, independent verification and honest assistant identity remain explicit."
+  },
+  "shortcut_review": {
+    "case_ids_or_expected_output_lookup": false,
+    "worked_answer_strings_added": false,
+    "case_specific_response_templates_added": false,
+    "score_or_punctuation_accommodation_added": false,
+    "assessment": "Rules are general descriptions of adopted actions and learner evidence. The new base wording removes prescribed substitutions and an example answer. Existing teaching-method implementation contains examples internally, but index.ts emits descriptions only; these changes do not insert those internal example answers into requests."
+  },
+  "limitations": [
+    "Policy reorganization and base-layer cleanup are bundled factors; later score changes cannot isolate either cause.",
+    "Candidate03 preflight diagnostics do not establish semantic acceptance. Candidate04 requires full frozen development evaluation by strict replay of all preflight targets and unchanged calibrated v1.1 checks.",
+    "Real-product enrichment, default-room settings and deployed model identity remain separate downstream verification requirements."
+  ],
+  "hashes": {
+    "tutor-system/src/services/prompts/index.ts": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4",
+    "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682",
+    "tutor-system/src/services/prompts/responsePolicy.ts": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf",
+    "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b",
+    "evals/promptfoo/refinement-20261014/settings-r3.json": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/rubrics/v1/manifest.json": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec",
+    "evals/promptfoo/v1/generate.js": "7753f8db3c10e97ff417d3b253618fa61fb3c8a5ca8588be6252aa412af5d701",
+    "evals/promptfoo/v1/runner.js": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "evals/promptfoo/v1/gate.js": "5aa5a7b30f7771edec2668c25cc84ba5fa9e54dc919df653d09251fbd2286d34"
+  },
+  "actions": { "source_edits_by_reviewer": false, "holdouts_inspected": false }
+}

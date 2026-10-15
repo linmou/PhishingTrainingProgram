@@ -1,0 +1,13 @@
+# Second continuation round
+
+Intent: preserve the completed prompt comparisons and declared next hypotheses without replacing earlier failures.
+
+Date:2026-10-15. Tutor08 preflight has183 valid targets,173/183 mode and84/90 instruction selections, versus183/183 and89/90 baseline. The approved Guard pattern is retained, but participation selection remains unreliable. Full semantic judgments are pending independent evaluator-boundary calibration.
+
+Tutor09 tests a narrower cleanup of the original policy: preserve its ordering, general guidance,40-word reason allowance and approved Guard response pattern; remove worked case outputs, case utterance examples and punctuation-counter accommodations. The four cleaned base modules remain fixed. The adopted pre-failure explanation allowance, flexible scaffold cue form and genuine-disagreement guardrail are retained. This isolates the broad policy rewrite as a plausible cause of regressions, with these general spec-fidelity corrections disclosed. It is not a claim that all differences are attributable to exemplar removal alone.
+
+Transfer01 full comparison completes354 records with269 raw-event,282 applied-state,341 route and350 validity passes. Three-member macro-F1 rises from57.26% to70.58%, but regressions and four invalid outputs block acceptance. Three outputs narrate reconsideration until truncation; one omits the top-level explanation. Some outputs choose ineligible contradiction from pending, credit quoted choices to the wrong speaker, or treat different concrete situations as the same because their general principle matches.
+
+Transfer02 keeps the full suite and runtime consumer unchanged. It serializes the short overall conclusion before events, constrains both explanation lengths, uses explicit current-status eligibility, and distinguishes attributed claims and concrete situations from shared procedures. This is a prompt-only procedural/serialization intervention. It retains the no-external-completion requirement from01. No expected label, evidence type, model parameter or threshold changes. All baseline results and every failed candidate01 record remain available; no outcome-based retries.
+
+The E18 ecological input has an inherited target-type inconsistency: its action target is stored as detection_area and the consumer rejects truthful action evidence. Retain that evidence and report the configuration limitation; do not mislabel action evidence to make it pass. D06 is different: its conditional false inference can be explanation evidence, so the current recognition-type rejection is not established as unfixable.

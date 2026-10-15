@@ -1,0 +1,1068 @@
+{
+  "intent": "Independently verify completed boundary calibration evidence and the exact installed-byte follow-up before v1.3 adoption.",
+  "date": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "proposal_author": true,
+  "independence": "Auditor authored the boundary proposal; the parent reviewed all 32 new labels and another independent agent audited the calibration runner. This artifact independently reconstructs execution evidence, not an additional independent label-authoring event.",
+  "verdict": "Calibration02 integrity clear; installed-byte calibration prepared and clear to execute; v1.3 adoption pending its results and manifest audit.",
+  "calibration02": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02",
+    "fingerprint": "06495a68870a8dbd7d68f2b6583129f4ce3ad40a8d445e5128bb09dc928ed8d6",
+    "hashes": {
+      "snapshot.json": "e4c366b1ade72a6a54d5f13579842852fd43e6473909f5dca1989b189d56a162",
+      "summary.json": "6c8126075bfa4ac40bfe25446cd9b55843baa04a7df8130338c613cd80d6fa1f"
+    },
+    "conditions": {
+      "current": {
+        "total": 81,
+        "agreed": 79,
+        "metrics": {
+          "instruction_realization": {
+            "total": 38,
+            "agreed": 36,
+            "errors": 0,
+            "false_positives": 1,
+            "false_negatives": 1
+          },
+          "contextual_knowledge_quality": {
+            "total": 8,
+            "agreed": 8,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "persona_stability": {
+            "total": 10,
+            "agreed": 10,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "honest_self_representation": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "reading_level": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "disruption_correction": {
+            "total": 6,
+            "agreed": 6,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "learning_state_target": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "guard_tone_safety": {
+            "total": 3,
+            "agreed": 3,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "learner_dignity": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "decision_reasoning": {
+            "total": 4,
+            "agreed": 4,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "contribution_feedback": {
+            "total": 4,
+            "agreed": 4,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          }
+        },
+        "disagreements": [
+          {
+            "id": "IR-PROCEDURE-IMPERATIVE",
+            "expected": {
+              "status": "pass",
+              "pass": true
+            },
+            "result": {
+              "pass": false,
+              "score": 0,
+              "reason": "Response is a directive instruction, failing to provide the conceptual elaboration required for explanation.",
+              "metric": "instruction_realization",
+              "method": "llm_rubric",
+              "status": "fail"
+            }
+          },
+          {
+            "id": "IR-CUE-AS-EXPLANATION",
+            "expected": {
+              "status": "fail",
+              "pass": false
+            },
+            "result": {
+              "pass": true,
+              "score": 1,
+              "reason": "Response elaborates verification method consistent with declared explanation label and student input.",
+              "metric": "instruction_realization",
+              "method": "llm_rubric",
+              "status": "pass"
+            }
+          }
+        ]
+      },
+      "clarified": {
+        "total": 81,
+        "agreed": 81,
+        "metrics": {
+          "instruction_realization": {
+            "total": 38,
+            "agreed": 38,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "contextual_knowledge_quality": {
+            "total": 8,
+            "agreed": 8,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "persona_stability": {
+            "total": 10,
+            "agreed": 10,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "honest_self_representation": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "reading_level": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "disruption_correction": {
+            "total": 6,
+            "agreed": 6,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "learning_state_target": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "guard_tone_safety": {
+            "total": 3,
+            "agreed": 3,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "learner_dignity": {
+            "total": 2,
+            "agreed": 2,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "decision_reasoning": {
+            "total": 4,
+            "agreed": 4,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          },
+          "contribution_feedback": {
+            "total": 4,
+            "agreed": 4,
+            "errors": 0,
+            "false_positives": 0,
+            "false_negatives": 0
+          }
+        },
+        "disagreements": []
+      }
+    },
+    "new_calls": 80,
+    "reused": 82,
+    "rows": 162,
+    "unique_requests": 129,
+    "errors": [],
+    "unplanned": [],
+    "rubricHashes": {
+      "current": {
+        "instruction_realization": "c1ee5e17767c08fd9b7e466590b5456d6ff273066cd190f600a5754c76eec6b3",
+        "contextual_knowledge_quality": "1c60c390d171d645cfdd57628198bdb283ec5164dbddf027d1b309890d688feb",
+        "persona_stability": "678e103175006b0c6937be0dfb831aab4cb7bcc53ad55da2442bc50b858343e2",
+        "honest_self_representation": "811fd0dcf51fae435cab2a6d81c39b1a7e96998b3e5363ae6882ef8936ebd778",
+        "reading_level": "3a339ed50d8162415a95d4d4b4845a1d49593c6b8d1138865995286d83cd2e02",
+        "disruption_correction": "aba0852beb0ebd9fdf5a1adc934bcb9e02d8be74f5e83e10bc5a3e3e1ba01da5",
+        "learning_state_target": "477cf03eed733ce08830bd7683a291eb8b7fae725e4c28fc3bed9cfb1596dab8",
+        "guard_tone_safety": "6247cfdae047a7119016a6933e396ffa07dce013415f4daa2c0241e746a35053",
+        "learner_dignity": "7407f639ed749e30b504f20955577cb148e793c79c18e04f5e4832b7b1828068",
+        "decision_reasoning": "88f61148f9a99099f2eda04b502caf62930923478a785cf4177ac9117408a4a7",
+        "contribution_feedback": "0ad6c845a23b77457370d07785f6bce7363887fd66db990c60b3eefd87686130"
+      },
+      "clarified": {
+        "instruction_realization": "174c4f3cf5099d74f5d90243a8aab4110e4b75a4f16ece642ae87c7c0f365c91",
+        "contextual_knowledge_quality": "1c60c390d171d645cfdd57628198bdb283ec5164dbddf027d1b309890d688feb",
+        "persona_stability": "07d13fab793870c14a5f3572c3ef706bb317a4133ee7e96bb889520a26966436",
+        "honest_self_representation": "811fd0dcf51fae435cab2a6d81c39b1a7e96998b3e5363ae6882ef8936ebd778",
+        "reading_level": "3a339ed50d8162415a95d4d4b4845a1d49593c6b8d1138865995286d83cd2e02",
+        "disruption_correction": "aba0852beb0ebd9fdf5a1adc934bcb9e02d8be74f5e83e10bc5a3e3e1ba01da5",
+        "learning_state_target": "477cf03eed733ce08830bd7683a291eb8b7fae725e4c28fc3bed9cfb1596dab8",
+        "guard_tone_safety": "6247cfdae047a7119016a6933e396ffa07dce013415f4daa2c0241e746a35053",
+        "learner_dignity": "7407f639ed749e30b504f20955577cb148e793c79c18e04f5e4832b7b1828068",
+        "decision_reasoning": "88f61148f9a99099f2eda04b502caf62930923478a785cf4177ac9117408a4a7",
+        "contribution_feedback": "0ad6c845a23b77457370d07785f6bce7363887fd66db990c60b3eefd87686130"
+      }
+    },
+    "dependencies": [
+      {
+        "file": "runner.js",
+        "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+      },
+      {
+        "file": "evaluator.js",
+        "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+      },
+      {
+        "file": "../rubrics/v1/manifest.json",
+        "sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99"
+      }
+    ],
+    "record_hash_manifest_sha256": "2af5185e7b06a83e3f1c69b845a3cde435c88b696b70ab9de1c57405052827dd",
+    "raw_keys": [
+      "request",
+      "endpoint",
+      "attempts",
+      "payload",
+      "text"
+    ]
+  },
+  "completed_checks": [
+    "Recomputed snapshot fingerprint from all frozen identity fields.",
+    "Reconstructed every request using judgeMessages and frozen rubric, input, output and settings; checked complete request and endpoint identity for all162 rows.",
+    "Recomputed checkedResult and agreement from raw response text and frozen expected fields; every stored result and both condition summaries agree.",
+    "Checked all reused raw response objects against their SHA256-pinned prior source or canonical job alias without filtering outcomes.",
+    "Checked there are no unexpected condition/index records and all expected records are present.",
+    "All81 labels and contexts appear in both conditions. The49 earlier regression examples remain represented."
+  ],
+  "interpretation": {
+    "instruction_realization": "Current36/38 versus clarified38/38. The two corrected disagreements are imperative procedural teaching falsely rejected as explanation and an unresolved comparison cue falsely accepted as explanation.",
+    "persona_stability": "Current10/10 and clarified10/10; calibration demonstrates no measured persona improvement. The clarification is requirement-grounded scope guidance with retained negative boundaries.",
+    "other_metrics": "All33 remaining fixtures agree in both conditions; unchanged identical requests are reused and are not independent observations.",
+    "generalization_limit": "Finite calibration does not establish an error-free evaluator or target-model acceptance. Prior development judgments remain historical evidence."
+  },
+  "installed_preparation": {
+    "fingerprint": "9029f022333d937d73dbee4b7f5accbbd1a294a84c4a2e9c1c954efed5222124",
+    "hashes": {
+      "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-installed-calibration/snapshot.json": "dd7a6b89d6d4b164eaf217221fa13f2da9b9863bb6a3a50c17759aaccb612c4f",
+      "evals/promptfoo/refinement-20261014/evaluator-installed-boundary-calibration.json": "588c5fa423286b7f5b9bfdb60402ee6b71aeab9cf9f971d95ec3e9444e8bf9a5",
+      "evals/promptfoo/v1/calibrate-boundaries.js": "dcb2d4ba49601169b04619ec77d02502e3686f0f68936c2baf4203f7badbb707"
+    },
+    "sourceDiff": [
+      {
+        "line": 27,
+        "before": "    const expectedPass = row.fixture ? row.fixture.expected_realization : row.example.expected;",
+        "after": "    const expectedPass = row.fixture?.expected ? row.fixture.expected.pass : row.fixture ? row.fixture.expected_realization : row.example.expected;"
+      }
+    ],
+    "fixtures": 81,
+    "jobs": 162,
+    "unique_requests": 81,
+    "new_calls": 48,
+    "prior_reuse_jobs": 66,
+    "alias_jobs": 48,
+    "changed_rubrics": [
+      "instruction_realization",
+      "persona_stability"
+    ],
+    "installed_hashes": {
+      "instruction_realization": "d8ca885e016b93cae08edf01fc33a5d092d88b4238702ef347163bd47683ca3c",
+      "persona_stability": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2"
+    },
+    "existing_result_files": 0
+  },
+  "exact_byte_note": "apply_patch added one terminal newline to each newly appended rubric. Installed files equal calibration02 clarified strings plus that byte. The follow-up treats these as distinct requests and reuses only the33 unchanged unique requests.",
+  "adoption_requirements": [
+    "Finish and retain all162 logical evaluations of the installed-byte calibration, representing81 unique requests, before claiming exact-byte calibration.",
+    "Preserve any disagreement or error without outcome-dependent retries, relabeling or fixture deletion.",
+    "Version only the two reviewed rubric texts and associated provenance metadata; preserve applicability, thresholds, partitions and deterministic methods.",
+    "Rejudge affected persona_stability and instruction_realization checks symmetrically for the complete baseline and new candidate using the same installed bytes and provider parameters.",
+    "Retain all target outputs and original judgments. Reuse a prior judgment only when its complete request and provider identity match; retain failed judgments equally.",
+    "Complete the applicable full comparison and remaining acceptance requirements before any passing claim."
+  ],
+  "auditor_model_calls": 0,
+  "artifact_status": "Pre-adoption audit; append a distinct revision after installed calibration and manifest changes are available.",
+  "completion_revision": {
+    "revision": 2,
+    "recorded_at": "2026-10-15",
+    "previous_audit_sha256": "a9b29e2d53b3b2dc520fae6b910aacdb512a2b4dc7ccba2d48e29397a228570b",
+    "verdict": "changes_required_before_adoption",
+    "execution_integrity": "clear",
+    "completed_installed_calibration": {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-installed-calibration",
+      "fingerprint": "9029f022333d937d73dbee4b7f5accbbd1a294a84c4a2e9c1c954efed5222124",
+      "hashes": {
+        "snapshot.json": "dd7a6b89d6d4b164eaf217221fa13f2da9b9863bb6a3a50c17759aaccb612c4f",
+        "summary.json": "7a9679704067cdc9094ee0e67da7cf2671bbcec5f5a5ca2c2c52bac70adafbd4"
+      },
+      "conditions": {
+        "current": {
+          "total": 81,
+          "agreed": 80,
+          "metrics": {
+            "instruction_realization": {
+              "total": 38,
+              "agreed": 37,
+              "errors": 0,
+              "false_positives": 1,
+              "false_negatives": 0
+            },
+            "contextual_knowledge_quality": {
+              "total": 8,
+              "agreed": 8,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "persona_stability": {
+              "total": 10,
+              "agreed": 10,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "honest_self_representation": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "reading_level": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "disruption_correction": {
+              "total": 6,
+              "agreed": 6,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learning_state_target": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "guard_tone_safety": {
+              "total": 3,
+              "agreed": 3,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learner_dignity": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "decision_reasoning": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "contribution_feedback": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            }
+          },
+          "disagreements": [
+            {
+              "id": "IR-CUE-AS-EXPLANATION",
+              "expected": {
+                "status": "fail",
+                "pass": false
+              },
+              "result": {
+                "pass": true,
+                "score": 1,
+                "reason": "Response teaches verification procedure, satisfying explanation rubric permitting procedural teaching.",
+                "metric": "instruction_realization",
+                "method": "llm_rubric",
+                "status": "pass"
+              }
+            }
+          ]
+        },
+        "clarified": {
+          "total": 81,
+          "agreed": 80,
+          "metrics": {
+            "instruction_realization": {
+              "total": 38,
+              "agreed": 37,
+              "errors": 0,
+              "false_positives": 1,
+              "false_negatives": 0
+            },
+            "contextual_knowledge_quality": {
+              "total": 8,
+              "agreed": 8,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "persona_stability": {
+              "total": 10,
+              "agreed": 10,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "honest_self_representation": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "reading_level": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "disruption_correction": {
+              "total": 6,
+              "agreed": 6,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learning_state_target": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "guard_tone_safety": {
+              "total": 3,
+              "agreed": 3,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learner_dignity": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "decision_reasoning": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "contribution_feedback": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            }
+          },
+          "disagreements": [
+            {
+              "id": "IR-CUE-AS-EXPLANATION",
+              "expected": {
+                "status": "fail",
+                "pass": false
+              },
+              "result": {
+                "pass": true,
+                "score": 1,
+                "reason": "Response teaches verification procedure, satisfying explanation rubric permitting procedural teaching.",
+                "metric": "instruction_realization",
+                "method": "llm_rubric",
+                "status": "pass"
+              }
+            }
+          ]
+        }
+      },
+      "new_calls": 48,
+      "reused": 114,
+      "rows": 162,
+      "unique_requests": 81,
+      "errors": [],
+      "unplanned": [],
+      "rubricHashes": {
+        "current": {
+          "instruction_realization": "d8ca885e016b93cae08edf01fc33a5d092d88b4238702ef347163bd47683ca3c",
+          "contextual_knowledge_quality": "1c60c390d171d645cfdd57628198bdb283ec5164dbddf027d1b309890d688feb",
+          "persona_stability": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2",
+          "honest_self_representation": "811fd0dcf51fae435cab2a6d81c39b1a7e96998b3e5363ae6882ef8936ebd778",
+          "reading_level": "3a339ed50d8162415a95d4d4b4845a1d49593c6b8d1138865995286d83cd2e02",
+          "disruption_correction": "aba0852beb0ebd9fdf5a1adc934bcb9e02d8be74f5e83e10bc5a3e3e1ba01da5",
+          "learning_state_target": "477cf03eed733ce08830bd7683a291eb8b7fae725e4c28fc3bed9cfb1596dab8",
+          "guard_tone_safety": "6247cfdae047a7119016a6933e396ffa07dce013415f4daa2c0241e746a35053",
+          "learner_dignity": "7407f639ed749e30b504f20955577cb148e793c79c18e04f5e4832b7b1828068",
+          "decision_reasoning": "88f61148f9a99099f2eda04b502caf62930923478a785cf4177ac9117408a4a7",
+          "contribution_feedback": "0ad6c845a23b77457370d07785f6bce7363887fd66db990c60b3eefd87686130"
+        },
+        "clarified": {
+          "instruction_realization": "d8ca885e016b93cae08edf01fc33a5d092d88b4238702ef347163bd47683ca3c",
+          "contextual_knowledge_quality": "1c60c390d171d645cfdd57628198bdb283ec5164dbddf027d1b309890d688feb",
+          "persona_stability": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2",
+          "honest_self_representation": "811fd0dcf51fae435cab2a6d81c39b1a7e96998b3e5363ae6882ef8936ebd778",
+          "reading_level": "3a339ed50d8162415a95d4d4b4845a1d49593c6b8d1138865995286d83cd2e02",
+          "disruption_correction": "aba0852beb0ebd9fdf5a1adc934bcb9e02d8be74f5e83e10bc5a3e3e1ba01da5",
+          "learning_state_target": "477cf03eed733ce08830bd7683a291eb8b7fae725e4c28fc3bed9cfb1596dab8",
+          "guard_tone_safety": "6247cfdae047a7119016a6933e396ffa07dce013415f4daa2c0241e746a35053",
+          "learner_dignity": "7407f639ed749e30b504f20955577cb148e793c79c18e04f5e4832b7b1828068",
+          "decision_reasoning": "88f61148f9a99099f2eda04b502caf62930923478a785cf4177ac9117408a4a7",
+          "contribution_feedback": "0ad6c845a23b77457370d07785f6bce7363887fd66db990c60b3eefd87686130"
+        }
+      },
+      "dependencies": [
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+        },
+        {
+          "file": "../rubrics/v1/manifest.json",
+          "sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99"
+        }
+      ],
+      "record_hash_manifest_sha256": "1966d9f29bd9167fab02f6c45961ff9345e4096ecfada689589a707592dd8602",
+      "raw_keys": [
+        "request",
+        "endpoint",
+        "attempts",
+        "payload",
+        "text"
+      ]
+    },
+    "finding": {
+      "fixture": "IR-CUE-AS-EXPLANATION",
+      "row": "current-61.json",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      },
+      "observed": {
+        "status": "pass",
+        "pass": true,
+        "reason": "Response teaches verification procedure, satisfying explanation rubric permitting procedural teaching."
+      },
+      "evidence": "The declared explanation only directs a comparison and leaves whether the complete website names match unresolved. That is the explicit focused-cue scaffolding boundary. The installed judge treats procedural wording as sufficient for explanation despite the unresolved inference.",
+      "scope": "This is one unique request reused in the second identical condition, not two independent errors. All other80 fixtures agree, including all10 persona cases. No transport or format errors occurred."
+    },
+    "interpretation": "The terminal-newline run establishes residual evaluator instability or boundary misapplication, not that a newline caused the disagreement. Calibration02's81/81 remains preserved but does not make installed-byte80/81 pass the declared all-fixture check.",
+    "next_action": "Retain the failed judgment and frozen label. Diagnose or revise the general action boundary under a new declared evaluator revision if justified, then calibrate the exact installed bytes with all81 existing fixtures retained. Do not retry this identical request for a favorable outcome or adopt it as if calibration passed.",
+    "symmetric_rejudging": "Still pending successful adoption; no baseline/candidate semantic acceptance claim is supported by this calibration."
+  },
+  "adoption_revision": {
+    "revision": 3,
+    "recorded_at": "2026-10-15",
+    "previous_audit_sha256": "42e4ca4b6a28e692ea1563ab97a657ce4c9217b7913e9f8e701ad26ceac3bba2",
+    "verdict": "clear_for_v1.3_rubric_adoption",
+    "scope": "Exact installed rubric text, completed calibration execution, versioned unchanged-gate manifest and metadata-only baseline replay checkpoint. This is not target acceptance.",
+    "calibration": {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-inference-precedence-calibration",
+      "fingerprint": "f5855469f48c015e1699750bf248c63b3eae07e8518aa5fd40f550f9583eed9a",
+      "hashes": {
+        "snapshot.json": "ccd5c00ffc517d92ebb3691a1ea7958c91edcac72a9a355c53003711aa532bc2",
+        "summary.json": "eec665a0de242c2c3b5892b6a4800b4677fa9a7ba0f7e1219c76338a5d1c3f63"
+      },
+      "conditions": {
+        "current": {
+          "total": 81,
+          "agreed": 80,
+          "metrics": {
+            "instruction_realization": {
+              "total": 38,
+              "agreed": 37,
+              "errors": 0,
+              "false_positives": 1,
+              "false_negatives": 0
+            },
+            "contextual_knowledge_quality": {
+              "total": 8,
+              "agreed": 8,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "persona_stability": {
+              "total": 10,
+              "agreed": 10,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "honest_self_representation": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "reading_level": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "disruption_correction": {
+              "total": 6,
+              "agreed": 6,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learning_state_target": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "guard_tone_safety": {
+              "total": 3,
+              "agreed": 3,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learner_dignity": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "decision_reasoning": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "contribution_feedback": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            }
+          },
+          "disagreements": [
+            {
+              "id": "IR-CUE-AS-EXPLANATION",
+              "expected": {
+                "status": "fail",
+                "pass": false
+              },
+              "result": {
+                "pass": true,
+                "score": 1,
+                "reason": "Response teaches verification procedure, satisfying explanation rubric permitting procedural teaching.",
+                "metric": "instruction_realization",
+                "method": "llm_rubric",
+                "status": "pass"
+              }
+            }
+          ]
+        },
+        "clarified": {
+          "total": 81,
+          "agreed": 81,
+          "metrics": {
+            "instruction_realization": {
+              "total": 38,
+              "agreed": 38,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "contextual_knowledge_quality": {
+              "total": 8,
+              "agreed": 8,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "persona_stability": {
+              "total": 10,
+              "agreed": 10,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "honest_self_representation": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "reading_level": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "disruption_correction": {
+              "total": 6,
+              "agreed": 6,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learning_state_target": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "guard_tone_safety": {
+              "total": 3,
+              "agreed": 3,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "learner_dignity": {
+              "total": 2,
+              "agreed": 2,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "decision_reasoning": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            },
+            "contribution_feedback": {
+              "total": 4,
+              "agreed": 4,
+              "errors": 0,
+              "false_positives": 0,
+              "false_negatives": 0
+            }
+          },
+          "disagreements": []
+        }
+      },
+      "new_calls": 38,
+      "reused": 124,
+      "rows": 162,
+      "unique_requests": 119,
+      "errors": [],
+      "unplanned": [],
+      "rubricHashes": {
+        "current": {
+          "instruction_realization": "d8ca885e016b93cae08edf01fc33a5d092d88b4238702ef347163bd47683ca3c",
+          "contextual_knowledge_quality": "1c60c390d171d645cfdd57628198bdb283ec5164dbddf027d1b309890d688feb",
+          "persona_stability": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2",
+          "honest_self_representation": "811fd0dcf51fae435cab2a6d81c39b1a7e96998b3e5363ae6882ef8936ebd778",
+          "reading_level": "3a339ed50d8162415a95d4d4b4845a1d49593c6b8d1138865995286d83cd2e02",
+          "disruption_correction": "aba0852beb0ebd9fdf5a1adc934bcb9e02d8be74f5e83e10bc5a3e3e1ba01da5",
+          "learning_state_target": "477cf03eed733ce08830bd7683a291eb8b7fae725e4c28fc3bed9cfb1596dab8",
+          "guard_tone_safety": "6247cfdae047a7119016a6933e396ffa07dce013415f4daa2c0241e746a35053",
+          "learner_dignity": "7407f639ed749e30b504f20955577cb148e793c79c18e04f5e4832b7b1828068",
+          "decision_reasoning": "88f61148f9a99099f2eda04b502caf62930923478a785cf4177ac9117408a4a7",
+          "contribution_feedback": "0ad6c845a23b77457370d07785f6bce7363887fd66db990c60b3eefd87686130"
+        },
+        "clarified": {
+          "instruction_realization": "573876259820c0efb04c4e15a34b1a0dbd77f5895239e2d395d9f0afa87b0d24",
+          "contextual_knowledge_quality": "1c60c390d171d645cfdd57628198bdb283ec5164dbddf027d1b309890d688feb",
+          "persona_stability": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2",
+          "honest_self_representation": "811fd0dcf51fae435cab2a6d81c39b1a7e96998b3e5363ae6882ef8936ebd778",
+          "reading_level": "3a339ed50d8162415a95d4d4b4845a1d49593c6b8d1138865995286d83cd2e02",
+          "disruption_correction": "aba0852beb0ebd9fdf5a1adc934bcb9e02d8be74f5e83e10bc5a3e3e1ba01da5",
+          "learning_state_target": "477cf03eed733ce08830bd7683a291eb8b7fae725e4c28fc3bed9cfb1596dab8",
+          "guard_tone_safety": "6247cfdae047a7119016a6933e396ffa07dce013415f4daa2c0241e746a35053",
+          "learner_dignity": "7407f639ed749e30b504f20955577cb148e793c79c18e04f5e4832b7b1828068",
+          "decision_reasoning": "88f61148f9a99099f2eda04b502caf62930923478a785cf4177ac9117408a4a7",
+          "contribution_feedback": "0ad6c845a23b77457370d07785f6bce7363887fd66db990c60b3eefd87686130"
+        }
+      },
+      "dependencies": [
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+        },
+        {
+          "file": "../rubrics/v1/manifest.json",
+          "sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99"
+        }
+      ],
+      "record_hash_manifest_sha256": "21daf7deebf52c2255c7d82e0ba4f0f6aca62c756a5b628bf8a3fe98b97699cc",
+      "raw_keys": [
+        "request",
+        "endpoint",
+        "attempts",
+        "payload",
+        "text"
+      ]
+    },
+    "preserved_fixtures": {
+      "count": 81,
+      "comparison": "All ID, metric, expected fields, input and output objects deep-equal the preceding installed-byte calibration. Provider request settings and endpoint unchanged.",
+      "prior_failures": "Earlier79/81 and80/81 conditions remain preserved; no identical failed request was resampled for a favorable result."
+    },
+    "exact_installed_text": {
+      "matches_all_clarified_snapshot_rubrics": true,
+      "instruction_realization_sha256": "573876259820c0efb04c4e15a34b1a0dbd77f5895239e2d395d9f0afa87b0d24",
+      "persona_stability_sha256": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2",
+      "new_realization_clause": "The installed first-stage clarification is retained. The proposed general inference-versus-execution precedence paragraph is appended exactly, with the terminal newline frozen before calibration."
+    },
+    "manifest": {
+      "file": "evals/promptfoo/rubrics/v1/manifest.json",
+      "sha256": "2de3dfd2b119b987bd6c11587847462c21fd9c1bdc46e719270ec10e5e8ba6d0",
+      "differences": [
+        {
+          "path": "/version",
+          "before": "v1.2",
+          "after": "v1.3"
+        },
+        {
+          "path": "/revision/previous_version",
+          "before": "v1.1",
+          "after": "v1.2"
+        },
+        {
+          "path": "/revision/previous_manifest_sha256",
+          "before": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec",
+          "after": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99"
+        },
+        {
+          "path": "/revision/changed_check",
+          "before": "instruction_realization"
+        },
+        {
+          "path": "/revision/scope",
+          "before": "Route schema-valid Guard/null through the semantic realization judge as absence of a declared teaching action, not a C01 error. Clarify that general protective benefit does not relabel a correction-first response as protective_instruction. Preserve action eligibility, applicability, labels, thresholds, partitions, and every other rubric.",
+          "after": "Clarify permitted honest disclosure and firm role-consistent correction; distinguish complete procedural teaching from focused learner inference. Preserve all labels, applicability, gates and other rubrics."
+        },
+        {
+          "path": "/revision/proposal",
+          "before": "evals/promptfoo/refinement-20261014/instruction-realization-null-taxonomy-proposal.md",
+          "after": "evals/promptfoo/refinement-20261014/evaluator-inference-precedence-calibration.json"
+        },
+        {
+          "path": "/revision/audit_status",
+          "before": "clear; independent /root review in refinement-20261014/audit-null-instruction-v12.json"
+        },
+        {
+          "path": "/revision/calibration_status",
+          "before": "49/49 current-condition examples agree; zero unresolved errors; initial48/49 condition preserved",
+          "after": "81/81 exact installed-text examples agree; zero unresolved errors. Earlier79/81 and80/81 conditions retained."
+        },
+        {
+          "path": "/revision/calibration_fixtures",
+          "before": "evals/promptfoo/refinement-20261014/null-instruction-calibration-proposal.json"
+        },
+        {
+          "path": "/revision/protective_benefit_clarification_review",
+          "before": "Independent coordinating-agent review approved the exact general clarification on 2026-10-15; adoption follows complete8+11+30 calibration in the new r2 directories."
+        },
+        {
+          "path": "/revision/calibration_evidence",
+          "before": [
+            "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.2-null-boundaries-r2/summary.json",
+            "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.2-boundaries-r2/summary.json",
+            "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.2-calibration-r2/summary.json"
+          ],
+          "after": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-inference-precedence-calibration/summary.json"
+        },
+        {
+          "path": "/revision/initial_v1_2_calibration",
+          "before": {
+            "rubric_sha256": "35c300472508271a684b51b45f2bdb0288c9a741ddcd7da91a5b51e70ddc18e6",
+            "null_boundaries": {
+              "agreed": 8,
+              "total": 8,
+              "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.2-null-boundaries"
+            },
+            "prior_boundaries": {
+              "agreed": 10,
+              "total": 11,
+              "failed_fixture": "D-C2",
+              "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.2-boundaries/current-D-C2.json"
+            },
+            "disposition": "Preserve original evidence and fixture labels. Initial condition is not calibrated for acceptance. Rerun all 8 null, 11 prior-boundary and 30 existing examples in new directories under the clarified rubric."
+          }
+        },
+        {
+          "path": "/revision/comparison",
+          "before": "All applicable instruction_realization judgments must be recomputed for both baseline and candidate, retaining every target output and original judgment. Other unchanged judgments may be retained only when exact request/settings identity matches.",
+          "after": "Rejudge every applicable persona_stability and instruction_realization check symmetrically on preserved baseline/candidate target outputs. Reuse unchanged exact requests regardless of outcome. No target regeneration."
+        },
+        {
+          "path": "/revision/changed_checks",
+          "after": [
+            "instruction_realization",
+            "persona_stability"
+          ]
+        },
+        {
+          "path": "/revision/audit",
+          "after": "evals/promptfoo/refinement-20261014/audit-boundary-adoption-v1.3-20261015.json"
+        },
+        {
+          "path": "/revision/calibration_summary_sha256",
+          "after": "eec665a0de242c2c3b5892b6a4800b4677fa9a7ba0f7e1219c76338a5d1c3f63"
+        },
+        {
+          "path": "/files/2/sha256",
+          "before": "6d7118ec8f8963e48625b204bd92f8a252957f93ad698465ddb8f017fa71a5d1",
+          "after": "f984e97c86c2e776d99bbad4d83dfeb2fcef9e06689a62466ec9e8d8cd629601"
+        },
+        {
+          "path": "/files/4/sha256",
+          "before": "c1ee5e17767c08fd9b7e466590b5456d6ff273066cd190f600a5754c76eec6b3",
+          "after": "573876259820c0efb04c4e15a34b1a0dbd77f5895239e2d395d9f0afa87b0d24"
+        },
+        {
+          "path": "/files/12/sha256",
+          "before": "678e103175006b0c6937be0dfb831aab4cb7bcc53ad55da2442bc50b858343e2",
+          "after": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2"
+        },
+        {
+          "path": "/checks/1/version",
+          "before": "v1.2",
+          "after": "v1.3"
+        },
+        {
+          "path": "/checks/1/status",
+          "before": "calibrated_49_examples_including_22_realization_boundaries",
+          "after": "calibrated_81_examples_including_38_realization_and_10_persona"
+        },
+        {
+          "path": "/checks/5/version",
+          "before": "v1",
+          "after": "v1.3"
+        },
+        {
+          "path": "/checks/5/status",
+          "before": "calibrated_30_examples",
+          "after": "calibrated_81_examples_including_38_realization_and_10_persona"
+        },
+        {
+          "path": "/evaluator_revision",
+          "before": 7,
+          "after": 8
+        },
+        {
+          "path": "/execution_revision",
+          "before": 7,
+          "after": 8
+        }
+      ],
+      "unchanged": "All requirement mappings, methods, checked fields, applicability, thresholds, hard partitions, accuracy constraints, conditional-result extensions, retained checks and deterministic scoring definitions are unchanged. Only revision/provenance metadata, the two changed metric versions/statuses, their file hashes and the version assertion test hash change."
+    },
+    "structural_validation": {
+      "command": "rtk proxy node --test evals/promptfoo/rubrics/v1/decision-metrics.test.js evals/promptfoo/v1/calibrate-boundaries.test.js",
+      "passed": 19,
+      "failed": 0,
+      "exit_code": 0,
+      "verified_by_auditor": true,
+      "test_change": "Only the manifest version assertion changes from v1 to v1.3 in decision-metrics.test.js; the updated file hash is recorded in the manifest."
+    },
+    "metadata_correction": {
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.3",
+      "derived": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.3-r2",
+      "source_snapshot_sha256": "69ab1b12b41abb491d5d12201e2319a22fc444d82fa91f554e952002144efc7d",
+      "derived_snapshot_sha256": "ae5393cb5cac07c81bd0611d117889fb590d06c07fcf8860b999a50afee63003",
+      "records_verified": 181,
+      "target_objects_equal_original_v12": 181,
+      "judge_evidence_equal_v13_source": 181,
+      "judge_provenance_delta": "reused_from field can be added; calls/requests/results remain identical",
+      "result_objects_equal": 181,
+      "new_target_calls": 0,
+      "new_judge_evidence": 0,
+      "only_manifest_delta": "decision-metrics.test.js source hash metadata",
+      "record_hash_manifest_sha256": "6507ce6a42f5ab08dfc323a5e74c9aab1d9cea7494a6c291bace7ab6b63180e7",
+      "complete": false
+    },
+    "authority_identities": {
+      "tutor-system/docs/ai-behaviors/constitution.md": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e",
+      "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+      "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "60419a65988047a571a02f9528bf9f5808620250d3d9999ac217d10a4c28dfdb",
+      "evals/promptfoo/refinement-20261014/evaluator-inference-precedence-calibration.json": "8ed2fefd16f3977df65a1c7a7974e7212875a53936d7a193334b1f4969917a3f",
+      "evals/promptfoo/rubrics/v1/manifest.json": "2de3dfd2b119b987bd6c11587847462c21fd9c1bdc46e719270ec10e5e8ba6d0",
+      "evals/promptfoo/rubrics/v1/decision-metrics.test.js": "f984e97c86c2e776d99bbad4d83dfeb2fcef9e06689a62466ec9e8d8cd629601",
+      "evals/promptfoo/v1/calibrate-boundaries.test.js": "20db301920b20e95a311197906eb39c169017dde5e17c6466c5c31db85e8dfcf"
+    },
+    "judgment_scope": "The final calibration fixes the one preserved focused-cue false positive with38 changed unique judge requests. Persona remains10/10; the final step demonstrates no additional persona gain. All81 agreement is finite calibration evidence, not universal evaluator reliability.",
+    "remaining_execution": "The baseline-r2 checkpoint contains181/183 records. Complete the final two preserved-response judgments/replays and full candidate semantic judging under the same corrected manifest before comparative acceptance. The candidate11 preflight snapshot retains the earlier test-file hash as historical provenance; final comparison must use the corrected manifest without regenerating its targets.",
+    "auditor_model_calls": 0
+  }
+}

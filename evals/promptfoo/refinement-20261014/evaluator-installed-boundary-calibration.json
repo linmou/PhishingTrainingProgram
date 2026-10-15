@@ -1,0 +1,838 @@
+{
+  "intent": "Verify exact installed rubric file bytes, including final newline, retaining all81 labels and earlier verdicts.",
+  "status": "Prepared; no semantic clarification or label changes beyond the independently reviewed calibration02.",
+  "clarifications": {},
+  "current_rubric_identities": {
+    "persona_stability": {
+      "sha256": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2"
+    },
+    "instruction_realization": {
+      "sha256": "d8ca885e016b93cae08edf01fc33a5d092d88b4238702ef347163bd47683ca3c"
+    }
+  },
+  "fixtures": [],
+  "regression_fixtures": [
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-guard-declared-explanation-absent.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-0.json",
+      "source_sha256": "706de20cc22c88f512f563dcf5b64e8e38eb0731fd3c8bdeed88959706a1bcf9",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-guard-explanation-account.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-1.json",
+      "source_sha256": "a4ec75349baab0f4bdcfe40becebc08bd3a86e91098a0179ae549fcd497c77f2",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-guard-scaffold-account.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-2.json",
+      "source_sha256": "0435763e92825c4898811793788da13ba8e8375524cbf2aa4ea84b353012d5a8",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-null-participation-account.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-3.json",
+      "source_sha256": "8c495922da6d2fe22c44fb903aee0ae5704de60c8d438af4708a9cd380762a64",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-null-participation-delivery.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-4.json",
+      "source_sha256": "1597039022a49cdd54a17108aad9deeeaf66669becb6a6a65936bacff45bc7fc",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-null-teaching-account.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-5.json",
+      "source_sha256": "678eba03be4cb9293e7982c6a395ae809a9aefcbba4366378e080bffbeb903ec",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-null-teaching-delivery.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-6.json",
+      "source_sha256": "5552409f0fdd5f350a53645a8cc031c7571a9162f81aeb67b94298daeecb6f0d",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-null-boundaries-r2:current-tutoring-explanation-delivery.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-7.json",
+      "source_sha256": "e20ceb80853f0a125c0e71cc387e1db93609071d19e386cb0cf57972d60a0c65",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-C1.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-8.json",
+      "source_sha256": "5d49beeb7ac613625b94535c3b98771bb0761839ae26f16330c1d4b323e84bbf",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-C2.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-9.json",
+      "source_sha256": "800cfb7a32c6cdca46dc1ecc6546fdf9ac6d5c69a98c9caa1e63d56abbf3ca9c",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-I1.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-10.json",
+      "source_sha256": "65a2f3711c2a96daa2dd62d42bd7eab80f398434446f39574945fb75a77eb7d5",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-P1.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-11.json",
+      "source_sha256": "10174a17ffdb4bed97f76e96dc4c0e640a72897d60a372d723e1bcec68895816",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-P2.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-12.json",
+      "source_sha256": "0a7a6b398b62194203ba063eae6486e65a04e9bf22cf2e1e7c8ce6c916829d11",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-P3.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-13.json",
+      "source_sha256": "4c5fb9069014cfff7b47645d83c046b907cf10db659754124bf5a7b39f5e0950",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-S1.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-14.json",
+      "source_sha256": "85da561c77f804c118114ab0a8752cb449ab821d7c0e77dfb6b65c01e70adaab",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-S2.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-15.json",
+      "source_sha256": "fe57ae08da548f130d618ffdc433b86a28cc7bd335d569978e6d86ae315728b5",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-S3.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-16.json",
+      "source_sha256": "a3ffe7f774148d5363c8ec44fa7dbb46620868409685f61e65b1c42b290dc12f",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-S4.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-17.json",
+      "source_sha256": "bb08104b40d3db5285d7a4ac611fb911ccd295fcb9cd4dc235c3466982cb319a",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-boundaries-r2:current-D-S5.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-18.json",
+      "source_sha256": "6aede9846d0e6761f717d4f511ebecf5d5a62024d3fbefe19218130734e3f497",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:0.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-19.json",
+      "source_sha256": "a4e5220a653c4815c49e6be7f2925a08d845c32f2c87c0cf3e0cf6aab1055ccd",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:1.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-20.json",
+      "source_sha256": "979ee4bc48f1005c2b9bdaa634e6fccd4724fddc056df8d18d08cdebf18e5c5d",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:10.json",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-21.json",
+      "source_sha256": "b60791f3da6fad3c76ef345c6e55e3e865cfdb43602cce0c6202ca44d784905f",
+      "expected": {
+        "status": "not_applicable",
+        "pass": null,
+        "accuracy_pass": null
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:11.json",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-22.json",
+      "source_sha256": "8cd15610d61cebec2c83767168a26ed1b936ea49edcd1c85b0aebb0915a8cd62",
+      "expected": {
+        "status": "fail",
+        "pass": false,
+        "accuracy_pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:12.json",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-23.json",
+      "source_sha256": "5ad226ec359d2fc73c7a408f9d476572c35bad9ddaf5ec6307a7141d1164ec8b",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:13.json",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-24.json",
+      "source_sha256": "09bd671692397ba1f055bfd87d1bdd237a5bb751dbb62d46e456e5c79b972196",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:14.json",
+      "metric": "honest_self_representation",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-25.json",
+      "source_sha256": "7abd26124b6172aadb6a30056ffba3d55ea65a71d1dbc96e0b6ce2dd874eca4d",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:15.json",
+      "metric": "honest_self_representation",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-26.json",
+      "source_sha256": "3c1b14429c7d63b5fd7c364dd9d798a5d8b41b267f2e3a7d141c5f0b30c86421",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:16.json",
+      "metric": "reading_level",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-27.json",
+      "source_sha256": "c979f7130fa4d91cc074e23c33a03e3a06796a7d741740a444c975601da20889",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:17.json",
+      "metric": "reading_level",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-28.json",
+      "source_sha256": "4892f8608ecfab2d3bbecd571b7057be8dd525a803ac8f096e0c1887fefad46d",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:18.json",
+      "metric": "disruption_correction",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-29.json",
+      "source_sha256": "30e02222b4bd05a0e9cd88d88a362feb8db54d91d47803921c513255353cbc0e",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:19.json",
+      "metric": "disruption_correction",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-30.json",
+      "source_sha256": "f57821b8ccb28ab65aa50b658b1e139d23c4ec262ee32a01a6833378ae849c9b",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:2.json",
+      "metric": "learning_state_target",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-31.json",
+      "source_sha256": "76343521e6e65daef03ddfaa8a70f5fe19389db07aa3b03cb387822369f17d96",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:20.json",
+      "metric": "guard_tone_safety",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-32.json",
+      "source_sha256": "0a9605203133b7bc99d557ffab52fe3478b4cb8a91f7dfc3b78f69b398d2b5a4",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:21.json",
+      "metric": "guard_tone_safety",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-33.json",
+      "source_sha256": "2a63e70cd53fcda069b6421fcc4d9e030c37716133fadc1dd675f8e2245012b0",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:22.json",
+      "metric": "learner_dignity",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-34.json",
+      "source_sha256": "e705bb5550a2298b933856692e3827d7e9e66929aa58ba2327965aa38d7c3b11",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:23.json",
+      "metric": "learner_dignity",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-35.json",
+      "source_sha256": "79eedf478791c1ef90d423b92940d742afb2a492eb3311448b42e5ac9507c79a",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:24.json",
+      "metric": "decision_reasoning",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-36.json",
+      "source_sha256": "22a29b9fb53b31745b4ac1d31a35f2e9c55bcb1a26f7de6b62d0b62a862ff684",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:25.json",
+      "metric": "decision_reasoning",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-37.json",
+      "source_sha256": "d033861a841f5232e99bcb1e319e642a893949b47996a6cb86bac4eb484792b4",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:26.json",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-38.json",
+      "source_sha256": "4770ad0a5606c1a6c66dd8227e25cba2c25d110ea4a5791ef9efcd034284a1fe",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:27.json",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-39.json",
+      "source_sha256": "d718359de4b0b9b78cc2344140bb5c188a272bdaf6264f2b7bcdce266cc4d9ac",
+      "expected": {
+        "status": "pass",
+        "pass": true,
+        "accuracy_pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:28.json",
+      "metric": "contribution_feedback",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-40.json",
+      "source_sha256": "3c695440b42eba6233a782d74bd7df2aff21ad801ea5948b45c5dbb4d5ba0b9f",
+      "expected": {
+        "status": "not_applicable",
+        "pass": null
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:29.json",
+      "metric": "guard_tone_safety",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-41.json",
+      "source_sha256": "30989c2eb36ea5c779279ce56fe11c2389ae803c0c60fb5d76a20682ae42b2e4",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:3.json",
+      "metric": "learning_state_target",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-42.json",
+      "source_sha256": "0b8fa88ab6c269d19ec7089a4b7d9a949b0780cebed6a7c43623c84f92c6d533",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:4.json",
+      "metric": "contribution_feedback",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-43.json",
+      "source_sha256": "d0343a92e63605422717bc9ea7b2eb1b1825aa89357e5941e51f7d541b63c3a0",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:5.json",
+      "metric": "contribution_feedback",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-44.json",
+      "source_sha256": "61839514212d6f5b1ac66ac42b531d01f5b10714f0e50dcd85a7477b2d1ba04e",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:6.json",
+      "metric": "contribution_feedback",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-45.json",
+      "source_sha256": "7e59e1c33bfd204761048473172610fb0e6d9c3368ea798a5a6d881bc9643765",
+      "expected": {
+        "status": "not_applicable",
+        "pass": null
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:7.json",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-46.json",
+      "source_sha256": "1e7d3a818d5b7bee4fd1d65aa35874efc32ee84f9c5a4bd700102bd963efab4b",
+      "expected": {
+        "status": "pass",
+        "pass": true,
+        "accuracy_pass": true
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:8.json",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-47.json",
+      "source_sha256": "20e63345b7715cf7813e924ee441f65410154fed788e997e7d5fd5be4f5dcfa6",
+      "expected": {
+        "status": "fail",
+        "pass": false,
+        "accuracy_pass": false
+      }
+    },
+    {
+      "id": "regression:v1.2-calibration-r2:9.json",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-48.json",
+      "source_sha256": "5e6d074d31c67bcd926efa05364b97075b02b4ee81df71ca2ffa8fe4f16fba47",
+      "expected": {
+        "status": "fail",
+        "pass": false,
+        "accuracy_pass": true
+      }
+    },
+    {
+      "id": "PS-HONEST-PEER",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-49.json",
+      "source_sha256": "0c382a4d5899d3e1e40d61fdf92138142cea1e7b46accb5255781e4278f5d6ac",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "PS-PARENT-ROLE",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-50.json",
+      "source_sha256": "df54d6db027567cf4b376c3ffeec265db124906658a7e91971786d8383290b35",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "PS-HONEST-ADULT",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-51.json",
+      "source_sha256": "2f67e40502043c6c9f56e8970c3be858884929d5d7d47ed932d83c4141f7bd03",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "PS-GUARD-PEER",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-52.json",
+      "source_sha256": "67b9eb2d156244ae2b5ee0df293ecbd985486c053bbac0ebccbb4fd23038079a",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "PS-GUARD-BUREAUCRATIC",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-53.json",
+      "source_sha256": "9a1d6a38ce197ea700bd4e52952ba7d943da542d5abaf2cbfa2b00d41f862d1a",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "PS-GUARD-ADULT",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-54.json",
+      "source_sha256": "609ef31069e461b1ef56e213041c9740597f07f428fa2aa31fa0040d7939404c",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "PS-PROTECT-PEER",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-55.json",
+      "source_sha256": "36367d9e350a2f9e1cd6c1d928a10f1fbf8e57c1db6d36595c71ebd126740111",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "PS-PROTECT-ADULT",
+      "metric": "persona_stability",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-56.json",
+      "source_sha256": "9be187864ad1315d90547cca120e557a3d792d489b72ff80975f0617edd6e66e",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-PROCEDURE-DECLARATIVE",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-57.json",
+      "source_sha256": "9d0d351cfd7272938b7add0520756e0fb44833ddd550c55868aad802446e6039",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-PROCEDURE-IMPERATIVE",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-58.json",
+      "source_sha256": "cbb290222abaafb72a2470f6b14eadacd66ca937906577df94df2310fa457a75",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-PROCEDURE-AS-SCAFFOLD",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-59.json",
+      "source_sha256": "596f1fe87df8eb6f7aa108cc2a36b2f94cbc39061c602dad695bbbb689ca483d",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-COMPARISON-CUE",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-60.json",
+      "source_sha256": "85b85763ea01aa9de4a7e73ce15b23406ad0cc29db4f48d20e13d5fac726764d",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-CUE-AS-EXPLANATION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-61.json",
+      "source_sha256": "626b8db9157de4658b7416c3d9881c3e942c138d88f8e84038bd317b0e5dabcd",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-COMPARISON-ANSWER",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-62.json",
+      "source_sha256": "c42ed935e1dcf38c424930b5ff5db106b33288d712a923949511b42df595100c",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-ANSWER-AS-SCAFFOLD",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-63.json",
+      "source_sha256": "9207bf4c114ed187b8d8f2015ee41cfaae06b5474a3fff6827e745371aa93200",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-COUNTEREVIDENCE-EXPLANATION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-64.json",
+      "source_sha256": "1b18704ff0131133729624f38c1e50e8cac707cc5c64752fc1254fbbf77eaf2e",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-COUNTEREVIDENCE-INCOMPLETE-CORRECTION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-65.json",
+      "source_sha256": "63c09a507e660ec41c74d14e064946c64edd1f1287468f402e03f98940c9bb58",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-CORRECTION-COMPLETE",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-66.json",
+      "source_sha256": "50b0ac1dd7be54463b0cfa5945e1754198e7bfab5762aec336106dcc8ea5d06f",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-CORRECTION-AS-PROTECTION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-67.json",
+      "source_sha256": "f298fb9bcf14b295aeed504232258299260efebbda850f922869769652e84829",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-CORRECTION-NO-ACTION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-68.json",
+      "source_sha256": "a035399dc751ed6c436514b6b250d1f410df70d696dfcb5a8f7cb041159849d7",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-CORRECT-PARTIAL-CALLED-WRONG",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-69.json",
+      "source_sha256": "4513b4bb3f0995b609bfd014bd8f23215e9d23865e3bd39e4a6e3b93ccc5b891",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-PROTECTION-COMPLETE",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-70.json",
+      "source_sha256": "92d56d9294223b175a5bf14ea6c50a3fb237af30650e165ce9446592726198a2",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "IR-PROTECTION-AS-CORRECTION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-71.json",
+      "source_sha256": "5c82c151decd2bb2860e289c00c8cdf650bd81d8e76244ea22162dc1ae315f13",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "IR-PROTECTION-AS-EXPLANATION",
+      "metric": "instruction_realization",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-72.json",
+      "source_sha256": "c64e85eba51c51a005bc384bcccd476611283790414dec0f5873ba736d7793cd",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "G02-PERSISTENCE-IMPACT",
+      "metric": "disruption_correction",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-73.json",
+      "source_sha256": "4e29cf32c1425f91acabd6b70bf8adc00e79c19e300bc38111817ac7421f5097",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "G02-PERSISTENCE-CLASSIFICATION",
+      "metric": "disruption_correction",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-74.json",
+      "source_sha256": "0f4f99b7905b5a6a447e6cdb23876dfdde088c4eab7c1f903e4fcf3f2a3f390d",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "G02-COMPLETE-BOUNDARY",
+      "metric": "disruption_correction",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-75.json",
+      "source_sha256": "c9b263854ca6fdd843786f2305d200567edd4a7eac23bf67e26fff51e0ae4c46",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "G02-SAFE-ADVICE-ONLY",
+      "metric": "disruption_correction",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-76.json",
+      "source_sha256": "39bab5b9d2b4a1d009328a1c62925d61c8c3d44e3803b642d082bd9fcb7cac02",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    },
+    {
+      "id": "T04-GUARD-ACCURATE-RISK",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-77.json",
+      "source_sha256": "1acb8a14bd7f6408208347acb5bec1350eec2039b0c6d15bc4e87edca35fb7b0",
+      "expected": {
+        "status": "pass",
+        "pass": true,
+        "accuracy_pass": true
+      }
+    },
+    {
+      "id": "T04-GUARD-FALSE-CLAIM",
+      "metric": "contextual_knowledge_quality",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-78.json",
+      "source_sha256": "ef3495209d5870a57e2b3dc771ea301b332b045750ab13f10361ca21259f4c12",
+      "expected": {
+        "status": "fail",
+        "pass": false,
+        "accuracy_pass": false
+      }
+    },
+    {
+      "id": "REASON-GUARD-SUPPORTED",
+      "metric": "decision_reasoning",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-79.json",
+      "source_sha256": "4ebe584b17f46dcf72f2ae4f89f4284f5cfcc22a9ea7a29feeab19f528a39508",
+      "expected": {
+        "status": "pass",
+        "pass": true
+      }
+    },
+    {
+      "id": "REASON-GUARD-INVENTED",
+      "metric": "decision_reasoning",
+      "source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/clarified-80.json",
+      "source_sha256": "be2cd3179b7aae252eb45b58fbe3b30fdf07de295c487f2579937174086a8b25",
+      "expected": {
+        "status": "fail",
+        "pass": false
+      }
+    }
+  ],
+  "totals": {
+    "total_per_condition": 81
+  },
+  "changed_factor": "Only the final newline introduced by the text editing tool differs from calibrated strings. Reuse33unchanged requests;48requests need exact-file verification. Conditions are identical and shared; no target calls."
+}

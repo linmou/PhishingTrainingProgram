@@ -1,0 +1,276 @@
+{
+  "intent": "Pin the unchanged baseline, reviewed authority, cases and scoring contract before candidate authorship.",
+  "status": "candidate07_complete_failed_full_thinking_comparison",
+  "latest_execution_record": "run-record.md",
+  "thinking_semantic_interruption": "thinking-v12-disk-interruption.json",
+  "latest_thinking_semantic_checkpoint": "audit-thinking-v12-4x-replay.json",
+  "candidate07": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-07.md",
+    "sha256": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-candidate07.json",
+    "audit_sha256": "314a05a5dc8ba4e1b68109c1a156298ba45e2f22e5c80fc3272a0adf9b03bfee",
+    "status": "audited_frozen",
+    "changed_factors": "Retain06 general teaching detail, restore05 prior-state participation branches, separate protection from Guard, compact reason10–15words and consolidate duplicate participation guidance. Current base generator unchanged. Combined policy intervention."
+  },
+  "evaluator_v12": {
+    "manifest_raw_sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99",
+    "rubric_sha256": "c1ee5e17767c08fd9b7e466590b5456d6ff273066cd190f600a5754c76eec6b3",
+    "evaluator_sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b",
+    "calibration": "49/49,50providerattempts,0unresolvederrors; initial48/49 condition preserved",
+    "status": "adopted_after_independent_review",
+    "scope": "Schema-valid Guard/null reaches semantic realization judge; protective benefit cannot relabel correction-first wording. All cases, labels, applicability and thresholds unchanged. New comparisons require v1.2 on both sides."
+  },
+  "candidate05_result": {
+    "short_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate05-preflight",
+    "short_fingerprint": "761b714ef2191ed962548da805dfa46304d3c29b9cf55cbad022f518c196dba5",
+    "short_mode": "179/183",
+    "short_instruction": "76/90",
+    "thinking_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate05-thinking-preflight",
+    "thinking_fingerprint": "eef4270c4540b2cc812aab78412ca0171ced9175b6fad367a89f8d43c1702387",
+    "thinking_mode": "177/183",
+    "thinking_instruction": "81/90",
+    "classification_verdict": "failed_both_settings",
+    "thinking_comparison_regression_rows": 27,
+    "semantic_status": "unrun"
+  },
+  "thinking_baseline_result": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-preflight",
+    "fingerprint": "b9f20386c1509b503eb01a8aa7886b7c9940ec15b5770d721fa5c3f1e1335b14",
+    "mode": "183/183",
+    "instruction": "89/90",
+    "classification_verdict": "accepted",
+    "semantic_status": "unrun",
+    "comparability": "All61 initial message arrays equal original baseline. Full fresh183 generations under thinking settings. Executed after candidate05 authorship and before candidate06."
+  },
+  "candidate05": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-05.md",
+    "sha256": "9e7469e69176dacb18d8ae3d74d15791950da4ef9d54c954be39d153e38d672e",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-candidate05.json",
+    "audit_sha256": "db46c27b7716bfeffb22ec7d6d7fbf2b1e73168b12a42ebe6a6c7295c3723e16",
+    "status": "audited_frozen",
+    "settings_lanes": [
+      "settings-r3.json",
+      "settings-thinking-diagnostic.json"
+    ],
+    "changed_factors": "Participation procedure branches on prior state before distinguishing Guard entry/persistence/exit. Restored participation does not complete inventory. Policy suffix only; product parser/repair behavior unchanged by the general v2 enforcement fix.",
+    "operation": "Two preflights use12 workers each to bound combined active target requests at24; model and request settings remain frozen."
+  },
+  "lean_composition_diagnostic": {
+    "policy": "candidate04 unchanged",
+    "settings": "settings-r3.json unchanged",
+    "adapter": "candidate v2 with regenerate_room_prompt=false",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-lean-composition-diagnostic.json",
+    "audit_sha256": "9edf2c7a2ea612e4af651aca9499d25fa0d0936fe154076984b7465102c2e193",
+    "status": "audited_frozen",
+    "limits": "Bundled composition, user-normalization and validator/repair differences. Independently check every first/final raw output against production parser and truncation handling; report repairs separately. Diagnostic only."
+  },
+  "candidate04_preflight_result": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate04-preflight",
+    "fingerprint": "e1687c1bd98ebb31794d5b6f24c8c3d725a622fc516a3d5073c10a5704420f9a",
+    "generations": 183,
+    "valid_contracts": 183,
+    "format_repairs": 3,
+    "correct_mode": 172,
+    "correct_instruction": 71,
+    "instruction_denominator": 90,
+    "three_vote_instruction": "24/30",
+    "classification_verdict": "failed",
+    "semantic_status": "unrun"
+  },
+  "thinking_diagnostic": {
+    "settings_path": "evals/promptfoo/refinement-20261014/settings-thinking-diagnostic.json",
+    "settings_raw_sha256": "9d842418b07e3906d0bd45d6f35f3ab90bdc977a47e4081ec1eb410cee10975b",
+    "settings_structured_sha256": "bf366496ff792448e0e79e0a7eaed1555a083723e0876413c043cc55dc36bb6d",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-thinking-diagnostic.json",
+    "audit_sha256": "96bdbce58c65f20294926a3e34e1f3df40d921cfe88614afcaced231d3c4d258",
+    "status": "audited_frozen",
+    "scope": "Candidate04 and all sources fixed; target thinking=true/max_tokens=8000 jointly changed from false/100. All other controls unchanged. Diagnostic only; requires fresh matched baseline and full acceptance work if advanced. No production configuration change."
+  },
+  "candidate03_preflight_result": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate03-preflight",
+    "generations": 183,
+    "valid_contracts": 183,
+    "format_repairs": 2,
+    "correct_mode": 170,
+    "correct_instruction": 79,
+    "instruction_denominator": 90,
+    "three_vote_instruction": "26/30",
+    "classification_verdict": "failed",
+    "semantic_status": "unrun",
+    "disposition": "Rejected at diagnostic screening; all raw outputs preserved."
+  },
+  "candidate04": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-04.md",
+    "sha256": "8886a0c21912883a2b786182a8d7a7d47cde15093d9cae6cbd8b6627cf688116",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-candidate04.json",
+    "audit_sha256": "78f6c9c1b17df28d1bd021dbc0328327ddfeccf312a696191a3296f537ebe081",
+    "status": "audited_frozen_preflight",
+    "authorship_timing": "After all183 candidate03 target outputs and deterministic scoring, with unseen holdouts sealed.",
+    "changed_factors": "Procedural policy organization; separate general teaching-method taxonomy from decision labels, preserve meaning in reading-level guidance, remove fixed peer example. All cases, labels, inventories, settings and scoring unchanged."
+  },
+  "candidate02_result": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate02-v1.1",
+    "fingerprint": "7a3e10ec4e76f8a272fcaa880089707962283b0535e835c3d6bfc5099de6ab8d",
+    "status": "complete_failed_acceptance",
+    "generations": 183,
+    "assertions": 2706,
+    "target_format_errors": 1,
+    "standalone_gate_issues": 63,
+    "comparison_gate_issues": 105,
+    "diagnostic_audit_path": "evals/promptfoo/refinement-20261014/diagnostic-policy-review-candidate02.json",
+    "diagnostic_audit_sha256": "e139504e5efc336eae467c14b639775ad0cddaecaf5cc436e83104c51b412a5f"
+  },
+  "candidate03": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-03.md",
+    "sha256": "9ffd59afe9a02cb6ad8cd8ee64354f2d58cd81965d63184766bfcad575f2d5cd",
+    "status": "audited_frozen_preflight",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-candidate03.json",
+    "audit_sha256": "f7e21363d3f7d4e651be5619d88f271d52825178de26011208f8114afcefb6dc",
+    "authorship_timing": "After complete candidate02 development outputs and original scoring; all unseen holdout outcomes remain sealed.",
+    "changed_factors": "Clean contradictory general base-policy instructions in responsePolicy.ts, roleParameters.ts and emotionalParameters.ts; clarify policy field separation, present engagement, evidence-limited mastery and unknown official addresses. All cases, labels, inventories, settings and v1.1 scoring unchanged."
+  },
+  "replacement_runs": [
+    {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-baseline-r3",
+      "fingerprint": "af71e37ec755824336c5e378f63de8bcf57d634b7694154e6d44974f83c3f229",
+      "settings_sha256": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+      "status": "incomplete",
+      "target_transport_errors": 159
+    },
+    {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r4",
+      "settings_path": "evals/promptfoo/refinement-20261014/settings-r3.json",
+      "status": "interrupted_by_disk_exhaustion_exit1",
+      "saved_generations": 179,
+      "authorization": "User confirmed Mac sleep and requested another attempt after waking it. Fresh complete suite; no outcome-based replay."
+    },
+    {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5",
+      "fingerprint": "239d9838faa067cc94baef294fc8773b679488450f1548632002d2f494f84def",
+      "status": "complete_failed_acceptance",
+      "generations": 183,
+      "assertions": 2706,
+      "unresolved_errors": 0,
+      "recovery": "All 179 available r4 records replayed unchanged, including failures; only four absent records newly generated.",
+      "standalone_gate_issues": 11
+    }
+  ],
+  "candidate01_result": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01",
+    "fingerprint": "300efa03cde5231be1577ff20a009ab38a45bdd4f0d97443ad16a483e6920e62",
+    "status": "complete_failed_acceptance",
+    "generations": 183,
+    "assertions": 2706,
+    "unresolved_errors": 0,
+    "standalone_gate_issues": 19,
+    "comparison_gate_issues": 40
+  },
+  "candidate02": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-02.md",
+    "sha256": "cc2c0fec6e0fb15f886b90e315d7ed0363c380d5ec38fe90521ab16533be8ef0",
+    "status": "audited_frozen_full_evaluation_in_progress",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-candidate02.json",
+    "audit_sha256": "a6e20b3492aeebda4ea72343d6ccf683761b2ab5f9c7c7bf24281c8f218a0e72",
+    "authorship_timing": "After all 183 candidate01 development generations completed and original standalone scoring; before any new holdout score or output disclosure.",
+    "review_correction": "Narrowed Guard entry to deliberate obstruction or knowing continuation of unsafe conduct after correction; reasoned disagreement remains genuine engagement."
+  },
+  "evaluator_revision": {
+    "version": "v1.1",
+    "manifest_structured_sha256": "aee752288a60c4e6f96a60d3dbfcef2c6e742c033b71a99002f9137519540d03",
+    "changed_rubric": "instruction_realization",
+    "rubric_sha256": "95fb099011f1355f6cd63b9b076265a76ade48063ab473b7754ab0a4b95ac83c",
+    "scope": "Reviewed semantic-boundary clarification; all cases, labels, applicability, gates and other rubric instructions unchanged. Symmetric replay rejudges every affected baseline/candidate output after calibration."
+  },
+  "candidate01": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-01.md",
+    "sha256": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+    "generator_sha256": "c6f493d7ea0f117cfa4e7ebd5c025a3b6c9ceaed2f358ffaab76f67041fb0c89",
+    "audit_path": "evals/promptfoo/refinement-20261014/audit-candidate01.json",
+    "audit_sha256": "c6db912d9f05a30791d8f9ab76c26eedced8080d32aeb49d681534978fb33ad0",
+    "audit_verdict": "prompt_integrity_clear_acceptance_pending",
+    "authorship_timing": "After baseline-r2 and baseline-r3 attempted all 183 generations, with transport gaps explicitly blocking acceptance. Replacement baseline-r4 retains original frozen prompts."
+  },
+  "source_commit": "8dc7271",
+  "baseline_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-baseline-r2",
+  "baseline_fingerprint": "cdc964f7e0faac8baa39d94860ca11e6f90df97776dc0af2cb28bf31bf99c5ff",
+  "baseline_started_utc": "2026-10-15T02:22:50.329Z",
+  "hash_encoding": "SHA-256 of UTF-8 source content; structured snapshot values use JSON.stringify.",
+  "snapshot_hashes": {
+    "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+    "settings": "3b59a2a4164ed037470c62c2a641b81ce5e4b3dbd33732f9d6016b675d30dd76",
+    "manifest": "9c21202dcc697fafd8ff35f49aad72e0095da9090932874cb5f3b09643be7b52",
+    "active_prompt_source": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77",
+    "rubrics": "7731890e14a4422c3f7315c50e199b68563e7a87598b93d24883e62e99dd8ace"
+  },
+  "actual_authority_content": [
+    {
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
+      "sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e"
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd"
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
+      "sha256": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a"
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
+      "sha256": "a9ba894e5cb9cb32244dd9daad43ae2e415d60f60c38aecdde4953bf6ce2fbe8"
+    },
+    {
+      "path": "evals/promptfoo/rubrics/v0/manifest.json",
+      "sha256": "b6cc4d7c5455425f11c06a9482dc1cf2c28e25e509ecbd9413f64961dc0e0636"
+    }
+  ],
+  "grounding": "Reuse human-adopted constitution 1.0 and unchanged T01-T08/G01-G03. No new priority or exception.",
+  "candidate_factors_declared_before_authorship": "Clean appended policy and remove the base generator's four complete dialogue demonstrations. Pre-edit regeneration using the same preset/role/inventory matched every saved baseline_system exactly (61/61), so inventory and role/configuration are controlled. Baseline retains all original messages.",
+  "case_disposition": {
+    "all": "reuse_without_input_or_assertion_changes",
+    "cases": 61,
+    "legacy_assertions": 173,
+    "repetitions": 3,
+    "expected_generations": 183
+  },
+  "scoring": "Retain frozen manifest thresholds and historical assertion dispositions. Completeness and typed-evidence fixes apply identically to baseline and candidate. Classification uses allowed-set accuracy: individual >=0.8, three-member >0.9; declared hard partitions 1.0. Fixed two-member ties abstain and are diagnostic. No gate relaxation.",
+  "supporting_checks": "Historical decision_reasoning remains visible and gated as supporting contract evidence; it is not reinstated as a domain behavior requirement.",
+  "calibration": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-calibration",
+    "agreed": 30,
+    "total": 30
+  },
+  "independent_holdouts": {
+    "path": "evals/promptfoo/refinement-20261014/holdouts/cases.json",
+    "sha256": "73b80772d6416dd6894542d8a3a0beb33e38d23eca5a7cdb0a3f381ee3fbaaa5",
+    "count": 16,
+    "status": "sealed_until_candidate_freeze",
+    "author": "/root/fresh_holdouts",
+    "execution_path": "evals/promptfoo/refinement-20261014/holdouts/execution-cases.json",
+    "execution_sha256": "fc28ffdb3bc99c94558f8196b6c68fe26f2ab0999358862d2e7b852322ff0461",
+    "execution_provenance_sha256": "1fc0886e4e97853c3d5fd32697260e4eace0f3411f2fccaf3aca6dde1820bec1",
+    "packaging": "Independent author added only baseline_system using the unchanged generator; original scenarios and labels remain sealed and unchanged."
+  },
+  "baseline_room_generator": {
+    "path": "tutor-system/src/services/prompts/index.ts",
+    "sha256": "a4946ebe9461def95c0fba3316073e93f518114455793856bd4565da285e0c1f"
+  },
+  "partial_run": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-baseline",
+    "completed_generations_preserved": 12,
+    "disposition": "All completed passing and failing evidence replayed unchanged; interrupted in-flight responses may have been lost before case-level persistence. Not a completed experiment."
+  },
+  "production_limit": "Temperature0.3/token100 matches the evaluation and service fallback, not ordinary enabled-room defaults0.7/token120. Offline transport retries and absent live checklist/assessment enrichment preclude a production reliability or full UI-parity claim. See README production-parity limits.",
+  "completed_thinking": {
+    "baseline": "../results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.2-4x",
+    "candidate": "../results/qwen3.5-flash/shortcut-removal-20261015-candidate07-thinking-v1.2-4x",
+    "generations_each": 183,
+    "assertions_each": 2706,
+    "baseline_gate_issues": 6,
+    "candidate_comparison_issues": 33,
+    "target_calls": 0,
+    "old_semantic_rows_reused": 175,
+    "old_judgments_preserved": 2074,
+    "unresolved_errors": 0
+  }
+}

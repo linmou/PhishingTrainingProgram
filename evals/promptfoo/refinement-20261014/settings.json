@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "target_max_tokens": 100,
+  "target_enable_thinking": false,
+  "target_format_attempts": 2,
+  "judge_max_tokens": 8000,
+  "judge_enable_thinking": true,
+  "repetitions": 3,
+  "transport_attempts": 3,
+  "transport_retry_delay_ms": 10000,
+  "request_concurrency": 12,
+  "timeout_ms": 180000,
+  "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+  "changed_factors": "Production ecological packaging, default 100-token non-thinking target, exact production format repair, three repetitions; unchanged semantic judge settings and rubric thresholds. Operational concurrency increased from four to twelve before candidate authorship; complete prior generations are replayed without outcome selection."
+}

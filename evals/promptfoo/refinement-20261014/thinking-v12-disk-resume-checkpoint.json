@@ -1,0 +1,581 @@
+{
+  "recorded_at": "2026-10-15T07:18:50.340Z",
+  "status": "incomplete_unstable_disk_capacity",
+  "prior_checkpoint": "thinking-v12-disk-interruption.json",
+  "resumption": "Exact snapshot commands resumed after1.7GiB became available. Capacity fell below200MiB within a minute. Terminated both remaining workers proactively before another write failure. All saved results retained, regardless of outcome; unsaved in-flight judgments may be lost.",
+  "remaining_work": "Stable free disk capacity, exact-command resumption, complete semantic comparison, and reviewed base diagnostic. All183 target responses per arm are already saved in preflights.",
+  "runs": [
+    {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.2",
+      "fingerprint": "7517728ebb9204b6c34c0b4d51c69a979c83b6ceb4f07cffeb8b12e16b4b65af",
+      "saved_generations": 46,
+      "expected_generations": 183,
+      "saved_assertions": 776,
+      "expected_assertions": 2706,
+      "new_target_calls": 0,
+      "all_saved_targets_match_preflight": true,
+      "malformed": [],
+      "files": [
+        {
+          "file": "webpage_account_security_alert_classic-0.json",
+          "bytes": 455083,
+          "sha256": "3574d2d7562bfb47738cb28ecd17033ba7f5637a2db3d54f34a4d963f9ad3169",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_account_security_alert_classic-1.json",
+          "bytes": 463272,
+          "sha256": "184bfd7b15b02bdb89ab69564b7cd68e3032ad08fb3b69b7f7060edfdc43984e",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_account_security_alert_classic-2.json",
+          "bytes": 427114,
+          "sha256": "d8aca17a1c3f87d729bb508ff59897f022fb3c8677e65feaeb36ca1afcea47f7",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_nintendo_click_deal-0.json",
+          "bytes": 444394,
+          "sha256": "3def30c71624bcdbb1655f2ee3e6ae94f5a3d56d56d6cac089a46576a431ac93",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_nintendo_click_deal-1.json",
+          "bytes": 489771,
+          "sha256": "cf85bdc3c8c87d31475b4421cabf5e5bfb295ed19dd1245bd6b51c5b0f0df620",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_nintendo_click_deal-2.json",
+          "bytes": 480488,
+          "sha256": "76ca7ed0d4a7f905ced1a75a21f22e77017281008fb0433decf5f1fd23cd5dd3",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_itunes_professional_photo-0.json",
+          "bytes": 448478,
+          "sha256": "010fec4ab9adc72f1305c1f33ee9b05e9592a776e630d9dd233308552ec4480f",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_itunes_professional_photo-1.json",
+          "bytes": 444765,
+          "sha256": "d6d52aaa095621185a0ae798e273158c106a1d267d52c39a8a2c0577a1da22b2",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_itunes_professional_photo-2.json",
+          "bytes": 458506,
+          "sha256": "6da03e92c78c32544a9942f119ec322abf7024151321d47a4f3059a7a93a0ebb",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_lock_icon_myth-0.json",
+          "bytes": 453366,
+          "sha256": "5202edb5e9f379b1547548dce24afb8917bb6c330215c46cc545e2dd91b6e028",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_lock_icon_myth-1.json",
+          "bytes": 462903,
+          "sha256": "f789622635b9336ba9ae77b6911342ee0148d3ff54904ab7e9b4def22492f336",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_lock_icon_myth-2.json",
+          "bytes": 403407,
+          "sha256": "a0c5c69d65f78e639dc102ebcf23425ff324733f30b05882ce5db139b0305b1c",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_click_impulse-0.json",
+          "bytes": 473689,
+          "sha256": "d51c3386e934f6141fb0ca36d0498230b6413d39959edd89ec59a5100da68c4a",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_click_impulse-1.json",
+          "bytes": 473722,
+          "sha256": "e6839491cab75faebebab984dcef3f414b51bfa8e1eb70f249af9552fce7cc8c",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_click_impulse-2.json",
+          "bytes": 502163,
+          "sha256": "08b22ca9e597a244148fff936bee46d693339e4f09924d398ec820033550bd6a",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_correct_safe_action-0.json",
+          "bytes": 486351,
+          "sha256": "cf92c4162f2b921d4c77d3b613ca062f8ef2b7f7ee528bdf347e9e74246a28f4",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_safe_action-1.json",
+          "bytes": 440015,
+          "sha256": "339b04df7d0c171c1da2d5b8b972dedad4f22fe7b61c368d249e2f5d5051a740",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_safe_action-2.json",
+          "bytes": 473428,
+          "sha256": "55bc0c167c5ff6c92a842fa0ef940f55693abe516aba005ca76ca1a305f99dca",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_lock_reasoning-0.json",
+          "bytes": 468225,
+          "sha256": "0c3eeddd9c81b2ff994729c1d5af3bed8a76c003eddda0e5820168ff9a131750",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_lock_reasoning-1.json",
+          "bytes": 417980,
+          "sha256": "f988babe356741b1bf9b8c488d6a08f116733d5092cdd5ea460210e573f79f82",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_lock_reasoning-2.json",
+          "bytes": 421925,
+          "sha256": "d5a337caee27ecaed9847ba70bfc39e84be523a8fedfccdf3e9c3106e5f59ae1",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_pressure_words-0.json",
+          "bytes": 377017,
+          "sha256": "2e9726a04a6d5d70eb66ef8652c7e4ced09ca5e67d8ac8cf69cfbb6bbdc344f6",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_pressure_words-1.json",
+          "bytes": 422815,
+          "sha256": "a090b6ab268df0cade7c68557e6ec177d31791dff90604a886824b9abff37718",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_pressure_words-2.json",
+          "bytes": 408603,
+          "sha256": "8c23ebdfc9077731c89a298063cf2f82ac77cf566e31e46bacd7007307a88236",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_personal_story_trap-0.json",
+          "bytes": 398185,
+          "sha256": "f44af914f119309abea0dd68edfca9486defcb326c239a468d8c048a8c9016a5",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_personal_story_trap-1.json",
+          "bytes": 405193,
+          "sha256": "bb1bedef40877a0b35526100e5e25a42a07f497858dfd3ecc43bfe9a132670c8",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_personal_story_trap-2.json",
+          "bytes": 391064,
+          "sha256": "e03d2aada04c02bfe759561b5df6b45076f9923d9f500e53ab698b2ee1d3c742",
+          "assertions": 15
+        },
+        {
+          "file": "student_thinks_alert_is_real-0.json",
+          "bytes": 440521,
+          "sha256": "c2a363174f2acb9c3a1dfb3c16a700628a8ccc0c60712aa015201265d48ad6cc",
+          "assertions": 18
+        },
+        {
+          "file": "student_thinks_alert_is_real-1.json",
+          "bytes": 458214,
+          "sha256": "c18f69be6ce0de69992421cf8f816f2b2a1c903228057c9dd24dd3cc17791668",
+          "assertions": 18
+        },
+        {
+          "file": "student_thinks_alert_is_real-2.json",
+          "bytes": 424221,
+          "sha256": "ca1bff3e8a33d7cb4d07d03900bf070be7e8d56ad9fe6113729581c46d51aa2b",
+          "assertions": 18
+        },
+        {
+          "file": "student_wants_to_click-0.json",
+          "bytes": 431798,
+          "sha256": "70282159065d15d6b3c89afe12df5fdbf2e7b066d6295a8c85dc18200425a409",
+          "assertions": 17
+        },
+        {
+          "file": "student_wants_to_click-1.json",
+          "bytes": 413679,
+          "sha256": "ce5a38512602323e1ec3ddc5b3370159c268dbb81c76f75f1cdfcd12600f8106",
+          "assertions": 17
+        },
+        {
+          "file": "student_wants_to_click-2.json",
+          "bytes": 430384,
+          "sha256": "1a75dd96ebb1c56a0c34e9b47143ac0babd3a070820fdabd507f9f5cd0784b5f",
+          "assertions": 17
+        },
+        {
+          "file": "student_trusts_https-0.json",
+          "bytes": 380726,
+          "sha256": "c137afd922ef9d67933d1f6dac61052ea8a125851bba054a6f2d494fc63c498d",
+          "assertions": 17
+        },
+        {
+          "file": "student_trusts_https-1.json",
+          "bytes": 425021,
+          "sha256": "1c43782cfe8d1e360874e372545ef7fc97ad4faf8a5fa61c6148823a9ae745b9",
+          "assertions": 17
+        },
+        {
+          "file": "student_trusts_https-2.json",
+          "bytes": 420427,
+          "sha256": "8128c0cd5f8139f0680ce0dfb3e899fda7914cf81e5590d4c9d6de8cd68d85fa",
+          "assertions": 17
+        },
+        {
+          "file": "student_notices_misspelling_only-0.json",
+          "bytes": 407255,
+          "sha256": "87b4d11287e89dcd513d060f3d29aad2b23247fa0c0584ea0d12bd16eece7d13",
+          "assertions": 17
+        },
+        {
+          "file": "student_notices_misspelling_only-1.json",
+          "bytes": 406612,
+          "sha256": "e46354cd2d73ee1144dfd432dd21e42d3169cc168e842bbd38b0c3a1bb935d95",
+          "assertions": 17
+        },
+        {
+          "file": "student_notices_misspelling_only-2.json",
+          "bytes": 417957,
+          "sha256": "007389068d122473df053b8a656a782fd491e1acbfe44c772925066c1b2aa7a2",
+          "assertions": 17
+        },
+        {
+          "file": "student_gives_vague_answer-0.json",
+          "bytes": 356773,
+          "sha256": "46bd8f643ebbb3b184721aa8d80d93e02b0595518c183a9f5065d71ad1e0f917",
+          "assertions": 15
+        },
+        {
+          "file": "student_gives_vague_answer-1.json",
+          "bytes": 395732,
+          "sha256": "0fa02153c8bc82a69a1b8cc8e8df28f617122a7bb2dc381e968d9c9cf161f742",
+          "assertions": 15
+        },
+        {
+          "file": "student_gives_vague_answer-2.json",
+          "bytes": 389188,
+          "sha256": "beabdc22cbcb27836789bf0eb209269c73f87b7c864042fd202b34cc248c4b43",
+          "assertions": 15
+        },
+        {
+          "file": "younger_student_confused-0.json",
+          "bytes": 385722,
+          "sha256": "ce059ea8943656fb77589d474641cc0a1b9ffa8714daad3a5e13d55545823429",
+          "assertions": 15
+        },
+        {
+          "file": "younger_student_confused-1.json",
+          "bytes": 378071,
+          "sha256": "fb9b269d3be190f93ce62729b7a0bfcccf5dc4aa1a4281a8de5092169eadb59c",
+          "assertions": 15
+        },
+        {
+          "file": "overconfident_student-2.json",
+          "bytes": 432527,
+          "sha256": "204af75cf43dca614729ef89790e83205b43a50b17a31d84359cab2b4818b487",
+          "assertions": 17
+        },
+        {
+          "file": "student_asks_what_to_do-0.json",
+          "bytes": 355328,
+          "sha256": "33088476495d7e949ae1360ec441b7cb5d9b58c0706430ce877cb9f8917df08b",
+          "assertions": 15
+        }
+      ]
+    },
+    {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-thinking-v1.2",
+      "fingerprint": "6809d2581b9eaa52235763cb6b8dc0524645f69093313e75cbe214a9f06d2071",
+      "saved_generations": 45,
+      "expected_generations": 183,
+      "saved_assertions": 761,
+      "expected_assertions": 2706,
+      "new_target_calls": 0,
+      "all_saved_targets_match_preflight": true,
+      "malformed": [],
+      "files": [
+        {
+          "file": "webpage_account_security_alert_classic-0.json",
+          "bytes": 483409,
+          "sha256": "9dbab5830b1b2db8f5705483ba4b2feeb27bd5b079922b0b40163f2cc7db8960",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_account_security_alert_classic-1.json",
+          "bytes": 441372,
+          "sha256": "65b1bde8a4496da13690e12c6702fa6c4ca1a1a1021464418b370f4d78cffbd4",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_account_security_alert_classic-2.json",
+          "bytes": 499553,
+          "sha256": "481ee0bf6ebfeeca098b02be38925bb79e535edc140d8f54a1dfa08b06165995",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_nintendo_click_deal-0.json",
+          "bytes": 434175,
+          "sha256": "15d715488ba1bab06a99dfa793783070855dac54f1eb80a7fb83f367f0b06290",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_nintendo_click_deal-1.json",
+          "bytes": 455384,
+          "sha256": "b4b0a91298ba0c7f730b0a416bb2771bcb6e35b4211a3db93d8988fbd3794200",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_nintendo_click_deal-2.json",
+          "bytes": 488207,
+          "sha256": "4ef04f50f2342357688f50877f005989ca2ac89a02f501bc2b0731798b2622a7",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_itunes_professional_photo-0.json",
+          "bytes": 444365,
+          "sha256": "d90c405adab440864cba37a1e8bb078d9dc21db2140e68765ff302e5faa31cee",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_itunes_professional_photo-1.json",
+          "bytes": 407505,
+          "sha256": "d2467f91bfd724522c3d50cda0a9ca7bb835c052f8bd5fdefd6127688b5cce54",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_itunes_professional_photo-2.json",
+          "bytes": 482934,
+          "sha256": "8a17c8bd4fe2a50695149bb994c2dc9cf64a6fd85ba5edd24422c9f34d5f26ef",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_lock_icon_myth-0.json",
+          "bytes": 417244,
+          "sha256": "6873ad5567f496b0e4c9ee7f098fb0a6ea1609918a3be7b52750b10e15db1399",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_lock_icon_myth-1.json",
+          "bytes": 445433,
+          "sha256": "9a68a4055c84155133ff78ac976678dd9a4baf4ebf2d310962c6815e5251ee28",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_lock_icon_myth-2.json",
+          "bytes": 399663,
+          "sha256": "bd21cf9dfdcaf3c4fd6f91be1a83ef8ff450a22ab70b51892143da1af96b91d1",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_click_impulse-0.json",
+          "bytes": 434580,
+          "sha256": "a1122ea127088f50069722eefd7a9c95919a71c95ab72fd84512c2bbf8cf0a90",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_click_impulse-1.json",
+          "bytes": 438947,
+          "sha256": "ae74df715958b16f07d09eb600c8f31c429ad004b0a3233ed2e4121be30cab6f",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_click_impulse-2.json",
+          "bytes": 470829,
+          "sha256": "2197851e03fa7ef3593b7c8a323c90ec170d54cfdc16ed62cc5fdae62487fc53",
+          "assertions": 18
+        },
+        {
+          "file": "webpage_demo_correct_safe_action-0.json",
+          "bytes": 453588,
+          "sha256": "757adbd91cf0a0ad63056c3ddf0888971571e496180da0d5294e899de6aa50df",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_safe_action-1.json",
+          "bytes": 448802,
+          "sha256": "1ab02cf1e9c68b245ef655f9c6c0dfbbe670c8c47f8918a12ea0989c228a80dc",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_safe_action-2.json",
+          "bytes": 424771,
+          "sha256": "cbf0938e473d4a8cf7d758b235c249f63e773821332060401d686ab620b3e25e",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_lock_reasoning-0.json",
+          "bytes": 430425,
+          "sha256": "abe4dc1fe384537559361137fa442f728032441e8053fb3fd2704bd0449eb1c7",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_lock_reasoning-1.json",
+          "bytes": 423748,
+          "sha256": "ea02caad27bc1152975f0fef905f48b8fd5c8a9843455a335b4d3dee05221f42",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_correct_lock_reasoning-2.json",
+          "bytes": 471279,
+          "sha256": "93809806a4179335ee282610098197747584930845d3bdf7e943f5c2ad41de5d",
+          "assertions": 17
+        },
+        {
+          "file": "webpage_demo_pressure_words-0.json",
+          "bytes": 361446,
+          "sha256": "cc82094c8f28c8752e7ad237e8adf17df14d67d965f35543af6dc74dbd48e0d1",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_pressure_words-1.json",
+          "bytes": 365670,
+          "sha256": "9aa62a0c0aba1e65b084246bd6d6cf43bb8cc47b5fa2508e63eccfa637449cf4",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_pressure_words-2.json",
+          "bytes": 419993,
+          "sha256": "a0646362d58f0e02e72e5bd89eaa6e1d1a66c5fd8306cf2e1cf09648e6af8e51",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_personal_story_trap-0.json",
+          "bytes": 484606,
+          "sha256": "3dec79e1dd6d43d4841c86152f027fdf082031dc537b7eef0e0610e70c87cc8a",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_personal_story_trap-1.json",
+          "bytes": 448108,
+          "sha256": "f12611a30bcf7f316767eb48b8e1e560e0f02e6789ba2b761586663974b12704",
+          "assertions": 15
+        },
+        {
+          "file": "webpage_demo_personal_story_trap-2.json",
+          "bytes": 427817,
+          "sha256": "8bd1b93435e932bdceb382e9ad6fb85878570ac369e04438cdf5709c56a768d8",
+          "assertions": 15
+        },
+        {
+          "file": "student_thinks_alert_is_real-0.json",
+          "bytes": 445280,
+          "sha256": "1f6178174f97d4e24ff10866ebb1bff136bea808f1edbb257ef3e661ee0e56db",
+          "assertions": 18
+        },
+        {
+          "file": "student_thinks_alert_is_real-1.json",
+          "bytes": 459856,
+          "sha256": "e4b0bca16d22a447dc38e51061aa7b68651bc2ad98508b6e735721fec3d76646",
+          "assertions": 18
+        },
+        {
+          "file": "student_thinks_alert_is_real-2.json",
+          "bytes": 438198,
+          "sha256": "36baf2339960a6a5ebb3a0a3b229e72734f8b131f4142eca39bfc2867617fc15",
+          "assertions": 18
+        },
+        {
+          "file": "student_wants_to_click-0.json",
+          "bytes": 401832,
+          "sha256": "0d8aa9a6a6bb873bcf445f1d32d9e19af3bbcc9bffc3f1e1ecea0b3676896e2d",
+          "assertions": 17
+        },
+        {
+          "file": "student_wants_to_click-1.json",
+          "bytes": 409553,
+          "sha256": "64e86fad883bd23eda4a75ec6eee53b358aef792e66127e0ed9e91e666f06224",
+          "assertions": 17
+        },
+        {
+          "file": "student_wants_to_click-2.json",
+          "bytes": 384503,
+          "sha256": "b5c1059a6b72b451223023e9e4e53133d8bd966e7089f2549b04dd68d00d1342",
+          "assertions": 17
+        },
+        {
+          "file": "student_trusts_https-0.json",
+          "bytes": 467113,
+          "sha256": "5f0593fa18ca1efd30bfa778aeeb45fb8173bf3f50d42d372b03511c4baaf6b6",
+          "assertions": 17
+        },
+        {
+          "file": "student_trusts_https-1.json",
+          "bytes": 400231,
+          "sha256": "ad65b023bb1bacad6e120dc433b8819110602ee8831c42c01c180bf1d038bf8f",
+          "assertions": 17
+        },
+        {
+          "file": "student_trusts_https-2.json",
+          "bytes": 418178,
+          "sha256": "c516e27e1f65a2da40edf0b9b7294e673f48c07260a531446263e1218298d5ad",
+          "assertions": 17
+        },
+        {
+          "file": "student_notices_misspelling_only-0.json",
+          "bytes": 414204,
+          "sha256": "e5e80880756a61ad3a535c6f50bd503d4f810f59d50f4b493d9b2017d12ece6d",
+          "assertions": 17
+        },
+        {
+          "file": "student_notices_misspelling_only-1.json",
+          "bytes": 382570,
+          "sha256": "60da3c46ce476a2ce29821d4f44bdfd53ca710dbdfa77f1e4442b7942d5bb699",
+          "assertions": 17
+        },
+        {
+          "file": "student_notices_misspelling_only-2.json",
+          "bytes": 381275,
+          "sha256": "49ff756042a40fa737a6b744b1b47a796a74a4c54c2f98e4523cc117ec635b5f",
+          "assertions": 17
+        },
+        {
+          "file": "student_gives_vague_answer-0.json",
+          "bytes": 443277,
+          "sha256": "723e6109a7f99b1872414915aa33847fa6afe3320956805441a2a19a31402d04",
+          "assertions": 15
+        },
+        {
+          "file": "student_gives_vague_answer-2.json",
+          "bytes": 396082,
+          "sha256": "9440b39dcada58ba5a9aea149e4c4bbb3901e95c246e7d7dc77c3660bc0c1809",
+          "assertions": 15
+        },
+        {
+          "file": "younger_student_confused-0.json",
+          "bytes": 403500,
+          "sha256": "34a5103a71e398ce333b1d332ec077a841e0c722d74dbb2c23bc015231751bb0",
+          "assertions": 15
+        },
+        {
+          "file": "younger_student_confused-1.json",
+          "bytes": 357567,
+          "sha256": "375f2b079a8e874bd5faefe72a23216c1b63613a6951478fc110a71aca569aba",
+          "assertions": 15
+        },
+        {
+          "file": "younger_student_confused-2.json",
+          "bytes": 378933,
+          "sha256": "388ef17972ccc6c02e31c04a75b645515b2a9e979ca554cbe9a18826908072a6",
+          "assertions": 15
+        },
+        {
+          "file": "overconfident_student-0.json",
+          "bytes": 462013,
+          "sha256": "ad00dfa152d5e12f4e65f43c38f21cffb57fbb20f37d7ab1106edddfc800271d",
+          "assertions": 17
+        }
+      ]
+    }
+  ]
+}

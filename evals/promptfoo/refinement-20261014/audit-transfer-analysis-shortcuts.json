@@ -1,0 +1,54 @@
+{
+  "intent": "Independently inspect the current transfer-analysis runtime prompt for shortcuts against af86353's exposed regression additions and adopted TA01-TA04 requirements.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "scope": "Read-only audit of current TRANSFER_ANALYSIS_SYSTEM_PROMPT and relevant ordinary-analysis request/validation path. Historical experimental candidate09 is not the runtime candidate.",
+  "runtime_identity": {
+    "source": "tutor-system/supabase/functions/assessment-api/index.ts",
+    "prompt_lines": "34-50",
+    "prompt_sha256": "3d7adb68417498e44d16404ada5a0f10533480a7bee11accb349d13afcea4e92",
+    "prompt_characters": 5211,
+    "hash_method": "Parse TypeScript AST, read string-literal array assigned to TRANSFER_ANALYSIS_SYSTEM_PROMPT and join decoded strings with newline, matching runtime join behavior.",
+    "source_sha256": "ce2dda8c88d1acbc4d83458ae7b92f0d55d2dd024ba2f5789f7cb1bfc86e4c88"
+  },
+  "comparison_coverage": {
+    "commit": "af86353863c60d5517b6bb6b3a4748554c64fd36",
+    "negative_cases": 20,
+    "surface_cases": 4,
+    "former_negative_holdouts": 16,
+    "total": 40,
+    "literal_complete_learner_or_target_matches_in_runtime_prompt": 0,
+    "provenance": "Branch metadata explicitly marks former negative holdouts exposed and holdout_eligible false. Surface cases are development diagnostics. They were inspected as exposed regression evidence; fresh sealed tutor validation was not accessed.",
+    "temporal_evidence": "Git blame assigns substantive current prompt rules at lines36-47 to84dff32e on2026-10-04, preceding af86353's2026-10-13 additions. The current contract shape at48-49 has a later independent revision. This does not prove the absence of earlier case-driven tuning."
+  },
+  "findings": [
+    {
+      "id": "TA-SHORTCUT-01",
+      "classification": "remaining_worked_examples_without_demonstrated_added_case_copying",
+      "source": "tutor-system/supabase/functions/assessment-api/index.ts:39",
+      "finding": "The runtime still supplies two concrete learner utterance examples and their no-event versus partial classifications for one explanation target. These are miniature labeled demonstrations. They do not exactly reproduce any of the40added learner/target strings inspected.",
+      "recommendation": "If the cleanup objective includes removing worked solutions from all production prompts, replace these two utterance/label examples with the general action-versus-explanation evidence rule already stated in the same paragraph. Preserve TA01/TA02 meaning and evaluate any future change with matched evidence."
+    },
+    {
+      "id": "TA-SHORTCUT-02",
+      "classification": "legitimate_generic_target_specificity_rule_with_domain_examples",
+      "source": "tutor-system/supabase/functions/assessment-api/index.ts:38",
+      "finding": "The prompt lists several distinct verification steps that a broad safe action does not demonstrate. The added negatives test similar action/target distinctions, but the clause predates their addition and contains neither case IDs nor literal target dispatch.",
+      "recommendation": "Retain the semantic principle that related safe behavior does not establish an unmentioned target. The enumeration can be generalized during cleanup, but its existence alone is not evidence of benchmark cheating."
+    }
+  ],
+  "generic_policy_assessment": {
+    "TA01_TA02": "Current-message attribution, informal semantic evidence, target-specific scope, narrow-versus-broad coverage and action-versus-explanation distinctions are directly grounded in the adopted specification.",
+    "TA03_TA04": "Contradiction, repair, genuine different-situation transfer and status-changing eligibility are generic state rules rather than fixture-specific answers.",
+    "surface_invariance": "No capitalization, spelling, punctuation, answer-length or word-match branch targets the surface cases. Shortness is explicitly separated from evidence sufficiency at36.",
+    "runtime_dispatch": "The inspected analysis path at318-375 sends one item per model request and validates IDs, evidence attribution and eligible transitions. It does not select outputs by benchmark case ID or literal learner sentence. The message.content.includes(evidence_quote) check is exact quote attribution validation, not classification by keyword."
+  },
+  "historical_candidate_status": "af86353's refinement record explicitly rejects experimental candidate09 and records byte-for-byte restoration of its runtime source. No candidate09 rule was treated as current production behavior in this audit.",
+  "conclusion": "Confirmed remaining labeled examples at line39 and legitimate domain-specific contrast guidance at38. No demonstrated literal solution copying from the40added cases, input-specific dispatch, scorer bypass, or concealed holdout use was found in the inspected current runtime. This source audit does not establish model accuracy or absence of all historical development overfitting.",
+  "branch_artifact_hashes": {
+    "af86353:evals/promptfoo/transfer-analysis/negative-cases.json": "e48b9bb6dae2a2e4b36f9e60fb6dca4f7a392625a44c3007f51279641c8f0f7d",
+    "af86353:evals/promptfoo/transfer-analysis/surface-cases.json": "30bd797a8ae2735c3f4c488dcf2ab70f81efa86600b3b96ab6bd3d240ee6f876",
+    "af86353:evals/promptfoo/transfer-analysis/negative-holdouts-v2.json": "b8938906287beab2141ed6555680ca0b9cc66c43cbbe53e60269d7fbee68e93b"
+  },
+  "actions": { "source_or_case_edits": false, "provider_calls": 0, "fresh_sealed_tutor_holdouts_inspected": false }
+}

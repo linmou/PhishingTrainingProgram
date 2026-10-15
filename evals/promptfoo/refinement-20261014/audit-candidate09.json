@@ -1,0 +1,114 @@
+{
+  "intent": "Independently audit candidate09's deletion-focused original-policy cleanup and resolve inherited specification conflicts before execution.",
+  "audited_at": "2026-10-15 08:40:02 UTC",
+  "auditor": "Independent refinement_audit agent; did not author candidate09",
+  "verdict": "clear",
+  "candidate": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-09.md",
+    "sha256": "5c450f6012b7cfd9002b73c9b0e7138c79a613f0c21fcff8accec2640495708f"
+  },
+  "changed_factor_record": {
+    "path": "evals/promptfoo/refinement-20261014/continuation-round02-20261015.md",
+    "sha256": "27b4856f5fe268a272b0e0f6c75cb6ce77124f6ab67ba8d5ac689e2d0b076b08"
+  },
+  "original_policy": {
+    "path": "evals/promptfoo/v1/candidate-policy-11-contract-v2.md",
+    "sha256": "2aed2910fad48a19cdbaae049137ab326c74643c50080850c371fc43df36405b"
+  },
+  "comparison_candidate": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-08.md",
+    "sha256": "9e6059b2854736e00b51429ae0094321cb7ee8e22bafbff13ae6cb3d834b990e"
+  },
+  "unchanged_base_sources": [
+    {
+      "path": "tutor-system/src/services/prompts/index.ts",
+      "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "sha256": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "sha256": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b"
+    }
+  ],
+  "authority": {
+    "specification": {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+      "requirements": [
+        "G01",
+        "G02",
+        "G03",
+        "T01",
+        "T02",
+        "T05",
+        "T06"
+      ]
+    },
+    "constitution": {
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
+      "sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e",
+      "principles": [
+        "P2",
+        "P3.3",
+        "H2",
+        "H3",
+        "H4",
+        "R4",
+        "R5"
+      ]
+    },
+    "user_authorization": "Parent reports the user explicitly approved the original generic two-sentence Guard response structure and requested its use. This audit treats that approval as controlling over the earlier deletion-based recommendation."
+  },
+  "review_history": [
+    {
+      "candidate_sha256": "bb240d91ef79e3f3ccf4f7dbc3079155210f49dc3ae22fb97e23a0c0fc5bc7c8",
+      "verdict": "changes_required",
+      "findings": [
+        {
+          "id": "C09-T01-EXPLANATION",
+          "finding": "Inherited explanation definition excluded concise misconception explanation before failed focused scaffolding.",
+          "requirement": "T01 permitted alternatives",
+          "resolution": "Final definition expressly preserves pre-failure explanation and requires correction plus its safe action after focused failure."
+        },
+        {
+          "id": "C09-T01-SCAFFOLD",
+          "finding": "Two content-precision clauses required a comparison question, excluding permissible declarative or imperative scaffolding.",
+          "requirement": "T01; constitutional R1; adopted semantic-action boundaries",
+          "resolution": "Both clauses now permit a focused comparison cue; question, statement or instruction may leave the inference open."
+        },
+        {
+          "id": "C09-G01-DISAGREEMENT",
+          "finding": "Broad inherited knowing-rejection wording needed its genuine-disagreement boundary retained explicitly.",
+          "requirement": "G01",
+          "resolution": "Reasoned disagreement remains genuine engagement is restored beside the knowing-rejection rule."
+        }
+      ]
+    }
+  ],
+  "changed_factors": [
+    "Preserve original policy ordering, general procedural/domain guidance, generic JSON contract descriptions and original at-most-40-word reason guidance.",
+    "Remove worked progression JSON outputs, concrete learner-utterance and domain-response examples, historical candidate reference and punctuation-counter workaround.",
+    "Retain the user's approved generic Guard response schema and general R5 clarity priority.",
+    "Generalize knowing-rejection examples into the intended acceptance-plus-deliberate-reliance condition.",
+    "Apply the three requirement-fidelity corrections recorded above; current cleaned base and declared model/case/evaluator settings remain fixed."
+  ],
+  "integrity_assessment": [
+    "No case ID, case-specific entity, expected-answer lookup, worked learner-response solution or punctuation scoring workaround remains in the inspected policy.",
+    "The surviving JSON objects illustrate field shape using generic field descriptions; they are not behavioral case answers. The separately enumerated decision vocabulary retains all valid action values.",
+    "The approved Guard schema follows G02/G03 and is filled from current observable behavior. Planned actions must not be reported as completed; participation-only Guard does not require task facts.",
+    "Known Guard persistence and genuine-attempt recovery remain explicit; no count threshold is introduced.",
+    "T01 protection, failed-focused-scaffold correction with safe action, correct-partial alternatives and flexible scaffolding remain available.",
+    "T02 retains learner-owned inventory evidence, one unmet target, contradiction reopening and consolidation only after all useful targets are demonstrated.",
+    "Configured peer/adult voice, honest identity, accurate content and the fixed response contract remain supported."
+  ],
+  "causal_limit": "This is a controlled policy-suffix comparison against08 under the same current base, not a pure exemplar-removal ablation against the original production request. Original ordering, reason guidance, approved structure, examples removal and necessary general spec-fidelity fixes are a declared bundle. Candidate06 already tested a related retention approach; this result must not be represented as an untried isolated exemplar factor.",
+  "findings": [],
+  "execution_status": "Unrun at final audit. Clear integrity does not establish behavior acceptance. Preserve all independent repetitions; use identical evaluator versions for full comparison."
+}

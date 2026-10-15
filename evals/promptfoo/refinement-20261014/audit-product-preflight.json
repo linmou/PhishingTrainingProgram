@@ -1,0 +1,82 @@
+{
+  "intent": "Independently audit target-only product preflight generation, diagnostic gating, provenance, and replay safety before use on another candidate.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_product_preflight",
+  "verdict_scope": "Final verdict is reaudit_2; original findings and intermediate verdict remain preserved below as historical review evidence.",
+  "verification": {
+    "command": "rtk proxy node --test evals/promptfoo/v1/generate.test.js evals/promptfoo/v1/product-adapter.test.js",
+    "exit_code": 0,
+    "tests": 9,
+    "passed": 9,
+    "scope": "Four generate integration checks and five production-adapter checks, with no provider calls."
+  },
+  "confirmed": [
+    "Preflight delegates to the exact runner messagesFor and generateTarget functions with explicit variant, settings, contract and room-regeneration flag.",
+    "Production generation uses the existing builder, parser, last-user format repair and truncation rejection. Target errors are retained but excluded from deterministic parsing.",
+    "Every configured case/repetition job is scheduled without outcome filtering. Generation results preserve raw targets and all new target calls. Resume does not deliberately retry behavioral failures.",
+    "Typed deterministic reports and rows explicitly mark semantic_status unrun. The tested real case fails the full gate on missing semantic assertions even when all deterministic checks pass.",
+    "The normal full runner can read the target record shape, checks replay request messages and model settings, and uses original target outputs for semantic evaluation. Strict complete replay requires --replay without --replay_available true; the latter explicitly allows generation for missing files."
+  ],
+  "findings": [
+    {
+      "id": "P01",
+      "severity": "medium",
+      "file": "evals/promptfoo/v1/generate.js:32",
+      "finding": "Existing per-generation files are skipped solely on filename existence, and line44 aggregates them without validating job identity, input, contract, request or settings. A snapshot fingerprint validates only the snapshot, not cached rows. A stale/foreign or structurally incomplete record can silently replace a required repetition.",
+      "required_fix": "Validate every cached record against its frozen case/repetition, input, contract, expected request messages and provider settings before reuse and aggregation. Reject mismatches without resampling. Validate completed report/summary consistency or reject stale terminal artifacts.",
+      "test": "Resume after a swapped case record, changed row input, changed request settings, wrong repetition and incomplete target must fail before any generator call; untouched failed targets must remain reusable unchanged."
+    },
+    {
+      "id": "P02",
+      "severity": "medium",
+      "file": "evals/promptfoo/v1/generate.js:17",
+      "finding": "Cases and settings.repetitions are unvalidated before scheduling. Empty cases or zero repetitions yield a successful zero-generation preflight; fractional repetitions are implicitly truncated by Array.from. Duplicate case IDs alias output filenames and can collapse or race repetitions.",
+      "required_fix": "Require a nonempty array of uniquely identified cases and a positive integer repetition count before writing snapshots or calling the generator. Require the expected checks/labels needed by deterministic diagnostics.",
+      "test": "Empty cases, duplicate IDs, zero/negative/fractional repetitions and missing expected-check definitions fail with zero generator calls."
+    },
+    {
+      "id": "P03",
+      "severity": "medium",
+      "file": "evals/promptfoo/v1/generate.js:20",
+      "finding": "Prompt generator dependency capture runs only with explicit regeneration, but product-adapter.js:17 also calls generateSystemPrompt when baseline_system is absent. Such product cases can change generated messages after base/preset edits without changing the recorded dependency fingerprint.",
+      "required_fix": "Capture generator sources whenever the product path can use generation: always for product, or when regeneration is requested or a case lacks baseline_system.",
+      "test": "A product case without baseline_system and regeneration false must snapshot systemPrompts.ts and prompt-generator dependencies."
+    }
+  ],
+  "test_gap": "Existing generate tests inject a stub generator, so they do not independently establish a full generateTarget format-repair then strict runner-replay round trip. Add one offline mocked-fetch integration checking that repaired and valid targets, including failed outputs, are replayed without any new target call or changed target bytes. Existing adapter checks already cover repair construction and rejecting failed repairs.",
+  "acceptance_boundary": "These findings do not invalidate the current candidate02 full run; that run uses the existing runner, not this new preflight extension. Preflight remains a diagnostic, never semantic acceptance. Full replay must preserve every completed target, including failures.",
+  "hashes": {
+    "evals/promptfoo/v1/generate.js": "89ba7095b718c8598644c41d4b5d5bde9f36d7bd528b73b9fa846bd6f20c27dd",
+    "evals/promptfoo/v1/generate.test.js": "533c16db7f10f38fc04960046443b148fa6845a46ddd72de1f327160730f7f35",
+    "evals/promptfoo/v1/runner.js": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb",
+    "evals/promptfoo/v1/evaluator.js": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8",
+    "evals/promptfoo/rubrics/v1/manifest.json": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec"
+  },
+  "reaudit_1": {
+    "verdict": "changes_required_before_next_preflight",
+    "verification": { "command": "rtk proxy node --test evals/promptfoo/v1/generate.test.js evals/promptfoo/v1/product-adapter.test.js", "passed": 13, "failed": 0 },
+    "resolved": ["P01 cached row identity, requests/settings/call-history and deterministic diagnostics validation", "P02 nonempty unique cases and positive integer repetition validation", "P03 generator dependencies captured for every product preflight", "Offline actual generation-to-strict-runner-replay integration retains valid, repaired and failed targets without new target calls"],
+    "remaining_finding": {
+      "id": "P04",
+      "severity": "medium",
+      "file": "evals/promptfoo/v1/generate.js scheduling loop and terminal report validation",
+      "finding": "Terminal report/summary validation occurs after scheduling. If a generation file disappears from a completed preflight while report.json retains that target, the missing job is regenerated before the report mismatch is discovered. A corrupt cached row encountered later can also be rejected after an earlier missing job has already started generation.",
+      "required_fix": "Prevalidate all existing rows and terminal aggregates before any new generator call. A terminal report or summary requires complete unchanged generation evidence; reject missing rows or restore exact preserved rows without provider calls. Partial interrupted runs may generate only genuinely unfinished jobs after all existing evidence is validated.",
+      "tests": "A completed preflight with one missing generation file must cause zero generator calls; a partial run with both missing work and a corrupt existing record must reject before any generator call."
+    },
+    "hashes": { "evals/promptfoo/v1/generate.js": "86979065fa7a0ea1e7e097a66291e6608dc41426cb6050553debd8ddf9c772a9", "evals/promptfoo/v1/generate.test.js": "e55ebe5602dd5f3ad79964c6584a858099ddabf49ea696013f19a23345ba0bdc" }
+  },
+  "reaudit_2": {
+    "verdict": "clear_for_product_preflight",
+    "verification": { "command": "rtk proxy node --test evals/promptfoo/v1/generate.test.js evals/promptfoo/v1/product-adapter.test.js", "exit_code": 0, "passed": 15, "failed": 0 },
+    "resolved": ["P01", "P02", "P03", "P04"],
+    "P04_evidence": "All retained rows are validated before scheduling. Existing terminal report/summary requires complete unchanged generation rows and is reconciled before any generator call. Tests independently confirm zero calls for missing completed evidence and for corrupt partial evidence alongside unfinished work. Aggregates are revalidated before final writes.",
+    "replay_evidence": "Actual generateTarget with offline fetch passes direct-valid, repaired-valid and failed-repair paths. Resume retains targets; strict full runner replay preserves the exact target objects, including failure evidence, and makes zero new target calls.",
+    "measurement_boundary": "Semantic checks remain explicitly unrun in preflight and the full gate rejects their absence on the applicable development case. This is approval of the diagnostic generator, not candidate acceptance. Use strict complete replay for semantic runs; preserve every target and original error.",
+    "remaining_material_findings": [],
+    "hashes": { "evals/promptfoo/v1/generate.js": "7753f8db3c10e97ff417d3b253618fa61fb3c8a5ca8588be6252aa412af5d701", "evals/promptfoo/v1/generate.test.js": "329d4907de1374d2a89bb8e591e2f74ef56dd80491b6569ba20f9e26d54fa440" }
+  },
+  "actions": { "production_or_harness_edits": false, "provider_calls": 0, "holdouts_inspected": false }
+}

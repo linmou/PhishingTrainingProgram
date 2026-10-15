@@ -1,0 +1,59 @@
+{
+  "intent": "Independently audit candidate05 state-first participation refinement and exact product requests before both declared diagnostic preflights.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_declared_preflights",
+  "scope": "Prompt integrity and requirement fidelity, not model conformance or release acceptance.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-05.md",
+    "sha256": "9e7469e69176dacb18d8ae3d74d15791950da4ef9d54c954be39d153e38d672e",
+    "composed_request_set_sha256": "b0fe8bbc8b26417814ab34b1a98144e2877096c7f462600e27de1abbdc0d835b",
+    "request_digest_method": "SHA-256 of JSON.stringify of all61 messagesFor(case, product, exact candidate05 policy, v2, true) arrays in frozen case order."
+  },
+  "verification": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate04-preflight/snapshot.json and report.json",
+    "cases": 61,
+    "differences_beyond_policy_suffix": [],
+    "user_inputs_and_inventory_preserved": true,
+    "cases_and_labels_unchanged": true,
+    "v1_1_manifest_unchanged": true,
+    "captured_source_dependencies_unchanged": true,
+    "method": "For each frozen case, compared the current composed request to the preserved original candidate04 target request after replacing only its policy suffix. Every system request and user turn matched exactly after that replacement.",
+    "provider_calls": 0
+  },
+  "changed_factor_relative_to_candidate04": "Only appended policy participation/state guidance changes. Prior Guard persistence is evaluated before fresh-entry criteria; acknowledgment/promises cannot require newly demonstrated misconduct. Genuine current attempts restore participation even if wrong, without automatically completing inventory. Guard persistence replies describe unresumed work rather than inventing new obstruction.",
+  "spec_fidelity": {
+    "G01": "Explicit Guard persists until genuine task engagement or clarification; a wrong task attempt can recover. Empty acknowledgment, future promise and evasion do not recover. Unknown/tutoring prior state requires clear current deliberate obstruction or knowing unsafe defiance. Counts, topic preference and ordinary mistakes do not establish intent. This resolves the tension between candidate04's current-obstruction entry wording and its separately stated persistence rule without adding a new threshold.",
+    "G02_G03": "The reply names actual participation obstruction, shared-learning effect and needed change. On empty acknowledgment, failure to resume work supplies the participation boundary; fresh disruption is not fabricated. Serious respectful delivery and task-attempt recovery remain intact.",
+    "T01_T02": "The existing teaching-action, protection and target-selection rules remain unchanged. Guard recovery changes mode only; inventory evidence still controls the next target and consolidation.",
+    "other_obligations": "Factual grounding, official-address uncertainty, assistant identity, concise output and reason/decision/response separation remain unchanged."
+  },
+  "generality": {
+    "case_ids_or_expected_labels_used_as_rules": false,
+    "worked_answers_or_case_templates_added": false,
+    "score_or_punctuation_accommodations_added": false,
+    "assessment": "State branches express existing G01 persistence/recovery requirements and T02 evidence ownership. The diagnostic hypothesis is concrete but not causally established; observing improvement would not by itself prove the earlier wording conflict caused all errors."
+  },
+  "planned_comparison_controls": {
+    "low_budget": "settings-r3.json: thinking=false/max_tokens100, three repetitions,183 generations",
+    "reasoning_budget": "settings-thinking-diagnostic.json: thinking=true/max_tokens8000, three repetitions,183 generations",
+    "interpretation": "Keep the two configurations distinct. Within each lane candidate05 changes policy only relative to product04 with the same settings. Comparing lanes jointly changes thinking and budget. Preserve all outcomes and do not select favorable repetitions or describe either preflight as semantic acceptance.",
+    "adapter_revision": "Current strict-v2 production parser/repair revision does not change product message construction or product parser/repair behavior. Historical nonproduct replay limitations remain documented separately in audit-v2-adapter-parity.json."
+  },
+  "acceptance_requirements": [
+    "Run all183 generations in each declared lane, retaining every original output, repair and error.",
+    "If advanced, use strict complete replay and one matched baseline/configuration for full semantic checks, partitions and non-regression.",
+    "Independent validation and real product release checks remain separate; no unseen evidence was inspected for this refinement."
+  ],
+  "hashes": {
+    "evals/promptfoo/refinement-20261014/settings-r3.json": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "evals/promptfoo/refinement-20261014/settings-thinking-diagnostic.json": "9d842418b07e3906d0bd45d6f35f3ab90bdc977a47e4081ec1eb410cee10975b",
+    "tutor-system/src/services/prompts/index.ts": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4",
+    "tutor-system/src/services/prompts/responsePolicy.ts": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf",
+    "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682",
+    "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/rubrics/v1/manifest.json": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec"
+  },
+  "actions": { "source_edits_by_reviewer": false, "holdouts_inspected": false }
+}

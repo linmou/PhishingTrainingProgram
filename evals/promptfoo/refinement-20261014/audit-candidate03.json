@@ -1,0 +1,70 @@
+{
+  "intent": "Independently audit the exact candidate03 policy and all composed development requests before target-only preflight.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_preflight",
+  "scope": "Prompt integrity and experimental-factor fidelity; this is not model conformance, benchmark acceptance or release approval.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-03.md",
+    "sha256": "9ffd59afe9a02cb6ad8cd8ee64354f2d58cd81965d63184766bfcad575f2d5cd",
+    "composed_request_set_sha256": "d2892939fe40f0ba7df5e4af3ed48d26381306f29214854605f965a650e40d46",
+    "request_digest_method": "SHA-256 of JSON.stringify of messagesFor(case, product, exact policy, v2, true) for all61 cases in frozen order."
+  },
+  "verification": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate02-v1.1/snapshot.json and report.json",
+    "cases": 61,
+    "frozen_cases_byte_equivalent_after_JSON_serialization": true,
+    "user_turns_unchanged": 61,
+    "inventories_preserved": 61,
+    "unexplained_system_prompt_differences": [],
+    "source_check": "Compared each current system request with candidate02's exact preserved original request, replacing only the old/new RESPONSE_POLICY, role strings, mistake_normalization strings and appended policy. All61 match exactly after those declared replacements. Trusted-adult role text is unchanged.",
+    "changed_generator_dependencies": ["tutor-system/src/services/prompts/responsePolicy.ts", "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts", "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts"],
+    "settings_equal_to_candidate02_snapshot": true,
+    "v1_1_manifest_equal_to_candidate02_snapshot": true,
+    "model_calls": 0
+  },
+  "changed_factors_relative_to_candidate02": [
+    "Appended policy explicitly separates reason, decision and response fields while retaining observable evidence, response purpose, relevant priority/uncertainty and existing concise output bounds.",
+    "Appended policy distinguishes genuine unsafe attempts from deliberate obstruction, evaluates current Guard recovery despite earlier misconduct, avoids lasting-mastery inference and explicitly forbids inventing unknown official addresses.",
+    "RESPONSE_POLICY narrows correction to an actual false inference after a focused scaffold, keeps incomplete correct understanding distinct, separates immediate protection from correction, and requires all useful targets before consolidation.",
+    "Peer role text delegates instructional choices to Learning Process rather than duplicating eligibility/progression rules; role identity and adult role remain unchanged.",
+    "Both mistake_normalization values express focused-misconception correction and remove complete example answers conflating unsafe action with correction. Their distinct matter-of-fact versus calm-normalizing voice remains."
+  ],
+  "changed_factors_relative_to_original_baseline": [
+    "Previously audited removal of four complete base dialogue demonstrations remains in effect; index.ts is unchanged from candidate02.",
+    "The appended policy is replaced, and three inherited prompt-rule modules are now also cleaned. This is a bundled prompt comparison; a changed score cannot identify one clause as its cause."
+  ],
+  "integrity_findings": {
+    "case_ids_or_expected_labels_used_as_rules": false,
+    "worked_case_answer_strings_added": false,
+    "punctuation_or_sentence_counter_accommodation_added": false,
+    "case_specific_response_templates_added": false,
+    "assessment": "Changes express adopted T01/T02, G01/G02 and supervision/content constraints in general terms. They do not provide named-case solutions or expected-output lookups. Existing inventory facts and short role/style examples are configured teaching inputs; no new complete development-answer demonstration is introduced."
+  },
+  "review_history": [
+    {
+      "policy_sha256": "6bc0e304f3fb814e65e84d5e2a97936039e86b3b2e48f201ad178ac466b720d3",
+      "finding": "The field-separation rewrite requested only observable evidence in reason, dropping the previously explicit response purpose required by the frozen decision_reasoning rubric.",
+      "resolution": "Parent restored observable evidence and response purpose, material priority/uncertainty where needed, and purpose in the final self-check before preflight. Final9ffd59af policy inspected and approved."
+    }
+  ],
+  "risks_and_acceptance": [
+    "The unchanged100-token target budget can still truncate correct intentions; preflight and full runs must retain all malformed/truncated outputs and allowed repairs.",
+    "Preflight is deterministic diagnostic evidence only. Strict full replay must preserve every preflight target, including failed outputs, under the same settings and source.",
+    "All frozen semantic checks, v1.1 instruction-realization judgments, hard partitions, non-regression and independent validation remain required. No failure is waived by this prompt audit.",
+    "Live checklist-progress and verified-assessment enrichment, default-room sampling settings and deployed-provider identity remain product-release verification scope rather than properties established by these composed requests."
+  ],
+  "hashes": {
+    "tutor-system/src/services/prompts/index.ts": "c6f493d7ea0f117cfa4e7ebd5c025a3b6c9ceaed2f358ffaab76f67041fb0c89",
+    "tutor-system/src/services/prompts/responsePolicy.ts": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf",
+    "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts": "0f1d7acd3b5a9ffa578d1307bd381e33b828f2e4c4afb6377e9a2f78849e03fc",
+    "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b",
+    "evals/promptfoo/refinement-20261014/settings-r3.json": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/rubrics/v1/manifest.json": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec",
+    "evals/promptfoo/v1/gate.js": "5aa5a7b30f7771edec2668c25cc84ba5fa9e54dc919df653d09251fbd2286d34",
+    "evals/promptfoo/v1/runner.js": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+  },
+  "actions": { "prompt_or_harness_edits_by_reviewer": false, "holdouts_inspected": false }
+}

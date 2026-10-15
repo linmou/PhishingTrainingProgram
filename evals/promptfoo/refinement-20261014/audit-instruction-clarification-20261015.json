@@ -1,0 +1,63 @@
+{
+  "intent": "Independently assess whether the proposed instruction-realization clarification preserves T01/T02 criteria and warrants symmetric rejudging.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "Approve the narrow clarification for a versioned evaluator revision, with calibration limits stated and existing applicable calibration retained. Do not expand consolidation scope in this revision.",
+  "authority": {
+    "spec": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md:25-35",
+    "live_rubric": "evals/promptfoo/rubrics/v1/instruction_realization.md",
+    "interpretation": "T01 requires declared first substantive action and its realization. The existing rubric already rejects question-mark heuristics and separates selection from realization. T02 owns learning target and consolidation eligibility. The proposed clarification elaborates these boundaries without changing eligibility labels or thresholds."
+  },
+  "evidence": {
+    "calibration_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-instruction-calibration",
+    "fingerprint": "3f0897ada91a0aa6ad9315835653c117215772f15b73153af3a051fe2a3a5fe8",
+    "verified_records": 22,
+    "verified_provider_attempts_per_record": 1,
+    "transport_errors": 0,
+    "original_agreement": "8/11",
+    "clarified_agreement": "11/11",
+    "original_positive_gold": { "true_positive": 6, "false_negative": 0 },
+    "original_negative_gold": { "true_negative": 2, "false_positive": 3 },
+    "clarified_positive_gold": { "true_positive": 6, "false_negative": 0 },
+    "clarified_negative_gold": { "true_negative": 5, "false_positive": 0 },
+    "corrected_false_positives": ["D-P2", "D-P3", "D-C2"],
+    "unchanged_boundaries": ["D-S1", "D-S2", "D-S3", "D-S4", "D-S5", "D-P1", "D-C1", "D-I1"],
+    "false_negative_limit": "The constructed calibration contains no original false negative. It demonstrates preservation of imperative/question scaffolds and negative controls, not measured improvement of false negatives. The original disputed declarative comparison output is supported as scaffolding by independent semantic review, but these 22 calls did not rejudge that exact output.",
+    "sampling_limit": "One request per condition and fixture, judge temperature zero, does not establish stochastic reliability or broad judge accuracy. These diagnostic fixtures were authored after observing development failures and are calibration evidence, not unseen target validation."
+  },
+  "criterion_review": [
+    {
+      "boundary": "Scaffolding grammatical form",
+      "finding": "Criterion-preserving. A focused imperative can leave an unresolved comparison; supplying the comparison result then asking okay does not. This follows the existing hint/question and first-move wording rather than adding a requirement."
+    },
+    {
+      "boundary": "Protection versus correction",
+      "finding": "Criterion-preserving. Stopping an unsafe intention alone does not explicitly repair a misconception. D-P2/D-P3 expose prior false passes. D-C1/D-C2 test the converse with identical text and different declared labels."
+    },
+    {
+      "boundary": "Selection versus realization",
+      "finding": "Criterion-preserving. D-I1 actually begins with misconception correction and therefore realizes correction even though the unsafe intention independently makes protection the required selection. The deterministic selection failure must remain."
+    }
+  ],
+  "consolidation": {
+    "recommendation": "Defer scope expansion. Preserve frozen T01 applicability and selection outcomes; do not make returned consolidation suppress the T01 realization check or grant it a pass.",
+    "reason": "The live rubric defines four T01 actions and assigns consolidation cases outside T01 to T02. On a frozen T01 case, a consolidation response does not perform the required T01 action; a failure is defensible even when the label is schema-valid. Selection remains responsible for deciding whether consolidation was eligible. Calling consolidation a contract-invalid label would be inaccurate and should be distinguished from an out-of-scope T01 action in explanations.",
+    "future_work": "If realization of consolidation independently of its eligibility is desired, define and calibrate that additional property explicitly in a separate revision, with positive consolidation, premature consolidation, and mixed-action boundaries. Do not infer that extension from the present 11 fixtures."
+  },
+  "minimal_next_steps": [
+    "Finish and preserve the original baseline and candidate judgments before activating a new evaluator revision.",
+    "Adopt only the five generalized clarification paragraphs; keep target prompt, cases, applicability, eligibility labels and thresholds frozen.",
+    "Retain the 11 diagnostic fixtures and rerun existing applicable instruction-realization calibration examples under the exact adopted rubric. An exact disputed-output diagnostic would strengthen the false-negative claim but is not a reason to resample target generations.",
+    "Rejudge every applicable instruction_realization output symmetrically across complete baseline and candidate, including old passes and failures; preserve target outputs and original judge records.",
+    "Recompute affected aggregate, partition, joint and non-regression reports. Report the diagnostic calibration as three corrected false positives with zero newly observed false negatives, not demonstrated improvement in both error directions."
+  ],
+  "hashes": {
+    "evals/promptfoo/refinement-20261014/diagnostic-review-candidate01.json": "4ed5a7d0d1d4929212ed1187204acaad7c6c8a393c17c94dc17b4d9ef659c394",
+    "evals/promptfoo/rubrics/v1/instruction_realization.md": "86ec0bf0737a92ebe6270cb37f120244cd274d97e873c9b57b3e5d619bd79124",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+    "calibration_snapshot_json": "ec1b2d2d07eb4d0b9c57a8d6abf77cf46a2ec88c6b5e8e4cd25b4810bbd83034",
+    "calibration_summary_json": "f7dfb6a5bd6a1edc809a938d68521a6ce029a95d6cc4144a1d21d557cf1a7024",
+    "all_22_records_sorted_filename_colon_sha256_joined_by_newline": "ff603cc8543f5c88df57156ff2dc191efe52989ebb72ed2ba287e8ebc3659aeb"
+  },
+  "actions": { "live_rubric_edited": false, "live_evaluator_edited": false, "model_calls": 0, "holdouts_inspected": false }
+}

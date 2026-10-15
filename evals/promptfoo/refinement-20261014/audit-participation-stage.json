@@ -1,0 +1,91 @@
+{
+  "intent": "Independent pre-execution audit of the participation-only diagnostic policy, request composition, baseline provenance and resume integrity.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "changes_required",
+  "inspected": {
+    "policy": {
+      "file": "evals/promptfoo/refinement-20261014/participation-stage-policy.md",
+      "sha256": "3101637f5cfc0a3417be69bea73f1ac2350a77288efdc9b55114347efce2ec0f"
+    },
+    "runner": {
+      "file": "evals/promptfoo/v1/generate-participation.js",
+      "sha256": "a0550b5a80f48bb2021f499d3d7b4e98f0bca24105ab7a34a0a4cd050f34d0fd"
+    }
+  },
+  "request_verification": {
+    "request_contexts_verified": 61,
+    "user_keys": [
+      "scenario_context",
+      "conversation_history",
+      "student_message",
+      "prior_mode",
+      "knowledge_inventory"
+    ],
+    "no_case_ids_labels_or_partitions": true,
+    "policy_sha256": "3101637f5cfc0a3417be69bea73f1ac2350a77288efdc9b55114347efce2ec0f",
+    "source_sha256": "a0550b5a80f48bb2021f499d3d7b4e98f0bca24105ab7a34a0a4cd050f34d0fd"
+  },
+  "baseline_verification": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.3-r2",
+    "snapshot_sha256": "ae5393cb5cac07c81bd0611d117889fb590d06c07fcf8860b999a50afee63003",
+    "report_sha256": "6ef198512a470f30905b41e780cff932a4d51f7051999477b53cbf76106c2a0d",
+    "records": 183,
+    "baseline_issues": [],
+    "baseline_classification": "accepted",
+    "new_target_calls": 0,
+    "raw_judge_calls_preserved": 1900,
+    "new_judge_evidence_in_r2": 0,
+    "all_targets_match_original_v12": true,
+    "all_judge_evidence_matches_v13": true,
+    "mode_correct": 183
+  },
+  "changed_factors": "The diagnostic removes the full room teaching task and policy, changes output schema to reason/mode, and presents the same scenario/history/current contribution/prior state/inventory as evidence. These bundled factors are declared; it is not a pure wording ablation or deployable tutor.",
+  "requirement_assessment": "Separating participation from teaching is a legitimate diagnostic of the observed mode/action interaction. The general rules preserve genuine effort, mistakes, knowing rejection, prior-state persistence and recovery. A perfect mode result would still require a separately audited response stage and full behavior/product validation.",
+  "findings": [
+    {
+      "id": "unqualified_refusal",
+      "status": "open",
+      "severity": "material",
+      "evidence": "The policy lists refusal of the intended learning activity without requiring clear deliberate obstruction.",
+      "required_change": "Qualify refusal as clear deliberate refusal/obstruction to preserve G01's protection of uncertainty, confusion and ordinary topic preferences."
+    },
+    {
+      "id": "cached_summary_identity",
+      "status": "open",
+      "severity": "material",
+      "evidence": "Existing report.json and classification-comparison.json are skipped without checking agreement with freshly reconstructed records and classifier output.",
+      "required_change": "Validate existing report identity/results and existing classification result against recomputed values; fail closed on mismatch."
+    },
+    {
+      "id": "saved_row_provenance",
+      "status": "open",
+      "severity": "material",
+      "evidence": "load() does not validate saved input, source_type, role, partitions or target_generation against the frozen case and selected final call.",
+      "required_change": "Validate those provenance fields or reconstruct them from frozen inputs and final call before producing the report."
+    },
+    {
+      "id": "detached_target_and_ineligible_repair",
+      "status": "resolved_in_inspected_runner",
+      "evidence": "The initial reviewed implementation validated call request identities but not target equality to the selected call or repair eligibility. The inspected revision derives selected target/parse/results from the last call and rejects a second call following a valid initial answer or transport error."
+    },
+    {
+      "id": "snapshot_body_identity",
+      "status": "resolved_in_inspected_runner",
+      "evidence": "The initial reviewed implementation trusted the stored fingerprint string alone. The inspected revision compares every frozen identity field against the independently reconstructed identity."
+    }
+  ],
+  "checks": {
+    "existing_structural_tests_passed": 2,
+    "model_calls": 0,
+    "all61_request_contexts_checked": true,
+    "results_are_diagnostic_only": true
+  },
+  "limitations": [
+    "Reason's40-word guidance is not currently enforced by parsedMode; the diagnostic measures mode and structural validity, not semantic reason quality.",
+    "The baseline supplies saved mode predictions from the complete original tutor. The new decomposition condition changes several declared request factors, so any improvement cannot be attributed exclusively to removing the response field.",
+    "Current resume fixes require final verification after the remaining edits; no preparation or model run is authorized by this audit verdict."
+  ],
+  "next_action": "Resolve the three open findings, freeze the revised exact source/policy hashes, and obtain an updated clear audit before calls."
+}

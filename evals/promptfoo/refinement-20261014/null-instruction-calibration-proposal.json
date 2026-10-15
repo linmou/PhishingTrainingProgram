@@ -1,0 +1,44 @@
+{
+  "intent": "Freeze Guard/null realization calibration and malformed routing boundaries before independent review or model calls.",
+  "status": "draft_pending_independent_review",
+  "proposed_evaluator_revision": {
+    "check_version": "v1.2",
+    "exact_generalized_clarification": [],
+    "acceptance": "Every semantic fixture must agree with its independently reviewed label; zero judge errors. Routing fixtures are checked locally, never sent as malformed semantic examples.",
+    "calibration_contexts": {
+      "account": {
+        "configured_role": "adult",
+        "knowledge_inventory": {"detection_areas": ["A lock does not prove website identity."], "verification_steps": ["Open the real account app independently."]},
+        "scenario_context": "An account notice links to an unfamiliar login page with a lock icon.",
+        "conversation_history": "Student: I was interrupting. Tutor: Return to the task with a relevant attempt.",
+        "student_message": "Does the lock tell me who owns the page?",
+        "prior_mode": "guard"
+      },
+      "delivery": {
+        "configured_role": "peer",
+        "knowledge_inventory": {"detection_areas": ["A sender display name does not establish sender identity."], "verification_steps": ["Check the delivery in the real carrier app."]},
+        "scenario_context": "A delivery text claims a payment is needed through an unfamiliar link.",
+        "conversation_history": "Student: I kept changing the topic. Tutor: Make a relevant attempt about this message.",
+        "student_message": "The sender name says the carrier. What should I compare?",
+        "prior_mode": "guard"
+      }
+    },
+    "calibration_fixtures": [
+      {"id":"null-participation-account","context":"account","mode":"guard","instruction":null,"response":"Off-topic comments stop the discussion. Please make a relevant attempt about the notice.","expected_realization":false},
+      {"id":"null-teaching-account","context":"account","mode":"guard","instruction":null,"response":"The lock protects the connection but does not establish who owns the page.","expected_realization":false},
+      {"id":"guard-explanation-account","context":"account","mode":"guard","instruction":"explanation","response":"The lock protects the connection but does not establish who owns the page.","expected_realization":true},
+      {"id":"guard-scaffold-account","context":"account","mode":"guard","instruction":"scaffolding","response":"Compare the full address with the real service's address; which part identifies the owner?","expected_realization":true},
+      {"id":"null-participation-delivery","context":"delivery","mode":"guard","instruction":null,"response":"Changing the subject prevents us from checking the message. Return to the delivery question.","expected_realization":false},
+      {"id":"null-teaching-delivery","context":"delivery","mode":"guard","instruction":null,"response":"The display name can be copied, so it does not establish who sent the text.","expected_realization":false},
+      {"id":"tutoring-explanation-delivery","context":"delivery","mode":"tutoring","instruction":"explanation","response":"The display name can be copied, so it does not establish who sent the text.","expected_realization":true},
+      {"id":"guard-declared-explanation-absent","context":"delivery","mode":"guard","instruction":"explanation","response":"Stop changing the subject and make a relevant attempt.","expected_realization":false}
+    ],
+    "routing_fixtures": [
+      {"id":"guard-null-valid","mode":"guard","instruction":null,"expected_contract":"pass","expected_judge_calls":1},
+      {"id":"tutoring-null-invalid","mode":"tutoring","instruction":null,"expected_contract":"error","expected_judge_calls":0},
+      {"id":"guard-absent-invalid","mode":"guard","expected_contract":"error","expected_judge_calls":0},
+      {"id":"guard-unknown-invalid","mode":"guard","instruction":"invented_action","expected_contract":"error","expected_judge_calls":0},
+      {"id":"guard-number-invalid","mode":"guard","instruction":3,"expected_contract":"error","expected_judge_calls":0}
+    ]
+  }
+}

@@ -1,0 +1,376 @@
+{
+  "intent": "Preserve independent, sealed, comparable holdout validation of frozen candidate01 against the production baseline.",
+  "version": "fresh-20261014-validation-v1",
+  "author": "/root/fresh_holdouts",
+  "status": "complete",
+  "started_at_utc": "2026-10-15 04:30:33 UTC",
+  "candidate_freeze_authority": "Parent /root declared candidate01 frozen and independently audited clear before authorizing these calls.",
+  "source_files": {
+    "execution_cases": {
+      "path": "evals/promptfoo/refinement-20261014/holdouts/execution-cases.json",
+      "sha256": "fc28ffdb3bc99c94558f8196b6c68fe26f2ab0999358862d2e7b852322ff0461"
+    },
+    "candidate_policy": {
+      "path": "evals/promptfoo/refinement-20261014/candidate-policy-01.md",
+      "sha256": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040"
+    },
+    "candidate_generator": {
+      "path": "tutor-system/src/services/prompts/index.ts",
+      "sha256": "c6f493d7ea0f117cfa4e7ebd5c025a3b6c9ceaed2f358ffaab76f67041fb0c89"
+    },
+    "active_baseline_policy": {
+      "path": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+      "sha256": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77"
+    },
+    "settings": {
+      "path": "evals/promptfoo/refinement-20261014/settings-r3.json",
+      "sha256": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436"
+    },
+    "runner": {
+      "path": "evals/promptfoo/v1/runner.js",
+      "sha256": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d"
+    },
+    "evaluator": {
+      "path": "evals/promptfoo/v1/evaluator.js",
+      "sha256": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8"
+    },
+    "adapter": {
+      "path": "evals/promptfoo/v1/product-adapter.js",
+      "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+    },
+    "gate": {
+      "path": "evals/promptfoo/v1/gate.js",
+      "sha256": "5aa5a7b30f7771edec2668c25cc84ba5fa9e54dc919df653d09251fbd2286d34"
+    },
+    "classification": {
+      "path": "evals/promptfoo/v1/classification.js",
+      "sha256": "0d60a4a76e329c03d796cacdf0bb603c94990ba4f4cb3ab193263e44852c3441"
+    },
+    "analysis": {
+      "path": "evals/promptfoo/v1/analyze.js",
+      "sha256": "bd7b3cee7f894ffa35eb51fecc232e403f7af278373731f5d0e032f5abbe9fd8"
+    }
+  },
+  "sampling": {
+    "cases": 16,
+    "repetitions_per_case": 3,
+    "expected_generations_per_run": 48,
+    "target_temperature": 0.3,
+    "target_max_tokens": 100,
+    "settings_changed": false,
+    "semantic_resampling": false
+  },
+  "operations": {
+    "workers_per_run": 6,
+    "settings_request_concurrency_cap_per_process": 24,
+    "concurrent_runs": 2,
+    "inhibition": "caffeinate -i",
+    "operational_difference": "The main development runs use 24 generation workers each; both holdout runs use six generation workers each. Judge metrics fan out through Promise.all, so each holdout process can still make up to 24 concurrent HTTP requests under the unchanged request_concurrency setting. Six workers is not a six-request concurrency cap. Both holdout arms use identical API parameters and settings.",
+    "free_disk_before_launch": "3.2 GiB available according to df -h",
+    "judge_fanout": "Promise.all across applicable semantic metrics within each generation.",
+    "actual_retry_behavior": {
+      "judge_schema_attempts": 2,
+      "transport_attempts_per_schema_attempt": 3,
+      "timeout_ms_per_transport_attempt": 180000,
+      "transport_retry_delay_ms": 10000,
+      "interpretation": "A transport failure can exhaust one judge-call attempt and then recover on the second existing schema attempt because no valid judgment was produced. This is the existing operational/schema error path, not semantic pass/fail resampling."
+    }
+  },
+  "runs": {
+    "baseline": {
+      "command": "rtk proxy caffeinate -i node evals/promptfoo/v1/runner.js --cases evals/promptfoo/refinement-20261014/holdouts/execution-cases.json --settings evals/promptfoo/refinement-20261014/settings-r3.json --variant product --contract_version v2 --workers 6 --out evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "session_id": 43742,
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "variant": "product",
+      "contract_version": "v2",
+      "regenerate_room_prompt": false,
+      "policy_override": null,
+      "status": "complete",
+      "snapshot_fingerprint": "8e25437d1d74fedd5718c673feb0fe1023bfb40ea551b847be4d176330f8a6f8",
+      "exit_code": 0,
+      "completed_at_utc": "2026-10-15T04:43:04.716Z",
+      "saved_generations": 48,
+      "artifacts": [
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline/snapshot.json",
+          "sha256": "c30a156d29010d0edb89d55b71d95b739ec3f89bf70ce3eb200413656b517c1e",
+          "bytes": 751555
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline/report.json",
+          "sha256": "3e49749485f106a23a1f33fa25754a4a686f0bf003059777abcb5c476f5538e3",
+          "bytes": 14838622
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline/gate.json",
+          "sha256": "ac3c9e79322759557a8421ed1b6b8efe6a42572af340b88732c5d6b49544c850",
+          "bytes": 13771
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline/classification.json",
+          "sha256": "a5a40e51f7c02c65bd9b731fc6a80e4e219de8a220a715c76b5bd685c951cf9e",
+          "bytes": 50068
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline/analysis.json",
+          "sha256": "7c87120e4f8f0dc152e6ed6ea6876117c6b905ac53833e48408fdf9314f75b1d",
+          "bytes": 112700
+        }
+      ],
+      "integrity": {
+        "run": "baseline",
+        "generation_count": 48,
+        "unique_generation_ids": 48,
+        "request_identity": "passed",
+        "target_and_judge_parameters": "passed",
+        "replay_count": 0
+      },
+      "expected_checks": 582,
+      "actual_checks": 582,
+      "operational_evidence": {
+        "target_errors": 0,
+        "evaluator_errors": 0,
+        "target_calls": 52,
+        "judge_calls": 417,
+        "target_format_repairs": 4,
+        "judge_second_attempts": 0,
+        "transport_attempts": 484,
+        "failed_transport_attempt_categories": {
+          "judge:The operation was aborted due to timeout": 13,
+          "judge:HTTP 429": 2
+        }
+      }
+    },
+    "candidate": {
+      "command": "rtk proxy caffeinate -i node evals/promptfoo/v1/runner.js --cases evals/promptfoo/refinement-20261014/holdouts/execution-cases.json --settings evals/promptfoo/refinement-20261014/settings-r3.json --variant product --contract_version v2 --policy evals/promptfoo/refinement-20261014/candidate-policy-01.md --regenerate_room_prompt true --workers 6 --out evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01",
+      "session_id": 32828,
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01",
+      "variant": "product",
+      "contract_version": "v2",
+      "regenerate_room_prompt": true,
+      "policy_override": "evals/promptfoo/refinement-20261014/candidate-policy-01.md",
+      "status": "complete",
+      "snapshot_fingerprint": "1e30d90b3f5ddf365efdec268582ee0a15cc92203a71869076854ea177660fac",
+      "exit_code": 0,
+      "completed_at_utc": "2026-10-15T04:51:54.391Z",
+      "saved_generations": 48,
+      "expected_checks": 582,
+      "actual_checks": 582,
+      "artifacts": [
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01/snapshot.json",
+          "sha256": "30e52c2fb48078d916c673a7d86655f09d6129bcb89ca942eefa7be81d3e661b",
+          "bytes": 810403
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01/report.json",
+          "sha256": "bc5757ce0c26414ef9df5d0d192579ec7cffbf58f6f02ab3ae8762e67eadd40b",
+          "bytes": 14310183
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01/comparison.json",
+          "sha256": "1fd7e9212f9072074179bb5272ae642bd16c99d779b511184af370d8ba2de875",
+          "bytes": 25352
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01/classification-comparison.json",
+          "sha256": "45088532ceb66a6b6e51453e1a585b14183b2e3d36f2adc415941a8c904f93b1",
+          "bytes": 51758
+        },
+        {
+          "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01/analysis.json",
+          "sha256": "97101a3afc4bd28e28fa22a1b5ba29120ec20a71db70e31b1d068b1795c652f3",
+          "bytes": 127782
+        }
+      ],
+      "operational_evidence": {
+        "target_errors": 0,
+        "evaluator_errors": 0,
+        "target_calls": 48,
+        "judge_calls": 419,
+        "target_format_repairs": 0,
+        "judge_second_attempts": 2,
+        "transport_attempts": 483,
+        "failed_transport_attempt_categories": {
+          "judge:The operation was aborted due to timeout": 18
+        }
+      },
+      "integrity": {
+        "run": "candidate01",
+        "generation_count": 48,
+        "unique_generation_ids": 48,
+        "request_identity": "passed",
+        "snapshot_identity": "passed",
+        "comparable_cases_settings_rubrics_manifest": "passed",
+        "runtime_sources_unchanged": "passed",
+        "target_and_judge_parameters": "passed",
+        "replay_count": 0,
+        "assertion_coverage": {
+          "expected": 582,
+          "actual": 582
+        }
+      }
+    }
+  },
+  "exposure": {
+    "case_contents_revealed_to_prompt_author": false,
+    "detailed_results_revealed_to_prompt_author": false,
+    "authorized_external_disclosure": "Only completion/progress counts, operational errors, and artifact metadata. All semantic outcomes, including aggregate acceptance, remain sealed until /root requests final validation results.",
+    "events": [
+      {
+        "event": "Candidate freeze declared and live validation authorized",
+        "at_utc": "2026-10-15 04:30:33 UTC"
+      },
+      {
+        "event": "Parent tightened isolation to withhold even aggregate semantic acceptance",
+        "at_utc": "2026-10-15 04:31:37 UTC"
+      },
+      {
+        "event": "Both arms complete; analysis written; only progress/completion counts, operational error counts, and metadata released to parent. All semantic results remain sealed.",
+        "at_utc": "2026-10-15T04:53:32Z"
+      }
+    ]
+  },
+  "validation_checks": {
+    "preflight_hashes": "passed",
+    "snapshot_identity": "passed for both frozen snapshots",
+    "generation_completeness": "48/48 per arm; 96 total; three distinct generation IDs per case and arm",
+    "assertion_completeness": "582/582 per arm; 1164 total; no missing or error assertions",
+    "actual_target_request_identity": "passed against each frozen case and requested baseline/candidate adapter path",
+    "actual_target_and_judge_settings": "passed against the identical frozen settings",
+    "source_stability": "all pinned policy, generator, runner, adapter, evaluator, and postprocessor hashes remained unchanged at final validation",
+    "gate": "executed; detailed outcome sealed",
+    "classification": "executed; individual, pooled, two-member and three-member comparison outcomes sealed",
+    "interaction_analysis": "executed on preserved paired output evidence; detailed outcome sealed"
+  },
+  "postprocessing_commands": [
+    {
+      "phase": "baseline_gate",
+      "command": "rtk node evals/promptfoo/v1/gate.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "exit_code": 1,
+      "summary": {
+        "verdict": "failed",
+        "issues": 3,
+        "issue_types": [
+          "below_threshold",
+          "pair"
+        ],
+        "metric_rows": 36
+      }
+    },
+    {
+      "phase": "baseline_classification",
+      "command": "rtk node evals/promptfoo/v1/classification.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "exit_code": 1,
+      "summary": {
+        "verdict": "failed",
+        "rows": 36,
+        "regressions": 0
+      }
+    },
+    {
+      "phase": "baseline_analysis",
+      "command": "rtk node evals/promptfoo/v1/analyze.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "exit_code": 0,
+      "summary": {
+        "verdict": "failed",
+        "issues": 3,
+        "usage": {
+          "target_tokens": 241785,
+          "judge_tokens": 1253233,
+          "target_requests": 52,
+          "judge_requests": 432,
+          "replayed_generations": 0
+        }
+      }
+    },
+    {
+      "phase": "candidate_gate_comparison",
+      "command": "rtk node evals/promptfoo/v1/gate.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01 evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "exit_code": 1,
+      "summary": {
+        "verdict": "failed",
+        "issues": 17,
+        "issue_types": [
+          "transition",
+          "regression",
+          "below_threshold",
+          "pair"
+        ],
+        "metric_rows": 36
+      }
+    },
+    {
+      "phase": "candidate_classification_comparison",
+      "command": "rtk node evals/promptfoo/v1/classification.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01 evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "exit_code": 1,
+      "summary": {
+        "verdict": "failed",
+        "rows": 36,
+        "regressions": 6
+      }
+    },
+    {
+      "phase": "candidate_analysis_comparison",
+      "command": "rtk node evals/promptfoo/v1/analyze.js evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01 evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-baseline",
+      "exit_code": 0,
+      "summary": {
+        "verdict": "failed",
+        "issues": 17,
+        "usage": {
+          "target_tokens": 134411,
+          "judge_tokens": 1317260,
+          "target_requests": 48,
+          "judge_requests": 435,
+          "replayed_generations": 0
+        }
+      }
+    }
+  ],
+  "operational_errors": [
+    {
+      "scope": "baseline",
+      "status": "all recovered",
+      "unresolved": 0,
+      "failed_transport_attempt_categories": {
+        "judge:The operation was aborted due to timeout": 13,
+        "judge:HTTP 429": 2
+      }
+    },
+    {
+      "scope": "candidate",
+      "status": "all recovered",
+      "unresolved": 0,
+      "failed_transport_attempt_categories": {
+        "judge:The operation was aborted due to timeout": 18
+      }
+    }
+  ],
+  "completed_at_utc": "2026-10-15T04:53:32Z",
+  "sealed_result": {
+    "scope": "Independent eligible synthetic holdout comparison only; development/ecological acceptance and release readiness are outside this subtask.",
+    "overall_holdout_comparison_verdict": "failed",
+    "candidate_gate_summary": {
+      "verdict": "failed",
+      "issues": 17,
+      "issue_types": [
+        "transition",
+        "regression",
+        "below_threshold",
+        "pair"
+      ],
+      "metric_rows": 36
+    },
+    "candidate_classification_summary": {
+      "verdict": "failed",
+      "rows": 36,
+      "regressions": 6
+    },
+    "analysis_artifact": {
+      "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-holdout-candidate01/analysis.json",
+      "sha256": "97101a3afc4bd28e28fa22a1b5ba29120ec20a71db70e31b1d068b1795c652f3",
+      "bytes": 127782
+    },
+    "failure_preservation": "All original successes, semantic failures, errors, repaired attempts, and provider responses remain in the immutable per-generation records and reports. No semantic pass/fail result was resampled."
+  }
+}

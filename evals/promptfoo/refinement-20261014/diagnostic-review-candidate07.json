@@ -1,0 +1,1470 @@
+{
+  "intent": "Independently diagnose completed candidate06/07 target-only evidence, review the legitimacy of deterministic evaluator alignment, and fact-check the current run record.",
+  "reviewed_at_utc": "2026-10-15 06:56:05 UTC",
+  "reviewer": "/root/refinement_audit",
+  "verdict": "Candidate07 thinking passes standalone classification but fails matched-baseline nonregression. Its remaining failures principally violate already-explicit rules. No new literal policy contradiction or omitted requirement was found that establishes another narrow additive prompt patch as necessary. Controlled prompt-composition experiments remain possible; model/request architecture alternatives are distinct hypotheses.",
+  "complete_runs": [
+    {
+      "name": "candidate06-preflight",
+      "count": 183,
+      "hashes": {
+        "snapshot": "c16a7274a3753c307b4b76481d7153039cf4be5eb812a08484fba3f4f68d2a0d",
+        "report": "531b67f65b1cb05f570ee6a8fc8d12397976cbf7c8149b5d6a767eaf04932f8f",
+        "policy": "cb0a6821196a87e236107f09f95c51606f1ff910ddf2b608edfeab6c9233eec6",
+        "settings": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "f92152b72468d1b53c072644c5a792eda44cb22e9fc5ca1ed8836bb05b4c85ae",
+        "classification": "d4bd27d7d755be6faa2fdd7608a013fcc7d680e6ed0a9f4cde94509501822686"
+      },
+      "metrics": {
+        "contract_validity": {
+          "pass": 177,
+          "fail": 6
+        },
+        "mode_selection": {
+          "pass": 165,
+          "fail": 18
+        },
+        "response_length": {
+          "pass": 176,
+          "fail": 7
+        },
+        "instruction_selection": {
+          "pass": 77,
+          "fail": 13
+        }
+      },
+      "classification_at_initial_read": {
+        "verdict": "incomplete",
+        "issues": 6,
+        "overall": [
+          {
+            "metric": "mode_selection",
+            "passed": 58,
+            "expected": 61,
+            "verdict": "pass"
+          },
+          {
+            "metric": "instruction_selection",
+            "passed": 25,
+            "expected": 30,
+            "verdict": "fail"
+          }
+        ]
+      },
+      "format_repairs": 52,
+      "terminal_target_errors": 6
+    },
+    {
+      "name": "candidate06-thinking-preflight",
+      "count": 183,
+      "hashes": {
+        "snapshot": "2b92144842c45c9b877c5ba248e3aac79020be223dd530371744d82afa49f4c2",
+        "report": "5c2b743ccaba235cf892ef844a102679fce58c4e212e66f2db7f5ccff34119af",
+        "policy": "cb0a6821196a87e236107f09f95c51606f1ff910ddf2b608edfeab6c9233eec6",
+        "settings": "bf366496ff792448e0e79e0a7eaed1555a083723e0876413c043cc55dc36bb6d",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "f92152b72468d1b53c072644c5a792eda44cb22e9fc5ca1ed8836bb05b4c85ae",
+        "classification": "91c15c8ce5acd9fd55e887d2b826023a35f58bfd27b91619b5b4968a51fc04e7"
+      },
+      "metrics": {
+        "contract_validity": {
+          "pass": 183
+        },
+        "mode_selection": {
+          "pass": 173,
+          "fail": 10
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "instruction_selection": {
+          "pass": 85,
+          "fail": 5
+        }
+      },
+      "classification_at_initial_read": {
+        "verdict": "failed",
+        "issues": 0,
+        "overall": [
+          {
+            "metric": "mode_selection",
+            "passed": 58,
+            "expected": 61,
+            "verdict": "pass"
+          },
+          {
+            "metric": "instruction_selection",
+            "passed": 29,
+            "expected": 30,
+            "verdict": "pass"
+          }
+        ]
+      },
+      "format_repairs": 0,
+      "terminal_target_errors": 0
+    },
+    {
+      "name": "candidate07-preflight",
+      "count": 183,
+      "hashes": {
+        "snapshot": "dc841972d28ff979ac9ef3a9a425af256bcd1f8a1b410a7f8492e7992b412b37",
+        "report": "5ba3a6ce7b5c5f0210f630bfcb51d540335358e27413ab6a993e91c185992859",
+        "policy": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+        "settings": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "88cbd4a41ab7fdb0b53a88179a819cb291aa613e557422d36b564126911b213d",
+        "classification": null
+      },
+      "metrics": {
+        "contract_validity": {
+          "pass": 183
+        },
+        "mode_selection": {
+          "pass": 177,
+          "fail": 6
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "instruction_selection": {
+          "pass": 80,
+          "fail": 10
+        }
+      },
+      "classification_at_initial_read": null,
+      "format_repairs": 9,
+      "terminal_target_errors": 0
+    },
+    {
+      "name": "candidate07-thinking-preflight",
+      "count": 183,
+      "hashes": {
+        "snapshot": "67228ea79b452f206f0cb493ea86458e2fd15d9f468faac6e9b95743dfb7f443",
+        "report": "8f51c905d77ece6f0e6ee0292f58690d7c9cbd6b251f87e22775133338c4f953",
+        "policy": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+        "settings": "bf366496ff792448e0e79e0a7eaed1555a083723e0876413c043cc55dc36bb6d",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "88cbd4a41ab7fdb0b53a88179a819cb291aa613e557422d36b564126911b213d",
+        "classification": null
+      },
+      "metrics": {
+        "contract_validity": {
+          "pass": 183
+        },
+        "mode_selection": {
+          "pass": 175,
+          "fail": 8
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "instruction_selection": {
+          "pass": 86,
+          "fail": 4
+        }
+      },
+      "classification_at_initial_read": null,
+      "format_repairs": 0,
+      "terminal_target_errors": 0
+    }
+  ],
+  "final_independent_validation": {
+    "candidate07-preflight": {
+      "initial_valid": 174,
+      "final_valid": 183,
+      "dependencies": [
+        {
+          "file": "generate.js",
+          "sha256": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942"
+        },
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+        },
+        {
+          "file": "product-adapter.js",
+          "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+        },
+        {
+          "file": "../rubrics/v1/decision-metrics.js",
+          "sha256": "5792f08eae1a3ec08f20e18bae13f8d3d5ede2bdfe2474f232ea70075e6206a8"
+        },
+        {
+          "file": "tutor-system/src/services/tutorDecisionContract.ts",
+          "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/index.ts",
+          "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+          "sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf"
+        }
+      ],
+      "standalone": null
+    },
+    "candidate07-thinking-preflight": {
+      "initial_valid": 183,
+      "final_valid": 183,
+      "dependencies": [
+        {
+          "file": "generate.js",
+          "sha256": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942"
+        },
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+        },
+        {
+          "file": "product-adapter.js",
+          "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+        },
+        {
+          "file": "../rubrics/v1/decision-metrics.js",
+          "sha256": "5792f08eae1a3ec08f20e18bae13f8d3d5ede2bdfe2474f232ea70075e6206a8"
+        },
+        {
+          "file": "tutor-system/src/services/tutorDecisionContract.ts",
+          "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/index.ts",
+          "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+          "sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf"
+        }
+      ],
+      "standalone": {
+        "sha256": "f2b6cda048bb3cc73df9f0a1afb9abba13732d55bfa472d0f83f77e62077d6c0",
+        "verdict": "accepted",
+        "overall": [
+          {
+            "metric": "mode_selection",
+            "passed": 59,
+            "expected": 61,
+            "verdict": "pass"
+          },
+          {
+            "metric": "instruction_selection",
+            "passed": 29,
+            "expected": 30,
+            "verdict": "pass"
+          }
+        ],
+        "failed_gating_rows": []
+      }
+    },
+    "run_record": {
+      "sha256": "5c450821db1aa0d78c79bd047a1ade47f47d309bd21bbd8c756e90110f46accc",
+      "lines": [
+        "Candidate01 bundled exemplar removal with a broad policy rewrite and shorter reason guidance. Candidates02–05 added general priority/state distinctions and cleaned contradictory base guidance. Candidate06 retains more original general detail while removing worked answers; its reason allowance returns to40 words. This prevents attributing all changes to exemplar removal alone. [The candidate06 audit](audit-candidate06.json) verifies61/61 requests differ from05 only in policy; the earlier base changes remain declared factors relative to the original baseline.",
+        "Contribution-feedback expected N is183 in each arm, with81/91/95 inapplicable. Contextual-knowledge expected N is183 with43/20/18 inapplicable. Candidate02 contains one terminal target-format failure after its permitted repair; it also exposes a schema-valid Guard/null output mislabeled as a realization contract error. Its28 unevaluable assertion rows and original grades remain recorded. These are not inferred dignity/identity violations or silently removed samples.",
+        "Standalone gate issue counts are13/20/63; candidate comparison counts are42/105. Counts overlap across partitions/checks and are not distinct case counts. Overall three-vote mode is59/61,59/61,57/61; instruction29/30,24/30,26/30. Every arm fails acceptance. Baseline's hard failures include three known-Guard acknowledgment transitions, one imminent-protection action, two decision reasons and seven controlled-pair rows. Candidate01 additionally has factual-accuracy failures and instruction-realization/Guard-protocol regressions. Every pass→fail row and applicability change is retained in the comparison artifacts; none receives a waiver.",
+        "| Candidate06, short | 177/183 | 165/183 | 77/90 | Incomplete classification; six terminal format failures |",
+        "Candidate05 fixes all six known-Guard acknowledgment/promise outputs under thinking, versus1/6 for04thinking. Five of its nine action failures involve incorrect proposed answers phrased as questions; four are premature consolidation. The independent [candidate05 diagnosis](diagnostic-policy-review-candidate05.json) supports restoring the original generic distinction without restoring worked answers. All six initial format failures across05's two configurations emitted the unsupported `instructing` label and ended normally; this is evidence of possible taxonomy interference, not token truncation. Candidate06short, in contrast, has actual truncation under the restored reason allowance.",
+        "Evaluator v1.2 is being calibrated to distinguish schema-valid Guard/null behavior failures from contract errors while preserving LLM judging, frozen applicability and denominators. Its first condition passes48/49 examples and remains failed evidence. A separately reviewed general clarification of protective benefit versus first instructional action is a new condition; adoption and symmetric scoring remain pending. [The independent review](audit-null-instruction-v12.json) and [proposal](instruction-realization-null-taxonomy-proposal.md) pin source identities and preserve this chronology.",
+        "The cleanup and harness repairs are reviewable, but a passing behavior result has not been achieved. Finish the current candidate06 diagnostic and evaluator calibration, assess the next revision only where the observed failure supports a concrete general change, and require the complete comparable semantic/regression/holdout gates before acceptance. Final release verification remains separate. Raw development evidence and immutable failures support the reported limits; successful local tests alone do not establish tutoring quality or learner outcomes."
+      ]
+    }
+  },
+  "final_thinking_classification": {
+    "standalone": "accepted",
+    "three_member_mode": "59/61",
+    "three_member_instruction": "29/30",
+    "matched_baseline": "accepted; mode183/183, instruction89/90",
+    "comparison": "failed",
+    "overlapping_regression_rows": 20,
+    "note": "Passing standalone thresholds does not waive nonregression or establish semantic acceptance."
+  },
+  "pattern_counts": {
+    "candidate07_short": {
+      "mode_errors": 6,
+      "mode_patterns": {
+        "unknown-state topic preference incorrectly treated as deliberate refusal": 3,
+        "known-Guard relevant request for help incorrectly treated as nonparticipation": 3
+      },
+      "instruction_errors": 10,
+      "instruction_patterns": {
+        "focused-question false inference labeled explanation": 9,
+        "correct partial answer prematurely consolidated": 1
+      },
+      "initial_invalid": 9,
+      "initial_invalid_pattern": "All nine are tutoring/null, with normal finish_reason=stop; all become valid after the one allowed production repair.",
+      "terminal_invalid": 0
+    },
+    "candidate07_thinking": {
+      "mode_errors": 8,
+      "mode_patterns": {
+        "knowing unsafe continuation incorrectly treated as tutoring": 3,
+        "unknown-state topic preference incorrectly treated as deliberate refusal": 3,
+        "unknown-state acknowledgment incorrectly treated as Guard persistence": 1,
+        "ordinary imminent unsafe proposal incorrectly treated as Guard": 1
+      },
+      "instruction_errors": 4,
+      "instruction_patterns": {
+        "belief without intended action incorrectly labeled protective_instruction": 1,
+        "correct partial safe verification prematurely consolidated": 1,
+        "focused-question false inference labeled explanation": 2
+      },
+      "initial_invalid": 0,
+      "terminal_invalid": 0,
+      "format_repairs": 0
+    },
+    "candidate06_short": {
+      "initial_repairs": 52,
+      "terminal_invalid": 6,
+      "terminal_pattern": "All six terminal invalid targets end with finish_reason=length after repair. The full output budget is100tokens while reason allowance had returned to40words.",
+      "limitation": "This establishes a truncation problem in this candidate/configuration, not general100-token infeasibility."
+    },
+    "candidate06_thinking": {
+      "mode_errors": 10,
+      "instruction_errors": 5,
+      "format_repairs": 0,
+      "terminal_invalid": 0
+    }
+  },
+  "source_rule_evidence": [
+    {
+      "requirement": "G01",
+      "failure": "Knowing unsafe continuation mislabeled tutoring",
+      "exact_policy": "If prior_mode is tutoring or unknown: enter guard for clear deliberate obstruction, intentional disruption or manipulation, or knowing continuation of unsafe conduct after its correction. Knowing defiance of an understood safety correction is a participation problem even when it stays on topic.",
+      "assessment": "Explicitly covered. No missing exception discovered."
+    },
+    {
+      "requirement": "G01",
+      "failure": "Topic preference and unknown-state acknowledgment become Guard",
+      "exact_policy": "A preference for another activity alone is insufficient evidence of deliberate obstruction. Do not infer an existing guard state when prior state is unknown.",
+      "assessment": "Explicitly covered. Some responses invent repeated refusal from a topic preference; adding another equivalent sentence would be speculative."
+    },
+    {
+      "requirement": "G01",
+      "failure": "Relevant request for help in known Guard rejected",
+      "exact_policy": "If prior_mode is guard: keep guard until the current contribution makes a genuine task attempt or asks a relevant clarification.",
+      "assessment": "Explicitly covered. Short outputs demanding a completed attempt before allowing help reverse the stated clarification boundary."
+    },
+    {
+      "requirement": "T01/G01",
+      "failure": "Ordinary unsafe proposal becomes Guard; ordinary belief becomes protection",
+      "exact_policy": "Protection can occur in tutoring; choose Guard only when its participation criteria are independently met.",
+      "additional_exact_policy": "Belief in legitimacy alone is not an imminent action.",
+      "assessment": "Both boundaries are explicit. These are real selection failures, not judge interpretation errors."
+    },
+    {
+      "requirement": "T01",
+      "failure": "Wrong proposed answer after a focused tutor question labeled explanation",
+      "exact_policy": "An incorrect proposed answer phrased as a question still qualifies; Guard recovery does not erase that instructional history.",
+      "additional_exact_policy": "Before a focused scaffold fails, a concise explanation may correct a real misconception; once the focused scaffold has failed, correction and its connected safe action are required.",
+      "assessment": "The previously omitted clarification is now present. Outputs explicitly negate the proposed inference but still declare explanation, often omitting the safe action. This remains behavior/action conformance failure."
+    },
+    {
+      "requirement": "T02",
+      "failure": "Safe partial verification prematurely consolidated",
+      "exact_policy": "consolidation: only when the learner has already demonstrated EVERY useful configured point, including equivalent wording, without later contradiction. Otherwise choose one unmet point with scaffolding or explanation.",
+      "assessment": "Explicitly covered. Adding another paraphrase of inventory completeness is not a newly supported fix."
+    },
+    {
+      "requirement": "response contract",
+      "failure": "Tutoring with null instruction",
+      "exact_policy": "decision: an object containing only mode (\"tutoring\" or \"guard\") and instruction (\"protective_instruction\", \"correction\", \"scaffolding\", \"explanation\", \"consolidation\", or JSON null). Null is valid only in guard.",
+      "assessment": "Explicitly covered. Nine short-run initial objects violate it, although repair succeeds. These must remain in the evidence."
+    }
+  ],
+  "raw_candidate07_failures": [
+    {
+      "run": "candidate07-preflight",
+      "records": [
+        {
+          "id": "webpage_demo_correct_lock_reasoning",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student correctly identifies lock limitation and proposes safe verification steps.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified that the lock only secures the connection, not the site's identity. Your plan to check the address and use the real app is the correct safety action.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "holdout_student_trusts_support_domain",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student assumes domain name proves ownership, missing full host comparison.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A familiar name in a web address does not prove ownership. Compare the full host to the real platform's known address.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "holdout_student_trusts_support_domain",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student assumes platform name in URL proves ownership, missing full host check.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A familiar name in the address does not prove ownership. Compare the full domain to the real platform's official site.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "holdout_student_trusts_support_domain",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student assumes platform name in URL proves ownership, missing full host comparison.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A familiar name in the address does not prove ownership. Compare the full host to the real platform's known address.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student refuses task and changes topic, requiring guard mode to restore participation.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must focus on the security alert task. Please stop changing the subject and attempt to analyze the suspicious link.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student refuses task and changes topic, requiring guard mode.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must complete the safety lesson before discussing other topics. Please analyze the alert link instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student refuses task to discuss unrelated topics, requiring guard mode.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must complete the safety lesson before discussing other topics. Please analyze the alert link and explain why it is suspicious.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student attempts task but misunderstands domain structure.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"No, the /login part is a page path. The company domain is school-help.example.net.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student attempts task but misunderstands domain structure.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"No, the /login part is a page path. The company domain is school-help.example.net.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student attempts task but misidentifies domain structure.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"No, /login is a page path. The company domain is school-help.example.net.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student attempts task but misunderstands domain structure.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"The /login part is a page, not the company name. The full domain school-help.example.net is the site address.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student attempts task but misunderstands domain structure.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"The /login part is a page, not the company name. The full domain school-help.example.net is the site address.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student attempts task but misunderstands domain structure.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"No, the /login part is a page path. The company domain is school-help.example.net.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "ecological_participation_confusion",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student requests help to join discussion without attempting task analysis.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"Stop asking for help to join. First, identify one suspicious detail in the alert post yourself.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "ecological_participation_confusion",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student requests help to join discussion without attempting the task, requiring guard mode.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"You must attempt the task first. Please identify one suspicious detail in the alert message.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "ecological_participation_confusion",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student requests help to join discussion without attempting the task.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"Stop trying to join the discussion. First, examine the alert and identify one suspicious detail before proceeding.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "candidate07-thinking-preflight",
+      "records": [
+        {
+          "id": "student_thinks_alert_is_real",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student treats fear-based urgency as proof of legitimacy, risking unsafe link click\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"This is not safe. Open the real app or type the official website yourself instead of clicking this link.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation",
+                "correction"
+              ],
+              "actual": "protective_instruction"
+            }
+          ]
+        },
+        {
+          "id": "deliberate_https_repetition",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student plans unsafe action despite understanding HTTPS limitation; needs protective instruction on safe alternative.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not click security alert links. Type the platform's actual URL in your browser or open the official app to verify.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "id": "deliberate_https_repetition",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student acknowledges HTTPS limitation but plans to use it anyway, requiring protective instruction.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not click the link even with a lock icon. Open the real app or type the official website address yourself.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "id": "deliberate_https_repetition",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student acknowledges HTTPS limitation but plans unsafe action anyway.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not click that link. Open the real app or type the actual platform's address yourself.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student refuses task twice; entering guard to require engagement with safety lesson.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must complete the safety lesson before discussing other topics. Please examine the suspicious link and share your observations.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student refuses task participation and wants to discuss unrelated topics instead.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"This is a phishing training session. Please attempt the task or ask a relevant clarification about the security alert.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student refuses task twice, interrupting participation. Requires guard to restore engagement.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"You are refusing the assigned task. Please examine the suspicious link and explain your findings.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_acknowledgement_only",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student acknowledged without attempting the task or asking relevant questions\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"Acknowledging is not enough. Please attempt the task by identifying what makes this message suspicious, or ask a specific question about it.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_correct_verification_action",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification by checking real app instead of clicking link\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"Good job verifying through the official app. This is the correct way to handle security alerts.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student attempted task after guard; domain identification remains unmet\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"No, /login is a page path, not the domain. The full domain is school-help.example.net.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student now attempts task; needs help identifying full domain versus path.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"/login is a page path, not the company name. Look at school-help.example.net before the slash to find the actual address.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "ecological_click_imminent",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student proposes opening suspicious link, requires protective instruction\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not open that link. Type the real app or website address directly into your browser instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "initial_repair_evidence": [
+    {
+      "id": "four_improving_attempts",
+      "rep": 0,
+      "initial": "{\n  \"reason\": \"Student acknowledges errors and commits to checking the real app, enabling tutoring.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"Acknowledging mistakes is a good step. Please proceed by opening the official app or typing the correct website address manually.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n  \"reason\": \"Student acknowledges errors and plans to check the real app, so resume tutoring.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"Good. Focus on the URL: testdrive.info is not the official social media site. Do not click that link.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "four_improving_attempts",
+      "rep": 1,
+      "initial": "{\n  \"reason\": \"Student acknowledges mistakes and plans to check real app, resuming tutoring.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"That is a good plan. Please open the official app directly to verify any alerts.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n\"reason\": \"Student acknowledges mistakes and plans to check real app, ready for scaffolding.\",\n\"decision\": {\"mode\": \"tutoring\", \"instruction\": \"scaffolding\"},\n\"response\": \"Good. First, verify the sender name spelling: is it 'Social' or 'Socail'? Then confirm the URL domain matches the official platform.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "four_improving_attempts",
+      "rep": 2,
+      "initial": "{\n  \"reason\": \"Student acknowledges errors and plans to check the real app, resuming tutoring.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"Good. Remember that a lock icon does not prove a site is safe. Always open the official app directly.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n  \"reason\": \"Student acknowledges errors and commits to checking the real app, ready for targeted teaching.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"Good. Verify by opening the official app directly instead of using any link in the message.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "guard_semantic_correction",
+      "rep": 0,
+      "initial": "{\n  \"reason\": \"Student demonstrates correct safe action, ending guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"That is the correct approach. You have successfully identified the safe verification step.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n\"reason\": \"Student demonstrates safe action plan, allowing transition to tutoring on remaining targets.\",\n\"decision\": {\"mode\": \"tutoring\", \"instruction\": \"scaffolding\"},\n\"response\": \"That is the correct approach. Next, check if the sender's account name has spelling errors like 'Socail' instead of 'Social'.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "guard_semantic_correction",
+      "rep": 1,
+      "initial": "{\n  \"reason\": \"Student demonstrates correct safe action after prior guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"That is the correct approach. You have successfully identified the safe verification steps.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n\"reason\": \"Student demonstrates safe action, allowing transition to tutoring on remaining targets.\",\n\"decision\": {\"mode\": \"tutoring\", \"instruction\": \"scaffolding\"},\n\"response\": \"You correctly chose the real app. Next, check if the sender's name has spelling errors like 'Socail'.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "guard_semantic_correction",
+      "rep": 2,
+      "initial": "{\n  \"reason\": \"Student demonstrates safe action, ending guard and confirming correct behavior.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"That is the correct approach. You have successfully identified the safe verification steps.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n  \"reason\": \"Student demonstrates safe action, allowing transition to tutoring on remaining targets.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"You correctly chose the real app. Next, check if the sender's name has a spelling error like 'Socail' instead of 'Social'.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "guard_correct_verification_action",
+      "rep": 0,
+      "initial": "{\n  \"reason\": \"Student demonstrated safe verification; transition from guard to tutoring.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"You verified the alert safely. Next, check if the sender's name has spelling errors like 'Socail'.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n\"reason\": \"Student verified via official app, demonstrating safe action after guard.\",\n\"decision\": {\"mode\": \"tutoring\", \"instruction\": \"scaffolding\"},\n\"response\": \"You correctly used the real app. Next, check if the sender's account name has spelling errors like 'Socail'.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "guard_correct_verification_action",
+      "rep": 1,
+      "initial": "{\n  \"reason\": \"Student demonstrated safe verification via official app after prior guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"You correctly verified the alert through the real app. This confirms the link was a scam.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n\"reason\": \"Student verified via official app, demonstrating safe action after guard.\",\n\"decision\": {\n\"mode\": \"tutoring\",\n\"instruction\": \"scaffolding\"\n},\n\"response\": \"You correctly used the real app to verify. Next, check if the sender's account name has spelling errors.\"\n}",
+      "final_finish": "stop"
+    },
+    {
+      "id": "guard_correct_verification_action",
+      "rep": 2,
+      "initial": "{\n  \"reason\": \"Student demonstrated safe verification via official app, ending guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": null\n  },\n  \"response\": \"You correctly verified the alert through the real app. Next, check if the sender's name has spelling errors like 'Socail'.\"\n}",
+      "initial_finish": "stop",
+      "final": "{\n\"reason\": \"Student demonstrated safe verification via official app, enabling new target on URL analysis.\",\n\"decision\": {\"mode\": \"tutoring\", \"instruction\": \"scaffolding\"},\n\"response\": \"You verified correctly. Now notice the link uses testdrive.info instead of the real platform name.\"\n}",
+      "final_finish": "stop"
+    }
+  ],
+  "same_output_manual_observations": [
+    {
+      "run": "candidate07-preflight",
+      "case_id": "ecological_participation_confusion",
+      "repetitions": [
+        0,
+        1,
+        2
+      ],
+      "observation": "The learner asks for help rejoining; outputs demand an unaided task attempt and two explicitly tell them to stop asking/trying to join. Wrong mode also yields a substantively counterproductive participation boundary."
+    },
+    {
+      "run": "candidate07-preflight",
+      "case_id": "development_peer_incorrect_guard_recovery",
+      "repetitions": [
+        0,
+        1,
+        2
+      ],
+      "observation": "Responses negate the proposed wrong domain interpretation but label explanation and omit an independent safe comparison/verification action. Correct factual identification alone does not satisfy the required correction action."
+    },
+    {
+      "run": "candidate07-thinking-preflight",
+      "case_id": "deliberate_https_repetition",
+      "repetitions": [
+        0,
+        1,
+        2
+      ],
+      "observation": "Responses introduce a planned click not present in the learner's stated reliance on a lock, substitute protection for the participation boundary, and choose tutoring despite acknowledged knowing continuation."
+    },
+    {
+      "run": "candidate07-preflight",
+      "case_id": "four_improving_attempts",
+      "repetition": 1,
+      "observation": "The repaired response asks a spelling question and then introduces domain matching, despite the one-target rule. Its allowed instruction label and valid JSON do not establish semantic quality."
+    }
+  ],
+  "deterministic_rescore_audit": {
+    "verified": true,
+    "baseline_verdict": "accepted",
+    "candidate_standalone": "accepted",
+    "comparison": "failed",
+    "regression_rows": 20,
+    "issues": 0,
+    "rows": 42,
+    "unchanged_native_statistics": true,
+    "sha256": "89045dbd9d9ad9b06dc7650cb4b6fe7dad5391c93c098d2918f8293c681e65a8",
+    "classification_source_sha256": "0d60a4a76e329c03d796cacdf0bb603c94990ba4f4cb3ab193263e44852c3441",
+    "provenance_hashes_valid": true,
+    "legitimacy": "Valid derived deterministic rescoring. Independently verified deep equality of cases/settings and both complete classification check definitions; native baseline rows/predictions/issues are byte-for-byte equal as objects after manifest alignment. Independently reproduced comparison verdict, all20 regressions,42 rows, predictions and issues. All recorded source snapshot/report hashes match.",
+    "boundaries": "Only the derived scoring identity uses the frozenv1.2 manifest. Original evidence is unchanged, no target/judge call occurred, no threshold/method changed, and no v1.2 semantic result is implied.",
+    "manifest_chronology": "Candidate05 and thinking baseline frozev1.1. Candidate06 froze draftv1.2 with the null/action clarification. Candidate07 froze the samev1.2 rules after49/49 calibration and adoption metadata. The06->07 manifest changes are status/calibration/comparison metadata; classification definitions stay unchanged."
+  },
+  "run_record_review": {
+    "reviewed_file": {
+      "path": "evals/promptfoo/refinement-20261014/run-record.md",
+      "sha256": "5c450821db1aa0d78c79bd047a1ade47f47d309bd21bbd8c756e90110f46accc",
+      "bytes": 14732
+    },
+    "confirmed": [
+      "Full-arm metric table pass/applicable counts reproduce the three2706-check raw reports.",
+      "Conditional feedback and contextual-knowledge N/A denominators reproduce raw statuses.",
+      "All four displayed interaction groups reproduce joined case/repetition/output checks, including Guard correction×tone.",
+      "Standalone issues13/20/63 and candidate comparisons42/105 match stored gates.",
+      "Recorded candidate03-06short target-screening counts and matched thinking baseline counts are accurate.",
+      "The distinction between classifier acceptance, semantic acceptance and production release is maintained."
+    ],
+    "corrections": [
+      {
+        "id": "R01",
+        "severity": "factual_count",
+        "current_text": "Its28 unevaluable assertion rows",
+        "correct_value": "14 distinct unevaluable assertion rows:12error plus2missing. Thirteen are attached to the one malformed deliberate_https_repetition-0 target; one is the valid-Guard/null realization routing error.",
+        "evidence": [
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "mode_selection",
+            "status": "missing",
+            "reason": "Target output is missing."
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "contract_validity",
+            "status": "missing",
+            "reason": "Target output is missing."
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "contribution_feedback",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "contextual_knowledge_quality",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "persona_stability",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "honest_self_representation",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "disruption_correction",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "guard_tone_safety",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "learner_dignity",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "decision_reasoning",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "v0:deliberate_https_repetition:2",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "v0:deliberate_https_repetition:3",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "deliberate_https_repetition",
+            "rep": 0,
+            "metric": "v0:deliberate_https_repetition:4",
+            "status": "error",
+            "reason": "Target suggestion cannot be evaluated"
+          },
+          {
+            "case_id": "development_recovery_pair_attempt",
+            "rep": 2,
+            "metric": "instruction_realization",
+            "status": "error",
+            "reason": "Declared instruction is missing/invalid; C01 contract error."
+          }
+        ]
+      },
+      {
+        "id": "R02",
+        "severity": "stale_status",
+        "finding": "Target-only table omits completed candidate06-thinking and both candidate07 runs. Remaining decision still says finish candidate06.",
+        "correction": "Add06thinking183valid/173mode/85action;07short183valid/177mode/80action;07thinking183valid/175mode/86action. Record07thinking standalone classifier accepted and matched comparison failed20overlapping regressionrows."
+      },
+      {
+        "id": "R03",
+        "severity": "stale_status",
+        "finding": "Evaluatorv1.2 described as pending calibration/adoption.",
+        "correction": "Record original48/49 condition retained, later49/49 condition adopted/frozen, and distinguish any still-pending symmetric semantic rescoring. Do not imply49/49 proves an error-free evaluator."
+      },
+      {
+        "id": "R04",
+        "severity": "precision",
+        "finding": "The snapshot paragraph says dependency hashes are stored per source, while dependency entries inspected contain full file/content bodies and an aggregate fingerprint.",
+        "correction": "Describe full dependency source snapshots and their aggregate identity; link separate audit hashes if claiming individual dependency hashes."
+      }
+    ],
+    "status": "Findings reported to parent for reconciliation. This reviewer did not edit run-record.md."
+  },
+  "recommendation": {
+    "next_narrow_prompt_patch": "No specific new missing rule or literal contradiction was found in candidate07. An additional equivalent mode, inventory, correction or null-label admonition would be an unisolated rephrasing hypothesis rather than a necessary fix established by these outputs.",
+    "useful_remaining_prompt_only_experiment": {
+      "hypothesis": "The accumulated base edits interact with the cleaned generic policy, rather than removed worked answers being the sole performance factor.",
+      "design": "If pursuing another prompt-only diagnostic, independently vary the audited generic policy and base composition while keeping the model/settings/cases/scorer fixed. Use frozen controls to separate the baseline-rule retention strategy from prior role/response-policy/taxonomy changes. Any original contradictory base is a diagnostic control, not an accepted production candidate.",
+      "constraint": "Candidate06 retained current cleaned base and changed policy/reason allowance, so it did not isolate this interaction. Candidate07 combined mode branches, teaching detail and compact reason; it likewise does not isolate a single clause.",
+      "value_limit": "Such an ablation has a causal question, but does not guarantee improvement. It is more informative than another broad additive rewrite."
+    },
+    "taxonomy_hypothesis": {
+      "evidence": "Earlier candidate04/05 emitted instructing, matching a legacy teaching-method heading. Candidate07 emitted none of those invalid enum values; its short initial failures are tutoring/null.",
+      "conclusion": "Taxonomy removal remains independently testable but is not a direct demonstrated fix for candidate07's current final failures. The existing base already says those method names are not decision labels."
+    },
+    "architecture_or_configuration_alternatives": [
+      {
+        "factor": "Separate participation/action selection from response generation",
+        "scope": "Changes request orchestration, call count, latency and evidence flow. Requires its own design, product implementation and full comparison; it is not a prompt cleanup."
+      },
+      {
+        "factor": "Structured evidence for prior participation and demonstrated inventory",
+        "scope": "Changes input representation or upstream state derivation. Must use legitimate product evidence and preserve uncertainty, never expose evaluator gold labels. Needs independent validation of the added state layer."
+      },
+      {
+        "factor": "Different target model or further reasoning/budget study",
+        "scope": "A new model/configuration factor requiring established parameters and matched baseline. Existing results do not prove the current model incapable or100tokens universally infeasible."
+      }
+    ],
+    "acceptance": "Candidate07thinking's standalone pass supports further evaluation as an experiment if selected, but it does not override20 matched nonregressions or semantic checks still unrun. Preserve every output and use the complete required comparisons before a passing claim."
+  },
+  "base_ablation_plan": {
+  "status": "Concrete next diagnostic experiment requested by parent after candidate07 review. Exact source reconstruction independently verified; no live source mutation or model calls performed by this reviewer.",
+  "hypothesis": "Accumulated base guidance edits interact with the cleaned generic decision policy. Isolate the joint base-version effect under two independently frozen policies instead of adding another equivalent rule.",
+  "design": {
+    "factors": {
+      "policy": [
+        "candidate06",
+        "candidate07"
+      ],
+      "base": [
+        "current cleaned base",
+        "candidate01 historical base with four full dialogue demonstrations removed"
+      ]
+    },
+    "existing_cells": [
+      "candidate06-thinking-preflight with current base",
+      "candidate07-thinking-preflight with current base"
+    ],
+    "new_cells": [
+      "candidate06 policy with historical base",
+      "candidate07 policy with historical base"
+    ],
+    "required_generations_per_new_cell": 183,
+    "total_new_generations_if_executed": 366,
+    "fixed": "Same61cases, learner input/history/prior state, roles/inventory, model, temperature, thinking/max_tokens, three repetitions, transport/format policy, deterministic definitions and thresholds.",
+    "scoring": "Use frozenv1.2 for new diagnostics and legitimately derive aligned deterministic comparisons for old cells where only manifest metadata differs; preserve original evidence. Full semantic comparisons require symmetric evaluation under the same adopted revision.",
+    "interpretation": "Each within-policy historical/current comparison isolates the four-file base bundle. Differences between those base effects test policy×base interaction. This does not isolate individual base sentences or each of the four files."
+  },
+  "immutable_source": {
+    "snapshot": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/snapshot.json",
+    "sha256": "e650ee7b6775fcd7fa69db348d31bcf281f730c7f0b393320ef8c76ab80f7159",
+    "current_comparator_snapshot": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-thinking-preflight/snapshot.json",
+    "current_comparator_sha256": "67228ea79b452f206f0cb493ea86458e2fd15d9f468faac6e9b95743dfb7f443",
+    "restore_exactly": [
+      {
+        "file": "tutor-system/src/services/prompts/index.ts",
+        "historical_sha256": "c6f493d7ea0f117cfa4e7ebd5c025a3b6c9ceaed2f358ffaab76f67041fb0c89",
+        "current_sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+        "historical_sha256": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2",
+        "current_sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+        "historical_sha256": "3416473893908b7df049d11a7d571db01a933b6405fec3d7732738390e8bd2cc",
+        "current_sha256": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+        "historical_sha256": "4a126f3f2e56c27c1d9bf9229518740d6277344052874247417c745f78be2890",
+        "current_sha256": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b"
+      }
+    ],
+    "unchanged_dependencies": [
+      {
+        "file": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+        "sha256": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77"
+      },
+      {
+        "file": "tutor-system/src/services/systemPrompts.ts",
+        "sha256": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/basePrompt.ts",
+        "sha256": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/checklistPromptGenerator.ts",
+        "sha256": "7f94fe2249ac8dbc308e17283cb90283827d37ecea687589c5308d40cdd6904e"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/dynamicParameterLoader.ts",
+        "sha256": "5e060df227497b64deb6e28e2c0ee9d18349d99693143c9d455d307a4b8cde0c"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/multiAgentTutorPrompt.ts",
+        "sha256": "3930f8eb21ca0307a6275fc276a2e7211985f479a9d7adcf99238a36311000a9"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/parameterConfig.ts",
+        "sha256": "74f081f84d74f43a2a3ebe0bce6d5fdda8c0adc7a482a9881cc8df4b778f2505"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/presets.ts",
+        "sha256": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/transferV3Prompt.ts",
+        "sha256": "8ef48229e15f343930e844d816495f9ce3748b2acbce11f58564f55e89f9d9f5"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/types.ts",
+        "sha256": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts",
+        "sha256": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/frameworks/learningStages.ts",
+        "sha256": "7fc72f904c46b0a7b3e75654111e07904a5d98369a06a75f8a765fd2b8bb6d46"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts",
+        "sha256": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts",
+        "sha256": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1"
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+        "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+      }
+    ]
+  },
+  "reconstruction_verification": {
+    "reconstruction": {
+      "cases": 61,
+      "all_original_base_minus_four_dialogues": true,
+      "all_dialogue_blocks_absent": true,
+      "role_counts": {
+        "peer": 55,
+        "adult": 6
+      },
+      "historical_rendered_base_set_sha256": "3603fa203baf74c3eb69688c72888d4aceef316499acf11fe7d7b2c7e98b8c47",
+      "current_rendered_base_set_sha256": "da158a313232ee43364c2652a8ce8e348a1f28cbe934ddbcd852c84c0cfac5d1"
+    },
+    "matrix": [
+      {
+        "base": "historical",
+        "source_snapshot": "candidate01",
+        "policy": "06",
+        "policy_sha256": "cb0a6821196a87e236107f09f95c51606f1ff910ddf2b608edfeab6c9233eec6",
+        "request_set_sha256": "822c89f176435ef51d5cce7b7efa2f7f84e4a73b4fa2c754dba40a8e3b7ed5ce",
+        "count": 61
+      },
+      {
+        "base": "historical",
+        "source_snapshot": "candidate01",
+        "policy": "07",
+        "policy_sha256": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+        "request_set_sha256": "87c929ee8e85485965df2da02c55984c94329421343cfb622a1221185482808f",
+        "count": 61
+      },
+      {
+        "base": "current",
+        "source_snapshot": "candidate07",
+        "policy": "06",
+        "policy_sha256": "cb0a6821196a87e236107f09f95c51606f1ff910ddf2b608edfeab6c9233eec6",
+        "request_set_sha256": "725c16eee0ac2507ea02688d212b897187cd788679083677cc02036c15b18055",
+        "count": 61
+      },
+      {
+        "base": "current",
+        "source_snapshot": "candidate07",
+        "policy": "07",
+        "policy_sha256": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+        "request_set_sha256": "61cec6e3c427904cc631c1f09c397cb64e9a3933abdea5d9eb889b5584c5a31d",
+        "count": 61
+      }
+    ],
+    "all_user_turns_identical": true,
+    "model_calls": 0,
+    "filesystem_mutations": 0
+  },
+  "execution_boundaries": [
+    "Keep active full semantic runs isolated from experimental source changes. Materialize a separate frozen source tree or use a reviewed snapshot-backed renderer; do not modify shared live generator modules while workers may load them.",
+    "Snapshot all four restored files and their unchanged transitive dependencies. Preserve frozen policies06/07 exactly rather than copying activeTutorAgentPrompt contents.",
+    "Build the production request from the historical generated room base plus the selected cleaned policy. The old active policy exists as an unchanged source dependency but must be fully replaced at the verified policy boundary.",
+    "Read back generated messages for all61 cases and match the independently recorded request-set identities before starting calls. Do not rewrite case input, inventory or expected labels.",
+    "Retain all initial outputs, every permitted repair, errors, and all183repetitions. No selection by score or retries of semantic failures.",
+    "Historical guidance is an experimental control, not a proposed production rollback. Acceptance still requires complete semantic, regression and independent validation."
+  ],
+  "inherited_guidance_risks": [
+    {
+      "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "restored_text": "If the immediately preceding tutor turn asked a question and the latest student answer remains unsafe or incomplete, directly correct the misconception and give one concrete safe action; do not ask another question instead.",
+      "risk": "Broader than T01: any question and incomplete answer can trigger correction, conflicting with focused-question and correct-partial distinctions. Later policy precedence must remain explicit."
+    },
+    {
+      "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "restored_text": "A first-round direct correction is allowed when the student is about to take an unsafe action.",
+      "risk": "Uses correction for protection and may compete with the required protective_instruction decision label."
+    },
+    {
+      "file": "tutor-system/src/services/prompts/index.ts",
+      "restored_text": "Use the lock does not prove the site is real instead of HTTPS encrypts the connection.",
+      "risk": "These statements express different facts. Restoring this simplification can cause content substitution despite later accuracy guidance."
+    },
+    {
+      "file": "tutor-system/src/services/prompts/index.ts",
+      "restored_text": "Available Scaffolding Techniques, including Explaining and Instructing.",
+      "risk": "Reintroduces the umbrella term without the current explicit distinction from decision.instruction labels, a plausible source of action taxonomy interference."
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "restored_text": "Use third-person examples only. Say A person who clicked a fake security link could land on a fake login page.",
+      "risk": "A fixed story can displace the relevant target and compete with later optional/contextual-example guidance; peer duplicated unsafe-or-incomplete correction guidance also returns."
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "restored_text": "Direct correction for failed scaffolding or imminent unsafe action, with a lock-icon correction micro-example.",
+      "risk": "Duplicates the broad correction/protection rule and restores a familiar example that could dominate a different misconception."
+    }
+  ],
+  "shortcut_review": {
+    "result": "The61/61 reconstruction proves the historical renderer adds no content beyond the original frozen base minus exactly the four full dialogue demonstrations. No worked JSON answer sequence, evaluation ID, expected label or candidate-policy shortcut is reintroduced by these four source files.",
+    "retained_examples": "Previously present short style/content examples return, including the peer fake-login story and emotional lock-icon correction example. They are real factors in this base comparison and must be disclosed, not described as exemplar-free.",
+    "limit": "This review does not reclassify every generic micro-example as a shortcut merely because it concerns phishing. The complete dialogue demonstrations and removed active-policy case solutions remain absent from the constructed experimental requests."
+  },
+  "cached_source_isolation_review": {
+  "verdict": "No material provenance problem found for the disclosed diagnostic-control isolation plan, provided the listed conditions hold.",
+  "reviewed_plan": "Assert current four file bytes against candidate07 snapshot; hydrate exact historical bytes using apply_patch; type-check; start two thinking preflight processes with one worker each and frozen historical source snapshots; restore current bytes after each control process has emitted its first record; validate every initial request against independently reconstructed historical-base messages.",
+  "basis": [
+    "The four affected prompt modules are statically imported through generateSystemPrompt and cached by each standalone Node process before its first target request. Their exported constants/functions remain in memory after on-disk restoration.",
+    "Existing full-judging processes already loaded current modules; strict target replay compares regenerated message bytes with the retained original request before semantic judging and fails closed on a mismatch.",
+    "The dynamically read format-repair instruction comes from aiService.ts, which is outside the four hydrated files and retains its frozen identity."
+  ],
+  "required_evidence": [
+    "Hydrate all four files and verify hashes before either new process starts; verify exact current hashes again after restoration.",
+    "Wait for a first saved record from BOTH control processes before restoring; a first record from only one does not establish the other's module state.",
+    "Check all183 saved initial requests per control, not only the first record, against the frozen historical composition and selected policy.",
+    "Record process IDs, launch/hydration/restoration times, source/snapshot identities and the operational concurrency declaration.",
+    "A restarted control must use historical sources again and satisfy the same snapshot fingerprint; it must not resume under restored current source silently.",
+    "Preserve any replay mismatch, incomplete generation or other failure. Do not regenerate completed evidence to hide source drift."
+  ],
+  "concurrency": "Two semantic processes capped12 each plus two one-worker target controls yield an intended maximum26 concurrent provider requests. This is a declared operational factor; provider request parameters remain unchanged.",
+  "scope": "Diagnostic controls only. Restored conflicting guidance and legacy microexamples are disclosed experimental factors, not approved clean-candidate content."
+},
+  "recommendation": "Proceed as the next controlled diagnostic if selected. It has a concrete causal question left unresolved by the prior bundled edits. A favorable result would identify a base-policy interaction to investigate, not authorize shipping inherited contradictory guidance."
+},
+  "actions": {
+    "provider_calls": 0,
+    "prompt_or_harness_edits": 0,
+    "sealed_holdout_access": false,
+    "artifact_only": true
+  }
+}

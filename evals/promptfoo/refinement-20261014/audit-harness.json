@@ -1,0 +1,452 @@
+{
+  "intent": "Preserve the independent audit of measurement and production-parity changes before the candidate prompt is authored.",
+  "audit_version": 1,
+  "auditor": "/root/refinement_audit",
+  "author_independence": "The auditor did not implement the harness or author the candidate prompt.",
+  "captured_at_utc": "2026-10-15T02:14:22.315Z",
+  "git_revision": "8dc7271c7a9a670e2e6315e4fcdfb3f39eea1768",
+  "scope": "Uncommitted gate, runner, product adapter, regression-test, and preparation changes.",
+  "candidate_prompt_hash": null,
+  "harness_snapshot_sha256": "e2eac597b6a2a1300b821ef7a3ca1d51f0a14f6ef430993c6df09f6fc8e67e8e",
+  "harness_snapshot_hash_method": "SHA-256 of JSON.stringify(inspected_artifact_hashes), with the insertion order below.",
+  "verdict": "clear",
+  "verdict_scope": "The current verdict combines latest_reaudit with room_prompt_regeneration_audit; the latter supersedes hashes for its changed files. Initial and intermediate reviews retain their findings and verdicts as historical evidence.",
+  "initial_verdict": "changes_required",
+  "inspected_artifact_hashes": {
+    ".agents/skills/ai-behavior-design-eval/SKILL.md": "d075d1a8a150648ff1b466a5c59fe298e0310b1d8c00b1fcde9a87c6e891f187",
+    ".agents/skills/ai-behavior-design-eval/references/evaluation-contract.md": "46bfae31d466eb8c3b87ee41741cfb5e75b59d01cd4b2a5f105a707961b6d17a",
+    ".agents/skills/ai-behavior-design-eval/references/promptfoo.md": "10798f032420c1f81d253d71b22cb80e69933f3607c044fb02e9e0837746eb6a",
+    "tutor-system/scripts/check-promptfoo-quality-gate.js": "f707bd3c050319d0564140b366deb77d6fb203c8d5f1fc313384f83ecb025fe2",
+    "tutor-system/scripts/run-promptfoo-eval.js": "20a12ae55b80418104b1d010169e4825574c24a465daa6db74f44784b629197f",
+    "evals/promptfoo/v1/transfer/quality-gate.js": "4b793d611c49fa2aa4df8f4f04204fe25b5b7c2c3ac70cc9ee50b0bad482fef6",
+    "evals/promptfoo/v1/runner.js": "c423ff3cd0a98ef82264358be074bff104118b771f9765984e145109a6f68cdb",
+    "evals/promptfoo/v1/product-adapter.js": "d6874a5e0e2ccf3dd69e172a957e21c0c1f7c1a3b9e15331e5658f6e47e6e77e",
+    "evals/promptfoo/v1/product-adapter.test.js": "185dcb20ab53ba355c6029923e8539413ed2a2c5c0117574c9341452d54c8464",
+    "evals/promptfoo/v1/transfer/partition-gate.test.js": "2d0fad620c124964e5fd4b24373db935beb4b7f6abd1d4d27ce3e9d1aad103bb",
+    "tutor-system/scripts/check-promptfoo-quality-gate.test.js": "56dadf3f2cdadcf6c07d923e799dd2a2a9e86b781554e266d8702a54327c80db",
+    "tutor-system/src/services/__tests__/promptfooQualityGate.test.ts": "23cb8611e1acd5fa7d10a42d29c3fd7c2bd2f4826c9fa718492870e5d0ab0eda",
+    "evals/promptfoo/refinement-20261014/README.md": "8205d5770093d4ca88540bb550556ca44b2b40307930f2ef69c582c6c5bddd22",
+    "evals/promptfoo/refinement-20261014/settings.json": "74b1a688381575dbe7c6f85f64fc192db6058b31a75051552410dd1940f0bb0f",
+    "tutor-system/src/services/aiService.ts": "e821ed5b9f111ee8e684c9ea012e84aa9c74115069d3a10416fbc4097a3c60d6",
+    "tutor-system/src/services/ecologicalTutorCall.ts": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+    "tutor-system/src/services/tutorDecisionContract.ts": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66",
+    "evals/promptfoo/v1/evaluator.js": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8",
+    "evals/promptfoo/v1/transfer/comparison.js": "141116d3a55c9b32ae4be2d1b5f0722a25cca6d1938fb93ad45530237620fd95",
+    "evals/promptfoo/v1/transfer/fixtures/gate-fixtures.js": "eaeaeb58fcadf29beba4f6b30a512cca5f05a0f79e7e945da7548d1ebd8e07a5",
+    "evals/promptfoo/v1/transfer/manifest.json": "5f8f16f5798b5722e567a038dfdf1e2e5fe643aa6372ec23a7f028024fb2a471"
+  },
+  "verification": [
+    {
+      "command": "rtk proxy node --test tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js",
+      "exit_code": 0,
+      "result": { "tests": 15, "passed": 15, "failed": 0 }
+    },
+    {
+      "kind": "controlled in-memory production call, mocked fetch",
+      "inputs": "Production-shaped messages, target_format_attempts=2, target_max_tokens=100; first response is malformed JSON object, second is a valid v2 decision.",
+      "result": { "calls": 2, "error": null, "initial_preserved": true, "production_repair_appended": true }
+    },
+    {
+      "kind": "controlled in-memory production call, mocked fetch",
+      "inputs": "Both responses contain parseable v2 JSON but finish_reason=length.",
+      "result": { "calls": 2, "error": "Production tutor decision remained invalid after two attempts.", "initial_preserved": true, "production_repair_appended": true }
+    }
+  ],
+  "findings": [
+    {
+      "id": "H01",
+      "severity": "high",
+      "location": "tutor-system/scripts/check-promptfoo-quality-gate.js:178",
+      "problem": "The unresolved-error gate only inspects row and grading-container errors. An individual assertion can contain a judge error and still be treated as an ordinary tolerated behavior failure.",
+      "controlled_input": "Construct 10 cases per required suite with every metric passing. Set the first turn_rhythm component to {pass:false,score:0,error:'Judge provider timeout',status:'error'} without a row-level error.",
+      "observed": { "passed": true, "failures": [], "turn_rhythm": { "passed": 19, "total": 20, "passRate": 0.95 } },
+      "required_resolution": "Reject unresolved component errors/missing results independently of behavior thresholds; add a direct regression case.",
+      "status": "open_at_captured_hash"
+    },
+    {
+      "id": "H02",
+      "severity": "high",
+      "location": "evals/promptfoo/v1/transfer/quality-gate.js:157",
+      "problem": "Baseline comparison silently skips absent baseline generations or metric results. A supplied empty baseline satisfies non-regression with zero comparable evidence.",
+      "controlled_input": "Use the partition test's 10-case complete passing candidate and identical manifest, but set baseline.report.evidence=[]. The test mocks only the frozen production-source identity.",
+      "observed": { "verdict": "accepted", "issues": [], "comparable_counts": [0, 0, 0, 0, 0, 0] },
+      "required_resolution": "Validate complete baseline case/assertion/repetition coverage and unresolved errors before comparison. Missing or duplicate baseline rows must block acceptance.",
+      "status": "open_at_captured_hash"
+    },
+    {
+      "id": "H03",
+      "severity": "high",
+      "location": "evals/promptfoo/v1/transfer/quality-gate.js:76",
+      "problem": "Expected rows derive solely from the supplied cases array. The gate does not reconcile that array with frozen manifest partition membership, so a reduced set can remove cases and a whole partition without a coverage issue.",
+      "controlled_input": "From the partition test's synthetic 10-case set, omit case-0 (the only boundary case) from both supplied cases and evidence while retaining the manifest.",
+      "observed": { "verdict": "accepted", "issues": [], "metric_partitions": ["overall", "ordinary", "overall", "ordinary"] },
+      "required_resolution": "Reconcile the supplied case IDs and versions with frozen manifest membership before deriving expected metric rows. Assert missing partitions and empty supplied case sets cannot be accepted.",
+      "status": "open_at_captured_hash"
+    },
+    {
+      "id": "H04",
+      "severity": "medium",
+      "location": "evals/promptfoo/v1/runner.js:103",
+      "problem": "A replay that already contains format_repair returns before production invalidity is converted to a target error. Parseable text with finish_reason=length can therefore reach semantic scoring despite failing the production validity predicate.",
+      "controlled_input": {
+        "messages": [{ "role": "system", "content": "policy" }, { "role": "user", "content": "context" }],
+        "replay_text": "{\"reason\":\"Evidence.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"explanation\"},\"response\":\"Safe answer.\"}",
+        "finish_reason": "length",
+        "format_repair": "Present with initial.request.messages matching the supplied messages",
+        "settings": { "target_format_attempts": 2, "transport_attempts": 3 }
+      },
+      "observed": { "new_calls": 0, "production_valid": false, "has_error": false },
+      "required_resolution": "Apply production failure normalization before every terminal return, including replay and exhausted-repair paths; preserve raw text in evidence while preventing it from becoming a displayed or scored successful output.",
+      "status": "open_at_captured_hash"
+    },
+    {
+      "id": "H05",
+      "severity": "medium",
+      "location": "tutor-system/scripts/check-promptfoo-quality-gate.js:104",
+      "problem": "Coverage reconciliation blocks missing assertions, but summaries still derive total and passRate from returned components. Removing a failed component inflates the displayed fraction instead of retaining its frozen expected denominator and a missing count.",
+      "evidence": "summarizeReport increments total only inside getComponents(result).forEach; evaluateGate calls summarizeReport before reconcileCoverage and never reconciles summary denominators.",
+      "required_resolution": "Build metric and partition summaries from the frozen manifest, recording expected, passed, missing, and error counts independently from returned components.",
+      "status": "open_at_captured_hash"
+    }
+  ],
+  "positive_findings": [
+    "The product adapter calls the actual ecological message builder and actual production decision parser.",
+    "The candidate intervention replaces the appended policy while preserving each saved room prompt and target user context.",
+    "Fresh format repair reproduces the actual production instruction and appends it to the last user turn; malformed initial responses remain recorded.",
+    "The configured target model settings and three repetitions are explicit changed factors, rather than being silently inherited from historical 8000-token runs.",
+    "The transfer changes evaluate pair outcomes in each repetition and compute threshold and non-regression rows per supplied partition.",
+    "The runner snapshot includes cases, settings, policy, rubrics, relevant production sources, evaluator sources, and the runner hash. Baseline and candidate must still use the same frozen settings and complete case set."
+  ],
+  "final_reaudit": {
+    "captured_at_utc": "2026-10-15T02:20:49.782Z",
+    "auditor": "/root/refinement_audit",
+    "verdict": "clear",
+    "harness_snapshot_sha256": "6aab168ff96afc52221d1d139010f562bf70d087bd229fd2dda93360489e5043",
+    "hash_method": "SHA-256 of JSON.stringify(inspected_artifact_hashes), in the insertion order below.",
+    "inspected_artifact_hashes": {
+      ".agents/skills/ai-behavior-design-eval/SKILL.md": "d075d1a8a150648ff1b466a5c59fe298e0310b1d8c00b1fcde9a87c6e891f187",
+      ".agents/skills/ai-behavior-design-eval/references/evaluation-contract.md": "46bfae31d466eb8c3b87ee41741cfb5e75b59d01cd4b2a5f105a707961b6d17a",
+      ".agents/skills/ai-behavior-design-eval/references/promptfoo.md": "10798f032420c1f81d253d71b22cb80e69933f3607c044fb02e9e0837746eb6a",
+      "tutor-system/scripts/check-promptfoo-quality-gate.js": "e3aab1306c9be0be7993fc637a6447538538ac1cef8294e996f9e3e4f1a844ce",
+      "tutor-system/scripts/run-promptfoo-eval.js": "20a12ae55b80418104b1d010169e4825574c24a465daa6db74f44784b629197f",
+      "evals/promptfoo/v1/transfer/quality-gate.js": "31d44826b5ff735dc49b07992ea1ec0ed18b16581d5f4e9455e88347bd5c48e9",
+      "evals/promptfoo/v1/runner.js": "c19e10e320499a50429f533ecf7cd07c2dbd3fc6726b05bc22414c85000db67a",
+      "evals/promptfoo/v1/product-adapter.js": "d6874a5e0e2ccf3dd69e172a957e21c0c1f7c1a3b9e15331e5658f6e47e6e77e",
+      "evals/promptfoo/v1/product-adapter.test.js": "d5ddc51dc9e22fe356b4e628691f9b80ba9769d907fd3464cb9eedcaa789193d",
+      "evals/promptfoo/v1/transfer/partition-gate.test.js": "795f71e5b5000e73970cd26b524faf3e26a6038ceffa10d83722befae5a112de",
+      "tutor-system/scripts/check-promptfoo-quality-gate.test.js": "e11c12a5e6fbd44108f09d96f5b451fc49d555187ce720fc900db3a3cd1c32bc",
+      "tutor-system/src/services/__tests__/promptfooQualityGate.test.ts": "23cb8611e1acd5fa7d10a42d29c3fd7c2bd2f4826c9fa718492870e5d0ab0eda",
+      "evals/promptfoo/refinement-20261014/README.md": "8205d5770093d4ca88540bb550556ca44b2b40307930f2ef69c582c6c5bddd22",
+      "evals/promptfoo/refinement-20261014/settings.json": "74b1a688381575dbe7c6f85f64fc192db6058b31a75051552410dd1940f0bb0f",
+      "tutor-system/src/services/aiService.ts": "e821ed5b9f111ee8e684c9ea012e84aa9c74115069d3a10416fbc4097a3c60d6",
+      "tutor-system/src/services/ecologicalTutorCall.ts": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+      "tutor-system/src/services/tutorDecisionContract.ts": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66",
+      "evals/promptfoo/v1/evaluator.js": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8",
+      "evals/promptfoo/v1/transfer/comparison.js": "141116d3a55c9b32ae4be2d1b5f0722a25cca6d1938fb93ad45530237620fd95",
+      "evals/promptfoo/v1/transfer/fixtures/gate-fixtures.js": "eaeaeb58fcadf29beba4f6b30a512cca5f05a0f79e7e945da7548d1ebd8e07a5",
+      "evals/promptfoo/v1/transfer/manifest.json": "5f8f16f5798b5722e567a038dfdf1e2e5fe643aa6372ec23a7f028024fb2a471",
+      "evals/promptfoo/v1/classification.js": "25065231f38e8ef32e61d2cb7551ce0ac882f48ce9c1b1d9d1fa74bbe60786db",
+      "evals/promptfoo/v1/classification.test.js": "2ecddcc32abe31eb6818d20f49a843dfb97e4abf4accd30d86215480d0e3bbc3",
+      "evals/promptfoo/v1/transfer/manifest-schema.js": "72e7d12f9ada2b139788f0863b281cf62ba7a33eb68c07dbf039e631c97ba329"
+    },
+    "dispositions": [
+      { "finding": "H01", "status": "resolved", "evidence": "Component errors and missing/malformed judgments now independently block legacy acceptance; focused regression tests pass." },
+      { "finding": "H02", "status": "resolved", "evidence": "Missing baseline generations/results, duplicate/unexpected generations/results, method drift, and case-version drift now block comparison. The duplicate malformed baseline probe returns incomplete with duplicate_baseline_result, duplicate_baseline_generation, and baseline_case_version_drift." },
+      { "finding": "H03", "status": "resolved", "evidence": "The transfer gate validates cases against manifest partition IDs/versions. Missing-partition regression passes." },
+      { "finding": "H04", "status": "resolved", "evidence": "The repaired truncated replay now has production_valid=false, target.error present, and zero new calls. Both independent probe and regression test pass." },
+      { "finding": "H05", "status": "resolved", "evidence": "Legacy summaries project frozen expected assertions before counting. Removing one of four direct-correction components yields total=4, missing=1, passRate=0.75." }
+    ],
+    "additional_classification_review": {
+      "result": "clear within the classification scorecard scope",
+      "checked": "Fixed repetition membership, majority voting, tie abstention, abstention denominators, permitted-label sets, singleton-only F1 disclosure, exact strict 90% boundary, generation coverage, and same-case/settings comparison identity.",
+      "controlled_results": [
+        { "input": "One of 10 cases wrong in all three repetitions", "ensemble_accuracy": 0.9, "verdict": "failed" },
+        { "input": "One of 11 cases wrong in all three repetitions", "ensemble_accuracy": 0.9090909090909091, "verdict": "accepted" },
+        { "input": "Remove case-9 repetition 2 from a 10-case complete report", "verdict": "incomplete", "issues": [{ "type": "missing_generation", "key": "case-9:2" }] },
+        { "input": "Repeat case-0 repetition 0 in a complete report", "verdict": "incomplete", "issues": [{ "type": "duplicate_generation", "key": "case-0:0" }] },
+        { "input": "Compare two all-passing reports with the same counts but different case IDs", "verdict": "incomplete", "issues": [{ "type": "incomparable_baseline" }] }
+      ],
+      "scope_note": "Classification acceptance is one gate. Complete semantic metrics, validity/judge errors, constitutional hard constraints, exact transitions, semantic pairs, independent eligible holdouts, and overall refinement integrity remain required in the full evaluation."
+    },
+    "tests": {
+      "command": "rtk proxy node --test tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js evals/promptfoo/v1/classification.test.js",
+      "exit_code": 0,
+      "total": 23,
+      "passed": 23,
+      "failed": 0
+    },
+    "baseline_reuse_assessment": "The already-running baseline uses runner c423ff3cd0a98ef82264358be074bff104118b771f9765984e145109a6f68cdb. Its only subsequent runner change adds failure normalization before an existing terminal return. For fresh target calls with target_format_attempts=2, target.format_repair is absent at that branch, so this added condition is false; fresh initial/repair request content and evaluation remain identical. The original snapshot must be preserved, and comparable baseline/candidate reports must be scored with the same final gate versions."
+  },
+  "main_gate_review": {
+    "auditor": "/root/refinement_audit",
+    "verdict": "changes_required",
+    "inspected_artifact_hashes": {
+      "evals/promptfoo/v1/gate.js": "6329e7e69967e2362ceaac57db3266baf4429ffdf0161617a75e15c53ebfa3bb",
+      "evals/promptfoo/v1/harness.test.js": "af82f560a791270e0eb6355cbce7963751392a5c800db7f9007165e21af663c5"
+    },
+    "fixture": "Ten synthetic cases based on harness.test.js fixture(): frozen cases, settings.repetitions=1, empty rubrics, the checked-in v1 metric manifest, one deterministic mode_selection result per case. Each record.input equals its frozen case. Every result initially has status=pass, pass=true, score=1.",
+    "tests": {
+      "command": "rtk proxy node --test evals/promptfoo/v1/harness.test.js",
+      "exit_code": 0,
+      "passed": 19,
+      "failed": 0
+    },
+    "findings": [
+      {
+        "id": "M01",
+        "severity": "high",
+        "problem": "Baseline records are indexed without validating duplicates, input identity, result methods/statuses, or unresolved errors.",
+        "probes": [
+          { "mutation": "Set the first baseline assertion to status=error, pass=false, score=0", "verdict": "accepted", "issues": [], "baseline_passed": 9 },
+          { "mutation": "Append a duplicate baseline generation", "verdict": "accepted", "issues": [] },
+          { "mutation": "Change baseline.results[0].input.input to a different student message while retaining baselineSnapshot", "verdict": "accepted", "issues": [] }
+        ],
+        "resolution": "Validate baseline evidence against its frozen snapshot before comparing; ordinary baseline behavior failures remain permissible, but malformed, missing, duplicated, and errored evidence must block.",
+        "status": "open_at_captured_hash"
+      },
+      {
+        "id": "M02",
+        "severity": "high",
+        "problem": "Scoring partitions come from mutable record.source_type, record.role, and record.partitions instead of the frozen case. Those fields are outside the record.input hash check.",
+        "probe": "Use ten instruction_selection cases: case-0 is ecological with imminent_protection and fails; the other nine are synthetic_development and pass. Change only case-0's result-level source_type to synthetic_development and partitions to [].",
+        "observed": { "before": "failed", "after": "accepted", "issues": [], "remaining_partitions": ["overall", "source:synthetic_development"] },
+        "resolution": "Derive row membership and hard partitions from frozen cases, and reject drift in redundant evidence metadata.",
+        "status": "open_at_captured_hash"
+      },
+      {
+        "id": "M03",
+        "severity": "high",
+        "problem": "Target errors and malformed typed results can be tolerated as ordinary behavior outcomes.",
+        "probes": [
+          { "mutation": "Set candidate.results[0].target.error='Provider failed' with passing checks", "verdict": "accepted", "issues": [] },
+          { "mutation": "Set one result to status=unknown, pass=false, score=0", "verdict": "accepted", "issues": [], "passed": 9, "applicable": 10 },
+          { "mutation": "Set the first deterministic result method to invented_method", "verdict": "accepted", "issues": [] },
+          { "mutation": "Set the first result pass to the string 'false'", "verdict": "accepted", "issues": [], "passed": 10, "applicable": 10 }
+        ],
+        "resolution": "Validate target errors independently and enforce registered methods, supported statuses, boolean pass values, and consistent binary scores before aggregation.",
+        "status": "open_at_captured_hash"
+      },
+      {
+        "id": "M04",
+        "severity": "high",
+        "problem": "Empty or unusable frozen evaluation definitions can produce an accepted verdict without any measurements.",
+        "probes": [
+          { "mutation": "snapshot.cases=[] and report.results=[]", "verdict": "accepted", "generation_count": 0, "issues": [] },
+          { "mutation": "snapshot.settings.repetitions=0 and report.results=[]", "verdict": "accepted", "generation_count": 0, "issues": [] },
+          { "mutation": "Keep ten cases but empty every expected.checks and every record.results", "verdict": "accepted", "metrics": [], "issues": [] }
+        ],
+        "resolution": "Validate nonempty cases/assertions, positive integral repetitions, unique case/check identities, and registered metric definitions before scoring.",
+        "status": "open_at_captured_hash"
+      },
+      {
+        "id": "M05",
+        "severity": "medium",
+        "problem": "Missing generations or assertions are blocking, but they disappear from metric denominators because the gate continues before incrementing frozen row counts.",
+        "probe": "Remove the tenth generation from a complete ten-case report.",
+        "observed": { "verdict": "failed", "issues": [{ "type": "missing_generation", "key": "case-9:0" }], "overall": { "expected": 9, "applicable": 9, "passed": 9, "verdict": "pass" } },
+        "resolution": "Build expected rows from all frozen case/assertion/repetition memberships before looking up results; track missing/error evidence in the reported denominator.",
+        "status": "open_at_captured_hash"
+      }
+    ]
+  },
+  "operational_continuation_review": {
+    "inspected_artifact_hashes": {
+      "evals/promptfoo/v1/runner.js": "94de091840177e8701bf6db5b7ff3dded1e712519f73718f3096de9ec2bbf2c9",
+      "evals/promptfoo/refinement-20261014/settings.json": "a7a38928a876ebd1d4efb784cbb29bd053479e69d103b1b9f26cd46f7a9097b4",
+      "evals/promptfoo/v1/classification.js": "25065231f38e8ef32e61d2cb7551ce0ac882f48ce9c1b1d9d1fa74bbe60786db",
+      "evals/promptfoo/v1/classification.test.js": "4a09058570ec321139a6e121340eadf526dbc98e2d7c4220328a6c91613ba7b3"
+    },
+    "reported_action": "The author terminated the first baseline after 12 completed generation records, preserved those records, and started baseline-r2 at concurrency/workers 12 with replay_available=true. Prompt authorship remains pending full baseline completion.",
+    "source_assessment": "replay_available selects by file existence, without inspecting outcome. Existing completed records enter the same request/settings-checked replay path; only missing files trigger new target generation. The settings record declares the concurrency change, and the runner snapshot now includes its own source content.",
+    "evidence_limitation": "The runner writes a generation record only after all associated semantic judgments finish. Terminating an active process can therefore lose already-received target or judge responses for unfinished records. The author was asked to record this limitation; this audit has verified the replay algorithm, not the completeness of all in-flight responses from the terminated process."
+  },
+  "room_prompt_regeneration_audit": {
+    "captured_at_utc": "2026-10-15T02:51:19.103Z",
+    "inspected_artifact_hashes": {
+      "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb",
+      "evals/promptfoo/v1/runner.js": "01286ae45d37fd72f51a8ae953165b337b181b43f628687853e86caaa573d646",
+      "evals/promptfoo/v1/product-adapter.test.js": "f328be44b2a89ee22e45426342dfd7073f9c41a2e0c4e7e009b063a7004c513d",
+      "evals/promptfoo/v1/harness.test.js": "eb5a80f9c89ff1d727dfb11e58ab78cb7775109a570b2b5e2220b56b0af412b9",
+      "evals/promptfoo/refinement-20261014/README.md": "4a3fc2a3e8b8f9dc82ebacd142132ecde758e5e4903b545e558323a37e218f3b",
+      "evals/promptfoo/refinement-20261014/settings.json": "a7a38928a876ebd1d4efb784cbb29bd053479e69d103b1b9f26cd46f7a9097b4",
+      "tutor-system/src/services/systemPrompts.ts": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0",
+      "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77",
+      "tutor-system/src/services/prompts/basePrompt.ts": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88",
+      "tutor-system/src/services/prompts/checklistPromptGenerator.ts": "7f94fe2249ac8dbc308e17283cb90283827d37ecea687589c5308d40cdd6904e",
+      "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b",
+      "tutor-system/src/services/prompts/dynamicParameterLoader.ts": "5e060df227497b64deb6e28e2c0ee9d18349d99693143c9d455d307a4b8cde0c",
+      "tutor-system/src/services/prompts/index.ts": "a4946ebe9461def95c0fba3316073e93f518114455793856bd4565da285e0c1f",
+      "tutor-system/src/services/prompts/multiAgentTutorPrompt.ts": "3930f8eb21ca0307a6275fc276a2e7211985f479a9d7adcf99238a36311000a9",
+      "tutor-system/src/services/prompts/parameterConfig.ts": "74f081f84d74f43a2a3ebe0bce6d5fdda8c0adc7a482a9881cc8df4b778f2505",
+      "tutor-system/src/services/prompts/pedagogy/frameworks/learningStages.ts": "7fc72f904c46b0a7b3e75654111e07904a5d98369a06a75f8a765fd2b8bb6d46",
+      "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227",
+      "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1",
+      "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts": "4a126f3f2e56c27c1d9bf9229518740d6277344052874247417c745f78be2890",
+      "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts": "3416473893908b7df049d11a7d571db01a933b6405fec3d7732738390e8bd2cc",
+      "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9",
+      "tutor-system/src/services/prompts/presets.ts": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682",
+      "tutor-system/src/services/prompts/responsePolicy.ts": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2",
+      "tutor-system/src/services/prompts/transferV3Prompt.ts": "8ef48229e15f343930e844d816495f9ce3748b2acbce11f58564f55e89f9d9f5",
+      "tutor-system/src/services/prompts/types.ts": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2"
+    },
+    "artifact_set_sha256": "3b40f5387d5837a9f59343ade021097796eeb793ce55f62cf6baf86efcb45de8",
+    "auditor": "/root/refinement_audit",
+    "verdict": "clear",
+    "hash_method": "SHA-256 of JSON.stringify(inspected_artifact_hashes), in the recorded insertion order.",
+    "scope": "Pre-candidate harness support for an explicit regenerate_room_prompt flag and complete source snapshots of the room-prompt generator.",
+    "declared_factor": "The candidate may remove the four base dialogue demonstrations through the room generator while replacing the appended tutor policy. The baseline continues using its preserved room prompt. Case inputs, expected assertions, room role/inventory, and model request settings remain frozen.",
+    "evidence": {
+      "development_cases": {
+        "file": "evals/promptfoo/v1/development-with-guard-scenario-rich.json",
+        "sha256": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517"
+      },
+      "pre_edit_equivalence": {
+        "cases": 61,
+        "full_request_equivalence": 61,
+        "unchanged_user_turn": 61,
+        "runner_flag_forwarding_matches_adapter": 61
+      },
+      "tests": {
+        "command": "rtk proxy node --test evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/harness.test.js",
+        "exit_code": 0,
+        "total": 30,
+        "passed": 30,
+        "failed": 0
+      },
+      "snapshot_review": "regenerate_room_prompt is recorded in the run identity/fingerprint and forwarded through run, evaluate, and messagesFor to the product adapter. Regenerated runs snapshot the systemPrompts.ts bridge plus recursive prompt TypeScript sources. The existing request-equality check still prevents replay of a target generated under different messages.",
+      "baseline_behavior": "With the flag absent or false, a supplied baseline_system remains the room prompt. With the flag true, the adapter calls the product generator with the same casual_peer preset, peer/adult role mapping, and inventory, then changes only the appended policy when one is supplied."
+    },
+    "findings": [
+      {
+        "id": "R01",
+        "severity": "medium",
+        "problem": "The first regeneration snapshot implementation omitted the directly imported systemPrompts.ts bridge.",
+        "status": "resolved",
+        "resolution": "The bridge is now explicitly included before recursive prompt sources; its recorded hash matches the current pure re-export source."
+      }
+    ],
+    "sealed_execution_metadata_review": {
+      "file": "evals/promptfoo/refinement-20261014/holdouts/execution-provenance.json",
+      "sha256": "1fc0886e4e97853c3d5fd32697260e4eace0f3411f2fccaf3aca6dde1820bec1",
+      "case_count": 16,
+      "changed_case_fields": [
+        "baseline_system"
+      ],
+      "model_calls": 0,
+      "independently_verified_dependency_hashes": {
+        "verified_source_dependencies": 12,
+        "adapter_hash_verified": true,
+        "mismatches": []
+      },
+      "packager_validation": {
+        "status": "passed",
+        "case_count": 16,
+        "only_added_field": "baseline_system",
+        "unchanged_case_deep_equality": true,
+        "original_case_hash_preserved": true,
+        "original_provenance_hash_preserved": true,
+        "generator_source_stable_during_derivation": true,
+        "predicted_execution_hash_confirmed": true
+      },
+      "scope": "The reviewer verified packaging metadata and current source dependency hashes. Deep equality of sealed execution cases is the independent packager's recorded validation."
+    },
+    "next_candidate_audit": "The exact candidate identity must cover the edited generator sources, appended policy, and regeneration flag. Baseline/candidate settings, cases, assertions, and required partitions stay comparable. The eventual audit must assess both prompt edits together; this pre-edit harness audit does not accept an unauthored candidate."
+  },
+  "follow_up": "The required independent candidate prompt audit will be recorded separately once its exact hash and development evidence exist.",
+  "latest_reaudit": {
+    "captured_at_utc": "2026-10-15T02:31:25.894Z",
+    "inspected_artifact_hashes": {
+      ".agents/skills/ai-behavior-design-eval/SKILL.md": "d075d1a8a150648ff1b466a5c59fe298e0310b1d8c00b1fcde9a87c6e891f187",
+      ".agents/skills/ai-behavior-design-eval/references/evaluation-contract.md": "46bfae31d466eb8c3b87ee41741cfb5e75b59d01cd4b2a5f105a707961b6d17a",
+      ".agents/skills/ai-behavior-design-eval/references/promptfoo.md": "10798f032420c1f81d253d71b22cb80e69933f3607c044fb02e9e0837746eb6a",
+      "tutor-system/scripts/check-promptfoo-quality-gate.js": "e3aab1306c9be0be7993fc637a6447538538ac1cef8294e996f9e3e4f1a844ce",
+      "tutor-system/scripts/run-promptfoo-eval.js": "8780f64491ec9544e7312509effa7860cbec5eda3f3e8cd80cdb9f22f0bf462e",
+      "evals/promptfoo/v1/transfer/quality-gate.js": "31d44826b5ff735dc49b07992ea1ec0ed18b16581d5f4e9455e88347bd5c48e9",
+      "evals/promptfoo/v1/runner.js": "94de091840177e8701bf6db5b7ff3dded1e712519f73718f3096de9ec2bbf2c9",
+      "evals/promptfoo/v1/product-adapter.js": "d6874a5e0e2ccf3dd69e172a957e21c0c1f7c1a3b9e15331e5658f6e47e6e77e",
+      "evals/promptfoo/v1/product-adapter.test.js": "d5ddc51dc9e22fe356b4e628691f9b80ba9769d907fd3464cb9eedcaa789193d",
+      "evals/promptfoo/v1/transfer/partition-gate.test.js": "795f71e5b5000e73970cd26b524faf3e26a6038ceffa10d83722befae5a112de",
+      "tutor-system/scripts/check-promptfoo-quality-gate.test.js": "e11c12a5e6fbd44108f09d96f5b451fc49d555187ce720fc900db3a3cd1c32bc",
+      "tutor-system/src/services/__tests__/promptfooQualityGate.test.ts": "23cb8611e1acd5fa7d10a42d29c3fd7c2bd2f4826c9fa718492870e5d0ab0eda",
+      "evals/promptfoo/refinement-20261014/README.md": "042284a042fdb01825b6e904c5f62a8ca744718dcc16bb65153d43746d0186b2",
+      "evals/promptfoo/refinement-20261014/settings.json": "a7a38928a876ebd1d4efb784cbb29bd053479e69d103b1b9f26cd46f7a9097b4",
+      "tutor-system/src/services/aiService.ts": "e821ed5b9f111ee8e684c9ea012e84aa9c74115069d3a10416fbc4097a3c60d6",
+      "tutor-system/src/services/ecologicalTutorCall.ts": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+      "tutor-system/src/services/tutorDecisionContract.ts": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66",
+      "evals/promptfoo/v1/evaluator.js": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8",
+      "evals/promptfoo/v1/transfer/comparison.js": "141116d3a55c9b32ae4be2d1b5f0722a25cca6d1938fb93ad45530237620fd95",
+      "evals/promptfoo/v1/transfer/fixtures/gate-fixtures.js": "eaeaeb58fcadf29beba4f6b30a512cca5f05a0f79e7e945da7548d1ebd8e07a5",
+      "evals/promptfoo/v1/transfer/manifest.json": "5f8f16f5798b5722e567a038dfdf1e2e5fe643aa6372ec23a7f028024fb2a471",
+      "evals/promptfoo/v1/classification.js": "0d60a4a76e329c03d796cacdf0bb603c94990ba4f4cb3ab193263e44852c3441",
+      "evals/promptfoo/v1/classification.test.js": "085f75aaf6d9a119cd5da93f09e1f5a5bd0a146c841ae23c36c473fd9c95f796",
+      "evals/promptfoo/v1/transfer/manifest-schema.js": "72e7d12f9ada2b139788f0863b281cf62ba7a33eb68c07dbf039e631c97ba329",
+      "evals/promptfoo/v1/gate.js": "5aa5a7b30f7771edec2668c25cc84ba5fa9e54dc919df653d09251fbd2286d34",
+      "evals/promptfoo/v1/harness.test.js": "eb5a80f9c89ff1d727dfb11e58ab78cb7775109a570b2b5e2220b56b0af412b9"
+    },
+    "harness_snapshot_sha256": "bcde085ecb7f08348639ba1e42e28d2901a7a3c2c3d93cf3d4a1d6a8d0edb8c2",
+    "auditor": "/root/refinement_audit",
+    "verdict": "clear",
+    "hash_method": "SHA-256 of JSON.stringify(inspected_artifact_hashes), in the recorded insertion order.",
+    "scope": "Expanded harness audit including the main v1 gate, legacy CLI gate, transfer partition gate, production adapter/repair/replay, classification statistics and comparison, and operational continuation metadata.",
+    "finding_dispositions": [
+      {
+        "ids": [
+          "H01",
+          "H02",
+          "H03",
+          "H04",
+          "H05"
+        ],
+        "status": "resolved",
+        "evidence": "Prior final_reaudit evidence remains applicable except for the declared operational continuation and new current hashes."
+      },
+      {
+        "id": "M01",
+        "status": "resolved",
+        "evidence": "Independent baseline-error, duplicate-generation, and changed-input probes now each return failed with the corresponding typed issue. Required knowledge cannot be excluded by a baseline not_applicable result; the new probe returns required_content_excluded with side=baseline."
+      },
+      {
+        "id": "M02",
+        "status": "resolved",
+        "evidence": "The forged source/partition probe remains failed, reports changed_partition_metadata, and retains overall, source:ecological, imminent_protection, and source:synthetic_development rows from the frozen cases."
+      },
+      {
+        "id": "M03",
+        "status": "resolved",
+        "evidence": "Target errors, unknown statuses, forged methods, and non-boolean pass values all block acceptance independently of aggregate accuracy."
+      },
+      {
+        "id": "M04",
+        "status": "resolved",
+        "evidence": "Empty cases, zero repetitions, and empty expected assertions now return failed. Regression tests cover duplicate execution definitions."
+      },
+      {
+        "id": "M05",
+        "status": "resolved",
+        "evidence": "Removing one of ten generations keeps expected=10, applicable=10, passed=9 and errors=1. Missing first assertions keep the frozen declared method; the checked knowledge row reports method=llm_rubric, expected=1, errors=1."
+      }
+    ],
+    "verification": {
+      "command": "rtk proxy node --test evals/promptfoo/v1/harness.test.js evals/promptfoo/v1/classification.test.js tutor-system/scripts/check-promptfoo-quality-gate.test.js evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/transfer/partition-gate.test.js",
+      "exit_code": 0,
+      "total": 51,
+      "passed": 51,
+      "failed": 0,
+      "independent_probes": "All acceptance counterexamples recorded under main_gate_review were rerun. Every corrupt-evidence and empty-definition probe now fails. The separate baseline required-content exclusion probe and missing-first-method check also pass their expected blocking/reporting outcomes. Changing only the declared hard-partition manifest now makes classification comparison incomplete with incomparable_baseline."
+    },
+    "operational_notes": [
+      "The reviewed runner includes its source in snapshots and supports explicit replay_available, selecting completed files by existence and applying the unchanged prompt/provider-setting checks. Concurrency 12 and replay of every completed record are recorded in the revised settings.",
+      "The README now explicitly records the first partial run's 12 completed generations and potentially lost responses for unfinished jobs. This is a retained run-provenance limitation, not proof that a complete accepted baseline already exists.",
+      "The legacy CLI latest.json now copies the report carrying its frozen evaluation_manifest, while its immutable raw report remains separately available."
+    ],
+    "acceptance_boundary": "This is a clear audit of the inspected harness changes, not a benchmark or release acceptance. The full comparable baseline/candidate evidence, semantic calibration, candidate refinement audit, eligible independent holdout evidence, hard constraints, and product release evidence remain separately required.",
+    "classification_follow_up": "Classification now reads hard partitions from its frozen metric manifest, rejects empty classification coverage, and includes that manifest in baseline comparison identity. The declared mode-transition regression and manifest-drift regression pass.",
+    "production_parity_scope": "The current README correctly identifies temperature 0.3 and 100 tokens as the service missing-field fallback, rather than ordinary enabled-room defaults of 0.7 and a 120-token cap. The evaluator has three transport attempts and saved contexts omit live checklist-progress/assessment-feedback enrichment. This audit establishes the inspected builder/parser/format-repair behavior; it does not establish full default-room, deployed-provider, or transport parity.",
+    "previous_checkpoint": {
+      "captured_at_utc": "2026-10-15T02:28:20.229Z",
+      "harness_snapshot_sha256": "ae8df4cb40c182405b9271fc0edff0f5212405539f9deb836a229d4985ca3f40",
+      "tests_passed": 50,
+      "classification_sha256": "25065231f38e8ef32e61d2cb7551ce0ac882f48ce9c1b1d9d1fa74bbe60786db"
+    }
+  }
+}

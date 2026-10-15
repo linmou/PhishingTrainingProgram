@@ -1,0 +1,56 @@
+{
+  "intent": "Independently audit candidate12's unrelated-domain participation demonstrations and exact composed requests before execution.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_declared_preflight",
+  "verdict_scope": "Final verdict follows exact-hash reaudit below; initial candidate and balance finding remain preserved as history.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-12.md",
+    "sha256": "a84f3e9216ef51488621fdcfc33eaf8ee73b6dbb0bfede08d77da94aab5918d9",
+    "reference_candidate11_sha256": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050",
+    "composed_request_set_sha256": "4739bbe5143c60de4464d58fd337f352fd01c8e499b6edb163e6b1aaa3fa12f5",
+    "digest_method": "SHA-256 of JSON.stringify of all61 messagesFor(case, product, exact policy, v2, true) arrays in frozen order."
+  },
+  "verification": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate11-thinking-preflight/snapshot.json and report.json",
+    "cases": 61,
+    "only_addition_to_candidate11": true,
+    "differences_beyond_policy_suffix": [],
+    "user_inputs_inventory_and_base_preserved": true,
+    "source_dependency_changes": [],
+    "complete_development_learner_strings_in_added_examples": [],
+    "provider_calls": 0
+  },
+  "legitimacy": "Representative unrelated-domain few-shot guidance is expressly permitted by the evaluation skill when grounded in requirements rather than copied test solutions. These four examples specify mode and observable justification only; no full tutor response, phishing fact, case ID, score workaround or expected-case lookup is added. The examples become training material and cannot serve as independent validation.",
+  "requirement_review": {
+    "workshop_labels": "Genuine clarification belongs in tutoring; explicitly accepting a safety warning while deliberately choosing the warned-against action meets knowing unsafe continuation for Guard. Both labels are individually defensible.",
+    "shape_labels": "Known Guard persists through a bare promise and exits on a substantive incorrect task attempt. These two examples directly preserve G01's correctness-independent recovery rule.",
+    "contract": "The appended demonstrations are clearly framed as unrelated examples, not current learner facts or full serialized tutor replies. The final v2 contract remains unchanged."
+  },
+  "finding": {
+    "id": "C12-01",
+    "classification": "imbalanced_demonstration_pair",
+    "source": "candidate-policy-12.md:67-69",
+    "finding": "The tutoring workshop example asks only a clarification; the Guard example alone explicitly proposes unsafe cleaning. Thus action presence and acknowledged defiance change together. The demonstrations leave an avoidable correlation between unsafe proposal and Guard, matching the known residual overreach this intervention intends to address.",
+    "required_refinement": "Make the first workshop learner a genuine mistaken unsafe proposal based on an incorrect belief, with tutoring and separate protection justified. Keep the same activity/action as the second example, whose decisive extra evidence is understood risk and deliberate continuation. This is a small representative-training refinement, not a change to G01 or benchmark cases."
+  },
+  "experimental_limits": [
+    "Missing demonstrations have not been established as the cause of the remaining classifier errors.",
+    "Examples are a new prompt-training factor. Frozen full development evaluation, exact audits and independent validation remain required; do not score the demonstration texts as unseen generalization.",
+    "Wait for the current isolated-mode03 condition to complete before execution as recorded by the parent. Preserve every subsequent candidate12 target and error."
+  ],
+  "reaudit": {
+    "verdict": "clear_for_declared_preflight",
+    "policy_sha256": "a154c1cf3b56f8a8fd3ec72e006dc44b9fe2030e7d50e5d4ce72a6c768d91ecc",
+    "composed_request_set_sha256": "f1d6e033c7295a60ca2948fc5f8552df7d4b26c0d7cf16a914aa79a26ed7c8a4",
+    "resolved": ["C12-01"],
+    "resolution": "Both workshop learners now propose unsafe cleaning. The tutoring example expresses a mistaken belief that switching off disconnects the machine; the Guard example explicitly accepts the remaining risk and deliberately continues. The label distinction rests on knowing defiance rather than presence of unsafe action. Protective teaching is separately required for the genuine mistaken attempt.",
+    "composition": "All61 product requests differ from candidate11 only by the added demonstration block. Removing that block restores candidate11 byte-for-byte. User contexts, roles, inventories, base source and all other policy bytes remain fixed.",
+    "training_material_status": "The four balanced demonstrations are representative requirement-grounded few-shot guidance. They are exposed training material, not independent test cases. No full learner-facing tutor replies, evaluation utterances, case IDs or fixture-specific answer lookup are added.",
+    "remaining_material_findings": [],
+    "settings_sha256": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca",
+    "continuation_record_sha256": "1694b29fbc839ec56fc74b97ec788cf9519169b41b3d20595a40dd2e216c35fd",
+    "execution_boundary": "Parent reports isolated-mode03 completed before candidate12 execution. Preflight must retain all61cases/183outputs, with semantic acceptance and independent validation separately required. This audit does not establish that examples cause a performance improvement."
+  },
+  "actions": { "source_edits_by_reviewer": false, "holdouts_inspected": false }
+}

@@ -1,0 +1,72 @@
+{
+  "intent": "Supersede the earlier thinking-transfer source selection with the user's requested existing nonthinking candidate02 configuration before renewed staging verification.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "verdict": "clear",
+  "verdict_scope": "Exact source/configuration integration; live staging and production acceptance remain separate.",
+  "supersedes": "audit-selected-release-integration-20261015.json only for the selected Transfer decoding configuration and its source/test identities. Earlier independent Tutor/downstream verification remains applicable while those sources remain unchanged.",
+  "authorization": "User directed disabling Transfer thinking first when its latency proved excessive. Parent selected the already evaluated candidate02 nonthinking configuration rather than creating new prompt content.",
+  "transfer": {
+    "snapshot": "output/transfer-analysis-current/full-candidate02-20261015/frozen.json",
+    "snapshot_sha256": "f6b2f658e0ad65752c56c6e8ed8b94b356bad7fcf88bcd7704fc0eebf9a209de",
+    "prompt_sha256": "9266debd11301743960684202116c9533cf57c0d9811b83d5ff2a89103b1c564",
+    "prompt_exact_match": true,
+    "settings": {
+      "model": "qwen3.5-flash",
+      "temperature": 0,
+      "max_tokens": 600,
+      "enable_thinking": false,
+      "response_format": {
+        "type": "json_object"
+      }
+    },
+    "source_comparison": "Compared with the previously inspected production assessment-api v10 entry, replacing only TRANSFER_ANALYSIS_SYSTEM_PROMPT reproduces current source except one extra blank line before analyzeMessage. Existing one-call-per-target transport, JSON parsing, truncation rejection, evidence/type/state filtering, aggregate application and assessment generation semantics are restored unchanged.",
+    "operational_retry_proposal": "Not adopted. fetchAnalysisResponse, analysisAbort and the added transport-retry test were removed. The prior latency/proposal audit remains historical evidence, not an active runtime design.",
+    "benchmark_status": "The saved nonthinking02 evaluation remains failed on required gates; selecting it does not alter historical judgments or acceptance."
+  },
+  "tutor": {
+    "policy": "candidate07 plus the authorized original generic Guard template",
+    "request_settings": {
+      "temperature": 0.3,
+      "max_tokens": 100,
+      "enable_thinking": false
+    },
+    "active_source_sha256": "2b41d22cf1a218a23f49ea7449be72b0910ee23d2d2ccdaef1e0dbfa3baafb18",
+    "ai_service_sha256": "c57294e1108d10f41aa5009bd96c2ef483df899df960a838187f436ca6b3d936",
+    "unchanged_since_prior_independent_integration_tests": true
+  },
+  "browser_evidence_capture": {
+    "source": "tutor-system/scripts/browser-e2e/workflows/transfer-status-events.js",
+    "change": "Records analysis requests and responses in finally and permits a declared browser wait via E2E_ANALYSIS_TIMEOUT_MS; default90000, validated range90000–600000. This does not alter provider parameters, target input, expected event or consumer validation.",
+    "owner_reported_tests": "20 browser runner tests pass.",
+    "scope": "Browser waiting longer does not extend the Edge function runtime or prove a failed provider operation succeeded."
+  },
+  "composition_followup": {
+    "verified_source": "getAIConfig calls getEffectiveSystemPrompt, which regenerates from available persisted prompt_config using the selected room generator. This is already covered by6 independently executed passing roomSourceOfTruth tests.",
+    "saved_request": "tmp/browser_demo_runs/staging-template-20261015133946-76ade6ff/tutor-provider.json",
+    "saved_request_sha256": "906a307928c07f550ec06205e0a62daf9a74f3e81a6c15703653a895aadd537b",
+    "observed_base_sha256": "ee5e65cf75e7a76a85a8277c7005a78b0d5587b01448621eb3a85978ccf22833",
+    "observation": "This saved request contains the historical generated base with four old dialogues, plus selected active policy and .3/100/false. It exactly matches baseline_system in43 frozen development cases.",
+    "owner_reported_root_cause": "Both staging and production click fixtures have null prompt_config. This metadata was reported by the release owner, not independently queried by this auditor.",
+    "required_interpretation": "Preserve the completed run as stored-base compatibility evidence. Verify regenerated selected-base composition in a provenance-backed configured fixture or an independent new room. Authored raw room prompts should not be overwritten by default inventory assumptions."
+  },
+  "verification": {
+    "source_hashes": {
+      "tutor-system/supabase/functions/assessment-api/index.ts": "a3ba0bc4df1080a954dff13421497ec60753d76893b15c60897c06c70ff31883",
+      "tutor-system/supabase/functions/assessment-api/index.test.ts": "6ce17356d444f6b98a9c8f4fe790ec028bd2781b2597faf3b21efecc1ed5a9ca",
+      "tutor-system/src/services/aiService.ts": "c57294e1108d10f41aa5009bd96c2ef483df899df960a838187f436ca6b3d936",
+      "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts": "2b41d22cf1a218a23f49ea7449be72b0910ee23d2d2ccdaef1e0dbfa3baafb18",
+      "tutor-system/scripts/browser-e2e/workflows/transfer-status-events.js": "559e1509f04360edcf797957c672aaf0787742472f6bf4e94a8a9657e25b2f67",
+      "tutor-system/scripts/browser-e2e.test.js": "33cee346c8df41eb4778590dd69960aa897e2cc5d3b33f871e4a8c4e8e6b0a5b"
+    },
+    "prompt_match": true,
+    "transport_helper_removed": true,
+    "transport_test_removed": true,
+    "prior_independent_checks": "7suites85tests for service/downstream consumers plus6roomSourceOfTruth tests passed before this Transfer decoding-only supersession; Tutor and downstream consumer sources remain unchanged.",
+    "owner_current_deno_status": "34-test rerun pending at audit creation; owner reports type checking has started successfully. Staging advance requires that rerun to pass.",
+    "release_status": "Renewed staging and exact-artifact production verification pending. Previous thinking-arm live results do not verify this nonthinking deployment."
+  },
+  "auditor_model_calls": 0,
+  "auditor_runtime_edits": 0,
+  "auditor_label_or_gate_edits": 0
+}

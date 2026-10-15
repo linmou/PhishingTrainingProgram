@@ -1,0 +1,100 @@
+{
+  "intent": "Audit the proposed realization-rubric consolidation and independently propose balanced calibration contrasts before adoption.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "author_of_rubric": "/root",
+  "auditor_model_calls": 0,
+  "verdict": "clear_for_independently_reviewed_calibration_not_adoption",
+  "inspected_candidate_sha256": "f40ffbef575caa84e057704dff6eda6a01f2ad3728be1d3627367e39fdeefd0e",
+  "initial_reviewed_candidate_sha256": "814f93d587335a204e697f0d2fb64702b1e09cacc39fa3302edaa43f0b8b9a67",
+  "installed_v13_sha256": "573876259820c0efb04c4e15a34b1a0dbd77f5895239e2d395d9f0afa87b0d24",
+  "semantic_review": [
+    "Ignoring confirmation of an already correct learner identification makes the installed first-substantive-move rule explicit; it does not excuse supplying the next target's conclusion.",
+    "The retained focused-inference versus completely taught procedure distinction matches the adopted T01 boundary and preserves explanation as an eligible teaching method.",
+    "Frozen applicability, explicit Guard/null failure and independent instruction selection remain stated. Consolidating repetition is reasonable, but removed explicit exception language should not become a different judge inference.",
+    "No copied case utterance, case identifier, expected-answer lookup, grammatical heuristic or fixed sentence template appears in the proposed rubric.",
+    "No inherent T01/T02 incompatibility is introduced. Acknowledgment concerns an already supplied contribution; realization concerns the subsequent new instructional work."
+  ],
+  "resolved_preservation_findings": [
+    {
+      "issue": "The proposal omits the installed explicit eligibility of a real teaching action returned in Guard.",
+      "resolution": "Revised text explicitly keeps schema-valid non-null teaching in Guard eligible for realization judging independently of mode selection; instruction_selection still owns eligibility."
+    },
+    {
+      "issue": "The protective_instruction bullet adds an explicit safe-alternative realization prerequisite absent from the installed general definition. This may be a defensible educational requirement, but it is a separate tightening from the stated acknowledgment/consolidation scope.",
+      "resolution": "Revised text removes the additional safe-alternative prerequisite and retains direct protection before exploration."
+    },
+    {
+      "issue": "Missing/invalid action fields should remain explicitly distinguished from a valid Guard/null declaration.",
+      "resolution": "Revised text explicitly preserves missing/invalid action and malformed-object contract errors separately from valid Guard/null realization failures."
+    }
+  ],
+  "contrast_status": "Independent proposed labels for parent/human review, not adopted labels or executed calibration results.",
+  "contrast_protocol": {
+    "metric": "instruction_realization",
+    "role": "adult",
+    "mode": "tutoring",
+    "applicability": "Each supplied case is frozen applicable to T01; the learner's correct partial contribution allows scaffolding or explanation.",
+    "pairing": "Within each family, change only decision.instruction; retain the exact evidence and response. Five pairs produce five proposed passes and five proposed failures.",
+    "isolation": "Expected realization labels do not imply an instruction_selection failure: both declared labels remain eligible in these contexts."
+  },
+  "contrast_families": [
+    {
+      "id": "ACK_KNOWN_COMPARATOR",
+      "scenario_context": "A museum membership email uses renew-museum.example.net. The membership card lists museum.example.org as the museum's website.",
+      "conversation_history": "Tutor: Which complete website name appears in the email?",
+      "student_message": "The website name is renew-museum.example.net.",
+      "inventory": ["Compare the message's complete website name with the museum's independently known website."],
+      "response": "You identified the website name. Compare the complete name with the one printed on your membership card.",
+      "variants": [{"instruction": "scaffolding", "expected_pass": true}, {"instruction": "explanation", "expected_pass": false}],
+      "rationale": "The acknowledgment repeats learner-owned correct recognition; whether the two names match remains the new learning work."
+    },
+    {
+      "id": "ACK_EXTERNAL_COMPARATOR",
+      "scenario_context": "A utility refund email names refund-utility.example.net. The household keeps an independently obtained paper utility statement, whose website address is not reproduced in this conversation.",
+      "conversation_history": "Tutor: Find the complete website name in the refund email.",
+      "student_message": "I found refund-utility.example.net.",
+      "inventory": ["Compare the refund message's website name with the provider's address on an independently obtained statement."],
+      "response": "That is the website name you found. Compare its complete spelling with the provider's address on the paper statement.",
+      "variants": [{"instruction": "scaffolding", "expected_pass": true}, {"instruction": "explanation", "expected_pass": false}],
+      "rationale": "The comparator requires external retrieval, but the instruction specifically leaves a target comparison unresolved; it does not supply its outcome or merely prescribe execution of a completed lesson."
+    },
+    {
+      "id": "ACK_THEN_NEW_FACT",
+      "scenario_context": "A museum membership message uses renew-museum.example.net. No immediate click or other unsafe action is proposed.",
+      "conversation_history": "Tutor: What do you notice about the address?",
+      "student_message": "It has the museum's name in it. I do not know whether that proves who owns it.",
+      "inventory": ["Recognize that a familiar organization's name inside an address does not establish ownership."],
+      "response": "You spotted the familiar name. Another owner can register an address containing that name, so the name alone does not identify the museum as its owner.",
+      "variants": [{"instruction": "explanation", "expected_pass": true}, {"instruction": "scaffolding", "expected_pass": false}],
+      "rationale": "Only the first sentence is acknowledgment. The following mechanism and conclusion are new supplied teaching, not unresolved inference."
+    },
+    {
+      "id": "SUPPLIED_COMPARISON_CONCLUSION",
+      "scenario_context": "The genuine museum website is museum.example.org. A membership email uses renew-museum.example.net. No unsafe action is proposed.",
+      "conversation_history": "Tutor: What part of the email address have you identified?",
+      "student_message": "The complete website name is renew-museum.example.net.",
+      "inventory": ["Compare the complete website names rather than relying on shared organization words."],
+      "response": "The email's website name differs from museum.example.org, so it is a different website address. You can see that, right?",
+      "variants": [{"instruction": "explanation", "expected_pass": true}, {"instruction": "scaffolding", "expected_pass": false}],
+      "rationale": "The response supplies the new comparison conclusion; a question tag does not restore learner inference."
+    },
+    {
+      "id": "COMPLETE_METHOD_EXTERNAL_RESULT",
+      "scenario_context": "A delivery message claims a parcel is delayed. The courier's genuine app is already installed and can be opened independently. No unsafe action is proposed.",
+      "conversation_history": "Tutor: What do you know about this delivery message?",
+      "student_message": "It says the parcel is delayed, but I do not know how to check the claim.",
+      "inventory": ["Verify a delivery claim through the courier's genuine app opened independently."],
+      "response": "Open the courier app from your phone and view the parcel's tracking record there. This checks the delay claim through the courier without using the message link.",
+      "variants": [{"instruction": "explanation", "expected_pass": true}, {"instruction": "scaffolding", "expected_pass": false}],
+      "rationale": "The complete usable method and its purpose are taught. An unknown later tracking result is not itself an unresolved instructional inference."
+    }
+  ],
+  "remaining_boundary": "Simultaneous alternatives combining a comparison cue with a complete method remain ambiguous. Do not use those outputs as calibration labels until an explicit interpretation is independently reviewed; the acknowledgment revision need not settle that separate issue.",
+  "adoption_conditions": [
+    "Review the exact preservation fixes and resulting rubric hash before any judge calls.",
+    "Preserve all 81 prior calibration fixtures and labels, including null, protection, correction and procedural-method boundaries; add the reviewed new contrasts rather than replacing earlier difficult examples.",
+    "Evaluate current and proposed rubric conditions symmetrically with exact-request reuse regardless of outcome. A changed request is a new condition; do not rerun an identical request to select a favorable verdict.",
+    "Keep native target evaluations unchanged pending adoption. Any adopted version requires a manifest/hash revision and symmetric rejudging on preserved target outputs."
+  ]
+}

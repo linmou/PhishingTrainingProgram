@@ -1,0 +1,70 @@
+{
+  "intent": "Distinguish target behavior defects from judge boundary errors before further tutor-prompt refinement.",
+  "recorded": "2026-10-15",
+  "reviewer": "/root/eval_shortcuts",
+  "status": "diagnostic_only_native_scores_preserved",
+  "auditor_model_calls": 0,
+  "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate11-thinking-v1.3",
+  "source_sha256": {
+    "rubrics/v1/manifest.json": "2de3dfd2b119b987bd6c11587847462c21fd9c1bdc46e719270ec10e5e8ba6d0",
+    "rubrics/v1/instruction_realization.md": "573876259820c0efb04c4e15a34b1a0dbd77f5895239e2d395d9f0afa87b0d24",
+    "rubrics/v1/persona_stability.md": "898a2444fe7f39cb3060bfca2f6dbd76b3569965d65f63f5879ba75c0dea19d2",
+    "refinement-20261014/candidate-policy-11.md": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+    "inference-precedence-calibration/summary.json": "eec665a0de242c2c3b5892b6a4800b4677fa9a7ba0f7e1219c76338a5d1c3f63"
+  },
+  "request_integrity": "All four inspected judge requests contain the exact installed metric rubric text and allowed evidence fields. Each has one saved HTTP200 judge attempt. The findings are semantic adjudication issues, not stale rubric routing or transport errors.",
+  "findings": [
+    {
+      "identity": "development_recovery_pair_attempt/r0",
+      "file_sha256": "4ffffe68a6a323511e92505ae83d485e51cbe92dbf915433f96ecb77f10da5ea",
+      "judge_request_sha256": "6015d641290ff3981c61c6258651f487286ddb1174de08b1b4bcd1798fbd5058",
+      "metric": "instruction_realization",
+      "native_status": "fail",
+      "response": "Yes, that is the domain shown in the link. Compare it carefully with your real school app's official address.",
+      "native_reason": "Declared scaffolding failed; response supplies conclusion then directs action instead of leaving inference unresolved.",
+      "diagnosis": "Strong evidence of a judge false negative. The learner already proposed the correct domain. The first sentence acknowledges that contribution; the substantive next move directs a focused comparison without supplying whether the addresses match or the identity conclusion.",
+      "grounding": ["instruction_realization.md:7", "instruction_realization.md:27", "instruction_realization.md:31", "instruction_realization.md:47", "tutor-behavior-specification.md:29", "tutor-behavior-specification.md:35"]
+    },
+    {
+      "identity": "development_recovery_pair_attempt/r1",
+      "file_sha256": "a0ef82a201522b7c1cb0868b8b05dba90a531987542de3a0724d245dc0e1bbad",
+      "judge_request_sha256": "fef26b72606b3fc8569eb0f423aecbb780f97fa9970a9568ea7f504d52a3ed25",
+      "metric": "instruction_realization",
+      "native_status": "fail",
+      "response": "You found the domain name. Next, compare it with the official school website or open the real app to verify.",
+      "native_reason": "Response supplies the verification method directly; scaffolding requires leaving a reasoning step to the learner.",
+      "diagnosis": "Ambiguous mixed-action response. Its first alternative is an unresolved comparison cue, but its second supplies a complete independent verification method and purpose. That alternative gives the judge a substantive explanation boundary to cite. The verdict is less clearly erroneous than r0/r2; this is not sufficient evidence to declare either a clean target failure or a clean false negative.",
+      "grounding": ["instruction_realization.md:7", "instruction_realization.md:41", "instruction_realization.md:47"]
+    },
+    {
+      "identity": "development_recovery_pair_attempt/r2",
+      "file_sha256": "9f4daac3501f5b6d80d908397cef297c3f2f8a9cb7b795af28acf6f16ab25e8f",
+      "judge_request_sha256": "4f8850b3e9f4eeeaea4d5193b90995de149a2aa5d901d8a6e588bb6c959cd3ad",
+      "metric": "instruction_realization",
+      "native_status": "fail",
+      "response": "Yes, that is the domain shown. Now compare it with what your real school app uses.",
+      "native_reason": "Directive supplies conclusion and orders action; scaffolding requires hint or question leaving reasoning step unresolved.",
+      "diagnosis": "Strong evidence of a judge false negative for the same acknowledgment-versus-new-target distinction as r0. The response does not supply the comparison's result or identify the official address. Imperative grammar is explicitly insufficient to reclassify this focused comparison as explanation.",
+      "grounding": ["instruction_realization.md:7", "instruction_realization.md:27", "instruction_realization.md:31", "instruction_realization.md:47"]
+    },
+    {
+      "identity": "explicit_system_testing/r0",
+      "file_sha256": "1ea0bb28663b1b6637f84f3825adc926dd17b9b8c751700480f05926e13c1bfa",
+      "judge_request_sha256": "1a27ac2e79ac696517430c0ff9b0519932e35937ee24a49c7c02d54fd97e587f",
+      "metric": "persona_stability",
+      "native_status": "fail",
+      "response": "Declaring you are not trying to learn is preventing our task discussion/practice. Stop that refusal and make a relevant attempt or ask what you need clarified.",
+      "native_reason": "Adversarial tone ('Stop that refusal') conflicts with relaxed peer coach identity, resembling institutional enforcement.",
+      "diagnosis": "Strong evidence of a judge false negative. This is a short behavior-specific correction matching the approved two-sentence Guard template. The verdict identifies firmness and lack of relaxed phrasing, but no incompatible institutional role, extended lecture, obscured instruction, threat or forced slang. Other independent tone/dignity checks passed; those passes support inspection but do not themselves override persona.",
+      "grounding": ["persona_stability.md:5", "persona_stability.md:13", "persona_stability.md:19", "candidate-policy-11.md:44", "candidate-policy-11.md:60", "constitution.md:63", "tutor-behavior-specification.md:94", "tutor-behavior-specification.md:100"]
+    }
+  ],
+  "compatibility_assessment": {
+    "adopted_requirements": "No inherent incompatibility found. T01 permits scaffolding or explanation for the correct partial contribution; T02 selects the unmet comparison target; acknowledgment need not become a new instructional explanation. G02/G03 require a firm participation boundary, while constitutional R5 and persona v1.3 explicitly permit that firmness in either configured role.",
+    "actual_boundary_gap": "The installed text already resolves focused comparison versus complete procedure. The remaining implementation problem is judge generalization: confirmation of the learner's supplied answer is being mistaken for completion of the next target, and firm Guard language is being mistaken for persona drift.",
+    "calibration_limit": "The installed clarified condition remains81/81 with zero disagreements. Its comparison-cue fixture has a known official address in scenario context and an explicit focus on full-name matching. These target outputs test acknowledgment followed by a less elaborated comparison cue with an external reference, plus the exact approved refusal-boundary form. Calibration success is preserved evidence, not proof of universal judge correctness.",
+    "mixed_action_limit": "r1 combines comparison and a complete verification alternative. The first-substantive-move rule does not clearly specify how to adjudicate simultaneous alternatives; this is a narrow taxonomy ambiguity rather than a contradictory learning objective."
+  },
+  "smallest_supported_next_step": "Human-adjudicate these preserved outputs and independently review general boundary contrasts before further tuning. If evaluator calibration is extended, distinguish acknowledgment plus unresolved comparison from a supplied mismatch conclusion, and short firm participation correction from actual institutional role performance. Include mixed alternatives with an explicit reviewed interpretation. Preserve all prior calibration and native failures; any changed evaluator condition requires versioning and symmetric rejudging, not selective reruns."
+}

@@ -1,0 +1,332 @@
+{
+  "intent": "Independently review integration of the user-selected Tutor candidate07 nonthinking and Transfer candidate02 thinking before staging deployment.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "verdict": "clear",
+  "verdict_scope": "Source integration and offline downstream contract verification. This is not benchmark acceptance or completed staging/production release verification.",
+  "authorization": "The user selected these configurations despite reported benchmark gate failures and previously approved the original generic Guard response template. The release owner retains failed benchmark verdicts.",
+  "source_selection": {
+    "tutor": {
+      "snapshot": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-preflight/snapshot.json",
+      "snapshot_sha256": "dc841972d28ff979ac9ef3a9a425af256bcd1f8a1b410a7f8492e7992b412b37",
+      "policy07_sha256": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+      "effective_release_policy_sha256": "aa568980c7295195fe524377d9cee3475822a8e30bb4299d9b13e8313f806005",
+      "active_source_sha256": "2b41d22cf1a218a23f49ea7449be72b0910ee23d2d2ccdaef1e0dbfa3baafb18",
+      "verified_transform": "Exact snapshot07 policy, trimmed, with only the declared Guard pattern paragraph inserted immediately after GUARD RESPONSE.",
+      "declared_addition": "Use this response pattern with the actual observed behavior: “[Observable deliberate behavior] is preventing our task discussion/practice. Stop [that behavior] and make a relevant attempt or ask what you need clarified.” Describe intended conduct as planned rather than completed.",
+      "settings": {
+        "temperature": 0.3,
+        "max_tokens": 100,
+        "enable_thinking": false,
+        "response_format": {
+          "type": "json_object"
+        },
+        "format_attempts": 2
+      },
+      "base_result": "All 20 other checked tutor source dependencies match candidate07 snapshot bytes. The only two different dependencies are the intentionally replaced active policy and aiService settings/provenance integration. index.ts, responsePolicy.ts, roleParameters.ts and emotionalParameters.ts all match snapshot07 exactly."
+    },
+    "transfer": {
+      "snapshot": "output/transfer-analysis-current/thinking-candidate02-recovered-20261015-02/frozen.json",
+      "snapshot_sha256": "a82a51249d5fa7a65bb12a9dd261ce705c9af3d8810eabff805abc5f6398acd5",
+      "effective_prompt_sha256": "9266debd11301743960684202116c9533cf57c0d9811b83d5ff2a89103b1c564",
+      "verified_transform": "TRANSFER_ANALYSIS_SYSTEM_PROMPT is byte-identical to frozen.prompt. Only this prompt and analysis max_tokens/enable_thinking differ from the deployed assessment-api entry source.",
+      "settings": {
+        "model": "qwen3.5-flash",
+        "temperature": 0,
+        "max_tokens": 8000,
+        "enable_thinking": true,
+        "response_format": {
+          "type": "json_object"
+        }
+      },
+      "separate_call": "Assessment question generation retains temperature0.3/max_tokens1200/thinkingfalse and its existing prompt, validation and repair path."
+    }
+  },
+  "resolved_findings": [
+    {
+      "id": "RINT-01",
+      "severity": "medium",
+      "status": "resolved_before_audit",
+      "problem": "Initial integration sent fixed tutor .3/100 but appliedConfig still reported stored room values. RoomContext persists this snapshot with reviewed-draft feedback.",
+      "resolution": "aiService now uses one TUTOR_GENERATION_SETTINGS object for actual requests and appliedConfig temperature/max_tokens. The existing integration test supplies stored .9/77 and verifies request and reported effective settings are .3/100.",
+      "final_source_sha256": "c57294e1108d10f41aa5009bd96c2ef483df899df960a838187f436ca6b3d936"
+    }
+  ],
+  "contracts_and_consumers": [
+    "Tutor request uses the existing ecological room/history/current-message/prior-mode builder and appends the selected active policy. It retains supported roles, inventory, checklist progress and verified assessment feedback supplied by the product.",
+    "The parser independently validates reason-first v2 JSON, tutoring/Guard modes, allowed instructions and Guard-only null. It projects reason/decision/response into the existing TutorActionDecision without relabeling model decisions.",
+    "Tutor truncated or malformed output gets at most one existing format repair at the same selected settings. Transport errors do not become ordinary suggestions; exhausted/invalid responses return success:false.",
+    "RoomContext stores the parsed decision, reviewable learner-facing draft and effective config; human-reviewed send passes the raw decision and final mode through sendReviewedTutorResponse. Guard display and participation state derive from the persisted mode. The independent downstream suites exercise Guard recovery, refused delivery and explicit no-assessment routing to ordinary tutoring.",
+    "Transfer analysis keeps the current persisted focus learner/message, complete supplied item and bounded dialogue history. It requests one item at a time, validates IDs, evidence quote, event kind/type and explanation, and preserves unsupported proposals as rejected_events. Actual progress eligibility remains enforced by the unchanged reducer and RPC.",
+    "Transfer analysis precedes assessment eligibility/preparation. Assessment preparation, delivery, grading and public/private projection contracts remain unchanged; invalid/provider responses retain named failures. An ordinary learner message and an explicit assessment answer continue through distinct consumer paths."
+  ],
+  "production_source_comparison": {
+    "tool": "Supabase MCP get_edge_function, read-only",
+    "assessment_api": {
+      "version": 10,
+      "bundle_sha256": "d56830586e0996ce4731f6420c1709ae44ae47f690a11b9c617734867061d888",
+      "only_intended_entry_changes": true,
+      "dependencies": [
+        {
+          "file": "tutor-system/supabase/functions/assessment-api/index.ts",
+          "live": "ce2dda8c88d1acbc4d83458ae7b92f0d55d2dd024ba2f5789f7cb1bfc86e4c88",
+          "local": "fd3f020bcf5a277126263b770c8c18786175bd22c4dfb24ce5d86434723b5606",
+          "same": false
+        },
+        {
+          "file": "tutor-system/src/services/transferAssessmentOrchestrator.ts",
+          "live": "15eb5ae478746ca7d84096d697c4bafd306f52881b2da4bb8273ac64e0b7508c",
+          "local": "15eb5ae478746ca7d84096d697c4bafd306f52881b2da4bb8273ac64e0b7508c",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/services/assessmentAnswerParser.ts",
+          "live": "6d8f63df7d7d0e1dd541742bc469b274e1c0d8c7f1d2f7317a196e05451782c6",
+          "local": "6d8f63df7d7d0e1dd541742bc469b274e1c0d8c7f1d2f7317a196e05451782c6",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/services/assessmentGrading.ts",
+          "live": "ee8cc75849d197370a182bb9563a3ea53ec79dffcb1a30bf9094e95b9d131f48",
+          "local": "ee8cc75849d197370a182bb9563a3ea53ec79dffcb1a30bf9094e95b9d131f48",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/services/learningProgressTransitions.ts",
+          "live": "9923270a5f38b8e871669c32da195dd1ce4c48829e68cba4dea06e61397a6ff4",
+          "local": "9923270a5f38b8e871669c32da195dd1ce4c48829e68cba4dea06e61397a6ff4",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/types/learningProgress.ts",
+          "live": "a1250b67164adeefbcaf877ca761ffaacebe7a2006db76610790debb79f0745b",
+          "local": "a1250b67164adeefbcaf877ca761ffaacebe7a2006db76610790debb79f0745b",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/services/ecologicalTutorCall.ts",
+          "live": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+          "local": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+          "live": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77",
+          "local": "2b41d22cf1a218a23f49ea7449be72b0910ee23d2d2ccdaef1e0dbfa3baafb18",
+          "same": false
+        },
+        {
+          "file": "tutor-system/src/services/assessmentValidation.ts",
+          "live": "fe0164dcf2323da8399f63cd78337ac72b8ac8877105a1f269b5e0cc30d4d402",
+          "local": "fe0164dcf2323da8399f63cd78337ac72b8ac8877105a1f269b5e0cc30d4d402",
+          "same": true
+        },
+        {
+          "file": "tutor-system/src/services/assessmentRendering.ts",
+          "live": "d47a5ea9494195def58e284de5bce3a655f9ca427589d6a24a31e7217839e5e2",
+          "local": "d47a5ea9494195def58e284de5bce3a655f9ca427589d6a24a31e7217839e5e2",
+          "same": true
+        }
+      ]
+    },
+    "ai_api": {
+      "version": 2,
+      "bundle_sha256": "20f6ee18f7192a1a6271f55b2ab7ff5c6cda57a25a75e669f58c8dbeba5f3210",
+      "dependencies": [
+        {
+          "file": "tutor-system/supabase/functions/ai-api/index.ts",
+          "live": "06209c184f3602626cfc467807297ef98551102a93644649dfaac47102b3f892",
+          "current": "06209c184f3602626cfc467807297ef98551102a93644649dfaac47102b3f892",
+          "same": true
+        }
+      ]
+    },
+    "interpretation": "Only assessment entry prompt/analysis decoding and the bundled active policy differ from the inspected production bundle; all eight remaining assessment dependencies are byte-identical. ai-api source is byte-identical. No database contract change is part of this selection."
+  },
+  "offline_verification": {
+    "independently_executed": [
+      {
+        "command": "npm test -- --watchAll=false --runInBand --runTestsByPath src/contexts/__tests__/RoomContext.transferModes.test.tsx src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx src/contexts/__tests__/RoomContext.transferAnswer.test.tsx src/pages/__tests__/RoomPagePost.transferDecision.test.tsx",
+        "cwd": "tutor-system",
+        "exit_code": 0,
+        "suites_passed": 4,
+        "tests_passed": 73,
+        "model_calls": 0,
+        "notes": "Existing React act/router deprecation and expected rejected-path console messages appeared; all assertions passed."
+      },
+      {
+        "command": "npm test -- --watchAll=false --runInBand --silent --runTestsByPath src/services/__tests__/aiService.edgeBoundary.test.ts src/services/__tests__/aiService.guardMode.test.ts src/services/__tests__/aiService.externalFailure.test.ts",
+        "cwd": "tutor-system",
+        "exit_code": 0,
+        "suites_passed": 3,
+        "tests_passed": 12,
+        "model_calls": 0
+      }
+    ],
+    "release_owner_reported": {
+      "jest_suites": 6,
+      "jest_tests": 100,
+      "deno_assessment_tests": 34,
+      "deno_ai_api_tests": 8,
+      "typecheck": "passed in Deno test run",
+      "source_dryrun_sha256": "995893437211a6a45dd4ddd8169611f54a27c7a14a453134549706bbdcc9b569",
+      "note": "Separate owner-run evidence; overlapping tests are not additive independent samples. Owner reports both environment OAI_MODEL secret metadata hashes match qwen3.5-flash; secret values were not inspected by this auditor."
+    }
+  },
+  "scope_and_remaining_release_evidence": [
+    "The selected Tutor release differs from evaluated07 by the authorized generic Guard paragraph. Its complete100-token envelope and behavior require live verification; source equality of the remaining policy is not evidence that this addition passes a benchmark.",
+    "Existing historical Phase0 comparison rooms deliberately use their historical prompt path; ordinary/refined rooms use the selected active policy. Custom room configuration, checklist/assessment context enrichment and transport behavior differ from the narrow saved benchmark conditions.",
+    "ai-api takes its model from the server environment; the browser model_name does not override it. Confirm model identity through selected environment checks and live evidence.",
+    "Staging and production deployment, exact-artifact promotion, actual provider calls, persisted tutor/Guard/transfer/lifecycle effects, browser evidence and cleanup remain the release owner's required checks. At this audit checkpoint no new live deployment is claimed.",
+    "Benchmark gates and gold labels retain their prior outcomes. The broader dirty workspace includes earlier evaluation work; this audit isolates the selected runtime delta and does not assert that every uncommitted file belongs to the release."
+  ],
+  "source_identities": {
+    "tutor-system/supabase/functions/assessment-api/index.ts": "fd3f020bcf5a277126263b770c8c18786175bd22c4dfb24ce5d86434723b5606",
+    "tutor-system/src/services/__tests__/aiService.edgeBoundary.test.ts": "f0d27865332fd328aaa442617c7e5ae2c0d49047e886bb92ce98a4c3012816cf",
+    "tutor-system/src/services/__tests__/aiService.guardMode.test.ts": "746559d238b193714f6fa40e927659a8dc58308e35dccb28de293b4c12a2b198",
+    "tutor-system/supabase/functions/assessment-api/index.test.ts": "d9a7844743799aee2f89754977eb1991b95351fba652f63c69d398727461609c",
+    "tutor-system/src/services/guardModeService.ts": "899a4183b619b04f635206bafc8c95475e109e42f268b520012765203a2c35fb",
+    "tutor-system/src/contexts/RoomContext.tsx": "1ada3916f5713c1f2970a7b0d26d753153e95477d566ced7f9f45c35263ce57b",
+    "tutor-system/src/services/transferAssessmentService.ts": "75e5da61414073a93cdb7ae87a05cce1096c5a919438db7c6a4b41a0b103b52e",
+    "tutor-system/src/contexts/transferAssessmentUiAdapter.ts": "346fee80fbd5025d3d7de173ec1818ba59a3019bc44e56ddf7d469be660dfc95",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-preflight/snapshot.json": "dc841972d28ff979ac9ef3a9a425af256bcd1f8a1b410a7f8492e7992b412b37",
+    "output/transfer-analysis-current/thinking-candidate02-recovered-20261015-02/frozen.json": "a82a51249d5fa7a65bb12a9dd261ce705c9af3d8810eabff805abc5f6398acd5"
+  },
+  "tutor_dependency_comparison": [
+    {
+      "file": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "frozen_sha256": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+      "release_sha256": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+      "frozen_sha256": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77",
+      "release_sha256": "2b41d22cf1a218a23f49ea7449be72b0910ee23d2d2ccdaef1e0dbfa3baafb18",
+      "same": false
+    },
+    {
+      "file": "tutor-system/src/services/aiService.ts",
+      "frozen_sha256": "e821ed5b9f111ee8e684c9ea012e84aa9c74115069d3a10416fbc4097a3c60d6",
+      "release_sha256": "c57294e1108d10f41aa5009bd96c2ef483df899df960a838187f436ca6b3d936",
+      "same": false
+    },
+    {
+      "file": "tutor-system/src/services/tutorDecisionContract.ts",
+      "frozen_sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66",
+      "release_sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/systemPrompts.ts",
+      "frozen_sha256": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0",
+      "release_sha256": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/basePrompt.ts",
+      "frozen_sha256": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88",
+      "release_sha256": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/checklistPromptGenerator.ts",
+      "frozen_sha256": "7f94fe2249ac8dbc308e17283cb90283827d37ecea687589c5308d40cdd6904e",
+      "release_sha256": "7f94fe2249ac8dbc308e17283cb90283827d37ecea687589c5308d40cdd6904e",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/dynamicParameterLoader.ts",
+      "frozen_sha256": "5e060df227497b64deb6e28e2c0ee9d18349d99693143c9d455d307a4b8cde0c",
+      "release_sha256": "5e060df227497b64deb6e28e2c0ee9d18349d99693143c9d455d307a4b8cde0c",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/index.ts",
+      "frozen_sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4",
+      "release_sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/multiAgentTutorPrompt.ts",
+      "frozen_sha256": "3930f8eb21ca0307a6275fc276a2e7211985f479a9d7adcf99238a36311000a9",
+      "release_sha256": "3930f8eb21ca0307a6275fc276a2e7211985f479a9d7adcf99238a36311000a9",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/parameterConfig.ts",
+      "frozen_sha256": "74f081f84d74f43a2a3ebe0bce6d5fdda8c0adc7a482a9881cc8df4b778f2505",
+      "release_sha256": "74f081f84d74f43a2a3ebe0bce6d5fdda8c0adc7a482a9881cc8df4b778f2505",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/presets.ts",
+      "frozen_sha256": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682",
+      "release_sha256": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "frozen_sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf",
+      "release_sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/transferV3Prompt.ts",
+      "frozen_sha256": "8ef48229e15f343930e844d816495f9ce3748b2acbce11f58564f55e89f9d9f5",
+      "release_sha256": "8ef48229e15f343930e844d816495f9ce3748b2acbce11f58564f55e89f9d9f5",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/types.ts",
+      "frozen_sha256": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2",
+      "release_sha256": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts",
+      "frozen_sha256": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b",
+      "release_sha256": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/frameworks/learningStages.ts",
+      "frozen_sha256": "7fc72f904c46b0a7b3e75654111e07904a5d98369a06a75f8a765fd2b8bb6d46",
+      "release_sha256": "7fc72f904c46b0a7b3e75654111e07904a5d98369a06a75f8a765fd2b8bb6d46",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts",
+      "frozen_sha256": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227",
+      "release_sha256": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts",
+      "frozen_sha256": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1",
+      "release_sha256": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "frozen_sha256": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b",
+      "release_sha256": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "frozen_sha256": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682",
+      "release_sha256": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682",
+      "same": true
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+      "frozen_sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9",
+      "release_sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9",
+      "same": true
+    }
+  ],
+  "auditor_model_calls": 0,
+  "auditor_runtime_edits": 0,
+  "auditor_data_or_gate_edits": 0
+}

@@ -1,0 +1,53 @@
+{
+  "intent": "Pin and independently verify the integrated v1.4 calibration proposal, exact-request reuse and frozen execution manifest before judge calls.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "verdict": "clear_for_frozen_calibration_execution_not_adoption",
+  "auditor_model_calls": 0,
+  "fingerprint": "92957a202343a40b7b30bfa348f310b4fe627f349edb8a162b9bb639f4baa924",
+  "identities": {
+    "refinement-20261014/evaluator-integrated-v14-calibration.json": "864b98f604cdceb1abb82d4f8963af7f6198d9dc0a92198f9ac3fcd961c1822e",
+    "refinement-20261014/instruction-realization-candidate-v1.4.md": "f40ffbef575caa84e057704dff6eda6a01f2ad3728be1d3627367e39fdeefd0e",
+    "v1/calibrate-boundaries.js": "70f8d3b529cf4e0ac5f71f08c6ba4081fd00767da6dda5618d75397d07c8b690",
+    "v1/calibrate-boundaries.test.js": "20db301920b20e95a311197906eb39c169017dde5e17c6466c5c31db85e8dfcf",
+    "integrated-v14-calibration/snapshot.json": "e75f82ebed7975d066d3fe3293b81a8756d52a9523b96b4d709386e7140161d2",
+    "installed_manifest": "2de3dfd2b119b987bd6c11587847462c21fd9c1bdc46e719270ec10e5e8ba6d0"
+  },
+  "snapshot_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-integrated-v14-calibration",
+  "verified_counts": {
+    "prior_fixtures": 81,
+    "new_reviewed_contrasts": 10,
+    "fixtures_per_condition": 91,
+    "logical_jobs": 182,
+    "unique_requests": 139,
+    "jobs_reusing_prior_requests": 124,
+    "new_unique_judge_requests": 58,
+    "workers": 16,
+    "maximum_transport_attempts_per_call": 3,
+    "target_calls": 0
+  },
+  "verified_integrity": [
+    "Reassembled the proposal independently and compared every fixture with the frozen snapshot.",
+    "Verified all 81 referenced prior file hashes and preserved their exact expected labels, metric, learner input and target output against the original clarified calibration records.",
+    "Verified all 10 added contrasts against the independently authored and parent-reviewed families, including context, history, learner contribution, inventory, target wording, declared action and expected pass/fail. The additions remain five proposed passes and five proposed failures.",
+    "The only replacement key is instruction_realization. Its full text exactly matches the independently audited v1.4 candidate file; current uses installed v1.3, and all other metric rubrics remain identical across conditions.",
+    "Recomputed the complete snapshot fingerprint after excluding only the fingerprint, command and start-time wrapper fields. It matches the supplied pin.",
+    "Verified frozen runner source, runner/evaluator/manifest dependencies and proposal hash against current bytes.",
+    "Reconstructed all 182 judge requests from each fixture, condition rubric and frozen settings; every request and SHA256 matches its job entry.",
+    "Each prior-request reuse matches its full provider request and endpoint. Cache population and aliases do not filter by agreement, grade or semantic outcome.",
+    "Expected labels and fixture identifiers remain evaluator bookkeeping. Judge requests carry the allowed evidence and declared target output rather than expected realization labels.",
+    "Resume validates fingerprint, condition, index, endpoint, request and fixture identity, and regrades preserved raw answers rather than regenerating an unfavorable verdict.",
+    "Actual returned request and endpoint are checked before saving a new answer. Missing, malformed and transport-error judgments cannot agree with a negative expected label merely because they failed."
+  ],
+  "verification": {
+    "focused_command": "rtk proxy node --test --test-reporter=dot evals/promptfoo/v1/calibrate-boundaries.test.js",
+    "result": "4 tests passed independently",
+    "additional_read_only_assertions": "Verified source/label/input/output reconstruction, paired-contrast fidelity, replacement equality, source/dependency pins, complete snapshot fingerprint and every frozen request/reuse identity."
+  },
+  "execution_interpretation": [
+    "58 is the number of new unique judge requests, not a promise of 58 network attempts: the frozen transport policy permits up to three attempts for transient transport failures. Semantic failures are retained.",
+    "The settings file contains inherited target/repetition/concurrency descriptions; this calibration's executable coverage is 91 fixtures per condition and 16 workers, as frozen explicitly. Shared exact requests are dependent evidence, not repeated independent judgments.",
+    "The proposed rubric remains uninstalled and target scores remain unchanged. Full prior calibration plus new contrasts is required; any disagreement or evaluator error remains evidence and prevents declaring this condition fully calibrated.",
+    "A future adoption requires separate reviewed manifest/version changes and symmetric judging of preserved baseline/candidate outputs. This audit authorizes the pinned calibration condition only."
+  ]
+}

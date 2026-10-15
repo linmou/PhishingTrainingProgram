@@ -1,0 +1,34 @@
+{
+  "intent": "Diagnose the preserved installed-rubric procedural/scaffold false positive and propose a general boundary clarification without changing labels.",
+  "date": "2026-10-15",
+  "author": "/root/refinement_audit",
+  "status": "Proposed evaluator clarification; active rubric unedited by auditor; efficacy untested.",
+  "identities": {
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-installed-calibration/current-61.json": "4851ba7ef5605cc3146802eceabf0f845ea87d99a540473f3e2b11341ea5ca97",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-installed-calibration/clarified-61.json": "db99182169172af2813c68f16dd8dff9c6395e3f992a699d0c5157f7d7d7e87b",
+    "evals/promptfoo/refinement-20261014/evaluator-installed-boundary-calibration.json": "588c5fa423286b7f5b9bfdb60402ee6b71aeab9cf9f971d95ec3e9444e8bf9a5"
+  },
+  "installed_instruction_rubric_sha256": "d8ca885e016b93cae08edf01fc33a5d092d88b4238702ef347163bd47683ca3c",
+  "finding": {
+    "fixture_id": "IR-CUE-AS-EXPLANATION",
+    "expected_pass": false,
+    "actual_pass": true,
+    "verdict_reason": "Response teaches verification procedure, satisfying explanation rubric permitting procedural teaching.",
+    "observed_work": "The learner has identified the message's website name. The response cues comparison with the already supplied known address, leaving the match relation unresolved. It does not supply the comparison result or elaborate a separate method.",
+    "requirement_basis": "T01 distinguishes scaffolding from explanation and requires the declared first substantive teaching action to be realized. The adopted semantic action boundary explicitly treats focused comparison cues with unresolved inference as scaffolding. T02 governs target choice separately.",
+    "diagnosis": "The broad procedural-explanation permission is treated as sufficient despite the more specific focused-cue criterion. This is an overlap/precedence misapplication. The saved final verdict supports that diagnosis; hidden target reasoning is unnecessary.",
+    "retained_interpretation": "The negative label remains defensible. A new general specification choice is not required to preserve this already adopted distinction. Do not infer that all directions containing a comparison, or all procedures with an unknown outcome, must be scaffolding."
+  },
+  "proposed_replacement_for_general_procedural_boundary": "Judge the immediate learning work. A focused cue that leaves the targeted comparison or inference for the learner is scaffolding, even when phrased as a procedural step; this specific boundary takes precedence over the general permission for procedural explanation. Explanation supplies relevant content or a usable method and its purpose. Later execution of a fully supplied method to retrieve an external result does not by itself create the unresolved learning inference required for scaffolding. Imperative grammar or an unknown later check result alone does not decide the action.",
+  "retained_boundaries": [
+    "Keep direct protection first when it is the realized first move stopping unsafe conduct.",
+    "Keep explicit inference correction plus its required connected safe action distinct from explanation and protection.",
+    "Keep explanation that supplies the comparison result valid; keep that same complete answer invalid as scaffolding.",
+    "Keep both declarative and imperative complete method explanations valid and their false scaffolding labels invalid.",
+    "Keep focused declarative/imperative comparison cues valid as scaffolding and invalid as explanation in the reviewed contexts.",
+    "Preserve every81 expected label, input, output, applicability field and accuracy extension."
+  ],
+  "calibration_plan": "Declare a new evaluator-text revision; freeze exact installed bytes before calibration; reuse only complete identical requests and provider identity, irrespective of outcome. Retain original and installed failed conditions. Calibrate all81 existing fixtures, with unchanged other rubric requests shared and changed instruction requests newly judged where no exact evidence exists. Any later acceptance comparison must apply the adopted revision symmetrically to preserved baseline/candidate targets.",
+  "limits": "The proposal clarifies an existing semantic boundary but is not demonstrated to fix the judge. External versus in-context information is explanatory context, not a keyword or location-based classifier. Calibrated agreement would still not establish universal evaluator reliability.",
+  "auditor_model_calls": 0
+}

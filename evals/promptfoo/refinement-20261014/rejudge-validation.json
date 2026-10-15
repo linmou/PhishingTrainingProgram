@@ -1,0 +1,44 @@
+{
+  "intent": "Reconcile the evaluator revision while proving target responses and unaffected judgments were preserved.",
+  "recorded_date": "2026-10-15",
+  "version": "v1.1",
+  "method": "For every case/repetition, assert.deepEqual compares the complete target object to the original run and requires zero new_target_calls. For every unchanged semantic check, its full judge calls array must equal the original. Every instruction_realization judgment must have fresh evidence without reused_from. Original records are never overwritten.",
+  "baseline": {
+    "source": "../results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5",
+    "directory": "../results/qwen3.5-flash/shortcut-removal-20261015-baseline-v1.1",
+    "fingerprint": "b25c139708f531046b28a34fda88448e9dbfe9ecd0de95acb55bc450f373abd1",
+    "completed_at": "2026-10-15T05:12:09.920Z",
+    "targets_preserved": 183,
+    "unchanged_semantic_judgments_preserved": 1803,
+    "affected_judgments_recomputed": 90,
+    "provider_attempts": 91,
+    "unresolved_errors": 0,
+    "standalone_gate_issues": 13,
+    "classification_verdict": "failed"
+  },
+  "candidate01": {
+    "source": "../results/qwen3.5-flash/shortcut-removal-20261015-candidate01",
+    "directory": "../results/qwen3.5-flash/shortcut-removal-20261015-candidate01-v1.1",
+    "fingerprint": "a9621cb1d37ddd3558231802678974c5aac22cc0ba5889ef96299a7f24303a5a",
+    "completed_at": "2026-10-15T05:19:42.059Z",
+    "targets_preserved": 183,
+    "unchanged_semantic_judgments_preserved": 1803,
+    "affected_judgments_recomputed": 90,
+    "provider_attempts": 101,
+    "unresolved_errors": 0,
+    "standalone_gate_issues": 20,
+    "comparison_gate_issues": 42,
+    "classification_comparison_regressions": 21,
+    "classification_verdict": "failed"
+  },
+  "invariants": {
+    "all_target_objects_preserved": true,
+    "all_unchanged_judge_calls_preserved": true,
+    "all_affected_passes_and_failures_rejudged": true,
+    "case_labels_thresholds_and_applicability_unchanged": true,
+    "assertions_per_arm": 2706,
+    "new_target_calls": 0
+  },
+  "calibration_audit": "audit-instruction-adoption-20261015.json",
+  "limitation": "Passing calibration does not guarantee every live semantic judgment is correct. Reported disagreements remain failures in the frozen gate; no individual override is applied."
+}

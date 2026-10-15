@@ -1,0 +1,63 @@
+{
+  "intent": "Audit a lean candidate-variant diagnostic against product04, explicitly separating composition effects from validation and format-repair differences.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_bundled_diagnostic_with_declared_limits",
+  "configuration": {
+    "variant": "candidate",
+    "contract_version": "v2",
+    "regenerate_room_prompt": false,
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-04.md",
+    "policy_sha256": "8886a0c21912883a2b786182a8d7a7d47cde15093d9cae6cbd8b6627cf688116",
+    "settings": "evals/promptfoo/refinement-20261014/settings-r3.json",
+    "settings_sha256": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "target": "qwen3.5-flash; temperature0.3; thinking=false; max_tokens100; three repetitions; unchanged retry/concurrency settings"
+  },
+  "exact_composition_review": {
+    "cases": 61,
+    "lean_request_set_sha256": "c5c05aa12b7260a31233dd79eb829478878bad4186187c3afafc5d7c8c8b2f92",
+    "digest_method": "SHA-256 of JSON.stringify of all61 messagesFor(case, candidate, exact candidate04 policy, v2, false) arrays in frozen case order.",
+    "input_inventory_errors": [],
+    "preservation": "Every lean user JSON is exactly c.input, and every lean room JSON is exactly the same configured role plus full inventory. No evaluator labels/checks or expected behavior are included.",
+    "system_changes": "Replace generated base room guidance with short tutor identity and role/inventory JSON, retain candidate04 verbatim, and append runner contractV2. This removes role-style, communication/cognitive/emotional guidance, learning-process duplication, reading advice, teaching-method descriptions, generic detection/privacy/default-safe-action sections and closing room guidance. The generic contract is an additional instruction, not merely deleted text.",
+    "user_changes": "Lean serializes raw c.input after a combined introductory line. Product uses the ecological builder, normalizes null prior_mode to unknown and adds interaction_mode single_agent. After accounting for those two JSON differences, all61 input payloads agree. All scenario, history and latest learner text remain unchanged.",
+    "system_character_ranges": { "product04": [12521,13771], "lean": [7314,8558] }
+  },
+  "adapter_factors": [
+    {
+      "factor": "Format validity",
+      "evidence": "runner.js targetFormatValid uses metrics.contractValidityV2 for candidate, while product uses product-adapter.productionValid and parseTutorDecision.",
+      "difference": "Candidate metric accepts legacy reasoning/suggested_response extra fields and agent-tagged replies that the production parser rejects. Candidate generation also does not reject parseable output solely because finish_reason is length."
+    },
+    {
+      "factor": "Repair request composition",
+      "evidence": "runner.js generateTarget selects a different repair path by variant.",
+      "difference": "Candidate appends the failed answer as an assistant turn and a new user schema/repair instruction. Product appends its actual repair instruction to the existing last user turn without supplying the failed answer. Both use two target attempts, but their repair requests differ."
+    },
+    {
+      "factor": "Terminal repair failure",
+      "difference": "Only product adds a production-invalid error marker after the second invalid output. Candidate deterministic contract diagnostics can fail without that product marker."
+    }
+  ],
+  "independent_probes": [
+    { "input": "Valid v2 plus legacy reasoning field", "candidate_format_valid": true, "production_valid": false },
+    { "input": "Valid v2 with agent:riley-tagged response", "candidate_format_valid": true, "production_valid": false },
+    { "input": "Parseable valid v2 with finish_reason length", "candidate_format_valid": true, "production_valid": false }
+  ],
+  "assessment": "Removing the lengthy inherited prompt layer is a reasonable diagnostic after recurrent ordinary classification errors. Existing candidate variant tests a bundle of lean composition, generic contract emphasis, user normalization and repair/parser differences. It cannot isolate contradictory base guidance as the cause. There is no case-specific answer insertion or outcome selection in this composition.",
+  "required_reporting": [
+    "Record every composition and adapter factor above before execution; describe this as a bundled diagnostic, not exact production parity or an isolated base-prefix ablation.",
+    "Retain every raw target and attempt without outcome-based retries or selection. Report first-attempt classification separately from final repaired classification so changed repair prompts are visible.",
+    "Independently apply the production parser and finish_reason check to final outputs and report those counts alongside candidate contract validity. Do not describe candidate-format-valid outputs as production-valid.",
+    "Preserve original-setting product04 failures. A promising lean diagnostic requires a newly matched baseline, unchanged full semantic/holdout validation and actual production integration before acceptance or release."
+  ],
+  "controls": "Candidate04 policy, cases, role/inventory, expected labels, settings-r3 and v1.1 gates stay fixed. No live source edits are needed to execute this diagnostic.",
+  "hashes": {
+    "evals/promptfoo/v1/runner.js": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "evals/promptfoo/v1/generate.js": "7753f8db3c10e97ff417d3b253618fa61fb3c8a5ca8588be6252aa412af5d701",
+    "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/rubrics/v1/manifest.json": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec"
+  },
+  "actions": { "source_edits_by_reviewer": false, "provider_calls": 0, "holdouts_inspected": false }
+}

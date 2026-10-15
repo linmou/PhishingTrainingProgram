@@ -1,0 +1,51 @@
+{
+  "intent": "Independently verify production parser/repair parity for future v2 generation and document historical replay/provenance limits.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_future_v2_generation_with_historical_replay_limits",
+  "verification": {
+    "command": "rtk proxy node --test evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/generate.test.js evals/promptfoo/v1/harness.test.js",
+    "exit_code": 0,
+    "passed": 42,
+    "failed": 0,
+    "scope": "Offline integration, adapter, cache/resume and runner boundaries. Parent's broader81-test result is separate evidence, not rerun here.",
+    "lean_existing_run": {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate04-lean-preflight",
+      "generations": 183,
+      "first_attempt_production_valid": 183,
+      "final_production_valid": 183,
+      "format_repairs": 0,
+      "conclusion": "These preserved diagnostic outputs do not depend on the former weaker validator or alternate repair path."
+    }
+  },
+  "confirmed_changes": [
+    "generateTarget uses product-adapter.productionValid for every v2 contract, regardless of variant. Parseable truncation, forbidden legacy fields and out-of-mode agent tags now trigger the production bounded repair rather than acceptance.",
+    "Every v2 repair appends the actual production instruction to the existing last user turn without adding the failed assistant output. Final production-invalid responses receive terminal errors and are excluded from deterministic/semantic parsing.",
+    "generate.js applies production cached-request/repair validation to every v2 variant, retaining all prior cache/aggregate checks.",
+    "Both runner and preflight snapshot production parser and repair source dependencies for all v2 variants, even when lean composition does not use the ecological product message builder.",
+    "The offline test covers malformed first responses caused by finish_reason length, forbidden reasoning field and agent tags; all three use exactly productionRepair and complete with valid final outputs. Already failed repaired replay remains failed without new calls."
+  ],
+  "resume_and_provenance": [
+    "Runner/preflight source hashes and dependency identities changed. Existing same-directory snapshots fail resume fingerprint validation; use new run directories rather than rewriting snapshots.",
+    "Historical targets and judgments remain immutable. A historical valid first output can be replayed unchanged under the new adapter when its original request and settings match, but the new snapshot must declare the new adapter source.",
+    "A historical output accepted by the former validator but newly rejected by the production parser can trigger a fresh format-repair call during replay if it has no previous repair. That produces changed target evidence and must not be described as unchanged-generation rejudging or hidden inside a comparison.",
+    "A valid historically repaired output is replayed unchanged even when its old final repair request differs from current productionRepair. This is preservation of old evidence, not retroactive proof that its generation used the current repair protocol."
+  ],
+  "historical_repair_probe": {
+    "fixture": "Valid v2 final output with format_repair.initial holding the original request, but final request uses the old extra assistant/new-user repair turns.",
+    "result": "Current generateTarget accepts the exact historical target with zero new calls even though final repair request differs from productionRepair.",
+    "interpretation": "Original-message identity validation alone does not establish historical repair parity. Preserve and label this difference; reject incompatible historical repairs if a future lane promises exact current-generation protocol parity. The existing lean183 are unaffected because none used repair."
+  },
+  "remaining_limits": [
+    "The exported targetFormatValid helper still implements deterministic metric validity and is not itself the production validator. Actual v2 generation bypasses it correctly; callers must not treat that helper alone as production acceptance.",
+    "A matching parser and repair protocol does not make lean message composition identical to product composition, or reproduce deployed transport/configuration behavior.",
+    "No scoring thresholds, expected labels or semantic rubric criteria are changed by this adapter revision. Any affected historical comparison needs symmetric treatment and explicit target-evidence accounting."
+  ],
+  "hashes": {
+    "evals/promptfoo/v1/runner.js": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe",
+    "evals/promptfoo/v1/generate.js": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942",
+    "evals/promptfoo/v1/product-adapter.test.js": "1718d7437968ba040575938a4a17e2bafbb1298f2286c967404e92b707d8e6e5",
+    "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+  },
+  "actions": { "source_edits_by_reviewer": false, "provider_calls": 0, "holdouts_inspected": false }
+}

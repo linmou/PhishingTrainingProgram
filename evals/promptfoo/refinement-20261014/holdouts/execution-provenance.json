@@ -1,0 +1,128 @@
+{
+  "intent": "Freeze the existing production base prompt for each immutable independent holdout before prompt cleanup, using a separate execution artifact.",
+  "version": "fresh-20261014-execution-v1",
+  "created_at_utc": "2026-10-15T02:47:45.133Z",
+  "packager": "/root/fresh_holdouts",
+  "execution_cases_file": "execution-cases.json",
+  "execution_cases_sha256": "fc28ffdb3bc99c94558f8196b6c68fe26f2ab0999358862d2e7b852322ff0461",
+  "source_cases_file": "cases.json",
+  "source_cases_sha256": "73b80772d6416dd6894542d8a3a0beb33e38d23eca5a7cdb0a3f381ee3fbaaa5",
+  "source_provenance_file": "provenance.json",
+  "source_provenance_sha256": "530c8d39df016c5648dd716484a454c9bf8af1cffb18fb32e13c4f6487e0e247",
+  "case_count": 16,
+  "derivation": "Each output case is the exact original case plus baseline_system = generateSystemPrompt({...PRESET_CONFIGS.casual_peer, role: {role: case.role === adult ? high : low}, ...case.inventory}). The role strings in this description denote literal values.",
+  "preset": "casual_peer",
+  "role_mapping": {
+    "peer": "low",
+    "adult": "high"
+  },
+  "changed_case_fields": [
+    "baseline_system"
+  ],
+  "source_hashes_sha256": {
+    "tutor-system/src/services/systemPrompts.ts": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0",
+    "tutor-system/src/services/prompts/index.ts": "a4946ebe9461def95c0fba3316073e93f518114455793856bd4565da285e0c1f",
+    "tutor-system/src/services/prompts/basePrompt.ts": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88",
+    "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts": "3416473893908b7df049d11a7d571db01a933b6405fec3d7732738390e8bd2cc",
+    "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1",
+    "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227",
+    "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts": "4a126f3f2e56c27c1d9bf9229518740d6277344052874247417c745f78be2890",
+    "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9",
+    "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b",
+    "tutor-system/src/services/prompts/responsePolicy.ts": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2",
+    "tutor-system/src/services/prompts/presets.ts": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682",
+    "tutor-system/src/services/prompts/types.ts": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2"
+  },
+  "adapter_defaults_reference": {
+    "file": "evals/promptfoo/v1/product-adapter.js",
+    "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+  },
+  "runtime": {
+    "node": "v22.12.0",
+    "typescript": "4.9.5",
+    "transpilation": {
+      "module": "CommonJS",
+      "target": "ES2019",
+      "esModuleInterop": true
+    }
+  },
+  "authorship_boundary": "The independent cases and label derivations were finalized and hashed before the packager was authorized to inspect production generator source. Packaging added no scenarios, labels, checks, or expected outcomes. Prompt-source access was solely for deterministic derivation after construction.",
+  "exposure_status": "Case contents remain sealed from the prompt author; baseline generator source is now known to this packager after original case freeze.",
+  "model_calls": 0,
+  "validation": {
+    "status": "passed",
+    "case_count": 16,
+    "only_added_field": "baseline_system",
+    "unchanged_case_deep_equality": true,
+    "original_case_hash_preserved": true,
+    "original_provenance_hash_preserved": true,
+    "generator_source_stable_during_derivation": true,
+    "predicted_execution_hash_confirmed": true
+  },
+  "baseline_prompt_hashes": [
+    {
+      "case_id": "fresh_holdout_01",
+      "baseline_system_sha256": "a50765103da5bfdbe9d4cace100b42774eb29bde3faf3513cb05df2664bbc79f"
+    },
+    {
+      "case_id": "fresh_holdout_02",
+      "baseline_system_sha256": "2d4556ce77b54245ec5dc43c0a2b753cd214d1100c04ce6187e194749ed35920"
+    },
+    {
+      "case_id": "fresh_holdout_03",
+      "baseline_system_sha256": "dfbd1514aa3d72682759eadf95a4b1cb95ff880cf810aab47ffb1d454d08c067"
+    },
+    {
+      "case_id": "fresh_holdout_04",
+      "baseline_system_sha256": "1ac2cc64f1d16e7430d79b0d4cff83a01a3657322845dddc58e4064a74d56d21"
+    },
+    {
+      "case_id": "fresh_holdout_05",
+      "baseline_system_sha256": "173d2f770358d4a3d4aa4e6f7ef6200a91f96da500c220c57d5f0f1e522bdc9b"
+    },
+    {
+      "case_id": "fresh_holdout_06",
+      "baseline_system_sha256": "ec8e4282ffa666d6c21afac3539f6c208ccfaf9d405c39d9e1fe07e170bbedd5"
+    },
+    {
+      "case_id": "fresh_holdout_07",
+      "baseline_system_sha256": "40050d290f55f5e6b351e2813ab5cc0ea1803aadf39a3a8f34b2e29541a0ba36"
+    },
+    {
+      "case_id": "fresh_holdout_08",
+      "baseline_system_sha256": "9ac4e374c60e8160024820688b379d3702cdd1fab0e4c1e2a6f747b3fc0a98e9"
+    },
+    {
+      "case_id": "fresh_holdout_09",
+      "baseline_system_sha256": "b1a3a07710d22070cd45d1265adc8d900aecd9c8026cc410ce1646cb64052294"
+    },
+    {
+      "case_id": "fresh_holdout_10",
+      "baseline_system_sha256": "2085ae5a15373edf4bb535d91acc58732a518b9e4ad61dd231d67df4bd86e3a3"
+    },
+    {
+      "case_id": "fresh_holdout_11",
+      "baseline_system_sha256": "f93ea995150f0aeab6663e833774509716a58f9c94b7c15a4020dd6b3e05776c"
+    },
+    {
+      "case_id": "fresh_holdout_12",
+      "baseline_system_sha256": "1a1628a51866fa73cf86baeead40cd4528ec0e93d2a57ea2a23962d9d005c438"
+    },
+    {
+      "case_id": "fresh_holdout_13",
+      "baseline_system_sha256": "df47f51025a0b0974a5ff6539a7e7bce8ceb9e5c0deaab5a4cbdefc071550043"
+    },
+    {
+      "case_id": "fresh_holdout_14",
+      "baseline_system_sha256": "df47f51025a0b0974a5ff6539a7e7bce8ceb9e5c0deaab5a4cbdefc071550043"
+    },
+    {
+      "case_id": "fresh_holdout_15",
+      "baseline_system_sha256": "313595d7015348b3f60435dc0dd0ca3aa89c65895d906dfa8d1ec11e3217ee8e"
+    },
+    {
+      "case_id": "fresh_holdout_16",
+      "baseline_system_sha256": "06ee62cddbaaa665d9481adfaeb4633beb0bb2e0475ac4397215edec7f54f4ff"
+    }
+  ]
+}

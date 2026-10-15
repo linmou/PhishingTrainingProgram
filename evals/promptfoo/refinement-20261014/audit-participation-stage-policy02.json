@@ -1,0 +1,267 @@
+{
+  "intent": "Independently audit participation-stage policy02 against G01, complete prior diagnostic evidence and the fixed mode-only harness.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "clear",
+  "candidate": {
+    "file": "evals/promptfoo/refinement-20261014/participation-stage-policy-02.md",
+    "sha256": "66a471fea352d1a59488b9df5aa5a6cd52fd861dd548c3b7bd10d8f0990be350"
+  },
+  "verification": {
+    "identities": {
+      "evals/promptfoo/refinement-20261014/participation-stage-policy-02.md": "66a471fea352d1a59488b9df5aa5a6cd52fd861dd548c3b7bd10d8f0990be350",
+      "evals/promptfoo/v1/generate-participation.js": "0f2d34e9b08acf823f49de2f7d93d8c2af887303030b1e6ac0fee47fe9d247d3",
+      "evals/promptfoo/v1/generate-participation.test.js": "7fc8f0799efee5ec1e3fae4fed78a5ac22051fa4e465caf4bbea57a65d9577f1",
+      "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca",
+      "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "e5198d77301d3023298f430f66211d49f0ca71124a0748af8d71108405874bde"
+    },
+    "contexts_unchanged": 61,
+    "settings_unchanged": true,
+    "runner_unchanged": true,
+    "source_snapshot_sha256": "1b68d82786c80a8340958958112a16c04962f36f8cdf216ab21760238686e193"
+  },
+  "reference_condition": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-participation-stage-diagnostic-r2",
+    "records": 183,
+    "valid": 183,
+    "mode_passed": 179,
+    "errors": [],
+    "verdict": "failed",
+    "regression_rows": 10,
+    "total_raw_calls": 183,
+    "format_repairs": 0,
+    "report_sha256": "04ad9971cbbbc5e27794db2b88cb294d37a90210377a9d09f1f5c95cbb9ea84c",
+    "classification_sha256": "21c4d6f0c4b7557b41cb09ce0410dcb67ad594b69929ecb858927c97efe58687",
+    "record_hash_manifest_sha256": "3adeb510b80b1bffc9141d0a47104a7ad956d8297d6af5482200a09347f36de2",
+    "all_saved_requests_results_provenance_verified": true
+  },
+  "evidence": {
+    "failures": [
+      {
+        "file": "guard_dodge-0.json",
+        "sha256": "a4f0a6aaa2cdf2a888b1fa53c0a6f6cb89e0110151130306b2350832aa7b7f65",
+        "parsed": {
+          "reason": "Student avoids the security task, first asking about music, then stating preference to talk about something else instead of addressing the scam alert.",
+          "mode": "guard"
+        },
+        "check": {
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "expected": [
+            "tutoring"
+          ],
+          "actual": "guard"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+          "student_message": "I would rather talk about something else.",
+          "prior_mode": null
+        }
+      },
+      {
+        "file": "guard_dodge-1.json",
+        "sha256": "bb5764193a462081c488e8b2e0261f2edb4fc92bd47ea343f704a8bce17c5abf",
+        "parsed": {
+          "reason": "Student explicitly states preference to discuss other topics instead of the security lesson, declining to engage with the safety alert instructions provided by the tutor.",
+          "mode": "guard"
+        },
+        "check": {
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "expected": [
+            "tutoring"
+          ],
+          "actual": "guard"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+          "student_message": "I would rather talk about something else.",
+          "prior_mode": null
+        }
+      },
+      {
+        "file": "guard_dodge-2.json",
+        "sha256": "628c0abdf1dc59f283e692e790b73b9b8382309560d5900ea5c4c2cc1f6b5417",
+        "parsed": {
+          "reason": "Student explicitly refuses the learning activity by shifting topics to music and stating a preference to talk about something else, ignoring the safety instruction regarding the scam link.",
+          "mode": "guard"
+        },
+        "check": {
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "expected": [
+            "tutoring"
+          ],
+          "actual": "guard"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+          "student_message": "I would rather talk about something else.",
+          "prior_mode": null
+        }
+      },
+      {
+        "file": "guard_semantic_correction-0.json",
+        "sha256": "9672e369e051f526887cc676f960a173b821849ddc0c9a83b1173bfabe165af4",
+        "parsed": {
+          "reason": "Prior mode was guard. Student restates safety promise without analyzing scam indicators or providing relevant clarification.",
+          "mode": "guard"
+        },
+        "check": {
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "expected": [
+            "tutoring"
+          ],
+          "actual": "guard"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Do not use the alert link. Student: I will open the real app myself and check the account activity there.",
+          "student_message": "I understand: I will ignore the message link, open the real app, and check recent login activity.",
+          "prior_mode": "guard"
+        }
+      }
+    ],
+    "contrasts": [
+      {
+        "file": "deliberate_https_repetition-0.json",
+        "sha256": "806cc70ce9bb82d5a53df586ff727d00566b347889f85fdbb61ee219f40d19df",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "deliberate_https_repetition-1.json",
+        "sha256": "32b9c9c47494ac2a57bd5a9e735a5f043cbc05c03e80c888edf8abf96816085a",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "deliberate_https_repetition-2.json",
+        "sha256": "d0d0c6b5181110b70375d82c53fe6f3153977df204d4077da7c29452a204245a",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "development_peer_incorrect_guard_recovery-0.json",
+        "sha256": "e5213b899595433d9a9e186e3d09b1354eb9b7a794cb71e9bb860be0a99e528d",
+        "mode": "tutoring",
+        "pass": true
+      },
+      {
+        "file": "development_peer_incorrect_guard_recovery-1.json",
+        "sha256": "5f764a430eb4a9ea04f520e179254d15d3ea44bc7d76071a678b91004a068cc3",
+        "mode": "tutoring",
+        "pass": true
+      },
+      {
+        "file": "development_peer_incorrect_guard_recovery-2.json",
+        "sha256": "d646303e404b760c3eac4e4c774eb0ed5b2dbc14ffc89430da0918a8f3bff685",
+        "mode": "tutoring",
+        "pass": true
+      },
+      {
+        "file": "development_recovery_pair_attempt-0.json",
+        "sha256": "e286f807229a9b7f5ef3935aa465322d5bad4f27e6c45a87fd1aade24b7fd0c6",
+        "mode": "tutoring",
+        "pass": true
+      },
+      {
+        "file": "development_recovery_pair_attempt-1.json",
+        "sha256": "153fd8fe8a33c6858b3952c54bd794c4c22b9933168a09823ee9850dc08be227",
+        "mode": "tutoring",
+        "pass": true
+      },
+      {
+        "file": "development_recovery_pair_attempt-2.json",
+        "sha256": "3c9b921c4da1cd7600ad0bf4b9103e715f5283fdff2739d1c19ec0c7dd0614eb",
+        "mode": "tutoring",
+        "pass": true
+      },
+      {
+        "file": "development_recovery_pair_promise-0.json",
+        "sha256": "c57d131ee82f9e13918867e2506ce532cfe1020b54515c2ec15d8922972c2e86",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "development_recovery_pair_promise-1.json",
+        "sha256": "3e39ac33f9fc54ef0bb77098a3d8ee570fd43da9594ee97ed37fed6277cc7059",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "development_recovery_pair_promise-2.json",
+        "sha256": "00be7ac3d77d2c45dbc9c4d44a3f7c13049e936efdb91458ab70c111f92d98d7",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "guard_dodge_known_guard-0.json",
+        "sha256": "21a7728a7ae65cd50a4f3d47cdb11365e2e17bfe73cee82b816624c1f7b291b9",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "guard_dodge_known_guard-1.json",
+        "sha256": "edfb1ff2cf3a3bced9f2b5b8f935b75688dd9ece94cf63b700369a19810f3ec7",
+        "mode": "guard",
+        "pass": true
+      },
+      {
+        "file": "guard_dodge_known_guard-2.json",
+        "sha256": "54e3cb06cd6d82e938e3740ca5b5d4515d2f9f4a22b8597a39f2044e041597da",
+        "mode": "guard",
+        "pass": true
+      }
+    ]
+  },
+  "changed_factors": "Only the mode-only policy changes. It orders participation boundaries, distinguishes substantive intended solutions from content-free promises, and separates ordinary topic preference/conversational redirection from clear deliberate obstruction and established Guard state. Harness,61 input contexts, baseline, generation settings, schema, repetition count, labels, aggregation and gates remain fixed.",
+  "requirement_review": [
+    {
+      "requirement": "G01 substantive recovery",
+      "finding": "A task-specific answer, proposed solution or clarification can show re-engagement before an external action is executed. Recovery does not require correctness, apology, an extra detector clue or a claim that the action has already happened."
+    },
+    {
+      "requirement": "G01 persistence and ongoing obstruction",
+      "finding": "The corrected first branch requires the substantive contribution to replace ongoing obstruction. Continued deliberate obstruction or knowing warned-against repetition remains ineligible for recovery even if presented as a solution. Actual history is usable without demanding an express admission in the latest sentence."
+    },
+    {
+      "requirement": "G01 ordinary engagement and unknown state",
+      "finding": "Friendly personal questions, confusion, reasoned disagreement and ordinary topic preferences remain tutoring. Redirection or a safety warning alone cannot establish prior Guard; clear current obstruction can still establish a new Guard entry."
+    },
+    {
+      "requirement": "Evidence/attribution",
+      "finding": "The policy continues to prohibit invented intent, warnings and completed actions. It distinguishes understood facts from deliberately chosen behavior without a keyword/count test."
+    }
+  ],
+  "resolved_finding": {
+    "id": "premature_recovery_precedence",
+    "initially_reviewed_sha256": "6f6e3ddc34a8826bdccb6e24dec32bd21c435c3ee8d8ef03a7475aa7cac48973",
+    "issue": "The first ordered branch restored tutoring for a specific proposed solution while excepting only an explicit current acceptance-and-rejection admission. This could override continued deliberate obstruction established by other evidence.",
+    "resolution": "The exact final hash conditions recovery on replacing obstruction, preserves continued knowing repetition, permits actual historical evidence and protects ordinary wrong attempts.",
+    "status": "resolved"
+  },
+  "shortcut_assessment": "No case identifier, entity, learner quotation, expected-answer lookup or lexical/count recipe appears in the candidate. The topic-preference and intended-solution distinctions are requirement-grounded evidence/state rules. Development failures motivate the revision; they do not independently establish generalization.",
+  "causal_limits": "The complete first stage has179/183 correct modes with four behavior failures and zero execution errors. It shifts errors relative to the full tutor; the new policy tests those semantic boundaries within the fixed diagnostic architecture. It does not establish that a two-stage deployed tutor would improve.",
+  "validation_reuse": "The runner and structural-test hashes match the clear r2 harness audit. Its23 offline integrity probes and2 structural tests remain applicable; no semantic-wording tests or model calls were performed for this audit.",
+  "required_next_steps": [
+    "Freeze this exact policy in a new immutable directory and execute all61 cases with three repetitions.",
+    "Preserve all successes, failures, format attempts and transport errors; retain the first diagnostic unchanged.",
+    "Compare with the complete original baseline and first stage, including known/unknown state, incorrect recovery, content-free promises, deliberate repetition and ordinary engagement partitions.",
+    "Any subsequent response-stage architecture requires separate independent audit and full behavior/product validation; a mode-only passing result is not automatic adoption."
+  ],
+  "auditor_model_calls": 0
+}

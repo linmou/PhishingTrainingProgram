@@ -1,0 +1,3372 @@
+{
+  "intent": "Diagnose completed candidate05 short/thinking preflights against the newly matched thinking baseline and identify a requirement-grounded next strategy.",
+  "reviewed_at_utc": "2026-10-15 06:26:31 UTC",
+  "reviewer": "/root/refinement_audit",
+  "verdict": "Candidate05 improves the earlier Guard-state boundary but still fails real mode, action and inventory requirements. The matched baseline demonstrates stronger deterministic conformance with the same model/settings. Retaining audited generic baseline rules while removing shortcuts is a justified strategy test; neither model impossibility nor semantic acceptance follows.",
+  "runs": [
+    {
+      "name": "baseline-thinking-preflight",
+      "hashes": {
+        "snapshot": "db4a979313ae832f9c77fc8a2a405e4e59268079ba54b7bd49cb98ec11972ecc",
+        "report": "a09dd56001924cd082f563027dc71b8f26c0c3947d001551ae84029b9f14cfdc",
+        "policy": "2aed2910fad48a19cdbaae049137ab326c74643c50080850c371fc43df36405b",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "aee752288a60c4e6f96a60d3dbfcef2c6e742c033b71a99002f9137519540d03",
+        "settings": "bf366496ff792448e0e79e0a7eaed1555a083723e0876413c043cc55dc36bb6d",
+        "classification": "71d48df0d3c4cbac4b45183d12656bbd3c7f9fecdd2b1ae014013712966e12bb"
+      },
+      "variant": "product",
+      "regenerate": false,
+      "settings": {
+        "model": "qwen3.5-flash",
+        "target_temperature": 0.3,
+        "judge_temperature": 0,
+        "target_max_tokens": 8000,
+        "target_enable_thinking": true,
+        "target_format_attempts": 2,
+        "judge_max_tokens": 8000,
+        "judge_enable_thinking": true,
+        "repetitions": 3,
+        "transport_attempts": 3,
+        "transport_retry_delay_ms": 10000,
+        "request_concurrency": 24,
+        "timeout_ms": 180000,
+        "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+        "changed_factors": "Diagnostic after four cleaned prompt candidates failed under target thinking=false/max_tokens=100. Use the repository v1/settings.json target thinking=true/max_tokens=8000 configuration, preserving r3 model, temperatures, three repetitions, repair/retry policy, concurrency, cases and v1.1 scoring. This jointly changes thinking and token budget, so it cannot isolate either cause or establish production-default performance. Acceptance requires a newly matched baseline and full semantic/holdout validation under these settings."
+      },
+      "count": 183,
+      "metrics": {
+        "contract_validity": {
+          "pass": 183
+        },
+        "mode_selection": {
+          "pass": 183
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "instruction_selection": {
+          "pass": 89,
+          "fail": 1
+        }
+      },
+      "classification": {
+        "verdict": "accepted",
+        "issues": 0,
+        "overall": [
+          {
+            "metric": "mode_selection",
+            "passed": 61,
+            "expected": 61,
+            "verdict": "pass"
+          },
+          {
+            "metric": "instruction_selection",
+            "passed": 30,
+            "expected": 30,
+            "verdict": "pass"
+          }
+        ]
+      },
+      "failures": [
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 1,
+          "text": "{\"reason\":\"Student is now attempting the task after guard. They need to identify the actual domain name in the URL.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"explanation\"},\"response\":\"/login is a page path, not the company domain. The website name before it is school-help.example.net; compare that with your real school service.\"}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        }
+      ],
+      "repairs": []
+    },
+    {
+      "name": "candidate05-preflight",
+      "hashes": {
+        "snapshot": "1774f7d459613ef59a8c779ec127c1373e4a96cb8cde2a2d48c64ad3c5b394a9",
+        "report": "48955e5185eea0baa8ce8d089dc3a4b7e785759b2489e8d852c785243b020066",
+        "policy": "9e7469e69176dacb18d8ae3d74d15791950da4ef9d54c954be39d153e38d672e",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "aee752288a60c4e6f96a60d3dbfcef2c6e742c033b71a99002f9137519540d03",
+        "settings": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+        "classification": "9539300740c64d3930407339ba1249f457deb91e4406764e4f9aa557f04c7123"
+      },
+      "variant": "product",
+      "regenerate": true,
+      "settings": {
+        "model": "qwen3.5-flash",
+        "target_temperature": 0.3,
+        "judge_temperature": 0,
+        "target_max_tokens": 100,
+        "target_enable_thinking": false,
+        "target_format_attempts": 2,
+        "judge_max_tokens": 8000,
+        "judge_enable_thinking": true,
+        "repetitions": 3,
+        "transport_attempts": 3,
+        "transport_retry_delay_ms": 10000,
+        "request_concurrency": 24,
+        "timeout_ms": 180000,
+        "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+        "changed_factors": "Fresh full baseline after the previous full attempt ended with transport errors. Only operational concurrency changes from twelve to twenty-four; all target and judge request parameters, retry limits, cases, rubrics and thresholds remain unchanged. This is the controlled 0.3/100 evaluation configuration, not ordinary enabled-room defaults. Candidate uses this same settings file."
+      },
+      "count": 183,
+      "metrics": {
+        "contract_validity": {
+          "pass": 183
+        },
+        "mode_selection": {
+          "pass": 179,
+          "fail": 4
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "instruction_selection": {
+          "pass": 76,
+          "fail": 14
+        }
+      },
+      "classification": {
+        "verdict": "failed",
+        "issues": 0,
+        "regressions": 14,
+        "overall": [
+          {
+            "metric": "mode_selection",
+            "passed": 60,
+            "expected": 61,
+            "verdict": "pass"
+          },
+          {
+            "metric": "instruction_selection",
+            "passed": 26,
+            "expected": 30,
+            "verdict": "fail"
+          }
+        ]
+      },
+      "failures": [
+        {
+          "id": "webpage_demo_correct_lock_reasoning",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student demonstrated lock limitation and safe verification method.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified that the lock only secures the connection, not the site's identity. Checking the exact address and using the real app is the correct safety action.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_correct_lock_reasoning",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student demonstrated lock icon limitation and safe verification method.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified that the lock only secures the connection, not the site's identity. Checking the exact address and using the real app is the correct safety action.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_correct_lock_reasoning",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student correctly identifies lock limitations and proposes safe verification steps.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"Your reasoning is correct. The lock only secures the connection, not the site's identity. Always verify by typing the official URL manually.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "student_correctly_uses_real_bank_channel",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification steps for the bank alert.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"That is correct. Do not use the message link; open the real app or call the number on the card instead.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "student_correctly_uses_real_bank_channel",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification steps for the bank alert.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"That is correct. Do not click the link; use the real app or call the number on the card instead.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "holdout_student_trusts_support_domain",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student assumes platform name in URL proves legitimacy, missing domain verification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The word SnapTalk appears in the address, but scammers can use it too. Compare the full web address to the official site you already know.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "holdout_student_trusts_support_domain",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student assumes platform name in URL proves ownership, missing full host verification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"A familiar name does not prove ownership. Compare the full domain to the real app address.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "holdout_student_trusts_support_domain",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student assumes domain name presence proves ownership, missing full host verification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"A familiar name in the address does not prove ownership. Compare the full web address to the official platform you trust.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "deliberate_https_repetition",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student acknowledges lock limitation but plans unsafe action.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not rely on the lock icon. Open the real app or type the official website address manually to check for alerts.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student refuses task and changes topic, requiring guard mode.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must complete the safety lesson before discussing other topics. Please stop using the alert link and open the real app instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student refuses task and changes topic, requiring guard mode.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must complete the safety lesson before discussing other topics. Please stop using the alert link and open the real app instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student refuses task and changes topic, requiring guard mode.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"We must complete the safety training before discussing other topics. Please return to analyzing the security alert.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student demonstrates safe verification steps, ending guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe actions: ignoring the link and checking activity in the real app. This approach protects your account effectively.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student demonstrates safe verification steps, ending guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe actions: ignoring the link and checking login activity in the real app. This approach effectively protects your account from this type of scam.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student demonstrates safe verification steps, ending guard state.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe actions: ignoring the link and checking activity in the real app. This approach effectively protects your account from this type of scam.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "guard_correct_verification_action",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification, ending guard and confirming mastery.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly verified the alert through the official app. This confirms the message was a scam.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student attempts task after guard; address structure is unmet target.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The /login part is a page path, not the domain. The full domain is school-help.example.net.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student attempts task after guard; address structure needs correction.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The /login part is a page, not the company domain. The full domain must match the real school service exactly.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        }
+      ],
+      "repairs": [
+        {
+          "id": "student_asks_what_to_do",
+          "rep": 0,
+          "initial": "{\n  \"reason\": \"Student asks for safe action steps after identifying a suspicious link.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"instructing\"\n  },\n  \"response\": \"Do not click the link. Open the real app or type the official website address directly into your browser to check for alerts.\"\n}",
+          "finish": "stop",
+          "final": "{\n\"reason\": \"Student asks for safe action steps after identifying a suspicious link.\",\n\"decision\": {\n\"mode\": \"tutoring\",\n\"instruction\": \"scaffolding\"\n},\n\"response\": \"Do not click the link. Open your real app or type the official website address manually to check for alerts.\"\n}"
+        },
+        {
+          "id": "student_asks_what_to_do",
+          "rep": 1,
+          "initial": "{\n  \"reason\": \"Student asks for safe action steps after identifying a suspicious link.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"instructing\"\n  },\n  \"response\": \"Do not click the link. Open the real app or type the official website address manually to check your account.\"\n}",
+          "finish": "stop",
+          "final": "{\"reason\":\"Student asks for safe action steps after identifying a suspicious link.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Do not click the link. Open your real app or type the official website address manually to check for alerts.\"}"
+        },
+        {
+          "id": "student_asks_what_to_do",
+          "rep": 2,
+          "initial": "{\n  \"reason\": \"Student asks for safe action after identifying suspicious link.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"instructing\"\n  },\n  \"response\": \"Do not click the link. Open the real app or type the official website address directly into your browser.\"\n}",
+          "finish": "stop",
+          "final": "{\n\"reason\": \"Student asks for safe action steps after identifying a suspicious link.\",\n\"decision\": {\n\"mode\": \"tutoring\",\n\"instruction\": \"scaffolding\"\n},\n\"response\": \"Do not click the link. Open your real app or type the official website address directly to check for alerts.\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "candidate05-thinking-preflight",
+      "hashes": {
+        "snapshot": "cdc76bdb9f3eebee3a512b35d1fc5158e15a82667fd877c494f5cbf1f347a322",
+        "report": "e3b21533f08da3cde0226c42d8fe44edee8680e972740a740fdd4b81bcece3ea",
+        "policy": "9e7469e69176dacb18d8ae3d74d15791950da4ef9d54c954be39d153e38d672e",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "aee752288a60c4e6f96a60d3dbfcef2c6e742c033b71a99002f9137519540d03",
+        "settings": "bf366496ff792448e0e79e0a7eaed1555a083723e0876413c043cc55dc36bb6d",
+        "classification": "34bedb3fe0be1d11f6cc34f97024fc2dcd0903cf3aa41b5b8b5910e9eb2b35f7"
+      },
+      "variant": "product",
+      "regenerate": true,
+      "settings": {
+        "model": "qwen3.5-flash",
+        "target_temperature": 0.3,
+        "judge_temperature": 0,
+        "target_max_tokens": 8000,
+        "target_enable_thinking": true,
+        "target_format_attempts": 2,
+        "judge_max_tokens": 8000,
+        "judge_enable_thinking": true,
+        "repetitions": 3,
+        "transport_attempts": 3,
+        "transport_retry_delay_ms": 10000,
+        "request_concurrency": 24,
+        "timeout_ms": 180000,
+        "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+        "changed_factors": "Diagnostic after four cleaned prompt candidates failed under target thinking=false/max_tokens=100. Use the repository v1/settings.json target thinking=true/max_tokens=8000 configuration, preserving r3 model, temperatures, three repetitions, repair/retry policy, concurrency, cases and v1.1 scoring. This jointly changes thinking and token budget, so it cannot isolate either cause or establish production-default performance. Acceptance requires a newly matched baseline and full semantic/holdout validation under these settings."
+      },
+      "count": 183,
+      "metrics": {
+        "contract_validity": {
+          "pass": 183
+        },
+        "mode_selection": {
+          "pass": 177,
+          "fail": 6
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "instruction_selection": {
+          "pass": 81,
+          "fail": 9
+        }
+      },
+      "classification": {
+        "verdict": "failed",
+        "issues": 0,
+        "regressions": 27,
+        "overall": [
+          {
+            "metric": "mode_selection",
+            "passed": 59,
+            "expected": 61,
+            "verdict": "pass"
+          },
+          {
+            "metric": "instruction_selection",
+            "passed": 27,
+            "expected": 30,
+            "verdict": "fail"
+          }
+        ]
+      },
+      "failures": [
+        {
+          "id": "webpage_demo_lock_icon_myth",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student believes lock icon proves safety; needs correction on URL verification\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A lock icon only shows the connection is encrypted, not that the site is real. Scammers can get them too. Type the official website address yourself to verify.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_lock_icon_myth",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student assumes lock equals safety; must clarify encryption does not verify domain ownership.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A lock icon only means the connection is encrypted, not that the site is legitimate. Always check the web address carefully instead.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_correct_safe_action",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student demonstrated safe action of not clicking and using real app. Consolidating this understanding.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"That is the correct approach. You could also check the URL domain to confirm it does not match the official platform.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_correct_lock_reasoning",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student demonstrated lock icon understanding and safe verification method.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"Correct. The lock shows encryption, not legitimacy. Your approach to check the address and use the real app is the right way to verify.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "deliberate_https_repetition",
+          "rep": 1,
+          "text": "{\"reason\": \"Student acknowledges lock isn't proof but plans unsafe verification method\", \"decision\": {\"mode\": \"tutoring\", \"instruction\": \"correction\"}, \"response\": \"Using the lock icon alone is not safe. Type the real platform's URL directly into your browser instead.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "id": "deliberate_https_repetition",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student knows lock isn't proof but still plans unsafe verification method\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"correction\"\n  },\n  \"response\": \"The lock only shows encryption, not legitimacy. Type the real platform URL manually to verify security alerts.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student refuses task and wants unrelated conversation instead\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"This training requires you to complete the phishing safety task. Please return to analyzing the security alert.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_dodge",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student evades security task through repeated topic changes instead of attempting the learning activity.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"The learning task requires you to focus on the security alert scenario. Please return to analyzing the suspicious message instead of changing topics.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_acknowledgement_only",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student only acknowledges without task attempt; needs genuine engagement with security checks\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"Acknowledgment alone does not complete the learning task. Please demonstrate how you would verify this alert safely.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification steps and correct understanding of the alert scam.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe approach. You now know to ignore suspicious links and verify through official channels instead.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification steps without unsafe actions\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe approach. Keep using these checks for any security alerts you receive online.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student now attempts task after derailing; needs domain structure clarification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The full domain is school-help.example.net, not just /login. Compare this entire address to your real school service.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student attempts task after guard; needs URL structure guidance for domain identification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The /login is a page path, not the company domain. Look at the full address before .com or .net to find the actual site name.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student made genuine task attempt after guard; needs domain comparison teaching\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The full domain is school-help.example.net, not just /login. Compare the complete address with your real school's official website.\"\n}",
+          "checks": [
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "id": "ecological_click_imminent",
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student proposes clicking suspicious link requiring immediate safety intervention\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not click that link. Open the real app or type the official website address manually instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        }
+      ],
+      "repairs": [
+        {
+          "id": "webpage_demo_personal_story_trap",
+          "rep": 1,
+          "initial": "{\n  \"reason\": \"Student requests personal story; redirect to objective evidence.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"instructing\"\n  },\n  \"response\": \"I do not share personal experiences. Check the sender spelling instead. Does 'Socail' match the official platform?\"\n}",
+          "finish": "stop",
+          "final": "{\"reason\":\"Student asks for personal experience; redirects to third-person analysis per training rules\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"I don't share personal stories. Focus on what you notice in the post itself.\"}"
+        },
+        {
+          "id": "student_correctly_lists_red_flags",
+          "rep": 1,
+          "initial": "{\n  \"reason\": \"Student identified red flags but needs safe verification method.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"instructing\"\n  },\n  \"response\": \"You found the misspelling and suspicious link. Open the official app or website directly to check for alerts instead of clicking the message.\"\n}",
+          "finish": "stop",
+          "final": "{\n\"reason\": \"Student identified red flags but needs to apply safe verification steps.\",\n\"decision\": {\n\"mode\": \"tutoring\",\n\"instruction\": \"scaffolding\"\n},\n\"response\": \"You found the key warning signs. What is the safest way to verify your account security instead?\"\n}"
+        },
+        {
+          "id": "frustrated_but_engaged",
+          "rep": 1,
+          "initial": "{\n  \"reason\": \"Student seeks safe check method; explaining manual login verification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"instructing\"\n  },\n  \"response\": \"To perform the safe check, do not click the link in the message. Open your actual social media app or type the official website address manually to see real alerts.\"\n}",
+          "finish": "stop",
+          "final": "{\n  \"reason\": \"Student engages despite frustration; needs direct instruction on safe verification steps.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"I hear your frustration. Do not click that link. Open the real app or type the official website address manually to check.\"\n}"
+        }
+      ]
+    }
+  ],
+  "verification": [
+    {
+      "name": "candidate04-thinking-preflight",
+      "first_valid": 181,
+      "final_valid": 183,
+      "grouped": [
+        {
+          "id": "guard_acknowledgement_only_known_guard",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "fail"
+            }
+          ]
+        },
+        {
+          "id": "development_recovery_pair_promise",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "fail"
+            }
+          ]
+        },
+        {
+          "id": "guard_correct_verification_action",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "fail"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "fail"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_lock_icon_myth",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "file": "generate.js",
+          "sha256": "7753f8db3c10e97ff417d3b253618fa61fb3c8a5ca8588be6252aa412af5d701"
+        },
+        {
+          "file": "runner.js",
+          "sha256": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8"
+        },
+        {
+          "file": "product-adapter.js",
+          "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+        },
+        {
+          "file": "tutor-system/src/services/tutorDecisionContract.ts",
+          "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/index.ts",
+          "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+          "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+        }
+      ]
+    },
+    {
+      "name": "candidate05-preflight",
+      "first_valid": 180,
+      "final_valid": 183,
+      "grouped": [
+        {
+          "id": "guard_acknowledgement_only_known_guard",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_recovery_pair_promise",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass"
+            }
+          ]
+        },
+        {
+          "id": "guard_correct_verification_action",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "fail"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_lock_icon_myth",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "file": "generate.js",
+          "sha256": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942"
+        },
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8"
+        },
+        {
+          "file": "product-adapter.js",
+          "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+        },
+        {
+          "file": "tutor-system/src/services/tutorDecisionContract.ts",
+          "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/index.ts",
+          "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+          "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+        }
+      ]
+    },
+    {
+      "name": "candidate05-thinking-preflight",
+      "first_valid": 180,
+      "final_valid": 183,
+      "grouped": [
+        {
+          "id": "guard_acknowledgement_only_known_guard",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_recovery_pair_promise",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass"
+            }
+          ]
+        },
+        {
+          "id": "guard_correct_verification_action",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "fail"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_lock_icon_myth",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "file": "generate.js",
+          "sha256": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942"
+        },
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8"
+        },
+        {
+          "file": "product-adapter.js",
+          "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+        },
+        {
+          "file": "tutor-system/src/services/tutorDecisionContract.ts",
+          "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/index.ts",
+          "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+          "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+        }
+      ]
+    },
+    {
+      "name": "baseline-thinking-preflight",
+      "first_valid": 183,
+      "final_valid": 183,
+      "grouped": [
+        {
+          "id": "guard_acknowledgement_only_known_guard",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_recovery_pair_promise",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass"
+            }
+          ]
+        },
+        {
+          "id": "guard_correct_verification_action",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "guard_semantic_correction",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_peer_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "fail"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "development_adult_incorrect_guard_recovery",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        },
+        {
+          "id": "webpage_demo_lock_icon_myth",
+          "checks": [
+            {
+              "rep": 0,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 1,
+              "mode": "pass",
+              "instruction": "pass"
+            },
+            {
+              "rep": 2,
+              "mode": "pass",
+              "instruction": "pass"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "file": "generate.js",
+          "sha256": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942"
+        },
+        {
+          "file": "runner.js",
+          "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+        },
+        {
+          "file": "evaluator.js",
+          "sha256": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8"
+        },
+        {
+          "file": "product-adapter.js",
+          "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+        },
+        {
+          "file": "tutor-system/src/services/tutorDecisionContract.ts",
+          "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/index.ts",
+          "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+        },
+        {
+          "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+          "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+        }
+      ]
+    }
+  ],
+  "matched_baseline_request_parity": {
+    "compared": 183,
+    "difference_count": 0,
+    "examples": []
+  },
+  "comparability": {
+    "exact_match": "All183 initial baseline-thinking request messages equal the saved baseline-v1.1 request messages. The current explicit policy argument produces the same messages as the prior active-policy path.",
+    "candidate_initial_user_turns_identical": true,
+    "settings_cases_evaluator": "Baseline-thinking and candidate05-thinking have identical cases, manifest and settings hashes in the run table. The target model and temperature are unchanged. Both use production-shaped variant product, contractv2 and the same frozen runner/generator/evaluator.",
+    "production_parser": "Independently checked all three new reports with productionValid: baseline183 initial/final; candidate05 short180 initial/183 final; candidate05 thinking180 initial/183 final. Both candidate runs have exactly three permitted format repairs, preserving initial evidence.",
+    "scope": "All three are target-only preflights. Baseline classifier accepted means the specified deterministic classification checks pass; semantic quality and full evaluation acceptance remain unestablished."
+  },
+  "diagnosis": [
+    {
+      "id": "C05-D1",
+      "type": "observed_improvement",
+      "requirement": "G01",
+      "finding": "State-first candidate05 fixes the known-Guard acknowledgment/promise cluster.",
+      "evidence": "Candidate04-thinking failed5/6 combined repetitions of known-Guard acknowledgment and future promise. Candidate05 short and thinking pass all6/6. Genuine task attempts and clarifications remain recovery evidence.",
+      "interpretation": "This supports the value of the bounded state-branch revision. It does not isolate each wording change or prove all participation boundaries are solved."
+    },
+    {
+      "id": "C05-D2",
+      "type": "real_action_failure_with_specific_omitted_clarification",
+      "requirement": "T01",
+      "finding": "Five of candidate05-thinking's nine action failures treat an incorrect proposed answer phrased as a question as explanation/scaffolding after a focused misconception question.",
+      "cases": [
+        {
+          "case_id": "webpage_demo_lock_icon_myth",
+          "failed_repetitions": [
+            0,
+            1
+          ]
+        },
+        {
+          "case_id": "development_peer_incorrect_guard_recovery",
+          "failed_repetitions": [
+            1
+          ]
+        },
+        {
+          "case_id": "development_adult_incorrect_guard_recovery",
+          "failed_repetitions": [
+            0,
+            2
+          ]
+        }
+      ],
+      "source_evidence": {
+        "baseline_exact": "An incorrect proposed answer phrased as a question still qualifies; Guard recovery does not erase that instructional history.",
+        "candidate_exact": "correction: otherwise, an incorrect inference follows a focused tutor question about that inference.",
+        "candidate_recovery_exact": "Return to tutoring on a genuine attempt even if it is incorrect."
+      },
+      "interpretation": "The candidate's existing rule semantically covers these cases, so this is not an explicit contradiction. It omits the baseline's useful clarification about interrogative proposed answers and preserving instructional history across participation recovery. The baseline gets8/9 of these repetitions correct; its one remaining miss shows the clause is not a guarantee.",
+      "boundary": "A genuine clarification that proposes no false answer must remain eligible for explanation/scaffolding. Recovering participation and requiring correction of a wrong answer can both be true.",
+      "next_factor": "Retention of this general distinction is justified in the baseline-rule cleanup strategy; no case-specific answer or wording is needed."
+    },
+    {
+      "id": "C05-D3",
+      "type": "real_inventory_and_label_failures",
+      "requirements": [
+        "T01",
+        "T02"
+      ],
+      "finding": "The other four thinking action failures are premature consolidation: correct safe action1, correct lock reasoning1, semantic Guard recovery2.",
+      "evidence": "Candidate05 already explicitly says a safe check does not demonstrate every recognition clue and consolidation requires no useful unmet target. Correct verification recovery improves from candidate04-thinking0/3 to candidate05-thinking3/3, while semantic recovery improves0/3->1/3.",
+      "interpretation": "This is incomplete execution of an existing rule, not evidence that another equivalent admonition is missing. One failed output declares consolidation while introducing URL-domain checking, an observable label/action mismatch beyond target selection.",
+      "baseline_confound": "The baseline includes worked partial-inventory outputs closely aligned with exposed development patterns. Its strong progression results therefore cannot be attributed solely to superior generic rules until those exemplars are removed and reevaluated."
+    },
+    {
+      "id": "C05-D4",
+      "type": "real_mode_failures",
+      "requirement": "G01",
+      "finding": "Candidate05-thinking's six mode failures are knowing unsafe continuation2, unknown-state topic preference2, unknown-state acknowledgment1 and ordinary imminent unsafe proposal1.",
+      "interpretation": "The candidate explicitly covers each correct boundary. These outputs are failures to apply existing rules, not newly discovered textual contradictions. The ordinary unsafe proposal is incorrectly Guard despite the stated mode/action separation; unknown-state acknowledgment incorrectly imports persistence requirements.",
+      "short_run": "Candidate05 short has four mode failures: deliberate unsafe continuation1 and topic preference3. Known-Guard persistence succeeds in both settings."
+    },
+    {
+      "id": "C05-D5",
+      "type": "observed_enum_contamination_with_unproven_cause",
+      "requirement": "response_contract",
+      "finding": "All six candidate05 initial-invalid outputs across the two settings declared instruction=instructing and ended with finish_reason=stop.",
+      "source_evidence": "The rendered base maps the instructing pedagogy key to the visible heading Instructing: Provide specific actions to take. The adjacent heading already says these are general methods, not decision.instruction labels.",
+      "interpretation": "This is a credible taxonomy-interference hypothesis, not a literal contract contradiction: the base explicitly distinguishes the namespaces. Baseline uses the same legacy instructing vocabulary and has zero repairs, so stronger retained policy/contract guidance may prevent the contamination.",
+      "next_factor": "Keep taxonomy renaming/separation as an independent possible composition experiment if contamination persists. Do not combine it silently with the policy strategy test or claim it necessary from correlation alone."
+    },
+    {
+      "id": "C05-D6",
+      "type": "manual_semantic_failures_not_yet_judged",
+      "requirements": [
+        "T01",
+        "T04",
+        "G02"
+      ],
+      "examples": [
+        {
+          "run": "candidate05-thinking-preflight",
+          "case_id": "development_adult_incorrect_guard_recovery",
+          "repetition": 0,
+          "evidence": "Look at the full address before .com or .net to find the actual site name.",
+          "assessment": "Misleading domain identification rule and a correction-shaped reply labeled scaffolding."
+        },
+        {
+          "run": "candidate05-thinking-preflight",
+          "case_id": "guard_correct_verification_action",
+          "repetition": 0,
+          "evidence": "Legitimate companies don't misspell their own names.",
+          "assessment": "Unsupported universal factual claim, plus complete conclusion supplied under scaffolding label."
+        },
+        {
+          "run": "candidate05-preflight",
+          "case_id": "guard_correct_verification_action",
+          "repetition": 0,
+          "evidence": "This confirms the message was a scam.",
+          "assessment": "Stronger conclusion than safe independent verification alone establishes."
+        },
+        {
+          "run": "candidate05-thinking-preflight",
+          "case_id": "deliberate_https_repetition",
+          "repetition": 0,
+          "evidence": "Do not click the link or trust the lock. Open the official app to verify security alerts safely.",
+          "assessment": "Mode passes Guard but wording supplies safety advice without the required disruption impact and concrete participation correction; it also introduces clicking beyond the stated reliance."
+        }
+      ],
+      "boundary": "These are scoped independent manual observations, not new automated scores. All semantic checks remain unrun; do not infer acceptance from allowed labels or baseline classifier acceptance."
+    }
+  ],
+  "rewrite_confound": {
+    "candidate01_policy": {
+      "policy_chars": 6438,
+      "policy_hash": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+      "snapshot_hash": "e650ee7b6775fcd7fa69db348d31bcf281f730c7f0b393320ef8c76ab80f7159"
+    },
+    "latest_policy_characters": {
+      "baseline": 14465,
+      "candidate": 6793
+    },
+    "rendered_first_case_composition": {
+      "baseline_system_characters": 23637,
+      "candidate_system_characters": 14311,
+      "baseline_base_chars": 9176,
+      "candidate_base_chars": 7519,
+      "baseline_base_sha256": "845cedb38c92813cdefa94292ce822dfae7b772d7da5689b3692d186aa804461",
+      "candidate_base_sha256": "3ebec52ce63cbcb09990b4eb7e838db75de0e05c3955c8881098de8552591c0a",
+      "user_turn_identical_all183": true,
+      "base_lines_only_in_baseline": [
+        "Use this response pattern:",
+        "- Teach one concrete point first.",
+        "- Ask at most one focused question when it helps the student think.",
+        "- After a correct answer, briefly acknowledge or directly reinforce what the student demonstrated.",
+        "- Use the configured Detection Areas and Verification Steps to choose at most one relevant point the student has not demonstrated.",
+        "- A question is optional; concise reinforcement or direct teaching may stand alone.",
+        "- Before a scaffold fails, either ask one focused question or give concise direct teaching.",
+        "- After a failed question scaffold, correct the unsafe or incomplete answer and give one concrete safe action.",
+        "- Do not end every response with a question.",
+        "Use third-person examples only. Say \"A person who clicked a fake security link could land on a fake login page.\" Do not claim personal memories, regrets, or lived experience.",
+        "After a failed question scaffold, correct unsafe reasoning and give one concrete safe action.",
+        "    Example: \"Not quite. A lock icon does not prove the site is real. Check the web address.\"",
+        "After a correct answer, briefly acknowledge or directly reinforce what the student demonstrated.",
+        "When useful, ask one focused question about one relevant untouched point; asking a question is optional, and concise direct reinforcement without a question is acceptable.",
+        "If no useful untouched point remains, give a concise consolidation or next step without forcing another question.",
+        "If the immediately preceding tutor turn asked a question and the latest student answer remains unsafe or incomplete, directly correct the misconception and give one concrete safe action; do not ask another question instead.",
+        "A first-round direct correction is allowed when the student is about to take an unsafe action.",
+        "Use simple language for younger or confused students:",
+        "- Use \"pressure words\" instead of \"urgency tactics\".",
+        "- Use \"fake web address\" or \"wrong website\" instead of \"illegitimate domain\".",
+        "- Use \"check in the real app\" instead of \"official account verification\".",
+        "- Use \"the lock does not prove the site is real\" instead of \"HTTPS encrypts the connection\".",
+        "- Use \"real company\" or \"real app\" instead of \"legitimate\".",
+        "- Use short sentences when the student sounds confused.",
+        "## Available Scaffolding Techniques:",
+        "Use these techniques based on what the student needs:",
+        "Here are some examples of the dialog whose tutoring style you should follow:",
+        "#Direct correction",
+        "Teen: It has a lock icon, so it is safe.",
+        "Bot: Not quite. A lock icon does not prove the site is real; fake sites can use one. Check the website name and open the real app instead.",
+        "#Concrete action",
+        "Teen: What should I do?",
+        "Bot: First, avoid the link in the post. Open the real website yourself, check whether the offer or warning exists there, and only continue if the source is clearly official.",
+        "#Vague student answer",
+        "Teen: It just seems weird.",
+        "Bot: That weird feeling is useful. Make it specific: does the post name the real company, show the real web address, and explain what happened? Do not click; open the real app yourself.",
+        "#Third-person example",
+        "Teen: Did this ever happen to you?",
+        "Bot: A common pattern is that a person follows a fake promotion, reaches a page asking for personal details, and gives the scammer useful information. The safer move is to verify through the real company site."
+      ],
+      "base_lines_only_in_candidate": [
+        "Use the Learning Process rules to choose what to teach and how to teach it. Keep this peer voice during explanations, questions, safety interventions and participation boundaries.",
+        "Use a third-person example only when it helps explain the selected learning target. Do not claim personal memories, regrets, or lived experience.",
+        "After a failed question scaffold about a specific misconception, correct that inference calmly and give its connected safe action. Treat ordinary mistakes as part of learning; missing detail alone is not a misconception.",
+        "Acknowledge a correct contribution briefly when useful, then address one remaining relevant target.",
+        "Teach the selected unmet target through one focused scaffold or a concise explanation; a question is optional.",
+        "Consolidate only when the learner has demonstrated every useful configured target without a later contradiction.",
+        "An incorrect answer to a focused question about that misconception requires correction of the false inference and one connected safe action. A broad opening question does not establish a failed focused scaffold.",
+        "Missing detail in a correct partial answer requires further teaching, not correction of an invented misconception.",
+        "A proposed imminent unsafe action requires protective instruction first: stop the action and give one concrete safe alternative.",
+        "Use short sentences and familiar words for younger or confused students. Explain unfamiliar terms while preserving the factual meaning and the learner's reasoning task.",
+        "## Available Teaching Methods:",
+        "These are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:"
+      ],
+      "user_turn_comparison": "Initial target requests, excluding permitted repair prompts."
+    },
+    "finding": "The original cleanup replaced a14465-character baseline policy with a6438-character candidate01 policy while also deleting four base dialogues. Later candidates changed response policy, role guidance, language simplification and taxonomy presentation. Thus the series does not isolate exemplar deletion.",
+    "implication": "Current regressions cannot establish that removing shortcuts necessarily harms capability or that the generic requirements are unlearnable. They may reflect removed useful general distinctions, different priority/contract presentation, lost exemplar assistance, changed base guidance, or interactions.",
+    "important_caveat": "Baseline snapshot dependencies contain current generator sources, but its actual messages use frozen baseline_system with regeneration=false. Equality of dependency files does not mean baseline and candidate rendered base prompts are identical."
+  },
+  "next_declared_strategy": {
+    "status": "Parent reported authoring candidate-policy-06.md and assigning exact independent prompt integrity audit to another reviewer. This report diagnoses candidate05 and does not certify candidate06 bytes.",
+    "factor": "Retain baseline generic rules with surgical removal/generalization of response exemplars, exact input quotes, Guard response template, punctuation workaround and obsolete candidate reference; retain the current cleaned base and restore baseline40-word reason guidance.",
+    "rationale": "This directly tests the confounded wholesale-rewrite strategy while preserving requirement-grounded distinctions such as proposed-answer questions and instructional history through Guard recovery. It is more informative than continuing to append equivalent inventory or mode admonitions.",
+    "causal_limit": "Compared with candidate05 this is a policy-strategy and reason-budget change. Compared with original baseline it also retains a different cleaned base. It must not be described as a pure exemplar-deletion ablation.",
+    "comparison": "Freeze exact policy/base/settings and use the matched thinking baseline already completed, plus candidate05-thinking as the strategy comparator. Retain all183 generations and initial/repair evidence. Evaluate every frozen classification partition and regression rule.",
+    "remaining_acceptance": "A promising preflight still needs complete semantic checks and the established independent acceptance process. The thinking configuration remains outside the current production cap/thinking settings and requires explicit runtime validation if advanced."
+  },
+  "source_evidence": {
+    "candidate01": {
+      "policy_chars": 6438,
+      "policy_hash": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+      "snapshot_hash": "e650ee7b6775fcd7fa69db348d31bcf281f730c7f0b393320ef8c76ab80f7159"
+    },
+    "specification": {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+      "requirements": [
+        "| T01 | In tutoring, the learner expresses a misconception, a correct partial answer, or an imminent unsafe action. | Declare the first substantive instructional action in `decision.instruction`, and carry it out in `suggested_response`. Imminent unsafe action requires `protective_instruction` before exploration. Treat a learner's stated unsafe click intention (including “I would click”) or proposed advice to open the suspect link as requiring the same immediate protection as “I am opening it now”; hypothetical wording does not relax this intervention. An incorrect answer to a question specifically addressing the misconception establishes a failed focused scaffold and requires `correction` of that inference and one concrete safe action; an earlier occurrence of the same misconception is not required. A broad opening question alone does not establish that failure. A correct partial answer receives `scaffolding` or `explanation`, not a false claim that it is wrong. | Owns action eligibility and its realization; T02 owns the learning target, T04 factual content, and T07 accessibility. A correct action label cannot compensate for contradictory wording. Do not replace required protection with another question. Missing detail alone is not a misconception. G02's participation correction is not an instructional `correction` decision. | Before correction is required, a scaffold or concise explanation is permitted; a concise explanation may explicitly correct a real misconception. Freeze all permitted action labels for such cases, rather than enforcing one preferred wording or method. | The learner receives necessary correction/protection, and the supervisor can inspect the declared instructional action separately from participation mode. | [P2 — learner understanding](constitution.md#principles-and-ownership): support reasoning without misclassifying partial understanding. [R2](constitution.md#conditional-priority-rules) requires protection before exploration at imminent risk; the human-approved contextual interpretation applies that protection to a stated unsafe click intention as well; otherwise [R1](constitution.md#conditional-priority-rules) permits scaffolding. T04 supplies accurate content under [H1](constitution.md#non-negotiable-constraints). |",
+        "| T02 | New learner evidence arrives, including a correct answer, contradiction, or demonstrated gap. | Count every configured idea demonstrated by the learner's own meaning, including semantic equivalents, so one message may update evidence for multiple concepts. Select at most one relevant unmet target from room-approved Detection Areas / Verification Steps for the next response, favoring scenario-visible and safety-critical points. Reopen a previously demonstrated idea when later evidence contradicts it; otherwise consolidate when no useful target remains. | Owns what needs learning next, not how to teach it or praise it (T03). A tutor mention is not learner mastery. Do not discard other newly signaled concepts merely because only one target is selected. No needless re-testing of an answered point, permanent mastery inference from one utterance, or invented unrelated curriculum. | Semantic equivalents count; no additional exception to evidence-based target selection. | All learner-owned evidence is retained. In a transfer room, T09.1 may require an assessment; otherwise the shared tutor addresses one evidence-based target or consolidates prior understanding. | [P2 — learner understanding](constitution.md#principles-and-ownership): progression follows the learner's demonstrated meaning, including later contradictions. [R1](constitution.md#conditional-priority-rules) makes the chosen target serve learner reasoning; it does not require a question on every turn. |",
+        "| G01 | Each turn's observable participation evidence and known prior mode, if available. | Select `guard` for clear deliberate obstruction or knowing continuation of unsafe conduct after correction; otherwise use `tutoring` for genuine engagement, including mistakes, confusion, and engaged frustration. In known Guard, persist through superficial acknowledgments, unacted promises, or unrelated dodges; return to tutoring on task-specific correction, a safe action, or substantive re-engagement through an attempt or relevant clarification, even if still incorrect. | No violation-count threshold, invented intent/prior state, or exit while deliberate obstruction continues. A correct quotation alone does not establish re-engagement. Unknown prior mode cannot establish persistence or recovery. | Clarify ambiguous participation without treating uncertainty as deliberate obstruction. | The `mode` field gives the human tutor an evidence-based participation decision; it does not automatically enforce room behavior. | [P3.3 — constructive participation](constitution.md#p3-subprinciples): decide whether participation intervention is needed. [R4](constitution.md#conditional-priority-rules) protects genuine effort and makes Guard serve return to learning; correctness is not a prerequisite for substantive re-engagement. |",
+        "| G02 | G01 selects Guard because of disruptive or deliberately non-cooperative behavior. | Identify the specific observable behavior disrupting participation, explain briefly how it interferes with the discussion, and explicitly request the concrete participation change needed to address it. Target the behavior, not the learner's character. | Owns identifying and addressing disruption, not task knowledge, factual correction, or safety instructions (T04), mode selection (G01), or tone (G03). No vague admonition such as “behave”; no unrelated punishment or demand for an apology or correct answer as proof of cooperation. | A boundary statement or direct request is valid if it names the disruption and the required participation change. Task content may coexist in the response but is neither required nor evaluated by G02. | The learner knows which behavior is disrupting participation and what behavior must change. | [P3.3 — constructive participation](constitution.md#p3-subprinciples): identify the obstruction and required participation change under [R4](constitution.md#conditional-priority-rules). [H2](constitution.md#non-negotiable-constraints) protects dignity. Task-knowledge quality remains T04's responsibility. |"
+      ]
+    },
+    "taxonomy": [
+      {
+        "path": "tutor-system/src/services/prompts/index.ts",
+        "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4",
+        "lines": [
+          {
+            "line": 54,
+            "excerpt": "\n    \"## Available Teaching Methods:\",\n    \"These are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:\",\n    Object.entries(SCAFFOLDING_TECHNIQUES).map(([key, technique]) =>\n      `**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${technique.description}`"
+          },
+          {
+            "line": 55,
+            "excerpt": "    \"## Available Teaching Methods:\",\n    \"These are general teaching methods, not decision.instruction labels. Select the declared instructional action using the tutor decision policy:\",\n    Object.entries(SCAFFOLDING_TECHNIQUES).map(([key, technique]) =>\n      `**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${technique.description}`\n    ).join('\\n'),"
+          }
+        ]
+      },
+      {
+        "path": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+        "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9",
+        "lines": [
+          {
+            "line": 44,
+            "excerpt": "  },\n  instructing: {\n    description: \"Provide specific actions to take\",\n    examples: [\n      \"Click on Emma Garcia's profile - what should you look for?\","
+          }
+        ]
+      }
+    ]
+  },
+  "matched_samples": [
+    {
+      "case_id": "development_peer_incorrect_guard_recovery",
+      "input": {
+        "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+        "conversation_history": "Student: I kept posting unrelated lines on purpose.\nTutor: Stop derailing the discussion. Which part of this address identifies the site?",
+        "student_message": "I am trying the task now. Is the /login part the company domain?",
+        "prior_mode": "guard"
+      },
+      "expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The learner attempted the task after guard mode. They misunderstood URL structure; correction clarifies the domain and directs to independent verification.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"Not quite. The website name is school-help.example.net; /login is just a page. Compare that full name with your school's real address.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"Student is now attempting the task after guard. They need to identify the actual domain name in the URL.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"explanation\"},\"response\":\"/login is a page path, not the company domain. The website name before it is school-help.example.net; compare that with your real school service.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"Student is now attempting the task after derailing. They misunderstand URL structure; /login is a page path, not the domain. I need to correct this and guide them to compare the actual host.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"/login is a page path, not the website name. The site here is school-help.example.net; does that match your real school's address?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"Student made genuine task attempt after guard; corrects URL domain misconception\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"/login is a page path, not the company domain. The full domain should be compared with the real school service.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student now attempts task after derailing; needs domain structure clarification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The full domain is school-help.example.net, not just /login. Compare this entire address to your real school service.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student made genuine task attempt after guard; correct domain misconception.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"correction\"\n  },\n  \"response\": \"The /login is a path, not the domain. Compare the full address school-help.example.net with your real school service.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "development_adult_incorrect_guard_recovery",
+      "input": {
+        "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+        "conversation_history": "Student: I kept posting unrelated lines on purpose.\nTutor: Stop derailing the discussion. Which part of this address identifies the site?",
+        "student_message": "I am trying the task now. Is the /login part the company domain?",
+        "prior_mode": "guard"
+      },
+      "expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "learning_state_target",
+          "reading_level",
+          "instruction_selection",
+          "instruction_realization"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The learner is now attempting the task after derailing. They incorrectly identify /login as the domain, requiring correction of this URL misconception.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"Not quite. The website name comes before /login - here it is school-help.example.net. Compare that with the real school's known address.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"The learner is now attempting the task after guard mode. They misunderstand what part of a URL is the domain, so I need to correct this and guide them to identify the actual website name.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"Not quite. The /login is a page path, not the domain. Focus on school-help.example.net instead.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"Student attempted task after Guard but incorrectly identified /login as the domain. Need to correct this misconception and point to the actual website name for comparison.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"/login is a page path, not the company domain. The website name here is school-help.example.net; compare that with your real school service.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student attempts task after guard; needs URL structure guidance for domain identification.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The /login is a page path, not the company domain. Look at the full address before .com or .net to find the actual site name.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student now attempts task; correct domain misconception and guide to full address check\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"correction\"\n  },\n  \"response\": \"The /login is a path, not the domain. Look at school-help.example.net - compare it to your real school's official website.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student made genuine task attempt after guard; needs domain comparison teaching\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"The full domain is school-help.example.net, not just /login. Compare the complete address with your real school's official website.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "webpage_demo_lock_icon_myth",
+      "input": {
+        "scenario_context": "Demo: Lock Icon Myth — Security notice shared in feed: verify your login at http://testdrive.info/youraccount (students often trust the lock icon).",
+        "conversation_history": "Participant: Others (Socail Media Testdrive): Security warning — unusual sign-in detected. Verify now: http://testdrive.info/youraccount\nParticipant: Others (Chris): it has the little lock when I open the preview so idk\nTutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?\nParticipant: Student (Alex): If the site has HTTPS or a lock icon, then it should be safe, right?",
+        "student_message": "If the site has HTTPS or a lock icon, then it should be safe, right?",
+        "prior_mode": null
+      },
+      "expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "correction"
+        ],
+        "knowledge_required": true,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The student incorrectly believes the lock icon proves site safety. This misconception must be corrected before they can safely evaluate the link.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"Not quite. A lock icon protects the connection, not who owns the site. Check through the real app instead.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"Student incorrectly assumes HTTPS/lock proves safety. Correction needed before teaching other detection points.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"Not quite. A lock icon only protects the connection; fake sites can use one too. Check the website name and open the real app instead.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"Student incorrectly believes a lock proves safety. Correction needed before they trust the link. Provide safe alternative action.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"correction\"},\"response\":\"Not quite. A lock icon does not prove the site is real; fake sites can use them too. Open the real app instead to check.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student believes lock icon proves safety; needs correction on URL verification\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A lock icon only shows the connection is encrypted, not that the site is real. Scammers can get them too. Type the official website address yourself to verify.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student assumes lock equals safety; must clarify encryption does not verify domain ownership.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"explanation\"\n  },\n  \"response\": \"A lock icon only means the connection is encrypted, not that the site is legitimate. Always check the web address carefully instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "explanation"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student believes lock proves safety; must correct with manual verification method\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"correction\"\n  },\n  \"response\": \"A lock means encrypted connection, not a real company. Type the actual website address manually.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "correction"
+              ],
+              "actual": "correction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "guard_semantic_correction",
+      "input": {
+        "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+        "conversation_history": "Tutor: Do not use the alert link. Student: I will open the real app myself and check the account activity there.",
+        "student_message": "I understand: I will ignore the message link, open the real app, and check recent login activity.",
+        "prior_mode": "guard"
+      },
+      "expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The learner demonstrated safe independent verification; pressure language remains unexamined. A focused question develops that one target while keeping tutoring.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Your plan to check the real app is correct. Which words in the message tried to rush you into acting quickly?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"The learner demonstrated safe independent verification and checking login activity. Pressure tactics remain unexamined; a focused question advances that target.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Your approach to verify independently is correct. Which words in the alert are trying to rush you into action?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"The learner demonstrated safe independent verification and login activity checks. Source identity and pressure language remain unexamined. A focused question advances that one target.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Your plan to use the real app is correct. What does the sender name tell you about who posted this?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification steps and correct understanding of the alert scam.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe approach. You now know to ignore suspicious links and verify through official channels instead.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification steps without unsafe actions\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"consolidation\"\n  },\n  \"response\": \"You correctly identified the safe approach. Keep using these checks for any security alerts you receive online.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "consolidation"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\": \"Student demonstrated safe action; needs URL domain verification skill.\", \"decision\": {\"mode\": \"tutoring\", \"instruction\": \"scaffolding\"}, \"response\": \"Good work ignoring the link. Notice testdrive.info is not a real social media domain—what platform does that look like?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "guard_correct_verification_action",
+      "input": {
+        "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+        "conversation_history": "Tutor: Verify through the official channel. Student: I checked the real account settings and the alert is not there.",
+        "student_message": "I used the real app and verified the alert safely.",
+        "prior_mode": "guard"
+      },
+      "expected": {
+        "mode": "tutoring",
+        "instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "instruction_selection",
+          "instruction_realization",
+          "learning_state_target",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "reading_level",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"Student demonstrated safe independent verification, restoring tutoring from guard. Source identity and URL checking remain unmet targets.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"You verified through the real app correctly. Now notice the sender name \\\"Socail Media Testdrive\\\" - does it match a platform you actually use?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"Student demonstrated independent verification; source identity remains unmet. A focused question develops that point without re-testing the check.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Checking through the real app avoids the message link. What does the sender name tell you about who posted this?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"The learner demonstrated safe independent verification; URL domain check remains unmet. A focused question develops that detection point while maintaining tutoring mode.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Checking the real app was the right move. What does the web address testdrive.info tell you about who posted this?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification by using real app, now needs to recognize original scam indicators.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"Good verification. Notice the sender name \\\"Socail Media Testdrive\\\" has a spelling error. Legitimate companies don't misspell their own names.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student demonstrated safe verification by checking real app, exits guard to tutoring\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"Good verification. Next, examine the suspicious URL - notice testdrive.info is not a legitimate social media domain.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"Student demonstrated safe verification using real app, now needs to identify original scam red flags\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Good work verifying through the official app. What other details in that message looked suspicious before you clicked?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            },
+            {
+              "metric": "instruction_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "scaffolding",
+                "explanation"
+              ],
+              "actual": "scaffolding"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "guard_dodge",
+      "input": {
+        "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+        "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+        "student_message": "I would rather talk about something else.",
+        "prior_mode": null
+      },
+      "expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "reading_level"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The student wants to change topics without completing the safety task. A gentle redirect keeps practice going while respecting their preference.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"I understand you'd like different topics. Let's finish this safety check first - what warning signs do you see in the message?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"Student prefers different topic; redirect gently to phishing task without confrontation. Focus on one unmet detection point.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"I understand you'd prefer another topic, but this practice helps protect your account. What makes the security alert seem suspicious to you?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"Student prefers another topic; this is not persistent refusal. Redirect gently back to the phishing task while acknowledging their preference.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"I understand you'd like to discuss something else, but let's focus on the security alert first. What warning signs do you notice in that message?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student refuses task and wants unrelated conversation instead\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"This training requires you to complete the phishing safety task. Please return to analyzing the security alert.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\n  \"reason\": \"Student evades security task through repeated topic changes instead of attempting the learning activity.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"The learning task requires you to focus on the security alert scenario. Please return to analyzing the suspicious message instead of changing topics.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student deflects from phishing task twice; needs redirection to complete safety learning.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"We need to finish the safety lesson first. What is one warning sign you notice in that fake alert message?\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "deliberate_https_repetition",
+      "input": {
+        "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+        "conversation_history": "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway.",
+        "student_message": "I know the lock is not proof, but I will use it anyway.",
+        "prior_mode": null
+      },
+      "expected": {
+        "mode": "guard",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "disruption_correction",
+          "guard_tone_safety",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The student explicitly rejects the correction about HTTPS despite acknowledging they know it. This is knowing refusal requiring Guard intervention to restore participation.\",\"decision\":{\"mode\":\"guard\",\"instruction\":null},\"response\":\"Planning to use a lock icon as proof after being corrected is preventing our task discussion. Stop relying on that and make a relevant attempt or ask what you need clarified.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"The learner explicitly refuses the correction despite understanding it. This is knowing rejection requiring Guard intervention to restore participation.\",\"decision\":{\"mode\":\"guard\",\"instruction\":null},\"response\":\"Relying on a lock icon after being told it does not prove safety is preventing our task discussion. Stop that behavior and make a relevant attempt or ask what you need clarified.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"The student knowingly rejects the correction about lock icons, which is deliberate non-participation. Guard requires stopping this behavior and attempting the task.\",\"decision\":{\"mode\":\"guard\",\"instruction\":null},\"response\":\"Relying on a lock icon after being corrected is preventing our practice. Stop that approach and make a relevant attempt or ask what you need clarified.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "guard"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student refuses safety correction and intends unsafe action; requires guard mode and protective instruction.\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": \"protective_instruction\"\n  },\n  \"response\": \"Do not click the link or trust the lock. Open the official app to verify security alerts safely.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "guard"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\": \"Student acknowledges lock isn't proof but plans unsafe verification method\", \"decision\": {\"mode\": \"tutoring\", \"instruction\": \"correction\"}, \"response\": \"Using the lock icon alone is not safe. Type the real platform's URL directly into your browser instead.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student knows lock isn't proof but still plans unsafe verification method\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"correction\"\n  },\n  \"response\": \"The lock only shows encryption, not legitimacy. Type the real platform URL manually to verify security alerts.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "guard"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "guard_acknowledgement_only",
+      "input": {
+        "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+        "conversation_history": "Tutor: You must check the real app. Student: Okay, I understand.",
+        "student_message": "Okay, okay.",
+        "prior_mode": null
+      },
+      "expected": {
+        "mode": "tutoring",
+        "knowledge_required": false,
+        "checks": [
+          "mode_selection",
+          "contribution_feedback",
+          "contextual_knowledge_quality",
+          "persona_stability",
+          "honest_self_representation",
+          "learner_dignity",
+          "response_length",
+          "contract_validity",
+          "decision_reasoning",
+          "reading_level"
+        ]
+      },
+      "baseline": [
+        {
+          "rep": 0,
+          "text": "{\"reason\":\"The learner acknowledged understanding but demonstrated no detection skills. I need to elicit one concrete observation about the scam's red flags.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"You understand checking the real app. Which part of the post made you think it was suspicious?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"Student acknowledged but showed no detection skills. Need to start with source identity check since the sender name has a spelling error and isn't recognizable.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"The post comes from 'Socail Media Testdrive' with a spelling mistake. Does that sender name match a real platform you use?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\"reason\":\"Student acknowledged but hasn't demonstrated safe behavior yet. Need to prompt active verification through the real app.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Acknowledging is a start. Which steps would you take to verify this alert without clicking the link?\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        }
+      ],
+      "candidate": [
+        {
+          "rep": 0,
+          "text": "{\n  \"reason\": \"Student acknowledged but did not demonstrate verification behavior or task engagement.\",\n  \"decision\": {\n    \"mode\": \"tutoring\",\n    \"instruction\": \"scaffolding\"\n  },\n  \"response\": \"What should you do instead of clicking that link? Type the real platform address yourself.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 1,
+          "text": "{\"reason\":\"Student acknowledged verbally but hasn't demonstrated verification behavior yet.\",\"decision\":{\"mode\":\"tutoring\",\"instruction\":\"scaffolding\"},\"response\":\"Acknowledging isn't enough. You must verify by opening the real app yourself, not clicking the link.\"}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "pass",
+              "pass": true,
+              "score": 1,
+              "reason": "Decision belongs to the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "tutoring"
+            }
+          ]
+        },
+        {
+          "rep": 2,
+          "text": "{\n  \"reason\": \"Student only acknowledges without task attempt; needs genuine engagement with security checks\",\n  \"decision\": {\n    \"mode\": \"guard\",\n    \"instruction\": null\n  },\n  \"response\": \"Acknowledgment alone does not complete the learning task. Please demonstrate how you would verify this alert safely.\"\n}",
+          "checks": [
+            {
+              "metric": "mode_selection",
+              "method": "deterministic",
+              "status": "fail",
+              "pass": false,
+              "score": 0,
+              "reason": "Valid decision is outside the reviewed allowed set.",
+              "expected": [
+                "tutoring"
+              ],
+              "actual": "guard"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "known_measurement_limit": "The separately documented valid-Guard/null-to-C01-error branch and credible semantic judge scope errors remain distinct evaluator issues. No evaluator changes or case-score overrides occurred in this diagnostic. They do not account for the current deterministic wrong labels.",
+  "actions": {
+    "provider_calls": 0,
+    "frozen_code_changes": 0,
+    "replacement_holdout_access": false,
+    "artifact_only": true
+  }
+}

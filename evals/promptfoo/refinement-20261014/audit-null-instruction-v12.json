@@ -1,0 +1,32 @@
+{
+  "intent": "Independently review the schema-aware realization correction and calibration labels before provider execution.",
+  "auditor": "/root",
+  "implementation_author": "/root/eval_shortcuts",
+  "reviewed_at_utc": "2026-10-15T06:30:41Z",
+  "verdict": "clear_for_calibration_only",
+  "evaluator_sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b",
+  "rubric_sha256": "35c300472508271a684b51b45f2bdb0288c9a741ddcd7da91a5b51e70ddc18e6",
+  "draft_manifest_sha256": "9eb6af4aea2d7ab15c84fd244fe873348f4cba625384feff41e939d06aa7950e",
+  "calibration_proposal_sha256": "4406419c3ac1abdcbca3eb4b820ff76e47bd58a41ba01e95800869a2af052748",
+  "review": [
+    "The preserved candidate02 recovery generation passes contract validity but receives an inconsistent realization contract error. Guard/null is a valid declared absence of teaching; frozen expected-tutoring applicability remains in force.",
+    "The revised precheck routes valid Guard/null through the existing LLM judge. It does not synthesize a verdict, infer an action from prose, suppress a row, or repair a target. Missing/invalid fields and tutoring/null remain errors.",
+    "Returned mode is exposed only to the realization judge as structural evidence. Expected mode/action labels remain excluded. Existing label eligibility stays separate from realization.",
+    "All eight semantic labels were independently reviewed: four null declarations fail regardless of whether prose teaches; real explanation/scaffolding with matching wording passes; declared explanation with participation-only prose fails. The scaffold fixture leaves comparison work; factual precision is a separate metric.",
+    "Five routing fixtures distinguish valid Guard/null from tutoring/null, absent fields, invalid enum and numeric instruction. Both legacy/v2 integration paths are covered without testing semantic reason wording.",
+    "Programmatic comparison with baseline-v1.1 verifies all14 check definitions unchanged except realization checked_field/version/status. Applicability, thresholds, required partitions, cases and expected labels are unchanged."
+  ],
+  "validation": { "focused_node_tests": 88, "passed": 88, "failed": 0, "provider_calls": 0 },
+  "calibration_plan": "Run all8 new null boundaries, all11 earlier action boundaries and all30 existing examples against the exact current rubric. Require49/49 agreement with zero unresolved errors. Then freeze revision and symmetrically rejudge every applicable baseline/candidate realization row, preserving original outputs and scores.",
+  "initial_calibration": { "null_boundaries": "8/8", "prior_boundaries": "10/11", "existing_examples": "30/30", "status": "failed", "failure": "D-C2 false positive: judge conflates correction's safety benefit with protective_instruction realization. No model or evaluator failure is discarded." },
+  "reviewed_second_condition": { "rubric_sha256": "c1ee5e17767c08fd9b7e466590b5456d6ff273066cd190f600a5754c76eec6b3", "draft_manifest_sha256": "830e85240df310ef565dff85cf5b6306c7bd835d63e9bad3ede385c1b0e1524c", "verdict": "clear_for_new_calibration", "rationale": "General clarification distinguishes a response's protective benefit from its first performed action. It preserves existing first-move ownership and independent action eligibility; no fixture-specific wording, labels or thresholds change. Require a new complete49-example calibration under this changed condition, preserving the failed original condition." },
+  "final_calibration": {
+    "agreed": 49, "total": 49, "unresolved_errors": 0, "provider_attempts": 50,
+    "rubric_sha256": "c1ee5e17767c08fd9b7e466590b5456d6ff273066cd190f600a5754c76eec6b3",
+    "null_summary_sha256": "3e024fa33add56a7d9e37eef49bdea2f6990e40b123eb489056968aeaef14c3c",
+    "prior_summary_sha256": "e9c721ba7c80f059628c4e1332f3f2da01d088d01724bd3f674ff94bdcd4d76b",
+    "existing_summary_sha256": "cd540f8f628931338dbae8ab64689c4646c56322b34a8bb1ccd7225fe05ebd17",
+    "verification": "All49 raw requests match Qwen3.5 Flash / temperature0 /8000tokens /thinkingtrue; all22 realization requests contain the exact adopted rubric bytes. One existing-example transport attempt recovered. No outcome-selected replay. Manifest adoption changes metadata only after calibration."
+  },
+  "acceptance": "evaluator_adopted; target_behavior_acceptance_requires_new_comparable_full_evaluation"
+}

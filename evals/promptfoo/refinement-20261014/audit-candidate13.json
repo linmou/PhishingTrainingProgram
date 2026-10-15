@@ -1,0 +1,42 @@
+{
+  "intent": "Independently audit removal of prefilled decision values from candidate11's contract demonstrations before candidate13 preflight.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_declared_preflight",
+  "scope": "Prompt integrity and exact intervention fidelity, not demonstrated label-bias causation or model acceptance.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-13.md",
+    "sha256": "a8e2eeda3c1f35617057c0845182356d304dfe59457fcb249857b6f070647f8d",
+    "reference_candidate11_sha256": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050",
+    "request_set_sha256": "bd531c204fbe0c0016a892aa18bb951a231cc35c9729c3408779b0dc034a41a3",
+    "digest_method": "SHA-256 of JSON.stringify of all61 messagesFor(case, product, exact policy, v2, true) arrays in frozen order."
+  },
+  "exact_diff": {
+    "changed_lines": 2,
+    "description": "Two JSON shape demonstrations prefilled with tutoring/scaffolding are replaced by neutral field/type/enum prose and a reference to that definition. All other candidate11 lines remain unchanged. Candidate12's unrelated-domain demonstrations are absent.",
+    "new_instruction": "There is no default mode or instruction; values must follow current participation and action evidence."
+  },
+  "verification": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate11-thinking-preflight/snapshot.json and report.json",
+    "cases": 61,
+    "differences_beyond_policy_suffix": [],
+    "user_turns_role_inventory_and_base_preserved": true,
+    "snapshotted_dependency_changes": [],
+    "provider_calls": 0,
+    "continuation_record_sha256": "665394b6bb26ed79cf39448dce03593dcb2be897ca541674caf9fe231c0f14e5"
+  },
+  "requirement_review": {
+    "contract": "The same reason-first v2 object remains mandatory. Reason/response nonempty types, reason40-word cap, response two-sentence/35-word bound, nested mode/instruction enums, Guard-only null and rejected legacy fields are retained. New prose does not change parser semantics.",
+    "G01": "Participation entry/persistence/recovery criteria are unchanged. Neutral enum description removes an illustrative default without favoring tutoring or Guard as a rule.",
+    "T01_T02": "Action eligibility, first-action realization, inventory evidence and consolidation rules are unchanged. Removing prefilled scaffolding does not prescribe another action or change expected labels.",
+    "shortcut_integrity": "No case IDs, learner utterances, worked behavior answers, response templates or scorer accommodations are added. The intervention removes a repeated label exemplar rather than replacing it with evaluation-specific answer content."
+  },
+  "hypothesis_and_limits": [
+    "Repeated prefilled values are a plausible source of response-label priming, but the existing observations do not establish that causal mechanism.",
+    "The intervention jointly removes JSON shape exemplars and adds neutral descriptions/no-default guidance. Any effect may concern formatting or prompt emphasis as well as label priming.",
+    "All61cases/183targets, including formatting failures and permitted repairs, must remain in the preflight. Compare directly with candidate11 under the same settings and preserved source.",
+    "Full semantic checks, matched-baseline non-regression, independently managed validation and product verification remain separately required. A clear prompt audit is not acceptance."
+  ],
+  "remaining_material_findings": [],
+  "actions": { "source_edits_by_reviewer": false, "holdouts_inspected": false }
+}

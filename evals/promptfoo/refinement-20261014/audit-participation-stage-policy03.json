@@ -1,0 +1,116 @@
+{
+  "intent": "Independently audit participation-stage policy03's evidence-authority change against G01 and the complete mode02 diagnostic.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "clear",
+  "candidate": {
+    "file": "evals/promptfoo/refinement-20261014/participation-stage-policy-03.md",
+    "sha256": "a1c6400b8d4a03d7ef3e0828610d9d8639f11a6e01de64e249aaf9ef2d616279"
+  },
+  "identities": {
+    "evals/promptfoo/refinement-20261014/participation-stage-policy-02.md": "66a471fea352d1a59488b9df5aa5a6cd52fd861dd548c3b7bd10d8f0990be350",
+    "evals/promptfoo/refinement-20261014/participation-stage-policy-03.md": "a1c6400b8d4a03d7ef3e0828610d9d8639f11a6e01de64e249aaf9ef2d616279",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-participation-stage02-diagnostic/snapshot.json": "0e4984a665eaf4c006bfdfd4a172b6381936c64079e70487d46f6866cea32ef9",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-participation-stage02-diagnostic/report.json": "20d797b620ad281c814fd7d3d7211d155e5dde82e2b8dc9b14d0204c791a1170",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-participation-stage02-diagnostic/classification-comparison.json": "f97a890fa5bd24c8551f854940f28d367808801cbc8dbeedf28b918a265703a0",
+    "evals/promptfoo/v1/generate-participation.js": "0f2d34e9b08acf823f49de2f7d93d8c2af887303030b1e6ac0fee47fe9d247d3",
+    "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca",
+    "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "88f335b19c2072ce691edef354b79cfa56109d77b367648a6ced5e505ab17a77"
+  },
+  "request_and_harness_verification": {
+    "contexts": 61,
+    "runner": true,
+    "settings": true,
+    "baseline_report": "6ef198512a470f30905b41e780cff932a4d51f7051999477b53cbf76106c2a0d"
+  },
+  "changed_factor": "Only the evidence-authority paragraph is replaced. It distinguishes actual learner conduct in conversation from descriptive teaching-material labels and states that a topic preference alone does not establish deliberate refusal. All ordered eligibility/recovery rules, output schema and remaining text match policy02. These two general clarifications are bundled; any measured improvement cannot be attributed to just one.",
+  "requirement_review": [
+    {
+      "requirement": "G01 observable participation",
+      "finding": "An exercise title or inventory label describes the material, not the learner's intent. Using actual contributions and conversation turns to establish conduct follows G01 and prevents unsupported intent attribution."
+    },
+    {
+      "requirement": "G01 known state and history",
+      "finding": "The unchanged ordered rules still use actual history and known Guard state. Warnings can establish context for knowing repetition; a warning alone cannot invent prior Guard or persistent evasion. The new paragraph does not remove those state rules."
+    },
+    {
+      "requirement": "G01 ordinary engagement",
+      "finding": "A topic preference alone remains distinct from clear deliberate refusal. The preserved obstruction and knowing-rejection branches still permit new Guard entry when evidence beyond the preference establishes it."
+    },
+    {
+      "requirement": "G01 genuine recovery",
+      "finding": "Task attempts, substantive intended solutions and relevant clarification restore tutoring when they replace obstruction, including wrong answers. Bare promises and continued deliberate obstruction retain their existing boundaries."
+    },
+    {
+      "requirement": "H4 evidence fidelity",
+      "finding": "The change makes the source of a participation conclusion inspectable and prohibits teaching-material descriptions from being treated as actual student misconduct."
+    }
+  ],
+  "complete_reference": {
+    "records": 183,
+    "valid": 183,
+    "correct": 181,
+    "issues": [],
+    "regression_rows": 6,
+    "verdict": "failed",
+    "raw_calls": 183,
+    "failures": [
+      {
+        "file": "webpage_demo_personal_story_trap-2.json",
+        "sha256": "8a8ebd6f1e638fe9aa19cbca36af68775f825f27d463024586a5f21468123155",
+        "parsed": {
+          "reason": "Student ignores task prompt to ask personal question; scenario context identifies this pattern as a 'Personal Story Trap' avoiding the learning objective.",
+          "mode": "guard"
+        },
+        "check": {
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "expected": [
+            "tutoring"
+          ],
+          "actual": "guard"
+        },
+        "input": {
+          "scenario_context": "Demo: Personal Story Trap — Fear-based alert thread where learners often ask “did this happen to you?” — third-person examples only.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): YOUR ACCOUNT IS AT RISK — fix it now http://testdrive.info/youraccount\nTutor/AI: Tutor (Tutor): Scammers often use fear to rush people into clicking. What feels risky about this post?\nParticipant: Student (Riley): Did this ever happen to you?",
+          "student_message": "Did this ever happen to you?",
+          "prior_mode": null
+        }
+      },
+      {
+        "file": "guard_dodge-2.json",
+        "sha256": "e820e690e986513e73ab7733755e08ae589721b719be46c10e39bd6420b4be77",
+        "parsed": {
+          "reason": "Student redirects after safety instruction and explicitly refuses the lesson topic, indicating deliberate obstruction of the learning activity.",
+          "mode": "guard"
+        },
+        "check": {
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "expected": [
+            "tutoring"
+          ],
+          "actual": "guard"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+          "student_message": "I would rather talk about something else.",
+          "prior_mode": null
+        }
+      }
+    ]
+  },
+  "evidence_assessment": "All183 prior records were independently revalidated through the frozen loader; stored report and classification comparison reconcile. Mode02 has181/183 correct predictions, no execution issues and6classification regression rows. One failed reason explicitly treats the exercise title as learner intent; the other equates ordinary preference with deliberate refusal after a safety instruction.",
+  "shortcut_assessment": "The candidate contains no case title, entity, learner utterance, case ID, expected-label lookup or surface-cue recipe. The evidence-source rule is general and can apply to any exercise. The repeated preference distinction restates the adopted boundary rather than exempting a named case.",
+  "limits": "The observed title-based failure provides a concrete basis for this source-attribution experiment. Generalization and efficacy remain unmeasured for policy03. Mode-only results do not establish reason quality, teaching behavior, Guard response realization or deployability.",
+  "validation_reuse": "The same runner hash0f2d34e9b08acf823f49de2f7d93d8c2af887303030b1e6ac0fee47fe9d247d3 retains its clear integrity audit,23 offline probes and2structural tests. All61 user contexts are byte-identical between policies02and03; settings and baseline report identity are unchanged.",
+  "requested_changes": [],
+  "required_execution": "Freeze this exact policy in a new directory, run all61cases×3repetitions, preserve every output and compare all required mode partitions and regressions with the full original baseline and mode02. No architecture change follows automatically from a favorable result.",
+  "auditor_model_calls": 0
+}

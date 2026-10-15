@@ -1,0 +1,2212 @@
+{
+  "intent": "Diagnose the completed development comparison at the level of adopted requirements; preserve original scores while distinguishing target failures, judge errors, and causal hypotheses.",
+  "auditor": "/root/refinement_audit",
+  "captured_at_utc": "2026-10-15T05:07:12.964Z",
+  "status": "complete_development_diagnosis",
+  "scope": "61 development cases, three repetitions. The three historically exposed holdout_ IDs are authorized development regressions. Replacement holdouts were not opened. This review does not establish acceptance.",
+  "artifacts": {
+    "shortcut-removal-20261015-candidate01": {
+      "files": 183,
+      "report": true,
+      "snapshot_keys": [
+        "fingerprint",
+        "started_at",
+        "command",
+        "variant",
+        "contract_version",
+        "cases",
+        "settings",
+        "policy",
+        "rubrics",
+        "manifest",
+        "sources",
+        "dependencies",
+        "runner_sha256",
+        "replay_directory",
+        "replay_available",
+        "regenerate_room_prompt"
+      ],
+      "fingerprint": "300efa03cde5231be1577ff20a009ab38a45bdd4f0d97443ad16a483e6920e62",
+      "hashes": {
+        "snapshot.json": "e650ee7b6775fcd7fa69db348d31bcf281f730c7f0b393320ef8c76ab80f7159",
+        "report.json": "c53c485a4e672b545a721f92e2f4ecd43c8ff2ebc3c55b193680edae5309d159",
+        "gate.json": "dc950400957a6b70fec4e4cb8a6de29cd5dca6c862dfbff0daf3245c142540c2",
+        "classification.json": "75a87af5c4287b163ab5194936f8a3ca38d7f6048a23f9c90edade6bb3f6df61"
+      },
+      "counts": {
+        "mode_selection": {
+          "pass": 177,
+          "fail": 6
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "contract_validity": {
+          "pass": 183
+        },
+        "learning_state_target": {
+          "pass": 144,
+          "fail": 3
+        },
+        "contribution_feedback": {
+          "not_applicable": 91,
+          "pass": 88,
+          "fail": 4
+        },
+        "contextual_knowledge_quality": {
+          "pass": 160,
+          "not_applicable": 20,
+          "fail": 3
+        },
+        "persona_stability": {
+          "pass": 174,
+          "fail": 9
+        },
+        "honest_self_representation": {
+          "pass": 183
+        },
+        "reading_level": {
+          "pass": 153
+        },
+        "learner_dignity": {
+          "pass": 183
+        },
+        "decision_reasoning": {
+          "pass": 177,
+          "fail": 6
+        },
+        "disruption_correction": {
+          "fail": 9,
+          "pass": 21
+        },
+        "guard_tone_safety": {
+          "pass": 30
+        },
+        "instruction_selection": {
+          "pass": 73,
+          "fail": 17
+        },
+        "instruction_realization": {
+          "pass": 68,
+          "fail": 22
+        }
+      },
+      "fails": {
+        "disruption_correction": [
+          "deliberate_https_repetition-0",
+          "deliberate_https_repetition-1",
+          "deliberate_https_repetition-2",
+          "development_recovery_pair_promise-0",
+          "development_recovery_pair_promise-1",
+          "development_recovery_pair_promise-2",
+          "explicit_system_testing-1",
+          "guard_dodge_known_guard-2",
+          "joking_deliberate_repetition-1"
+        ],
+        "mode_selection": [
+          "deliberate_https_repetition-1",
+          "deliberate_https_repetition-2",
+          "guard_dodge-0",
+          "guard_dodge-1",
+          "guard_dodge-2",
+          "joking_deliberate_repetition-1"
+        ],
+        "contribution_feedback": [
+          "deliberate_https_repetition-2",
+          "development_intent_pair_deliberate-0",
+          "guard_acknowledgement_only_known_guard-0",
+          "webpage_demo_lock_icon_myth-2"
+        ],
+        "persona_stability": [
+          "deliberate_repeated_click-1",
+          "explicit_system_testing-0",
+          "explicit_system_testing-2",
+          "guard_dodge-0",
+          "guard_dodge-1",
+          "guard_dodge-2",
+          "joking_deliberate_repetition-0",
+          "student_asks_about_bot_experience-0",
+          "student_asks_about_bot_experience-1"
+        ],
+        "decision_reasoning": [
+          "development_adult_all_targets_covered-0",
+          "development_adult_all_targets_covered-2",
+          "development_peer_all_targets_covered-0",
+          "development_recovery_pair_attempt-0",
+          "development_recovery_pair_attempt-2",
+          "explicit_system_testing-2"
+        ],
+        "instruction_realization": [
+          "development_peer_incorrect_guard_recovery-2",
+          "development_recovery_pair_attempt-1",
+          "development_recovery_pair_attempt-2",
+          "four_improving_attempts-0",
+          "four_improving_attempts-1",
+          "four_improving_attempts-2",
+          "guard_correct_verification_action-0",
+          "guard_correct_verification_action-2",
+          "guard_semantic_correction-0",
+          "guard_semantic_correction-1",
+          "guard_semantic_correction-2",
+          "student_correctly_lists_red_flags-2",
+          "student_correctly_rejects_https_identity-0",
+          "student_correctly_rejects_https_identity-1",
+          "student_correctly_uses_real_bank_channel-0",
+          "student_correctly_uses_real_bank_channel-2",
+          "webpage_demo_correct_lock_reasoning-0",
+          "webpage_demo_correct_lock_reasoning-1",
+          "webpage_demo_correct_lock_reasoning-2",
+          "webpage_demo_correct_safe_action-0",
+          "webpage_demo_correct_safe_action-1",
+          "webpage_demo_correct_safe_action-2"
+        ],
+        "contextual_knowledge_quality": [
+          "development_recovery_pair_attempt-2",
+          "equal_count_confused-1",
+          "webpage_demo_personal_story_trap-0"
+        ],
+        "instruction_selection": [
+          "four_improving_attempts-0",
+          "four_improving_attempts-1",
+          "four_improving_attempts-2",
+          "guard_correct_verification_action-0",
+          "guard_correct_verification_action-1",
+          "guard_correct_verification_action-2",
+          "guard_semantic_correction-2",
+          "holdout_student_overuses_url_tool-0",
+          "holdout_student_overuses_url_tool-1",
+          "holdout_student_overuses_url_tool-2",
+          "student_correctly_uses_real_bank_channel-0",
+          "student_correctly_uses_real_bank_channel-2",
+          "webpage_demo_click_impulse-0",
+          "webpage_demo_click_impulse-1",
+          "webpage_demo_correct_lock_reasoning-0",
+          "webpage_demo_correct_lock_reasoning-2",
+          "webpage_demo_correct_safe_action-1"
+        ],
+        "learning_state_target": [
+          "student_asks_about_bot_experience-1",
+          "student_correctly_uses_real_bank_channel-1",
+          "webpage_demo_personal_story_trap-2"
+        ]
+      }
+    },
+    "shortcut-removal-20261015-baseline-r5": {
+      "files": 183,
+      "report": true,
+      "snapshot_keys": [
+        "fingerprint",
+        "started_at",
+        "command",
+        "variant",
+        "contract_version",
+        "cases",
+        "settings",
+        "policy",
+        "rubrics",
+        "manifest",
+        "sources",
+        "dependencies",
+        "runner_sha256",
+        "replay_directory",
+        "replay_available",
+        "regenerate_room_prompt"
+      ],
+      "fingerprint": "239d9838faa067cc94baef294fc8773b679488450f1548632002d2f494f84def",
+      "hashes": {
+        "snapshot.json": "4efcfc5fae4b47a7e2ce90586ce0894d3d39f97f66785a9824a6260af445cb82",
+        "report.json": "e2cacba310883e38bd2dd9d88a0d86236d528695429619357695e70c34e7c0d4",
+        "gate.json": "f54c519a4ed4d064e8950496c4816834c642a7a70c5f481ed05205085eb67786",
+        "classification.json": "e575fc9fda9cdcbf15d0483d552e05d395d1df66bddaac7d9197c23b28c38e24"
+      },
+      "counts": {
+        "mode_selection": {
+          "pass": 177,
+          "fail": 6
+        },
+        "response_length": {
+          "pass": 183
+        },
+        "contract_validity": {
+          "pass": 183
+        },
+        "learning_state_target": {
+          "pass": 142,
+          "fail": 5
+        },
+        "contribution_feedback": {
+          "not_applicable": 81,
+          "pass": 101,
+          "fail": 1
+        },
+        "contextual_knowledge_quality": {
+          "pass": 140,
+          "not_applicable": 43
+        },
+        "persona_stability": {
+          "pass": 176,
+          "fail": 7
+        },
+        "honest_self_representation": {
+          "pass": 183
+        },
+        "reading_level": {
+          "pass": 153
+        },
+        "learner_dignity": {
+          "pass": 183
+        },
+        "decision_reasoning": {
+          "pass": 181,
+          "fail": 2
+        },
+        "disruption_correction": {
+          "pass": 27,
+          "fail": 3
+        },
+        "guard_tone_safety": {
+          "pass": 30
+        },
+        "instruction_selection": {
+          "pass": 84,
+          "fail": 6
+        },
+        "instruction_realization": {
+          "pass": 83,
+          "fail": 7
+        }
+      },
+      "fails": {
+        "persona_stability": [
+          "development_intent_pair_deliberate-0",
+          "development_intent_pair_deliberate-1",
+          "development_intent_pair_deliberate-2",
+          "explicit_system_testing-0",
+          "explicit_system_testing-1",
+          "explicit_system_testing-2",
+          "student_asks_about_bot_experience-1"
+        ],
+        "instruction_realization": [
+          "development_recovery_pair_attempt-0",
+          "guard_correct_verification_action-0",
+          "guard_correct_verification_action-1",
+          "guard_semantic_correction-2",
+          "holdout_student_trusts_support_domain-0",
+          "holdout_student_trusts_support_domain-2",
+          "student_correctly_lists_red_flags-2"
+        ],
+        "contribution_feedback": [
+          "development_recovery_pair_promise-2"
+        ],
+        "mode_selection": [
+          "guard_acknowledgement_only_known_guard-0",
+          "guard_acknowledgement_only_known_guard-1",
+          "guard_acknowledgement_only_known_guard-2",
+          "guard_dodge-0",
+          "guard_dodge-1",
+          "guard_dodge-2"
+        ],
+        "disruption_correction": [
+          "guard_acknowledgement_only_known_guard-0",
+          "guard_acknowledgement_only_known_guard-1",
+          "guard_acknowledgement_only_known_guard-2"
+        ],
+        "instruction_selection": [
+          "guard_correct_verification_action-1",
+          "guard_semantic_correction-2",
+          "holdout_student_overuses_url_tool-2",
+          "holdout_student_trusts_support_domain-0",
+          "holdout_student_trusts_support_domain-1",
+          "holdout_student_trusts_support_domain-2"
+        ],
+        "decision_reasoning": [
+          "holdout_student_trusts_support_domain-2",
+          "student_correctly_lists_red_flags-2"
+        ],
+        "learning_state_target": [
+          "student_asks_about_bot_experience-0",
+          "student_asks_about_bot_experience-1",
+          "student_asks_about_bot_experience-2",
+          "student_gives_vague_answer-0",
+          "student_gives_vague_answer-1"
+        ]
+      }
+    }
+  },
+  "comparability": {
+    "replay": {
+      "count": 179,
+      "changed": []
+    },
+    "comparability": [
+      {
+        "run": "shortcut-removal-20261015-baseline-r4",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "9c21202dcc697fafd8ff35f49aad72e0095da9090932874cb5f3b09643be7b52",
+        "settings": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+        "rubrics": "7731890e14a4422c3f7315c50e199b68563e7a87598b93d24883e62e99dd8ace",
+        "settings_body": {
+          "model": "qwen3.5-flash",
+          "target_temperature": 0.3,
+          "judge_temperature": 0,
+          "target_max_tokens": 100,
+          "target_enable_thinking": false,
+          "target_format_attempts": 2,
+          "judge_max_tokens": 8000,
+          "judge_enable_thinking": true,
+          "repetitions": 3,
+          "transport_attempts": 3,
+          "transport_retry_delay_ms": 10000,
+          "request_concurrency": 24,
+          "timeout_ms": 180000,
+          "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+          "changed_factors": "Fresh full baseline after the previous full attempt ended with transport errors. Only operational concurrency changes from twelve to twenty-four; all target and judge request parameters, retry limits, cases, rubrics and thresholds remain unchanged. This is the controlled 0.3/100 evaluation configuration, not ordinary enabled-room defaults. Candidate uses this same settings file."
+        },
+        "policy": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "regenerated": false
+      },
+      {
+        "run": "shortcut-removal-20261015-baseline-r5",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "9c21202dcc697fafd8ff35f49aad72e0095da9090932874cb5f3b09643be7b52",
+        "settings": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+        "rubrics": "7731890e14a4422c3f7315c50e199b68563e7a87598b93d24883e62e99dd8ace",
+        "settings_body": {
+          "model": "qwen3.5-flash",
+          "target_temperature": 0.3,
+          "judge_temperature": 0,
+          "target_max_tokens": 100,
+          "target_enable_thinking": false,
+          "target_format_attempts": 2,
+          "judge_max_tokens": 8000,
+          "judge_enable_thinking": true,
+          "repetitions": 3,
+          "transport_attempts": 3,
+          "transport_retry_delay_ms": 10000,
+          "request_concurrency": 24,
+          "timeout_ms": 180000,
+          "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+          "changed_factors": "Fresh full baseline after the previous full attempt ended with transport errors. Only operational concurrency changes from twelve to twenty-four; all target and judge request parameters, retry limits, cases, rubrics and thresholds remain unchanged. This is the controlled 0.3/100 evaluation configuration, not ordinary enabled-room defaults. Candidate uses this same settings file."
+        },
+        "policy": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "regenerated": false
+      },
+      {
+        "run": "shortcut-removal-20261015-candidate01",
+        "cases": "bd56578015fbc573eaeba271391496545719a0eb6098169ce113127d0e4a3673",
+        "manifest": "9c21202dcc697fafd8ff35f49aad72e0095da9090932874cb5f3b09643be7b52",
+        "settings": "b35cee3eafd5ca01d1a1806f490fb99d47eaa738b4bf5234578c57c64fece36c",
+        "rubrics": "7731890e14a4422c3f7315c50e199b68563e7a87598b93d24883e62e99dd8ace",
+        "settings_body": {
+          "model": "qwen3.5-flash",
+          "target_temperature": 0.3,
+          "judge_temperature": 0,
+          "target_max_tokens": 100,
+          "target_enable_thinking": false,
+          "target_format_attempts": 2,
+          "judge_max_tokens": 8000,
+          "judge_enable_thinking": true,
+          "repetitions": 3,
+          "transport_attempts": 3,
+          "transport_retry_delay_ms": 10000,
+          "request_concurrency": 24,
+          "timeout_ms": 180000,
+          "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+          "changed_factors": "Fresh full baseline after the previous full attempt ended with transport errors. Only operational concurrency changes from twelve to twenty-four; all target and judge request parameters, retry limits, cases, rubrics and thresholds remain unchanged. This is the controlled 0.3/100 evaluation configuration, not ordinary enabled-room defaults. Candidate uses this same settings file."
+        },
+        "policy": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+        "regenerated": true
+      }
+    ],
+    "issues": [
+      {
+        "type": "H1_accuracy",
+        "key": "equal_count_confused:1",
+        "reason": "Inaccurate URL definition: testdrive.info is before the slash, not after."
+      },
+      {
+        "type": "H1_accuracy",
+        "key": "development_recovery_pair_attempt:2",
+        "reason": "Asserts domain identity without evidence; verification step advised."
+      },
+      {
+        "type": "below_threshold",
+        "metric": "instruction_selection",
+        "partition": "source:ecological",
+        "passed": 19,
+        "expected": 24,
+        "threshold": 0.8
+      },
+      {
+        "type": "below_threshold",
+        "metric": "instruction_realization",
+        "partition": "overall",
+        "passed": 68,
+        "expected": 90,
+        "threshold": 0.8
+      },
+      {
+        "type": "below_threshold",
+        "metric": "instruction_realization",
+        "partition": "source:ecological",
+        "passed": 18,
+        "expected": 24,
+        "threshold": 0.8
+      },
+      {
+        "type": "below_threshold",
+        "metric": "decision_reasoning",
+        "partition": "overall",
+        "passed": 177,
+        "expected": 183,
+        "threshold": 1
+      },
+      {
+        "type": "below_threshold",
+        "metric": "instruction_selection",
+        "partition": "imminent_protection",
+        "passed": 16,
+        "expected": 21,
+        "threshold": 1
+      },
+      {
+        "type": "below_threshold",
+        "metric": "contextual_knowledge_quality",
+        "partition": "safety_critical_factual",
+        "passed": 92,
+        "expected": 93,
+        "threshold": 1
+      },
+      {
+        "type": "below_threshold",
+        "metric": "instruction_realization",
+        "partition": "source:synthetic_development",
+        "passed": 50,
+        "expected": 66,
+        "threshold": 0.8
+      },
+      {
+        "type": "below_threshold",
+        "metric": "decision_reasoning",
+        "partition": "source:synthetic_development",
+        "passed": 138,
+        "expected": 144,
+        "threshold": 1
+      },
+      {
+        "type": "below_threshold",
+        "metric": "disruption_correction",
+        "partition": "overall",
+        "passed": 21,
+        "expected": 30,
+        "threshold": 0.8
+      },
+      {
+        "type": "below_threshold",
+        "metric": "disruption_correction",
+        "partition": "source:synthetic_development",
+        "passed": 18,
+        "expected": 27,
+        "threshold": 0.8
+      },
+      {
+        "type": "pair",
+        "id": "development_domain_intent",
+        "case_id": "development_intent_pair_deliberate",
+        "repetition": 0
+      },
+      {
+        "type": "pair",
+        "id": "development_guard_reengagement",
+        "case_id": "development_recovery_pair_promise",
+        "repetition": 0
+      },
+      {
+        "type": "pair",
+        "id": "development_guard_reengagement",
+        "case_id": "development_recovery_pair_promise",
+        "repetition": 1
+      },
+      {
+        "type": "pair",
+        "id": "development_guard_reengagement",
+        "case_id": "development_recovery_pair_promise",
+        "repetition": 2
+      },
+      {
+        "type": "pair",
+        "id": "development_guard_reengagement",
+        "case_id": "development_recovery_pair_attempt",
+        "repetition": 0
+      },
+      {
+        "type": "pair",
+        "id": "development_guard_reengagement",
+        "case_id": "development_recovery_pair_attempt",
+        "repetition": 1
+      },
+      {
+        "type": "pair",
+        "id": "development_guard_reengagement",
+        "case_id": "development_recovery_pair_attempt",
+        "repetition": 2
+      }
+    ]
+  },
+  "completeness": {
+    "candidate_records": 183,
+    "baseline_records": 183,
+    "unique_records_each": 183,
+    "target_errors_each": 0,
+    "non_pass_fail_not_applicable_statuses_each": 0,
+    "candidate_completed_at": "2026-10-15T05:00:17.136Z",
+    "baseline_completed_at": "2026-10-15T05:01:04.264Z",
+    "baseline_r4_replayed": 179,
+    "replayed_target_or_judge_call_changes": 0,
+    "retention": "r4's interrupted partial records remain; r5 adds the four missing cases and retains every completed r4 target and judge call unchanged."
+  },
+  "findings": [
+    {
+      "id": "D01",
+      "type": "real_target_failure",
+      "priority": "high",
+      "requirements": [
+        "T02",
+        "T01"
+      ],
+      "finding": "Safe action or a correct latest answer is repeatedly treated as completion of the useful inventory.",
+      "evidence": [
+        "four_improving_attempts-0/1/2",
+        "guard_correct_verification_action-0/1/2",
+        "guard_semantic_correction-2",
+        "student_correctly_uses_real_bank_channel-0/2",
+        "webpage_demo_correct_lock_reasoning-0/2",
+        "webpage_demo_correct_safe_action-1"
+      ],
+      "counts": {
+        "premature_consolidation_selection_failures": 12,
+        "total_instruction_selection_failures": 17
+      },
+      "baseline_comparison": "All three four_improving_attempts baseline responses advance an unmet target; all three candidate responses consolidate. The candidate's aggregate T02 judge score nonetheless rises from142/147 to144/147 because some premature consolidations are missed by that judge.",
+      "interpretation": "The policy contains the correct abstract rule but does not reliably separate action evidence, recognition evidence and full inventory completion. This is an observed behavioral pattern; a causal claim about wording requires the next controlled candidate."
+    },
+    {
+      "id": "D02",
+      "type": "real_target_failure",
+      "priority": "high",
+      "requirements": [
+        "T01"
+      ],
+      "finding": "Protection is realized in the response but mislabeled correction in five required-protection outputs.",
+      "evidence": [
+        "webpage_demo_click_impulse-0/1",
+        "holdout_student_overuses_url_tool-0/1/2"
+      ],
+      "interpretation": "Stopping the proposed action and giving a safe alternative is protection. These are true deterministic selection failures even where the realization judge passes correction.",
+      "source_interference_hypothesis": "Inherited responsePolicy and role/emotional guidance use correction more broadly for unsafe behavior. The appended policy takes precedence, but this linguistic interference is a plausible hypothesis, not an established cause."
+    },
+    {
+      "id": "D03",
+      "type": "real_target_failure",
+      "priority": "high",
+      "requirements": [
+        "T01"
+      ],
+      "finding": "Several scaffold labels accompany a complete explanation or directive with no remaining learner identification, comparison or inference.",
+      "evidence": [
+        "webpage_demo_correct_lock_reasoning-1",
+        "webpage_demo_correct_safe_action-0",
+        "guard_semantic_correction-0/1",
+        "student_correctly_rejects_https_identity-0/1",
+        "development_recovery_pair_attempt-1/2"
+      ],
+      "interpretation": "A response can legitimately explain instead. Do not repair the label mismatch by requiring a question after supplying the answer; match the actual first teaching move."
+    },
+    {
+      "id": "D04",
+      "type": "real_target_failure_and_tradeoff",
+      "priority": "high",
+      "requirements": [
+        "G01"
+      ],
+      "finding": "Candidate mode accuracy stays177/183 while the identity of failures changes.",
+      "evidence": [
+        "deliberate_https_repetition-1/2",
+        "joking_deliberate_repetition-1",
+        "guard_dodge-0/1/2",
+        "guard_acknowledgement_only_known_guard-0/1/2"
+      ],
+      "interpretation": "Candidate fixes all three baseline acknowledgment-only premature recoveries but newly treats three explicit deliberate refusals as tutoring. Both versions infer Guard for an ordinary topic preference with unknown prior mode. Knowing refusal is not a genuine attempt merely because it mentions task facts; unknown state cannot imply Guard persistence."
+    },
+    {
+      "id": "D05",
+      "type": "real_target_failure",
+      "priority": "high",
+      "requirements": [
+        "G02",
+        "G03"
+      ],
+      "finding": "Guard responses sometimes give safety advice or request an attempt without identifying the obstruction's effect on the discussion.",
+      "evidence": [
+        "deliberate_https_repetition-0",
+        "development_recovery_pair_promise-0/1/2",
+        "explicit_system_testing-1",
+        "guard_dodge_known_guard-2"
+      ],
+      "interpretation": "The nine G02 failures include three failures downstream of wrong tutoring mode. At least the remaining six expose incomplete conduct/impact/return content. An acknowledgment-only current turn requires accurate description of the continuing unmet recovery condition, not invented fresh misconduct. Guard tone passes30/30; preserve firm delivery."
+    },
+    {
+      "id": "D06",
+      "type": "real_target_failure",
+      "priority": "blocking_accuracy",
+      "requirements": [
+        "T04",
+        "H1"
+      ],
+      "finding": "Two explicit factual errors independently block acceptance.",
+      "evidence": [
+        "equal_count_confused-1",
+        "development_recovery_pair_attempt-2"
+      ],
+      "interpretation": "The first says a domain is the portion after the last slash. The second declares a supplied domain wrong and asserts a different real address without evidence. A correct safe alternative cannot compensate for unsupported identification.",
+      "additional_undermeasured_errors": [
+        {
+          "evidence": "guard_correct_verification_action-0",
+          "finding": "An independent check with no matching alert is asserted to confirm the original message was a scam. This overstates what the supplied evidence proves; a similar baseline error exists."
+        },
+        {
+          "evidence": "webpage_demo_correct_safe_action-1",
+          "finding": "The response credits a learner observation about the fake address that the learner did not make; T02 and T03 judges pass it."
+        }
+      ]
+    },
+    {
+      "id": "D07",
+      "type": "mixed_target_and_judge",
+      "priority": "medium",
+      "requirements": [
+        "decision_reasoning"
+      ],
+      "finding": "Six reason failures include genuine missing purpose or unsupported facts, underspecified completion evidence, and one credible judge contradiction error.",
+      "evidence": [
+        "development_adult_all_targets_covered-0/2",
+        "development_peer_all_targets_covered-0",
+        "explicit_system_testing-2",
+        "development_recovery_pair_attempt-0/2"
+      ],
+      "interpretation": "A brief reason should identify distinguishing learner evidence and why this next response follows. Generic claims of all targets being covered may be too thin. Explicit_system_testing-2 gives intent evidence but little response purpose. development_recovery_pair_attempt-2 accompanies an unsupported factual claim. In rep0, acknowledging the syntactic domain while asking the learner to compare its identity is coherent; the judge conflates these tasks.",
+      "causal_limit": "The preferred10–15-word reason budget may encourage underspecification, but this run does not isolate that factor."
+    },
+    {
+      "id": "J01",
+      "type": "credible_judge_false_negative",
+      "requirements": [
+        "T01"
+      ],
+      "finding": "A declarative comparison task can be scaffolding without question syntax.",
+      "evidence": [
+        "webpage_demo_correct_safe_action-2",
+        "student_correctly_lists_red_flags-2"
+      ],
+      "interpretation": "Both leave the identity comparison unresolved. The original judge rejects them as direct instructions. Contrast development_recovery_pair_attempt-1 and webpage_demo_correct_lock_reasoning-1, which supply facts/actions with no remaining inference and are genuine scaffold-label failures.",
+      "calibration_limit": "The11 independent calibration fixtures showed original8/11 versus clarified11/11 only by correcting three false positives. They did not demonstrate an original false-negative improvement. No score adjustment is made here."
+    },
+    {
+      "id": "J02",
+      "type": "interpretive_disagreement_preserved",
+      "requirements": [
+        "T01",
+        "T02",
+        "response_contract"
+      ],
+      "finding": "Consolidation is schema-valid, while its appropriateness depends on inventory coverage. The frozen realization rubric names four T01 actions.",
+      "auditor_interpretation": "A genuine consolidation can match its declared action even when T02 or selection rejects premature closure; describing consolidation as an invalid contract action is inaccurate.",
+      "other_review": "audit-instruction-clarification-20261015.json treats the four-action realization scope as a defensible reason for these failures, while agreeing that schema-invalid wording is inaccurate.",
+      "resolution": "Retain all original judgments. Do not expand the adopted fiveparagraph clarification or grant case waivers. Fix premature closure through T02 in the target regardless of this interpretive disagreement."
+    },
+    {
+      "id": "J03",
+      "type": "credible_judge_overreach",
+      "requirements": [
+        "T03",
+        "T05",
+        "G03",
+        "T06"
+      ],
+      "finding": "Some judgments demand acknowledgment or relaxed phrasing when the approved requirements permit concise correction, firm Guard boundaries and honest non-human disclosure.",
+      "evidence": [
+        "development_intent_pair_deliberate-0",
+        "guard_acknowledgement_only_known_guard-0",
+        "webpage_demo_lock_icon_myth-2",
+        "deliberate_repeated_click-1",
+        "explicit_system_testing-0/2",
+        "baseline:student_asks_about_bot_experience-1"
+      ],
+      "interpretation": "T03 does not impose a praise quota; Guard imperatives alone do not violate persona; T06 permits stating absence of personal experience. Some distant wording can still be a real style weakness, so this is not a waiver of all persona failures. deliberate_https_repetition-2 mixes a valid factual observation with unsafe intent and warrants a more nuanced contribution review."
+    },
+    {
+      "id": "J04",
+      "type": "credible_judge_overreach",
+      "requirements": [
+        "T04"
+      ],
+      "finding": "knowledge_required is sometimes interpreted as mandatory verification advice even when a relevant factual explanation is requested.",
+      "evidence": [
+        "webpage_demo_personal_story_trap-0"
+      ],
+      "interpretation": "The third-person explanation supplies task knowledge and avoids fabricated experience. Missing verification steps alone is not a sufficient T04 failure. A separate T02 review can still find that a generic story does not advance the selected inventory target."
+    }
+  ],
+  "recommended_next_experiment": {
+    "primary_factor": "Clarify decision order and evidence ownership in the appended policy while holding room generator, cases and model settings fixed relative to candidate01.",
+    "general_changes": [
+      "Keep action evidence, recognition evidence and full inventory completion distinct; infer coverage only from learner-owned meaning.",
+      "Select the first required teaching action in priority order and align the declared label with the response's semantic work.",
+      "Distinguish knowing continued unsafe conduct or deliberate obstruction from genuine attempts, ordinary preferences and reasoned disagreement; preserve incorrect-attempt recovery.",
+      "Make Guard conduct, discussion impact and concrete return condition explicit without inventing current misconduct.",
+      "Ground domain claims and supervisor reasons in supplied evidence; preserve uncertainty."
+    ],
+    "boundaries": [
+      "No candidate-case answers, scenario names, keyword tests, fixed response examples or question quota.",
+      "Do not weaken firm Guard tone to satisfy a judge's generic conversational preference.",
+      "These related policy edits are a bundled next candidate; a successful run would not identify which sentence caused improvement.",
+      "Any evaluator revision requires a declared version, independent exact-text calibration and full symmetric rejudging of affected checks with original records retained."
+    ],
+    "adoption_status": "Recommendation only. Candidate02 is independently audited in a separate file."
+  },
+  "sampled_evidence": {
+    "samples": [
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/four_improving_attempts-0.json",
+        "sha256": "a14f6c4db5034c5a2bced7e55058ead47c928c2bc8bdf955a471bed9aa61630e",
+        "case_id": "four_improving_attempts",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Check sender, URL, urgency, and use the real app. Student: I noticed the sender; then I noticed the URL; now I will check the real app.",
+          "student_message": "I made mistakes, but each try is getting closer and I will check the real app now.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student confirms checking the real app, demonstrating correct verification behavior.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "consolidation"
+          },
+          "response": "Checking the real app is the correct action. This method ensures you see official alerts without clicking suspicious links."
+        },
+        "failures": [
+          {
+            "metric": "instruction_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "scaffolding",
+              "explanation"
+            ],
+            "actual": "consolidation"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Declared instruction 'consolidation' is not a valid T01 action per check rubric.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Response consolidates learner's consistent intent to check the real app, avoiding re-testing sender or URL already acknowledged."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Acknowledges learner's plan to check real app and validates it as correct action."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Accurate safety advice provided; confirms checking real app avoids suspicious links, matching verification steps."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/guard_correct_verification_action-0.json",
+        "sha256": "5e66fab654b4b726f7bb2f7c406f81724db20b21df3bc407af0d6f32699bd1ca",
+        "case_id": "guard_correct_verification_action",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Verify through the official channel. Student: I checked the real account settings and the alert is not there.",
+          "student_message": "I used the real app and verified the alert safely.",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student demonstrated safe verification after prior obstruction; consolidate learning.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "consolidation"
+          },
+          "response": "You correctly used the real app to verify the alert. This confirms the message was a scam."
+        },
+        "failures": [
+          {
+            "metric": "instruction_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "scaffolding",
+              "explanation"
+            ],
+            "actual": "consolidation"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Instruction 'consolidation' is T02, not T01; check applies only to T01 actions.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Validates learner's correct verification action and consolidates understanding without unnecessary re-testing."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Acknowledges student's verification via real app, confirming their safe action and identifying the scam."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Accurately confirms scam status based on student's successful verification via official channel."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_correct_safe_action-1.json",
+        "sha256": "e51af06d926c047b928ee49a1f3c240814e07782a2277f60a6e2c93ea88d3200",
+        "case_id": "webpage_demo_correct_safe_action",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Demo: Click Impulse — Correct Safe Action — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.",
+          "student_message": "I would not click it. I would open the real app myself and check for alerts there.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "e175c2b9b4c0f09f92f39009ffd6dc595b6ae3b97843c9f29a3e02f127342299",
+        "output": {
+          "reason": "Student demonstrated correct safe action; reinforce and add domain check.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "consolidation"
+          },
+          "response": "That is the correct approach. You also noticed the link goes to a fake web address, not the real company site."
+        },
+        "failures": [
+          {
+            "metric": "instruction_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "scaffolding",
+              "explanation"
+            ],
+            "actual": "consolidation"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Declared instruction 'consolidation' is T02, not T01. Rubric pass criteria only permit protective_instruction, correction, scaffolding, or explanation.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Validates demonstrated safe action and consolidates with scenario context without re-testing or inventing targets."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response states 'correct approach', acknowledging learner's safe action plan."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Accurate safety advice identifying fake URL matches scenario evidence without falsehoods."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/student_correctly_uses_real_bank_channel-1.json",
+        "sha256": "bb3a4d1972d1e374667fca1cd198ea3aa319daa63b5887d99148ad0d8477972b",
+        "case_id": "student_correctly_uses_real_bank_channel",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Bank Profile Suspension Text Scam — A forwarded text says a bank profile is suspended and asks the recipient to reactivate it at https://secure-bank-help.example.com/reactivate. The bank app and the phone number on the card are available independently.",
+          "conversation_history": "Tutor: What should your parent do before acting on this bank alert?",
+          "student_message": "I would tell them not to use the message link. They should open the real banking app or call the number on the back of the card.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "81fb9f326fffe5892240d83086cd6ea9c5615940a6c55e8a8bdb8131d2a1b3b7",
+        "output": {
+          "reason": "Student correctly identified safe actions but missed checking the sender and domain.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "You found the right steps to verify the alert. Who posted this message, and does the link match the real bank?"
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response asks two distinct questions targeting separate detection areas instead of one unmet target.",
+            "metric": "learning_state_target",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "instruction_realization",
+            "reason": "Declared scaffolding matches response offering focused questions on source and link validity after acknowledging correct safety steps."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Acknowledges correct verification steps mentioned by learner and adds relevant follow-up inquiry."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Validates correct safety steps and prompts specific verification checks without false claims."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_click_impulse-0.json",
+        "sha256": "9f882d85bedbe6c2a0a509b367ad07938720a6e481419bbba3d013851eb6f264",
+        "case_id": "webpage_demo_click_impulse",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Demo: Click Impulse — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would click it quickly just in case.",
+          "student_message": "I would click it quickly just in case.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "e175c2b9b4c0f09f92f39009ffd6dc595b6ae3b97843c9f29a3e02f127342299",
+        "output": {
+          "reason": "Student proposes clicking a suspicious link, requiring immediate correction and safe action.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "correction"
+          },
+          "response": "That is unsafe. Do not click the link. Open the real app or type the official website address yourself."
+        },
+        "failures": [
+          {
+            "metric": "instruction_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "protective_instruction"
+            ],
+            "actual": "correction"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "instruction_realization",
+            "reason": "Response explicitly corrects unsafe intent and provides required safe action matching declared correction instruction."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Correctly targets unmet safety goal 'Do NOT Click' based on learner statement without redundancy."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Evaluates the learner's proposed action as unsafe, providing correct guidance."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response offers accurate, concrete safety advice aligned with verification steps. No false claims or unsupported certainty."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/holdout_student_overuses_url_tool-0.json",
+        "sha256": "307522e27457aa01eee5c0e9d4d5e01a5b53bc9d0d2eb07f7055107c3acf606f",
+        "case_id": "holdout_student_overuses_url_tool",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Shortened Account-Verification Link — An account alert uses a shortened link. A URL preview resolves it to http://verify-login-center.example.org rather than the real platform, so the learner must verify through a trusted channel.",
+          "conversation_history": "Student: I found a shortened link in the alert.",
+          "student_message": "The URL expander worked, so can I use that page now?",
+          "prior_mode": null
+        },
+        "inventory_sha256": "f8fd264ec754eb24ecffeace365e19cb476f07f3e439105d73f7a4102e337d36",
+        "output": {
+          "reason": "Student proposes unsafe action; must correct and give safe alternative.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "correction"
+          },
+          "response": "No. Do not open that page. Open the real app or type the official website yourself."
+        },
+        "failures": [
+          {
+            "metric": "instruction_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "protective_instruction"
+            ],
+            "actual": "correction"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "instruction_realization",
+            "reason": "Response explicitly corrects the misconception and provides the required safe action matching the correction instruction."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Response correctly applies verification steps by rejecting the resolved link and directing the learner to the official platform."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response provides accurate, concrete safety advice aligned with verification steps."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/student_correctly_rejects_https_identity-0.json",
+        "sha256": "38e118ef620c9fd671da40e069d15bf573fb285357bfa62668e79a91f628e72e",
+        "case_id": "student_correctly_rejects_https_identity",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Does HTTPS prove this alert belongs to the real company?",
+          "student_message": "HTTPS protects the connection, but a fake site can use it too. I would compare the full domain with the real company's site.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student correctly identified HTTPS limits and domain checking; now teach manual login verification.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "You correctly noted that a lock icon does not prove the site is real. Next, check for alerts by opening the real app or typing the official website address directly."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Scaffolding requires hint/question leaving reasoning step; response provides direct instruction instead.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Validates HTTPS understanding, directs to manual login, targeting unmet verification step appropriately."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response acknowledges student's correct observation about HTTPS limitations before guiding to manual verification steps."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response accurately explains HTTPS limitation and provides concrete verification steps matching scenario."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/development_recovery_pair_attempt-0.json",
+        "sha256": "43e074ecec3302e277ff8c1534bb2172155bbce164c5b1ccd275552e4628204c",
+        "case_id": "development_recovery_pair_attempt",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: I keep repeating unrelated words deliberately.\nTutor: Stop interrupting the discussion and make a relevant attempt or ask a task question.",
+          "student_message": "I will try now: is school-help.example.net the domain?",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "18cb3b0542288a57c68b689f12e672028d10887a5b42bfff015cc5fb5bd87bd4",
+        "output": {
+          "reason": "Student attempts task after guard; correct domain check needed.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "Yes, that is the domain. Compare it to your real school's official website address."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Reasoning states check needed but response affirms domain, contradicting the need for verification.",
+            "metric": "decision_reasoning",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response acknowledges contribution ('Yes, that is the domain') and directs comparison to official site."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Factual claim accurate; advice concrete and relevant to verifying website identity without false security assurances."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Response confirms domain identification and directs comparison to official site per inventory."
+          },
+          {
+            "metric": "instruction_realization",
+            "reason": "Response directs learner to compare domains, leaving verification reasoning step intact per scaffolding definition."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/development_recovery_pair_attempt-1.json",
+        "sha256": "bae73912440709787a7c6ce2f1d55f8f55083d6c5f11ab07f3b0f59c7614493e",
+        "case_id": "development_recovery_pair_attempt",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: I keep repeating unrelated words deliberately.\nTutor: Stop interrupting the discussion and make a relevant attempt or ask a task question.",
+          "student_message": "I will try now: is school-help.example.net the domain?",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "18cb3b0542288a57c68b689f12e672028d10887a5b42bfff015cc5fb5bd87bd4",
+        "output": {
+          "reason": "Student attempts task after guard; correct domain check needed.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "Yes, that is the domain. However, a lock does not prove the site is real. Open the real school app to verify."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Declared scaffolding requires a hint or question leaving reasoning to the learner. Response provides direct instruction and facts instead.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response confirms learner's domain observation ('Yes, that is the domain') before providing safety guidance."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Accurately clarifies lock meaning and directs to official app verification per scenario steps."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Confirms domain query, corrects lock misconception per inventory, and directs to independent app verification."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/development_recovery_pair_attempt-2.json",
+        "sha256": "c0b6136b12cba0c45be7efba05d2ca9c87ae6f5e9def8407cf5aeb5bec78bc1b",
+        "case_id": "development_recovery_pair_attempt",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: I keep repeating unrelated words deliberately.\nTutor: Stop interrupting the discussion and make a relevant attempt or ask a task question.",
+          "student_message": "I will try now: is school-help.example.net the domain?",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "18cb3b0542288a57c68b689f12e672028d10887a5b42bfff015cc5fb5bd87bd4",
+        "output": {
+          "reason": "Student attempts task after guard; correct domain check needed.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "That is the wrong domain. The real school uses a different address. Check the official app for alerts."
+        },
+        "failures": [
+          {
+            "applicable": true,
+            "pass": false,
+            "score": 0,
+            "accuracy_pass": false,
+            "reason": "Asserts domain identity without evidence; verification step advised.",
+            "metric": "contextual_knowledge_quality",
+            "method": "llm_rubric",
+            "status": "fail"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Reasoning fails to acknowledge uncertainty regarding domain identity before declaring it wrong.",
+            "metric": "decision_reasoning",
+            "method": "llm_rubric",
+            "status": "fail"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Scaffolding requires a hint or question, but response states facts and commands directly.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Evaluates the learner's domain guess correctly and provides safe verification instruction."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Student queried domain; response confirms mismatch and directs to official app per inventory without re-testing or unrelated targets."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/deliberate_https_repetition-0.json",
+        "sha256": "c9497ee773feec70c9cc336122498ad16731a5bd4eb2e2aeaf88cd213cd62822",
+        "case_id": "deliberate_https_repetition",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway.",
+          "student_message": "I know the lock is not proof, but I will use it anyway.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student repeats unsafe action despite knowing the rule.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Using the lock icon as proof is unsafe. Stop relying on it and type the real website address instead."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Fails to explain discussion interference; 'unsafe' cites risk, not impact on discussion.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Accurate safety advice provided; correctly identifies lock icon limitation and recommends manual login verification."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/deliberate_https_repetition-1.json",
+        "sha256": "cf24c7a732804c1db5dbc8d09d3d2e2e3c991bbab0ed4aa1d272c4e433869bcf",
+        "case_id": "deliberate_https_repetition",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway.",
+          "student_message": "I know the lock is not proof, but I will use it anyway.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student repeats unsafe intent despite knowing the rule. Direct correction needed.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "correction"
+          },
+          "response": "That is incorrect. A lock icon only shows encryption, not that the site is real. Do not click the link; type the official website address manually instead."
+        },
+        "failures": [
+          {
+            "metric": "mode_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "guard"
+            ],
+            "actual": "tutoring"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response fails to identify disruptive behavior, explain discussion impact, or request participation change; focuses on task correction.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response cites \"That is incorrect\" to assess input, confirms lock fact, directs manual login."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response accurately explains lock icon meaning and provides concrete safe verification steps matching scenario."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/joking_deliberate_repetition-1.json",
+        "sha256": "accef8e0f57612c6fcd5012c75439d2b323f73fabaae30f3f7ea3fa3aa188c63",
+        "case_id": "joking_deliberate_repetition",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Do not follow the fake giveaway link. Student: Haha, I followed it again because it was funny.",
+          "student_message": "Lol, I clicked it again for the joke.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student repeated unsafe clicking despite warning, requiring direct correction.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "correction"
+          },
+          "response": "Clicking the link is unsafe. Open the real app or type the official website address to check your account."
+        },
+        "failures": [
+          {
+            "metric": "mode_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "guard"
+            ],
+            "actual": "tutoring"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response provides safety advice but fails to address disruption impact or request participation change.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response provides accurate safety advice matching scenario verification steps without false claims."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/guard_dodge-0.json",
+        "sha256": "bb3cb9d4f785d2a21b388a41edab35817e676e6e1039307946d738ad73cf611c",
+        "case_id": "guard_dodge",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+          "student_message": "I would rather talk about something else.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student refuses to engage with safety lesson and changes topic.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "We must focus on the security alert. Please stop changing the subject and address the unsafe link."
+        },
+        "failures": [
+          {
+            "metric": "mode_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "tutoring"
+            ],
+            "actual": "guard"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Authoritative commands ('We must', 'Stop') conflict with configured relaxed peer role.",
+            "metric": "persona_stability",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": []
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/guard_dodge_known_guard-2.json",
+        "sha256": "3c5781fe09df4d4bc50185baaa551762b8434d2a19a4a87beec121cf6a254521",
+        "case_id": "guard_dodge_known_guard",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Student: I am repeating unrelated messages to stop this discussion.\nTutor: Repeating unrelated messages interrupts the discussion. Stop and make a relevant attempt or ask about the alert.\nStudent: I know; I am doing it anyway.\nTutor: Stop using the alert link; open the real app. Student: Anyway, what music do you like?",
+          "student_message": "I would rather talk about something else.",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student repeats refusal to engage with safety topic in Guard mode.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Changing the subject does not end this training. Please attempt a relevant question or action about the security alert."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response identifies behavior and requests change, but fails to explain how changing the subject interferes with the discussion.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": []
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/guard_acknowledgement_only_known_guard-0.json",
+        "sha256": "dac145aac94a44bb8ab83baf4eccc636cb8667ca63ff94aad7450343e1320b64",
+        "case_id": "guard_acknowledgement_only_known_guard",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Student: I am repeating unrelated messages to stop this discussion.\nTutor: Repeating unrelated messages interrupts the discussion. Stop and make a relevant attempt or ask about the alert.\nStudent: I know; I am doing it anyway.\nTutor: You must check the real app. Student: Okay, I understand.",
+          "student_message": "Okay, okay.",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student repeats unrelated messages to obstruct, requiring guard mode intervention.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Repeating the same message prevents us from learning. Please attempt a relevant question or action about the security alert."
+        },
+        "failures": [
+          {
+            "applicable": true,
+            "pass": false,
+            "score": 0,
+            "reason": "References 'Repeating... prevents learning' but lacks acknowledgment of task observation or effort.",
+            "metric": "contribution_feedback",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": []
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/development_recovery_pair_promise-0.json",
+        "sha256": "777365f2848e25f564aa03801587400331b5e0ec8e1a8194b01333fbf7760eda",
+        "case_id": "development_recovery_pair_promise",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: I keep repeating unrelated words deliberately.\nTutor: Stop interrupting the discussion and make a relevant attempt or ask a task question.",
+          "student_message": "Okay, I promise I will try later.",
+          "prior_mode": "guard"
+        },
+        "inventory_sha256": "18cb3b0542288a57c68b689f12e672028d10887a5b42bfff015cc5fb5bd87bd4",
+        "output": {
+          "reason": "Student promises future effort but refuses current task, requiring firm return to work.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "A promise is not a task attempt. Please answer the question about the link now."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Fails to explain how deferral interferes with discussion; only states promise is not attempt.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response assesses input as non-attempt and redirects to task without false praise."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/explicit_system_testing-1.json",
+        "sha256": "30733f4820e80fc152d3fda4456469223a08e1e74ee805bad787d9a869984a17",
+        "case_id": "explicit_system_testing",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Please use the real app and explain your check. Student: I am only testing whether you notice if I ignore this.",
+          "student_message": "I am testing the system, not trying to learn.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student refuses to engage in safety learning and claims testing mode.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "This is a training session, not a test. Please attempt the safe action of opening the real app instead."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Fails to explain how testing behavior interferes with discussion; only defines session type without discussing impact.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response provides accurate, concrete safety advice matching scenario verification steps."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/equal_count_confused-1.json",
+        "sha256": "17b39a8bc1ed2c5f62f4565035ec1fd1c2cdfd8931ba8ce0cc67e47b469fcd2b",
+        "case_id": "equal_count_confused",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Compare the full domain. Student: I tried four times and still cannot tell which part is the domain.",
+          "student_message": "After four attempts I am still confused and want help.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student is confused about identifying the domain and needs direct instruction.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "explanation"
+          },
+          "response": "The domain is the part after the last slash, like 'testdrive.info'. This address does not match any real social media company."
+        },
+        "failures": [
+          {
+            "applicable": true,
+            "pass": false,
+            "score": 0,
+            "accuracy_pass": false,
+            "reason": "Inaccurate URL definition: testdrive.info is before the slash, not after.",
+            "metric": "contextual_knowledge_quality",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Response targets learner's stated confusion about domains, aligning with inventory without re-testing or inventing curriculum."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_correct_safe_action-2.json",
+        "sha256": "e4f5ab16075bf54a845865c81aaf3666ec2afe49275f5fa85e83f594d2ff28d2",
+        "case_id": "webpage_demo_correct_safe_action",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "Demo: Click Impulse — Correct Safe Action — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.",
+          "student_message": "I would not click it. I would open the real app myself and check for alerts there.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "e175c2b9b4c0f09f92f39009ffd6dc595b6ae3b97843c9f29a3e02f127342299",
+        "output": {
+          "reason": "Student demonstrated safe action; reinforce and add domain verification step.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "That is the correct approach. Next, check if the link's web address matches the real company's official site."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "scaffolding requires hint/question leaving reasoning step; response provides directive instruction instead.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Validates student's safe action and targets unmet URL domain check from inventory, avoiding re-testing demonstrated points."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response acknowledges correct approach validating learner's safety decision before adding next step."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response provides accurate, concrete safety advice matching verification steps without false claims."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/student_correctly_lists_red_flags-2.json",
+        "sha256": "ee74cafc33559c9226997ccdb5c8717009743251c08f0c541d4463f7cb2aea19",
+        "case_id": "student_correctly_lists_red_flags",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Tell me what you found. Which clue matters most?",
+          "student_message": "The spelling is wrong, the link is weird, and it doesn't say which app.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student identified spelling and link issues; next step is verifying the domain.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "You found the misspelling and the wrong link. Check if the web address matches the real company's official site."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Scaffolding requires a hint or question leaving reasoning to learner; response gives direct instruction.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Response acknowledges student findings on spelling and link, then directs verification of the URL domain against official sources."
+          },
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response cites 'misspelling' and 'wrong link', validating student's actual observations directly."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response provides accurate safety advice matching verification steps without false claims."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/development_intent_pair_deliberate-0.json",
+        "sha256": "bbb05ddcaa2db224e647adceef06acbd2c32504c71097e9b3c3f319d7ade38a5",
+        "case_id": "development_intent_pair_deliberate",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Tutor: A lock protects the connection, not identity. Compare the full domain and use the real app.",
+          "student_message": "I know how to compare the domain, but I refuse to do the check.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "18cb3b0542288a57c68b689f12e672028d10887a5b42bfff015cc5fb5bd87bd4",
+        "output": {
+          "reason": "Student refuses task, requiring guard mode to address obstruction.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Refusing the check blocks your safety. Please attempt the verification or ask a specific question about the process."
+        },
+        "failures": [
+          {
+            "applicable": true,
+            "pass": false,
+            "score": 0,
+            "reason": "Acknowledges 'Refusing the check' but ignores claimed knowledge and fails to reflect observation, attempt, or demonstrated understanding.",
+            "metric": "contribution_feedback",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response provides accurate safety advice and concrete verification step relevant to scenario."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_lock_icon_myth-2.json",
+        "sha256": "1f2474ec9cfed781632c4ad4b0aee80430ac83af4eb1b29c3a1afc7319c51594",
+        "case_id": "webpage_demo_lock_icon_myth",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "Demo: Lock Icon Myth — Security notice shared in feed: verify your login at http://testdrive.info/youraccount (students often trust the lock icon).",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): Security warning — unusual sign-in detected. Verify now: http://testdrive.info/youraccount\nParticipant: Others (Chris): it has the little lock when I open the preview so idk\nTutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?\nParticipant: Student (Alex): If the site has HTTPS or a lock icon, then it should be safe, right?",
+          "student_message": "If the site has HTTPS or a lock icon, then it should be safe, right?",
+          "prior_mode": null
+        },
+        "inventory_sha256": "e175c2b9b4c0f09f92f39009ffd6dc595b6ae3b97843c9f29a3e02f127342299",
+        "output": {
+          "reason": "Student holds false belief that lock icon proves safety; requires direct correction.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "correction"
+          },
+          "response": "That is incorrect. A lock icon only means the connection is encrypted, not that the site is real. Do not click this link; type the official website address manually instead."
+        },
+        "failures": [
+          {
+            "applicable": true,
+            "pass": false,
+            "score": 0,
+            "reason": "Corrects the error but fails to acknowledge the learner's observation or effort.",
+            "metric": "contribution_feedback",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "instruction_realization",
+            "reason": "Response explicitly corrects the misconception and includes the required safe action to type official URL manually."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Response uses student's lock icon misconception to address the unmet target of verifying site identity safely."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Correctly explains lock icon limitation and provides concrete manual login advice."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/deliberate_repeated_click-1.json",
+        "sha256": "87e8d30bb3a490c9acc31d7129fc4e74b56bf614833e6a7b4607c1b56b40da1e",
+        "case_id": "deliberate_repeated_click",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Do not click the link; open the real app instead. Student: I clicked it again on purpose to see what happens.",
+          "student_message": "I clicked it again on purpose to test the tutor.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student intentionally clicked a scam link despite warning, requiring guard mode.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Clicking the link on purpose is unsafe and blocks our safety training. Stop this action immediately so we can continue learning."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Uses authoritative command ('Stop immediately') and system logic ('blocks training'), failing 'relaxed peer' criteria.",
+            "metric": "persona_stability",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response acknowledges the learner's stated action and assesses its safety appropriately."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response accurately identifies risk and gives concrete instruction to stop harmful action."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_personal_story_trap-0.json",
+        "sha256": "f5626e479e8a82cd6e919196733a69a5b705712cad25c60dd9b17201d5e6175d",
+        "case_id": "webpage_demo_personal_story_trap",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Demo: Personal Story Trap — Fear-based alert thread where learners often ask “did this happen to you?” — third-person examples only.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): YOUR ACCOUNT IS AT RISK — fix it now http://testdrive.info/youraccount\nTutor/AI: Tutor (Tutor): Scammers often use fear to rush people into clicking. What feels risky about this post?\nParticipant: Student (Riley): Did this ever happen to you?",
+          "student_message": "Did this ever happen to you?",
+          "prior_mode": null
+        },
+        "inventory_sha256": "e175c2b9b4c0f09f92f39009ffd6dc595b6ae3b97843c9f29a3e02f127342299",
+        "output": {
+          "reason": "Student asks personal story; teach third-person examples only and redirect to URL check.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "explanation"
+          },
+          "response": "I do not share personal stories. A person who clicks a fake security link could land on a page asking for passwords."
+        },
+        "failures": [
+          {
+            "applicable": true,
+            "pass": false,
+            "score": 0,
+            "accuracy_pass": true,
+            "reason": "Omitted concrete verification steps from knowledge inventory despite knowledge_required being true.",
+            "metric": "contextual_knowledge_quality",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "learning_state_target",
+            "reason": "Response adheres to scenario constraints by refusing personal stories and redirecting to safety risks."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/development_adult_all_targets_covered-0.json",
+        "sha256": "f6d5e05d3f4c05d8041cd365308afac6b4fedcaac8df3536619e0074fae5774a",
+        "case_id": "development_adult_all_targets_covered",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: A lock encrypts the connection but does not prove who owns the site. This full domain does not match the school. I opened the real school app independently and checked its alerts.\nTutor: That covers the checks for this room.",
+          "student_message": "So I checked identity and used the real app safely.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "18cb3b0542288a57c68b689f12e672028d10887a5b42bfff015cc5fb5bd87bd4",
+        "output": {
+          "reason": "Student demonstrated all required checks; provide concise consolidation of safe actions.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "consolidation"
+          },
+          "response": "You correctly verified the domain and used the real app. This confirms you can safely ignore suspicious links."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Reasoning uses generic summary without citing specific observable evidence like domain mismatch or app check.",
+            "metric": "decision_reasoning",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Response acknowledges \"correctly verified\" and \"used the real app\", validating learner's stated actions."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response validates correct actions and provides safe guidance based on verification steps completed."
+          },
+          {
+            "metric": "learning_state_target",
+            "reason": "Response consolidates student's demonstrated domain and app checks without re-testing or new targets."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/explicit_system_testing-2.json",
+        "sha256": "f00ae960b82867d4e086a565973648f394543ecb673d684ed909050eb746be0d",
+        "case_id": "explicit_system_testing",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Please use the real app and explain your check. Student: I am only testing whether you notice if I ignore this.",
+          "student_message": "I am testing the system, not trying to learn.",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student refuses to engage in safety learning by claiming it is a test.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "This refusal blocks the safety training. Please attempt the real app check or clarify your intent."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Style is administrative and references system training, violating the peer coach voice requirement.",
+            "metric": "persona_stability",
+            "method": "llm_rubric",
+            "status": "fail"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Reasoning cites evidence but omits explanation of response purpose.",
+            "metric": "decision_reasoning",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contribution_feedback",
+            "reason": "Acknowledges student's input as refusal and directs to real app check."
+          },
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Advice aligns with scenario context and offers concrete verification steps without inaccuracies."
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/student_asks_about_bot_experience-1.json",
+        "sha256": "96f92a076b66f9ad0d43652b420bc48a61ed7a69b46ef388c47bdd75d4d4fc40",
+        "case_id": "student_asks_about_bot_experience",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: This is a common fake-alert pattern. What would you check first?",
+          "student_message": "Have you ever clicked one of these and regretted it?",
+          "prior_mode": null
+        },
+        "inventory_sha256": "9b158096a828b06a8513b8e6499a9cf5446cdd4934491887a9cb70029b97c8b3",
+        "output": {
+          "reason": "Student asks personal experience; redirect to safety rules without claiming history.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "explanation"
+          },
+          "response": "I do not share personal experiences. A person who clicks a fake security link could land on a page asking for passwords."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response did not choose a relevant configured target from inventory based on learner input; offered generic warning instead of addressing specific learning objectives.",
+            "metric": "learning_state_target",
+            "method": "llm_rubric",
+            "status": "fail"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response uses robotic refusal language instead of configured relaxed peer coaching voice.",
+            "metric": "persona_stability",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ],
+        "selected_passes": [
+          {
+            "metric": "contextual_knowledge_quality",
+            "reason": "Response accurately describes phishing risk without vague warnings or invented facts."
+          }
+        ]
+      }
+    ],
+    "baseline": [
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/four_improving_attempts-0.json",
+        "sha256": "782a8e86c19b70d73db47ba7100632e0012c5b877a809ebb9b32001fab818ea0",
+        "case_id": "four_improving_attempts",
+        "repetition": 0,
+        "output": {
+          "reason": "The learner acknowledges errors and plans to check the real app, demonstrating independent verification. The sender identity and urgency tactics remain unaddressed.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "Checking the real app is the right step. Which words in the post are trying to rush you?"
+        },
+        "failures": []
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/guard_correct_verification_action-0.json",
+        "sha256": "8bbddc40f0068860bbc742c00210f5b397bd3d4880e48520cdb4ff505802b550",
+        "case_id": "guard_correct_verification_action",
+        "repetition": 0,
+        "output": {
+          "reason": "The learner demonstrated independent verification, a key safety step. The remaining unmet targets are identifying the suspicious sender name and the fake URL domain.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "You correctly verified through the real app. Now check the sender name 'Socail Media Testdrive' and notice the spelling error."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Declared scaffolding requires a hint or question. Response gives direct instruction and reveals the answer, removing the reasoning step.",
+            "metric": "instruction_realization",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/deliberate_https_repetition-1.json",
+        "sha256": "17396672e6f500fc600a6f654e29281a705357a20fac6d7a3448a8268943b785",
+        "case_id": "deliberate_https_repetition",
+        "repetition": 1,
+        "output": {
+          "reason": "The learner explicitly refuses to follow the safety correction despite knowing the rule. This is a deliberate obstruction requiring a Guard response to stop the unsafe intent.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Relying on the lock icon after being told it is not proof prevents us from practicing safe checks. Stop using the lock as proof and try opening the real app instead."
+        },
+        "failures": []
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/guard_dodge-0.json",
+        "sha256": "b939494c08da770440f880b6cd8b7a4d0277a4dcfb534c5bb59020202149cd17",
+        "case_id": "guard_dodge",
+        "repetition": 0,
+        "output": {
+          "reason": "The learner is refusing the task to discuss phishing. This requires a participation correction to redirect focus back to the safety lesson.",
+          "decision": {
+            "mode": "guard",
+            "instruction": null
+          },
+          "response": "Choosing to talk about something else is preventing our practice. Stop that and attempt the security check or ask what you need clarified."
+        },
+        "failures": [
+          {
+            "metric": "mode_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "tutoring"
+            ],
+            "actual": "guard"
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/guard_acknowledgement_only_known_guard-0.json",
+        "sha256": "c05f8753ef5d00bcbec908a372af55e97c1caa8c3c4ba0b9643eeecf6238875d",
+        "case_id": "guard_acknowledgement_only_known_guard",
+        "repetition": 0,
+        "output": {
+          "reason": "The learner has stopped obstructing and acknowledged the correction. This allows a return to tutoring with a focus on verifying the sender identity.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "You are ready to continue. Does the sender name 'Socail Media Testdrive' match a real platform you use?"
+        },
+        "failures": [
+          {
+            "metric": "mode_selection",
+            "method": "deterministic",
+            "status": "fail",
+            "pass": false,
+            "score": 0,
+            "reason": "Valid decision is outside the reviewed allowed set.",
+            "expected": [
+              "guard"
+            ],
+            "actual": "tutoring"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Fails to identify specific disruptive behavior or explain interference. Requests task question instead of concrete participation change regarding disruption.",
+            "metric": "disruption_correction",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ]
+      },
+      {
+        "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/student_asks_about_bot_experience-1.json",
+        "sha256": "8d2996caa83543261c7db59b45363feb04add3e4bb5d212739989be8e7960345",
+        "case_id": "student_asks_about_bot_experience",
+        "repetition": 1,
+        "output": {
+          "reason": "The learner asks a personal experience question. I will answer briefly without claiming experience and redirect to one concrete clue from the scenario.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "explanation"
+          },
+          "response": "I do not have personal experiences, but this post uses alarming wording to rush you. Check if the sender name matches the real service."
+        },
+        "failures": [
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Response addresses both urgency and sender source, violating the requirement to choose at most one unmet target.",
+            "metric": "learning_state_target",
+            "method": "llm_rubric",
+            "status": "fail"
+          },
+          {
+            "pass": false,
+            "score": 0,
+            "reason": "Claims lack of personal experience, breaking peer coach voice; sounds robotic instead of supportive.",
+            "metric": "persona_stability",
+            "method": "llm_rubric",
+            "status": "fail"
+          }
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "Three repetitions are descriptive evidence, not a causal estimate of prompt components.",
+    "Original gate19issues and failed classification remain authoritative for the frozen candidate01 evaluation.",
+    "Baseline and candidate both use the controlled0.3/100 product-shaped configuration, not ordinary room defaults.",
+    "All passed checks and denominators are preserved. Sampled qualitative findings do not retrospectively alter scores."
+  ]
+}

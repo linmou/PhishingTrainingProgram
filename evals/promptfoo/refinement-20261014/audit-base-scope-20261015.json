@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-15",
+  "auditor": "independent refinement_audit agent",
+  "condition": "candidate09-scoped-base",
+  "verdict": "clear_for_full_development_preflight",
+  "scope": "Exact source-only applicability audit against the complete candidate09 thinking preflight snapshot.",
+  "reference": {
+    "snapshot": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate09-thinking-preflight/snapshot.json",
+    "sha256": "88fcc08e0c4359465cda748f578aa593150d55984d59bf39d7d9e6c97cbf96cc",
+    "continuation": "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md",
+    "continuation_sha256": "2b7553a270889dffcbb25fe9e106e49b89c5f18456cebe9521de07de5d1c2ba2"
+  },
+  "verification": {
+    "snapshot_sha256": "88fcc08e0c4359465cda748f578aa593150d55984d59bf39d7d9e6c97cbf96cc",
+    "changes": [
+      {
+        "file": "tutor-system/src/services/prompts/index.ts",
+        "before_sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4",
+        "after_sha256": "6ce299d8c6f491c2b4bac2a9a334a6314935cbaa66081b15256a26bc913937cc",
+        "line": 82,
+        "before": [
+          "    \"Remember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support.\""
+        ],
+        "after": [
+          "    \"During tutoring, help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support. During Guard, restore participation using the tutor decision policy.\""
+        ]
+      },
+      {
+        "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+        "before_sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf",
+        "after_sha256": "6d6cc22d3042bafa8fd8c126cc7d75e9efac7a8c3fedcbb899c85f33768c714d",
+        "line": 4,
+        "before": [],
+        "after": [
+          "  'Apply the teaching rules below after the tutor decision policy selects tutoring. When it selects Guard, follow its participation-correction rules; a task lesson is optional and any task content must remain accurate.',"
+        ]
+      },
+      {
+        "file": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+        "before_sha256": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682",
+        "after_sha256": "f8facd8acbf763f08a15a199bed49b628b73745ca888d01bea523afea8432edf",
+        "line": 13,
+        "before": [
+          "Use the Learning Process rules to choose what to teach and how to teach it. Keep this peer voice during explanations, questions, safety interventions and participation boundaries."
+        ],
+        "after": [
+          "During tutoring, use the Learning Process rules to choose what to teach and how to teach it. During Guard, follow the participation-correction policy. Keep this peer voice during explanations, questions, safety interventions and participation boundaries."
+        ]
+      }
+    ],
+    "policy_unchanged": true,
+    "policy_sha256": "5c450f6012b7cfd9002b73c9b0e7138c79a613f0c21fcff8accec2640495708f",
+    "settings_unchanged": true,
+    "cases_unchanged": true,
+    "cases_file_sha256": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "settings_file_sha256": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca",
+    "dependency_count": 28
+  },
+  "unchanged_inputs": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-09.md",
+    "cases": "evals/promptfoo/v1/development-with-guard-scenario-rich.json",
+    "settings": "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json",
+    "statement": "All 28 frozen source dependencies compared; precisely the three listed files differ. Candidate policy, cases and settings are identical to the reference snapshot. No decision labels, check definitions or thresholds change."
+  },
+  "requirement_review": [
+    {
+      "requirement": "G01/G02 mode and participation correction",
+      "finding": "The edits delegate Guard to the existing decision policy rather than requiring a task lesson in every response. The policy retains participation entry, persistence and recovery requirements and the user-approved two-sentence Guard structure."
+    },
+    {
+      "requirement": "T01/T02 teaching and inventory",
+      "finding": "The existing learning-process requirements remain applicable during tutoring. The experiment does not alter action selection or invent inventory completion from participation recovery."
+    },
+    {
+      "requirement": "Protection and factual accuracy",
+      "finding": "The unchanged appended policy still requires stopping a proposed unsafe act and supplying an independent safe alternative, and explicitly states that a safety instruction does not force tutoring mode. New scope language permits task content in Guard and requires it to remain accurate. No protection requirement is deleted."
+    },
+    {
+      "requirement": "T05/R5 persona and dignity",
+      "finding": "Peer voice continues during explanations, safety interventions and participation boundaries. Scope changes add no compelled persona performance, shaming or case-specific answer."
+    }
+  ],
+  "causal_basis": {
+    "reference_counts": {
+      "records": 183,
+      "valid": 183,
+      "mode_correct": 179,
+      "instruction_correct": 88,
+      "instruction_total": 90,
+      "length_pass": 183,
+      "deterministic_failed_records": 6
+    },
+    "observed_patterns": "Four participation decisions incorrectly choose tutoring, with reasons prioritizing teaching or engagement despite evidence requiring Guard. Two distinct failures consolidate partial inventory coverage.",
+    "hypothesis": "Unconditional source-level teaching mandates can compete with the appended participation policy. Scoping existing mandates is a distinct composition factor rather than another rule repeating the same knowing-rejection instruction.",
+    "limitations": "The records establish a plausible hypothesis, not causal proof. This condition does not address the separate inventory-completion failures."
+  },
+  "next_validation": "Run and retain all 61 development cases with three repetitions under the identical frozen settings. Compare with candidate09 to estimate the scope-change effect and retain the original baseline as acceptance reference. Semantic judging and full acceptance remain separate requirements.",
+  "status": "Source audit complete; no model calls performed for this audit. No acceptance or deployed-behavior claim."
+}

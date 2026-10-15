@@ -1,0 +1,199 @@
+{
+  "intent": "Final independent pre-execution audit of the corrected participation-only diagnostic and immutable r2 preparation.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "clear",
+  "previous_audit": {
+    "file": "evals/promptfoo/refinement-20261014/audit-participation-stage.json",
+    "sha256": "150e66e3750835efad3e21a3e135dafa1011a5b17de3742293df70ddffeaadb0",
+    "status": "Prior changes-required verdict retained for its inspected source; original prepared run remains unrun."
+  },
+  "inspected": {
+    "policy": "evals/promptfoo/refinement-20261014/participation-stage-policy.md",
+    "runner": "evals/promptfoo/v1/generate-participation.js",
+    "snapshot": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-participation-stage-diagnostic-r2/snapshot.json",
+    "policy_sha256": "fa9919b1b6d7cfcaaf8de3f65baf1519bf65affc2b7b84cb8260243332f8e9eb",
+    "runner_sha256": "0f2d34e9b08acf823f49de2f7d93d8c2af887303030b1e6ac0fee47fe9d247d3",
+    "snapshot_sha256": "1b68d82786c80a8340958958112a16c04962f36f8cdf216ab21760238686e193",
+    "baseline_report_sha256": "6ef198512a470f30905b41e780cff932a4d51f7051999477b53cbf76106c2a0d",
+    "fingerprint": "005487b90cfd5b469f10674926572876f5437b137f51cf5ac0cf34acb64db83f"
+  },
+  "verification": {
+    "cases": 61,
+    "jobs": 183,
+    "settings_unchanged": true,
+    "baseline_cases_and_manifest_unchanged": true,
+    "dependencies": [
+      {
+        "file": "runner.js",
+        "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+      },
+      {
+        "file": "evaluator.js",
+        "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+      },
+      {
+        "file": "classification.js",
+        "sha256": "0d60a4a76e329c03d796cacdf0bb603c94990ba4f4cb3ab193263e44852c3441"
+      }
+    ],
+    "existing_generation_files": 0
+  },
+  "probes": {
+    "method": "Read the exact inspected source, evaluate its load, snapshot, report and classification validation blocks in an isolated in-memory context with synthetic records and no filesystem writes or provider calls. Positive controls ensure rejection is caused by the intended identity checks.",
+    "count": 23,
+    "results": {
+      "valid_passing_record": {
+        "accepted": true,
+        "error": null
+      },
+      "valid_failing_record_preserved": {
+        "accepted": true,
+        "error": null
+      },
+      "invalid_final_contract_preserved_as_error": {
+        "accepted": true,
+        "error": null
+      },
+      "eligible_format_repair": {
+        "accepted": true,
+        "error": null
+      },
+      "target_substitution_rejected": {
+        "accepted": false,
+        "error": "Saved target output changed"
+      },
+      "repair_after_valid_first_answer_rejected": {
+        "accepted": false,
+        "error": "Ineligible saved format repair"
+      },
+      "repair_after_transport_error_rejected": {
+        "accepted": false,
+        "error": "Ineligible saved format repair"
+      },
+      "altered_input_rejected": {
+        "accepted": false,
+        "error": "Saved record provenance changed"
+      },
+      "altered_source_type_rejected": {
+        "accepted": false,
+        "error": "Saved record provenance changed"
+      },
+      "altered_role_rejected": {
+        "accepted": false,
+        "error": "Saved record provenance changed"
+      },
+      "altered_partitions_rejected": {
+        "accepted": false,
+        "error": "Saved record provenance changed"
+      },
+      "altered_target_generation_rejected": {
+        "accepted": false,
+        "error": "Saved record provenance changed"
+      },
+      "altered_result_metric_rejected": {
+        "accepted": false,
+        "error": "Saved mode score changed"
+      },
+      "altered_result_method_rejected": {
+        "accepted": false,
+        "error": "Saved mode score changed"
+      },
+      "altered_result_status_rejected": {
+        "accepted": false,
+        "error": "Saved mode score changed"
+      },
+      "altered_result_expected_rejected": {
+        "accepted": false,
+        "error": "Saved mode score changed"
+      },
+      "request_change_rejected": {
+        "accepted": false,
+        "error": "Saved request identity changed"
+      },
+      "cached_report_identity_accepted": {
+        "accepted": true,
+        "error": null
+      },
+      "cached_report_change_rejected": {
+        "accepted": false,
+        "error": "Saved report changed"
+      },
+      "cached_classification_identity_accepted": {
+        "accepted": true,
+        "error": null
+      },
+      "cached_classification_change_rejected": {
+        "accepted": false,
+        "error": "Saved classification changed"
+      },
+      "snapshot_identity_accepted": {
+        "accepted": true,
+        "error": null
+      },
+      "snapshot_body_change_rejected": {
+        "accepted": false,
+        "error": "Resume identity changed"
+      }
+    }
+  },
+  "resolved_findings": [
+    {
+      "id": "unqualified_refusal",
+      "resolution": "Policy now requires clear deliberate refusal, while retaining tutoring for genuine attempts, mistakes, clarification, frustration, reasoned disagreement and ordinary topic preferences."
+    },
+    {
+      "id": "cached_summary_identity",
+      "resolution": "Existing report fingerprint/results and full classifier object must match freshly derived values, otherwise resume fails."
+    },
+    {
+      "id": "saved_row_provenance",
+      "resolution": "Saved input, source type, role, partitions and target generation are checked against the frozen case and selected final call."
+    },
+    {
+      "id": "detached_target_and_ineligible_repair",
+      "resolution": "Target, parsed outputs and exact deterministic results are derived from recorded calls. A second call is rejected after a valid first answer or transport error, and requires the configured format-repair allowance."
+    },
+    {
+      "id": "snapshot_body_identity",
+      "resolution": "Every frozen identity field is compared with the reconstructed identity in addition to the fingerprint. Changed saved labels with an unchanged fingerprint are rejected."
+    }
+  ],
+  "preparation_integrity": [
+    "Recomputed r2 fingerprint from all frozen identity fields; it matches the declared fingerprint.",
+    "Frozen source and policy bytes match current files; all3 dependency bodies match disk.",
+    "Complete baseline report hash matches the audited183-record v1.3-r2 report.",
+    "Original cases, settings, manifest and authority-source snapshots equal the complete baseline. Derived cases change only check scope to mode_selection and remove legacy checks.",
+    "All61 request contexts preserve scenario, conversation history, current contribution, known prior mode and inventory; evaluator labels and case metadata are not target inputs.",
+    "Prepared r2 contains no generation records at audit; all183 planned repetitions remain required."
+  ],
+  "baseline": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.3-r2",
+    "snapshot_sha256": "ae5393cb5cac07c81bd0611d117889fb590d06c07fcf8860b999a50afee63003",
+    "report_sha256": "6ef198512a470f30905b41e780cff932a4d51f7051999477b53cbf76106c2a0d",
+    "records": 183,
+    "baseline_issues": [],
+    "baseline_classification": "accepted",
+    "new_target_calls": 0,
+    "raw_judge_calls_preserved": 1900,
+    "new_judge_evidence_in_r2": 0,
+    "all_targets_match_original_v12": true,
+    "all_judge_evidence_matches_v13": true,
+    "mode_correct": 183
+  },
+  "structural_validation": {
+    "command": "rtk proxy node --test evals/promptfoo/v1/generate-participation.test.js",
+    "passed": 2,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "interpretation": "The task decomposition, system prompt/context composition and reduced output schema are declared bundled diagnostic factors. G01 eligibility remains intact. A result measures isolated participation classification under this condition, not a complete tutor or an automatic runtime mode override.",
+  "remaining_requirements": [
+    "Preserve every one of the183 outputs and all format/transport attempts; maintain failures and errors in coverage.",
+    "Use existing classification aggregation, partitions and baseline predictions without threshold or label changes.",
+    "If advanced, separately audit the full response stage and its interaction with the participation decision, then perform complete behavior evaluation and product verification.",
+    "Reason's40-word policy guidance is not enforced by the stage parser; semantic reason quality and full response realization remain unmeasured by this diagnostic."
+  ],
+  "auditor_model_calls": 0
+}

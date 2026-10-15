@@ -1,0 +1,436 @@
+{
+  "intent": "Independently verify calibration-harness fidelity and failure handling before executing the frozen instruction-boundary comparison.",
+  "auditor": "/root/refinement_audit",
+  "captured_at_utc": "2026-10-15T04:43:13.296Z",
+  "verdict": "clear",
+  "scope": "Harness readiness only. No model calibration outcome or candidate acceptance is established.",
+  "inspected_artifact_hashes": {
+    "evals/promptfoo/v1/calibrate-instruction-boundaries.js": "0ec64760900990755423f5cf9dd9bc89cc6b5fd95e2bba60c342cca60439d347",
+    "evals/promptfoo/v1/runner.js": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "evals/promptfoo/v1/evaluator.js": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8",
+    "evals/promptfoo/rubrics/v1/manifest.json": "f8eed4cb8eda0d4e0b57a2ca3b143070a9d928f682bade79a5481813b1976146",
+    "evals/promptfoo/rubrics/v1/instruction_realization.md": "86ec0bf0737a92ebe6270cb37f120244cd274d97e873c9b57b3e5d619bd79124",
+    "evals/promptfoo/refinement-20261014/diagnostic-review-candidate01.json": "4ed5a7d0d1d4929212ed1187204acaad7c6c8a393c17c94dc17b4d9ef659c394",
+    "evals/promptfoo/refinement-20261014/settings-r3.json": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436"
+  },
+  "planned_comparison": {
+    "conditions": [
+      "original",
+      "clarified"
+    ],
+    "fixtures_per_condition": 11,
+    "logical_judge_calls": 22,
+    "workers": 4,
+    "settings": "evals/promptfoo/refinement-20261014/settings-r3.json",
+    "metric": "instruction_realization"
+  },
+  "verified_fidelity": [
+    "Both conditions enumerate the same eleven frozen fixtures, including context_override for the eligibility/realization boundary.",
+    "The sole judged-property change is appending the diagnostic report's exact generalized clarification to the original rubric.",
+    "judgeMessages receives the same context and normalized decision shape as ordinary evaluation; expected_realization and expected_selection stay outside the judge payload.",
+    "Snapshot retains all fixtures, contexts, exact rubric strings, settings, command, script body, and runner/evaluator/manifest sources; fingerprint rejects dependency drift.",
+    "Every result retains the raw call request/response, original fixture, judged input/output, derived verdict and agreement; prior passing and failing records are both reused.",
+    "Resume validates fingerprint, condition, fixture, input, output, and exact provider request, then rederives checkedResult and agreement from raw text with the frozen expected label.",
+    "Both conditions require complete evaluable evidence. Original disagreements are diagnostics; clarified must agree on all eleven. Raw errors, missing or malformed verdicts in either condition block.",
+    "The script writes only its selected evidence directory; live target prompts, rubrics, cases and existing judgments are unchanged."
+  ],
+  "findings": [
+    {
+      "id": "CH01",
+      "severity": "high",
+      "status": "resolved",
+      "problem": "Initial summary counted only error status, permitting original-condition missing judgments to escape the error gate.",
+      "resolution": "Any raw.error or status outside pass/fail is counted as blocking in either condition. Memory probe with eleven original missing results and eleven clarified agreements exits 1."
+    },
+    {
+      "id": "CH02",
+      "severity": "medium",
+      "status": "resolved",
+      "problem": "Initial identity omitted shared runner/evaluator/manifest source dependencies, permitting changed implementation across resume.",
+      "resolution": "All three source bodies are pinned in identity. A changed runner body causes resume identity rejection before any mock call."
+    },
+    {
+      "id": "CH03",
+      "severity": "high",
+      "status": "resolved",
+      "problem": "Initial resume trusted stored agrees and row metadata. A cached false verdict with agrees=true could yield a false 11/11 summary.",
+      "resolution": "Cached identity and exact request are validated; grade is rederived from raw.text and the frozen label. The original false-pass probe now reports 10/11 and exits 1."
+    },
+    {
+      "id": "CH04",
+      "severity": "low",
+      "status": "resolved",
+      "problem": "Initial normalized decision omitted decision.mode compared with actual saved judge requests.",
+      "resolution": "Nested decision.mode is tutoring and was asserted in every synthetic call."
+    }
+  ],
+  "deterministic_probe_evidence": {
+    "captured_at": "2026-10-15T04:43:13.296Z",
+    "source_sha256": "0ec64760900990755423f5cf9dd9bc89cc6b5fd95e2bba60c342cca60439d347",
+    "model_calls": 0,
+    "real_files_written": 0,
+    "probes": [
+      {
+        "probe": "all_valid",
+        "exit_code": 0,
+        "mocked_calls": 22,
+        "summary": {
+          "original": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          },
+          "clarified": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          }
+        },
+        "error": null
+      },
+      {
+        "probe": "original_disagreement",
+        "exit_code": 0,
+        "mocked_calls": 22,
+        "summary": {
+          "original": {
+            "total": 11,
+            "agreed": 0,
+            "errors": 0
+          },
+          "clarified": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          }
+        },
+        "error": null
+      },
+      {
+        "probe": "original_missing",
+        "exit_code": 1,
+        "mocked_calls": 22,
+        "summary": {
+          "original": {
+            "total": 11,
+            "agreed": 0,
+            "errors": 11
+          },
+          "clarified": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          }
+        },
+        "error": null
+      },
+      {
+        "probe": "original_error_with_valid_text",
+        "exit_code": 1,
+        "mocked_calls": 22,
+        "summary": {
+          "original": {
+            "total": 11,
+            "agreed": 0,
+            "errors": 11
+          },
+          "clarified": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          }
+        },
+        "error": null
+      },
+      {
+        "probe": "clarified_malformed",
+        "exit_code": 1,
+        "mocked_calls": 22,
+        "summary": {
+          "original": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          },
+          "clarified": {
+            "total": 11,
+            "agreed": 0,
+            "errors": 11
+          }
+        },
+        "error": null
+      },
+      {
+        "probe": "forged_agreement",
+        "exit_code": 1,
+        "mocked_calls": 0,
+        "summary": {
+          "original": {
+            "total": 11,
+            "agreed": 11,
+            "errors": 0
+          },
+          "clarified": {
+            "total": 11,
+            "agreed": 10,
+            "errors": 0
+          }
+        },
+        "error": null
+      },
+      {
+        "probe": "fixture_mismatch",
+        "exit_code": 1,
+        "mocked_calls": 0,
+        "summary": null,
+        "error": "Error: Cached calibration evidence does not match the frozen job."
+      },
+      {
+        "probe": "provider_mismatch",
+        "exit_code": 1,
+        "mocked_calls": 0,
+        "summary": null,
+        "error": "Error: Cached calibration evidence does not match the frozen job."
+      },
+      {
+        "probe": "dependency_drift",
+        "exit_code": 1,
+        "mocked_calls": 0,
+        "summary": null,
+        "error": "Error: Calibration resume identity changed."
+      }
+    ]
+  },
+  "probe_method": {
+    "execution": "Loaded the exact harness source in node:vm. Replaced only the filesystem with an in-memory evidence map and runner.call with a deterministic stub; used real shared judgeMessages, checkedResult, rubricsFor and sha. No real evidence file or model request was produced by the probes.",
+    "valid_stub": "Map response text plus declared instruction back to the frozen fixture; emit boolean expected_realization, numeric matching 0/1, and a nonempty reason under instruction_realization. Return the complete expected provider request.",
+    "original_disagreement": "Invert each original condition's expected_realization while keeping clarified correct; this remains a complete diagnostic comparison, so exit 0 is expected.",
+    "missing_and_error": "Original condition either returns error with no text, or error plus an otherwise valid verdict. Both must block despite clarified 11/11.",
+    "malformed": "Clarified condition returns non-JSON text; all eleven missing judgments must block.",
+    "cached_flag": "After a valid in-memory run, change clarified D-S1 raw verdict to false while leaving its stored result/agrees as a pass. Resume must recompute 10/11 and exit 1 with zero new calls.",
+    "identity_checks": "From a valid in-memory run, independently alter a cached fixture label, cached provider temperature, or runner source body. Each resume must reject with zero new calls.",
+    "independent_assertions": "Each fresh probe executes exactly 22 distinct condition/fixture jobs, retains three dependency sources, carries eleven fixtures, appends the exact clarification, includes nested mode, and excludes both expected-label fields from judge payloads."
+  },
+  "limitations": [
+    "Calibration deliberately makes one logical judge completion per fixture, with the shared transport retry policy. It does not add the production evaluator's possible format-only repair. Missing/malformed results block and remain preserved.",
+    "Nine passing deterministic probes establish harness behavior, not semantic judge agreement. The planned live calibration and subsequent full comparable affected-check rejudging remain separate work.",
+    "No current run score was modified, and the diagnostic proposal/calibration labels remain unchanged."
+  ],
+  "current_only_revision": {
+    "revision": "current-only-20261015",
+    "captured_at_utc": "2026-10-15T04:48:59.833Z",
+    "auditor": "/root/refinement_audit",
+    "verdict": "clear",
+    "scope": "Optional literal-current-rubric calibration mode and default-mode regression; original source audit and live calibration evidence remain preserved.",
+    "source_path": "evals/promptfoo/v1/calibrate-instruction-boundaries.js",
+    "source_sha256": "5e596847cf7bfb2266224288b6f8640f96c0c519845fdfe6c2be4bb6d5b28ad4",
+    "superseded_harness_source_sha256": "0ec64760900990755423f5cf9dd9bc89cc6b5fd95e2bba60c342cca60439d347",
+    "prior_audit_file_sha256": "d1850c7691be2fe58469dc397eaa8fea7d4cc2b5f555e0cb49e53a950e7de9f2",
+    "changed_factors": [
+      "Optional fourth argument --current-only selects one current condition with eleven frozen fixtures.",
+      "The current condition uses the exact string loaded by rubricsFor, preserving terminal newlines and applying no appended clarification.",
+      "currentOnly is part of snapshot identity, so a mode change cannot resume into an existing run.",
+      "The terminal agreement gate checks current in single-condition mode and clarified in default mode; errors in any executed condition remain blocking."
+    ],
+    "verified_fidelity": [
+      "No fixture, context, expected label, provider setting, shared evaluator function, or raw evidence format changed.",
+      "Current mode performs exactly eleven distinct condition/fixture calls; default mode still performs twenty-two.",
+      "An already-clarified literal with a final newline remains byte-identical and contains the clarification exactly once.",
+      "A current disagreement yields 10/11 and exit 1; missing, malformed, or transport-error results also exit 1.",
+      "Cached forged agreement is recomputed from raw text; fixture/dependency/request checks from the original audit remain in the unchanged shared path.",
+      "Mode changes and unknown mode arguments are rejected before any judge call."
+    ],
+    "deterministic_probe_evidence": {
+      "captured_at": "2026-10-15T04:48:59.833Z",
+      "source_sha256": "5e596847cf7bfb2266224288b6f8640f96c0c519845fdfe6c2be4bb6d5b28ad4",
+      "model_calls": 0,
+      "real_files_written": 0,
+      "probes": [
+        {
+          "probe": "current_all_valid",
+          "exit_code": 0,
+          "mocked_calls": 11,
+          "summary": {
+            "current": {
+              "total": 11,
+              "agreed": 11,
+              "errors": 0
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "current_one_wrong",
+          "exit_code": 1,
+          "mocked_calls": 11,
+          "summary": {
+            "current": {
+              "total": 11,
+              "agreed": 10,
+              "errors": 0
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "current_missing",
+          "exit_code": 1,
+          "mocked_calls": 11,
+          "summary": {
+            "current": {
+              "total": 11,
+              "agreed": 0,
+              "errors": 11
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "current_error_valid",
+          "exit_code": 1,
+          "mocked_calls": 11,
+          "summary": {
+            "current": {
+              "total": 11,
+              "agreed": 0,
+              "errors": 11
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "current_malformed",
+          "exit_code": 1,
+          "mocked_calls": 11,
+          "summary": {
+            "current": {
+              "total": 11,
+              "agreed": 0,
+              "errors": 11
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "default_all_valid",
+          "exit_code": 0,
+          "mocked_calls": 22,
+          "summary": {
+            "original": {
+              "total": 11,
+              "agreed": 11,
+              "errors": 0
+            },
+            "clarified": {
+              "total": 11,
+              "agreed": 11,
+              "errors": 0
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "default_original_disagreement",
+          "exit_code": 0,
+          "mocked_calls": 22,
+          "summary": {
+            "original": {
+              "total": 11,
+              "agreed": 0,
+              "errors": 0
+            },
+            "clarified": {
+              "total": 11,
+              "agreed": 11,
+              "errors": 0
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "default_original_missing",
+          "exit_code": 1,
+          "mocked_calls": 22,
+          "summary": {
+            "original": {
+              "total": 11,
+              "agreed": 0,
+              "errors": 11
+            },
+            "clarified": {
+              "total": 11,
+              "agreed": 11,
+              "errors": 0
+            }
+          },
+          "error": null
+        },
+        {
+          "probe": "current_literal_already_clarified_with_final_newline",
+          "exit_code": 0,
+          "mocked_calls": 11,
+          "exact_bytes_preserved": true,
+          "clarification_copies": 1
+        },
+        {
+          "probe": "current_forged_cached_agreement",
+          "exit_code": 1,
+          "mocked_calls": 0,
+          "summary": {
+            "current": {
+              "total": 11,
+              "agreed": 10,
+              "errors": 0
+            }
+          }
+        },
+        {
+          "probe": "mode_change_resume",
+          "exit_code": 1,
+          "mocked_calls": 0,
+          "error": "Error: Calibration resume identity changed."
+        },
+        {
+          "probe": "unknown_mode",
+          "exit_code": 1,
+          "mocked_calls": 0,
+          "error": "Error: Optional mode must be --current-only."
+        }
+      ]
+    },
+    "probe_method": "Node VM with an in-memory evidence filesystem and deterministic call stub, using real shared judgeMessages, checkedResult and sha. Literal-rubric output was supplied unchanged by the rubricsFor stub. Probes cover the actual current file text and an already-clarified string with a terminal newline; no live file or model was changed.",
+    "independently_verified_previous_live_calibration": {
+      "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-instruction-calibration",
+      "fingerprint": "3f0897ada91a0aa6ad9315835653c117215772f15b73153af3a051fe2a3a5fe8",
+      "source_sha256": "0ec64760900990755423f5cf9dd9bc89cc6b5fd95e2bba60c342cca60439d347",
+      "snapshot_sha256": "ec1b2d2d07eb4d0b9c57a8d6abf77cf46a2ec88c6b5e8e4cd25b4810bbd83034",
+      "summary_sha256": "f7dfb6a5bd6a1edc809a938d68521a6ce029a95d6cc4144a1d21d557cf1a7024",
+      "rubric_hashes": {
+        "original": "86ec0bf0737a92ebe6270cb37f120244cd274d97e873c9b57b3e5d619bd79124",
+        "clarified": "48c8ff3b91f9f2cedb1e5ffbf623242877f17ee0e2af2d16bf736099d9e0c9bd"
+      },
+      "counts": {
+        "original": {
+          "total": 11,
+          "agreed": 8,
+          "errors": 0,
+          "disagreements": [
+            "D-P2",
+            "D-P3",
+            "D-C2"
+          ]
+        },
+        "clarified": {
+          "total": 11,
+          "agreed": 11,
+          "errors": 0,
+          "disagreements": []
+        }
+      },
+      "records_sha256": "f99a24891417846df2c184ebd695f426222b1c8ef0ad40c86051a73422cfa9ae",
+      "record_hash_encoding": "SHA-256 of JSON.stringify(rows), where rows are {file,sha256} in original-then-clarified fixture order."
+    },
+    "calibration_interpretation": "The previous run supports the draft clarified rubric string hashed 48c8ff3b91f9f2cedb1e5ffbf623242877f17ee0e2af2d16bf736099d9e0c9bd. Its 11/11 agreement does not establish calibration of subsequently adopted file bytes. The current-only mode enables that separate exact-text check after adoption.",
+    "remaining_work": "Adopt/version the evaluator only after current frozen runs finish, run current-only calibration against the exact adopted rubric file, then perform comparable affected-check rejudging. This audit does not alter prior run judgments."
+  }
+}

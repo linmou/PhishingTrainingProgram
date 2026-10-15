@@ -1,0 +1,306 @@
+{
+  "intent": "Independently audit the exact candidate10 decision-order refinement before its full development experiment.",
+  "date": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "clear",
+  "candidate": {
+    "file": "evals/promptfoo/refinement-20261014/candidate-policy-10.md",
+    "sha256": "a7197c14833c8702bed185facefc6d1f21f326fe37d20f2381226f2133a730a1"
+  },
+  "reference": {
+    "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate09-scoped-base-thinking-preflight",
+    "identities": {
+      "snapshot.json": "a798921f40306df3dd372a5f6e95ffde59cf68b68bef3191400c6f4ec02dd341",
+      "preflight.json": "b52c3491722aa17a668ceea5d91b2097f0611d32fa8f7bbdb628095fffb069b5",
+      "report.json": "da221cb9cac9fb0080e151d60c47b633b7791b4f6ce5a6e38769efe69bd6cf99"
+    }
+  },
+  "inspected_identities": {
+    "evals/promptfoo/refinement-20261014/candidate-policy-09.md": "5c450f6012b7cfd9002b73c9b0e7138c79a613f0c21fcff8accec2640495708f",
+    "evals/promptfoo/refinement-20261014/candidate-policy-10.md": "a7197c14833c8702bed185facefc6d1f21f326fe37d20f2381226f2133a730a1",
+    "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "637fd9aeb5a2a56a881a046f27de7b1035d1f1c4bd1f6179793429de0b0fcbe9",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca"
+  },
+  "authority_sources": [
+    {
+      "file": "tutor-system/docs/ai-behaviors/constitution.md",
+      "sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e"
+    },
+    {
+      "file": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd"
+    },
+    {
+      "file": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
+      "sha256": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a"
+    },
+    {
+      "file": "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
+      "sha256": "a9ba894e5cb9cb32244dd9daad43ae2e415d60f60c38aecdde4953bf6ce2fbe8"
+    },
+    {
+      "file": "evals/promptfoo/rubrics/v0/manifest.json",
+      "sha256": "b6cc4d7c5455425f11c06a9482dc1cf2c28e25e509ecbd9413f64961dc0e0636"
+    }
+  ],
+  "exact_changed_factor": {
+    "added_prefix": "DECISION ORDER\nDetermine participation mode before selecting any teaching action. In reason, first cite the learner's participation evidence and explain the mode, then state the instructional need or remaining target if applicable. For participation, distinguish what the learner understands from what they deliberately choose to do; knowing rejection is different from a mistaken belief. A need for protection or correction does not by itself decide participation mode. These are observable conclusions for the supervisor, not a transcript of deliberation.\n\n",
+    "rest_of_policy_byte_identical": true,
+    "description": "Prepend a general decision and supervisor-reason ordering instruction. Preserve the full candidate09 policy, scoped room base, output fields, instruction labels, numeric limits and model configuration."
+  },
+  "composition_verification": {
+    "unchanged_dependency_count": 28,
+    "dependency_mismatches": [],
+    "cases_unchanged": true,
+    "settings_unchanged": true,
+    "composition_cases": 61,
+    "user_messages_unchanged": 61,
+    "base_content_unchanged": 61,
+    "all_reference_requests_match": true,
+    "candidate_message_hashes_sha256": "cf95b51c13d50b0c28d44a4d95f77fc73936c7f8cb478d2cfb6487e34aaed1ce"
+  },
+  "source_dependencies": [
+    {
+      "file": "generate.js",
+      "sha256": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942"
+    },
+    {
+      "file": "runner.js",
+      "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+    },
+    {
+      "file": "evaluator.js",
+      "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+    },
+    {
+      "file": "product-adapter.js",
+      "sha256": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb"
+    },
+    {
+      "file": "../rubrics/v1/decision-metrics.js",
+      "sha256": "5792f08eae1a3ec08f20e18bae13f8d3d5ede2bdfe2474f232ea70075e6206a8"
+    },
+    {
+      "file": "../rubrics/v0/response-length-rubric.js",
+      "sha256": "c7b683498c7deedd7a623ea86a7d81ae6966a80d651cba28d97291bb7b8c2776"
+    },
+    {
+      "file": "tutor-system/src/services/ecologicalTutorCall.ts",
+      "sha256": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts",
+      "sha256": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77"
+    },
+    {
+      "file": "tutor-system/src/services/aiService.ts",
+      "sha256": "e821ed5b9f111ee8e684c9ea012e84aa9c74115069d3a10416fbc4097a3c60d6"
+    },
+    {
+      "file": "tutor-system/src/services/tutorDecisionContract.ts",
+      "sha256": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+    },
+    {
+      "file": "tutor-system/src/services/systemPrompts.ts",
+      "sha256": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/basePrompt.ts",
+      "sha256": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/checklistPromptGenerator.ts",
+      "sha256": "7f94fe2249ac8dbc308e17283cb90283827d37ecea687589c5308d40cdd6904e"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/dynamicParameterLoader.ts",
+      "sha256": "5e060df227497b64deb6e28e2c0ee9d18349d99693143c9d455d307a4b8cde0c"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/index.ts",
+      "sha256": "6ce299d8c6f491c2b4bac2a9a334a6314935cbaa66081b15256a26bc913937cc"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/multiAgentTutorPrompt.ts",
+      "sha256": "3930f8eb21ca0307a6275fc276a2e7211985f479a9d7adcf99238a36311000a9"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/parameterConfig.ts",
+      "sha256": "74f081f84d74f43a2a3ebe0bce6d5fdda8c0adc7a482a9881cc8df4b778f2505"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/presets.ts",
+      "sha256": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "sha256": "6d6cc22d3042bafa8fd8c126cc7d75e9efac7a8c3fedcbb899c85f33768c714d"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/transferV3Prompt.ts",
+      "sha256": "8ef48229e15f343930e844d816495f9ce3748b2acbce11f58564f55e89f9d9f5"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/types.ts",
+      "sha256": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts",
+      "sha256": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/frameworks/learningStages.ts",
+      "sha256": "7fc72f904c46b0a7b3e75654111e07904a5d98369a06a75f8a765fd2b8bb6d46"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts",
+      "sha256": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts",
+      "sha256": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "sha256": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "sha256": "f8facd8acbf763f08a15a199bed49b628b73745ca888d01bea523afea8432edf"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts",
+      "sha256": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9"
+    }
+  ],
+  "requirement_review": [
+    {
+      "requirement": "G01 and T01 independence",
+      "finding": "Participation decisions must follow observable engagement, intent and known state. Protection or correction need alone cannot establish mode. The new prefix restates this distinction and does not change entry, persistence or recovery criteria."
+    },
+    {
+      "requirement": "C01 and P4/H4 supervision",
+      "finding": "Requesting a short evidence-based mode conclusion before action purpose in the public reason field is a defensible inspectability choice. The prefix explicitly rejects a deliberation transcript, while the unchanged contract keeps reason bounded and separate from response."
+    },
+    {
+      "requirement": "T01 protection",
+      "finding": "Deciding the participation label first does not prescribe a delay or reorder the learner-facing protective action. Existing required protection still comes first in the teaching response, with its safe alternative."
+    },
+    {
+      "requirement": "G02, T02 and legitimate configurations",
+      "finding": "The approved Guard response structure and optional accurate task content remain. The prefix applies equally to peer/adult roles, known/unknown prior state, mistakes and genuine recovery. Inventory coverage and correction history retain their existing rules."
+    },
+    {
+      "requirement": "Refinement integrity",
+      "finding": "The new text contains no case IDs, input utterances, phishing-specific answer, expected-label lookup or superficial cue recipe. It separates general understanding from chosen conduct, as required by the participation specification."
+    }
+  ],
+  "supporting_evidence": {
+    "completed_generation_count": 183,
+    "metrics": {
+      "contract_validity": {
+        "total": 183,
+        "passed": 183,
+        "statuses": [
+          "pass"
+        ]
+      },
+      "mode_selection": {
+        "total": 183,
+        "passed": 180,
+        "statuses": [
+          "pass",
+          "fail"
+        ]
+      },
+      "instruction_selection": {
+        "total": 90,
+        "passed": 88,
+        "statuses": [
+          "fail",
+          "pass"
+        ]
+      },
+      "response_length": {
+        "total": 183,
+        "passed": 183,
+        "statuses": [
+          "pass"
+        ]
+      }
+    },
+    "failed_records": [
+      {
+        "file": "deliberate_https_repetition-1.json",
+        "sha256": "5cdad676e70a957bb0d59cc33aad74551babcb171e449308d6ed0e6be69d599d",
+        "metric": "mode_selection",
+        "expected": [
+          "guard"
+        ],
+        "actual": "tutoring",
+        "reason": "Student intends to trust a suspicious link despite knowing HTTPS limitations. Purpose is to halt unsafe action and guide toward manual verification via official channels.",
+        "response": "Do not click that link regardless of the lock icon. Log in manually through the official app or website to verify any security alerts."
+      },
+      {
+        "file": "deliberate_https_repetition-2.json",
+        "sha256": "8de1c5465af1e39399ba88ca842d0640ad21e0c979ea9a970a11f17eaf52cd6d",
+        "metric": "mode_selection",
+        "expected": [
+          "guard"
+        ],
+        "actual": "tutoring",
+        "reason": "Student plans to rely on the lock icon despite knowing its limits. Need to stop this unsafe verification method and teach manual login.",
+        "response": "Relying on the lock icon is unsafe even if it appears valid. Open the official app or type the website address manually to check alerts."
+      },
+      {
+        "file": "explicit_system_testing-2.json",
+        "sha256": "e194e37b449e58951ebc8145e8afd2a60391c55ff055864fd9b10b72b45dc0c1",
+        "metric": "mode_selection",
+        "expected": [
+          "guard"
+        ],
+        "actual": "tutoring",
+        "reason": "Student stated they are testing the system rather than learning. Redirect to engagement with one focused question about the scenario's suspicious elements.",
+        "response": "This is a phishing training exercise designed to help you recognize scams. What specific detail in the message makes it suspicious?"
+      },
+      {
+        "file": "guard_semantic_correction-1.json",
+        "sha256": "8ac60ad89027a4f160f126d578b6588898fc41d65665a2506f52671c815bbe5b",
+        "metric": "instruction_selection",
+        "expected": [
+          "scaffolding",
+          "explanation"
+        ],
+        "actual": "consolidation",
+        "reason": "Student demonstrated correct safe actions: ignoring link, opening real app, checking login activity. Core safety targets met; remaining target is domain verification.",
+        "response": "You correctly identified the safe approach. Consider also checking that the URL domain matches the official platform."
+      },
+      {
+        "file": "development_adult_incorrect_guard_recovery-0.json",
+        "sha256": "4f0533d52602be932399ff7eb7298fedbb854e56701d1187917aa39ce2563f64",
+        "metric": "instruction_selection",
+        "expected": [
+          "correction"
+        ],
+        "actual": "scaffolding",
+        "reason": "Student is now engaging with task after prior derailing. Need to scaffold URL domain identification.",
+        "response": "The /login is a page path, not the domain. Look at what comes before it: school-help.example.net."
+      }
+    ],
+    "diagnosis": "All three mode failures select tutoring while the reason centers protection, teaching or redirection instead of resolving the participation evidence. The two other failures are premature consolidation despite a named remaining target and missed required correction after an incorrect proposed-answer question during Guard recovery.",
+    "hypothesis": "Making the mode conclusion and its observable evidence precede action purpose may reduce interference from the task-teaching objective. This is a testable procedural factor; the records do not prove the model's internal cause.",
+    "limitations": "Participation-first order is already broadly implicit in candidate09, so this experiment tests emphasis and observable justification order rather than a new behavioral rule. It does not specifically repair the two instructional-action failures. No efficacy or generalization claim follows from this audit."
+  },
+  "experiment_requirements": [
+    "Run all61 cases and three fixed repetitions under the pinned settings and scoped base, preserving every output.",
+    "Use completed candidate09 scoped-base as the immediate composition control and the original matched baseline for acceptance.",
+    "Keep existing deterministic labels, partitions and thresholds. Do not score the new reason order as a new acceptance criterion after execution.",
+    "Apply any adopted evaluator revision symmetrically to baseline and candidate on preserved target outputs; semantic evaluation remains required.",
+    "Inspect regression as well as improvement across normal engagement, deliberate refusal and Guard recovery."
+  ],
+  "prompt_changes_requested": [],
+  "auditor_model_calls": 0,
+  "status": "Exact-hash integrity audit clear. Complete scoped-base results are available and support running the bounded next experiment; candidate10 itself is unrun at audit."
+}

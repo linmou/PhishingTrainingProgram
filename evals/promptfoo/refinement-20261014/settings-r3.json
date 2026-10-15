@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "target_max_tokens": 100,
+  "target_enable_thinking": false,
+  "target_format_attempts": 2,
+  "judge_max_tokens": 8000,
+  "judge_enable_thinking": true,
+  "repetitions": 3,
+  "transport_attempts": 3,
+  "transport_retry_delay_ms": 10000,
+  "request_concurrency": 24,
+  "timeout_ms": 180000,
+  "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+  "changed_factors": "Fresh full baseline after the previous full attempt ended with transport errors. Only operational concurrency changes from twelve to twenty-four; all target and judge request parameters, retry limits, cases, rubrics and thresholds remain unchanged. This is the controlled 0.3/100 evaluation configuration, not ordinary enabled-room defaults. Candidate uses this same settings file."
+}

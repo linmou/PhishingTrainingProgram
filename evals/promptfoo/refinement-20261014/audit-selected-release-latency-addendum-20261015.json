@@ -1,0 +1,79 @@
+{
+  "intent": "Diagnose the selected thinking-enabled transfer configuration's live deadline exposure without changing the model condition or claiming release completion.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "parent_release_audit": "audit-selected-release-integration-20261015.json",
+  "status": "staging_transfer_completion_unverified_deadline_exposure_confirmed_in_source",
+  "auditor_model_calls": 0,
+  "auditor_runtime_edits": 0,
+  "selected_condition": {"temperature": 0, "max_tokens": 8000, "enable_thinking": true},
+  "reported_staging_evidence": {
+    "source": "Release owner's Management API function_logs observation; not independently fetched by this auditor",
+    "assessment_api_version": 55,
+    "worker_boot": "2026-10-15T13:40:45.452Z",
+    "wall_clock_shutdown": "2026-10-15T13:43:15.457Z",
+    "elapsed_seconds": 150.005,
+    "browser_wait_seconds": 90,
+    "analysis_response_completion": "Not observed"
+  },
+  "source_sha256": {
+    "tutor-system/supabase/functions/assessment-api/index.ts": "fd3f020bcf5a277126263b770c8c18786175bd22c4dfb24ce5d86434723b5606",
+    "tutor-system/src/services/checklistService.ts": "5f68078feb2be12c935fad393b39399797dd542f51093eeabb7240a4d80d3b77",
+    "tutor-system/src/services/transferAssessmentService.ts": "75e5da61414073a93cdb7ae87a05cce1096c5a919438db7c6a4b41a0b103b52e",
+    "thinking-candidate02-20261015-01/frozen.json": "e46abdaf98ed6efc5c34eaee82b397f29415f7fccd5d251e08016c6800068380"
+  },
+  "independent_saved_timing_analysis": {
+    "run": "output/transfer-analysis-current/thinking-candidate02-20261015-01",
+    "independent_requests": 348,
+    "http200_responses": 335,
+    "successful_latency_seconds": {"p50": 21.523, "p95": 37.164, "p99": 46.464, "maximum": 164.376},
+    "successful_responses_over150seconds": 1,
+    "transport_timeouts": 13,
+    "timeout_seconds_range": [180.004, 180.009],
+    "interpretation": "The selected condition has an observed long tail beyond the live150-second envelope. Full-inventory concurrent fanout waits for its slowest target and increases exposure. These timings do not isolate model generation from provider/network queuing."
+  },
+  "platform_verification": {
+    "source": "https://supabase.com/docs/guides/functions/limits",
+    "checked": "2026-10-15",
+    "limits": "Official documentation lists free worker wall clock150seconds, paid worker400seconds, and request idle timeout150seconds. Worker life can span multiple requests.",
+    "interpretation": "A larger browser-test wait cannot extend a worker's wall clock. A paid worker alone also does not extend the documented idle-response deadline. Correlate the reported shutdown with the actual invocation before asserting which provider call caused it."
+  },
+  "source_findings": [
+    {
+      "location": "assessment-api/index.ts:294-401",
+      "finding": "analyzeMessage launches one provider call per target with Promise.all and has no explicit fetch deadline. It applies one combined analysis only after every target response validates. A worker shutdown can discard all completed in-memory target responses."
+    },
+    {
+      "location": "checklistService.ts:167-192; transferAssessmentService.ts:289-310",
+      "finding": "The client caches only confirmed server completion and preserves failures. Each API request receives a fresh request_id. Retrying after an incomplete analysis can repeat every target call; the cache is not a per-target response journal."
+    },
+    {
+      "location": "assessment-api/index.ts:254-284",
+      "finding": "recordProviderAttempt belongs to assessment generation, hardcodes its1200-token journal setting and expects assessment scope fields. analyzeMessage never calls it. It cannot be reused unchanged as an8000-token analysis journal."
+    }
+  ],
+  "live_schema_verification": {
+    "tool": "Supabase MCP execute_sql and get_project_url, read-only",
+    "project": "zgbufaxooqxeabewktzd",
+    "scope_limit": "MCP is bound to production and rejects project_id overrides. These are production definitions, not a claim that staging RPC bytes were inspected.",
+    "function_definition_md5": {
+      "get_transfer_message_analysis_context_v1": "b77acbf0fd739272f4d7479323bed825",
+      "apply_transfer_message_analysis_v1": "c45e0dabb8522fbbc1ebe8705982ad18",
+      "record_transfer_provider_attempt_v1": "11b7218c6ae7f2755351a184de3de7ea"
+    },
+    "idempotence": "apply_transfer_message_analysis_v1 obtains a message advisory transaction lock and checks analysis:<message_id> in private.learning_event_inbox. Applied/no_change markers return already_processed. Guard deferral is retained. This protects database effects after analysis; it does not reserve or dedupe the preceding provider calls.",
+    "existing_attempt_table": "private.transfer_provider_attempts permits attempt_ordinal1 or2 only and has UNIQUE(request_id,attempt_ordinal). It is a two-attempt assessment journal, not an existing arbitrary-item durable transfer job/cache."
+  },
+  "smallest_next_checks": [
+    "Use existing staging invocation/gateway logs to correlate execution ID, request start, response status and shutdown, then read the message analysis marker and accepted events. Distinguish no response, client abandonment and a genuinely completed server analysis.",
+    "If the existing traces cannot identify the slow target, add minimal per-item start/finish/elapsed/status/finish_reason/usage/request-hash metadata around the unchanged provider request and one combined-completion log. Record IDs and timing rather than keys or learner text. No sampling or token-budget change is needed for this instrumentation.",
+    "Verify staging context/apply RPC definitions directly before relying on the production-confirmed message-idempotence properties."
+  ],
+  "smallest_contract_preserving_hardening": {
+    "proposal": "Give analysis provider work an explicit shared deadline below the confirmed live request/worker envelope, reserving time for error serialization or final persistence. Abort outstanding fetches and return the existing named retryable error contract when the deadline is exhausted. Keep temperature0/max_tokens8000/thinkingtrue and the complete target inventory unchanged.",
+    "completion_rule": "Do not apply partial inventory as analysis_complete, mark deferred success, or cache unfinished messages as completed. Retain validated model decisions; retryability must not become semantic outcome selection.",
+    "limitation": "This converts an opaque platform termination into a bounded recoverable failure. It does not guarantee successful completion of the observed long-tail condition and is insufficient by itself to declare the transfer release verified.",
+    "next_scope_if_required": "Reliable reuse across retries requires a separately reviewed durable per-item exact-request response journal or a worker/request arrangement that survives the measured latency. It must preserve complete-inventory application, current scope/state checks, Guard deferral, chronological message processing and final message dedupe. Existing RPC idempotence alone does not supply that architecture."
+  },
+  "release_implication": "Keep production promotion blocked on successful full-inventory staging completion and the affected lifecycle verification. Increasing only a test wait or silently reducing reasoning/token settings would not resolve the observed architectural deadline exposure."
+}

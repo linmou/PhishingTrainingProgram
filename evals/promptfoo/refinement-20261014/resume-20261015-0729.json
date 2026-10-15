@@ -1,0 +1,14 @@
+{
+  "intent": "Record availability-based continuation without replacing any saved model outcome.",
+  "started_at_utc": "2026-10-15T07:29:10Z",
+  "authorization": "User confirmed disk cleanup and requested another attempt.",
+  "available_disk_at_start": "2.3 GiB",
+  "checkpoint": "thinking-v12-disk-resume-checkpoint.json",
+  "validated_saved_baseline_records": 46,
+  "validated_saved_candidate_records": 45,
+  "validation": "All91 saved file SHA-256 hashes match the prior checkpoint and every saved file parses as JSON.",
+  "execution": "Resume each existing snapshot command with unchanged cases, model settings, policy, evaluator, dependencies, replay directory and eight workers. Each arm limits provider concurrency to12; combined cap24. A separate30-second disk/progress monitor and caffeinate assertions are active.",
+  "baseline_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.2",
+  "candidate_directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-thinking-v1.2",
+  "followup_scope": "User requested inclusion of eval additions from improve/transfer-analysis-negatives after the currently running comparison finishes. Local tip af86353 and predecessor7737cfb are under read-only dependency and harness review; no branch changes or new-suite model calls occur during this continuation."
+}

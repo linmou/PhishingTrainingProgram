@@ -1,0 +1,56 @@
+{
+  "intent": "Independently verify candidate07 prompt integrity, adopted participation/action boundaries and exact composed requests before execution.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_declared_preflights",
+  "scope": "Prompt integrity only; evaluator v1.2 adoption/calibration and benchmark acceptance are independently owned.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-07.md",
+    "sha256": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6",
+    "composed_request_set_sha256": "e3cd8d3d3b96e6cf6d056dc80b90f33b0494cb62487b089ce2ec6237602c36ea",
+    "digest_method": "SHA-256 of JSON.stringify of all61 messagesFor(case, product, exact policy, v2, true) arrays in frozen order."
+  },
+  "verification": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate06-preflight/snapshot.json and report.json",
+    "cases": 61,
+    "differences_beyond_policy_suffix": [],
+    "user_turns_inventory_and_role_preserved": true,
+    "snapshotted_runtime_and_generator_source_changes": [],
+    "method": "Compared every composed candidate07 request with candidate06's exact original target request after replacing only its policy suffix. System and user messages match exactly after that replacement.",
+    "provider_calls": 0
+  },
+  "changed_factors_relative_to_candidate06": [
+    "Participation uses candidate05's explicit known-Guard versus tutoring/unknown state branches. Genuine unsafe attempts remain tutoring with protection; knowing unsafe defiance and deliberate obstruction independently control Guard.",
+    "Guard persistence replies explicitly describe work not yet resumed after acknowledgment/promises, rather than inventing a new obstructive act.",
+    "The response contract moves to the end, requests compact separated JSON fields and restores the10-15-word reason aim instead of candidate06's40-word cap.",
+    "Duplicate participation reminders are removed and the introduction states participation, target and action ordering. Generic instructional/domain detail from candidate06 remains."
+  ],
+  "fidelity_review": {
+    "G01": "Known Guard persists through acknowledgment, future promises and evasion; substantive task attempts/clarifications recover even when wrong. A task fact attached to continued refusal is not recovery. Unknown state does not establish persistence, while clear present obstruction can establish entry. Ordinary unsafe mistakes and reasoned disagreement do not alone establish obstruction.",
+    "G02_G03": "The reply identifies observed participation conduct, effect and required change; it need not teach phishing content. Persistence can name absent task resumption without falsely accusing new misconduct. Serious respectful delivery remains mandatory.",
+    "T01": "Immediate and conditional unsafe action requires protection, not inferred Guard. Focused-question false inference requires correction and connected safe action. Recovery does not erase instructional history. Scaffolding can be a focused question, statement or instruction leaving an inference; explanation and first-action distinctions remain.",
+    "T02": "Learner-owned evidence controls one unmet target, contradiction reopening and full-useful-inventory consolidation. Restoring participation does not complete inventory.",
+    "supervision_and_content": "Reason links observable evidence to the selected learning target/participation change and must describe the supplied first teaching move. Grounded facts, official-address uncertainty, honest identity and separated v2 fields remain explicit."
+  },
+  "shortcut_review": {
+    "worked_case_answers_added": false,
+    "case_identifiers_or_expected_label_lookup": false,
+    "exact_input_quotes_or_guard_templates_added": false,
+    "punctuation_or_sentence_counter_workaround_added": false,
+    "assessment": "State branching and compact serialization address general mechanisms without inserting named-case solutions. Reducing reason length aims to fit the fixed output budget, not bypass semantic checks; all omitted obligations still fail their relevant check."
+  },
+  "limits_and_controls": [
+    "Participation restructuring and response compression are joint policy factors; improvement cannot establish a single causal mechanism.",
+    "The two previously declared target configurations remain separate experiments. Preserve all outputs, errors and repairs in each lane without selecting favorable repetitions.",
+    "The working manifest now records separately revised evaluator v1.2. This audit pins its current bytes but does not approve that evaluator revision, calibration or historical score migration. Semantic comparisons require exact adopted version and symmetric affected-check treatment.",
+    "A clear prompt audit and deterministic preflight do not establish semantic, unseen-validation or product-release acceptance."
+  ],
+  "hashes": {
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/refinement-20261014/settings-r3.json": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "evals/promptfoo/refinement-20261014/settings-thinking-diagnostic.json": "9d842418b07e3906d0bd45d6f35f3ab90bdc977a47e4081ec1eb410cee10975b",
+    "evals/promptfoo/rubrics/v1/manifest.json": "830e85240df310ef565dff85cf5b6306c7bd835d63e9bad3ede385c1b0e1524c"
+  },
+  "remaining_material_findings": [],
+  "actions": { "source_edits_by_reviewer": false, "holdouts_inspected": false }
+}

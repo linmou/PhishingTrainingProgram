@@ -1,0 +1,117 @@
+{
+  "intent": "Independently audit the exact candidate08 prompt before execution against the adopted tutor requirements and the user's approved generic Guard structure.",
+  "audited_at": "2026-10-15 08:31:08 UTC",
+  "auditor": "Independent refinement_audit agent; did not author candidate08",
+  "verdict": "clear",
+  "candidate": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-08.md",
+    "sha256": "9e6059b2854736e00b51429ae0094321cb7ee8e22bafbff13ae6cb3d834b990e"
+  },
+  "comparison": {
+    "path": "evals/promptfoo/refinement-20261014/candidate-policy-07.md",
+    "sha256": "8e84945b4c09b8ab7b2a0748bef94d7480bd65effe7ec9fab786700d98f0e3c6"
+  },
+  "changed_factor_record": {
+    "path": "evals/promptfoo/refinement-20261014/continuation-20261015.md",
+    "sha256": "86eafce06a6ef5dcdcfd08af3d53debe9acdab1fa645aef65567732fa6b18599"
+  },
+  "unchanged_base_sources": [
+    {
+      "path": "tutor-system/src/services/prompts/index.ts",
+      "sha256": "381c79d12b29c045ca381404be876c8cea0df3669005d56ecd02bef223431eb4"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "sha256": "aff27b6534a0c98c2828f32389482b6ddb8c511feb9332f7526467924e3a8daf"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "sha256": "6d2ffe85be34898e315882b08b7bdb7a260b0543eac860205aafacfbe026d682"
+    },
+    {
+      "path": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "sha256": "0fb6738de3a26bae3dafe15d73c581cc1d4de1b094eecd352e94feedc5fb4e5b"
+    }
+  ],
+  "authority": {
+    "specification": {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+      "requirements": [
+        "G01",
+        "G02",
+        "G03",
+        "T01",
+        "T02",
+        "T05",
+        "T06"
+      ]
+    },
+    "constitution": {
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
+      "sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e",
+      "principles": [
+        "P2",
+        "P3.3",
+        "H2",
+        "H3",
+        "H4",
+        "R4",
+        "R5"
+      ]
+    },
+    "user_authorization": "Parent reports the user explicitly approved the original generic two-sentence Guard response structure and requested its use. This audit treats that approval as controlling over the earlier deletion-based recommendation."
+  },
+  "inspected_changes": [
+    {
+      "change": "Restore the approved generic behavior-impact-participation-change response structure.",
+      "grounding": "G02 requires these three semantic elements; G03 requires a firm respectful expectation. Placeholders must be filled with actual observed behavior rather than a memorized case answer.",
+      "assessment": "Clear. No scenario names, case IDs, learner quotes, answer lookup or worked case output is added."
+    },
+    {
+      "change": "Restore clarity and serious correction priority over casual style.",
+      "grounding": "T05 and constitutional R5 explicitly permit clear direct correction to take priority over stylistic preferences; H2/H3 continue to constrain dignity and identity.",
+      "assessment": "Clear. The rule preserves calm respect and does not require authoritative role fabrication."
+    },
+    {
+      "change": "Clarify knowing rejection as accepting a correction while choosing to rely on the rejected inference.",
+      "grounding": "G01 distinguishes knowing continuation after correction from genuine mistakes and reasoned disagreement.",
+      "assessment": "Clear. The unchanged surrounding clauses protect ordinary error, confusion, genuine attempts, topic preference and reasoned disagreement."
+    },
+    {
+      "change": "Replace duplicated Guard prose with the structured section, retaining known-state persistence, intended/completed-action distinction, optional task content and participation-only null.",
+      "grounding": "G01 persistence is not a demand for new misconduct; G02 does not require a correct answer or task lesson; H4 prohibits inventing completed acts.",
+      "assessment": "Clear. All relevant boundaries remain explicit."
+    }
+  ],
+  "development_basis": {
+    "candidate07_report": {
+      "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-thinking-v1.2-4x/report.json",
+      "sha256": "366f00f69038e165b8dd3958c14aadd1f29702c73d4b744119f589bf4fd543bf"
+    },
+    "baseline_report": {
+      "path": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.2-4x/report.json",
+      "sha256": "dfaaec5439220e2b12252e7cab82eca22c32ba140c50474d8eec35679505796b"
+    },
+    "guard_protocol": {
+      "baseline_pass": 30,
+      "candidate_pass": 14,
+      "denominator": 30,
+      "candidate_failures_with_correct_guard": 13,
+      "candidate_failures_with_wrong_tutoring": 3
+    },
+    "limitation": "Thirteen is the number of saved Guard-label-correct failures, not thirteen independently certain judge decisions. Acknowledgment boundary judgments are inconsistent across semantically similar outputs. Many other omissions are clear; this uncertainty does not justify waiving scores."
+  },
+  "generalization_review": {
+    "state_and_input_evidence_preserved": true,
+    "valid_peer_and_adult_configurations_preserved": true,
+    "optional_task_content_preserved": true,
+    "legitimate_instruction_alternatives_preserved": true,
+    "independent_mode_and_action_decisions_preserved": true,
+    "case_specific_answers_added": false,
+    "frozen_eval_cases_labels_rubrics_or_thresholds_changed": false
+  },
+  "findings": [],
+  "execution_status": "Unrun at this audit. Clear integrity review permits the declared experiment; it is not acceptance or evidence of efficacy.",
+  "comparison_requirements": "Freeze candidate08 and unchanged base/settings/cases before target generation. Preserve all repetitions and failures. Any full semantic evaluation must use these saved targets, the same adopted evaluator and comparable baseline evidence. Existing instruction-realization and target-selection failures remain in scope."
+}

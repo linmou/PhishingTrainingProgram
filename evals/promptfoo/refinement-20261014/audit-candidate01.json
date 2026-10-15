@@ -1,0 +1,252 @@
+{
+  "intent": "Independently review candidate 01's shortcut removal, adopted-requirement fidelity, actual request composition, and declared harness changes before model comparison.",
+  "auditor": "/root/refinement_audit",
+  "captured_at_utc": "2026-10-15T04:25:27.726Z",
+  "verdict": "clear",
+  "verdict_scope": "Prompt-integrity review for the exact revised policy, generator, and regenerate_room_prompt=true composition below. Experimental acceptance remains incomplete.",
+  "experiment_readiness": "incomplete",
+  "candidate": {
+    "policy_path": "evals/promptfoo/refinement-20261014/candidate-policy-01.md",
+    "policy_sha256": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+    "generator_path": "tutor-system/src/services/prompts/index.ts",
+    "generator_sha256": "c6f493d7ea0f117cfa4e7ebd5c025a3b6c9ceaed2f358ffaab76f67041fb0c89",
+    "regenerate_room_prompt": true,
+    "variant": "product",
+    "contract_version": "v2",
+    "settings_path": "evals/promptfoo/refinement-20261014/settings-r3.json",
+    "settings_sha256": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "composed_development_request_set_sha256": "10b9f3e174e65e581f05f80efaab117c25ab4c90394f2f1a30da9fa2d0a52619",
+    "composed_hash_encoding": "SHA-256 of JSON.stringify(cases.map(c => ({id:c.id,role:c.role,input:c.input,inventory:c.inventory,messages:productionMessages(c,policy,true)}))). UTF-8, original case order.",
+    "active_production_policy_sha256": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77"
+  },
+  "inspected_artifact_hashes": {
+    ".agents/skills/ai-behavior-design-eval/SKILL.md": "d075d1a8a150648ff1b466a5c59fe298e0310b1d8c00b1fcde9a87c6e891f187",
+    ".agents/skills/ai-behavior-design-eval/references/evaluation-contract.md": "46bfae31d466eb8c3b87ee41741cfb5e75b59d01cd4b2a5f105a707961b6d17a",
+    ".agents/skills/ai-behavior-design-eval/references/promptfoo.md": "10798f032420c1f81d253d71b22cb80e69933f3607c044fb02e9e0837746eb6a",
+    "evals/promptfoo/refinement-20261014/README.md": "35dc7f76a56cad43f2052800e3f21d9753c515c5ed6686e2afccde054c554bed",
+    "evals/promptfoo/refinement-20261014/candidate-policy-01.md": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+    "evals/promptfoo/refinement-20261014/freeze.json": "e78663898ad5185c6742655400b2832ab8a72e6249e53479d36ffd5e6166ab23",
+    "evals/promptfoo/refinement-20261014/settings-r3.json": "a4dc486e07cc6bd45fac040ce8178b372b371e7186f2ac9b4e585f16a5741436",
+    "evals/promptfoo/refinement-20261014/settings.json": "a7a38928a876ebd1d4efb784cbb29bd053479e69d103b1b9f26cd46f7a9097b4",
+    "evals/promptfoo/rubrics/v0/manifest.json": "b6cc4d7c5455425f11c06a9482dc1cf2c28e25e509ecbd9413f64961dc0e0636",
+    "evals/promptfoo/v1/classification.js": "0d60a4a76e329c03d796cacdf0bb603c94990ba4f4cb3ab193263e44852c3441",
+    "evals/promptfoo/v1/classification.test.js": "085f75aaf6d9a119cd5da93f09e1f5a5bd0a146c841ae23c36c473fd9c95f796",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/v1/gate.js": "5aa5a7b30f7771edec2668c25cc84ba5fa9e54dc919df653d09251fbd2286d34",
+    "evals/promptfoo/v1/harness.test.js": "224a32c5ab1542bb4ec486a5b268dc457db7668ffc484c6b0d4184d772126ab4",
+    "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb",
+    "evals/promptfoo/v1/product-adapter.test.js": "f328be44b2a89ee22e45426342dfd7073f9c41a2e0c4e7e009b063a7004c513d",
+    "evals/promptfoo/v1/runner.js": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "tutor-system/docs/ai-behaviors/constitution.md": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md": "a9ba894e5cb9cb32244dd9daad43ae2e415d60f60c38aecdde4953bf6ce2fbe8",
+    "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+    "tutor-system/docs/ai-behaviors/tutor-response-contract.md": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a",
+    "tutor-system/src/services/ecologicalTutorCall.ts": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+    "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77",
+    "tutor-system/src/services/prompts/basePrompt.ts": "b7580ae4928099296e4d9514001de6e09eff0bceb4dfc5014b134608ff639b88",
+    "tutor-system/src/services/prompts/checklistPromptGenerator.ts": "7f94fe2249ac8dbc308e17283cb90283827d37ecea687589c5308d40cdd6904e",
+    "tutor-system/src/services/prompts/content/cybersecurity/detectionRules.ts": "44f735ec6a092f164241e1fc56edfd4bcd8c05b9d08fcf4dc12eb3b0bc72e50b",
+    "tutor-system/src/services/prompts/dynamicParameterLoader.ts": "5e060df227497b64deb6e28e2c0ee9d18349d99693143c9d455d307a4b8cde0c",
+    "tutor-system/src/services/prompts/index.ts": "c6f493d7ea0f117cfa4e7ebd5c025a3b6c9ceaed2f358ffaab76f67041fb0c89",
+    "tutor-system/src/services/prompts/multiAgentTutorPrompt.ts": "3930f8eb21ca0307a6275fc276a2e7211985f479a9d7adcf99238a36311000a9",
+    "tutor-system/src/services/prompts/parameterConfig.ts": "74f081f84d74f43a2a3ebe0bce6d5fdda8c0adc7a482a9881cc8df4b778f2505",
+    "tutor-system/src/services/prompts/pedagogy/frameworks/learningStages.ts": "7fc72f904c46b0a7b3e75654111e07904a5d98369a06a75f8a765fd2b8bb6d46",
+    "tutor-system/src/services/prompts/pedagogy/parameters/cognitiveParameters.ts": "2f7df3f3cba125f851c9b1423b2a295abe9417e507e0f318b93bd3e9f4065227",
+    "tutor-system/src/services/prompts/pedagogy/parameters/communicationStyles.ts": "33b78064d65cd3d6eb6bfa5ecc9a45eb4ab8af8bef36e7eab77285a5fcb6f3e1",
+    "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts": "4a126f3f2e56c27c1d9bf9229518740d6277344052874247417c745f78be2890",
+    "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts": "3416473893908b7df049d11a7d571db01a933b6405fec3d7732738390e8bd2cc",
+    "tutor-system/src/services/prompts/pedagogy/techniques/scaffoldingTechniques.ts": "10af0ee48d4cfc5d35f76b5b643dfb8bddf3099120c69578b6efb875c3dd2bd9",
+    "tutor-system/src/services/prompts/presets.ts": "925c71b873be110de4388dda8ca7e6089fb391fdbf40625e055aaabdfa6fa682",
+    "tutor-system/src/services/prompts/responsePolicy.ts": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2",
+    "tutor-system/src/services/prompts/transferV3Prompt.ts": "8ef48229e15f343930e844d816495f9ce3748b2acbce11f58564f55e89f9d9f5",
+    "tutor-system/src/services/prompts/types.ts": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2",
+    "tutor-system/src/services/systemPrompts.ts": "b3db6350a780ba2bf4f97fb0bc92da6d0914097b2eb5e5e08109b052a73f38d0",
+    "tutor-system/src/services/tutorDecisionContract.ts": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66"
+  },
+  "changed_factors": [
+    "Replace appended active tutor policy with general participation, teaching-action, target-selection, factuality, identity, and evidence rules; remove worked JSON answers, case-shaped dialogue/templates, punctuation substitutions, and historical candidate references.",
+    "Remove exactly four complete example dialogues from the room generator, preserving its remaining sections and configuration inputs.",
+    "Shorten preferred reason guidance to approximately 10–15 words while retaining evidence and response-purpose obligations; retain the active policy's two-sentence/35-word learner-response guidance and unchanged external validity/length checks.",
+    "Explicitly give the candidate decision policy precedence over conflicting earlier teaching guidance; distinguish a correct partial answer from an actual false inference.",
+    "Operational transport delta records underlying exception causes and applies the configured retry delay to thrown fetch errors. The three-attempt cap, target/judge parameters, and scoring remain unchanged."
+  ],
+  "requirement_review": [
+    {
+      "requirements": [
+        "T01",
+        "T02",
+        "P2",
+        "R1",
+        "R2"
+      ],
+      "finding": "After correction of C01 below, the candidate distinguishes imminent unsafe actions, actual false inferences, correct partial answers, and completed inventory; labels the first substantive instructional move and preserves one useful target. No case identifier, expected-label lookup, or worked answer is present."
+    },
+    {
+      "requirements": [
+        "G01",
+        "G02",
+        "G03",
+        "P3.3",
+        "R4",
+        "H2"
+      ],
+      "finding": "Participation is separated from correctness; unknown state cannot imply Guard persistence; substantive attempts or clarification can recover; the boundary identifies conduct, discussion impact, and a concrete participation change without requiring an apology or correct answer. No fixed Guard wording or violation-count rule remains."
+    },
+    {
+      "requirements": [
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "H1",
+        "H3"
+      ],
+      "finding": "Candidate preserves contribution-grounded acknowledgment, supported contextual knowledge and tool limits, configured peer/adult voice, identity honesty, accessible language, and bounded response length. HTTPS and independent-verification rules are ordinary domain requirements, not evaluation-answer lookups."
+    },
+    {
+      "requirements": [
+        "P4",
+        "H4",
+        "response_contract_v2"
+      ],
+      "finding": "Reason remains an evidence-based, supervisor-facing account tied to the actual response and decisions. Preferred concision is not a waiver of truthful justification. Response keeps reason-first v2 fields, existing categories, and explicit null only in Guard."
+    }
+  ],
+  "findings": [
+    {
+      "id": "C01",
+      "severity": "high",
+      "status": "resolved",
+      "problem": "Original candidate required correction for a wrong or incomplete answer to a focused question. T01 explicitly says missing detail alone is not a misconception and correct partial answers receive scaffolding or explanation.",
+      "first_observed_policy_sha256": "0e0ac95fee1267675c7f27aa4cd9e2547f7a2ac5e3667d26396a2aba0e527a9a",
+      "affected_sources": [
+        "evals/promptfoo/refinement-20261014/candidate-policy-01.md",
+        "tutor-system/src/services/prompts/responsePolicy.ts"
+      ],
+      "resolution": "The candidate now requires an actual false inference, explicitly preserves correct partial answers, and declares precedence over conflicting earlier teaching guidance. The inherited responsePolicy.ts phrase remains unchanged but is overridden in the audited combined request.",
+      "revision_history": [
+        {
+          "policy_sha256": "0e0ac95fee1267675c7f27aa4cd9e2547f7a2ac5e3667d26396a2aba0e527a9a",
+          "disposition": "changes_required"
+        },
+        {
+          "policy_sha256": "2b25a9d88839b6ece599357683b843ecb9df8bbc937ad937586b2804a2d64699",
+          "disposition": "Candidate clause corrected; inherited base-policy conflict still required explicit precedence."
+        },
+        {
+          "policy_sha256": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+          "disposition": "clear"
+        }
+      ],
+      "evidence_type": "Direct requirement-to-prompt contradiction and source review of the resolved full request; not a claim of measured model conformance."
+    }
+  ],
+  "execution_evidence": {
+    "development_cases": 61,
+    "distinct_inventory_configurations": 8,
+    "configured_roles": [
+      "peer",
+      "adult"
+    ],
+    "full_request_checks": {
+      "generated_room_prefix_matches": 61,
+      "original_user_messages_preserved": 61,
+      "active_policy_replaced_with_exact_candidate": 61,
+      "runner_regeneration_flag_forwarding": 61,
+      "generated_base_equals_frozen_base_with_only_four_dialogues_removed": 61,
+      "evaluation_metadata_mutations_do_not_change_request": 61
+    },
+    "metadata_mutation_probe": "For every case, replace id, expected, partitions, legacy rubric, and provenance with audit sentinels while preserving role, inventory, and input; assert complete generated messages remain identical.",
+    "pre_edit_equivalence_reference": "evals/promptfoo/refinement-20261014/audit-harness.json#room_prompt_regeneration_audit independently established all 61 complete regenerated requests equal the original frozen requests before generator edits.",
+    "tests": {
+      "command": "rtk proxy node --test evals/promptfoo/v1/product-adapter.test.js evals/promptfoo/v1/harness.test.js",
+      "exit_code": 0,
+      "total": 31,
+      "passed": 31,
+      "failed": 0,
+      "includes": "All-case request composition; frozen baseline preservation; parser and format-repair behavior; gate coverage/errors/baseline integrity; transport cause retention, delayed recovery and exhaustion with exactly three attempts."
+    },
+    "model_calls_by_auditor": 0,
+    "generalization_evidence": "The revised policy has no remaining material suspected case-specific shortcut requiring an additional controlled model probe. Deterministic request checks establish composition and exclusion of evaluator annotations, not behavioral generalization. Full candidate performance and independent holdout conformance remain unmeasured."
+  },
+  "baseline_evidence": [
+    {
+      "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-baseline-r2",
+      "snapshot_sha256": "a19513aa7b5c342244cb077c649ac24e2802dc609395d2b1a4e3f1f944ab348b",
+      "report_sha256": "4e22a2bdeebd90867ed213d3e868bd5e1842beec6e7c0db715d88e05e41267c6",
+      "generations": 183,
+      "target_errors": 43,
+      "typed_check_counts": {
+        "pass": 2000,
+        "fail": 113,
+        "not_applicable": 86,
+        "missing": 148,
+        "error": 359
+      },
+      "gate_verdict": "failed",
+      "classification_verdict": "incomplete"
+    },
+    {
+      "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261014-baseline-r3",
+      "snapshot_sha256": "1bc6baaac53754200308c98efc2615af51b6ae9f89e226a885de25340ee1a9c4",
+      "report_sha256": "1e52e0d967745225d01c335a7fb504df03fab524f17e39698150464095e82163",
+      "generations": 183,
+      "target_errors": 159,
+      "typed_check_counts": {
+        "pass": 125,
+        "fail": 309,
+        "missing": 679,
+        "error": 1593
+      },
+      "gate_verdict": "failed",
+      "classification_verdict": "incomplete"
+    },
+    {
+      "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r4",
+      "fingerprint": "fec5f2240e863edbb11c2cf7758a2344dbd8b12d1caa65d46adb0d407b5397dd",
+      "started_at_utc": "2026-10-15T04:21:54.215Z",
+      "expected_generations": 183,
+      "status_at_review": "partial and paused after ENOSPC; full comparison evidence unavailable",
+      "interruption_provenance": "The run owner reported ENOSPC while opening a result file, followed by continued Promise.all workers, and paused only Node PID 73960 with SIGSTOP. Already received responses may not have been persisted. Preserve this attempt as partial evidence; do not claim all received outcomes are available.",
+      "original_policy_preserved": true,
+      "regenerate_room_prompt": false
+    }
+  ],
+  "baseline_io_review": "Inspected preserved development inputs, raw target outputs, and nonpassing typed checks from baseline-r2/r3 in addition to complete result counts. A baseline response may have a valid action while failing concrete contextual teaching; target and missing judge evidence remain separately visible. No candidate improvement is inferred from these incomplete reports.",
+  "acceptance_blockers": [
+    {
+      "id": "B01",
+      "status": "open",
+      "issue": "No complete error-free comparable baseline yet. r2 and r3 attempted all 183 generations but retain target errors and missing/error checks. Baseline-r4 then encountered ENOSPC and was paused with possible received-but-unsaved evidence. Candidate authorship occurred after the prior full attempted runs, before an error-free baseline; this chronology remains part of the experiment record.",
+      "required_action": "Restore writable storage, preserve the partial r4 directory and interruption metadata, and obtain a complete original-prompt baseline with all required coverage and evaluator/provider errors resolved under the frozen contract. Retain failed prior runs and disclose any unavailable received responses."
+    },
+    {
+      "id": "B02",
+      "status": "open",
+      "issue": "Full candidate comparison, fixed individual/two/three-member classification views, required partitions, non-regression, semantic pairs, and independent unseen-holdout comparison remain pending.",
+      "required_action": "Execute and preserve complete comparable evidence for this exact candidate identity; apply all frozen gates without excluding failed or missing evidence."
+    },
+    {
+      "id": "B03",
+      "status": "open",
+      "issue": "At inspection, freeze.json still referenced original candidate hash 0e0ac95…; README retained a superseded final concurrency-12 sentence despite settings-r3 using 24, and described only 359 r2 errors without all 148 missing checks.",
+      "required_action": "Reconcile the final candidate hash, actual concurrency, and separate error/missing totals in provenance before execution. The author reported disk-write failure and intends to update when storage is writable."
+    }
+  ],
+  "transport_delta_audit": {
+    "verdict": "clear",
+    "runner_sha256": "046909571969dce242f7983650b3dc44f1427263f160e4d34772c61e87bde99d",
+    "harness_test_sha256": "224a32c5ab1542bb4ec486a5b268dc457db7668ffc484c6b0d4184d772126ab4",
+    "inspected_change": "The exception catch appends cause.code/cause.message when supplied and waits the configured retry delay only when another attempt remains. It does not change the provider request or attempt cap.",
+    "validation": "Integration test verifies two delayed failures followed by success, three-attempt exhaustion, retained underlying cause, and exact configured delay; included in the 31 passing tests.",
+    "comparability": "Fresh baseline-r4 and candidate should use this same runner. Earlier failed reports retain their original snapshots and are not silently rewritten."
+  },
+  "limits": [
+    "The peer/adult experiment mapping preserves each frozen case's role and eight inventories with the existing casual_peer parameter preset. It does not establish all arbitrary production configuration combinations.",
+    "Frozen target settings 0.3/100 are the controlled evaluation/service-fallback values; ordinary enabled rooms default to 0.7/120. Evaluation transport retries and omitted live checklist/assessment enrichment limit production parity.",
+    "The active policy source remains unchanged; base generator edits are candidate source work. Benchmark integrity does not establish deployment or release acceptance.",
+    "This audit's clear verdict is limited to the exact candidate identity and checked composition. Later policy, generator, configuration, or decision changes require a renewed audit."
+  ]
+}

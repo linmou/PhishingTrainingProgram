@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "target_max_tokens": 8000,
+  "target_enable_thinking": true,
+  "target_format_attempts": 2,
+  "judge_max_tokens": 8000,
+  "judge_enable_thinking": true,
+  "repetitions": 3,
+  "transport_attempts": 3,
+  "transport_retry_delay_ms": 10000,
+  "request_concurrency": 12,
+  "timeout_ms": 180000,
+  "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+  "changed_factors": "Matched full v1.2 semantic evaluation of the preserved thinking baseline and candidate07 preflight outputs. All target and judge request parameters equal settings-thinking-diagnostic.json. Only per-process operational request concurrency is12 so two full judging arms jointly stay within24 active requests. Every target output, including behavioral failures and format repairs, is replayed; no target resampling. Original preflight settings and outputs remain preserved."
+}

@@ -1,0 +1,17 @@
+{
+  "model": "qwen3.5-flash",
+  "target_temperature": 0.3,
+  "judge_temperature": 0,
+  "target_max_tokens": 8000,
+  "target_enable_thinking": true,
+  "target_format_attempts": 2,
+  "judge_max_tokens": 8000,
+  "judge_enable_thinking": true,
+  "repetitions": 3,
+  "transport_attempts": 3,
+  "transport_retry_delay_ms": 10000,
+  "request_concurrency": 48,
+  "timeout_ms": 180000,
+  "seed_policy": "No provider seed; preserve three independently requested generations per case without selection.",
+  "changed_factors": "User requested four times LLM-call parallelism on2026-10-15. Per-process operational request concurrency increases from12 to48 and workers from8 to32, bounding both arms at96 active provider requests. Model requests, prompts, cases, labels, evaluator and gates are unchanged. Replay every available full semantic record regardless of outcome; otherwise replay the original complete target preflight record. No new target responses or outcome-based retries. Earlier settings, outputs and interrupted in-flight calls remain historical evidence."
+}

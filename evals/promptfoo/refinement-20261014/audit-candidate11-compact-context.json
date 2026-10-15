@@ -1,0 +1,576 @@
+{
+  "intent": "Independently audit candidate11's compact-context composition diagnostic before target calls.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "clear",
+  "condition": "candidate11-compact-context-thinking-preflight",
+  "planned_output": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate11-compact-context-thinking-preflight",
+  "planned_command": "rtk proxy node evals/promptfoo/v1/generate.js evals/promptfoo/v1/development-with-guard-scenario-rich.json evals/promptfoo/refinement-20261014/candidate-policy-11.md evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate11-compact-context-thinking-preflight v2 --variant candidate --regenerate_room_prompt false --settings evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json --workers 32",
+  "exact_verification": {
+    "identities": {
+      "evals/promptfoo/v1/generate.js": "c7cd022b15e34d07bb80b7db16c2d5af6b155cb380719b52f2a88cb8c2d45942",
+      "evals/promptfoo/v1/runner.js": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe",
+      "evals/promptfoo/v1/evaluator.js": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b",
+      "evals/promptfoo/v1/product-adapter.js": "a1e40694d3bea21995febe66787ba313232e325357f154bd17f47f00eec608eb",
+      "evals/promptfoo/rubrics/v1/decision-metrics.js": "5792f08eae1a3ec08f20e18bae13f8d3d5ede2bdfe2474f232ea70075e6206a8",
+      "evals/promptfoo/rubrics/v0/response-length-rubric.js": "c7b683498c7deedd7a623ea86a7d81ae6966a80d651cba28d97291bb7b8c2776",
+      "tutor-system/src/services/ecologicalTutorCall.ts": "79cceaf8ded885532cd5603914e76144f336833a4fdc572784d728b23ea28227",
+      "tutor-system/src/services/prompts/activeTutorAgentPrompt.ts": "7767fe9b52ca0593c597b89b02960955923badd843dc5503a7a1cd8432c1ff77",
+      "tutor-system/src/services/aiService.ts": "e821ed5b9f111ee8e684c9ea012e84aa9c74115069d3a10416fbc4097a3c60d6",
+      "tutor-system/src/services/tutorDecisionContract.ts": "4a982e3e5080ed02e2e43ab99dde8bb8a2a1f8264d9f6da8c6f64051d9922e66",
+      "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+      "evals/promptfoo/refinement-20261014/candidate-policy-11.md": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050",
+      "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca",
+      "evals/promptfoo/rubrics/v1/manifest.json": "2de3dfd2b119b987bd6c11587847462c21fd9c1bdc46e719270ec10e5e8ba6d0",
+      "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "70c41e65dcb05a39972e795743f1d316b741f60a6da484a41e6345d1ef33c057"
+    },
+    "case_count": 61,
+    "expected_generations": 183,
+    "roles": {
+      "peer": 55,
+      "adult": 6
+    },
+    "complete_inventory_count": 61,
+    "inventory_hash_manifest_sha256": "63c578420a0419644d2c23ca5757379615b35b9f2ad15d51a90591c8eb6b9f59",
+    "all_context_values_preserved": true,
+    "metadata_absent": true,
+    "user_serialization_differences": {
+      "prior_null_to_product_unknown": 51,
+      "compact_omits_interaction_mode": 61,
+      "empty_history_differences": 0
+    },
+    "message_hashes": [
+      {
+        "case_id": "webpage_account_security_alert_classic",
+        "messages_sha256": "3eb67900c4f7cb168948c38a019b615810184e15433ccb4c0a849f95b2e836a8",
+        "system_chars": 14360,
+        "user_chars": 910,
+        "product_system_chars": 19938,
+        "product_user_chars": 949
+      },
+      {
+        "case_id": "webpage_nintendo_click_deal",
+        "messages_sha256": "542ae4ec7db0abc81eb07ce636c6f554e2c7aaff5bca6d797f1e3f46aed77bf7",
+        "system_chars": 14174,
+        "user_chars": 819,
+        "product_system_chars": 19749,
+        "product_user_chars": 858
+      },
+      {
+        "case_id": "webpage_itunes_professional_photo",
+        "messages_sha256": "eae7036acaa5466770a2a6acf7824ce3c7019b4d168e9ad3d04be1a26c55ea16",
+        "system_chars": 14262,
+        "user_chars": 843,
+        "product_system_chars": 19838,
+        "product_user_chars": 882
+      },
+      {
+        "case_id": "webpage_demo_lock_icon_myth",
+        "messages_sha256": "cc057dfa81ca92427cfd507776b958c228f5b221f4d143d5c8a2c8b472af1d52",
+        "system_chars": 14360,
+        "user_chars": 883,
+        "product_system_chars": 19938,
+        "product_user_chars": 922
+      },
+      {
+        "case_id": "webpage_demo_click_impulse",
+        "messages_sha256": "e7d256f1c8eaef2791b79fb5df61d23ce1db5dc1d3de8c65bd82b2b5b55c924d",
+        "system_chars": 14360,
+        "user_chars": 778,
+        "product_system_chars": 19938,
+        "product_user_chars": 817
+      },
+      {
+        "case_id": "webpage_demo_correct_safe_action",
+        "messages_sha256": "1d4b4dd19be3fadcb254a5260d29f5164f87e0405c98ce2b9b7dd80761b00ed8",
+        "system_chars": 14360,
+        "user_chars": 888,
+        "product_system_chars": 19938,
+        "product_user_chars": 927
+      },
+      {
+        "case_id": "webpage_demo_correct_lock_reasoning",
+        "messages_sha256": "0d8c044dd1d632a0f10ac6f1a85db56727c008b02fa66e74241c0e8261c372da",
+        "system_chars": 14360,
+        "user_chars": 1023,
+        "product_system_chars": 19938,
+        "product_user_chars": 1062
+      },
+      {
+        "case_id": "webpage_demo_pressure_words",
+        "messages_sha256": "84197adbf7634c95d7964bcd1310ec838dbe15eaa6b730c6dc83cec012149aa4",
+        "system_chars": 14360,
+        "user_chars": 686,
+        "product_system_chars": 19938,
+        "product_user_chars": 725
+      },
+      {
+        "case_id": "webpage_demo_personal_story_trap",
+        "messages_sha256": "bd699ca0875a359e7c2e35eb0672d48c635a6970e2a3a693dc8b6882ed8b2cd8",
+        "system_chars": 14360,
+        "user_chars": 685,
+        "product_system_chars": 19938,
+        "product_user_chars": 724
+      },
+      {
+        "case_id": "student_thinks_alert_is_real",
+        "messages_sha256": "173167a2e56a6d4d9b18e30023a3bddea9ac7f0436133faacf67131b95a69bd6",
+        "system_chars": 14374,
+        "user_chars": 698,
+        "product_system_chars": 19938,
+        "product_user_chars": 737
+      },
+      {
+        "case_id": "student_wants_to_click",
+        "messages_sha256": "93dab6bc768f5d424e85d7048b01f70da856bb27676556fd3cb279ac4b43eb70",
+        "system_chars": 14374,
+        "user_chars": 616,
+        "product_system_chars": 19938,
+        "product_user_chars": 655
+      },
+      {
+        "case_id": "student_trusts_https",
+        "messages_sha256": "f2485aeef6dea5cdf46b75754c81bb49e0674f96557bd91ef54a092b88e75ac1",
+        "system_chars": 14374,
+        "user_chars": 652,
+        "product_system_chars": 19938,
+        "product_user_chars": 691
+      },
+      {
+        "case_id": "student_notices_misspelling_only",
+        "messages_sha256": "7f0f3fc2ea64d56511c1e089902409a3ef40f847a9a718066cb33fdff88d6308",
+        "system_chars": 14374,
+        "user_chars": 603,
+        "product_system_chars": 19938,
+        "product_user_chars": 642
+      },
+      {
+        "case_id": "student_gives_vague_answer",
+        "messages_sha256": "b97c20d0b80dba733a056d10c2c30a0019ecb040d43319290c0532e26eedb0b5",
+        "system_chars": 14374,
+        "user_chars": 584,
+        "product_system_chars": 19938,
+        "product_user_chars": 623
+      },
+      {
+        "case_id": "younger_student_confused",
+        "messages_sha256": "8172177e1ec2d71a26820a62e984936c701201ebedcbe61a9999931db9475b31",
+        "system_chars": 14374,
+        "user_chars": 645,
+        "product_system_chars": 19938,
+        "product_user_chars": 684
+      },
+      {
+        "case_id": "overconfident_student",
+        "messages_sha256": "d1daf6cfc6286c0bd3a6f1aa8651207a6b18c660ced65654e9aeb64a7eee76a2",
+        "system_chars": 14374,
+        "user_chars": 629,
+        "product_system_chars": 19938,
+        "product_user_chars": 668
+      },
+      {
+        "case_id": "student_asks_what_to_do",
+        "messages_sha256": "77ddf063f717fa6c0d7984167466f29c3c95a8584936041015711ac49c976a55",
+        "system_chars": 14374,
+        "user_chars": 636,
+        "product_system_chars": 19938,
+        "product_user_chars": 675
+      },
+      {
+        "case_id": "student_asks_about_url_tools",
+        "messages_sha256": "d067c45280d176f17e4a851fa3cfb648bb111c3ec4c2ddf1a36bb3a847d2320f",
+        "system_chars": 14374,
+        "user_chars": 660,
+        "product_system_chars": 19938,
+        "product_user_chars": 699
+      },
+      {
+        "case_id": "student_mentions_panic_words",
+        "messages_sha256": "10b2831294041247062731e036ebf70b11421c7887d83c83aacf322bb7a172e7",
+        "system_chars": 14374,
+        "user_chars": 642,
+        "product_system_chars": 19938,
+        "product_user_chars": 681
+      },
+      {
+        "case_id": "student_asks_about_bot_experience",
+        "messages_sha256": "8d13379a2150c378100243f888b1c192428b62fffab7cc196a69dbfbe07a4bf4",
+        "system_chars": 14374,
+        "user_chars": 645,
+        "product_system_chars": 19938,
+        "product_user_chars": 684
+      },
+      {
+        "case_id": "student_correctly_lists_red_flags",
+        "messages_sha256": "308f9d535eef78d8f17dec6eb2cc41f826722a5b67cc4a365933d799a78dbc8a",
+        "system_chars": 14374,
+        "user_chars": 648,
+        "product_system_chars": 19938,
+        "product_user_chars": 687
+      },
+      {
+        "case_id": "student_thinks_design_proves_legit",
+        "messages_sha256": "dbf87c9c67334ef1013f1f8e513832e37a59e87db02bb56c879320bb00155c84",
+        "system_chars": 14374,
+        "user_chars": 629,
+        "product_system_chars": 19938,
+        "product_user_chars": 668
+      },
+      {
+        "case_id": "student_correctly_uses_real_bank_channel",
+        "messages_sha256": "fb40eeb6b2a0804f67ba76f5f9ce2fe09482fad8a76bcea08ec68985e8690306",
+        "system_chars": 13407,
+        "user_chars": 682,
+        "product_system_chars": 18988,
+        "product_user_chars": 721
+      },
+      {
+        "case_id": "student_correctly_rejects_https_identity",
+        "messages_sha256": "c82681f3ade05436a1d3043141a031488a280345449e364ba37054efdffca06a",
+        "system_chars": 14374,
+        "user_chars": 709,
+        "product_system_chars": 19938,
+        "product_user_chars": 748
+      },
+      {
+        "case_id": "student_asks_reverse_image",
+        "messages_sha256": "0e457f098749c75524a5e46bb734e9710121972c242bd447225c1a6e4756cf8e",
+        "system_chars": 14374,
+        "user_chars": 641,
+        "product_system_chars": 19938,
+        "product_user_chars": 680
+      },
+      {
+        "case_id": "holdout_student_trusts_support_domain",
+        "messages_sha256": "a7555fd3249b4713c99f4c3e70a7b4a26e9538192814be9f04e114f0f2adbe6b",
+        "system_chars": 13361,
+        "user_chars": 691,
+        "product_system_chars": 18942,
+        "product_user_chars": 730
+      },
+      {
+        "case_id": "holdout_parent_forwards_bank_alert",
+        "messages_sha256": "e7e0c66b3b10c4d44e3a501af7b2e028897bcce31baaf4777eceb71232ecdb47",
+        "system_chars": 13407,
+        "user_chars": 641,
+        "product_system_chars": 18988,
+        "product_user_chars": 680
+      },
+      {
+        "case_id": "holdout_student_overuses_url_tool",
+        "messages_sha256": "2ef7042e2da6a92b28c9811f8dcba172413fbc4dc4c57ad5cb2be77394dd09b4",
+        "system_chars": 13295,
+        "user_chars": 564,
+        "product_system_chars": 18875,
+        "product_user_chars": 603
+      },
+      {
+        "case_id": "deliberate_repeated_click",
+        "messages_sha256": "fbc6d9183a7701434d0f184c5dfb9f01c8532103df3a28cae4adf17bcc3b51ae",
+        "system_chars": 14374,
+        "user_chars": 686,
+        "product_system_chars": 19938,
+        "product_user_chars": 725
+      },
+      {
+        "case_id": "deliberate_https_repetition",
+        "messages_sha256": "4007cec777820d4e41037634fea2b935108bf41148df4c2c3020bc456ce73c07",
+        "system_chars": 14374,
+        "user_chars": 696,
+        "product_system_chars": 19938,
+        "product_user_chars": 735
+      },
+      {
+        "case_id": "explicit_system_testing",
+        "messages_sha256": "c14b7500e41dac3797cc1e2856382dac69ec7592c81c0883f1a0c3e398d78ab7",
+        "system_chars": 14374,
+        "user_chars": 685,
+        "product_system_chars": 19938,
+        "product_user_chars": 724
+      },
+      {
+        "case_id": "joking_deliberate_repetition",
+        "messages_sha256": "46aa65dd3cf689cdb0566b4dc00ebb2318ecc44d704434bb7ee5f7dccc910d75",
+        "system_chars": 14374,
+        "user_chars": 660,
+        "product_system_chars": 19938,
+        "product_user_chars": 699
+      },
+      {
+        "case_id": "first_unsafe_mistake",
+        "messages_sha256": "75fef9fe56d7e0971196f53630096c7696d379fb0f313903a24a033408cc9242",
+        "system_chars": 14374,
+        "user_chars": 654,
+        "product_system_chars": 19938,
+        "product_user_chars": 693
+      },
+      {
+        "case_id": "repeated_genuine_confusion",
+        "messages_sha256": "2924b6babe7938ee288ab604f6488a9f674e7011eb97dcec54b28a222506723a",
+        "system_chars": 14374,
+        "user_chars": 684,
+        "product_system_chars": 19938,
+        "product_user_chars": 723
+      },
+      {
+        "case_id": "four_improving_attempts",
+        "messages_sha256": "02e6a02eefe9f30093412b3469dd6c6929325a79c3718be90080e757a545dbec",
+        "system_chars": 14374,
+        "user_chars": 746,
+        "product_system_chars": 19938,
+        "product_user_chars": 785
+      },
+      {
+        "case_id": "frustrated_but_engaged",
+        "messages_sha256": "c0de084554a44d22a9e29401a76b8d914195b222002655e4101c2ca74fb613fb",
+        "system_chars": 14374,
+        "user_chars": 682,
+        "product_system_chars": 19938,
+        "product_user_chars": 721
+      },
+      {
+        "case_id": "clarification_seeking",
+        "messages_sha256": "82fde3930753466e884543daee1c24f8e5ffd8046b194ae244e1e4d92f24dcee",
+        "system_chars": 14374,
+        "user_chars": 653,
+        "product_system_chars": 19938,
+        "product_user_chars": 692
+      },
+      {
+        "case_id": "equal_count_deliberate",
+        "messages_sha256": "93e437818fecdede41782124878f005940e0ed71150b2d1663f48727bcf999f4",
+        "system_chars": 14374,
+        "user_chars": 657,
+        "product_system_chars": 19938,
+        "product_user_chars": 696
+      },
+      {
+        "case_id": "equal_count_confused",
+        "messages_sha256": "97d985ba5d42fac8650900a1255bca3a703759a58f65dcd14c4e671597e1ae08",
+        "system_chars": 14374,
+        "user_chars": 683,
+        "product_system_chars": 19938,
+        "product_user_chars": 722
+      },
+      {
+        "case_id": "guard_dodge",
+        "messages_sha256": "49290e04c87896ea7510feaa2e0433ad51ff32ade18960d5727f33813e2f32b1",
+        "system_chars": 14374,
+        "user_chars": 656,
+        "product_system_chars": 19938,
+        "product_user_chars": 695
+      },
+      {
+        "case_id": "guard_acknowledgement_only",
+        "messages_sha256": "da50dd1aa6c74acee77ee276f24001e7208d43645c06f69b853eaa12ec329148",
+        "system_chars": 14374,
+        "user_chars": 597,
+        "product_system_chars": 19938,
+        "product_user_chars": 636
+      },
+      {
+        "case_id": "guard_semantic_correction",
+        "messages_sha256": "ee2a716cf054696d48c8e94cdf003089af9ac1aab9cf27d24447e2a4763b4d0b",
+        "system_chars": 14374,
+        "user_chars": 734,
+        "product_system_chars": 19938,
+        "product_user_chars": 768
+      },
+      {
+        "case_id": "guard_correct_verification_action",
+        "messages_sha256": "a30f3b76268902a4af76ee8a567096dc0461922220c637dad4f1059aadcf2f20",
+        "system_chars": 14374,
+        "user_chars": 691,
+        "product_system_chars": 19938,
+        "product_user_chars": 725
+      },
+      {
+        "case_id": "guard_dodge_known_guard",
+        "messages_sha256": "4d955c2043f2012410c397ed893cdf5e8b9e74238df7e7b8bd5318e275b511eb",
+        "system_chars": 14374,
+        "user_chars": 889,
+        "product_system_chars": 19938,
+        "product_user_chars": 923
+      },
+      {
+        "case_id": "guard_acknowledgement_only_known_guard",
+        "messages_sha256": "a5615addbcb4a4e9d4eecc6d320f9af74a0b89715ffb212bc773f4494ac940e0",
+        "system_chars": 14374,
+        "user_chars": 830,
+        "product_system_chars": 19938,
+        "product_user_chars": 864
+      },
+      {
+        "case_id": "development_peer_all_targets_covered",
+        "messages_sha256": "5f3fab43fbaae6ff316e6b5176d3440674b9be60447b19b8bd67419e45a5ee02",
+        "system_chars": 13130,
+        "user_chars": 723,
+        "product_system_chars": 18707,
+        "product_user_chars": 762
+      },
+      {
+        "case_id": "development_peer_later_contradiction",
+        "messages_sha256": "459b27265bb8bc5b78211cc8e5c611512f2b98fb2f4b1a8103a1a5dbb1fc7dd4",
+        "system_chars": 13130,
+        "user_chars": 586,
+        "product_system_chars": 18707,
+        "product_user_chars": 625
+      },
+      {
+        "case_id": "development_peer_incorrect_guard_recovery",
+        "messages_sha256": "c2b29ce55db8302bc5f2eebf957be00ad13bb754e510155419565b0712b26257",
+        "system_chars": 13130,
+        "user_chars": 643,
+        "product_system_chars": 18707,
+        "product_user_chars": 677
+      },
+      {
+        "case_id": "development_peer_guard_clarification_recovery",
+        "messages_sha256": "5a4568b285f5f46bc6ff3bf2db749175634edbc4e5789aff9172252d8085f9c4",
+        "system_chars": 13130,
+        "user_chars": 583,
+        "product_system_chars": 18707,
+        "product_user_chars": 617
+      },
+      {
+        "case_id": "development_adult_all_targets_covered",
+        "messages_sha256": "7316e8065f2817b6d5012ea4824523b74d3af9177a5b6d4f79d1b662f6aa452a",
+        "system_chars": 13131,
+        "user_chars": 723,
+        "product_system_chars": 18613,
+        "product_user_chars": 762
+      },
+      {
+        "case_id": "development_adult_later_contradiction",
+        "messages_sha256": "4a685be15badfa9ad10ae3bad6c1feda20eafa76a3c2f86dc4c8d404f5c850d1",
+        "system_chars": 13131,
+        "user_chars": 586,
+        "product_system_chars": 18613,
+        "product_user_chars": 625
+      },
+      {
+        "case_id": "development_adult_incorrect_guard_recovery",
+        "messages_sha256": "d4bea6840c4f758b9222e1c9ee27ae19a3520bc472d96d65e2b6db4308f125f0",
+        "system_chars": 13131,
+        "user_chars": 643,
+        "product_system_chars": 18613,
+        "product_user_chars": 677
+      },
+      {
+        "case_id": "development_adult_guard_clarification_recovery",
+        "messages_sha256": "8ca0c0751170662b402031191836fa917c8626906fe515c957fc2880ec1ff3c0",
+        "system_chars": 13131,
+        "user_chars": 583,
+        "product_system_chars": 18613,
+        "product_user_chars": 617
+      },
+      {
+        "case_id": "development_intent_pair_deliberate",
+        "messages_sha256": "b492af2eab370839a2d8df7914a8f69562adcfe26b98199547f569ae3e6d63a7",
+        "system_chars": 13130,
+        "user_chars": 599,
+        "product_system_chars": 18707,
+        "product_user_chars": 638
+      },
+      {
+        "case_id": "development_intent_pair_confused",
+        "messages_sha256": "a5e1bb93f86c37d8415b7d306c45511ee9a0bee489bf89cfd331fea1ff52b120",
+        "system_chars": 13130,
+        "user_chars": 609,
+        "product_system_chars": 18707,
+        "product_user_chars": 648
+      },
+      {
+        "case_id": "development_recovery_pair_promise",
+        "messages_sha256": "802ea5b625564f72de949c228b4b1154478a655c9a659e21d739915e053c1647",
+        "system_chars": 13131,
+        "user_chars": 622,
+        "product_system_chars": 18613,
+        "product_user_chars": 656
+      },
+      {
+        "case_id": "development_recovery_pair_attempt",
+        "messages_sha256": "ec44724168a3c1107925e24303a4f0f529b3556202b1d1175144c13ce75f5c7c",
+        "system_chars": 13131,
+        "user_chars": 643,
+        "product_system_chars": 18613,
+        "product_user_chars": 677
+      },
+      {
+        "case_id": "ecological_click_imminent",
+        "messages_sha256": "a78b4a0b2f43efd278546512840671bd481f5d6f6b27a62f806297c2120a63c2",
+        "system_chars": 14360,
+        "user_chars": 756,
+        "product_system_chars": 19938,
+        "product_user_chars": 795
+      },
+      {
+        "case_id": "ecological_lock_clarification",
+        "messages_sha256": "a5f7a8a9841cefe50cf854e6fcf455fa3ac22c7ac5bf41c4d3a8989a1b27a7ed",
+        "system_chars": 14360,
+        "user_chars": 863,
+        "product_system_chars": 19938,
+        "product_user_chars": 902
+      },
+      {
+        "case_id": "ecological_participation_disruption",
+        "messages_sha256": "b59bb309a5e890288f91301da4041c77a0de8440ee81402e0351fab8c39bba62",
+        "system_chars": 14360,
+        "user_chars": 988,
+        "product_system_chars": 19938,
+        "product_user_chars": 1027
+      },
+      {
+        "case_id": "ecological_participation_confusion",
+        "messages_sha256": "31472503cee886e50062b5b53ff3bc84dbd02ef7b42a2a2a69dbec520d245c6a",
+        "system_chars": 14360,
+        "user_chars": 980,
+        "product_system_chars": 19938,
+        "product_user_chars": 1019
+      }
+    ],
+    "dependency_changes_since_candidate11_snapshot": [],
+    "output_directory_exists": false
+  },
+  "provider": {
+    "endpoint_sha256": "e7ce1b2fec6e34a3e97a40081667fdba0121a327ad38ed5e9fce4daaf2be9abc",
+    "endpoint_matches_baseline": true,
+    "model": "qwen3.5-flash",
+    "temperature": 0.3,
+    "max_tokens": 8000,
+    "enable_thinking": true,
+    "repetitions": 3,
+    "request_concurrency": 48,
+    "format_attempts": 2,
+    "transport_attempts": 3
+  },
+  "request_composition": {
+    "system": "Existing runner.messagesFor(candidate): generic phishing-tutor introduction, JSON containing configured role and complete knowledge_inventory, exact candidate11 policy, and existing active v2 contract.",
+    "user": "Existing generic evidence-only wrapper plus JSON.stringify(case.input). All61 objects preserve the frozen scenario, conversation history, latest learner contribution and raw prior mode.",
+    "evaluator_separation": "Case IDs, expected modes/actions, partitions, source annotations and legacy grader data are absent from the constructed target requests. Semantic teaching-material context already present in case.input remains unchanged.",
+    "contract": "The v2 parser and production-shaped format repair path remain active because contractVersion is v2. Passing shape alone is not behavioral acceptance."
+  },
+  "changed_factors": [
+    "Replace generated room-base, framework, communication/style and duplicate teaching instructions with compact role/inventory context.",
+    "Append the runner's existing active v2 contract after the unchanged candidate11 policy.",
+    "Use the candidate wrapper and raw case.input serialization:51 null prior modes replace product's unknown string, all61 omit the constant single_agent interaction-mode field, and wrapper wording/newline placement changes."
+  ],
+  "fidelity_review": [
+    "Complete configured inventories are retained without pruning, summarization or target selection; all61 reconstructed inventories match the case objects.",
+    "Configured role values are retained for55peer and6adult cases. Candidate11 still supplies general peer/adult behavior rules.",
+    "Scenario, history and current contribution match; prior-mode meaning is preserved, including explicit Guard and unknown state. No expected decision is substituted.",
+    "Candidate11 policy, all10 relevant preflight/runtime source dependencies, cases and generation settings match the audited product-condition reference.",
+    "No prompt rule, model choice, sampling parameter, deterministic label, metric, threshold or applicable partition changes in this diagnostic."
+  ],
+  "interpretation": {
+    "hypothesis": "Removing additional room guidance while retaining the full policy may reduce instruction interference. This is an existing composition route, not another policy rewrite or multi-call architecture.",
+    "limits": "The new composition changes several request details together, so observed differences cannot be attributed solely to removing base text. Compact role does not carry arbitrary custom product style settings. This diagnostic does not establish production parity or general configuration support.",
+    "original_baseline": "The unchanged original tutor remains the acceptance reference. Completed candidate11 product-shaped outputs are the immediate composition control.",
+    "acceptance": "All61cases×3repetitions are required. The existing preflight performs deterministic diagnostics only; semantic checks remain unrun and full acceptance cannot follow from its summary."
+  },
+  "validation": "All61 message pairs reconstructed offline and exact message hashes retained above. Endpoint and generation parameters match the preserved baseline. No code changed, so prior parser/harness validation remains applicable; no new semantic-wording tests or provider calls were made.",
+  "requested_changes": [],
+  "status": "Clear for the declared diagnostic at the pinned hashes; output directory absent at audit.",
+  "auditor_model_calls": 0
+}

@@ -1,0 +1,57 @@
+{
+  "intent": "Verify final v1.1 evaluator adoption, calibration identities, and preservation of the frozen comparison criteria before symmetric rejudging.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_full_symmetric_instruction_realization_rejudging",
+  "scope": "Evaluator adoption only; no target acceptance or release verdict.",
+  "verified_change": {
+    "rubric": "evals/promptfoo/rubrics/v1/instruction_realization.md",
+    "sha256": "95fb099011f1355f6cd63b9b076265a76ade48063ab473b7754ab0a4b95ac83c",
+    "exact_proposal": "The original frozen rubric plus exactly the five independently reviewed paragraphs and Semantic action boundaries heading; one terminating newline differs from concatenation.",
+    "manifest_version": "v1.1",
+    "manifest_file_sha256": "524400b5c3b7013dbf8322afb124cd12db0e1f2acb24ca7f5f605196fece96ec",
+    "manifest_JSON_stringify_sha256": "aee752288a60c4e6f96a60d3dbfcef2c6e742c033b71a99002f9137519540d03",
+    "previous_manifest_matches_baseline_r5_snapshot": true,
+    "all_five_authority_source_hashes_match_current_bytes": true,
+    "all_sixteen_manifest_file_hashes_match_current_bytes": true,
+    "bookkeeping": "Manifest records the revision and actual authority hashes; response-contract status now accurately describes evaluation through product adapter. The decision-metrics test changes only its expected manifest version; its recorded file hash matches that edit."
+  },
+  "preservation": {
+    "comparison_source": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-r5/snapshot.json",
+    "unchanged_fields": ["checks except instruction_realization version", "thresholds", "expected_fields", "report_contract", "case_audit", "execution_manifest", "transfer_registry"],
+    "unchanged_executable_dependencies": ["evaluator.js", "decision-metrics.js"],
+    "gates": "Current main gate, classification, transfer gate and quality-gate wrapper hashes match the pre-adoption latest_reaudit recorded in audit-harness.json. The broader uncommitted gate repairs predate this evaluator revision and remain separately audited.",
+    "labels_applicability_partitions": "Frozen case-audit/execution-manifest identity and all check configurations are unchanged. No consolidation expansion or returned-label-based applicability suppression was introduced."
+  },
+  "calibration": {
+    "boundaries": {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.1-boundaries",
+      "records": 11,
+      "agreed": 11,
+      "provider_attempts": 11,
+      "errors": 0,
+      "all_instruction_requests_use_exact_adopted_rubric": true,
+      "snapshot_sha256": "bf12a88224366467b7fed93ab8fbb00fe24f9b1e6986230b01de6afa4da2a931",
+      "summary_sha256": "81337c2464141c3193c8ad4882308516a79c6e14c525623237a4272bc4384afc",
+      "records_digest": "c8453548af35c9aa2a2b691e9b31252b37fd25df50e4749ecdf8a5e146e8fc1e"
+    },
+    "existing": {
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-v1.1-calibration",
+      "records": 30,
+      "agreed": 30,
+      "provider_attempts": 31,
+      "terminal_transport_errors": 0,
+      "evaluator_errors": 0,
+      "retained_timeout": "Example28 retains first-attempt timeout followed by HTTP200 recovery; no valid judgment was resampled.",
+      "all_three_instruction_requests_use_exact_adopted_rubric": true,
+      "summary_sha256": "d2bea482ff3c2e7ab2cb9ba762f79d5d73b54da030385f6aad23901c8f52f8d5",
+      "records_digest": "6eff7feb6147bebed6a13394f7d4d59c1f4e926a72d61d3c397176e78dae699e"
+    },
+    "combined": "41/41 independently reconciled preserved results agree with frozen calibration labels; 42 provider attempts including one retained timeout recovery.",
+    "digest_method": "SHA-256 of lexicographically sorted record filename:SHA256 lines joined by newline, without terminal newline.",
+    "snapshot_bookkeeping_difference": "Boundary snapshot precedes decision-metrics.test.js version-expectation bookkeeping update and records its former hash. Its adopted rubric bytes are exact; that test-file difference does not alter judge requests. Preserve snapshot rather than rewriting it.",
+    "limits": "Constructed calibration supports this evaluator revision. It is not target performance evidence and does not independently demonstrate reduced false negatives; the original paired diagnostic showed three corrected false positives."
+  },
+  "next_step": "Rejudge every applicable instruction_realization output in both complete frozen development runs with this same version, retaining old judgments and exact target outputs. Recompute all affected aggregates, partitions, interactions and non-regression; keep any independently managed validation comparison symmetric too.",
+  "actions": { "rubric_edits_by_reviewer": false, "evaluator_edits_by_reviewer": false, "model_calls_by_reviewer": 0, "holdouts_inspected": false }
+}

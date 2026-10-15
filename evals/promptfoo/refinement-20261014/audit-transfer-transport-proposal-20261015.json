@@ -1,0 +1,117 @@
+{
+  "intent": "Independently assess the proposed bounded transfer-analysis transport recovery before source edits.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "verdict": "proposal_defensible_implementation_review_pending",
+  "reviewed_source_sha256": "fd3f020bcf5a277126263b770c8c18786175bd22c4dfb24ce5d86434723b5606",
+  "selected_prompt_sha256": "9266debd11301743960684202116c9533cf57c0d9811b83d5ff2a89103b1c564",
+  "unchanged_provider_parameters": {
+    "model": "qwen3.5-flash",
+    "temperature": 0,
+    "max_tokens": 8000,
+    "enable_thinking": true,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "proposed_operational_factor": {
+    "attempt_timeout_ms": 60000,
+    "max_attempts": 2,
+    "retry_http_statuses": [
+      429,
+      502,
+      503,
+      504
+    ],
+    "retry_transport": [
+      "network_failure",
+      "timeout_including_response_body_read"
+    ]
+  },
+  "latency_evidence": [
+    {
+      "dir": "output/transfer-analysis-current/thinking-candidate02-20261015-01",
+      "rows": 354,
+      "uniqueCalls": 348,
+      "status200": 335,
+      "errors": 13,
+      "non200": 0,
+      "latency_ms": {
+        "p50": 21523,
+        "p95": 37322,
+        "p99": 47466,
+        "max": 164376,
+        "above45": 5,
+        "above60": 1,
+        "above75": 1
+      },
+      "errorsByText": {
+        "The operation was aborted due to timeout": 13
+      }
+    },
+    {
+      "dir": "output/transfer-analysis-current/thinking-candidate02-recovered-20261015-01",
+      "rows": 354,
+      "uniqueCalls": 348,
+      "status200": 345,
+      "errors": 3,
+      "non200": 0,
+      "latency_ms": {
+        "p50": 21550,
+        "p95": 37164,
+        "p99": 47466,
+        "max": 164376,
+        "above45": 5,
+        "above60": 1,
+        "above75": 1
+      },
+      "errorsByText": {
+        "fetch failed": 3
+      }
+    },
+    {
+      "dir": "output/transfer-analysis-current/thinking-candidate02-recovered-20261015-02",
+      "rows": 354,
+      "uniqueCalls": 348,
+      "status200": 348,
+      "errors": 0,
+      "non200": 0,
+      "latency_ms": {
+        "p50": 21550,
+        "p95": 37322,
+        "p99": 50957,
+        "max": 164376,
+        "above45": 6,
+        "above60": 1,
+        "above75": 1
+      },
+      "errorsByText": {}
+    }
+  ],
+  "latency_counting": "Deduplicated complete call objects across each directory's354 logical generation rows, eliminating six alias rows. Each recovered directory describes its retained/latest evidence, not a cumulative count of all historical attempts.",
+  "recommendation": "Use60seconds rather than lengthening each attempt: recovered successful-call p99 is50.957seconds; two60second attempts leave nominal30seconds under the observed150second platform limit. The one164.376second success would already exceed that limit. Observed latency is support for this bounded choice, not a guarantee of future completion.",
+  "required_implementation_boundaries": [
+    "Construct the serialized target request once and reuse identical bytes for the second transport attempt. Keep target-level retries inside the existing parallel item processing; a completed valid sibling is not requested again within that invocation.",
+    "Apply the timeout through fetch AND full body acquisition. A timer cleared immediately after headers would leave the observed body-read hang unbounded.",
+    "Separate body acquisition from JSON/model-output validation. Network/body-read abort may retry; completed HTTP200 invalid JSON, invalid envelope, length finish_reason, schema-invalid output and semantic/state/type rejection must not retry.",
+    "Retry only the named transient HTTP statuses; other HTTP errors terminate this invocation. Consume or cancel failed response bodies and clear each attempt timer.",
+    "Keep apply_transfer_message_analysis_v1 after all target validations. An exhausted or invalid target must not partially apply other targets.",
+    "Do not claim a hard150second bound for prepare_turn: it awaits analysis then starts separate assessment generation and possible format repair. Its sequential path needs remaining-time handling or a separately scoped verification/claim.",
+    "Promise.all rejection does not cancel sibling promises. Ensure terminal operation failure does not launch further unnecessary retry attempts; account for already in-flight requests and unknown provider completion after client abort."
+  ],
+  "focused_handler_verification": [
+    "Two target items: one succeeds once; the other transport-fails then succeeds. Assert1+2calls, identical retried bytes/settings and one complete final DBapply.",
+    "Hanging response body after HTTP200headers: attempt is aborted at the deadline and receives exactly one retry.",
+    "Completed HTTP200 malformed outer JSON, malformed model JSON, truncated model output and invalid event each produce the existing error without transport retry or DBapply.",
+    "Eligible429/502/503/504 each recover on the bounded second attempt; noneligible HTTP statuses never retry.",
+    "Two transport failures exhaust the item, return AI_PROVIDER_ERROR and never apply any target. Timers are cleared; valid siblings are not resampled.",
+    "Exercise prepare_turn when analysis was needed in the same invocation; verify the deadline interpretation rather than assuming analysis timeout alone bounds assessment generation."
+  ],
+  "limitations": [
+    "Provider abort can leave an unknown server-side outcome; it does not prove the provider stopped computation.",
+    "With no durable cache, retained sibling successes live only within one invocation. A later client invocation after terminal failure may recompute those targets; do not describe this proposal as cross-request replay.",
+    "The transport change is a declared operational change to production delivery. It does not alter selected prompt/decoding settings, replace saved evaluation outcomes or convert benchmark failure to acceptance."
+  ],
+  "auditor_model_calls": 0,
+  "auditor_runtime_edits": 0
+}

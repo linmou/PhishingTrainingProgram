@@ -1,0 +1,69 @@
+{
+  "intent": "Independently validate exact-request calibration reuse, fixture reconstruction, frozen condition identity and resume integrity before boundary-calibration-02 execution.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/eval_shortcuts",
+  "implementation_author": "coordinating /root agent; auditor did not author the runner or boundary proposal",
+  "verdict": "clear",
+  "scope": "Calibration execution integrity. This audit does not adopt the proposed rubric clarifications or establish target-model conformance.",
+  "identities": {
+    "evals/promptfoo/v1/calibrate-boundaries.js": "f62f94ba38e5d6556a3a1ac3857009b36f06e36452bebb688fe8299add4719a0",
+    "evals/promptfoo/refinement-20261014/evaluator-boundary-calibration-proposal.json": "8e76f78d34350b30c7ed1766e5967999ff60ad4d48d2bba70f272fe773b6a3fa",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-boundary-calibration-02/snapshot.json": "e4c366b1ade72a6a54d5f13579842852fd43e6473909f5dca1989b189d56a162"
+  },
+  "independent_reconstruction": {
+    "fixtures": 81,
+    "prior_fixtures": 49,
+    "new_fixtures": 32,
+    "conditions": 2,
+    "logical_judgments": 162,
+    "unique_requests": 129,
+    "planned_new_unique_judge_calls": 80,
+    "prior_reuse_jobs": 74,
+    "new_call_alias_jobs": 8,
+    "workers": 16,
+    "prior_input_output_mismatches": 0,
+    "assembled_fixture_snapshot_mismatches": 0,
+    "reconstructed_request_mismatches": 0,
+    "selected_prior_source_hash_or_request_mismatches": 0,
+    "canonical_alias_mismatches": 0,
+    "endpoint_mismatches": 0,
+    "fingerprint_valid": true,
+    "changed_rubrics": ["instruction_realization", "persona_stability"],
+    "method": "Auditor rebuilt all fixtures from pinned prior source bytes and the proposal, reconstructed all condition requests with judgeMessages and requestFor, validated every manifest source/alias/endpoint, and recomputed the snapshot fingerprint. No provider calls were used."
+  },
+  "verified": [
+    "All 49 earlier fixture input/output pairs are loaded verbatim from SHA-256-pinned records. Their original pass/null and optional accuracy labels are checked before assembly; the 32 additions preserve the independently proposed, parent-reviewed labels.",
+    "The current and clarified conditions contain the identical 81 fixtures. Only the two proposed rubric texts differ; all other metric rubric bytes are identical across conditions.",
+    "Cache eligibility depends on the complete provider request and endpoint identity, never pass/fail, agreement, malformed output or error outcome. First matching sources follow frozen fixture order rather than favorable-grade selection.",
+    "The snapshot freezes each logical job's complete request, request hash, endpoint, selected prior source/path/hash or canonical job alias, and new-call designation before execution.",
+    "Current rubric pins are asserted; the fingerprint includes proposal, settings, endpoint, fixtures, exact rubric bytes, runner/evaluator/manifest dependencies, runner source, job manifest and worker count. Resume rejects any identity mismatch.",
+    "Prior, resumed and new response evidence must match the full request hash and endpoint. Existing rows are regraded with checkedResult and frozen labels; cached agrees flags are not authoritative.",
+    "An in-memory check confirmed a cached failing verdict remains a disagreement against positive gold, while malformed output cannot satisfy a negative gold fixture. Missing/error results remain visible rather than becoming agreement.",
+    "Identical unchanged requests are shared between conditions with explicit provenance. They are not reported as independent repeated provider calls.",
+    "The runner calls the judge transport only; it generates no tutor targets, changes no target output, and applies no valid-semantic-failure retry.",
+    "Sixteen-worker execution is explicitly frozen. Actual unique new calls and logical reused judgments are reported separately."
+  ],
+  "resolved_findings": [
+    {
+      "id": "endpoint_cache_identity",
+      "initial_issue": "The initial runner keyed reuse by request only, while the revised proposal also required endpoint/provider identity.",
+      "resolution": "Endpoint is frozen in the identity and every job; prior eligibility and resume/new-response validation require exact endpoint equality.",
+      "status": "resolved"
+    },
+    {
+      "id": "pre_execution_cache_manifest",
+      "initial_issue": "The initial snapshot omitted the required per-job request, source/new-call selection and alias manifest.",
+      "resolution": "The full 162-job manifest is frozen before execution, with source SHA-256, full request/hash, endpoint and canonical aliases. Current rubric pins are also asserted.",
+      "status": "resolved"
+    }
+  ],
+  "remaining_limits": [
+    "Fixture labels were proposed independently and reviewed by the coordinating agent; this audit does not invent a separate human label-approval event.",
+    "Any disagreement or evaluator error remains calibration evidence to diagnose. It does not authorize outcome-dependent resampling, relabeling, fixture removal or automatic rubric adoption.",
+    "Adoption of revised rubric bytes requires the declared calibration gates and comparable symmetric rejudging of affected checks on preserved target outputs, retaining historical judgments.",
+    "boundary-calibration-01 is an unrun superseded freeze and contributes no additional independent evidence.",
+    "The clear verdict applies to the inspected exact hashes and prepared boundary-calibration-02 snapshot; material changes require updated review."
+  ],
+  "auditor_provider_calls": 0,
+  "auditor_implementation_or_rubric_edits": 0
+}

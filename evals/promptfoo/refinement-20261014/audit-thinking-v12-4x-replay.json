@@ -1,0 +1,201 @@
+{
+  "intent": "Independently verify the authorized fourfold concurrency increase and complete outcome-independent continuation of the two frozen thinking evaluation arms.",
+  "audited_at": "2026-10-15T07:58:41.224Z",
+  "auditor": "Independent refinement_audit agent",
+  "verdict": "pass_for_concurrency_request_identity_and_evidence_preservation",
+  "findings": [],
+  "scope": "Operational settings, replay selection, saved target and judgment preservation, actual judge requests, verdict reconstruction and complete report membership. This is an integrity audit, not a behavior-quality acceptance decision.",
+  "identities": {
+    "replay_manifest": {
+      "path": "evals/promptfoo/refinement-20261014/thinking-v12-4x-replay-manifest.json",
+      "sha256": "d0711043f0cfbb4921df5f4bc9c76c65312053cc81b03497dcc0a83dfc210ef9"
+    },
+    "previous_settings": {
+      "path": "evals/promptfoo/refinement-20261014/settings-thinking-judging.json",
+      "sha256": "31fe2426659037658a5b50a39dc5c38695ef662b7c027fc46ae9e8a0e3cdcf1e"
+    },
+    "current_settings": {
+      "path": "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json",
+      "sha256": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca"
+    },
+    "evaluator": {
+      "path": "evals/promptfoo/v1/evaluator.js",
+      "sha256": "79f8a1385961256cfc33e278db50963b6bac7f3f29e63909289e3157511b413b"
+    },
+    "runner": {
+      "path": "evals/promptfoo/v1/runner.js",
+      "sha256": "5f5c6f7da9b04358c43f1bf5f09469773fbb032931038ee3cdf582d8fd05d5fe"
+    }
+  },
+  "changed_factors": {
+    "authorization": "User requested four times LLM-call concurrency.",
+    "settings_changed_fields": [
+      "changed_factors",
+      "request_concurrency"
+    ],
+    "request_concurrency_per_arm": {
+      "before": 12,
+      "after": 48
+    },
+    "workers_per_arm": {
+      "before": 8,
+      "after": 32
+    },
+    "combined_configured_request_cap": {
+      "before": 24,
+      "after": 96
+    },
+    "replay_and_output_paths": "New output directories continue every available saved semantic record; all other jobs use the original complete target preflights."
+  },
+  "unchanged": {
+    "provider_parameters": [
+      "model",
+      "target_temperature",
+      "judge_temperature",
+      "target_max_tokens",
+      "target_enable_thinking",
+      "target_format_attempts",
+      "judge_max_tokens",
+      "judge_enable_thinking",
+      "transport_attempts",
+      "transport_retry_delay_ms",
+      "timeout_ms"
+    ],
+    "settings_other_than_concurrency_and_description": true,
+    "old_and_new_snapshot_fields": [
+      "variant",
+      "contract_version",
+      "cases",
+      "policy",
+      "rubrics",
+      "manifest",
+      "sources",
+      "dependencies",
+      "runner_sha256",
+      "regenerate_room_prompt"
+    ],
+    "repetitions": 3,
+    "cases_per_arm": 61,
+    "provider_endpoint_identity": true,
+    "completed_targets_equal_original_preflights": true,
+    "new_target_calls": 0
+  },
+  "validation": {
+    "replay_selection": "Every expected case/repetition filename occurs exactly once in each 183-entry replay directory and manifest. Every entry is a symlink resolving to its declared source, whose bytes match the manifest SHA-256.",
+    "outcome_independence": "The complete sets of saved old semantic filenames equal the selected semantic subsets: 91 baseline and 84 candidate. All 45 old records containing failed checks are included. Remaining 92 baseline and 99 candidate entries use original target preflights.",
+    "preserved_evidence": "Every selected target, input, case ID and repetition equals the original preflight. Every prior semantic results array, judge result and judge calls array equals the corresponding new record. All 2,074 prior judgments remain unchanged.",
+    "actual_request_verification": "All 3,801 recorded judge calls exactly match the frozen rubric, case input and normalized output through the pinned evaluator judgeMessages function, the unchanged provider parameters and JSON response format. Any second format attempt contains exactly the frozen repair follow-up.",
+    "verdict_verification": "Every saved judge result is independently reconstructed with the pinned checkedResult function from its last preserved raw text. The 15 recorded format-repair calls retain their earlier raw responses.",
+    "final_reports": "Each report has the snapshot fingerprint and exactly 183 unique expected case/repetition records. Every report record deeply equals its saved per-generation JSON. Each arm contains all 2,706 assertions.",
+    "monotonic_file_preservation": [
+      {
+        "arm": "baseline",
+        "observed_at": "2026-10-15T07:47:04.662Z",
+        "records_unchanged": 115
+      },
+      {
+        "arm": "baseline",
+        "observed_at": "2026-10-15T07:52:27.147Z",
+        "records_unchanged": 179
+      },
+      {
+        "arm": "baseline",
+        "observed_at": "2026-10-15T07:55:15.687Z",
+        "records_unchanged": 182
+      },
+      {
+        "arm": "candidate07",
+        "observed_at": "2026-10-15T07:47:04.662Z",
+        "records_unchanged": 105
+      },
+      {
+        "arm": "candidate07",
+        "observed_at": "2026-10-15T07:52:27.147Z",
+        "records_unchanged": 175
+      },
+      {
+        "arm": "candidate07",
+        "observed_at": "2026-10-15T07:55:15.687Z",
+        "records_unchanged": 182
+      }
+    ],
+    "aggregate_hash_definition": "evidence_sha256 is SHA-256 of JSON.stringify on filename-sorted [filename, raw-file SHA-256, selected source kind] tuples."
+  },
+  "arms": [
+    {
+      "arm": "baseline",
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-baseline-thinking-v1.2-4x",
+      "completed": 183,
+      "expected": 183,
+      "reused_semantic_records": 91,
+      "newly_judged_target_records": 92,
+      "preserved_semantic_judgments": 1076,
+      "all_judge_calls_verified": 1900,
+      "judge_format_repair_calls": 7,
+      "recorded_transport_attempts": 1953,
+      "failed_judgments_retained": 43,
+      "unevaluable_judgments": 0,
+      "endpoint_hashes": [
+        "e7ce1b2fec6e34a3e97a40081667fdba0121a327ad38ed5e9fce4daaf2be9abc"
+      ],
+      "new_target_calls": 0,
+      "target_equality": true,
+      "request_identity": true,
+      "verdict_reconstruction": true,
+      "assertions": 2706,
+      "assertion_statuses": {
+        "pass": 2515,
+        "not_applicable": 135,
+        "fail": 56
+      },
+      "report_exists": true,
+      "report_sha256": "dfaaec5439220e2b12252e7cab82eca22c32ba140c50474d8eec35679505796b",
+      "evidence_sha256": "764c26151019b057a05f07e1172e646990a6a81147301c01c0f50b6b2a176f4e",
+      "previous_snapshot_sha256": "07bf77979147c4ca007c8cd5d2cc404181a2cd39ede9a42342bb03565fd4e80e",
+      "snapshot_sha256": "a290517a62aa198472c3f47655a07bc0bdc2a4f96336db499f6aebcc3b6149b6",
+      "all_available_old_semantic_records_selected": true,
+      "old_semantic_records_containing_failed_checks": 19,
+      "all_report_records_equal_saved_files": true
+    },
+    {
+      "arm": "candidate07",
+      "directory": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-thinking-v1.2-4x",
+      "completed": 183,
+      "expected": 183,
+      "reused_semantic_records": 84,
+      "newly_judged_target_records": 99,
+      "preserved_semantic_judgments": 998,
+      "all_judge_calls_verified": 1901,
+      "judge_format_repair_calls": 8,
+      "recorded_transport_attempts": 1963,
+      "failed_judgments_retained": 82,
+      "unevaluable_judgments": 0,
+      "endpoint_hashes": [
+        "e7ce1b2fec6e34a3e97a40081667fdba0121a327ad38ed5e9fce4daaf2be9abc"
+      ],
+      "new_target_calls": 0,
+      "target_equality": true,
+      "request_identity": true,
+      "verdict_reconstruction": true,
+      "assertions": 2706,
+      "assertion_statuses": {
+        "pass": 2466,
+        "not_applicable": 136,
+        "fail": 104
+      },
+      "report_exists": true,
+      "report_sha256": "366f00f69038e165b8dd3958c14aadd1f29702c73d4b744119f589bf4fd543bf",
+      "evidence_sha256": "42a790c6d53cd6ac65b3ea653a683b4ba62e401384140bd5d5372387d00c017e",
+      "previous_snapshot_sha256": "5fe314bd0d62917fdb5627926a2428bfa632329cd0a3d3cef454170b87c71e40",
+      "snapshot_sha256": "437904f9cc2b354f325e341f57d943e6e968d702a7dcd7d943d6aa3845b2ac3a",
+      "all_available_old_semantic_records_selected": true,
+      "old_semantic_records_containing_failed_checks": 26,
+      "all_report_records_equal_saved_files": true
+    }
+  ],
+  "limits": [
+    "The integrity verdict does not override failed behavior checks or establish quality-gate acceptance.",
+    "The evidence proves preservation of saved semantic results. Responses from interrupted requests that were never persisted cannot be reconstructed; continuation may request those missing judgments again.",
+    "The concurrency change affects scheduling and transport exposure. It does not change captured provider request parameters."
+  ]
+}

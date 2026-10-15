@@ -1,0 +1,49 @@
+{
+  "intent": "Independently audit a settings-only reasoning/budget diagnostic before execution while preserving candidate04 and frozen measurement criteria.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_declared_diagnostic",
+  "settings": {
+    "path": "evals/promptfoo/refinement-20261014/settings-thinking-diagnostic.json",
+    "raw_sha256": "9d842418b07e3906d0bd45d6f35f3ab90bdc977a47e4081ec1eb410cee10975b",
+    "JSON_stringify_sha256": "bf366496ff792448e0e79e0a7eaed1555a083723e0876413c043cc55dc36bb6d",
+    "changes_from_r3": [
+      { "key": "target_enable_thinking", "before": false, "after": true },
+      { "key": "target_max_tokens", "before": 100, "after": 8000 },
+      { "key": "changed_factors", "type": "provenance description", "effect": "Declares the combined diagnostic and separate acceptance conditions; not a provider-request parameter." }
+    ],
+    "all_other_keys_unchanged": true,
+    "target_thinking_and_budget_match_existing_v1_settings": true
+  },
+  "verified_controls": {
+    "comparison_snapshot": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate04-preflight/snapshot.json",
+    "candidate04_policy_fixed": true,
+    "all_snapshotted_dependencies_fixed": true,
+    "cases_and_labels_fixed": true,
+    "v1_1_manifest_fixed": true,
+    "model": "qwen3.5-flash",
+    "target_temperature": 0.3,
+    "repetitions": 3,
+    "request_concurrency": 24,
+    "format_repair_attempts": 2,
+    "transport_attempts": 3,
+    "timeout_ms": 180000,
+    "judge_configuration": "Unchanged temperature0, thinking enabled,8000 tokens."
+  },
+  "assessment": {
+    "defensibility": "Repeated classification errors under the short nonthinking configuration justify checking whether the same cleaned prompt behaves differently under the repository's existing reasoning-enabled larger-budget configuration. The diagnostic preserves all prior failures rather than reclassifying them or tuning case labels.",
+    "causal_limit": "Thinking and token budget change together. Any improvement establishes a difference between those joint configurations, not an isolated reasoning effect, a proven truncation cause, or performance under the original settings.",
+    "production_limit": "The actual production suggestion path disables thinking and caps completions at120 tokens. This diagnostic does not represent that runtime, authorize its configuration change, or establish production-default performance.",
+    "measurement_limit": "Deterministic preflight cannot establish semantic quality, factual safety, non-regression or unseen generalization. Three repetitions are retained without outcome selection; transport failures and format repairs remain evidence.",
+    "resource_limit": "The larger completion allowance may increase provider time, cost and timeout incidence at the unchanged concurrency. Preserve those outcomes and any later operational change as declared factors; do not silently alter retry or timeout settings."
+  },
+  "advancement_requirements": [
+    "Freeze and preserve all diagnostic outputs and metadata, including errors, truncation and repairs; use strict replay if advanced to semantic judging.",
+    "Generate an entirely matched fresh original-policy baseline under these same target and judge settings before making comparative acceptance claims.",
+    "Apply all unchanged v1.1 semantic gates, hard constraints, partitions and non-regression checks symmetrically to the matched baseline and candidate.",
+    "Use independently managed validation under the same declared configuration, with prior exposure handled explicitly by its owner.",
+    "Keep diagnostic, original-setting evaluation and downstream release conclusions separate. A passing larger-budget diagnostic does not close the failed original-setting comparison."
+  ],
+  "remaining_findings": [],
+  "actions": { "source_edits_by_reviewer": false, "provider_calls": 0, "holdouts_inspected": false }
+}

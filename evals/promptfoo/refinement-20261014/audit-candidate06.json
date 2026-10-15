@@ -1,0 +1,63 @@
+{
+  "intent": "Independently audit candidate06's restored generic guidance against adopted requirements and exact product request composition before execution.",
+  "date": "2026-10-15",
+  "reviewer": "/root/prompt_shortcuts",
+  "verdict": "clear_for_declared_preflights",
+  "verdict_scope": "Final verdict follows reaudit below; original findings and original hashes remain historical evidence.",
+  "candidate": {
+    "policy": "evals/promptfoo/refinement-20261014/candidate-policy-06.md",
+    "sha256": "2006a2c8beaaca415d7ecdf6ace9f070152885c83e40fd4e7182730ea9d77b3a",
+    "request_set_sha256": "048778a3d96073cbe4e62746e7c27a5d80d8251132b2c380398d7ee7e0c17e2c",
+    "digest_method": "SHA-256 of JSON.stringify of all61 messagesFor(case, product, exact policy, v2, true) arrays in frozen order."
+  },
+  "verified": {
+    "comparison": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate05-preflight/snapshot.json and report.json",
+    "cases": 61,
+    "differences_beyond_policy_suffix": [],
+    "user_inputs_and_inventories_unchanged": true,
+    "cases_and_labels_unchanged": true,
+    "source_dependencies_unchanged": true,
+    "provider_calls": 0
+  },
+  "changed_factors": [
+    "Replace candidate05's broader rewrite with the original candidate11 generic procedural/domain guidance, removing complete worked outputs, exact learner quotes, scenario dialogues, fixed Guard templates, punctuation substitutions and experimental candidate references.",
+    "Restore at-most40-word reason guidance instead of candidate05's10-15-word aim. This is part of the policy change, not an isolated demonstration-removal effect.",
+    "Keep current cleaned base generator and both separately declared short/nonthinking and larger/thinking settings fixed."
+  ],
+  "shortcut_assessment": "The inspected candidate removes the documented examples, exact answer templates, alarming-wording accommodation and candidate08 reference. Remaining URL, tool-method and personal-identity guidance is topic-specific generic teaching guidance, not a named-case lookup or worked development answer. Repeated refinement against development cases still limits generalization claims.",
+  "findings": [
+    {
+      "id": "C06-01",
+      "file": "candidate-policy-06.md:9",
+      "finding": "Knowingly rejecting a correction revives the previously identified overbroad Guard entry criterion. Reasoned disagreement with a correction need not be deliberate obstruction or knowing continuation of unsafe conduct.",
+      "required_fix": "Narrow the unsafe-defiance clause to knowing continuation of unsafe conduct after understood correction and retain reasoned-disagreement protection. This is the same adopted G01 boundary resolved before candidate02 was frozen."
+    },
+    {
+      "id": "C06-02",
+      "file": "candidate-policy-06.md:41 and47",
+      "finding": "The inherited wording makes scaffolding ask a focused comparison question and directs another question after correct address identification. T01 permits focused declarative/imperative cues leaving an inference, and T02 does not require a question for the selected target.",
+      "required_fix": "Allow a focused cue or question and make the comparison question conditional/optional. Preserve the unresolved reasoning step and selected target without imposing grammatical form."
+    },
+    {
+      "id": "C06-03",
+      "file": "candidate-policy-06.md:19",
+      "finding": "Explanation defined as without first correcting an error excludes T01's expressly permitted concise explanatory correction before a focused scaffold has failed.",
+      "required_fix": "Clarify that pre-failure concise explanation may address a real misconception while keeping required correction/protection precedence and first-action realization distinctions."
+    }
+  ],
+  "evaluation_boundary": "The separate pending Guard/null scorer correction does not establish rubric-dependent acceptance here. Freeze its exact version and symmetrically recompute affected evidence before any acceptance claim. Deterministic preflight remains diagnostic; no altered semantic score is waived by this audit.",
+  "reaudit": {
+    "verdict": "clear_for_declared_preflights",
+    "policy_sha256": "cb0a6821196a87e236107f09f95c51606f1ff910ddf2b608edfeab6c9233eec6",
+    "request_set_sha256": "2d01a09bd6dc917959cde875a22edfc0c9a155346f6ba554940e02fa5f758b0b",
+    "resolved": ["C06-01", "C06-02", "C06-03"],
+    "resolution": "Guard entry now specifies knowing unsafe continuation after understood correction and protects reasoned disagreement. Scaffolding accepts a question, statement or instruction leaving an inference. Explanation may address a real misconception before focused-scaffold failure, with required correction/protection precedence retained.",
+    "unknown_state_review": "Unknown prior state prevents inferred persistence but not new entry on clear present deliberate refusal/obstruction. This remains consistent with G01 and does not invent prior warnings. Existing Guard persists through empty acknowledgments/promises and recovers on substantive attempts, even wrong.",
+    "first_action_review": "The policy distinguishes first substantive teaching from acknowledgment and participation management. Explicit error correction followed by a question remains correction rather than scaffolding. Direct factual identification/explanation does not become scaffolding merely because the learner is confused. Required protection comes first. No new question quota or exact reply template remains.",
+    "controls": "All61 product requests still change only the policy suffix relative to candidate05. User inputs/inventory and every snapshotted source dependency remain unchanged. Both declared configurations remain separate comparisons.",
+    "additional_declared_factor": "Final policy includes the three minimal requirement-fidelity corrections to inherited candidate11 guidance alongside the restoration/removal bundle and40-word reason bound. This is not an isolated removal-of-examples experiment.",
+    "remaining_material_findings": [],
+    "acceptance_limit": "Clearance covers prompt integrity for deterministic preflights. Full semantic acceptance requires the exact frozen scorer revision, symmetric affected-check rejudging, matched settings, all gates and independent validation."
+  },
+  "actions": { "source_edits_by_reviewer": false, "holdouts_inspected": false }
+}

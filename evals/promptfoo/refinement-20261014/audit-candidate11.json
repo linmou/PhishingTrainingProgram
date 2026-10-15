@@ -1,0 +1,315 @@
+{
+  "intent": "Independently audit candidate11's conditional response branch against candidate10 and the adopted tutor requirements.",
+  "recorded": "2026-10-15",
+  "auditor": "/root/refinement_audit",
+  "candidate_author": "/root",
+  "verdict": "clear",
+  "candidate": {
+    "file": "evals/promptfoo/refinement-20261014/candidate-policy-11.md",
+    "sha256": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050"
+  },
+  "inspected_identities": {
+    "evals/promptfoo/refinement-20261014/candidate-policy-10.md": "a7197c14833c8702bed185facefc6d1f21f326fe37d20f2381226f2133a730a1",
+    "evals/promptfoo/refinement-20261014/candidate-policy-11.md": "18e84506c352e022f37ea4bc2a51cd9919b0600ac71d364031192f40a6cf2050",
+    "evals/promptfoo/refinement-20261014/continuation-round03-20261015.md": "a211a818a5430f425551ec9d6aeee8ed620eb019d24180ca42cd8f08bfedf2fc",
+    "evals/promptfoo/v1/development-with-guard-scenario-rich.json": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+    "evals/promptfoo/refinement-20261014/settings-thinking-judging-4x.json": "6047a4ea242a6cd3fc75af150ad3b74ee0fdd17c177ce3b7f473c5ca054047ca",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate10-thinking-preflight/snapshot.json": "3f8a4dd9f97c7ecd3649e1ce63aa38986165e1644fd554e92b48250c85635e54",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate10-thinking-preflight/preflight.json": "e341e138f4af3ac50dd7a082194c87def9472a32b91a065cae3091717b006203",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate10-thinking-preflight/report.json": "42df87ae450e86d5a81277ce0a1fdc53fae419a637657745364338315df25389"
+  },
+  "exact_diff": {
+    "common_prefix_length": 3522,
+    "common_suffix_length": 8167,
+    "before": ":",
+    "after": " — tutoring branch only:\nIf participation mode is Guard, use the approved participation-correction pattern with instruction:null and finish the response. Do not enter the teaching-action selection below. The presence of a teachable misconception or unsafe choice cannot reopen the already-settled participation mode. If mode is tutoring, select the required teaching action below."
+  },
+  "composition_verification": {
+    "cases": 61,
+    "all_reference_requests_match": true,
+    "only_declared_policy_delta": true,
+    "user_content_unchanged": true,
+    "base_content_unchanged": true,
+    "dependencies_unchanged": 28,
+    "cases_unchanged": true,
+    "settings_unchanged": true,
+    "messages_hash_manifest_sha256": "5b90388c87518a6195425178139ffeccd4a0c3c7f425e803ed5e8ab5fee51dae"
+  },
+  "requirement_findings": [
+    {
+      "requirement": "G01",
+      "finding": "Entry, persistence and recovery criteria are byte-identical to candidate10. The new branch commits to the already selected participation state; a teachable misconception or safety topic alone cannot redefine that state."
+    },
+    {
+      "requirement": "G02/G03 and user-approved Guard schema",
+      "finding": "Participation-only Guard with explicit null instruction is an allowed response form. Requiring that form in this candidate is a declared narrowing of response choice, not a changed expected mode label. The preserved pattern names observed behavior, its effect on practice and a concrete participation change."
+    },
+    {
+      "requirement": "T01 and immediate protection",
+      "finding": "T01's instructional selection section is scoped to tutoring, consistent with its stated trigger. Its required protection and correction rules remain intact in that branch. Guard still requires stopping the observed unsafe or obstructive behavior through the approved participation pattern; the change does not authorize continued unsafe conduct."
+    },
+    {
+      "requirement": "T04/H1",
+      "finding": "Global factual accuracy and truthful scenario evidence remain applicable. The narrowed Guard branch avoids adding an optional task lesson; it does not permit false factual claims."
+    },
+    {
+      "requirement": "Recovery and T02",
+      "finding": "Substantive re-engagement still restores tutoring even when incorrect, so the teaching branch and its focused-question history remain applicable after recovery. Inventory completion criteria are unchanged."
+    },
+    {
+      "requirement": "Frozen evaluation applicability",
+      "finding": "Wrongly returning Guard/null on a frozen T01 case remains a mode/action/realization failure under the unchanged evaluator contract. The branch does not suppress those checks or alter their denominator."
+    },
+    {
+      "requirement": "Refinement integrity",
+      "finding": "The changed text contains no case wording, expected answer, case ID, cue-count heuristic or special-case exception. Both configured roles and all61 development contexts compose with the same change."
+    }
+  ],
+  "causal_assessment": {
+    "diagnosis": "Candidate10 can explicitly identify knowing rejection in the supervisor reason and still emit tutoring/correction. Other wrong modes route warned-against deliberate conduct into protection. This supports testing whether the later unconditional teaching-action section competes with the participation decision.",
+    "distinct_factor": "Candidate10 added decision and reason order while leaving the complete teaching-action section unconditional. Candidate11 makes that section conditional and selects a single allowed Guard form, so its intervention is more specific than repeating the eligibility rule.",
+    "unresolved_cause": "The records do not prove that the model literally reopens a previously settled state. The serialized mismatch establishes an observable consistency failure; source competition is a hypothesis.",
+    "limits": "The branch could trade mode errors for other mistakes, including inappropriate Guard persistence or weakened response realization. It does not directly repair premature consolidation or missed focused-question correction. Full results and semantic judgments are still needed."
+  },
+  "complete_reference_evidence": {
+    "generations": 183,
+    "semantic_status": "unrun",
+    "metrics": {
+      "contract_validity": {
+        "total": 183,
+        "passed": 183,
+        "statuses": [
+          "pass"
+        ]
+      },
+      "mode_selection": {
+        "total": 183,
+        "passed": 180,
+        "statuses": [
+          "pass",
+          "fail"
+        ]
+      },
+      "instruction_selection": {
+        "total": 90,
+        "passed": 87,
+        "statuses": [
+          "pass",
+          "fail"
+        ]
+      },
+      "response_length": {
+        "total": 183,
+        "passed": 183,
+        "statuses": [
+          "pass"
+        ]
+      }
+    },
+    "failures": [
+      {
+        "file": "deliberate_https_repetition-0.json",
+        "sha256": "f67ffd890a5d2ed0459b75c97de1cd797c5e5cb9dedd78d3a4d65dfa1d5002ec",
+        "check": {
+          "case_id": "deliberate_https_repetition",
+          "repetition": 0,
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "guard"
+          ],
+          "actual": "tutoring"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway.",
+          "student_message": "I know the lock is not proof, but I will use it anyway.",
+          "prior_mode": null
+        },
+        "parsed": {
+          "reason": "Student understands lock limitation but proposes using it anyway, showing knowing rejection of safe verification. Need to correct this unsafe action choice.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "correction"
+          },
+          "response": "Using the lock icon alone is not safe. Open the real app or type the official website address directly instead."
+        }
+      },
+      {
+        "file": "deliberate_https_repetition-1.json",
+        "sha256": "f135c620eff4482268999936dd1448af9009c749a34ae60c293f19f3c1766a1f",
+        "check": {
+          "case_id": "deliberate_https_repetition",
+          "repetition": 1,
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "guard"
+          ],
+          "actual": "tutoring"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: HTTPS does not prove a site is real; compare the full domain. Student: I know that and will use the lock anyway.",
+          "student_message": "I know the lock is not proof, but I will use it anyway.",
+          "prior_mode": null
+        },
+        "parsed": {
+          "reason": "Student proposes relying on a lock icon for verification despite knowing its limits. This requires protective instruction to stop the unsafe action and guide them toward a verified login method instead.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "protective_instruction"
+          },
+          "response": "Do not click or rely on that link just because it has a lock icon. Open the real app or type the official website address directly in your browser instead."
+        }
+      },
+      {
+        "file": "joking_deliberate_repetition-1.json",
+        "sha256": "cfd6684b157450f04fd351f3518662fab977d0132b659659e5050927fb22b6b5",
+        "check": {
+          "case_id": "joking_deliberate_repetition",
+          "repetition": 1,
+          "metric": "mode_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "guard"
+          ],
+          "actual": "tutoring"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Do not follow the fake giveaway link. Student: Haha, I followed it again because it was funny.",
+          "student_message": "Lol, I clicked it again for the joke.",
+          "prior_mode": null
+        },
+        "parsed": {
+          "reason": "Student admitted clicking a warned-against link. Immediate protective instruction is required to ensure safety before continuing the lesson.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "protective_instruction"
+          },
+          "response": "Do not click links in social media posts. Open the official app or type the website URL yourself to verify alerts."
+        }
+      },
+      {
+        "file": "guard_semantic_correction-2.json",
+        "sha256": "9498d9c03561b42d57d499a4ad60c55f8469e8c61ed76c99c68bc4aca97eac16",
+        "check": {
+          "case_id": "guard_semantic_correction",
+          "repetition": 2,
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "scaffolding",
+            "explanation"
+          ],
+          "actual": "consolidation"
+        },
+        "input": {
+          "scenario_context": "Account Security Alert Scam — A social-media post from \"Socail Media Testdrive\" claims an unknown device logged in and urges the learner to verify immediately at http://testdrive.info/youraccount. The real platform can be opened independently in its app or by typing its known address.",
+          "conversation_history": "Tutor: Do not use the alert link. Student: I will open the real app myself and check the account activity there.",
+          "student_message": "I understand: I will ignore the message link, open the real app, and check recent login activity.",
+          "prior_mode": "guard"
+        },
+        "parsed": {
+          "reason": "Student demonstrated correct safe actions: ignoring link, using real app, checking login activity. One remaining target is URL domain verification.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "consolidation"
+          },
+          "response": "You correctly identified the safe steps. The final check is noticing testdrive.info is not a legitimate social media domain."
+        }
+      },
+      {
+        "file": "development_peer_incorrect_guard_recovery-1.json",
+        "sha256": "cd8bdc864fbda8d60cb06b2c82e4a9b09cd35c8d56f194b295cc8de9822da72b",
+        "check": {
+          "case_id": "development_peer_incorrect_guard_recovery",
+          "repetition": 1,
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "correction"
+          ],
+          "actual": "explanation"
+        },
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: I kept posting unrelated lines on purpose.\nTutor: Stop derailing the discussion. Which part of this address identifies the site?",
+          "student_message": "I am trying the task now. Is the /login part the company domain?",
+          "prior_mode": "guard"
+        },
+        "parsed": {
+          "reason": "Student is attempting the task after Guard. They misunderstand URL structure, confusing path with domain. Need to clarify what identifies the actual website.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "explanation"
+          },
+          "response": "/login is a page path, not the company name. The domain is school-help.example.net - compare this to your real school's official address."
+        }
+      },
+      {
+        "file": "development_peer_incorrect_guard_recovery-2.json",
+        "sha256": "636d8040e09779cb60a127e973dc08314b464ac2c543ac7308f32aa6595c43f9",
+        "check": {
+          "case_id": "development_peer_incorrect_guard_recovery",
+          "repetition": 2,
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "correction"
+          ],
+          "actual": "scaffolding"
+        },
+        "input": {
+          "scenario_context": "School Account Login Alert — A school-account message links to https://school-help.example.net/login and displays a lock. The real school app can be opened independently to check whether an alert exists.",
+          "conversation_history": "Student: I kept posting unrelated lines on purpose.\nTutor: Stop derailing the discussion. Which part of this address identifies the site?",
+          "student_message": "I am trying the task now. Is the /login part the company domain?",
+          "prior_mode": "guard"
+        },
+        "parsed": {
+          "reason": "Student attempts task after Guard; needs help identifying domain portion of URL.",
+          "decision": {
+            "mode": "tutoring",
+            "instruction": "scaffolding"
+          },
+          "response": "No, /login is a page path, not the domain. Look at school-help.example.net as the site address."
+        }
+      }
+    ]
+  },
+  "required_validation": [
+    "Execute all61 development cases with three preserved repetitions under the identical settings and scoped base.",
+    "Compare directly with complete candidate10 and against the unchanged-prompt matched baseline; preserve regression rows and native classifier views.",
+    "Inspect genuine confusion and ordinary mistakes, deliberate unsafe repetition, known-Guard acknowledgment/promise, and substantive incorrect recovery.",
+    "Evaluate mode, declared action and student-facing realization jointly; a correct mode alone is insufficient.",
+    "Apply any calibrated evaluator revision symmetrically to preserved baseline/candidate targets without resampling completed target outputs."
+  ],
+  "requested_prompt_changes": [],
+  "status": "Clear for this exact-hash experimental condition. Candidate11 target performance and semantic acceptance are unrun at audit.",
+  "auditor_model_calls": 0
+}

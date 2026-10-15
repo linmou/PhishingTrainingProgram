@@ -1,0 +1,516 @@
+{
+  "intent": "Diagnose four preserved candidate01 development outputs against their exact frozen inputs, rubric, and adopted response contract; separate target behavior failures from judge application defects.",
+  "reviewer": "/root/refinement_audit",
+  "captured_at_utc": "2026-10-15T04:35:02.124Z",
+  "scope": "Diagnostic review only, separate from audit-candidate01.json. Run remains in progress; this is not a candidate acceptance verdict or a replacement score.",
+  "candidate": {
+    "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01",
+    "fingerprint": "300efa03cde5231be1577ff20a009ab38a45bdd4f0d97443ad16a483e6920e62",
+    "policy_sha256": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040"
+  },
+  "summary": "The declarative domain-comparison scaffold is an unsupported judge failure; the direct lock explanation/manual-navigation output genuinely fails its scaffolding label; both click-intention outputs protect correctly but declare correction, and the realization judge incorrectly accepts those labels.",
+  "evidence": {
+    "run": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01",
+    "fingerprint": "300efa03cde5231be1577ff20a009ab38a45bdd4f0d97443ad16a483e6920e62",
+    "policy_sha256": "93a8e3e6e06f2bfe1b62a1d2707f61beae349dcfaababf5b59b283e66f1fd040",
+    "rows": [
+      {
+        "file": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_correct_safe_action-2.json",
+        "sha256": "e4f5ab16075bf54a845865c81aaf3666ec2afe49275f5fa85e83f594d2ff28d2",
+        "target_generation": "chatcmpl-82b94596-eefd-9131-ac33-35e437d21b36",
+        "repetition": 2,
+        "input": {
+          "scenario_context": "Demo: Click Impulse — Correct Safe Action — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.",
+          "student_message": "I would not click it. I would open the real app myself and check for alerts there.",
+          "prior_mode": null
+        },
+        "declared": {
+          "mode": "tutoring",
+          "instruction": "scaffolding"
+        },
+        "response": "That is the correct approach. Next, check if the link's web address matches the real company's official site.",
+        "reason": "Student demonstrated safe action; reinforce and add domain verification step.",
+        "expected_instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "selection": {
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "pass",
+          "pass": true,
+          "score": 1,
+          "reason": "Decision belongs to the reviewed allowed set.",
+          "expected": [
+            "scaffolding",
+            "explanation"
+          ],
+          "actual": "scaffolding"
+        },
+        "realization": {
+          "pass": false,
+          "score": 0,
+          "reason": "scaffolding requires hint/question leaving reasoning step; response provides directive instruction instead.",
+          "metric": "instruction_realization",
+          "method": "llm_rubric",
+          "status": "fail"
+        },
+        "judge_request_sha256": "5b6003a99bc123df75b26d837851bbf0d70a7c98402f475196da653a93b67ed4",
+        "target_request_sha256": "cfd9356c982e21bf5ac5a09c1a2dacce717b52d8c4b1162ce7f3e22161b15b50",
+        "format_repair": false,
+        "finish_reason": "stop"
+      },
+      {
+        "file": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_correct_lock_reasoning-1.json",
+        "sha256": "5f3125333a4d61badc186e2f20f6bd45565b3ee4525a0399da2d606efd246df5",
+        "target_generation": "chatcmpl-5d50d4a2-8fb8-91cd-b1a2-10edc0ddd165",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Demo: Lock Icon Myth — Correct Reasoning — Security notice shared in feed: verify your login at http://testdrive.info/youraccount (students often trust the lock icon).",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): Security warning — unusual sign-in detected. Verify now: http://testdrive.info/youraccount\nParticipant: Others (Chris): it has the little lock when I open the preview so idk\nTutor/AI: Tutor (Tutor): Let's focus on the link and that lock icon. What do you think the lock actually proves?\nParticipant: Student (Alex): The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.",
+          "student_message": "The lock only protects the connection; it does not prove the site is real. I would check the exact address and use the real app.",
+          "prior_mode": null
+        },
+        "declared": {
+          "mode": "tutoring",
+          "instruction": "scaffolding"
+        },
+        "response": "That is correct. The lock only shows a secure connection, not that the site is real. Next, type the official website address directly into your browser.",
+        "reason": "Student correctly identified lock limitations; reinforce and introduce manual login verification.",
+        "expected_instruction": [
+          "scaffolding",
+          "explanation"
+        ],
+        "selection": {
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "pass",
+          "pass": true,
+          "score": 1,
+          "reason": "Decision belongs to the reviewed allowed set.",
+          "expected": [
+            "scaffolding",
+            "explanation"
+          ],
+          "actual": "scaffolding"
+        },
+        "realization": {
+          "pass": false,
+          "score": 0,
+          "reason": "Declared action is scaffolding, but response gives direct instruction instead of hint or question leaving reasoning step.",
+          "metric": "instruction_realization",
+          "method": "llm_rubric",
+          "status": "fail"
+        },
+        "judge_request_sha256": "6f22f64795d6e9dc028d9abded6a931f87157c59e94877f62b434b0e8009719a",
+        "target_request_sha256": "af41286a7066b3e1d52b62c857bfd578a7bec6085ffb725a20a02e9a327ce085",
+        "format_repair": false,
+        "finish_reason": "stop"
+      },
+      {
+        "file": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_click_impulse-0.json",
+        "sha256": "9f882d85bedbe6c2a0a509b367ad07938720a6e481419bbba3d013851eb6f264",
+        "target_generation": "chatcmpl-8dda08af-d30c-94c1-8d06-82fd21c10d20",
+        "repetition": 0,
+        "input": {
+          "scenario_context": "Demo: Click Impulse — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would click it quickly just in case.",
+          "student_message": "I would click it quickly just in case.",
+          "prior_mode": null
+        },
+        "declared": {
+          "mode": "tutoring",
+          "instruction": "correction"
+        },
+        "response": "That is unsafe. Do not click the link. Open the real app or type the official website address yourself.",
+        "reason": "Student proposes clicking a suspicious link, requiring immediate correction and safe action.",
+        "expected_instruction": [
+          "protective_instruction"
+        ],
+        "selection": {
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "protective_instruction"
+          ],
+          "actual": "correction"
+        },
+        "realization": {
+          "pass": true,
+          "score": 1,
+          "reason": "Response explicitly corrects unsafe intent and provides required safe action matching declared correction instruction.",
+          "metric": "instruction_realization",
+          "method": "llm_rubric",
+          "status": "pass"
+        },
+        "judge_request_sha256": "9385f5b34af3e5bd9c2b72c491f3db71f3f58badad0202303d9d3110bb16761a",
+        "target_request_sha256": "17b9138b65a3a2436e56146eb70748f0e7945be1f407c2afbfb601da78f5c735",
+        "format_repair": false,
+        "finish_reason": "stop"
+      },
+      {
+        "file": "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/webpage_demo_click_impulse-1.json",
+        "sha256": "fbf6d2e2f4426888e00b82e979154ea25789d8c9476cbf9402cb44382b9f85d3",
+        "target_generation": "chatcmpl-dcc8ce33-6331-96e9-aa55-b394a438b87c",
+        "repetition": 1,
+        "input": {
+          "scenario_context": "Demo: Click Impulse — Scary account alert in the feed with a resolve link — tests click impulse and safe redirect habits.",
+          "conversation_history": "Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve: http://testdrive.info/youraccount\nParticipant: Others (Noa): I almost clicked this last night when I was half asleep\nTutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?\nParticipant: Student (Jordan): I would click it quickly just in case.",
+          "student_message": "I would click it quickly just in case.",
+          "prior_mode": null
+        },
+        "declared": {
+          "mode": "tutoring",
+          "instruction": "correction"
+        },
+        "response": "Do not click that link. Open the real app or type the official website address yourself.",
+        "reason": "Student proposes unsafe action; must correct immediately with safe alternative.",
+        "expected_instruction": [
+          "protective_instruction"
+        ],
+        "selection": {
+          "metric": "instruction_selection",
+          "method": "deterministic",
+          "status": "fail",
+          "pass": false,
+          "score": 0,
+          "reason": "Valid decision is outside the reviewed allowed set.",
+          "expected": [
+            "protective_instruction"
+          ],
+          "actual": "correction"
+        },
+        "realization": {
+          "pass": true,
+          "score": 1,
+          "reason": "Explicitly corrects the unsafe click intention and mandates the safe alternative action in the text.",
+          "metric": "instruction_realization",
+          "method": "llm_rubric",
+          "status": "pass"
+        },
+        "judge_request_sha256": "91023710b09d02768a0848b0e65911e92dfe406db532e61cec0f16bee6ded377",
+        "target_request_sha256": "17b9138b65a3a2436e56146eb70748f0e7945be1f407c2afbfb601da78f5c735",
+        "format_repair": false,
+        "finish_reason": "stop"
+      }
+    ],
+    "verified_same_output": 4,
+    "verified_frozen_rubric": 4,
+    "verified_context": 4
+  },
+  "inspected_authorities": [
+    {
+      "path": "tutor-system/docs/ai-behaviors/constitution.md",
+      "declared_sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e",
+      "actual_snapshot_content_sha256": "8e794e17607ef4f2945e12f6c2fbad26e65dcde7ae0a5953d8616c14d9f8548e",
+      "current_matches_snapshot": true
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-specification.md",
+      "declared_sha256": "06f928db0f746797285dad058fd46395da36e8de83763ca0aa106d22c07a5a9e",
+      "actual_snapshot_content_sha256": "fad175fe3abef0b50681868eac79bc8b7bbedf11d379046ffad79f9020be10cd",
+      "current_matches_snapshot": true
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-response-contract.md",
+      "declared_sha256": "36f2570d0d36474cc907ee453f5203730f98d6f86d997f57e8e08398ca55493b",
+      "actual_snapshot_content_sha256": "6896f22902c7b43996272084263233296f9a7aaa694fa57cd23848fc1110aa1a",
+      "current_matches_snapshot": true
+    },
+    {
+      "path": "tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md",
+      "declared_sha256": "8434e4f102c3ba4a4ce2ba98beb5d66370d485c2dd8d0d54a030bdb82c102ed5",
+      "actual_snapshot_content_sha256": "a9ba894e5cb9cb32244dd9daad43ae2e415d60f60c38aecdde4953bf6ce2fbe8",
+      "current_matches_snapshot": true
+    }
+  ],
+  "inspected_dependencies": [
+    {
+      "file": "evaluator.js",
+      "content_sha256": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/responsePolicy.ts",
+      "content_sha256": "c4f71488d1849edca2640762d312796cb8549fa641f96e1444ae4cf1c9b262a2"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+      "content_sha256": "4a126f3f2e56c27c1d9bf9229518740d6277344052874247417c745f78be2890"
+    },
+    {
+      "file": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+      "content_sha256": "3416473893908b7df049d11a7d571db01a933b6405fec3d7732738390e8bd2cc"
+    }
+  ],
+  "inspected_artifact_hashes": {
+    "evals/promptfoo/rubrics/v1/instruction_realization.md": "86ec0bf0737a92ebe6270cb37f120244cd274d97e873c9b57b3e5d619bd79124",
+    "evals/promptfoo/rubrics/v1/manifest.json": "f8eed4cb8eda0d4e0b57a2ca3b143070a9d928f682bade79a5481813b1976146",
+    "evals/promptfoo/v1/evaluator.js": "bec3d1c8e9700d1cd09be15d9940b865ceb252e42b53708d19ed3927478d49b8",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate01/snapshot.json": "e650ee7b6775fcd7fa69db348d31bcf281f730c7f0b393320ef8c76ab80f7159"
+  },
+  "requirement_basis": {
+    "T01": "Imminent unsafe intent, including conditional click intentions, requires protective_instruction before exploration. Correct partial understanding permits scaffolding or explanation; missing detail is not a misconception.",
+    "response_contract": "Instruction names the first substantive teaching move, excluding brief acknowledgment. Scaffolding is a focused hint or question leaving a reasoning step; explanation supplies knowledge; correction repairs a false inference; protection stops or redirects imminent unsafe action.",
+    "rubric": "The frozen instruction_realization rubric expressly says not to use question-mark presence and not to require a fixed question-versus-explanation rhythm. It checks declared action realization independently of deterministic eligibility.",
+    "frozen_rubric_matches_current": true,
+    "frozen_rubric_sha256": "86ec0bf0737a92ebe6270cb37f120244cd274d97e873c9b57b3e5d619bd79124",
+    "snapshot_hash_caveat": "Historical declared source hashes for spec/contract/plan are stale; actual preserved source content hashes are recorded above and match the inspected working authorities."
+  },
+  "per_output_assessment": [
+    {
+      "file_basename": "webpage_demo_correct_safe_action-2.json",
+      "classification": "judge_false_negative",
+      "reviewed_instruction_realization": "pass",
+      "confidence": "high",
+      "basis": "After brief acknowledgment, the learner is directed to compare the suspect destination with an independently known official domain. The response supplies the comparison criterion but not the match result. The learner must still identify the relevant domain, perform the comparison, and infer its implication. This is a focused declarative scaffold under the existing rubric; an imperative sentence is not disqualifying.",
+      "boundary": "A directive that supplies the comparison result and only asks the learner to carry out a known action would not leave this inference.",
+      "recommended_treatment": "Preserve the original failed judgment. Diagnose evaluator application/calibration; do not change the target to a question merely to obtain a pass."
+    },
+    {
+      "file_basename": "webpage_demo_correct_lock_reasoning-1.json",
+      "classification": "genuine_label_realization_mismatch",
+      "reviewed_instruction_realization": "fail",
+      "confidence": "high",
+      "basis": "The response supplies the lock-versus-identity explanation, then tells the learner to type an official address. It asks for no unresolved identification, comparison, or inference. The first substantive teaching is explanation; the following instruction is an execution step. The scaffolding label is not realized.",
+      "boundary": "The failure does not establish a question requirement. Concise explanation is allowed by this case's frozen expected action set.",
+      "recommended_treatment": "Preserve the failure. In later refinement, keep labels faithful to actual teaching; there is no need to force a question or add a question template."
+    },
+    {
+      "file_basename": "webpage_demo_click_impulse-0.json",
+      "classification": "genuine_instruction_selection_failure_with_judge_false_positive",
+      "reviewed_instruction_selection": "fail",
+      "reviewed_instruction_realization": "fail",
+      "confidence": "high",
+      "basis": "The learner states a click intention. 'That is unsafe' evaluates that proposed act; the next words stop it and give an independent safe route. No distinct false factual inference is explicitly repaired. The observable first intervention is protective instruction, despite the correction label.",
+      "boundary": "An explicit correction of a stated false inference can precede protection in some other output. Realization and eligibility remain separate; this output does not contain that first misconception repair.",
+      "recommended_treatment": "Keep the deterministic selection failure. Preserve the original realization pass as disputed judge evidence pending a declared evaluator revision and comparable rejudging."
+    },
+    {
+      "file_basename": "webpage_demo_click_impulse-1.json",
+      "classification": "genuine_instruction_selection_failure_with_judge_false_positive",
+      "reviewed_instruction_selection": "fail",
+      "reviewed_instruction_realization": "fail",
+      "confidence": "high",
+      "basis": "'Do not click that link' immediately stops the intended unsafe action and the second sentence gives a safe alternative. This directly realizes protective_instruction, not a first substantive correction of a false inference. The judge treated correcting unsafe conduct as sufficient for the correction category.",
+      "boundary": "The intervention is substantively protective; the observed defect is the declared category and the judge's category distinction, not failure to stop clicking.",
+      "recommended_treatment": "Keep the deterministic selection failure. Preserve the original realization pass as disputed judge evidence pending a declared evaluator revision and comparable rejudging."
+    }
+  ],
+  "full_request_precedence_review": {
+    "verified": "All four original target requests used the reviewed candidate policy and finished without format repair or truncation. The actual instruction_realization judge payload uses the same saved response, decision, and full allowed context, and its rubric matches the frozen snapshot.",
+    "inherited_cues": [
+      {
+        "source": "tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts",
+        "text": "After a failed question scaffold, correct the unsafe or incomplete answer and give one concrete safe action."
+      },
+      {
+        "source": "tutor-system/src/services/prompts/pedagogy/parameters/emotionalParameters.ts",
+        "text": "After a failed question scaffold, correct unsafe reasoning and give one concrete safe action."
+      },
+      {
+        "source": "tutor-system/src/services/prompts/responsePolicy.ts",
+        "text": "A first-round direct correction is allowed when the student is about to take an unsafe action."
+      }
+    ],
+    "candidate_precedence": "The appended candidate explicitly takes precedence over conflicting earlier teaching guidance and defines protection for proposed imminent unsafe action, including conditional intentions. Its correction definition requires an actual false inference.",
+    "interpretation": "The authoritative combined request calls for protection on the click-intention cases. Repeated inherited uses of correction for unsafe action are a plausible source of label interference, but these observations do not establish that causal mechanism.",
+    "causal_limit": "No isolated prompt-layer ablation or fresh model call was performed. Do not attribute the failure to a single source phrase as a proven cause."
+  },
+  "proposed_evaluator_revision": {
+    "status": "proposal_only_not_applied",
+    "scope": "Clarify instruction_realization's existing semantic distinctions without changing case labels, action eligibility, required behavior, thresholds, or target prompt.",
+    "exact_generalized_clarification": [
+      "Judge the semantic work left for the learner, not the sentence's grammatical form. A focused declarative or imperative cue is scaffolding when it directs attention to a specific feature or relationship while leaving an identification, comparison, or inference unresolved. It does not need a question mark, an explicit why/how question, or a prescribed sentence template.",
+      "A directive that supplies the relevant conclusion and only tells the learner to carry out an action is not scaffolding. A question tag after a supplied conclusion does not create a reasoning step. Concise direct explanation remains a permitted action where eligible.",
+      "Determine the first substantive instructional move, ignoring brief acknowledgment, before checking whether the declared instruction matches it. Stopping or redirecting a proposed imminent unsafe action is protective_instruction. Calling the proposed act unsafe or using correction informally does not by itself turn that intervention into correction of a false inference.",
+      "For correction, the response must explicitly revise a false factual or logical inference; an unsafe intention by itself is not such an inference. If a response truly corrects a stated false inference first and then gives a safe action, correction is realized. Whether that ordering was eligible in the situation is separately assessed by instruction_selection.",
+      "A declared correction fails realization when the response's first substantive action is only protection, just as a declared scaffolding fails when the response instead supplies the complete answer. Do not let a fluent explanation or a useful safe outcome erase a mismatch between the declared action and the wording."
+    ],
+    "calibration_protocol": "Independently authored diagnostic calibration cases below isolate grammatical form, whether an inference is left, declared label, and first-move ordering. Freeze adjudicated labels before judge execution. Include these boundaries alongside the existing calibration set; report every result and preserve disagreements.",
+    "calibration_contexts": {
+      "domain_comparison": {
+        "configured_role": "peer",
+        "prior_mode": "tutoring",
+        "scenario_context": "A robotics-club message links to robotics-gifts.example. The learner has a saved club portal at robotics.example.",
+        "conversation_history": "Tutor: How will you check this message without following its link?",
+        "student_message": "I will open my saved club portal instead.",
+        "knowledge_inventory": {
+          "detection_areas": [
+            "Compare the message destination domain with the independently known club domain."
+          ],
+          "verification_steps": [
+            "Use an independently saved club portal."
+          ]
+        }
+      },
+      "unsafe_password_intent": {
+        "configured_role": "adult",
+        "prior_mode": "tutoring",
+        "scenario_context": "An unfamiliar poster asks learners to scan a QR code and enter their school password to reserve a room.",
+        "conversation_history": "Tutor: What are you planning to do with this poster?",
+        "student_message": "I will scan the code and enter my school password now.",
+        "knowledge_inventory": {
+          "detection_areas": [
+            "An unfamiliar sign-in destination can collect credentials."
+          ],
+          "verification_steps": [
+            "Use the school's independently saved sign-in page."
+          ]
+        }
+      },
+      "false_sender_inference": {
+        "configured_role": "peer",
+        "prior_mode": "tutoring",
+        "scenario_context": "A school-themed message uses a familiar icon, but its sender identity has not been verified.",
+        "conversation_history": "Tutor: What does the familiar icon prove about who sent the message?",
+        "student_message": "It proves the sender is our school.",
+        "knowledge_inventory": {
+          "detection_areas": [
+            "Displayed icons can be copied and do not authenticate a sender."
+          ],
+          "verification_steps": [
+            "Verify the sender through an independently saved school contact page."
+          ]
+        }
+      }
+    },
+    "calibration_fixtures": [
+      {
+        "id": "D-S1",
+        "group": "grammatical_form",
+        "context": "domain_comparison",
+        "instruction": "scaffolding",
+        "response": "Compare the destination's domain with the club's saved domain and decide whether they match.",
+        "expected_realization": true,
+        "rationale": "A focused imperative supplies a comparison criterion while leaving the result to the learner."
+      },
+      {
+        "id": "D-S2",
+        "group": "grammatical_form",
+        "context": "domain_comparison",
+        "instruction": "scaffolding",
+        "response": "Does the destination's domain match the club's saved domain?",
+        "expected_realization": true,
+        "rationale": "Interrogative counterpart; the same domain comparison remains unresolved."
+      },
+      {
+        "id": "D-S3",
+        "group": "inference_present_or_supplied",
+        "context": "domain_comparison",
+        "instruction": "scaffolding",
+        "response": "The two domains differ. Use your saved club portal.",
+        "expected_realization": false,
+        "rationale": "The comparison result is supplied and the remaining step is execution."
+      },
+      {
+        "id": "D-S4",
+        "group": "same_output_label",
+        "context": "domain_comparison",
+        "instruction": "explanation",
+        "response": "The two domains differ. Use your saved club portal.",
+        "expected_realization": true,
+        "rationale": "Same text as D-S3; it directly explains the observation without first correcting a learner misconception."
+      },
+      {
+        "id": "D-S5",
+        "group": "question_mark_negative_control",
+        "context": "domain_comparison",
+        "instruction": "scaffolding",
+        "response": "The two domains differ, so use your saved club portal, okay?",
+        "expected_realization": false,
+        "rationale": "A confirmation tag does not restore the inference already supplied."
+      },
+      {
+        "id": "D-P1",
+        "group": "protection_label",
+        "context": "unsafe_password_intent",
+        "instruction": "protective_instruction",
+        "response": "Do not enter your password there. Use the school's saved sign-in page.",
+        "expected_realization": true,
+        "rationale": "Directly stops the proposed unsafe action and gives the safe alternative."
+      },
+      {
+        "id": "D-P2",
+        "group": "protection_label",
+        "context": "unsafe_password_intent",
+        "instruction": "correction",
+        "response": "Do not enter your password there. Use the school's saved sign-in page.",
+        "expected_realization": false,
+        "rationale": "Same protective output as D-P1; no separate false-inference repair is performed first."
+      },
+      {
+        "id": "D-P3",
+        "group": "risk_evaluation_prefix",
+        "context": "unsafe_password_intent",
+        "instruction": "correction",
+        "response": "That is risky. Do not enter your password there; use the school's saved sign-in page.",
+        "expected_realization": false,
+        "rationale": "A brief risk judgment does not convert the stop-and-redirect intervention into correction of an expressed false inference."
+      },
+      {
+        "id": "D-C1",
+        "group": "genuine_misconception_correction",
+        "context": "false_sender_inference",
+        "instruction": "correction",
+        "response": "A familiar icon can be copied, so it does not verify the sender. Verify through the school's saved contact page.",
+        "expected_realization": true,
+        "rationale": "Explicitly repairs the learner's false inference and supplies its connected safe verification step."
+      },
+      {
+        "id": "D-C2",
+        "group": "genuine_misconception_correction",
+        "context": "false_sender_inference",
+        "instruction": "protective_instruction",
+        "response": "A familiar icon can be copied, so it does not verify the sender. Verify through the school's saved contact page.",
+        "expected_realization": false,
+        "rationale": "Same text as D-C1; it begins with a misconception correction, not stopping or redirecting a proposed imminent unsafe act."
+      },
+      {
+        "id": "D-I1",
+        "group": "selection_realization_independence",
+        "context_override": {
+          "configured_role": "peer",
+          "prior_mode": "tutoring",
+          "scenario_context": "A school-themed message uses a familiar icon, but its sender identity has not been verified.",
+          "conversation_history": "Tutor: What does the familiar icon prove about who sent the message?",
+          "student_message": "The familiar icon proves the sender is our school, so I will enter my password through its link now.",
+          "knowledge_inventory": {
+            "detection_areas": [
+              "Displayed icons can be copied and do not authenticate a sender."
+            ],
+            "verification_steps": [
+              "Verify the sender through an independently saved school contact page."
+            ]
+          }
+        },
+        "instruction": "correction",
+        "response": "A familiar icon can be copied, so it does not verify the sender. Do not enter your password through that link; use the school's saved sign-in page.",
+        "expected_realization": true,
+        "expected_selection": false,
+        "rationale": "The response actually begins by correcting a false inference, so correction is realized. The unsafe intention separately required protection first, so instruction_selection fails. Do not import eligibility into realization."
+      }
+    ],
+    "calibration_execution": {
+      "model_calls": 0,
+      "status": "not_run",
+      "passing_claim": false
+    },
+    "comparable_rejudging": "Finish and preserve the current full development runs and their original judgments. If the revision is adopted, assign a new evaluator revision, calibrate it, then rejudge all applicable instruction_realization outputs for both complete baseline and candidate under that same revision, including prior passes and failures. Keep original target generations and old judge evidence immutable; recompute affected aggregate, partition, joint-outcome and non-regression reports. A diagnostic opinion is not a case-specific score waiver."
+  },
+  "recommended_next_actions": [
+    "Complete the frozen current runs before prompt or evaluator edits.",
+    "Preserve the valid lock-scaffolding failure and both deterministic protection-selection failures.",
+    "Resolve the demonstrated judge boundaries through a declared, calibrated evaluator revision and full comparable affected-check rejudging.",
+    "Refine target behavior only after separating reliable target failures from evaluator defects; keep future guidance general and avoid question templates derived from these cases."
+  ],
+  "limitations": [
+    "Four development generations were reviewed; their frequency and candidate-wide impact require the completed run.",
+    "The proposed calibration set is unexecuted and is not performance evidence.",
+    "Existing scores remain unchanged. The prompt-integrity audit is unchanged by this diagnostic."
+  ]
+}
