@@ -3,6 +3,7 @@ Provide a human-readable QA guide for the transfer-assessment room workflow, inc
 
 ## Metadata
 - Updated: 2026-10-14
+- Default-on room creation baseline commit: `28706fe`.
 - Assessment input reminder baseline commit: `289cdfa`.
 - Release baseline commit: `83690fe`; queued-assessment verification added during hosted release.
 - Source of truth: `features/transfer_assessment.feature` and the [Partial-only final assessment contract](ai-behaviors/transfer-status-response-contract.md#assessment-after-full-understanding).
@@ -24,6 +25,8 @@ An assessment is a tutor turn inside the room. It does not switch the room into 
 
 A transfer learning enabled room is an ordinary tutoring room whose **Enable In-Room Assessment** setting has been saved on. The room keeps the same tutor, learner, chat, AI, and Guard controls, but it also supports learner-owned learning targets, evidence-based transfer checks, tutor-reviewed assessment drafts, and persisted answer attempts.
 
+New rooms start with this setting on for all teaching and test templates. Existing rooms retain their saved choice, and tutors can turn it off in AI settings.
+
 An ordinary room does not run this transfer-assessment lifecycle. Its checklist remains room-shared and its messages use the normal tutoring or Guard paths. It does not prepare a private transfer draft or grade assessment answers.
 
 ### How To Create One
@@ -32,7 +35,7 @@ An ordinary room does not run this transfer-assessment lifecycle. Its checklist 
 2. Enter the room title and description, choose an image if needed, and select **Create Room**.
 3. Open the new room and open the AI settings panel.
 4. Turn on **Enable AI Assistant**.
-5. Turn on **Enable In-Room Assessment**.
+5. Confirm **Enable In-Room Assessment** is checked; new rooms have it on by default. Turn it on for an existing room if needed.
 6. Save the settings and reopen the room if needed to confirm the setting persisted.
 7. Open **Learning Progress** and create targets with **Generate Learning Targets** or **Enter Manually**.
 8. Have the learner join. The targets then become the learner-owned checklist used by the assessment workflow.

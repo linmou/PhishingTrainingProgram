@@ -2,8 +2,8 @@
 
 Intent: document browser and trusted Supabase service boundaries.
 
-Updated: 2026-09-22
-Implementation commit: `c23fc9e`
+Updated: 2026-10-14
+Implementation baseline commit: `28706fe`
 
 ## Purpose
 Core database client configuration and service abstraction layer. Provides type-safe database operations, authentication helpers, and comprehensive logging for the educational platform.
@@ -21,6 +21,8 @@ The Edge Function does not use Supabase Auth. The browser facade sends the curre
 The Edge Function imports the existing CRA resolver directly. Shared runtime imports use explicit `.ts` paths so Deno can bundle that module graph; there is no copied Edge lifecycle implementation.
 
 Assessment generation and ordinary tutor responses read `OAI_API_KEY`, `OAI_BASE_URL`, and exact `OAI_MODEL=qwen3.5-flash` from the Supabase Edge Function secret store. The React bundle sends the current localStorage/offline-user identity and chat payload to the functions and never receives provider credentials. Supabase Auth sign-in is not required for these application-managed sessions. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true` and can be set to `false` to disable assessment operations.
+
+New rooms default `rooms.transfer_learning_enabled` to `true`, including rooms created from every teaching and test template. Room creation inherits this database default. Explicit opt-outs and existing rooms keep their saved values; tutors can change **Enable In-Room Assessment** in AI settings. Assessment delivery still requires the configured learning targets, learner evidence, and tutor review.
 
 ## Client Configuration
 
