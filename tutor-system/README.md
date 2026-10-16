@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-10-15
-Commit: 2f63749 (working release baseline)
+Updated: 2026-10-16
+Commit: 0e5c156 (source baseline for the full-conversation context fix)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -24,6 +24,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Capacity Management**: 1 tutor + 1 student maximum
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
+- **Full AI Conversation Context**: Tutor suggestions include all saved room messages in chronological order, fetched in pages beyond the database response cap. Context lookup failures stop generation rather than supplying an incomplete history. See the [full-history verification record](docs/doc_update_record/documentation_update_record_v2026_10_16_full_tutor_history.md).
 - **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
 - **Transfer Assessments**: Room-approved learner targets drive semantic evidence analysis and teacher-reviewed questions; private keys, two-attempt grading, and terminal-only failure feedback stay behind the trusted assessment API
 - **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt

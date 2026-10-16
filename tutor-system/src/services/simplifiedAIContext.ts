@@ -25,19 +25,40 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
         console.log('🔄 Building AI context from existing room and message data');
 
         // Get room context (the phishing scenario being discussed)
-        const { data: room } = await supabase
+        const { data: room, error: roomError } = await supabase
             .from('rooms')
             .select('title, description, pre_populated_dialogue, created_at')
             .eq('id', roomId)
             .single();
+        if (roomError) throw roomError;
 
-        // Get recent chat messages (the actual discussion)
-        const { data: messages } = await supabase
-            .from('messages')
-            .select('content, user_role, response_mode, created_at')
-            .eq('room_id', roomId)
-            .order('created_at', { ascending: true })
-            .limit(15); // Last 15 messages for context
+        // Read the full discussion in pages, including rooms beyond the server row cap.
+        const pageSize = 1000;
+        const messages: Array<{
+            id: string;
+            content: string;
+            user_role: string;
+            response_mode: string | null;
+            created_at: string;
+        }> = [];
+        let cursor: { id: string; created_at: string } | null = null;
+        while (true) {
+            const query = supabase
+                .from('messages')
+                .select('id, content, user_role, response_mode, created_at')
+                .eq('room_id', roomId)
+                .order('created_at', { ascending: true })
+                .order('id', { ascending: true });
+            // A cursor prevents earlier inserts/deletions from shifting later pages.
+            if (cursor) {
+                query.or(`created_at.gt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.gt.${cursor.id})`);
+            }
+            const { data: page, error } = await query.range(0, pageSize - 1);
+            if (error) throw error;
+            if (!page || page.length === 0) break;
+            messages.push(...page);
+            cursor = page[page.length - 1];
+        }
 
         const context: ConversationMessage[] = [];
 
@@ -57,7 +78,7 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
             context.push(...prePop);
         }
 
-        // Add recent chat messages
+        // Add the complete saved discussion.
         if (messages && messages.length > 0) {
             messages.forEach(msg => {
                 // Character-tagged AI rows keep their identity; Riley is never learner evidence.
@@ -88,7 +109,7 @@ export async function buildAIContextFromExistingData(roomId: string): Promise<Co
 
     } catch (error) {
         console.error('❌ Error building AI context from existing data:', error);
-        return [];
+        throw error;
     }
 }
 
