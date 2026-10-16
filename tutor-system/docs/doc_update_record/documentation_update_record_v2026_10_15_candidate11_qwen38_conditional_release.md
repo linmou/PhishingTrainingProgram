@@ -1,8 +1,8 @@
 # Candidate11 and Qwen3.8 conditional release
 
-Intent: evaluate the user's exact candidate11 selection and deploy only after its evaluation and affected product checks pass.
+Intent: preserve the exact candidate11 evaluation and the user's subsequent explicit release selection, with source, deployment and affected product-verification evidence.
 
-Date: 2026-10-15. Working baseline: `8441f11`. Owner: root Codex agent. Batch: candidate11-qwen38-20261015. Status: benchmark failed under explicit user release selection; narrowed tutor/Qwen3.8 scope is staging verified and production deployed, with production operational verification in progress. Transfer/assessment retain productionQwen3.5.
+Date: 2026-10-15. Working baseline: `8441f11`. Integrated runtime release commit: `079948105fae7173fbbc91192a856c1c45034891` on `no_sign_up`. Owner: root Codex agent. Batch: candidate11-qwen38-20261015. Status: benchmark failed under explicit user release selection; narrowed tutor/Qwen3.8 scope is staging and production verified. Transfer/assessment retain productionQwen3.5. The sections below preserve decisions and intermediate states in chronological order.
 
 The user requested an agent evaluation of candidate11 using qwen3.8-flash without thinking, followed by candidate11 tutoring deployment and Qwen3.8 as the default model if it passes. Evaluation owner: candidate11_qwen38_eval. Independent audit owner: qwen38_audit. Root owns conditional runtime integration and staging/production delivery. No runtime or hosted configuration change is authorized before the stated pass condition is established.
 
@@ -153,3 +153,31 @@ Production ordinary tutor-response passes in `production-template-20261015223119
 During production verification the user replaced AGENTS.md instructions with the merge-before-production gate. Production13/3 was already deployed when that steering arrived. Before any further production fixture or deployment mutation, root is committing the exact tested/deployed runtime and required documentation directly on `no_sign_up`, whose current parent is2f63749. No separate feature branch merge is needed. Root remains the release owner; no other deployment owner is active for this batch.
 
 The integrated release commit will be recorded after creation. Compare its full deployed function inputs and frontend inputs with frozen/staging/deployed evidence, and rebuild the frontend from that commit. If relevant bytes remain identical, reuse the valid staging checks and continue production verification without a redundant deployment. This record does not claim that the earlier promotion occurred after integration. Remaining production checks and final cleanup stay open.
+
+Integrated release commit: `079948105fae7173fbbc91192a856c1c45034891` on `no_sign_up`, direct commit over2f63749 with the required runtime, tests, docs and compact audit records. No raw output directories or temporary release scripts were included. All7staging report commits were2f63749 with the exact frozen working-tree source now committed as0799481; integration changed no tested runtime bytes. `integrated-release-manifest.json` verifies all9runtime hashes against that commit and checks293frontend/public/package inputs against committed Git blobs. `integrated-artifact-comparison.json` verifies both complete function source manifests against the commit and staging/production deployments, and records the rebuilt frontend asset hashes. Rebuild passes with the same `main.8f810298.js` and `main.adbd87d8.css`, with existing warnings. An initial metadata read hit the command output buffer limit on package-lock; the successful check compares committed Git blob identities without reading large Git output through that buffer. No application artifact changed.
+
+No further production mutation occurred between receipt of the new merge gate and completing those commit/artifact checks. Production verification then resumed on the identical integrated sources. The earlier production Guard report `production-template-20261015223219-6c328fd5` also passes entry/persistence/recovery and cleanup. Remaining product checks are still open; this is not a premature released verdict.
+
+## Final production acceptance
+
+All seven selected production journeys pass against project `zgbufaxooqxeabewktzd`, assessment-api13 and ai-api3, with exact source parity to integrated release0799481 and the staging-tested manifests. Reports are retained under `tmp/browser_demo_runs/`:
+
+| Journey | Production report directory | Result |
+| --- | --- | --- |
+| Ordinary tutoring and reviewed-send persistence | production-template-20261015223119-ddc47fa5 | pass |
+| Ordinary Guard entry, persistence and recovery | production-template-20261015223219-6c328fd5 | pass |
+| Checklist generation | production-template-20261015223910-6e28f68a | pass |
+| Checklist coverage and downstream tutor consumption | production-template-20261015224029-8f325dc2 | pass |
+| Configured full11 tutoring | production-template-20261015224116-d0875571 | pass |
+| Configured full11 Guard and recovery | production-template-20261015224225-bc4f09d2 | pass |
+| Assessment pass/retry/failure/reload and terminal tutor feedback | production-template-20261015224328-9f04efd3 | pass |
+
+`output/candidate11-release-20261015/production-verified.json`, SHA256 `b8cebb6421522caeb1ecca03bedce523c6e781107c4fee49f2e799e26a827d27`, reconciles all seven report hashes, nine runtime hashes, both exact generated-base checks and temporary configuration restorations. All13successful ai-api calls report actualQwen3.8; all11tutor calls use temperature0.3/max_tokens600/thinkingfalse and the exact full11 policy. The terminal assessment branches consume the actual server outcome/key context and persist the tutor reply against the correct terminal answer without re-analyzing it as ordinary learning.
+
+Final read-only cleanup is `production-cleanup-final.json`, SHA256 `8336d590507d0c7f3178c1b8034b4dd877416463c1cc149a84cc79d82a92a4ae`: all32generated-row counts across four fixtures are zero, mode/timestamps/source are reset and both room configurations are restored. `process-cleanup-final.json`, SHA256 `24980fdb9a966f284ce2eb563007bc1d83be81b5f5b46f3e23a32dfe306c93cb`, confirms the owned staging app90761 and resource monitor90103 stopped, port3100 has no listener, and the user's existing production-project app43549 remains running.
+
+The [integrated-release parity audit](../../../evals/promptfoo/refinement-20261014/audit-candidate11-integrated-release-parity-20261015.json), SHA256 `9a341f25be9b7cd58ead3b57021ea8df63d7f498ef18c8ddcab94c72f22006da`, independently verifies the committed nine runtime files,293frontend/build inputs, all12deployed source files and three rebuilt assets. `integrated-build-configuration.json`, SHA256 `4b93863fad989501096ff970856cdbd8c528275da50f09b9c10a8324746af103`, records the optimized NODE_ENVproduction build targeting the production Supabase URL and the existing REACT_APP_ENVIRONMENTdebug setting. The saved browser requests and server responses establish real-provider use; this record does not infer the application environment flag from the build optimization mode.
+
+Final runtime selection is full candidate11 tutoring on Qwen3.8 Flash,0.3/600/nonthinking; extraction and generic ai-api also useQwen3.8. Transfer analysis and assessment-question generation remain onQwen3.5 with their inherited prompt, eligibility, lifecycle and decoding behavior. No SQL or project-secret change was applied. Frontend source/build and the running local application are verified; no external frontend-host publication was configured or performed. Benchmark failures and inherited transfer semantic diagnostics remain failed in their original evidence, and fresh AI assessment-question generation is not claimed by the fixed-question assessment-answer journey.
+
+The [final independent production audit](../../../evals/promptfoo/refinement-20261014/audit-candidate11-production-acceptance-20261015.json), SHA256 `7070faf82f73a7cd52d6523ef3d6b2f71708c42f8ad3cdc0e02d32421488d035`, is clear for this narrowed release with no blocking findings. It independently verifies all seven report hashes/projects/results/cleanup, actual model and settings, configured-base parity, both terminal assessment/tutor branches and all32zero-count cleanup assertions. The batch is production verified and closed for the explicitly selected tutor/default/extraction scope. This final documentation-only update changes no deployed artifact.
