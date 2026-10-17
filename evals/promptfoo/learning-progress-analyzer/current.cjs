@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: evaluate added branch cases against the current transfer handler, preserving resumable evidence and full-suite coverage.
+// Purpose: evaluate added branch cases against the learning-progress analyzer, preserving resumable evidence and full-suite coverage.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -74,12 +74,12 @@ function freeze(dir,coverage) {
   snapshot.files=snapshot.files.map(f=>{const content=fs.readFileSync(path.join(root,'tutor-system',f.name),'utf8');return {...f,content,sha256:hash(content)};});
   const {cases,original_case_ids}=suiteCases(coverage), aliases=aliasesFor(cases);
   const files=[...codeFiles,...sources,'development.json','holdouts.json','final-assessment-cases.json','final-assessment-holdouts.json','final-assessment-refinement-holdouts.json','final-assessment-refinement-holdouts-v2.json'].map(f=>path.relative(root,path.join(__dirname,f)));
-  files.push(...['constitution.md','tutor-behavior-specification.md','transfer-status-response-contract.md','transfer-analysis-evaluation-plan.md'].map(f=>'tutor-system/docs/ai-behaviors/'+f));
+  files.push(...['constitution.md','tutor-behavior-specification.md','transfer-status-response-contract.md','learning-progress-analyzer-evaluation-plan.md'].map(f=>'tutor-system/docs/ai-behaviors/'+f));
   const prompt=loadProduction(snapshot).evaluationPrompt;
   const frozen={run_id:path.basename(dir),frozen_at:new Date().toISOString(),coverage,source_commit:sourceCommit,
     git_revision:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),
     git_status:execFileSync('git',['status','--short'],{cwd:root,encoding:'utf8'}),
-    comparison:'Current transfer component shared by original tutor and cleaned tutor candidates; no tutor-prompt factor enters these calls. Historical transfer prompts remain separately reported.',
+    comparison:'Learning-progress analyzer shared by original tutor and cleaned tutor candidates; no tutor-prompt factor enters these calls. Historical analyzer prompts remain separately reported.',
     grounding:'Adopted constitution 1.0; TA01–TA04 and T09.1 current contract; human gold-label review pending',
     cases,original_case_ids,aliases,snapshot,prompt,prompt_sha256:hash(prompt),
     settings:{model:'qwen3.5-flash',temperature:0,max_tokens:600,enable_thinking:false,response_format:{type:'json_object'},repetitions:3,seed:null,timeout_ms:90000,target_attempts:1,num_workers:16},

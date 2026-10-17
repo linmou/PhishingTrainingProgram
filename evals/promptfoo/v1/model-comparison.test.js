@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const {fixedModel,modelSnapshot,matchingRequest,limiter} = require('./model-comparison');
 const fs = require('node:fs');
 const path = require('node:path');
-const transfer = require('../transfer-analysis/evaluate.cjs');
+const transfer = require('../learning-progress-analyzer/evaluate.cjs');
 
 test('frozen handler model pin and injected model agree before calling the provider',async()=>{
   const frozen=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../output/transfer-analysis-current/full-candidate02-20261015/frozen.json'),'utf8'));

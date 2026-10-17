@@ -1,7 +1,8 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-10-16
+Updated: 2026-10-17
 Commit: 0e5c156 (source baseline for the full-conversation context fix)
+Naming review baseline: 518a07d
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -162,7 +163,7 @@ OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OAI_MODEL=qwen3.8-flash
 ```
 
-`OAI_API_KEY` and `OAI_BASE_URL` are read only by Supabase Edge Functions. The React bundle sends chat payloads to those functions and never receives the provider credentials. Tutoring and `ai-api` use Qwen3.8 from `src/services/aiModels.ts`; transfer analysis and assessment generation retain Qwen3.5 in `assessment-api`. `OAI_MODEL` selects the model only for offline evaluations. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true`.
+`OAI_API_KEY` and `OAI_BASE_URL` are read only by Supabase Edge Functions. The React bundle sends chat payloads to those functions and never receives the provider credentials. Tutoring and `ai-api` use Qwen3.8 from `src/services/aiModels.ts`; the learning-progress analyzer and assessment generation retain Qwen3.5 in `assessment-api`. `OAI_MODEL` selects the model only for offline evaluations. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true`.
 
 ### Assessment API Deployment
 

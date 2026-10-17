@@ -38,6 +38,8 @@ Non-goals: room administration, latency, multi-bot simulation, implementing the 
 
 Intent: make the existing learner-evidence rules independently measurable for `TRANSFER_ANALYSIS_SYSTEM_PROMPT`.
 
+The component is named the learning-progress analyzer; `transfer_analysis` remains its stable behavior ID and `TRANSFER_ANALYSIS_SYSTEM_PROMPT` its runtime identifier. Its classification evaluation is documented in the [analyzer suite](../../../evals/promptfoo/learning-progress-analyzer/README.md).
+
 Analysis behavior ID: `transfer_analysis`. Grounding review: resolved by Codex on 2026-10-13 against constitution 1.0 and the existing [transfer status response contract](transfer-status-response-contract.md). These clauses specify T02's analysis boundary; T09 retains assessment eligibility. The current contract permits direct coverage from pending/partial, but recovery from `needs_review` in the same situation first becomes partial. Different-situation spontaneous transfer can directly cover a review target. That recovery distinction is retained for measurement, not generalized into a new educational principle.
 
 | Requirement ID | Trigger and prior state | Required result | Prohibited result | Permitted alternatives | User-visible effect / consumer | Constitutional grounding |

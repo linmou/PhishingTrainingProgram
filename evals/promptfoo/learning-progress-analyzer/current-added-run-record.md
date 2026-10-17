@@ -1,10 +1,10 @@
-# Current transfer prompt: added-case results
+# Current learning-progress analyzer prompt: added-case results
 
-Intent: preserve the result of applying the branch's 40 added cases to the current transfer-analysis component.
+Intent: preserve the result of applying the branch's 40 added cases to the learning-progress analyzer.
 
 Executed: 2026-10-15. Source baseline: `8dc7271`; imported case commit: `af86353863c60d5517b6bb6b3a4748554c64fd36`. Verdict: complete diagnostic run, failed behavior gates. This component is shared by the current original/cleaned tutor candidates; it measures no tutor-prompt effect.
 
-The [plan](../../../tutor-system/docs/ai-behaviors/transfer-analysis-evaluation-plan.md), [independent integration audit](audit-current-integration.json) and local immutable run `output/transfer-analysis-current/added-20261015-01/` preserve the protocol. The freeze contains full authority, source dependencies, cases, prior states, prompt and settings; generations preserve every input, raw response, applied state, score and request metadata. `resource-monitor.jsonl` and session records retain execution progress. Raw artifacts are intentionally untracked.
+The [plan](../../../tutor-system/docs/ai-behaviors/learning-progress-analyzer-evaluation-plan.md), [independent integration audit](audit-current-integration.json) and local immutable run `output/transfer-analysis-current/added-20261015-01/` preserve the protocol. The freeze contains full authority, source dependencies, cases, prior states, prompt and settings; generations preserve every input, raw response, applied state, score and request metadata. `resource-monitor.jsonl` and session records retain execution progress. Raw artifacts are intentionally untracked.
 
 | Artifact | SHA-256 |
 | --- | --- |

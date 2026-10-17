@@ -10,9 +10,9 @@ const evaluator = require('./evaluator');
 const {assess} = require('./gate');
 const {analyze} = require('./analyze');
 const tutorClassification = require('./classification');
-const current = require('../transfer-analysis/current.cjs');
-const transfer = require('../transfer-analysis/evaluate.cjs');
-const {classificationReport} = require('../transfer-analysis/classification.cjs');
+const current = require('../learning-progress-analyzer/current.cjs');
+const transfer = require('../learning-progress-analyzer/evaluate.cjs');
+const {classificationReport} = require('../learning-progress-analyzer/classification.cjs');
 const root = path.resolve(__dirname, '../../..');
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const hash = value => createHash('sha256').update(typeof value === 'string' ? value : JSON.stringify(value)).digest('hex');
@@ -40,7 +40,7 @@ function matchingRequest(target, original, model) {
 }
 function sources() {
   return [__filename, ...['runner.js','evaluator.js','gate.js','product-adapter.js'].map(f=>path.join(__dirname,f)),
-    ...['current.cjs','evaluate.cjs','classification.cjs'].map(f=>path.join(__dirname,'../transfer-analysis',f)),
+    ...['current.cjs','evaluate.cjs','classification.cjs'].map(f=>path.join(__dirname,'../learning-progress-analyzer',f)),
     ...fs.readdirSync(path.join(__dirname,'../rubrics/v1')).filter(f=>f.endsWith('.md')||f.endsWith('.js')||f==='manifest.json').map(f=>path.join(__dirname,'../rubrics/v1',f)),
     ...fs.readdirSync(path.join(__dirname,'../rubrics/v0')).filter(f=>f.endsWith('.md')||f.endsWith('.js')).map(f=>path.join(__dirname,'../rubrics/v0',f)),
     ...['analyze.js','classification.js'].map(f=>path.join(__dirname,f)),

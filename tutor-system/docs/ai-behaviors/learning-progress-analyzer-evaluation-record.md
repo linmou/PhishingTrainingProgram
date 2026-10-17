@@ -1,6 +1,8 @@
-# Transfer analysis baseline evaluation — 2026-10-13
+# Learning-progress analyzer baseline evaluation — 2026-10-13
 
 Intent: report how the unchanged production analysis prompt classifies learner evidence against a frozen gold-label dataset.
+
+Naming update: 2026-10-17, baseline `c6d5129`. The suite and this record were renamed from `transfer-analysis`; navigable links use current paths. Historical commands, source paths beside hashes, run IDs and results below retain the identities recorded for the 2026-10-13 experiment. See the [naming notes](../../../evals/promptfoo/learning-progress-analyzer/README.md#scope-and-naming) before replaying evidence.
 
 Run ID: `baseline-01` under `output/transfer-analysis-eval-20261013/`. Executed 2026-10-13 12:31:35–12:32:19 UTC. Source revision: `6c5e7c0b7f5086746d0452bf685b9ed2d068048d`, plus the evaluation artifacts recorded in the freeze. Production source: Supabase project `zgbufaxooqxeabewktzd`, Edge `assessment-api` version 9, retrieved read-only through MCP.
 
@@ -24,7 +26,7 @@ The user requested classification against correct answers on 2026-10-13. Every m
 - Provider-reported usage: **166,024 prompt tokens; 16,363 completion tokens**.
 - Production messages are historical; exported target states are replay inputs, not reconstructed original call state. Several legacy targets have mismatched semantic text and stored type. They were preserved.
 
-Frozen authority: [constitution and spec snapshots, full inputs, gold labels, settings, hashes, and audit](../../../output/transfer-analysis-eval-20261013/baseline-01/frozen.json). Behavior: [TA01–TA05](tutor-behavior-specification.md#t02-analysis-responsibilities). Contract: [transfer status](transfer-status-response-contract.md). Plan: [evaluation plan](transfer-analysis-evaluation-plan.md).
+Frozen authority: [constitution and spec snapshots, full inputs, gold labels, settings, hashes, and audit](../../../output/transfer-analysis-eval-20261013/baseline-01/frozen.json). Behavior: [TA01–TA05](tutor-behavior-specification.md#t02-analysis-responsibilities). Contract: [transfer status](transfer-status-response-contract.md). Plan: [evaluation plan](learning-progress-analyzer-evaluation-plan.md).
 
 ## Scores
 
@@ -118,7 +120,7 @@ Every case with any failed or unevaluable check is listed. Each link opens repet
 
 The measured baseline does not satisfy the proposed classification benchmark. The evidence supports investigating three separate causes: semantic over/undercredit, confusion among state-dependent event kinds, and consumer rejection of otherwise meaningful evidence. The original concern about frequent MC questions has a plausible demonstrated mechanism in E08/E09/E20: these outputs create partial-target eligibility. It is not established that this mechanism explains every reported production interaction.
 
-The next step is to review the [gold-label sheet](../../../evals/promptfoo/transfer-analysis/gold-label-review.md), especially the marked boundaries, and freeze any corrected labels before prompt refinement. The baseline provides preserved failures for a future comparable candidate evaluation. Holdouts used here must be replaced if their feedback informs tuning. No candidate or production deployment was performed.
+The next step is to review the [gold-label sheet](../../../evals/promptfoo/learning-progress-analyzer/gold-label-review.md), especially the marked boundaries, and freeze any corrected labels before prompt refinement. The baseline provides preserved failures for a future comparable candidate evaluation. Holdouts used here must be replaced if their feedback informs tuning. No candidate or production deployment was performed.
 
 ## Evidence and reproducibility
 
@@ -126,8 +128,8 @@ The next step is to review the [gold-label sheet](../../../evals/promptfoo/trans
 - [Per-generation inputs and outputs](../../../output/transfer-analysis-eval-20261013/baseline-01/generations/): exact provider requests, complete responses, parsed analysis, rejected events, state outcomes, eligibility projection, and five typed checks.
 - [Machine-readable summary](../../../output/transfer-analysis-eval-20261013/baseline-01/summary-1791894739063.json).
 - [Production export](../../../output/transfer-analysis-eval-20261013/production-export.json) and [live SQL snapshot](../../../output/transfer-analysis-eval-20261013/production-functions.json).
-- [Runner](../../../evals/promptfoo/transfer-analysis/evaluate.cjs) and [harness checks](../../../evals/promptfoo/transfer-analysis/evaluate.test.cjs): eight tests passed before the freeze, including real-handler full-understanding flow, wrong-label failure, type filtering, invalid JSON/IDs/truncation, propagated state, and missing-result/pair gates.
-- [Independent holdout provenance](../../../evals/promptfoo/transfer-analysis/holdouts.json).
+- [Runner](../../../evals/promptfoo/learning-progress-analyzer/evaluate.cjs) and [harness checks](../../../evals/promptfoo/learning-progress-analyzer/evaluate.test.cjs): eight tests passed before the freeze, including real-handler full-understanding flow, wrong-label failure, type filtering, invalid JSON/IDs/truncation, propagated state, and missing-result/pair gates.
+- [Independent holdout provenance](../../../evals/promptfoo/learning-progress-analyzer/holdouts.json).
 
 Commands from repository root:
 

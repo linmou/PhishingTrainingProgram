@@ -1,4 +1,4 @@
-# Full transfer prompt refinement
+# Full learning-progress analyzer prompt refinement
 
 Intent: preserve full-suite evidence, transport recovery and remaining failures while removing prompt shortcuts.
 

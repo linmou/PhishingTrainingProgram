@@ -1,12 +1,14 @@
-# Transfer analysis evaluation plan
+# Learning-progress analyzer evaluation plan
 
 Intent: define the current item-event scorecard and preserve the provenance of historical evaluation results.
+
+Naming update: 2026-10-17, baseline `c6d5129`. The suite is now [learning-progress-analyzer](../../../evals/promptfoo/learning-progress-analyzer/README.md). Current commands use its new path; historical run locations and protocol identities remain recorded below.
 
 Updated: 2026-10-15. Source baseline: `8dc7271`; added cases: `af86353`. Current policy follows the user's approved removal of analysis flags and their assessment blockers. Historical results retain their original frozen contract and metrics.
 
 ## Added-case continuation and subsequent full suites
 
-The user requested the 40 branch additions for the current candidates after completing the tutor runs, reusing saved evidence. `current.cjs freeze DIR --coverage added` freezes only those cases against the current transfer handler/reducer. This component is identical across the tutor candidates; one transfer run supplies shared component evidence. Older transfer runs use different prompts and remain historical evidence.
+The user requested the 40 branch additions for the current candidates after completing the tutor runs, reusing saved evidence. `current.cjs freeze DIR --coverage added` freezes only those cases against the current learning-progress handler/reducer. This component is identical across the tutor candidates; one analyzer run supplies shared component evidence. Older transfer runs use different prompts and remain historical evidence.
 
 Imported files preserve learner text, targets, histories and event labels. Case/pair IDs use an `af86353_` namespace; new synthetic inputs use shared identities. Existing inputs retain historical identities. Historical flag labels remain in provenance; current checks follow TA01–TA04 and T09.1. All additions are exposed regression material, including former branch holdouts. Human label review remains pending, so this diagnostic cannot establish acceptance or unseen generalization.
 
@@ -16,7 +18,7 @@ Two surface-reference cases exactly duplicate other added inputs and gold. Freez
 
 Any next refinement uses `--coverage full`: all 73 prior cases plus all 40 additions. Five original sequence steps use fixed prior states for classification; five additional `sequence_replay` cases preserve actual output propagation and transition checks, excluded from ensembles. This gives 118 logical cases and 354 records. Keep the original-case classification slice visible. Compare future baseline/candidate results on identical inputs, contracts, settings and gates; reuse unchanged component evidence. Changed tutor prompts additionally require the full tutor suite.
 
-Changed measurement factors: additions, three repetitions, classification/ensemble reporting, new-case identity normalization and concurrency. Current transfer prompt, handler, event policy, sampling parameters and existing thresholds are fixed. The two-repetition entry point described below remains the historical comparison workflow.
+Changed measurement factors: additions, three repetitions, classification/ensemble reporting, new-case identity normalization and concurrency. Current analyzer prompt, handler, event policy, sampling parameters and existing thresholds are fixed. The two-repetition entry point described below remains the historical comparison workflow.
 
 ## Current analysis and assessment checks
 
@@ -37,7 +39,7 @@ The current case files contain event labels and optional explicit assessment exp
 
 The default freeze includes all 73 existing cases, including both refinement rounds (R01–R06 and V01–V06). Previously evaluated holdouts are marked as exposed regression cases. `--fresh_holdouts` adds a separately authored set and rejects IDs already present in the default cases; the author must still establish that new cases have not been exposed.
 
-Use `evals/promptfoo/transfer-analysis/evaluate.cjs freeze <new-run-directory> --comparison prompt` to freeze the historical production snapshot and current working-tree handler, their prompts, revised cases, settings, metric thresholds, and source hashes. Prompt comparison is the default because this revision changes the prompt and consumer contract. Generate separate fresh baseline and candidate responses on identical inputs/settings, propagate each variant's observed sequence state independently, and preserve every input, raw response, applied result, error, and score. Resume completed generations without resampling them; CLI `--num_workers` controls concurrency. Historical production snapshots and ecological exports must be available before freezing. A run is diagnostic until labels are reviewed.
+Use `evals/promptfoo/learning-progress-analyzer/evaluate.cjs freeze <new-run-directory> --comparison prompt` to freeze the historical production snapshot and current working-tree handler, their prompts, revised cases, settings, metric thresholds, and source hashes. Prompt comparison is the default because this revision changes the prompt and consumer contract. Generate separate fresh baseline and candidate responses on identical inputs/settings, propagate each variant's observed sequence state independently, and preserve every input, raw response, applied result, error, and score. Resume completed generations without resampling them; CLI `--num_workers` controls concurrency. Historical production snapshots and ecological exports must be available before freezing. A run is diagnostic until labels are reviewed.
 
 Required routing and lifecycle boundaries:
 
@@ -69,7 +71,7 @@ Behavior source at baseline preparation: TA01–TA05 under [T02](tutor-behavior-
 
 Sources: ten purposively selected production rooms from April 2026, spanning six scenario families, exported read-only through Supabase MCP. Exclude recent QA/demo rooms from the ecological slice. Keep spelling, uncertainty, disagreement, repetition, and complete prior dialogue through the focus message. Student IDs are pseudonymized. Scenario setup names are fictional product characters. Historical messages are replayed against the exported pending targets; this is not a reconstruction of original model calls. Synthetic cases imitate observed tone and reasoning patterns but retain synthetic provenance. Record legacy target/configuration mismatches rather than correcting them silently. No target is invented in an ecological case.
 
-Cases: `evals/promptfoo/transfer-analysis/development.json` plus independent `holdouts.json`. Twenty ecological selections and ten production-style synthetic cases; independent agent authors sixteen holdouts from spec/contract only. Full generated manifest records inputs, provenance, expected labels, rationale, pair IDs, and requirements. Add a stateful sequence linking the existing partial/full/contradiction/repair/transfer cases with explicit state propagation and no revised target text. Audit existing harness cases before execution; old assertions remain untouched. Human label review is recorded separately; ambiguous labels block acceptance and may be exercised diagnostically.
+Cases: `evals/promptfoo/learning-progress-analyzer/development.json` plus independent `holdouts.json`. Twenty ecological selections and ten production-style synthetic cases; independent agent authors sixteen holdouts from spec/contract only. Full generated manifest records inputs, provenance, expected labels, rationale, pair IDs, and requirements. Add a stateful sequence linking the existing partial/full/contradiction/repair/transfer cases with explicit state propagation and no revised target text. Audit existing harness cases before execution; old assertions remain untouched. Human label review is recorded separately; ambiguous labels block acceptance and may be exercised diagnostically.
 
 Target: production Edge `assessment-api` version 9 source retrieved via MCP. Use its actual handler to construct each request and apply its validation/filtering. Target model `qwen3.5-flash`, temperature 0, max_tokens 600, enable_thinking false, JSON object response. No target format/semantic retry; record truncation as a validity error. Two repetitions, no seed supplied, no best-run selection. Worker count is CLI-configurable, default four. Resume preserves completed requests and errors rather than resampling.
 

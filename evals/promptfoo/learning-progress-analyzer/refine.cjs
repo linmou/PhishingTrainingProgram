@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: freeze full prompt-only transfer refinements, reuse identical saved inputs, and compare all preserved gates.
+// Purpose: freeze full prompt-only learning-progress analyzer refinements, reuse identical saved inputs, and compare all preserved gates.
 'use strict';
 const fs=require('node:fs');
 const path=require('node:path');

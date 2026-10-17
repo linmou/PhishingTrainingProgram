@@ -1,4 +1,4 @@
-# Transfer analysis gold-label review
+# Learning-progress analyzer gold-label review
 
 Intent: make the expected classification labels inspectable before accepting an accuracy claim or tuning a prompt.
 
@@ -9,7 +9,7 @@ Review priorities: E08 (sufficient short pricing recognition), H03 (scope of the
 
 The raw-event gold label describes the intended semantic classification. The applied-state check exposes consumer losses; a rejected event is not automatically a correct no-evidence label. Full-understanding classifications are scoped to this one target. No-event means no supported state-changing event, which can include already-covered or repeated-partial cases.
 
-[Run findings](../../../tutor-system/docs/ai-behaviors/transfer-analysis-evaluation-record.md) · [Complete context and labels](../../../output/transfer-analysis-eval-20261013/baseline-01/frozen.json)
+[Run findings](../../../tutor-system/docs/ai-behaviors/learning-progress-analyzer-evaluation-record.md) · [Complete context and labels](../../../output/transfer-analysis-eval-20261013/baseline-01/frozen.json)
 
 | Case / source | Target and prior state | Current learner words | Expected event | Label rationale |
 | --- | --- | --- | --- | --- |

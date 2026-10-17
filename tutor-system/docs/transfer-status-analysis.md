@@ -1,10 +1,12 @@
-# Transfer Status Analysis
+# Learning-progress analyzer dialogue contract
 
 Intent: define the room dialogue and evidence contract used when judging one learner message.
 
-Updated: 2026-10-14
+Updated: 2026-10-17. Naming review baseline: `518a07d`.
 
 Status decisions and the structured output rules are defined in [the transfer status response contract](ai-behaviors/transfer-status-response-contract.md).
+
+This is the learning-progress analyzer's product input/application contract. Its [evaluation suite](../../evals/promptfoo/learning-progress-analyzer/README.md) scores evidence classification and progress consequences; assessment-question generation is a separate operation. The filename and RPC identifiers retain their existing integration names.
 
 ## Input
 

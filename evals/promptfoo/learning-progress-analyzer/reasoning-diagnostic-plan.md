@@ -1,4 +1,4 @@
-# Transfer reasoning-budget diagnostic
+# Learning-progress analyzer reasoning-budget diagnostic
 
 Intent: test whether the remaining procedural mistakes arise partly from the current low-budget, reasoning-disabled request configuration.
 

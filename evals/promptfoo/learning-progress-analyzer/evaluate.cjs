@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Purpose: freeze and evaluate production transfer-analysis classifications against preserved gold labels.
+// Purpose: freeze and evaluate production learning-progress-analyzer classifications against preserved gold labels.
 'use strict';
 
 const fs = require('node:fs');
@@ -166,9 +166,9 @@ function freeze(runDir, comparisonMode = 'prompt', freshHoldouts = null) {
   const candidate = loadProduction(candidateSnapshot);
   if (comparisonMode === 'routing' && candidate.evaluationPrompt !== production.evaluationPrompt) throw new Error('This routing-only comparison requires an unchanged analysis prompt');
   const settings = { model: 'qwen3.5-flash', temperature: 0, max_tokens: 600, enable_thinking: false, response_format: { type: 'json_object' }, repetitions: 2, seed: null, timeout_ms: 90000, target_attempts: 1, num_workers: 4, evaluator: 'deterministic gold-label comparison', human_label_review: 'pending', model_judge: null };
-  const paths = ['tutor-system/docs/ai-behaviors/constitution.md', 'tutor-system/docs/ai-behaviors/tutor-behavior-specification.md', 'tutor-system/docs/ai-behaviors/transfer-status-response-contract.md', 'tutor-system/docs/ai-behaviors/transfer-analysis-evaluation-plan.md', 'evals/promptfoo/transfer-analysis/development.json', 'evals/promptfoo/transfer-analysis/holdouts.json', 'evals/promptfoo/transfer-analysis/final-assessment-cases.json', 'evals/promptfoo/transfer-analysis/final-assessment-holdouts.json', 'evals/promptfoo/transfer-analysis/evaluate.cjs'];
-  paths.push('evals/promptfoo/transfer-analysis/final-assessment-refinement-holdouts.json', 'evals/promptfoo/transfer-analysis/final-assessment-refinement-holdouts-v2.json');
-  if (freshHoldouts) paths.push(path.posix.join('evals/promptfoo/transfer-analysis', freshHoldouts));
+  const paths = ['tutor-system/docs/ai-behaviors/constitution.md', 'tutor-system/docs/ai-behaviors/tutor-behavior-specification.md', 'tutor-system/docs/ai-behaviors/transfer-status-response-contract.md', 'tutor-system/docs/ai-behaviors/learning-progress-analyzer-evaluation-plan.md', 'evals/promptfoo/learning-progress-analyzer/development.json', 'evals/promptfoo/learning-progress-analyzer/holdouts.json', 'evals/promptfoo/learning-progress-analyzer/final-assessment-cases.json', 'evals/promptfoo/learning-progress-analyzer/final-assessment-holdouts.json', 'evals/promptfoo/learning-progress-analyzer/evaluate.cjs'];
+  paths.push('evals/promptfoo/learning-progress-analyzer/final-assessment-refinement-holdouts.json', 'evals/promptfoo/learning-progress-analyzer/final-assessment-refinement-holdouts-v2.json');
+  if (freshHoldouts) paths.push(path.posix.join('evals/promptfoo/learning-progress-analyzer', freshHoldouts));
   const artifacts = paths.map(file => ({ path: file, sha256: hash(fs.readFileSync(path.join(root, file), 'utf8')), content: fs.readFileSync(path.join(root, file), 'utf8') }));
   const frozen = { run_id: path.basename(runDir), frozen_at: new Date().toISOString(), baseline: 'unchanged production assessment-api v9; prompt and handler from MCP snapshot; historical Partial-state route', candidate: 'working-tree analysis contract and handler; Partial-to-Covered route', comparison: 'One real target generation replayed through both frozen handlers; both routes scored against revised policy. No prompt effect claimed.', candidate_snapshot: candidateSnapshot, settings, metrics: metricIds, expected_generations: cases.length * settings.repetitions, thresholds: { raw_event: 0.8, applied_state: 0.8, assessment_route: 0.8, validity: 1 }, required_suites: [...new Set(cases.map(c => c.suite))], required_partitions: [...new Set(cases.map(c => c.partition))], prompt: production.evaluationPrompt, prompt_sha256: hash(production.evaluationPrompt), cases, artifacts, production_snapshot: snapshot, production_functions: json(path.join(sourceDir, 'production-functions.json')), source_export_sha256: hash(exported), applicability_audit: [...auditExisting(), ...retained.map(c => ({ case_id: c.id, classification: 'refine', preserved_assertions: ['raw_event', 'applied_state', 'validity'], changed_assertion: 'assessment_route', reason: 'Same input and classification gold; route now follows approved Partial-to-Covered policy. Original baseline remains immutable; current scorecard uses item events and assessment eligibility.' }))], git_revision: execFileSync('git', ['rev-parse','HEAD'], { cwd: root, encoding: 'utf8' }).trim(), git_status: execFileSync('git', ['status','--short'], { cwd: root, encoding: 'utf8' }), grounding_review: 'Resolved under adopted constitution 1.0 and explicit human Partial-only decision', label_review: 'Agent-authored policy-grounded gold labels; human review pending. Diagnostic freeze, acceptance blocked pending review.' };
   frozen.comparison_mode = comparisonMode;
@@ -361,7 +361,7 @@ function report(runDir) {
 module.exports={loadProduction,targetState,eligible,baselineEligible,buildCases,buildRevisionCases,executeTarget,score,summarize};
 if(require.main===module){
   const [command,dir,...args]=process.argv.slice(2);
-  const runDir=path.resolve(root,dir||'output/transfer-analysis-eval-20261013/baseline-01');
+  const runDir=path.resolve(root,dir||'output/learning-progress-analyzer/baseline-01');
   const numWorkers=args.includes('--num_workers')?Number(args[args.indexOf('--num_workers')+1]):4;
   if(!Number.isInteger(numWorkers)||numWorkers<1||numWorkers>8)throw new Error('num_workers must be 1–8');
   const comparisonMode=args.includes('--comparison')?args[args.indexOf('--comparison')+1]:'prompt';
