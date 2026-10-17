@@ -1,6 +1,6 @@
 # Assessment result messages
 
-<!-- Intent: define the approved public result-message contract and its consumers. Updated: 2026-10-17. Baseline commit: c6d5129. -->
+<!-- Intent: define the approved public result-message contract and its consumers. Updated: 2026-10-17. Runtime release commit: 518a07d; baseline: c6d5129. -->
 
 ## Grading and publication
 

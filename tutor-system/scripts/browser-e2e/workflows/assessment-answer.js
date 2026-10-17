@@ -127,7 +127,8 @@ async function answer(ctx, label, selections, expectedStatus) {
     assert.deepEqual(attempt.selected_option_ids, [selections[index]]);
     assert(answers.some(row => row.id === attempt.answer_message_id), 'Attempt references a different learner answer');
   }
-  const terminalAnswer = answers.at(-1);
+  const terminalAnswer = answers.find(row => row.id === attempts.at(-1).answer_message_id);
+  assert(terminalAnswer, 'Terminal accepted attempt has no bound learner answer');
   const terminalTutor = await tutoringStep(ctx, { room: fixture.room }, {
     label: `answer-${label}-terminal-tutor`, focusMessageId: terminalAnswer.id,
     expectedAssessmentCount: 1,

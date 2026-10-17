@@ -48,7 +48,7 @@ This checklist validates the historical component-102 target specification. Its 
 
 ## Assessment dialogue acceptance (2026-10-17)
 
-- [ ] AR-20261017 Backend delivery: atomic result/closure messages, backfill, protected provenance, non-consuming processing, readiness and owner-only clearing. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
+- [x] AR-20261017 Backend delivery: atomic result/closure messages, backfill, protected provenance, non-consuming processing, readiness and owner-only clearing. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 

@@ -22,7 +22,7 @@ React and `ai-api` import `DEFAULT_AI_MODEL` from `src/services/aiModels.ts`, se
 
 The learning-progress analyzer uses the candidate02 policy with target-text evidence rules at temperature0, max_tokens600 and enable_thinkingfalse. The current unified-target revision is tracked in the [unified release record](doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md). The earlier candidate selection and its observed semantic errors are recorded in [candidate release evidence](doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md). Assessment-question generation remains a separate call with its existing settings.
 
-For an assessment answer, RoomContext supplies verified assessment feedback facts through `generateTutorSuggestion` options. The service includes that structured state in the system context so the model follows the recorded resolution and attempt count. Open assessments omit the answer key and terminal explanation. Missing backend lifecycle data blocks generation at RoomContext before the provider is called.
+Assessment grading creates deterministic backend result messages. `generateTutorSuggestion` receives the focused learner identity and expected result-message IDs; history assembly includes public questions/options, learner selections and attributed saved results. Trusted readiness recovers pending processing and blocks incomplete authority before the provider call, including after transfer learning is disabled. Common static instructions preserve retry privacy, cancellation handling, backend grading and the human tutor-feedback gate. The private review payload is excluded from the tutor prompt.
 
 ## Architecture Overview
 

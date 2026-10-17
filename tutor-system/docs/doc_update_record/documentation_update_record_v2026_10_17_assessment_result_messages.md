@@ -2,7 +2,7 @@
 
 Intent: record implementation, requirement alignment and release evidence for persisted assessment result messages replacing dynamic tutor assessment state.
 
-Updated: 2026-10-17. Baseline commit: `c6d51296f42ab84b2fb42d879cb1ff4db8580eae`.
+Updated: 2026-10-17. Runtime release commit: `518a07dfa519cd1f0cbd772d19408e1292be577d`; baseline: `c6d51296f42ab84b2fb42d879cb1ff4db8580eae`.
 
 ## Approved behavior and release scope
 
@@ -10,7 +10,7 @@ The user approved the reviewed plan on 2026-10-17. Backend exact-set grading cre
 
 Changed factors: result persistence/publication, historical backfill, API DTO projections, question/result history formatting, request invariant instructions, lifecycle restoration and result presentation. Grading, attempt limits, target scheduling and tutor-feedback gates retain their existing meaning.
 
-Batch: `assessment-results-dialogue-2026-10-17`. Release owner: Codex `/root`. Target integration branch: `no_sign_up`. Status: staging verified — awaiting integrated production release. Staging: `ciubrzggdqesgvfkpolj`; production: `zgbufaxooqxeabewktzd`.
+Batch: `assessment-results-dialogue-2026-10-17`. Release owner: Codex `/root`. Integrated branch: `no_sign_up`. Status: production verified. Staging: `ciubrzggdqesgvfkpolj`; production: `zgbufaxooqxeabewktzd`.
 
 ## Verification and acceptance
 
@@ -66,3 +66,23 @@ Final staging assessment-api64 uses source manifest `bec61a9a22f69467b36bd608828
 Full assessment workflow `staging-template-20261017204507-647e5e92` passed pass/retry/failure results, public options and causal outbound history, no LLM calls for grading, human follow-up binding, reload and rating gates, ambiguity and Guard recovery, individual-event/learner-clear denial, actual owner UI backup/clear and assistance cancellation. All3 distinct fixture rooms cleaned successfully, including the reused pass room. Real Qwen3.8 initial/regenerated retry responses preserved the solution and the remaining attempt; unscored Guard responses acknowledged the selection and awaited backend processing; cancellation responses provided assistance without inventing a grade. Full inputs/outputs, stored rows and screenshots remain in the run directory. Ordinary tutor workflow `staging-template-20261017204507-25770e53` also passed and cleaned its fixture.
 
 Production source preflight at `2026-10-17T20:45:49.811Z` matches the original exported catalog/data baseline with `differences=[]`:5 attempts,5 assessments,531 original messages. No production mutation has occurred. Promotion trigger: commit the tested source directly on `no_sign_up`, freeze/compare its SQL, Edge dependency and compiled-client manifests, recheck deployed staging source/configuration and production preconditions, then apply SQL before Edge and run these same production acceptance cases. Root owns the batch and inherited unchanged ai-api dependency. Production criteria remain open until the corresponding checks and cleanup pass.
+
+Integrated release commit: `518a07dfa519cd1f0cbd772d19408e1292be577d` on `no_sign_up`; all67 assessment-message files are committed. An initially overbroad local staging operation briefly included concurrent evaluation cleanup; the unpublished commit was corrected to contain only this task's changes, preserving the concurrent working files. No production mutation used the discarded commit.
+
+The frozen manifest verifies all140 runtime/build source files byte-for-byte against that integrated commit. Source aggregate: `500f7c0de49c40c354a8485a30760ed23799c4fa99a8589c00a2b6ebc74f9b48`; compiled production assets: `e4a5a30c1b5d916680c6e258c50fa9e00797bee2ab3cc4896061c3aaff30828e`; staging assets: `d06ca47ce146d13c6dd481621107c7734f35c7f93fc211e22f2ab0ae162ab356`. Detailed manifest: `integrated-release-manifest.json` in the evidence root. The tracked [artifact summary](assessment-results-dialogue-2026-10-17.artifacts.json) retains exact SQL/Edge/dependency/client hashes. Staging64 and its inherited ai-api4 were rechecked after integration; source/configuration match, and the post-cleanup SQL verification retains exactly31 study events and unchanged private hashes. These identical artifacts reuse the successful staging evidence. Production promotion is now authorized by the recorded release trigger, with production acceptance still open.
+
+## Production application and acceptance
+
+Production SQL applied at `2026-10-17T20:49:41.351Z`, backfilling7 events (5 results/2 closures), with zero unavailable assessments. Its idempotent recheck inserted0, preserved all5 original private attempts/assessments and their hashes, and confirmed matching object definitions/ACLs with processing RLS enabled. Production assessment-api14 has the identical staging-tested source manifest `bec61a9a22f69467b36bd60882828a50eeb3f28431c00a910aaf7ef6451b8756`; project-specific bundle `2ca7e7edc74a45197ae9e77df734f3bfa87d19b74e8cabf5c4315422bfa83cb6`. Supabase MCP retrieved all10 deployed runtime source files; every file matches the integrated manifest/local source. Evidence: `production-source-proof.json`.
+
+Ordinary production tutor workflow `production-template-20261017204954-42f688af` passed with cleanup. The assessment run `production-template-20261017204954-8d77a6c2` passed deterministic grading, pass follow-up and valid/private retry drafts, then exposed an unordered test query: its oracle used the last physical answer row instead of the terminal accepted attempt. The browser assertion failed before generating terminal-failure feedback; both fixture cleanups passed. The test now selects the answer ID from the last authoritative ordered attempt. This changes the browser oracle only; all deployed SQL/Edge/client artifacts remain identical. Production assessment acceptance is being rerun and remains open.
+
+## Release closure
+
+Production assessment workflow `production-template-20261017205209-9ec3d5c3` passed all four cases (pass, retry/failure, ambiguity/Guard recovery with owner backup/clear, assistance cancellation), initial/regenerated real-provider drafts, safe dialogue history and all3 distinct fixture cleanups. The browser-runner unit suite passes20 tests after the oracle correction. Captured learner-facing retry responses preserve the remaining attempt without supplying the solution; unscored Guard responses wait for backend grading; cancellation feedback does not invent an assessment result. Persisted grade/result creation remains deterministic with no grading provider call. Inputs, outputs, authoritative rows, backup exports and screenshots are retained in both final run directories.
+
+Final production inspection at `2026-10-17T20:54:14.514Z` retains7 historical events, zero duplicates/unready histories and zero fixture processing rows. Production Supabase MCP confirms all531 original messages are byte-equivalent after excluding the added null event column (hash `288142f6c3a944ebfe12b4aad750cbc5`), and all5 original attempts/assessments retain their original hashes. No accepted result lacks its saved message. The MCP read-only role correctly cannot execute the private readiness helper; the final table-level inspection uses its permitted SELECT scope, while the authorized Management API separately verifies zero unready histories. Staging retains31 historical events and unchanged26 attempts/22 assessments. Required releases, selected checks and cleanup have passed.
+
+The exact applied SQL is archived at `tutor-system/supabase/archived_migrations/20261017000000_assessment_result_messages.sql`, SHA-256 `830828444f5f91bb66378651cb47b37f402a8eb91ce63710b94fd83515680407`. No pending migration remains. Client builds were verified as locally served compiled artifacts against the hosted staging/production backends; this record does not describe a separate public frontend-hosting deployment. Runtime source is the integrated release commit; subsequent closeout changes are documentation, test-oracle correction and SQL archival.
+
+The two local compiled-client HTTP servers and the dedicated PostgreSQL validation cluster were stopped after verification; source snapshots and evidence remain available. Plan tasks and component101–104 assessment-dialogue acceptance markers are complete. The spec contains a concern-ordered review trail. No runtime source changed after the frozen production promotion.

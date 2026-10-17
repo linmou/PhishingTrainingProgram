@@ -33,7 +33,7 @@
 
 ## Assessment dialogue acceptance (2026-10-17)
 
-- [ ] AR-20261017 UI delivery: result attribution, all-ingress lifecycle, retry privacy, export linkage and separate human feedback/rating gates. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
+- [x] AR-20261017 UI delivery: result attribution, all-ingress lifecycle, retry privacy, export linkage and separate human feedback/rating gates. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 

@@ -2,7 +2,7 @@
 title: Record assessment results in dialogue history
 type: feature
 created: 2026-10-17
-status: in-review
+status: done
 baseline_commit: c6d51296f42ab84b2fb42d879cb1ff4db8580eae
 approved: 2026-10-17
 context:
@@ -88,15 +88,15 @@ Paths below are relative to `tutor-system/` except the requirements paths in the
 
 **Execution:**
 
-- [ ] `supabase/migrations/20261017000000_assessment_result_messages.sql` — event metadata/uniqueness/protection; transactional grade and both cancellation paths; historical backfill; readiness/projection changes; all affected feedback predicates.
-- [ ] `supabase/tests/assessment_result_messages.sql` — matrix, role/legacy-write protection, backfill invariance, Guard deferral, duplicates/concurrency and fault rollback against restored baselines.
-- [ ] `supabase/functions/assessment-api/index.ts`, `index.test.ts` — safe event/result DTO projection and readiness contract, including duplicate and cancellation returns.
-- [ ] `src/services/transferAssessmentService.ts`, `src/contexts/transferAssessmentUiAdapter.ts`, `src/types/index.ts` — typed safe projections, immediate result merge and lifecycle hydration.
-- [ ] `src/services/simplifiedAIContext.ts`, `src/services/ecologicalTutorCall.ts`, `src/services/aiService.ts`, `src/types/assessment.ts` — public question/result history, readiness validation, shared request rules and removal of prompt-only feedback state.
-- [ ] `src/contexts/RoomContext.tsx`, `src/pages/RoomPagePost.tsx`, `src/components/PostComment.tsx`, `src/components/PublicAssessmentQuestion.tsx`, `src/utils/messagePresentation.ts`, `src/contexts/roomExportBuilder.ts` — all-ingress lifecycle, stable common ordering, one result display, rating exclusion, attribution and exports. Use one shared ordering helper for UI/history.
-- [ ] Existing Edge/service/context/component/export suites and browser runner — verify these contracts using bounded workers; add focused prompt evaluation fixtures through the existing product/evaluation assembly.
-- [ ] Documents in the impact table — align requirements/contracts first, then record verified implementation and release evidence.
-- [ ] Release owner Codex `/root` — validate SQL locally, deploy/verify staging, integrate into `no_sign_up`, freeze artifacts, and promote/verify production in dependency order.
+- [x] `supabase/archived_migrations/20261017000000_assessment_result_messages.sql` — event metadata/uniqueness/protection; transactional grade and both cancellation paths; historical backfill; readiness/projection changes; all affected feedback predicates.
+- [x] `supabase/tests/assessment_result_messages.sql` — matrix, role/legacy-write protection, backfill invariance, Guard deferral, duplicates/concurrency and fault rollback against restored baselines.
+- [x] `supabase/functions/assessment-api/index.ts`, `index.test.ts` — safe event/result DTO projection and readiness contract, including duplicate and cancellation returns.
+- [x] `src/services/transferAssessmentService.ts`, `src/contexts/transferAssessmentUiAdapter.ts`, `src/types/index.ts` — typed safe projections, immediate result merge and lifecycle hydration.
+- [x] `src/services/simplifiedAIContext.ts`, `src/services/ecologicalTutorCall.ts`, `src/services/aiService.ts`, `src/types/assessment.ts` — public question/result history, readiness validation, shared request rules and removal of prompt-only feedback state.
+- [x] `src/contexts/RoomContext.tsx`, `src/pages/RoomPagePost.tsx`, `src/components/PostComment.tsx`, `src/components/PublicAssessmentQuestion.tsx`, `src/utils/messagePresentation.ts`, `src/contexts/roomExportBuilder.ts` — all-ingress lifecycle, stable common ordering, one result display, rating exclusion, attribution and exports. Use one shared ordering helper for UI/history.
+- [x] Existing Edge/service/context/component/export suites and browser runner — verify these contracts using bounded workers; add focused prompt evaluation fixtures through the existing product/evaluation assembly.
+- [x] Documents in the impact table — align requirements/contracts first, then record verified implementation and release evidence.
+- [x] Release owner Codex `/root` — validate SQL locally, deploy/verify staging, integrate into `no_sign_up`, freeze artifacts, and promote/verify production in dependency order.
 
 **Acceptance Criteria:**
 
@@ -127,3 +127,39 @@ Batch `assessment-results-dialogue-2026-10-17`, release owner Codex `/root`: val
 - 2026-10-17: Requirements review corrected pass feedback to correctness-only and identified room-wide terminal-failure disclosure as a contract change. Added source-level documentation and evaluation alignment tasks. Preserve backend grading and the current tutor-feedback gate.
 - 2026-10-17: Three independent reviewers passed request/requirements scope but rejected persistence rollout, history completeness, UI/API integration and evidence coverage. Added authoritative historical backfill, explicit event/API contract, options/provenance/history readiness, preserved invariant rules, complete ingress/display/rating tasks, and targeted deterministic/provider/release checks. Original draft and reviews are retained under `audits/assessment_results_plan_*`.
 - 2026-10-17: Implementation review identified unscored-answer readiness, multi-learner scope, feature-disable bypass and clear-history regression. Specify private non-consuming processing provenance, deterministic recovery and a trusted atomic clear operation. Real-provider retry feedback leaked the solution, requiring a stronger invariant retry instruction and repeat initial/regenerated provider evaluation. Preserve accepted-attempt grading, atomic public result creation, causal history, backfill and existing tutor gates.
+
+## Suggested Review Order
+
+**Tutor generation**
+
+- Start at tutor generation: assessment facts now arrive through saved dialogue.
+  [aiService.ts:884](../../tutor-system/src/services/aiService.ts#L884)
+
+**Persistence and readiness**
+
+- Check atomic grading, result identity and failure-only reviewed disclosure.
+  [20261017000000_assessment_result_messages.sql:116](../../tutor-system/supabase/archived_migrations/20261017000000_assessment_result_messages.sql#L116)
+
+- Check learner-scoped readiness, recovery and complete ordinary dialogue.
+  [simplifiedAIContext.ts:75](../../tutor-system/src/services/simplifiedAIContext.ts#L75)
+
+**Request behavior**
+
+- Review invariant retry, unscored-answer and Guard instructions shared across request paths.
+  [ecologicalTutorCall.ts:26](../../tutor-system/src/services/ecologicalTutorCall.ts#L26)
+
+**Room presentation**
+
+- Follow causal merging and lifecycle restoration across message ingress paths.
+  [transferAssessmentUiAdapter.ts:458](../../tutor-system/src/contexts/transferAssessmentUiAdapter.ts#L458)
+
+- Confirm automatic attribution and rating exclusion.
+  [PostComment.tsx:162](../../tutor-system/src/components/PostComment.tsx#L162)
+
+**Verification**
+
+- Review deterministic privacy, rollback, permissions, recovery and clearing regressions.
+  [assessment_result_messages.sql:1](../../tutor-system/supabase/tests/assessment_result_messages.sql#L1)
+
+- Check exact staging/production artifacts, real-provider evidence and cleanup.
+  [documentation_update_record_v2026_10_17_assessment_result_messages.md:1](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_17_assessment_result_messages.md#L1)

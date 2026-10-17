@@ -230,4 +230,4 @@ US1 delivery -> US5 provider generation
 
 ## Assessment dialogue follow-up (2026-10-17)
 
-- [ ] AR-20261017 Verify atomic saved results, backfill, provenance, readiness, public DTOs and staged production release. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.
+- [x] AR-20261017 Verify atomic saved results, backfill, provenance, readiness, public DTOs and staged production release. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.

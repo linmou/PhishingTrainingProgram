@@ -287,4 +287,4 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 
 ## Assessment dialogue follow-up (2026-10-17)
 
-- [ ] AR-20261017 Verify saved-message/history identity and disclosure, controlled orchestration and actual-provider behavior evidence. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.
+- [x] AR-20261017 Verify saved-message/history identity and disclosure, controlled orchestration and actual-provider behavior evidence. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.

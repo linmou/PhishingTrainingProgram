@@ -35,7 +35,7 @@
 
 ## Assessment dialogue acceptance (2026-10-17)
 
-- [ ] AR-20261017 Domain preservation: exact-set grading, two attempts, correctness-only pass and terminal-failure-only reviewed disclosure. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
+- [x] AR-20261017 Domain preservation: exact-set grading, two attempts, correctness-only pass and terminal-failure-only reviewed disclosure. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 
