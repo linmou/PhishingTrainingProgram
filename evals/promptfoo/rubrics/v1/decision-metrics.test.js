@@ -171,7 +171,7 @@ test('v0 archives match all 13 legacy evaluators without modifying their existin
 
 test('v1 file hashes and requirement mappings reconcile, with no composite turn_rhythm', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'manifest.json'), 'utf8'));
-  assert.equal(manifest.version, 'v1.3');
+  assert.equal(manifest.version, 'v1.4');
   assert.ok(['draft_uncalibrated', 'frozen'].includes(manifest.status));
   for (const entry of manifest.files) {
     assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, entry.file))).digest('hex'), entry.sha256);
