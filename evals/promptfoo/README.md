@@ -2,9 +2,24 @@
 
 Intent: document how to review and run the local Promptfoo benchmark for tutor prompt behavior before spending live LLM calls or changing production prompts.
 
-Updated: 2026-10-15
+Updated: 2026-10-17
 
 Source baseline commit: `8dc7271`
+
+Naming review baseline: `c6d5129`.
+
+## Evaluation map
+
+| Responsibility | Entry point | Scoring |
+| --- | --- | --- |
+| Classify student learning evidence and apply progress | [learning-progress-analyzer/](learning-progress-analyzer/README.md), formerly `transfer-analysis/` | Reference-label classification metrics and deterministic consumer checks |
+| Classify tutor mode and teaching action | [v1/classification.js](v1/classification.js), using the tutor suite's cases and saved outputs | Reference labels/allowed sets, accuracy and classification metrics |
+| Evaluate the tutor's generated response | [v1/](v1/README.md) | Semantic judges plus deterministic contract/length checks |
+| Evaluate transfer assessments and lifecycle | [v1/transfer/](v1/transfer/) | Semantic assessment checks plus deterministic lifecycle/contract checks |
+| Diagnose contextual reply interpretation | [contextual-reply cases](v1/contextual-reply-plan.md) | Existing tutor checks plus current-turn grounding |
+| Explore evolving learner/tutor conversations | [v1/simulated/](v1/simulated/README.md) | Exploratory conversation judges and structural checks |
+
+`classification.js` is a scorer, not a separate case suite. Analyzer prompt candidates are in `learning-progress-analyzer/refinement-policy-*.md`; tutor candidates are in `v1/candidate-policy*.md` and `refinement-20261014/`. Run snapshots identify the exact tested prompt and evaluator. The commands and scoring below document the legacy Promptfoo benchmark; the current specification-derived runner is documented in `v1/README.md`.
 
 The [current shortcut-removal experiment](refinement-20261014/README.md) uses the specification-derived [v1 runner](v1/README.md), production request packaging and three repetitions. The legacy commands below retain their own scoring contract. Their quality gate now requires a frozen expected-case/assertion manifest and rejects missing, duplicate, malformed, or errored evidence. `npm run eval:prompts` writes that manifest before generation and includes it in `gated-report.json` and `latest.json`.
 
