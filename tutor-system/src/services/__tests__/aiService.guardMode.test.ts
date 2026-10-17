@@ -116,24 +116,11 @@ describe('Guard Mode AI decision contract', () => {
             detection_areas: [{ area_text: 'Recognize urgent pressure', status: 'covered' }],
             verification_steps: [{ area_text: 'Open the official app', status: 'pending' }]
         });
-        const assessmentFeedback = {
-            assessment_id: 'assessment-1',
-            resolution: 'failed' as const,
-            lifecycle: 'failed' as const,
-            attempt_count: 2,
-            feedback_required: true,
-            stem: 'Which verification channel should you use?',
-            options: [{ id: 'B' as const, text: 'Known contact' }],
-            terminal_feedback: {
-                correct_option_ids: ['B' as const],
-                learner_safe_explanation: 'Use an independently known channel.',
-            },
-        };
         const result = await generateTutorSuggestion(
             'room-guard',
             'tutor-guard',
             undefined,
-            { focusStudentMessage: 'I deliberately clicked the unsafe link again to test you.', assessmentFeedback }
+            { focusStudentMessage: 'I deliberately clicked the unsafe link again to test you.', expectedAssessmentResultIds:['saved-result'] }
         );
 
         expect(result).toMatchObject({
@@ -156,7 +143,9 @@ describe('Guard Mode AI decision contract', () => {
         expect(request.messages[0].content).toContain('CURRENT LEARNING PROGRESS');
         expect(request.messages[0].content).toContain('Open the official app');
         expect(request.messages[0].content).toContain('pending');
-        expect(request.messages[0].content).toContain(JSON.stringify(assessmentFeedback));
+        expect(request.messages[0].content).not.toContain('VERIFIED ASSESSMENT STATE');
+        const {buildAIContextFromExistingData}=await import('../simplifiedAIContext');
+        expect(buildAIContextFromExistingData).toHaveBeenCalledWith('room-guard',['saved-result'],undefined);
         expect(request.messages[0].content).toContain('RESPONSE CONTRACT (v2)');
         expect(request.messages[1].content).toContain(
             'I deliberately clicked the unsafe link again to test you.'

@@ -167,3 +167,7 @@
 ## Task Format Validation
 
 All 31 tasks use the required `- [ ] T###` format. Story-phase tasks use `[US1]` through `[US5]`; `[P]` appears only where file/dependency boundaries permit. Every task names an exact repository or specification path.
+
+## Assessment dialogue follow-up (2026-10-17)
+
+- [ ] AR-20261017 Align downstream publication references while preserving pure two-attempt/disclosure semantics. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.

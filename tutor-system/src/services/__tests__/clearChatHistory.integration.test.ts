@@ -1,29 +1,24 @@
 /**
  * @jest-environment jsdom
  */
+// Responsibility: supabase.ts clearChatHistory authorization and trusted transactional clear delegation.
 
 import { clearChatHistory } from '../supabase';
 
 // Mock the supabase client and dependencies
-jest.mock('../supabase', () => {
-    const originalModule = jest.requireActual('../supabase');
-    
-    const mockSupabaseClient = {
+jest.mock('@supabase/supabase-js', () => ({
+    createClient: jest.fn(() => ({
         auth: {
             getUser: jest.fn()
         },
         from: jest.fn()
-    };
-
-    return {
-        ...originalModule,
-        supabase: mockSupabaseClient,
-        // Don't mock clearChatHistory - we want to test the real implementation
-    };
-});
+    }))
+}));
+jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{clearChatHistory:jest.fn()}}));
 
 // Import after mocking
 import { supabase } from '../supabase';
+import { transferAssessmentService } from '../transferAssessmentService';
 
 describe('Clear Chat History Integration Tests', () => {
     const mockRoomId = 'test-room-id';
@@ -38,6 +33,7 @@ describe('Clear Chat History Integration Tests', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (transferAssessmentService.clearChatHistory as jest.Mock).mockResolvedValue({success:true});
     });
 
     describe('GREEN PHASE - Tests should pass with implementation', () => {
@@ -170,14 +166,17 @@ describe('Clear Chat History Integration Tests', () => {
                 prePopulatedMessagesPreserved: true
             });
             
-            // Verify all tables were targeted for deletion
+            // The actual database transaction is covered by assessment_result_messages.sql.
             expect(mockSupabase.from).toHaveBeenCalledWith('users');
             expect(mockSupabase.from).toHaveBeenCalledWith('rooms');
-            expect(mockSupabase.from).toHaveBeenCalledWith('messages');
-            expect(mockSupabase.from).toHaveBeenCalledWith('message_feedback');
+            expect(transferAssessmentService.clearChatHistory).toHaveBeenCalledWith(mockRoomId);
+            expect(mockDelete).not.toHaveBeenCalled();
+            expect(mockSupabase.from).not.toHaveBeenCalledWith('messages');
+            expect(mockSupabase.from).not.toHaveBeenCalledWith('message_feedback');
         });
 
         it('should handle database errors gracefully', async () => {
+            (transferAssessmentService.clearChatHistory as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
             // Mock successful user lookup
             const mockUserSingle = jest.fn().mockResolvedValueOnce({
                 data: mockTutorUser,
@@ -224,7 +223,7 @@ describe('Clear Chat History Integration Tests', () => {
                 };
             });
 
-            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow();
+            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow('Database error');
         });
     });
 });

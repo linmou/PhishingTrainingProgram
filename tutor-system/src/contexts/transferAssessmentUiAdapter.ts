@@ -4,6 +4,7 @@
 import type { Message, RoomParticipationMode } from '../types';
 import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, TransferAssessmentDraft } from '../types/assessment';
 import { validateAssessmentDraft } from '../services/assessmentValidation';
+import { orderAssessmentMessages, parseAssessmentEvent } from '../services/assessmentRendering';
 import {
   PUBLIC_MESSAGE_DTO_KEYS,
   TransferAssessmentService,
@@ -237,6 +238,8 @@ export function projectRoomMessage(
     publicQuestion: publicQuestionFromStoredRow(source, explicit),
     assessmentId: asNonEmptyString(source.assessment_id),
     answerLifecycle: null,
+    assessment_event: parseAssessmentEvent(source.assessment_event),
+    assessment_selected_option_ids: Array.isArray(source.assessment_selected_option_ids) ? source.assessment_selected_option_ids as AssessmentOptionId[] : null,
   };
 }
 
@@ -469,18 +472,43 @@ export function mergeRoomMessages(
         publicQuestion: incomingView.publicQuestion ?? currentView?.publicQuestion ?? null,
         answerLifecycle: incomingView.answerLifecycle ?? currentView?.answerLifecycle ?? null,
       }
-      : message;
+      : { ...message };
     byId.set(message.id, { message: merged, seen: current ? current.seen : byId.size });
   };
   existing.forEach(remember);
   incoming.forEach(remember);
 
-  const entries = Array.from(byId.values());
-  const time = (entry: { message: Message }) => new Date(entry.message.created_at).getTime() || 0;
-  const chronological = (left: { message: Message; seen: number }, right: { message: Message; seen: number }) =>
-    time(left) - time(right) || left.seen - right.seen;
-
-  const prePopulated = entries.filter((entry) => entry.message.id.startsWith('prepop-')).sort(chronological);
-  const persisted = entries.filter((entry) => !entry.message.id.startsWith('prepop-')).sort(chronological);
-  return [...prePopulated, ...persisted].map((entry) => entry.message);
+  const ordered = orderAssessmentMessages(Array.from(byId.values()).map(entry => entry.message));
+  // Rehydrate from persisted events on every ingress, including result-before-answer delivery.
+  for (const message of ordered) {
+    const event = message.assessment_event;
+    if (!event) continue;
+    const answer = event.answer_message_id ? byId.get(event.answer_message_id)?.message : undefined;
+    const lifecycle: AnswerLifecycleView = {
+      state: event.outcome ?? 'duplicate',messageId:event.answer_message_id ?? event.question_message_id,
+      assessmentId:event.assessment_id,processingState:event.progress_deferred ? 'deferred' : 'applied',
+      answerOutcome:event.outcome,attemptNumber:event.attempt_number,attemptsUsed:event.attempts_used,
+      attemptsRemaining:event.attempts_remaining,selectedOptionIds:answer?.assessment_selected_option_ids ?? null,
+      terminal:event.terminal,transition:null,code:event.closure_reason,feedbackRequired:event.kind==='result' && event.terminal,
+      alreadyProcessed:true,terminalFailureFeedback:null,
+    };
+    if (answer && event.kind==='result') {
+      const current=readAnswerLifecycle(answer);
+      if (!current || current.answerOutcome!==event.outcome || current.attemptNumber!==event.attempt_number) {
+        (answer as RoomMessageView).answerLifecycle=lifecycle;
+      }
+    }
+    const question = byId.get(event.question_message_id)?.message as RoomMessageView | undefined;
+    if (question?.publicQuestion) {
+      const current = question.answerLifecycle;
+      if (!current || (lifecycle.terminal && !current.terminal) ||
+        lifecycle.attemptsUsed>current.attemptsUsed || event.kind==='closure') {
+        question.answerLifecycle=lifecycle;
+      }
+      if (event.terminal && (question.publicQuestion.lifecycle==='delivered' || event.kind==='closure')) {
+        question.publicQuestion={...question.publicQuestion,lifecycle:event.lifecycle==='open' ? 'delivered' : event.lifecycle};
+      }
+    }
+  }
+  return ordered;
 }

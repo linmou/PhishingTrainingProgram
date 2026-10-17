@@ -5,6 +5,7 @@
 import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room, User, UserRole } from '../types';
 import { readAnswerLifecycle, readPublicQuestion } from './transferAssessmentUiAdapter';
 import type { AnswerLifecycleView } from './transferAssessmentUiAdapter';
+import type { AssessmentEvent } from '../types/assessment';
 
 interface PublicQuestionExport {
   id: string;
@@ -26,6 +27,8 @@ interface AnswerLifecycleExport {
 }
 
 type RoomExportMessage = ChatExportData['messages'][number] & {
+  assessment_event?: AssessmentEvent;
+  parent_message_id?: string | null;
   public_question?: PublicQuestionExport;
   answer_lifecycle?: AnswerLifecycleExport;
 };
@@ -236,12 +239,13 @@ export const buildRoomTextExport = ({
       const feedbackInfo = feedbackStats && feedbackStats.total_feedback_count > 0
         ? ` [👍${feedbackStats.like_count} 👎${feedbackStats.dislike_count}${feedbackStats.overall_average_rating ? ` ★${feedbackStats.overall_average_rating.toFixed(1)}` : ''}]`
         : '';
-      const line = `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
+      const line = `[${message.created_at}] ${message.assessment_event ? 'Assessment result' : message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
       const lifecycle = readPublicQuestion(message)
         ? lifecycleForQuestion(messages, message, userRole, userId)
         : null;
       return [
         line,
+        ...(message.assessment_event ? [`   Assessment event: ${JSON.stringify(message.assessment_event)}`] : []),
         ...renderPublicQuestionLines(message),
         ...renderAnswerLifecycleLines(lifecycle),
       ];
@@ -274,6 +278,8 @@ export const buildRoomExportData = ({
         : null;
       return {
         id: msg.id,
+        parent_message_id: msg.parent_message_id,
+        ...(msg.assessment_event ? {assessment_event:msg.assessment_event} : {}),
         user_role: msg.user_role,
         display_name: msg.display_name,
         content: msg.content,

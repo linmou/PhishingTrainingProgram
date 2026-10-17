@@ -3,7 +3,8 @@
 import { supabase } from './supabase';
 import type { Room } from '../types';
 import type { LearningTargetInput } from '../types/checklist';
-import type { AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
+import type { AssessmentEvent, AssessmentHistoryReadiness, AssessmentOption, AssessmentOptionId, PrivateAssessment, TransferAssessmentDraft } from '../types/assessment';
+import { parseAssessmentEvent } from './assessmentRendering';
 import {
   PUBLIC_ASSESSMENT_DTO_KEYS,
   type AssessmentApiEnvelope,
@@ -23,6 +24,8 @@ export interface PublicAssessmentDTO {
 }
 
 export interface TutorAssessmentReview {
+  student_id?: string;
+  history_readiness: AssessmentHistoryReadiness;
   item_label: string;
   assessment: PrivateAssessment;
   resolution?: string;
@@ -32,6 +35,9 @@ export interface TutorAssessmentReview {
 }
 
 export interface PublicMessageDTO {
+  assessment_event?: AssessmentEvent | null;
+  assessment_id?: string | null;
+  assessment_selected_option_ids?: AssessmentOptionId[] | null;
   assessment_lifecycle?: string | null;
   id: string;
   room_id: string;
@@ -58,6 +64,10 @@ export const PUBLIC_MESSAGE_DTO_KEYS: ReadonlyArray<keyof PublicMessageDTO> = [
   'response_mode',
   'assessment',
   'created_at',
+  'assessment_lifecycle',
+  'assessment_event',
+  'assessment_id',
+  'assessment_selected_option_ids',
 ];
 
 export const PUBLIC_ASSESSMENT_FORBIDDEN_KEYS: ReadonlyArray<string> = [
@@ -86,6 +96,7 @@ export interface TerminalFailureFeedbackDTO {
 }
 
 export interface ProcessedMessageDTO {
+  result_message: PublicMessageDTO | null;
   message_id: string;
   assessment_id: string;
   processing_state: AssessmentProcessingState;
@@ -193,6 +204,9 @@ export function toPublicMessageDTO(value: unknown): PublicMessageDTO {
     parent_message_id: nullableString(source.parent_message_id),
     response_mode: nullableString(source.response_mode),
     assessment_lifecycle: nullableString(source.assessment_lifecycle),
+    assessment_event: parseAssessmentEvent(source.assessment_event),
+    assessment_id: nullableString(source.assessment_id),
+    assessment_selected_option_ids: optionIds(source.assessment_selected_option_ids),
     assessment: assessmentValue == null ? null : publicAssessment(assessmentValue),
     created_at: requiredString(source.created_at),
   };
@@ -231,7 +245,16 @@ function projectProcessedMessage(value: unknown): ProcessedMessageDTO {
     ? { correct_option_ids: feedbackIds, learner_safe_explanation: feedbackExplanation }
     : null;
   const rawAttempt = source.attempt_number;
+  if (!Object.prototype.hasOwnProperty.call(source,'result_message')) throw new Error('ASSESSMENT_RESULT_UNAVAILABLE');
+  const resultMessage = source.result_message == null ? null : toPublicMessageDTO(source.result_message);
+  if ((answerOutcome || source.code === 'assisted' || source.code === 'cancelled') && !resultMessage?.assessment_event) {
+    throw new Error('ASSESSMENT_RESULT_UNAVAILABLE');
+  }
+  const event = resultMessage?.assessment_event;
+  if (event && (event.assessment_id!==source.assessment_id ||
+    (event.kind==='result' && event.answer_message_id!==source.message_id))) throw new Error('INVALID_ASSESSMENT_EVENT');
   return {
+    result_message: resultMessage,
     message_id: requiredString(source.message_id),
     assessment_id: requiredString(source.assessment_id),
     processing_state: processingState(source.processing_state),
@@ -322,6 +345,10 @@ export class TransferAssessmentService {
 
   readReview(roomId: string, assessmentId: string): Promise<TutorAssessmentReview> {
     return this.request('read_review', { room_id: roomId, assessment_id: assessmentId });
+  }
+
+  clearChatHistory(roomId:string):Promise<{success:boolean;title:string;prePopulatedMessagesPreserved:boolean}> {
+    return this.request('clear_chat_history',{room_id:roomId});
   }
 
   editLearningProgress(input: {

@@ -387,12 +387,13 @@ const RoomPagePost: React.FC = () => {
         const latest = [...visibleMessages]
             .reverse()
             .find(message => (message.is_ai_generated || message.user_role === 'tutor')
+                && !message.assessment_event
                 && !message.id.startsWith('prepop-'));
 
         if (!latest) return null;
 
         const response = decodeAgentMessage(latest)?.character === 'riley'
-            ? [...visibleMessages].reverse().find(message => decodeAgentMessage(message)?.character === 'tutor') || latest
+            ? [...visibleMessages].reverse().find(message => !message.assessment_event && decodeAgentMessage(message)?.character === 'tutor') || latest
             : latest;
 
         if (completedRatingMessageId === response.id) return null;

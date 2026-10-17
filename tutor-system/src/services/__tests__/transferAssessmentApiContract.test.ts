@@ -129,7 +129,7 @@ describe('assessment API contract', () => {
   it('keeps the explicit operation allowlist and versioned envelopes', () => {
     expect(ASSESSMENT_API_OPERATIONS).toEqual([
       'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
-      'prepare_turn', 'send_reviewed', 'read_review', 'process_message',
+      'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
     ]);
     expect(new Set(ASSESSMENT_API_OPERATIONS).size).toBe(ASSESSMENT_API_OPERATIONS.length);
     ASSESSMENT_API_OPERATIONS.forEach((operation) => expect(isAssessmentApiOperation(operation)).toBe(true));
@@ -201,6 +201,7 @@ describe('assessment API contract', () => {
 
   it('keeps the canonical processed-message DTO field set unchanged', () => {
     const dto: ProcessedMessageDTO = {
+      result_message:null,
       message_id: 'answer-1',
       assessment_id: 'assessment-1',
       processing_state: 'applied',
@@ -220,6 +221,7 @@ describe('assessment API contract', () => {
       },
     };
     expect(Object.keys(dto)).toEqual([
+      'result_message',
       'message_id', 'assessment_id', 'processing_state', 'answer_outcome', 'attempt_number',
       'attempts_used', 'attempts_remaining', 'selected_option_ids', 'terminal', 'transition',
       'feedback_required', 'code', 'already_processed', 'terminal_failure_feedback',

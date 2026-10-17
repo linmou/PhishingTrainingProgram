@@ -1,5 +1,11 @@
 # Browser E2E Testing
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Extend assessment-answer and tutor-response checks with saved result identities, complete option/result dialogue, no VERIFIED ASSESSMENT STATE section, retry/pass/failure/cancellation disclosure, reload/deduplication, required-rating exclusions and actual provider response evidence. Run matching staging and production journeys in the approved SQL→Edge→client batch. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
 Updated: 2026-10-14. Workflow revision baseline commit: `73f5908`; assessment release browser baseline: `88b3ccd`.

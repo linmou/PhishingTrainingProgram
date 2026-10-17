@@ -1,5 +1,7 @@
 # Historical Specification Quality Checklist: Component 102 Target
 
+<!-- Assessment dialogue revision: updated 2026-10-17; baseline commit c6d5129. -->
+
 <!-- Intent: verify that the restored component specification is complete, testable, and bounded before technical planning. -->
 
 This checklist validates the historical component-102 target specification. Its checked items are not a production deployment or runtime verification result.
@@ -43,6 +45,10 @@ This checklist validates the historical component-102 target specification. Its 
 - [x] User stories cover delivery, grading, authorization, atomic evidence, and provider generation.
 - [x] Success criteria cover lifecycle, concurrency, privacy, stem-only storage, rollback, provider behavior, and evidence separation.
 - [x] No React or evaluation-policy work is assigned to component 102.
+
+## Assessment dialogue acceptance (2026-10-17)
+
+- [ ] AR-20261017 Backend delivery: atomic result/closure messages, backfill, protected provenance, non-consuming processing, readiness and owner-only clearing. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 

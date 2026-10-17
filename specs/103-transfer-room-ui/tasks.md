@@ -202,3 +202,7 @@ FR-005 and FR-006 are the restated forms recorded in `research.md` Decisions 202
 - Component 102 must promote persisted attempts used/remaining, terminal state, retry versus terminal feedback, terminal answer/explanation disclosure, selection type after reload, and stem-only message content. Component 103 does not add a compatibility fallback if those fields are absent or incompatible.
 - Missing trusted auth, hosted SQL/RLS evidence, provider/evaluation evidence, or browser release evidence is a named external blocker, not a UI fallback.
 - Root agent context update is deferred to the integration owner; do not run `update-agent-context.sh` from this component worktree.
+
+## Assessment dialogue follow-up (2026-10-17)
+
+- [ ] AR-20261017 Verify result-stream display, saved lifecycle on all ingress, attribution, rating exclusions and exports. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.

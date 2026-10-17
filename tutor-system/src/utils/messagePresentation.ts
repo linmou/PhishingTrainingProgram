@@ -33,7 +33,7 @@ const roleName = (role: UserRole): string => role === 'tutor' ? 'Tutor' : role =
 
 /** Resolve presentation without consulting room state or inferring AI authorship. */
 export function resolveMessagePresentation(
-  message: Pick<Message, 'content' | 'user_role' | 'response_mode' | 'display_name' | 'avatar_url'>,
+  message: Pick<Message, 'content' | 'user_role' | 'response_mode' | 'display_name' | 'avatar_url' | 'assessment_event'>,
   viewerRole?: string | null
 ): MessagePresentation {
   const mode: TutorTurnMode = message.response_mode ?? 'tutoring';
@@ -45,6 +45,12 @@ export function resolveMessagePresentation(
   const baseName = message.display_name || roleName(role) || role || 'User';
   const roleIcon = ROLE_ICONS[role] || '👤';
   const roleColor = ROLE_COLORS[role] || '#6b7280';
+
+  if (message.assessment_event) return {
+    displayName:'Assessment result',avatarName:'Assessment result',avatarUrl:null,
+    body:message.content,roleBadge:null,roleColor:'#6b7280',roleIcon:'✓',isGuard:false,
+    isAssessment:false,isMultiagent:false,agentCharacter:null,
+  };
 
   if (isGuard) {
     return {

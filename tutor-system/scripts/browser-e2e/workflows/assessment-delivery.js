@@ -68,10 +68,15 @@ async function assessmentCycle(ctx, journey, target, label) {
   if (process.env.E2E_RECORD_VIDEO === '1') await ctx.studentPage.waitForTimeout(2200);
   const answerStop = await captureResponses(ctx.studentPage, response => response.url().includes('/functions/v1/assessment-api'));
   let answerCalls;
+  let savedResult;
   try {
     for (const option of correctOptions) await question.locator(`input[value="${option}"]`).check();
     await question.getByRole('button', { name: 'Submit answer' }).click();
-    await question.getByRole('status').filter({ hasText: 'Correct.' }).waitFor({ timeout: TIMEOUT });
+    const saved = await waitForMatch(() => query(ctx.client, 'messages', '*', 'room_id', journey.room.id),
+      rows => rows.some(row => row.assessment_event?.assessment_id === questionMessage.assessment_id && row.assessment_event.kind === 'result'),
+      'saved assessment pass message');
+    savedResult = saved.find(row => row.assessment_event?.assessment_id === questionMessage.assessment_id && row.assessment_event.kind === 'result');
+    await ctx.studentPage.getByTestId(`assessment-result-${savedResult.id}`).waitFor({ timeout: TIMEOUT });
   } finally {
     answerCalls = await answerStop();
     writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-answer-function.json`), answerCalls);
@@ -116,7 +121,7 @@ async function assessmentCycle(ctx, journey, target, label) {
   const terminalGate = await assertAssessmentGate(ctx.studentPage, false);
   await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
   const restored = ctx.studentPage.locator(`[data-testid="public-assessment-${questionMessage.assessment_id}"]`);
-  await restored.getByRole('status').filter({ hasText: 'Correct.' }).waitFor({ timeout: TIMEOUT });
+  await ctx.studentPage.getByTestId(`assessment-result-${savedResult.id}`).waitFor({ timeout: TIMEOUT });
   assert.equal(await restored.getByRole('button', { name: 'Submit answer' }).isDisabled(), true);
   const restoredGate = await assertAssessmentGate(ctx.studentPage, false);
   await openRoom(ctx.tutorPage, ctx.appUrl, journey.room.id);

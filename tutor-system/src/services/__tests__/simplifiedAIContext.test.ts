@@ -5,8 +5,13 @@
 
 import { buildAIContextFromExistingData } from '../simplifiedAIContext';
 import { supabase } from '../supabase';
+import { assessmentResultMessage, deliveredAnswerRow, deliveredQuestionRow } from '../../test-support/transferRoomFixtures';
+import {transferAssessmentService} from '../transferAssessmentService';
 
 jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
+jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{readReview:jest.fn().mockResolvedValue({history_readiness:{
+  ready:true,result_message_ids:[],handled_answer_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[],
+}})}}));
 
 type Message = {
   id: string;
@@ -40,6 +45,7 @@ function mockPage(data: Message[] | null, error: object | null = null) {
     order: jest.fn().mockReturnThis(),
     or: jest.fn().mockReturnThis(),
     range: jest.fn().mockResolvedValue({ data, error })
+    ,in:jest.fn().mockResolvedValue({data,error})
   };
   (supabase.from as jest.Mock).mockReturnValueOnce(query);
   return query;
@@ -56,7 +62,12 @@ function messages(count: number): Message[] {
 }
 
 describe('buildAIContextFromExistingData', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({history_readiness:{
+      ready:true,result_message_ids:[],handled_answer_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[],
+    }});
+  });
 
   it('keeps scenario, valid pre-populated posts and chat role formatting', async () => {
     mockRoom({
@@ -72,8 +83,8 @@ describe('buildAIContextFromExistingData', () => {
     });
     mockPage([
       { ...messages(1)[0], content: 'Student question', user_role: 'student' },
-      { ...messages(1)[0], content: 'Tutor explanation', user_role: 'tutor' },
-      { ...messages(1)[0], content: 'Observer note', user_role: 'observer' }
+      { ...messages(1)[0], id:'second', content: 'Tutor explanation', user_role: 'tutor' },
+      { ...messages(1)[0], id:'third', content: 'Observer note', user_role: 'observer' }
     ]);
     mockPage([]);
 
@@ -208,8 +219,8 @@ describe('buildAIContextFromExistingData', () => {
     mockRoom();
     mockPage([
       { ...messages(1)[0], content: '[agent:riley] Participant comment', response_mode: 'multiagent' },
-      { ...messages(1)[0], content: '[agent:tutor] Tutor comment', response_mode: 'multiagent' },
-      { ...messages(1)[0], content: '[agent:riley] Learner typed tag', user_role: 'student', response_mode: 'multiagent' }
+      { ...messages(1)[0], id:'second', content: '[agent:tutor] Tutor comment', response_mode: 'multiagent' },
+      { ...messages(1)[0], id:'third', content: '[agent:riley] Learner typed tag', user_role: 'student', response_mode: 'multiagent' }
     ]);
     mockPage([]);
     const context = await buildAIContextFromExistingData('multiagent-room');
@@ -233,5 +244,63 @@ describe('buildAIContextFromExistingData', () => {
     mockRoom(null, error);
     await expect(buildAIContextFromExistingData('missing-room')).rejects.toEqual(error);
     expect(supabase.from).toHaveBeenCalledTimes(1);
+  });
+
+  it('packages saved question options, learner answer and trusted result in causal dialogue order', async () => {
+    const result = assessmentResultMessage('retry',1,deliveredAnswerRow.id);
+    mockRoom();
+    mockPage([{...result,created_at:'2020-01-01T00:00:00Z'},deliveredAnswerRow,deliveredQuestionRow] as Message[]);
+    mockPage([]);
+    const context = await buildAIContextFromExistingData('room',[result.id]);
+    expect(context).toHaveLength(4);
+    expect(context[1].content).toContain(deliveredQuestionRow.content);
+    deliveredQuestionRow.assessment_options.forEach(option => expect(context[1].content).toContain(`${option.id}. ${option.text}`));
+    expect(context[2].content).toContain(`answer ${deliveredAnswerRow.id}`);
+    expect(context[3].content).toContain(result.id);
+    expect(context[3].content).toContain(deliveredAnswerRow.user_id);
+    expect(context[3].content).toContain(result.content);
+  });
+
+  it('refuses incomplete saved result history before returning provider context', async () => {
+    mockRoom(); mockPage([deliveredAnswerRow] as Message[]); mockPage([]);mockPage([]);
+    await expect(buildAIContextFromExistingData('room',['missing-result'])).rejects.toThrow('ASSESSMENT_RESULT_UNAVAILABLE');
+  });
+
+  it('reads private readiness in disabled transfer rooms and identifies a handled response as unscored',async ()=>{
+    mockRoom({...room,transfer_learning_enabled:false});mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[],
+      handled_answer_message_ids:[deliveredAnswerRow.id],pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
+    const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
+    expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredAnswerRow.assessment_id);
+    expect(context[2].content).toContain('Unscored assessment response');
+    expect(context[2].content).not.toContain('Correct.');
+  });
+
+  it('omits another learner unfinished answer without blocking the focused learner',async ()=>{
+    const result=assessmentResultMessage('passed',1,deliveredAnswerRow.id);
+    mockRoom();mockPage([deliveredQuestionRow,deliveredAnswerRow,result,
+      {...deliveredAnswerRow,id:'unrelated-pending',user_id:'other-learner',assessment_id:'other-assessment',content:'Other unfinished answer'}] as Message[]);mockPage([]);
+    const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
+    expect(context.map(message=>message.content).join('\n')).not.toContain('Other unfinished answer');
+    expect(context[3].content).toContain('lifecycle passed');
+    expect(context[3].content).toContain('progress deferred false');
+  });
+
+  it('fails missing public options even in a disabled transfer room',async ()=>{
+    mockRoom({...room,transfer_learning_enabled:false});
+    mockPage([{...deliveredQuestionRow,assessment_options:null}, {...deliveredAnswerRow,assessment_id:null}] as Message[]);mockPage([]);
+    await expect(buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id)).rejects.toThrow('Assessment question options are incomplete');
+    expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredQuestionRow.assessment_id);
+  });
+
+  it('fetches the exact result messages committed by trusted read recovery after history was read',async ()=>{
+    const result=assessmentResultMessage('passed',1,deliveredAnswerRow.id);
+    mockRoom();mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
+    const catchup=mockPage([result] as Message[]);
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[result.id],
+      pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
+    const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
+    expect(catchup.in).toHaveBeenCalledWith('id',[result.id]);
+    expect(context[3].content).toContain(result.id);
   });
 });

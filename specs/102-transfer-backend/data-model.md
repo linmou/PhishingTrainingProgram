@@ -1,5 +1,13 @@
 # Production Data Model: Transfer Assessment Backend
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Add nullable server-owned assessment_event metadata to public.messages with unique event-key identity. Result and closure rows are separate from questions/answers; private accepted attempts and grading remain authoritative. Backfill uses persisted source events and original timestamps. The approved current revision supersedes the affected September snapshot descriptions below. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
+`private.transfer_assessment_processing` records handled non-consuming outcomes by source answer ID, with assessment ID, disposition code and authoritative safe processing DTO. It is separate from accepted attempts, has RLS enabled and no participant access, and is written through a snapshot-validated backend operation. Guard-only deferrals may resume after Guard clears. Whole-room history clearing deletes these scoped sources before immutable result messages; an individual event cannot be erased through participant message deletion.
+
 <!-- Intent: preserve the production assessment storage inspection from 2026-09-28 and state the current final-assessment policy requirements. Updated: 2026-10-14. -->
 
 ## Current Final Assessment Policy

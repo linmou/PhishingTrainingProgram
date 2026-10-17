@@ -1,7 +1,7 @@
 // Supabase uses ISO string dates instead of Firestore Timestamps
 
 import { SystemPromptConfig } from '../services/prompts/types';
-import type { AssessmentOptionId, TransferAssessmentDraft } from './assessment';
+import type { AssessmentEvent, AssessmentOptionId, TransferAssessmentDraft } from './assessment';
 
 // User types
 export type UserRole = 'student' | 'tutor' | 'observer';
@@ -74,6 +74,8 @@ export interface RoomTemplate {
 
 // Message interface
 export interface Message {
+    assessment_event?: AssessmentEvent | null;
+    assessment_selected_option_ids?: AssessmentOptionId[] | null;
     id: string;
     room_id: string;
     user_id: string;

@@ -22,7 +22,6 @@ import {
 import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
 import { parseTutorDecision } from './tutorDecisionContract';
 import { ChecklistService } from './checklistService';
-import type { TutorAssessmentFeedback } from '../types/assessment';
 
 export { AI_MODELS, DEFAULT_AI_MODEL };
 export type { AIModelName };
@@ -843,7 +842,8 @@ export const generateTutorSuggestion = async (
     parameterOverrides?: ParameterOverrides,
     options?: {
         focusStudentMessage?: string;
-        assessmentFeedback?: TutorAssessmentFeedback;
+        focusStudentId?: string;
+        expectedAssessmentResultIds?: ReadonlyArray<string>;
     }
 ): Promise<{
     suggestion: string;
@@ -877,18 +877,11 @@ export const generateTutorSuggestion = async (
             console.warn('Checklist progress unavailable for tutor suggestion:', error);
         }
         
-        if (options?.assessmentFeedback) {
-            aiConfig = {
-                ...aiConfig,
-                system_prompt: `${aiConfig.system_prompt}\n\nVERIFIED ASSESSMENT STATE\n${JSON.stringify(options.assessmentFeedback)}\nUse this server result for assessment feedback; do not re-grade the learner answer. When resolution is open and lifecycle is delivered, preserve the retry and do not reveal or infer the answer key. A cancelled lifecycle ends the question without implying a failed attempt. When feedback_required is true, give the required feedback before any new assessment. Continue to prioritize immediate safety and Guard handling.`,
-            };
-        }
-
         // 4. Log final configuration being used
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
         
         // 5. Get conversation history (includes pre-populated discussion for ecology)
-        const conversationHistory = await buildAIContextFromExistingData(roomId);
+        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId);
         console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
         // Scenario string from room fields when available

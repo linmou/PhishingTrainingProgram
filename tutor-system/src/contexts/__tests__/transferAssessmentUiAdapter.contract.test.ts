@@ -53,6 +53,7 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
       duplicateTabTerminalStates.secondTab,
     ];
     const canonicalKeys = [
+      'result_message',
       'message_id',
       'assessment_id',
       'processing_state',

@@ -41,7 +41,25 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
       if (name === 'prepare_transfer_assessment_context_v1') {
         return { data: { ...providerScope(), selected_target_item_id: 'item-1' }, error: null };
       }
-      return suppliedRpc(name, args);
+      const result = await suppliedRpc(name, args);
+      const data = result.data as Record<string,any>;
+      const processed = data?.authoritative_result ?? data;
+      if (processed && (processed.answer_outcome || processed.code==='assisted' || processed.code==='cancelled') &&
+        !Object.prototype.hasOwnProperty.call(processed,'result_message')) {
+        const closure = !processed.answer_outcome;
+        const attempt = processed.attempt_number ?? processed.attempts_used ?? 1;
+        processed.result_message={id:`result-${processed.message_id}`,room_id:'room-1',user_id:'teacher-1',user_role:'tutor',
+          content:closure ? 'Assessment cancelled.' : 'Recorded grade.',parent_message_id:processed.message_id,
+          response_mode:null,assessment:null,created_at:'2026-10-17T00:00:00Z',assessment_event:{
+            event_key:closure ? 'assessment-closure:q' : `assessment-result:${processed.message_id}`,
+            kind:closure ? 'closure' : 'result',assessment_id:processed.assessment_id,question_message_id:'q',student_id:'learner-1',
+            answer_message_id:processed.message_id,attempt_number:closure ? null : attempt,outcome:processed.answer_outcome ?? null,
+            attempts_used:closure ? processed.attempts_used : attempt,attempts_remaining:processed.answer_outcome==='retry' ? 1 : 0,
+            terminal:processed.answer_outcome!=='retry',lifecycle:closure ? 'cancelled' : processed.answer_outcome==='retry' ? 'open' : processed.answer_outcome,
+            progress_deferred:processed.processing_state==='deferred',closure_reason:closure ? 'assisted' : null,
+          }};
+      }
+      return result;
     },
   };
 }
@@ -83,6 +101,10 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
           answer: { content, selected_option_ids: null, references_message_id: 'q' },
         }, error: null };
         writes.push({ name, args });
+        if (name==='record_transfer_assessment_processing_v1') return {data:{
+          message_id:'m',assessment_id:'a',processing_state:'rejected',answer_outcome:null,attempt_number:null,
+          attempts_used:0,attempts_remaining:2,terminal:false,code:args.p_code,result_message:null,
+        },error:null};
         return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'applied',
           answer_outcome: name === 'cancel_transfer_assessment_v1' ? null : 'passed',
           terminal: true, code: name === 'cancel_transfer_assessment_v1' ? 'assisted' : null,
@@ -93,7 +115,7 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
     const payload = await response.json();
     assertEquals(response.status, 200);
     if (content === 'B or D') {
-      assertEquals(writes, []);
+      assertEquals(writes[0].name,'record_transfer_assessment_processing_v1');
       assertEquals(payload.data.code, 'AMBIGUOUS_SELECTION');
       assertEquals(payload.data.attempts_used, 0);
       assertEquals(payload.data.terminal, false);
@@ -127,6 +149,83 @@ Deno.test('cancelled assessment replay bypasses grading and writes', async () =>
   assertEquals(payload.data.terminal, true);
   assertEquals(payload.data.already_processed, true);
 });
+
+Deno.test('missing saved result refuses duplicate processing before any provider call',async () => {
+  let providerCalls=0;
+  const handler=createAssessmentApiHandler(dependencies({
+    resolveAnswer:()=>({disposition:'duplicate'}),
+    fetch:async ()=>{providerCalls+=1;throw new Error('unexpected provider');},
+    rpc:async ()=>({data:{lifecycle:'passed',context:{attempt_snapshot:{}},assessment:{},answer:{content:'B'},
+      authoritative_result:{message_id:'m',assessment_id:'a',answer_outcome:'passed',terminal:true,result_message:null}},error:null}),
+  }));
+  const response=await handler(request('process_message',{assessment_id:'a',message_id:'m'}));
+  assertEquals(response.status,503);
+  assertEquals((await response.json()).error.code,'ASSESSMENT_RESULT_UNAVAILABLE');
+  assertEquals(providerCalls,0);
+});
+
+for (const scenario of ['ambiguity_then_pass','guard_then_clear','ordered_retry_then_pass']) {
+  Deno.test(`trusted review recovery: ${scenario}`,async ()=>{
+    let guard=scenario==='guard_then_clear'; let used=0; let resolution='open'; let providerCalls=0;
+    const ids=scenario==='guard_then_clear' ? ['first'] : ['first','second'];
+    const stored=new Map<string,Record<string,any>>(); const processedOrder:string[]=[];
+    const acceptedRequestIds=new Set<string>();
+    const handler=createAssessmentApiHandler(dependencies({resolveAnswer:resolveTransferAnswer,
+      fetch:async ()=>{providerCalls+=1;throw new Error('unexpected provider');},
+      rpc:async (name,args)=>{
+        const id=String(args.p_message_id);
+        if (name==='get_transfer_assessment_review_v1') {
+          const pending=ids.filter(answer=>!stored.has(answer) || (stored.get(answer)?.code==='guard_deferred' && !guard));
+          return {data:{student_id:'learner-1',history_readiness:{ready:pending.length===0,
+            pending_answers:pending.map(message_id=>({message_id,assessment_id:'a'})),
+            handled_answer_message_ids:ids.filter(answer=>stored.has(answer)&&!stored.get(answer)?.answer_outcome),
+            result_message_ids:[],pending_answer_message_ids:pending,unavailable_assessment_ids:[]}},error:null};
+        }
+        if (name==='get_transfer_assessment_processing_context_v1') {
+          const previous=stored.get(id);
+          return {data:{lifecycle:resolution,context:{progress:{status:'covered',understanding_level:'good'},
+            participation_mode:guard ? 'guard':'tutoring',progress_snapshot_hash:'h',feedback_required:resolution!=='open',
+            eligible_assessment_item_ids:['item-1'],unresolved_assessment:resolution==='open' ? {id:'a'}:null,
+            pending_repair_message_id:null,attempt_snapshot:{assessment_id:'a',accepted_attempt_count:used,resolution,
+              processed_answer_message_ids:ids.filter(answer=>stored.get(answer)?.answer_outcome)}},
+            assessment:{id:'a',item_id:'item-1',selection_type:'single',progress_snapshot_hash:'h',
+              options:['A','B','C','D'].map(id=>({id,text:`Option ${id}`})),correct_option_ids:['B'],learner_safe_explanation:'Reviewed explanation.'},
+            answer:{content:id==='first'&&scenario==='ambiguity_then_pass' ? 'A or B':id==='first'&&scenario==='ordered_retry_then_pass' ? 'A':'B',
+              selected_option_ids:null,references_message_id:'q'},
+            authoritative_result:previous?.code==='guard_deferred'&&!guard ? null:previous ?? null},error:null};
+        }
+        processedOrder.push(id);
+        let result:Record<string,any>;
+        if (name==='record_transfer_assessment_processing_v1') {
+          result={message_id:id,assessment_id:'a',processing_state:guard ? 'deferred':'rejected',answer_outcome:null,
+            attempt_number:null,attempts_used:used,attempts_remaining:2-used,terminal:false,code:args.p_code,result_message:null};
+        } else {
+          assertEquals(name,'process_assessment_message_v2');
+          const requestId=String(args.p_request_id);
+          assertEquals(acceptedRequestIds.has(requestId),false);
+          acceptedRequestIds.add(requestId); used+=1;
+          resolution=args.p_answer_outcome==='retry' ? 'open':String(args.p_answer_outcome);
+          result={message_id:id,assessment_id:'a',processing_state:'applied',answer_outcome:args.p_answer_outcome,
+            attempt_number:used,attempts_used:used,attempts_remaining:resolution==='open' ? 1:0,terminal:resolution!=='open'};
+        }
+        stored.set(id,result); return {data:result,error:null};
+      },
+    }));
+    let response=await handler(request('read_review',{room_id:'room-1',assessment_id:'a'}));
+    assertEquals(response.status,200); assertEquals((await response.json()).data.history_readiness.ready,true);
+    if (scenario==='guard_then_clear') {
+      assertEquals(used,0); guard=false;
+      response=await handler(request('read_review',{room_id:'room-1',assessment_id:'a'}));
+      assertEquals(response.status,200); assertEquals((await response.json()).data.history_readiness.ready,true);
+      assertEquals(used,1); assertEquals(processedOrder,['first','first']);
+    } else {
+      assertEquals(used,scenario==='ambiguity_then_pass' ? 1:2);
+      assertEquals(processedOrder,['first','second']);
+      if (scenario==='ordered_retry_then_pass') assertEquals(acceptedRequestIds.size,2);
+    }
+    assertEquals(providerCalls,0);
+  });
+}
 
 Deno.test('accepted retry replay after cancellation keeps its grade and marks it duplicate', async () => {
   const handler = createAssessmentApiHandler(dependencies({
@@ -371,6 +470,11 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
       if (name === 'process_assessment_message_v2') {
         assertEquals(args.p_answer_outcome, 'passed');
         return { data: { message_id: 'answer-1', assessment_id: 'question-1', processing_state: 'applied',
+          result_message:{id:'saved-result',room_id:'room-1',user_id:'teacher-1',user_role:'tutor',content:'Correct.',
+            response_mode:null,parent_message_id:'answer-1',created_at:'2026-10-17T00:00:00Z',assessment_event:{
+              event_key:'assessment-result:answer-1',kind:'result',assessment_id:'question-1',question_message_id:'question-1',
+              student_id:'learner-1',answer_message_id:'answer-1',attempt_number:1,outcome:'passed',attempts_used:1,
+              attempts_remaining:0,terminal:true,lifecycle:'passed',progress_deferred:false,closure_reason:null}},
           answer_outcome: 'passed', attempt_number: 1, attempts_used: 1, attempts_remaining: 0,
           selected_option_ids: ['B'], terminal: true, feedback_required: true }, error: null };
       }
@@ -650,6 +754,16 @@ Deno.test('disabled feature makes no storage call', async () => {
   assertEquals(response.status, 503);
   assertEquals(payload.error.code, 'ASSESSMENT_FEATURE_DISABLED');
   assertEquals(calls, 0);
+});
+
+Deno.test('owner clear remains available with assessment feature disabled and passes only verified identity',async ()=>{
+  const calls:unknown[]=[];
+  const handler=createAssessmentApiHandler(dependencies({featureEnabled:false,rpc:async(name,args)=>{
+    calls.push({name,args});return {data:{success:true,title:'Room',prePopulatedMessagesPreserved:true},error:null};
+  }}));
+  const response=await handler(request('clear_chat_history',{room_id:'room-1',actor_id:'forged'}));
+  assertEquals(response.status,200);
+  assertEquals(calls,[{name:'clear_room_chat_history_v1',args:{p_room_id:'room-1',p_actor_id:'teacher-1'}}]);
 });
 
 Deno.test('projects the approved checklist UUID into the browser initialization contract', async () => {

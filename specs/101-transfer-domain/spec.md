@@ -1,5 +1,11 @@
 # Feature Specification: Server-Authoritative Transfer Attempts
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+The approved dialogue publication contract preserves FR-011–013 and SC-006 grading/disclosure timing. Downstream room publication after authorized second failure follows the new backend contract; pure resolver outcomes remain unchanged. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 **Feature Branch**: `101-transfer-domain`  
 **Created**: 2026-09-11  
 **Revised**: 2026-10-13

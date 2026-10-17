@@ -1,5 +1,7 @@
 # Specification Quality Checklist: Transfer Room Lifecycle and UI Integration
 
+<!-- Assessment dialogue revision: updated 2026-10-17; baseline commit c6d5129. -->
+
 **Purpose**: Validate specification completeness and quality before planning
 **Created**: 2026-09-11
 **Feature**: [spec.md](../spec.md)
@@ -28,6 +30,10 @@
 - [x] User stories cover primary teacher, learner, reconnect, and role-scoped progress/export flows.
 - [x] Feature meets measurable outcomes defined in Success Criteria through the planned integration and privacy test matrix.
 - [x] No implementation details leak into specification as mandatory architecture; named repository boundaries are included only to define ownership and exclusions.
+
+## Assessment dialogue acceptance (2026-10-17)
+
+- [ ] AR-20261017 UI delivery: result attribution, all-ingress lifecycle, retry privacy, export linkage and separate human feedback/rating gates. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 

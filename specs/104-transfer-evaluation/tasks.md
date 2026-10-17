@@ -284,3 +284,7 @@ description: "Dependency-ordered two-attempt transfer evaluation and explanation
 - The root `AGENTS.md` and integration/orchestration records are not modified; context update remains deferred to integration.
 - Component 104 must stop at a blocking integration dependency if component 102 has not exported the shared v3 builder/identity, backend prompt reference/hash, and effective 1,200-token contract; no evaluation-local fallback is permitted.
 - Upgrade execution must also stop until component 101/102 lifecycle/DTO contracts are promoted and canonical T09 is reconciled. Target/judge execution must use `qwen3.5-flash` through the existing DashScope-compatible provider with no fallback.
+
+## Assessment dialogue follow-up (2026-10-17)
+
+- [ ] AR-20261017 Verify saved-message/history identity and disclosure, controlled orchestration and actual-provider behavior evidence. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.

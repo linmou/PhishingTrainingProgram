@@ -34,6 +34,7 @@ import {
   preparedCandidate,
   transferRoom,
   transferChecklist,
+  assessmentResultMessage,
 } from '../../test-support/transferRoomFixtures';
 import type { Message } from '../../types';
 
@@ -317,9 +318,9 @@ describe('RoomPagePost transfer lifecycle states', () => {
       })
     );
     (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
-    mount({ messages: [question] });
+    mount({ messages: [question,projectRoomMessage(assessmentResultMessage('retry',1,DELIVERED_ANSWER_ID) as unknown as Record<string,unknown>)] });
 
-    expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+    expect(screen.getByText('Incorrect. One attempt remaining.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
     expect(screen.getByRole('textbox')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
@@ -388,15 +389,17 @@ describe('RoomPagePost transfer lifecycle states', () => {
       })
     );
     (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
-    const { container } = mount({ messages: [question, first, second] });
+    const { container } = mount({ messages: [question, first, second,
+      projectRoomMessage(assessmentResultMessage('retry',1,DELIVERED_ANSWER_ID) as unknown as Record<string,unknown>),
+      projectRoomMessage(assessmentResultMessage('passed',2,'answer-2') as unknown as Record<string,unknown>)] });
 
-    expect(container.querySelectorAll('.post-comment')).toHaveLength(1);
+    expect(container.querySelectorAll('.post-comment')).toHaveLength(3);
     expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
     expect(screen.getByText('Correct.')).toBeInTheDocument();
     expect(screen.getByRole('textbox')).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
+    expect(screen.getAllByRole('button', { name: 'Reply' }).every(button=>!button.hasAttribute('disabled'))).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Previous answer' }));
-    expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+    expect(screen.getByText('Incorrect. One attempt remaining.')).toBeInTheDocument();
   });
 
   it('keeps a plain reply visible while embedding a pending answer to the same question', () => {

@@ -1,5 +1,11 @@
 # Feature Specification: Transfer Room Lifecycle and UI Integration
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+FR-009 and FR-011–014, SC-003–005 now follow the approved result-message contract: answer selections remain navigable, while saved room result messages own correctness/retry/explanation display. Role-safe exports include published failure results. All ingress restores lifecycle and controls without local grading; automatic results are distinct from tutor speech and mandatory-rating targets. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 **Feature Branch**: `103-transfer-room-ui`  
 **Created**: 2026-09-11  
 **Status**: Planned  

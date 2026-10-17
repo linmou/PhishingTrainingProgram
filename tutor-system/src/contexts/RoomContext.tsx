@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
-import type { AssessmentOptionId, TutorAssessmentFeedback } from '../types/assessment';
+import type { AssessmentOptionId } from '../types/assessment';
 import type { LearningTargetInput } from '../types/checklist';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
@@ -206,6 +206,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const messageWithDisplayName = addDisplayNameToMessage(projectRoomMessage(newMessage), participants);
                     setMessages(prev => mergeRoomMessages(prev, [messageWithDisplayName]));
                 }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${currentRoom.id}` },
+                payload => setMessages(prev => mergeRoomMessages(prev,[addDisplayNameToMessage(projectRoomMessage(payload.new as any),participants)]))
             )
             .on(
                 'postgres_changes',
@@ -595,6 +600,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             question,
                             preferredQuestionLifecycle(question, lifecycle)
                         );
+                        if (processed.result_message && !allMessages.some(message => message.id===processed.result_message?.id)) {
+                            allMessages.push(addDisplayNameToMessage(projectRoomMessage(processed.result_message as unknown as Record<string,unknown>),participantsData || []));
+                        }
                     } catch (restoreError) {
                         console.warn('Could not restore transfer assessment feedback:', restoreError);
                     }
@@ -756,6 +764,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             );
                         }) as RoomMessageView | undefined;
                         const incoming = [answerWithLifecycle];
+                        if (processed.result_message) incoming.push(addDisplayNameToMessage(
+                            projectRoomMessage(processed.result_message as unknown as Record<string,unknown>),participants
+                        ));
                         if (question) {
                             incoming.push(addDisplayNameToMessage(
                                 withAnswerLifecycle(question, preferredQuestionLifecycle(question, lifecycle)),
@@ -984,11 +995,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // Keep an explicitly selected focus stable across regeneration.
             let parentMessageId: string | undefined;
+            let parentStudentId: string | undefined;
             let parentMessageContent: string = '';
             if (focusMessageId) {
                 const selectedMessage = messages.find(m => m.id === focusMessageId && m.user_role === 'student');
                 if (!selectedMessage) throw new Error('Selected learner message is no longer available');
                 parentMessageId = selectedMessage.id;
+                parentStudentId = selectedMessage.user_id;
                 parentMessageContent = selectedMessage.content;
                 prompt = selectedMessage.content;
             } else if (!prompt) {
@@ -998,6 +1011,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (latestMessage) {
                     parentMessageId = latestMessage.id;
+                    parentStudentId = latestMessage.user_id;
                     parentMessageContent = latestMessage.content;
                     prompt = latestMessage.content;
                 }
@@ -1007,7 +1021,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('No student message found to respond to');
             }
 
-            let assessmentFeedback: TutorAssessmentFeedback | undefined;
+            let expectedAssessmentResultIds: string[] = [];
             let transferChecklist: Awaited<ReturnType<typeof ChecklistService.getActiveTransferChecklistForRoom>> | null = null;
             try {
                 const checklistService = ChecklistService as typeof ChecklistService & {
@@ -1037,36 +1051,28 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     );
                 }
                 parentMessageId = checklistOwnerMessage.id;
+                parentStudentId = checklistOwnerMessage.user_id;
                 parentMessageContent = checklistOwnerMessage.content;
                 // Assessment answers already belong to the grading lifecycle. Re-analyzing
                 // them as ordinary learning evidence is rejected by the trusted API.
                 const assessmentId = readAssessmentId(checklistOwnerMessage);
                 const isAssessmentAnswer = Boolean(assessmentId);
-                if (assessmentId) {
-                    const review = await transferAssessmentService.readReview(currentRoom.id, assessmentId);
-                    if (!['open', 'passed', 'failed'].includes(review.resolution || '') ||
-                        !['delivered', 'passed', 'failed', 'cancelled'].includes(review.lifecycle || '') ||
-                        !Number.isInteger(review.attempt_count) || review.attempt_count! < 0 ||
-                        review.attempt_count! > 2 || typeof review.feedback_required !== 'boolean') {
+                const readinessAssessmentId = assessmentId ?? [...messages].reverse().map(message =>
+                    (message as Partial<RoomMessageView>).publicQuestion
+                ).find(question => question?.studentId === checklistOwnerId)?.id;
+                if (readinessAssessmentId) {
+                    const review = await transferAssessmentService.readReview(currentRoom.id, readinessAssessmentId);
+                    const readiness = review.history_readiness;
+                    if (!readiness || readiness.ready !== true || !Array.isArray(readiness.result_message_ids) ||
+                        !Array.isArray(readiness.pending_answer_message_ids) || readiness.pending_answer_message_ids.length ||
+                        !Array.isArray(readiness.unavailable_assessment_ids) || readiness.unavailable_assessment_ids.length) {
                         throw createTransferPreparationError(
-                            'ASSESSMENT_FEEDBACK_UNAVAILABLE',
-                            'The assessment result is unavailable. Refresh the room and retry.',
+                            'ASSESSMENT_RESULT_UNAVAILABLE',
+                            'Assessment results are still processing or unavailable. Refresh the room and retry.',
                             true
                         );
                     }
-                    assessmentFeedback = {
-                        assessment_id: assessmentId,
-                        resolution: review.resolution as TutorAssessmentFeedback['resolution'],
-                        lifecycle: review.lifecycle as TutorAssessmentFeedback['lifecycle'],
-                        attempt_count: review.attempt_count!,
-                        feedback_required: review.feedback_required,
-                        stem: review.assessment.stem,
-                        options: review.assessment.options,
-                        terminal_feedback: review.resolution === 'open' ? null : {
-                            correct_option_ids: review.assessment.correct_option_ids,
-                            learner_safe_explanation: review.assessment.learner_safe_explanation,
-                        },
-                    };
+                    expectedAssessmentResultIds = readiness.result_message_ids;
                 }
                 if (!isAssessmentAnswer) {
                     await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId);
@@ -1112,7 +1118,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 {
                     // Same student line the tutor is responding to in the UI
                     focusStudentMessage: parentMessageContent || prompt,
-                    ...(assessmentFeedback ? { assessmentFeedback } : {}),
+                    focusStudentId:parentStudentId,
+                    expectedAssessmentResultIds,
                 }
             );
 
@@ -1184,7 +1191,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user.id,
                 effectiveParameterOverrides,
                 {
-                    focusStudentMessage: currentSuggestionContext.parentMessageContent
+                    focusStudentMessage: currentSuggestionContext.parentMessageContent,
+                    focusStudentId:messages.find(message=>message.id===currentSuggestionContext.parentMessageId)?.user_id,
                 }
             );
 
@@ -1275,13 +1283,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const parentMessageId = latestLearnerMessage?.id || draft.parentMessageId;
         const parentMessageContent = latestLearnerMessage?.content || draft.parentMessageContent;
 
+        if (currentRoom.transfer_learning_enabled) {
+            await generateAIResponse(undefined,parentMessageId);
+            return;
+        }
+
         setLoadingAI(true);
         try {
             const result = await generateTutorSuggestion(
                 currentRoom.id,
                 user.id,
                 undefined,
-                { focusStudentMessage: parentMessageContent }
+                { focusStudentMessage: parentMessageContent,focusStudentId:latestLearnerMessage?.user_id ?? messages.find(message=>message.id===parentMessageId)?.user_id }
             );
 
             if (!result.success) {

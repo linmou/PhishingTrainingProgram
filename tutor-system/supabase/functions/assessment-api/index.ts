@@ -10,12 +10,13 @@ import {
 } from '../../../src/services/ecologicalTutorCall.ts';
 import { validateAssessmentDraft } from '../../../src/services/assessmentValidation.ts';
 import { parseAssessmentAnswer } from '../../../src/services/assessmentAnswerParser.ts';
+import { parseAssessmentEvent } from '../../../src/services/assessmentRendering.ts';
 import { applyLearningEvent, isValidTransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 import type { LearningEventKind, TransferProgress } from '../../../src/services/learningProgressTransitions.ts';
 
 const OPERATIONS = new Set([
   'initialize_checklist', 'join_room', 'edit_learning_progress', 'post_message', 'analyze_message',
-  'prepare_turn', 'send_reviewed', 'read_review', 'process_message',
+  'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
 // Preserve the deployed assessment/transfer model; Qwen3.8 tutoring is selected separately by ai-api.
@@ -110,6 +111,8 @@ const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   LEGACY_ASSESSMENT_INCOMPLETE: { status: 409, retryable: false },
   ASSESSMENT_ALREADY_OPEN: { status: 409, retryable: false },
   ASSESSMENT_TERMINAL: { status: 409, retryable: false },
+  ASSESSMENT_RESULT_UNAVAILABLE: { status: 503, retryable: true },
+  INVALID_ASSESSMENT_EVENT: { status: 500, retryable: false },
   AUTHORIZATION_NOT_CONFIGURED: { status: 503, retryable: false },
   ASSESSMENT_FEATURE_DISABLED: { status: 503, retryable: false },
   AI_PROVIDER_NOT_CONFIGURED: { status: 503, retryable: true },
@@ -189,6 +192,9 @@ function projectMessage(value: unknown): Record<string, unknown> {
     parent_message_id: source.parent_message_id ?? null,
     response_mode: source.response_mode ?? null,
     assessment_lifecycle: source.assessment_lifecycle ?? null,
+    assessment_event: parseAssessmentEvent(source.assessment_event),
+    assessment_id: source.assessment_id ?? null,
+    assessment_selected_option_ids: source.assessment_selected_option_ids ?? null,
     assessment: source.assessment == null ? null : projectAssessment(source.assessment),
     created_at: source.created_at,
   };
@@ -201,6 +207,13 @@ function projectDelivery(value: unknown): Record<string, unknown> {
 
 function projectProcessed(value: unknown): Record<string, unknown> {
   const source = asRecord(value);
+  if ((source.answer_outcome || source.code === 'assisted' || source.code === 'cancelled') && !source.result_message) {
+    throw new Error('ASSESSMENT_RESULT_UNAVAILABLE');
+  }
+  const resultMessage = source.result_message == null ? null : projectMessage(source.result_message);
+  const event = resultMessage?.assessment_event as ReturnType<typeof parseAssessmentEvent>;
+  if (resultMessage && (!event || event.assessment_id!==source.assessment_id ||
+    (event.kind==='result' && event.answer_message_id!==source.message_id))) throw new Error('INVALID_ASSESSMENT_EVENT');
   const failed = source.answer_outcome === 'failed' && source.terminal === true && source.feedback_required === true;
   const feedback = failed ? asRecord(source.terminal_failure_feedback) : {};
   return {
@@ -217,6 +230,7 @@ function projectProcessed(value: unknown): Record<string, unknown> {
     feedback_required: source.feedback_required === true,
     code: source.code ?? null,
     already_processed: source.already_processed === true,
+    result_message: resultMessage,
     terminal_failure_feedback: failed ? {
       correct_option_ids: feedback.correct_option_ids,
       learner_safe_explanation: feedback.learner_safe_explanation,
@@ -502,6 +516,9 @@ async function processMessage(
     if (stored.lifecycle === 'cancelled' && stored.authoritative_result) {
       return projectProcessed({ ...asRecord(stored.authoritative_result), processing_state: 'duplicate', already_processed: true });
     }
+    if (stored.authoritative_result && !asRecord(stored.authoritative_result).answer_outcome) {
+      return projectProcessed({...asRecord(stored.authoritative_result),already_processed:true});
+    }
     const content = answer.selected_option_ids == null
       ? requiredString(answer.content)
       : selectedIds(answer.selected_option_ids).join(',');
@@ -532,15 +549,13 @@ async function processMessage(
         ? result.disposition
         : null;
     if (!answerOutcome) {
-      return projectProcessed({
-        message_id: messageId, assessment_id: assessmentId, processing_state: 'rejected',
-        answer_outcome: null, attempt_number: null,
-        attempts_used: snapshot.accepted_attempt_count ?? 0,
-        attempts_remaining: snapshot.resolution === 'open' ? 2 - (snapshot.accepted_attempt_count ?? 0) : 0,
-        selected_option_ids: null, terminal: snapshot.resolution !== 'open', transition: null,
-        feedback_required: false, code: result.clarification_code ?? result.disposition,
-        already_processed: result.disposition === 'duplicate', terminal_failure_feedback: null,
-      });
+      const recorded=asRecord(await rpc(deps,'record_transfer_assessment_processing_v1',{
+        p_assessment_id:assessmentId,p_message_id:messageId,p_actor_id:principal.application_user_id,
+        p_request_id:requestId,p_expected_attempt_count:snapshot.accepted_attempt_count,
+        p_expected_resolution:snapshot.resolution,p_code:result.clarification_code ?? result.disposition,
+      }));
+      if (recorded.code==='CONCURRENT_MODIFICATION') continue;
+      return projectProcessed(recorded);
     }
     const parsed = answer.selected_option_ids == null
       ? parseAssessmentAnswer(content, assessment.selection_type, assessment.options)
@@ -585,17 +600,37 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       return fail(String(error).includes('AUTHORIZATION_NOT_CONFIGURED')
         ? 'AUTHORIZATION_NOT_CONFIGURED' : 'UNAUTHORIZED');
     }
-    if (!deps.featureEnabled) return fail('ASSESSMENT_FEATURE_DISABLED');
+    if (!deps.featureEnabled && body.operation!=='clear_chat_history') return fail('ASSESSMENT_FEATURE_DISABLED');
 
     try {
       let data: unknown;
       switch (body.operation) {
-        case 'read_review':
+        case 'read_review': {
           assertTeacher(principal);
-          data = await rpc(deps, 'get_transfer_assessment_review_v1', {
+          const args={
             p_room_id: assertRoom(principal, body.room_id),
             p_assessment_id: requiredString(body.assessment_id),
             p_actor_id: principal.application_user_id,
+          };
+          let review=asRecord(await rpc(deps,'get_transfer_assessment_review_v1',args));
+          const pending=asRecord(review.history_readiness).pending_answers;
+          if (Array.isArray(pending) && pending.length) {
+            const studentId=requiredString(review.student_id,'ASSESSMENT_RESULT_UNAVAILABLE');
+            for (const candidate of pending) {
+              const answer=asRecord(candidate);
+              if (!answer.assessment_id) continue;
+              await processMessage(deps,{assessment_id:requiredString(answer.assessment_id),message_id:requiredString(answer.message_id)},
+                {...principal,application_user_id:studentId},crypto.randomUUID());
+            }
+            review=asRecord(await rpc(deps,'get_transfer_assessment_review_v1',args));
+          }
+          data=review;
+          break;
+        }
+        case 'clear_chat_history':
+          assertTeacher(principal);
+          data=await rpc(deps,'clear_room_chat_history_v1',{
+            p_room_id:assertRoom(principal,body.room_id),p_actor_id:principal.application_user_id,
           });
           break;
         case 'join_room':

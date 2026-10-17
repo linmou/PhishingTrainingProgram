@@ -1,5 +1,11 @@
 # aiService.ts - AI Assistant Functionality
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Tutor requests use saved assessment question/options, learner answers and backend result messages in dialogue history. Remove the dynamic VERIFIED ASSESSMENT STATE section and prompt-only assessmentFeedback input. Trusted readiness still blocks provider calls for pending/missing results; common request instructions preserve recorded grading, retries, cancellation, required feedback and Guard. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 <!-- Intent: explain AI request configuration, scenario learning targets and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 2f63749. -->
 
 ## Purpose

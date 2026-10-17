@@ -831,27 +831,9 @@ export const clearChatHistory = async (roomId: string, userId: string) => {
         throw new Error('You are not authorized to clear chat history for this room');
     }
 
-    // Delete all messages from the room (pre-populated messages are not stored in messages table)
-    const { error: deleteError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('room_id', roomId);
-
-    if (deleteError) {
-        console.error('❌ Supabase Service: Clear chat history error:', deleteError);
-        throw deleteError;
-    }
-
-    // Clear message feedback data
-    const { error: messageFeedbackError } = await supabase
-        .from('message_feedback')
-        .delete()
-        .eq('room_id', roomId);
-
-    if (messageFeedbackError) {
-        console.error('⚠️ Supabase Service: Message feedback cleanup warning:', messageFeedbackError);
-        // Don't throw error for message feedback cleanup - it's not critical
-    }
+    // The trusted transaction clears private assessment sources before immutable result rows.
+    const {transferAssessmentService}=await import('./transferAssessmentService');
+    await transferAssessmentService.clearChatHistory(roomId);
 
     console.log('✅ Supabase Service: Chat history cleared successfully:', {
         roomId,
@@ -937,4 +919,4 @@ export const deleteRoomTemplate = async (templateId: string) => {
 
     console.log('✅ Supabase Service: Template deleted:', templateId);
     return { success: true };
-}; 
+};
