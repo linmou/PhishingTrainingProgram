@@ -4,6 +4,8 @@ Intent: record shared-project lease coverage and evidence for the combined candi
 
 Date: 2026-10-21. Baseline: `72f1087`, stacked on allocator PR #7 and CI PR #6.
 
+Current status: the former client/Jest blockers below are resolved on the refreshed candidate. See the [coordination refresh record](documentation_update_record_v2026_10_21_coordination_refresh.md) for passing combined Staging acceptance and current CI. The original failures and interference evidence below are retained.
+
 Added an atomic GitHub-reference coordinator shared by browser fixtures and Staging deployment entrypoints. Existing fixed fixtures are serialized across machines. The manual deployment workflow retains its lease through the release owner's acceptance checks and exports it as an artifact. Direct MCP/API operators must acquire the same lease; possession of direct write credentials remains a cooperative-protocol boundary. No hosted runtime/schema behavior changes are part of this PR.
 
 Root AGENTS.md now explicitly requires the lease for Staging SQL, Edge, secret and fixture mutations, including direct MCP/Management API actions. The release owner holds it through acceptance and children must use the same candidate commit.
