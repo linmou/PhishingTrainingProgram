@@ -3,11 +3,11 @@
 Intent: record implementation decisions and delivery evidence for the Cyberbullying practise batch.
 Date: 2026-10-21. Baseline commit: 2807c52f3b3ee82f1e708b20740726a7a28e3912.
 Branch: feat/cyberbullying-practise. Release owner: Codex /root.
-Status: production SQL/Edge/frontend deployed; write gate reopened at 10:38:44 UTC. Production browser acceptance is in progress.
+Status: production verified. All six selected browser workflows and fixture cleanup passed. Runtime release commit: `3a49c9a60e4f959005c9a68e4a617842120f9dc4`.
 
 ## Scope and acceptance
 
-Implement the audited worktree plan at plan/cyberbullying-practise/final_plan.md. The batch changes room identity, Guard contracts, scenario data, role-playing, learner progress, tutor review and message projections. Combined verification covers identity/permissions, lifecycle, shared orchestration and migration: complete student/tutor/observer journeys for both practice types on staging and production, with exact integrated staging artifacts before production.
+Implement the earlier approved worktree plan, preserved in plan/cyberbullying-practise/draft_final_plan.md, with the user's current-identity-model decision and R1–R12. The later version 2 browser-draft amendment in final_plan.md is user-confirmed follow-up work. The batch changes room identity, Guard contracts, scenario data, role-playing, learner progress, tutor review and message projections. Combined verification covers identity/permissions, lifecycle, shared orchestration and migration: complete student/tutor/observer journeys for both practice types on staging and production, with exact integrated staging artifacts before production.
 
 Backend dependencies owned by this batch: existing approval and Guard RPC/trigger contracts, progress analysis/init/replay, membership allocation, assessment-api, ai-api, message/review projections. Application function definitions match between inspected staging and production; deployed Edge hashes remain to inspect.
 
@@ -179,8 +179,21 @@ All runs use https://phishingtrainingprogram.onrender.com and project zgbufaxooq
 | Guard | production-template-20261021104209-d810547c | Passed manual entry, AI entry and recovery; cleanup passed. |
 | Assessment answer | production-template-20261021104326-daacd068 | Passed pass/retry/failure, feedback, recovery, reload and cancellation; all four fixture uses cleaned. |
 | Assessment delivery | production-template-20261021104551-e8b141b0 | Passed both named targets, all queued assessments and terminal tutor feedback; cleanup passed. |
-| Progress transitions | production-template-20261021104947-61d64fa1 | Failed on AI_OUTPUT_INVALID during spontaneous transfer; earlier four target transitions passed; cleanup passed. Repair verification remains open. |
+| Progress transitions, initial | production-template-20261021104947-61d64fa1 | Failed on AI_OUTPUT_INVALID during spontaneous transfer; earlier four target transitions passed; cleanup passed. Failure retained below. |
+| Progress transitions, repaired | production-template-20261021105907-7f170037 | Passed all seven observations, persisted transitions and cleanup on assessment-api v16. |
 
 The failed phishing analysis received HTTP 502 and applied no partial progress. The browser harness had selected an earlier replay's HTTP 200, obscuring the error as a missing analysis marker; it now waits for and inspects the current message's analysis response. Shared analysis now allows the same bounded format repair already used by Cyberbullying. Four deterministic cases cover successful repair and repeated-invalid rejection for both practice types; all 59 Edge tests and 20 runner tests passed. Replaying the captured full-inventory scope returned HTTP 200 and the expected target transfer at output/phishing-inventory-diagnostic-2026-10-21T10-52-48.753Z; all 18 first attempts were valid, so that replay alone does not demonstrate repair or fix the intermittent failure. Staging/live acceptance remains necessary. The replay also retains the known broader target-judgment limitations.
 
-The later plan amendment in commit cdec6e4 introduces R13, replacing persisted proposals with browser drafts. This production batch implements the earlier approved proposal design and R1–R12. R13 is a separate plan direction; scope clarification was requested while finishing this batch's production verification.
+The later plan amendment in commit cdec6e4 introduces R13, replacing persisted proposals with browser drafts. This production batch implements the earlier approved proposal design and R1–R12. On 2026-10-21 the user explicitly confirmed that R13 is follow-up work. The version 2 plan is preserved for that follow-up.
+
+## Progress repair promotion
+
+Staging assessment-api v74 (bundle `5cc7b6a76a7ef5280afb15d640732a993423fdd1d5fa14176fc8b963e6b6cc49`) passed the complete seven-observation progress journey in `staging-template-20261021105350-ef1ab29a`, including persisted state and cleanup. All three required checks passed in Actions run `39587979778`. PR #10 merged as `3a49c9a60e4f959005c9a68e4a617842120f9dc4`; all 11 uploaded function files match that integrated commit. Manifest SHA-256: `0ac91910b6645c307fec7c7b18f9941911e1a3261751547d1651aed14c0b42e0`. Only the assessment handler and its test changed in the runtime manifest; entrypoint SHA-256 is `730905f33a8c896700808867e8a5ed4f31cc029e12dded5e9ae121052457d070`.
+
+Production preflight confirmed assessment-api v15 and the open `cyberbullying-v1` write gate. The exact staging-tested repair was promoted to production assessment-api v16, bundle `566f16c29a123d6b47cbc02727ad7884b20942b9b0f15f2527ffebbf78b27edd`; all 11 retrieved source files match. ai-api remains production v4/staging v6. This Edge-only repair changes the bounded invalid-output branch; the five completed production workflows above remain applicable to their unchanged successful paths.
+
+The final production progress journey `production-template-20261021105907-7f170037` passed all seven observations and cleanup against Render. Deterministic tests establish the bounded repair behavior; the live rerun establishes current workflow acceptance, not elimination of all future invalid provider outputs. Assessment delivery completed five full cycles. All six selected production workflows are accepted with their stored evidence and cleanup results.
+
+Render deployment `dep-dbc9lfgu01pc73d1n0s0` became live at 10:59:15 UTC from release commit `3a49c9a`. The served frontend remains exactly `main.8dfe3072.js`, SHA-256 `4c8a93ee67fdf8d6d1c56c7fc4b8c18360a2a7736b130f1040a27aea3d230e3b`, with the production project and current contract. The write gate remains open. The temporary staging development server was stopped after repair verification.
+
+After both environments passed, the exact migration was archived as `supabase/archived_migrations/20261021000000_cyberbullying_practise.sql`; SHA-256 remains `ca0c1424f18f79c8d16a112ae108e9cf03fa4b9a243de4f51d8c1decfd47c596`. No pending migration remains. Final aggregate cutover evidence is `output/cyberbullying-production-cutover.json`. Generated browser/provider evidence remains local under the recorded output/tmp paths. Broader pre-existing test failures and the manual semantic-evaluation limits above remain recorded; this acceptance covers the selected release scope.
