@@ -5,7 +5,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, captureResponses, guardProject, TIMEOUT } = require('../browser-e2e-support');
+const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, captureResponses, guardProject, managementQuery, TIMEOUT } = require('../browser-e2e-support');
 
 module.exports = async function cyberbullying(ctx) {
   const { tutorPage, studentPage, appUrl, client, evidenceDir, runId } = ctx;
@@ -94,6 +94,35 @@ module.exports = async function cyberbullying(ctx) {
     await character.waitFor({ state: 'hidden', timeout: TIMEOUT });
     assert.equal((await query(client, 'messages', 'id,user_role', 'room_id', room.id)).filter(message => message.user_role === 'tutor').length, 1);
 
+    const progressBeforeGuard = await query(client, 'checklist_items', 'id,status,understanding_level', 'checklist_id', checklist.id);
+    tutorPage.once('dialog', dialog => dialog.accept());
+    await tutorPage.getByTitle('Manually change Guard Mode', { exact: true }).click();
+    await waitForMatch(() => query(client, 'rooms', 'guard_mode', 'id', room.id), rows => rows[0]?.guard_mode === true, 'manual Guard entry');
+    const guardedText = 'I will forward the meme and laugh at Dylan so everyone joins in.';
+    await sendStudentMessage(studentPage, guardedText);
+    const guardedMessage = (await waitForMatch(() => query(client, 'messages', 'id,content', 'room_id', room.id),
+      rows => rows.some(row => row.content === guardedText), 'Guard learner message')).find(row => row.content === guardedText);
+    const readMarker = () => managementQuery(ctx.config, `select processing_state,event_payload from private.learning_event_inbox where dedupe_key='analysis:${guardedMessage.id}'`);
+    const deferred = await waitForMatch(readMarker, rows => rows[0]?.processing_state === 'deferred_guard', 'Guard progress deferral');
+    const progressDuringGuard = await query(client, 'checklist_items', 'id,status,understanding_level', 'checklist_id', checklist.id);
+    assert.deepEqual(progressDuringGuard.sort((a,b) => a.id.localeCompare(b.id)), progressBeforeGuard.sort((a,b) => a.id.localeCompare(b.id)));
+    await openRoom(tutorPage, appUrl, room.id);
+    await tutorPage.getByText(guardedText, { exact: true }).waitFor({ timeout: TIMEOUT });
+    await tutorPage.locator('button.ai-generate-btn').click();
+    await character.waitFor({ timeout: TIMEOUT });
+    await tutorPage.locator('.ai-suggestion-box').getByTitle('Deactivate Guard Mode', { exact: true }).click();
+    await tutorPage.getByRole('button', { name: /Copy to Input/i }).click();
+    const recoveryText = `Tutor reviewed recovery ${runId}`;
+    await tutorPage.locator('textarea.comment-input-field').fill(recoveryText);
+    await tutorPage.locator('form.comment-input-form button[type="submit"]').click();
+    const recoveryMessage = (await waitForMatch(() => query(client, 'messages', '*', 'room_id', room.id),
+      rows => rows.some(row => row.content === recoveryText), 'reviewed Guard recovery')).find(row => row.content === recoveryText);
+    const recoveryReview = (await query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id)).find(row => row.tutor_message_id === recoveryMessage.id);
+    assert.equal(recoveryReview.raw_guard_mode, true);
+    assert.equal(recoveryReview.final_guard_mode, false);
+    assert.equal((await query(client, 'rooms', 'guard_mode', 'id', room.id))[0].guard_mode, false);
+    const replayed = await waitForMatch(readMarker, rows => rows[0]?.processing_state === 'applied', 'Guard evidence replay');
+
     observerContext = await tutorPage.context().browser().newContext();
     await guardProject(observerContext);
     const observer = await observerContext.newPage();
@@ -120,7 +149,7 @@ module.exports = async function cyberbullying(ctx) {
       screenshot(studentPage, evidenceDir, 'cyberbullying-learner'),
       screenshot(observer, evidenceDir, 'cyberbullying-observer'),
     ]);
-    return { room, checklist, targets, approved, reviews, ratings, image_checks: imageChecks, export_path: exportPath, screenshots: snapshots };
+    return { room, checklist, targets, approved, reviews, ratings, guard: { deferred, replayed, recoveryMessage, recoveryReview }, image_checks: imageChecks, export_path: exportPath, screenshots: snapshots };
   } finally {
     writeJson(path.join(evidenceDir, 'cyberbullying-tutor-provider.json'), await stopTutor());
     writeJson(path.join(evidenceDir, 'cyberbullying-learner-provider.json'), await stopStudent());

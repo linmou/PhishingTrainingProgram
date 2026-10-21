@@ -3,6 +3,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { DEFAULT_AI_MODEL } from '../../../src/services/aiModels.ts';
 import { resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts';
 import {
   buildTransferTutorRequestContextV3,
@@ -19,7 +20,7 @@ const OPERATIONS = new Set([
   'prepare_turn', 'send_reviewed', 'read_review', 'process_message', 'clear_chat_history',
 ]);
 const OPTION_IDS = new Set(['A', 'B', 'C', 'D']);
-// Preserve the deployed assessment/transfer model; Qwen3.8 tutoring is selected separately by ai-api.
+// Assessment preparation and Cyberbullying analysis retain their validated model.
 const PROVIDER_MODEL = 'qwen3.5-flash';
 const PROVIDER_MAX_TOKENS = 1200;
 
@@ -338,7 +339,10 @@ async function analyzeMessage(
       asRecord(history[focusIndex]).content !== message.content) {
     throw new Error('INVALID_SCOPE');
   }
-  const provider = providerConfig(deps);
+  const provider = {
+    ...providerConfig(deps),
+    model: scope.practice_type === 'cyberbullying' ? PROVIDER_MODEL : DEFAULT_AI_MODEL,
+  };
   const allowedKinds = new Set(['initial_signal', 'demonstrated_understanding', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
   const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);
   const outcomes = await Promise.allSettled(items.map(async (item: any) => {
@@ -360,7 +364,7 @@ async function analyzeMessage(
             }) },
             ...(scope.practice_type === 'cyberbullying' ? [] : [{ role: 'user', content:
               'Evaluate ONLY this target: ' + item.area_text +
-              '\nDo not credit another useful or safe action. Identify the concrete action or claim required by this target, then compare it to the current learner message. When that required action or claim is absent, return events: []. When the learner states the full required action, use demonstrated_understanding from pending; initial_signal means an actual incomplete component, not a completed narrow action. For every other current status, follow the state eligibility rules above.' }]),
+              '\nDo not credit another useful or safe action. Identify the concrete action or claim required by this target, then compare it to the current learner message. When no component of this target is present, return events: []. From pending, use demonstrated_understanding for the full required action or claim; use initial_signal for a real but incomplete component. For a recognition target, identifying its object while explicitly uncertain about its required property is incomplete recognition: emit initial_signal from pending, rather than no event or demonstrated_understanding. For an action target, partial evidence must describe part of that action; recognizing a related object or channel is not partial performance of the action. A different safe action is not a component of an unmentioned target. For every other current status, follow the state eligibility rules above.' }]),
             ...(ordinal > 1 ? [{ role: 'system', content: 'The previous attempt violated the output contract. Return valid JSON using the supplied item/message IDs and eligible event categories. Each evidence_quote must be one exact contiguous substring of the current learner message; do not combine passages or insert ellipses. Preserve the evidence judgment and omit an event when the current learner supplies no relevant evidence.' }] : []),
           ],
           temperature: 0,

@@ -1150,7 +1150,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
     fetch: async (_input, init) => {
       const body = JSON.parse(String(init?.body));
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
-        assertEquals(body.model, 'qwen3.5-flash');
+        assertEquals(body.model, 'qwen3.8-flash');
         assertEquals(body.temperature, 0);
         assertEquals(body.max_tokens, 600);
         assertEquals(body.enable_thinking, false);
@@ -1163,6 +1163,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
         }) } }] }), { status: 200 });
       }
       assessmentCalls += 1;
+      assertEquals(body.model, 'qwen3.5-flash');
       return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
     },
   });
