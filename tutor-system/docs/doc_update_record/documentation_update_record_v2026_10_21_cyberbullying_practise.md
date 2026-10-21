@@ -3,7 +3,7 @@
 Intent: record implementation decisions and delivery evidence for the Cyberbullying practise batch.
 Date: 2026-10-21. Baseline commit: 2807c52f3b3ee82f1e708b20740726a7a28e3912.
 Branch: feat/cyberbullying-practise. Release owner: Codex /root.
-Status: production SQL/Edge applied under a closed write gate; compatible Render frontend awaits PR checks and merge. Production acceptance remains open.
+Status: production SQL/Edge/frontend deployed; write gate reopened at 10:38:44 UTC. Production browser acceptance is in progress.
 
 ## Scope and acceptance
 
@@ -163,3 +163,24 @@ Production cutover began around 10:31 UTC. Gate installation and actual-anon den
 The subsequent no_sign_up push was rejected by branch protection: isolation-harness, frontend-jest and frontend-build are required, but the merged workflow defined only isolation-harness. This remote prerequisite should have been inspected before closing writes. PR #9 now carries the release. The workflow restores focused frontend regression and build jobs using the locally validated Node 25.9.0/npm 11.12.1 versions and clean npm ci; the prior Node20/npm10 lockfile issue is recorded in issue #5. Local npm 11 clean-install dry-run succeeds without lockfile changes. CI must verify actual clean installation, tests and build before merge. The gate remains closed and Render still serves the previous commit until this prerequisite passes.
 
 The selected ten-suite local CI command initially passed 50 tests in nine suites but found an old Guard SQL test still reading migrations/023_guard_mode.sql after that file had been archived. Its reference now points to the unchanged archived artifact; both assertions pass. This is a test-path correction, with no runtime artifact change.
+
+All required checks passed in GitHub Actions run 39585673584: isolation, clean frontend installation, 10 Jest suites/52 tests, and build. npm ci installed 2,119 packages in 56 seconds. PR #9 merged at 10:36:57 UTC as a6c977b243b0ea282b618ba842a8a0a26c2437fa. The additional planning-history commit cdec6e4 was present in the branch and preserved. Compared with the staged manifest, the only changed manifest file is the archived-path test; runtime/SQL/Edge/build inputs remain identical. The merged manifest SHA-256 is 467ecccf91fd6b1d3a573ed02b1940c29a5cf4529af11dbe5123592e1de55f09.
+
+Render deploy dep-dbc9bj5g1s2s738ipeug became live at 10:38:16 UTC from that merge commit. Published main.8dfe3072.js has SHA-256 4c8a93ee67fdf8d6d1c56c7fc4b8c18360a2a7736b130f1040a27aea3d230e3b; inspection confirmed only the production project host and the cyberbullying-v1 contract. The hosted build hash differs from the local build and is recorded separately in output/cyberbullying-render-production.json. Production writes reopened at 10:38:44.420569 UTC; the gate's preceding change was 10:31:45.840542 UTC. The cutover remained within the 15-minute budget. The production stale/current-client probe passed at 10:38:47 UTC with no fixture-row changes. Full production browser acceptance follows on the Render URL.
+
+## Production browser acceptance
+
+All runs use https://phishingtrainingprogram.onrender.com and project zgbufaxooqxeabewktzd. Evidence directories are under tmp/browser_demo_runs/. The candidate staging development server on port 3217 was stopped after staging verification; the shared PostgreSQL validation cluster is retained.
+
+| Workflow | Production run | Result and cleanup |
+| --- | --- | --- |
+| Cyberbullying | production-template-20261021103857-b9f7587c | Passed full tutor/learner/observer, reviewed role/text, rating, Guard deferral/replay, image decode and JSON export journey; 15 valid Qwen3.8 progress attempts, zero invalid attempts; tagged room and observer cleanup passed. |
+| Tutor response | production-template-20261021104043-33906a50 | Passed generation, reviewed publication and audit; cleanup passed. |
+| Guard | production-template-20261021104209-d810547c | Passed manual entry, AI entry and recovery; cleanup passed. |
+| Assessment answer | production-template-20261021104326-daacd068 | Passed pass/retry/failure, feedback, recovery, reload and cancellation; all four fixture uses cleaned. |
+| Assessment delivery | production-template-20261021104551-e8b141b0 | Passed both named targets, all queued assessments and terminal tutor feedback; cleanup passed. |
+| Progress transitions | production-template-20261021104947-61d64fa1 | Failed on AI_OUTPUT_INVALID during spontaneous transfer; earlier four target transitions passed; cleanup passed. Repair verification remains open. |
+
+The failed phishing analysis received HTTP 502 and applied no partial progress. The browser harness had selected an earlier replay's HTTP 200, obscuring the error as a missing analysis marker; it now waits for and inspects the current message's analysis response. Shared analysis now allows the same bounded format repair already used by Cyberbullying. Four deterministic cases cover successful repair and repeated-invalid rejection for both practice types; all 59 Edge tests and 20 runner tests passed. Replaying the captured full-inventory scope returned HTTP 200 and the expected target transfer at output/phishing-inventory-diagnostic-2026-10-21T10-52-48.753Z; all 18 first attempts were valid, so that replay alone does not demonstrate repair or fix the intermittent failure. Staging/live acceptance remains necessary. The replay also retains the known broader target-judgment limitations.
+
+The later plan amendment in commit cdec6e4 introduces R13, replacing persisted proposals with browser drafts. This production batch implements the earlier approved proposal design and R1–R12. R13 is a separate plan direction; scope clarification was requested while finishing this batch's production verification.
