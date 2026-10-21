@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Tests the browser-draft migration and shared reviewed send against an owned disposable database, including concurrent submissions and cutover draining.
+// Tests 20261021010000_cyberbullying_browser_draft.sql and shared reviewed send: permissions, atomicity, concurrent submissions and cutover draining in an owned disposable database.
 'use strict';
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,7 +13,7 @@ const database = process.env.MIGRATION_TEST_DB;
 assert(database && database === process.env.PGDATABASE, 'Use scripts/database/disposable-database.js');
 assert(process.env.PGHOST?.startsWith('/'), 'Only the existing local cluster is allowed');
 const psql = '/opt/homebrew/opt/postgresql@17/bin/psql';
-const migration = 'tutor-system/supabase/migrations/20261021010000_cyberbullying_browser_draft.sql';
+const migration = 'tutor-system/supabase/archived_migrations/20261021010000_cyberbullying_browser_draft.sql';
 const suite = 'tutor-system/supabase/tests/cyberbullying_browser_draft.sql';
 const report = { database, migration_sha256: createHash('sha256').update(fs.readFileSync(path.join(root, migration))).digest('hex'), checks: [] };
 function sql(args) {
