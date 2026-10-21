@@ -2,11 +2,13 @@
 
 Intent: run the approved v1 mixed deterministic/LLM evaluation while preserving the legacy Promptfoo cases and every intermediate result.
 
-Updated: 2026-10-15. Source baseline commit: `8dc7271`; experiment snapshots preserve the worktree implementation.
+Updated: 2026-10-17. Source baseline commit: `19d58a1`; experiment snapshots preserve the worktree implementation.
 
 This is the v1 execution entrypoint, separate from the legacy Promptfoo CLI. It preserves conditional applicability and the separate factual-accuracy hard verdict; neither can be represented honestly by averaging legacy component scores. The [project evaluation plan](../../../tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md) owns the experiment; the [rubric manifest](../rubrics/v1/manifest.json) owns check metadata. Rubric Markdown contains only judge instructions.
 
 ## Shared evaluator and adapters
+
+`model-comparison.js` compares frozen tutor and transfer outputs with a different target model. `candidate11-qwen38.js` and `candidate11-qwen38-high-cap.js` preserve the historical Tutor11 experiments, including the separate 600-token condition. Their `freeze`, `run OUT --num_workers N`, and `report` commands require the recorded local reference artifacts under `output/`. Frozen validation deliberately rejects source drift. On 2026-10-17, the combined local suite passed 65/67 tests; both historical Tutor11 artifact checks rejected evaluator source drift after the contextual-reply change. Those historical experiments must not be presented as validated against the current evaluator.
 
 `evaluator.js` is the sole current output scorer. It accepts a frozen case, raw generation, contract version, settings, judge transport, and optional replay evidence. It returns the same result records consumed by `gate.js` and `analyze.js`, with explicit `pass`, `fail`, `not_applicable`, `missing`, and `error` statuses.
 
@@ -21,6 +23,16 @@ Current rubric revision `v1.2` / evaluator revision7 routes schema-valid Guard/n
 Run the seven-room product adapter from `tutor-system/` with `npm run eval:behavior:web`. It requires a local app and the configured Supabase endpoint (local or hosted) and writes a new `results/qwen3.5-flash/web-test-rooms-<timestamp>/` directory; it does not overwrite a `latest` report. Hosted runs may write test rooms, messages, and review/audit rows to that project. To pass the persistence checks, the endpoint must also have the raw-instruction schema/RPC migration applied; the runner records a product failure instead of hiding that mismatch when it is absent. Product and diagnostic behavior verdicts remain separate.
 
 ## Inputs and commands
+
+The [contextual-reply regression pair](contextual-reply-cases.json) preserves the real iTunes room history where “Looks like it does” incorrectly received reasoning about an earlier suspicious-account observation. Its controlled derivative changes only the latest reply to “Looks like it doesn't.” The [focused plan](contextual-reply-plan.md) maps both cases to existing requirements and checks; [case audit](contextual-reply-case-audit.json) accounts for all 61 unchanged cases. These are exposed ecological development cases, not independent holdouts. Run calibration before the focused diagnostic; use `full` to append both cases to the existing suite without modifying its frozen source. Every command requires a new output directory.
+
+```sh
+rtk proxy node evals/promptfoo/v1/contextual-reply.js calibrate NEW_CALIBRATION_DIRECTORY
+rtk proxy node evals/promptfoo/v1/contextual-reply.js focused NEW_FOCUSED_DIRECTORY
+rtk proxy node evals/promptfoo/v1/contextual-reply.js full NEW_FULL_DIRECTORY
+```
+
+The focused command executes three generations per case through the unchanged production prompt/contract, all 13 inherited checks and the new supporting `current_turn_grounding` semantic check. Registry v1.4 adds that check after calibration showed the generic reasoning judge accepted the observed stale justification. Existing rubric meanings remain unchanged. Focused/full runs can resume from completed records with identical inputs and settings. This establishes diagnostic coverage for this pair; full-suite non-regression and unseen generalization require separate complete runs. The [run record](contextual-reply-run-record.md) records executed evidence and any calibration or behavior failures.
 
 `development-with-guard.json` contains 61 cases, including all 43 existing cases and all 173 original assertions. Thirteen cases have ecological provenance, including explicitly labeled single-field product-fixture derivatives; six use the adult role. The earlier 59-case set remains preserved as `development-expanded.json`. Derived input provenance is in `baseline-provenance.json`, the preparation audit, and each case. Evaluator labels stay outside model inputs. Sealed independent cases under `../holdouts/` must not be read during prompt refinement.
 

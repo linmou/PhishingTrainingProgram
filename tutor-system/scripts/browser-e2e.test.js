@@ -75,11 +75,13 @@ test('blocks production requests before browser navigation can write there', asy
 });
 
 test('requires usable provider extraction rather than a fallback', () => {
-  const request = { messages: [{ content: 'Extract cybersecurity learning content' }] };
+  const request = { messages: [{ content: 'Extract the cybersecurity learning targets' }] };
   const response = (content) => ({ status: 200, request, response: { ok: true, data: { content } } });
   assert.deepEqual(extractedTargets([response('not JSON')]), []);
-  assert.deepEqual(extractedTargets([response('{"understanding":["[understanding] None"],"behavior":["[behavior] None"]}')]), []);
-  assert.equal(extractedTargets([response('{"understanding":["[understanding] Urgent wording"],"behavior":["[behavior] Open the official app"]}')]).length, 2);
+  assert.deepEqual(extractedTargets([response('{"detection_areas":[]}')]), []);
+  assert.deepEqual(extractedTargets([response('{"detection_areas":[null]}')]), []);
+  assert.deepEqual(extractedTargets([response('{"detection_areas":["Repeated","Repeated"]}')]), ['Repeated']);
+  assert.equal(extractedTargets([response('{"detection_areas":["Urgent wording","Open the official app"]}')]).length, 2);
 });
 
 test('transfer status checklist preserves every persisted room target', () => {
@@ -90,11 +92,11 @@ test('transfer status checklist preserves every persisted room target', () => {
   assert.deepEqual(templateChecklistItems(config), [
     { area_text: 'Urgent warning', item_type: 'detection_area', priority: 'important' },
     { area_text: 'Suspicious URL', item_type: 'detection_area', priority: 'important' },
-    { area_text: 'Do not click', item_type: 'verification_step', priority: 'critical' },
-    { area_text: 'Open the official app', item_type: 'verification_step', priority: 'critical' }
+    { area_text: 'Do not click', item_type: 'detection_area', priority: 'important' },
+    { area_text: 'Open the official app', item_type: 'detection_area', priority: 'important' }
   ]);
-  assert.throws(() => templateChecklistItems({ detection_areas: [], verification_steps: ['Only one'] }),
-    /detection areas/);
+  assert.equal(templateChecklistItems({ detection_areas: ['Only one'], verification_steps: [] }).length, 1);
+  assert.throws(() => templateChecklistItems({ detection_areas: [], verification_steps: [] }), /no learning targets/);
 });
 
 test('existing room selection validates template and owner without inserting', async () => {
@@ -104,7 +106,7 @@ test('existing room selection validates template and owner without inserting', a
       select: () => ({ eq: async () => ({ data: table === 'rooms' ? [{
         id: expected.id, title: expected.title, description: '[browser-e2e-template]', tutor_id: 'tutor-id', is_active: true,
         transfer_learning_enabled: false,
-        active_response_mode: 'tutoring', mode_changed_at: null, mode_change_source: null,
+        guard_mode: false, guard_mode_changed_at: null, guard_mode_change_source: null,
         ai_assistant_enabled: true, ai_assistant_prompt: 'Template prompt', pre_populated_dialogue: [{}]
       }] : [], error: null }) }),
       insert: () => { throw new Error('Room selection must not insert'); }
@@ -121,7 +123,7 @@ test('used template room is rejected before the workflow can write', async () =>
       select: () => ({ eq: async () => ({ data: table === 'rooms' ? [{
         id: expected.id, title: expected.title, description: '[browser-e2e-template]', tutor_id: 'tutor-id', is_active: true,
         transfer_learning_enabled: false,
-        active_response_mode: 'tutoring', mode_changed_at: null, mode_change_source: null,
+        guard_mode: false, guard_mode_changed_at: null, guard_mode_change_source: null,
         ai_assistant_enabled: true, ai_assistant_prompt: 'Template prompt', pre_populated_dialogue: [{}]
       }] : table === 'session_checklists' ? [{ id: 'used-checklist', is_active: true }] : [], error: null }) })
     })
@@ -131,6 +133,7 @@ test('used template room is rejected before the workflow can write', async () =>
 
 test('selects the transfer status workflow alongside the existing browser workflows', () => {
   assert.deepEqual(selectWorkflows([]), [
+    'cyberbullying',
     'tutor-response', 'checklist-generation', 'room-assessment-setup', 'checklist-management', 'checklist-coverage', 'guard-mode',
     'assessment-delivery', 'assessment-answer', 'transfer-status-events', 'early-message-recheck'
   ]);

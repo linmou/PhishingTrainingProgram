@@ -1,11 +1,44 @@
 // Supabase uses ISO string dates instead of Firestore Timestamps
 
 import { SystemPromptConfig } from '../services/prompts/types';
-import type { AssessmentOptionId, TransferAssessmentDraft } from './assessment';
+import type { AssessmentEvent, AssessmentOptionId, TransferAssessmentDraft } from './assessment';
 
 // User types
 export type UserRole = 'student' | 'tutor' | 'observer';
 export type UserStatus = 'active' | 'inactive';
+
+export type PracticeType = 'phishing' | 'cyberbullying';
+export type CyberbullyingCharacter = 'same_age_peer' | 'older_peer' | 'victim' | 'bully' | 'educator';
+export interface CyberbullyingSuggestion {
+    id: string;
+    room_id: string;
+    parent_message_id: string;
+    context_revision: number;
+    status: 'generating' | 'ready' | 'failed' | 'rejected' | 'superseded' | 'approved';
+    requested_character: CyberbullyingCharacter | null;
+    raw_character: CyberbullyingCharacter;
+    raw_response: string;
+    raw_guard_mode: boolean;
+    reason: string;
+}
+
+/** Stable scenario data retained across room/template copies and exports. */
+export interface CyberbullyingScenario {
+    id: string;
+    source_commit: string;
+    post: {
+        text: string;
+        image: string;
+        timestamp: string;
+        author: { id: string; name: string; profile_picture: string; role: string };
+    };
+    initial_comments: Array<{
+        id: string;
+        text: string;
+        timestamp: string;
+        author: { id: string; name: string; profile_picture: string; role: string };
+    }>;
+}
 
 export interface User {
     id: string;
@@ -23,6 +56,9 @@ export type PrePopulatedMessageRole = UserRole | 'others';
 
 // Pre-populated dialogue message for room setup
 export interface PrePopulatedMessage {
+    source_comment_id?: string;
+    persona_id?: string;
+    avatar_url?: string;
     user_name: string;
     message: string;
     role: PrePopulatedMessageRole;
@@ -32,6 +68,9 @@ export interface PrePopulatedMessage {
 // Room interface
 export interface Room {
     id: string;
+    practice_type?: PracticeType;
+    scenario_config?: CyberbullyingScenario | null;
+    conversation_revision?: number;
     tutor_id: string;
     title: string;
     description: string | null;
@@ -47,9 +86,9 @@ export interface Room {
     op_display_name: string | null;
     op_avatar_url: string | null;
     password: string | null; // Added for password protection
-    active_response_mode?: RoomParticipationMode;
-    mode_changed_at?: string | null;
-    mode_change_source?: 'reviewed_response' | 'manual_override' | null;
+    guard_mode?: RoomParticipationMode;
+    guard_mode_changed_at?: string | null;
+    guard_mode_change_source?: 'reviewed_response' | 'manual_override' | null;
     created_at: string;
     updated_at: string;
 }
@@ -57,6 +96,8 @@ export interface Room {
 // Room Template interface for saving and reusing room configurations
 export interface RoomTemplate {
     id: string;
+    practice_type?: PracticeType;
+    scenario_config?: CyberbullyingScenario | null;
     tutor_id: string;
     template_name: string;
     template_description: string | null;
@@ -74,6 +115,13 @@ export interface RoomTemplate {
 
 // Message interface
 export interface Message {
+    guard_mode?: boolean | null;
+    character?: CyberbullyingCharacter | null;
+    persona_id?: string | null;
+    persona_name?: string | null;
+    persona_avatar?: string | null;
+    assessment_event?: AssessmentEvent | null;
+    assessment_selected_option_ids?: AssessmentOptionId[] | null;
     id: string;
     room_id: string;
     user_id: string;
@@ -156,52 +204,31 @@ export interface AIResponse {
     error?: string;
 }
 
-export type RoomParticipationMode = 'tutoring' | 'guard';
-export type TutorTurnMode = RoomParticipationMode | 'assessment' | 'multiagent';
+export type RoomParticipationMode = boolean;
+export type TutorTurnMode = 'tutoring' | 'guard' | 'assessment';
 /** Legacy alias for APIs that exclusively control room participation. */
-export type TutorResponseMode = RoomParticipationMode;
+export type TutorResponseMode = boolean;
 
-/** Model decision mode. `multiagent` is a presentation decision, never persisted room participation. */
-export type TutorDecisionMode = RoomParticipationMode | 'multiagent';
+export type TutorDecisionMode = boolean;
 
-export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation' | 'transfer_assess' | 'guard' | 'multiagent';
+export type TutorInstruction = 'protective_instruction' | 'correction' | 'scaffolding' | 'explanation' | 'consolidation' | 'transfer_assess' | 'guard';
 
 export interface TutorActionDecision {
-    mode: TutorDecisionMode;
+    guard_mode: boolean;
     instruction: TutorInstruction | null;
-    mode_reason: string;
+    guard_reason: string;
     suggested_response: string;
 }
 
 // Raw v2 model contract; the reviewed-response workflow maps this to TutorActionDecision.
 export interface TutorBehaviorDecision {
     reason: string;
-    decision: { mode: TutorDecisionMode; instruction: TutorInstruction | null };
+    decision: { guard_mode: boolean; instruction: TutorInstruction | null };
     response: string;
 }
 
-/** One decoded character message from a multi-agent response or stored tagged row. */
-export interface DecodedAgentMessage {
-    character: 'riley' | 'tutor';
-    content: string;
-}
-
-/** Learner-visible AI choice. The multi_agent value is retained only for saved legacy configurations. */
-export type StudentAIChoice = 'peer' | 'adult' | 'multi_agent';
-
-/** Model-facing interaction mode. Multi-agent is deprecated and production requests use single_agent. */
-export type InteractionMode = 'single_agent' | 'multi_agent';
-
-/** Human-review draft for one approved-pending Multi-agent response. */
-export interface MultiAgentDraft {
-    rawDecision: TutorActionDecision;
-    parentMessageId: string;
-    parentMessageContent: string;
-    generatedMessages: DecodedAgentMessage[];
-    startTime: number;
-    contextMessages: string[];
-    aiConfigSnapshot?: AIAssistantConfigSnapshot;
-}
+export type StudentAIChoice = 'peer' | 'adult';
+export type InteractionMode = 'single_agent';
 
 export type {
     AssessmentOption,
@@ -248,6 +275,9 @@ export interface TypingIndicator {
 
 // Room context type
 export interface RoomContextType {
+    cyberbullyingDraft: CyberbullyingSuggestion | null;
+    finalCharacter: CyberbullyingCharacter | null;
+    updateFinalCharacter: (character: CyberbullyingCharacter) => void;
     currentRoom: Room | null;
     messages: Message[];
     participants: User[];
@@ -257,12 +287,12 @@ export interface RoomContextType {
     joinRoom: (roomId: string, password?: string) => Promise<void>;
     leaveRoom: () => Promise<void>;
     sendMessage: (content: string, options?: { replyToMessageId?: string; assessmentId?: string; selectedOptionIds?: AssessmentOptionId[] }) => Promise<void>;
-    setResponseMode: (mode: TutorResponseMode) => Promise<void>;
+    setGuardMode: (mode: TutorResponseMode) => Promise<void>;
     setTransferLearningEnabled: (enabled: boolean) => Promise<void>;
     generateAIResponse: (prompt?: string) => Promise<void>;
     regenerateAIResponse: (parameterOverrides: any) => Promise<void>;
     toggleAIAssistant: (enabled: boolean, config?: Partial<AIAssistantConfig>) => Promise<void>;
-    /** Student claims an AI interaction choice (peer/adult/multi-agent; single-student rooms only). */
+    /** Student claims an AI interaction choice (peer/adult; single-student rooms only). */
     setStudentAITone: (choice: StudentAIChoice) => Promise<void>;
     startTyping: () => void;
     stopTyping: () => void;
@@ -282,22 +312,14 @@ export interface RoomContextType {
         itemLabel?: string;
     } | null;
     confirmTransferDraft: (decision: TransferAssessmentDraft) => Promise<void>;
-    finalMode: TutorResponseMode;
+    finalGuardMode: TutorResponseMode;
     updateFinalResponse: (response: string) => void;
-    updateFinalMode: (mode: TutorResponseMode) => void;
+    updateFinalGuardMode: (mode: TutorResponseMode) => void;
     clearAISuggestion: () => void;
-    /** @deprecated Retained for compatibility with in-flight legacy drafts. */
-    multiAgentDraft: MultiAgentDraft | null;
-    /** @deprecated Multi-agent drafts are no longer generated by production requests. */
-    approveMultiAgentDraft: (editedMessages: string[]) => Promise<void>;
-    /** @deprecated Multi-agent drafts are no longer generated by production requests. */
-    regenerateMultiAgentDraft: () => Promise<void>;
-    /** @deprecated Multi-agent drafts are no longer generated by production requests. */
-    rejectMultiAgentDraft: () => Promise<void>;
     aiInteractions: AIInteraction[];
     currentSuggestionContext: { 
         rawDecision: TutorActionDecision;
-        finalMode: TutorResponseMode;
+        finalGuardMode: TutorResponseMode;
         finalResponse: string;
         parentMessageId: string; 
         parentMessageContent: string;
@@ -456,11 +478,11 @@ export interface AISuggestionFeedback {
     response_time_ms: number | null;
     context_messages: string[] | null;
     created_at: string;
-    raw_mode: TutorDecisionMode | null;
+    raw_guard_mode: TutorDecisionMode | null;
     raw_instruction: TutorInstruction | null;
-    mode_reason: string | null;
-    final_mode: TutorResponseMode | null;
-    mode_rectified: boolean;
+    guard_reason: string | null;
+    final_guard_mode: TutorResponseMode | null;
+    guard_rectified: boolean;
 }
 
 export interface AIInteraction {
@@ -472,16 +494,20 @@ export interface AIInteraction {
     tutor_final_response?: string;
     response_time_ms?: number;
     ai_config_snapshot?: AIAssistantConfigSnapshot;
-    raw_mode?: TutorDecisionMode;
+    raw_guard_mode?: TutorDecisionMode;
     raw_instruction: TutorInstruction | null;
-    mode_reason?: string;
-    final_mode?: TutorResponseMode;
-    mode_rectified?: boolean;
+    guard_reason?: string;
+    final_guard_mode?: TutorResponseMode;
+    guard_rectified?: boolean;
 }
 
 export interface ChatExportData {
+    learning_progress?: import('./checklist').SessionChecklist | null;
     room: {
         id: string;
+        practice_type?: PracticeType;
+        scenario_config?: CyberbullyingScenario | null;
+        guard_mode?: boolean;
         title: string;
         created_at: string;
         ai_enabled?: boolean;
@@ -489,6 +515,12 @@ export interface ChatExportData {
     };
     messages: Array<{
         id: string;
+        user_id?: string;
+        guard_mode?: boolean | null;
+        character?: CyberbullyingCharacter | null;
+        persona_id?: string | null;
+        persona_name?: string | null;
+        persona_avatar?: string | null;
         user_role: string;
         display_name?: string;
         content: string;
@@ -512,4 +544,4 @@ export interface ChatExportData {
     feedback_summary?: {
         [key: string]: any;
     };
-} 
+}

@@ -1,5 +1,11 @@
 # Contract: Transfer Domain Determinism
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Resolver retry/pass/failure and learner-feedback authorization remain unchanged. The authorized failed result is now published as a room message by the backend; persistence/publication remains outside the pure resolver. See [Assessment result messages](../../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 **Intent**: Define the pure function and fixture obligations for W2 implementation and downstream consumption.
 **Date**: 2026-09-11  
 **Revised**: 2026-10-13

@@ -46,7 +46,7 @@ describe('Qwen prompt boundary behavior', () => {
       .mockResolvedValueOnce({ data: { content: overLimit, model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null })
       .mockResolvedValueOnce({ data: { content: JSON.stringify({
         reason: 'The learner needs a contextual explanation.',
-        decision: { mode: 'tutoring', instruction: 'explanation' },
+        decision: { guard_mode: false, instruction: 'explanation' },
         response: overLimit,
       }), model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null });
 
@@ -56,7 +56,7 @@ describe('Qwen prompt boundary behavior', () => {
     const suggestion = await aiService.TutorSuggestionService.generateSuggestion(history, config('SUGGESTION'), {
       focusStudentMessage: 'The alert looks real?',
       scenarioContext: 'Account Security Alert',
-      priorMode: 'tutoring',
+      priorMode: false,
     });
 
     expect(direct).toMatchObject({ success: true, content: overLimit, model_used: 'qwen3.5-flash' });

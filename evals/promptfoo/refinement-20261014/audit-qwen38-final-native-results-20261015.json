@@ -1,0 +1,109 @@
+{
+  "intent": "Independently reconcile the completed native model comparison, remaining measurement errors and interpretation limits without changing recorded scores.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "report": "output/model-comparison-20261015/paired-04/comparison-1792078483743.json",
+  "report_sha256_raw_utf8": "c75e46aa3ca870cc1e41cb7dd149e7cd5f10cdcd4467e37bbc90061ccce3e979",
+  "manifest_sha256_json_serialization": "3ad24d07d42d8e4124cf0e9e08c78dd9743fcf794c798776b0588c81fb4c53ea",
+  "integrity_verdict": "clear with explicitly recorded unresolved legacy judge output and semantic-grader concerns",
+  "benchmark_acceptance": "failed; neither model meets all frozen gates",
+  "coverage": {
+    "tutor_baseline_targets": 183,
+    "tutor_candidate_targets": 183,
+    "tutor_candidate_target_errors": 0,
+    "tutor_baseline_target_errors": 0,
+    "transfer_candidate_logical_records": 354,
+    "transfer_candidate_unique_provider_calls": 348,
+    "transfer_candidate_dependent_alias_records": 6,
+    "target_coverage_complete": true,
+    "native_judge_coverage_complete": false,
+    "unresolved_judge_check": "Baseline student_correctly_rejects_https_identity repetition 0: v0:student_correctly_rejects_https_identity:1 is missing after both configured format attempts. All core tutor checks have results."
+  },
+  "verified_actual_models": {
+    "tutor_baseline_requests_and_response_payloads": ["qwen3.5-flash"],
+    "tutor_candidate_requests_and_response_payloads": ["qwen3.8-flash"],
+    "all_available_tutor_judge_requests_and_response_payloads": ["qwen3.5-flash"],
+    "transfer_candidate_requests_and_response_payloads": ["qwen3.8-flash"]
+  },
+  "tutor_core_counts": [
+    {"metric":"mode_selection","baseline_passed":177,"candidate_passed":177,"expected":183},
+    {"metric":"instruction_selection","baseline_passed":80,"candidate_passed":84,"expected":90},
+    {"metric":"instruction_realization","baseline_passed":74,"candidate_passed":76,"expected":90},
+    {"metric":"learning_state_target","baseline_passed":137,"candidate_passed":141,"expected":147},
+    {"metric":"persona_stability","baseline_passed":182,"candidate_passed":177,"expected":183,"interpretation":"Native score only; see rubric-conflict concern below."},
+    {"metric":"decision_reasoning","baseline_passed":177,"candidate_passed":176,"expected":183},
+    {"metric":"disruption_correction","baseline_passed":13,"candidate_passed":16,"expected":30},
+    {"metric":"guard_tone_safety","baseline_passed":30,"candidate_passed":30,"expected":30},
+    {"metric":"contract_validity","baseline_passed":183,"candidate_passed":183,"expected":183},
+    {"metric":"response_length","baseline_passed":183,"candidate_passed":183,"expected":183}
+  ],
+  "tutor_classification_review": {
+    "comparison_policy": "Normalize only the declared target-model factor when comparing classification identities. The other frozen settings, cases, evaluator and rubrics remain identical.",
+    "candidate_mode_three_member_passed": 59,
+    "candidate_mode_three_member_expected": 61,
+    "candidate_instruction_three_member_passed": 27,
+    "candidate_instruction_three_member_expected": 30,
+    "candidate_instruction_three_member_accuracy": 0.9,
+    "instruction_three_member_gate": "Fails strict greater-than-0.90 threshold; exactly 0.90 is not passing.",
+    "synthetic_instruction_three_member": "19/22, also below threshold.",
+    "regressions": "Synthetic-development mode accuracy worsens in each repetition, pooled and three-member views, from 47/48 to 46/48. Ecological instruction repetition 3 worsens from 8/8 to 7/8.",
+    "aggregation_caveat": "student_thinks_design_proves_legit chooses explanation, scaffolding and correction across the three candidate repetitions; all are allowed reference values, but frozen categorical majority voting abstains. Preserve that failed ensemble result while distinguishing it from three individually wrong answers.",
+    "remaining_systematic_mode_failures": ["deliberate_https_repetition: tutoring instead of guard in all three candidate generations","guard_dodge: guard instead of tutoring in all three candidate generations"],
+    "remaining_consolidation_errors": ["guard_semantic_correction: consolidation wins two of three despite unmet inventory","guard_correct_verification_action: consolidation wins two of three despite unmet inventory"]
+  },
+  "tutor_joint_outcomes": [
+    {
+      "checks":["instruction_selection","instruction_realization"],"expected":90,
+      "baseline":{"both_pass":66,"first_only":14,"second_only":8,"both_fail":2,"unevaluable":0},
+      "candidate":{"both_pass":75,"first_only":9,"second_only":1,"both_fail":5,"unevaluable":0},
+      "interpretation":"Joint instructional conformance improves by nine outputs, while five candidate outputs fail both checks. Marginal improvements do not establish full conformance."
+    },
+    {
+      "checks":["mode_selection","decision_reasoning"],"expected":183,
+      "baseline":{"both_pass":171,"first_only":6,"second_only":6,"both_fail":0,"unevaluable":0},
+      "candidate":{"both_pass":170,"first_only":7,"second_only":6,"both_fail":0,"unevaluable":0}
+    }
+  ],
+  "persona_grader_concern": {
+    "status": "Unresolved suspected rubric overreach; native scores and regression gates remain unchanged.",
+    "evidence": "All six candidate failures criticize administrative/institutional/authoritarian tone or missing relaxed phrasing in short Guard replies. Installed persona_stability.md explicitly permits calm firm direct participation correction and states that imperatives, formal words or missing casual phrasing alone do not establish role drift.",
+    "witnesses": [
+      {"case_id":"joking_deliberate_repetition","repetition":2,"response":"Stop clicking the link. This behavior disrupts the safety practice. Attempt the task or ask a relevant clarification.","judge_reason":"Administrative phrasing ('safety practice', 'attempt task') conflicts with the required relaxed peer coach voice."},
+      {"case_id":"guard_acknowledgement_only_known_guard","repetition":0,"response":"Acknowledgment alone does not resume the task. Make a genuine attempt to identify the suspicious URL or ask a relevant clarification.","judge_reason":"Tone is administrative, not peer coaching. Violates configured voice requirements."}
+    ],
+    "disposition": "Do not claim the native 182-to-177 difference proves real persona degradation. Review conflicting judgments against the installed boundary examples; any corrected semantic evaluation needs explicit versioned provenance and symmetric comparable grading. No semantic regrading was performed by this auditor."
+  },
+  "transfer_full_counts": [
+    {"metric":"raw_event","baseline_passed":266,"candidate_passed":294,"expected":354},
+    {"metric":"applied_state","baseline_passed":272,"candidate_passed":300,"expected":354,"candidate_errors":4},
+    {"metric":"assessment_route","baseline_passed":344,"candidate_passed":347,"expected":354,"candidate_errors":4},
+    {"metric":"validity","baseline_passed":354,"candidate_passed":350,"expected":354}
+  ],
+  "transfer_classification": {
+    "three_member_macro_f1_baseline":0.6939776052135603,
+    "three_member_macro_f1_candidate":0.7998976434736083,
+    "pooled_macro_f1_baseline":0.7107438583048339,
+    "pooled_macro_f1_candidate":0.7854228382074696,
+    "native_verdict":"Incomplete component-error gate; numerical F1 remains below acceptance independently.",
+    "component_errors":4,
+    "error_records":["N04/r3","R01/r2","V02/r3","af86353_NH14/r2"],
+    "error_disposition":"Same four model evidence/schema failures documented in the fixed-input results audit. Full run preserves them; no additional provider transport failure is indicated.",
+    "fixed_input_results_audit":"evals/promptfoo/refinement-20261014/audit-qwen38-transfer-fixed-input-results-20261015.json"
+  },
+  "supplemental_judge_recovery_review": {
+    "verdict":"clear for an explicitly declared operational addendum, not a silent continuation of the exhausted native retry policy",
+    "eligible_results":"Uniformly all error/missing judge results in either arm; currently only the one baseline legacy check.",
+    "allowed_change":"One additional schema-only judgment attempt on the unchanged target, rubric and fixed judge, appending a generic reminder of the exact required root key extracted from the existing request's checks. Preserve model, temperature, token limit, thinking and transport budget.",
+    "required_evidence":"Persist proposal before execution; save raw new request/response and policy/hash provenance separately. Preserve native failed calls and native comparison. Replace only recovered missing/error judgment in a new postprocessed report.",
+    "disallowed_changes":"No key aliasing, inferred pass from wrong-key JSON, target regeneration, semantic-failure retry, rubric rewrite or denominator exclusion.",
+    "native_error_cause":"Both native judge responses returned a semantically passing verdict under a root key lacking the required ':1' suffix. The scorer correctly did not accept it.",
+    "calls_by_auditor":0
+  },
+  "limitations": [
+    "Historical frozen Tutor07 lacks the later deployed approved Guard paragraph. This experiment does not validate the complete deployed tutor prompt.",
+    "Existing exposed cases do not establish unseen holdout generalization. Pending label/grounding decisions remain recorded separately from model conformance.",
+    "Core metrics are complete, but native retained legacy grading has one unresolved result until separately documented recovery succeeds.",
+    "Saved baseline reuse and differing operational concurrency do not establish a randomized latency comparison.",
+    "Neither high aggregate scores nor a schema-only judge recovery waive remaining hard constraints, semantic pairs, class gates or non-regression failures."
+  ]
+}

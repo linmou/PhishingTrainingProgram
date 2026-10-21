@@ -5,7 +5,10 @@ import {
   countAssessmentSegments,
   renderAssessment,
   validateAssessmentRendering,
+  parseAssessmentEvent,
+  orderAssessmentMessages,
 } from '../assessmentRendering';
+import { assessmentResultMessage, deliveredAnswerRow, deliveredQuestionRow } from '../../test-support/transferRoomFixtures';
 
 const baseAssessment = {
   stem: 'Imagine a teammate sends a prize link from a familiar account.',
@@ -19,6 +22,24 @@ const baseAssessment = {
 };
 
 describe('assessment rendering', () => {
+  it('allowlists event metadata and rejects contradictory retry/terminal facts', () => {
+    const event=assessmentResultMessage('retry',1,deliveredAnswerRow.id).assessment_event!;
+    expect(parseAssessmentEvent({...event,private_payload:{secret:true}})).toEqual(event);
+    for (const invalid of [{...event,terminal:true},{...event,attempt_number:2},{...event,event_key:'forged'},
+      {...event,attempts_remaining:0},{...event,kind:'closure'}]) {
+      expect(() => parseAssessmentEvent(invalid)).toThrow('INVALID_ASSESSMENT_EVENT');
+    }
+  });
+
+  it('orders inverted/tied timestamps by question, answer, result and subsequent attempt', () => {
+    const first=assessmentResultMessage('retry',1,deliveredAnswerRow.id);
+    const second=assessmentResultMessage('failed',2,'second-answer');
+    const rows=[{...second,created_at:'2020-01-01'}, {...deliveredAnswerRow,id:'second-answer',created_at:'2020-01-01'},
+      first,deliveredAnswerRow,deliveredQuestionRow];
+    const ordered=orderAssessmentMessages(rows);
+    expect(ordered.map(message=>message.id)).toEqual([deliveredQuestionRow.id,deliveredAnswerRow.id,first.id,'second-answer',second.id]);
+    expect(orderAssessmentMessages([...rows].reverse()).map(message=>message.id)).toEqual(ordered.map(message=>message.id));
+  });
   it('stores and displays one canonical text with instructions and A-D labels', () => {
     const rendered = renderAssessment(baseAssessment);
 

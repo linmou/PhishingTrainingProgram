@@ -83,10 +83,10 @@ export const transferRoom: Room = {
   op_avatar_url: null,
   password: null,
   pre_populated_dialogue: null,
-  active_response_mode: 'tutoring',
+  guard_mode: false,
   transfer_learning_enabled: true,
-  mode_changed_at: '2026-09-12T08:00:00Z',
-  mode_change_source: 'reviewed_response',
+  guard_mode_changed_at: '2026-09-12T08:00:00Z',
+  guard_mode_change_source: 'reviewed_response',
   created_at: '2026-09-12T08:00:00Z',
   updated_at: '2026-09-12T08:00:00Z',
 } as Room;
@@ -117,6 +117,8 @@ export const learnerBMessageRow = {
 
 /** Delivered question with public message fields and a public assessment projection. */
 export const deliveredQuestionRow = {
+  assessment_student_id:LEARNER_A_ID,
+  assessment_id:DELIVERED_QUESTION_ID,
   id: DELIVERED_QUESTION_ID,
   room_id: TRANSFER_ROOM_ID,
   user_id: TUTOR_ID,
@@ -192,7 +194,7 @@ export const deliveredPublicMessage: PublicMessageDTO = {
 
 export const reviewedDelivery: ReviewedDeliveryDTO = {
   message: deliveredPublicMessage,
-  room: { ...transferRoom, active_response_mode: 'tutoring' },
+  room: { ...transferRoom, guard_mode: false },
 };
 
 /** Assessment draft returned for learner A, including the private key. */
@@ -294,8 +296,23 @@ export const deliveredSecondAnswerRow: Message = {
 export const singleSelectionOptionIds: AssessmentOptionId[] = ['B'];
 export const multipleSelectionOptionIds: AssessmentOptionId[] = ['B', 'D'];
 
+/** A deterministic persisted result fixture, with the same public provenance as the SQL writer. */
+export function assessmentResultMessage(outcome:'retry'|'passed'|'failed',attempt:1|2,answerId:string): PublicMessageDTO {
+  return {
+    id:`result-${answerId}`,room_id:TRANSFER_ROOM_ID,user_id:TUTOR_ID,user_role:'tutor',
+    content:outcome==='passed' ? 'Correct.' : outcome==='retry' ? 'Incorrect. One attempt remaining.' : 'Incorrect. No attempts remaining. Correct option(s): B.\nVerify the request through an official channel.',
+    parent_message_id:answerId,response_mode:null,assessment:null,created_at:deliveredAnswerRow.created_at,
+    ai_model_used:null,ai_response_time_ms:null,assessment_id:null,assessment_lifecycle:null,assessment_selected_option_ids:null,
+    assessment_event:{event_key:`assessment-result:${answerId}`,kind:'result',assessment_id:DELIVERED_QUESTION_ID,
+      question_message_id:DELIVERED_QUESTION_ID,student_id:LEARNER_A_ID,answer_message_id:answerId,
+      attempt_number:attempt,outcome,attempts_used:attempt,attempts_remaining:outcome==='retry' ? 1 : 0,
+      terminal:outcome!=='retry',lifecycle:outcome==='retry' ? 'open' : outcome,progress_deferred:false,closure_reason:null},
+  };
+}
+
 /** First incorrect answer: the server leaves one retry and discloses no answer material. */
 export const processedFirstIncorrectRetry: ProcessedMessageDTO = {
+  result_message:assessmentResultMessage('retry',1,DELIVERED_ANSWER_ID),
   message_id: DELIVERED_ANSWER_ID,
   assessment_id: DELIVERED_QUESTION_ID,
   processing_state: 'applied',
@@ -315,6 +332,7 @@ export const processedFirstIncorrectRetry: ProcessedMessageDTO = {
 /** Correct first answer: terminal success comes from the server before both attempts are used. */
 export const processedCorrectTerminal: ProcessedMessageDTO = {
   ...processedFirstIncorrectRetry,
+  result_message:assessmentResultMessage('passed',1,DELIVERED_ANSWER_ID),
   answer_outcome: 'passed',
   selected_option_ids: singleSelectionOptionIds,
   attempts_remaining: 0,
@@ -325,6 +343,7 @@ export const processedCorrectTerminal: ProcessedMessageDTO = {
 /** Second incorrect answer: terminal failure includes the server-authorized learner disclosure. */
 export const processedSecondIncorrectTerminal: ProcessedMessageDTO = {
   ...processedFirstIncorrectRetry,
+  result_message:assessmentResultMessage('failed',2,SECOND_DELIVERED_ANSWER_ID),
   message_id: SECOND_DELIVERED_ANSWER_ID,
   answer_outcome: 'failed',
   attempt_number: 2,

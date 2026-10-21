@@ -26,6 +26,7 @@ import {
   deliveredQuestionRow,
   learnerAMessageRow,
   transferRoom,
+  assessmentResultMessage,
 } from '../../test-support/transferRoomFixtures';
 import {
   expectNoPrivateAssessmentFields,
@@ -92,6 +93,18 @@ const messagesWithDistinctQuestionIdentity = () => {
 };
 
 describe('roomExportBuilder transfer assessment projections', () => {
+  it.each(['student','tutor','observer'] as const)('exports saved result provenance and shared failure content for %s',role => {
+    const saved=assessmentResultMessage('failed',2,DELIVERED_ANSWER_ID);
+    const result=projectRoomMessage(saved as unknown as Record<string,unknown>);
+    const args=buildExport(role,LEARNER_A_ID,[questionMessage,answerMessage,result]);
+    const json=buildRoomExportData(args);
+    expect(json.messages[2]).toMatchObject({id:result.id,parent_message_id:DELIVERED_ANSWER_ID,
+      assessment_event:saved.assessment_event,content:saved.content});
+    const text=buildRoomTextExport(args);
+    expect(text).toContain(saved.assessment_event!.event_key);
+    expect(text).toContain(saved.content);
+    expect(text).toContain('Assessment result');
+  });
   it('renders the public question in the learner text export', () => {
     const text = buildRoomTextExport(buildExport('student', LEARNER_A_ID));
 

@@ -1,8 +1,14 @@
 // Test responsibility: verify exact facade projections for delivery and persisted two-attempt outcomes.
 
 import { TransferAssessmentService, type TransferAssessmentApi } from '../transferAssessmentService';
+import { assessmentResultMessage } from '../../test-support/transferRoomFixtures';
 
 function serviceWith(data: unknown): TransferAssessmentService {
+  const source = data as Record<string,any>;
+  if (source.answer_outcome) {
+    const message = assessmentResultMessage(source.answer_outcome,source.attempt_number,source.message_id);
+    source.result_message={...message,assessment_event:{...message.assessment_event,assessment_id:source.assessment_id}};
+  }
   const api: TransferAssessmentApi = { invoke: async () => ({ data: { ok: true, data }, error: null }) };
   return new TransferAssessmentService({ api, requestId: () => 'request-1' });
 }

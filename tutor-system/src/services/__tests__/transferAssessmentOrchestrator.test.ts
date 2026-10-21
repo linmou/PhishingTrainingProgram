@@ -49,7 +49,7 @@ function assessment(overrides: Partial<TransferAssessment> = {}): TransferAssess
 function context(overrides: Partial<TransferLifecycleContext> = {}): TransferLifecycleContext {
   return {
     progress: COVERED,
-    participation_mode: 'tutoring',
+    guard_mode: false,
     progress_snapshot_hash: SNAPSHOT_HASH,
     feedback_required: false,
     eligible_assessment_item_ids: ['item-1'],
@@ -304,7 +304,7 @@ describe('transfer assessment orchestrator', () => {
   });
 
   it('defers transfer processing while the room requires a protective response', () => {
-    const result = resolveTransferAnswer(context({ participation_mode: 'guard' }), answer('B'));
+    const result = resolveTransferAnswer(context({ guard_mode: true }), answer('B'));
 
     expect(result).toMatchObject({
       disposition: 'guard_deferred',
@@ -376,7 +376,7 @@ describe('transfer assessment orchestrator', () => {
       resolveTransferAnswer(context(), answer('A')),
       resolveTransferAnswer(context(), answer('What does compromised mean?')),
       resolveTransferAnswer(context(), answer('B', { assessment: assessment({ progress_snapshot_hash: 'other' }) })),
-      resolveTransferAnswer(context({ participation_mode: 'guard' }), answer('B')),
+      resolveTransferAnswer(context({ guard_mode: true }), answer('B')),
     ];
 
     const validPairs = [
@@ -399,7 +399,7 @@ describe('transfer resolved assessment privacy', () => {
       resolveTransferAnswer(context(), answer('B', { delivered: false })),
       resolveTransferAnswer(context(), answer('A')),
       resolveTransferAnswer(context(), answer('B or D')),
-      resolveTransferAnswer(context({ participation_mode: 'guard' }), answer('B')),
+      resolveTransferAnswer(context({ guard_mode: true }), answer('B')),
       resolveTransferAnswer(context(), answer('B', { delivered: false })),
     ];
 
@@ -607,7 +607,7 @@ describe('server-authoritative two-attempt lifecycle', () => {
   it.each([
     ['stale', authoritativeContext(), authoritativeAnswer('B', { assessment: authoritativeAssessment({ progress_snapshot_hash: 'old' }) })],
     ['assistance', authoritativeContext(), authoritativeAnswer('What does compromised mean?')],
-    ['guard', authoritativeContext({ participation_mode: 'guard' }), authoritativeAnswer('B')],
+    ['guard', authoritativeContext({ guard_mode: true }), authoritativeAnswer('B')],
   ])('does not consume an attempt for %s input', (_name, inputContext, input) => {
     const initial = (inputContext as TransferLifecycleContext & { attempt_snapshot: TransferAttemptSnapshot }).attempt_snapshot;
     const result = resolveTransferAnswer(inputContext, input);

@@ -1,9 +1,18 @@
 {
   "intent": "Own versioning and evaluator bookkeeping separately from clean LLM-facing rubric instructions.",
-  "version": "v1.3",
+  "version": "v1.4",
   "status": "frozen",
-  "recorded": "2026-10-15",
+  "recorded": "2026-10-16",
   "revision": {
+    "previous_version": "v1.3",
+    "changed_checks": ["current_turn_grounding"],
+    "scope": "Add a supporting current-contribution grounding check only to contextual-reply cases. Existing checks, labels, applicability and thresholds remain unchanged.",
+    "calibration_status": "3/3 focused current-turn examples agree; raw judge requests preserve the exact rubric. Generic decision reasoning missed the negative (2/3), retained separately.",
+    "calibration_evidence": "evals/promptfoo/results/qwen3.8-flash/contextual-reply-20261016-current-turn-calibration/summary.json",
+    "calibration_summary_sha256": "d8351b21a89548648428a23bc3e5cb26008b99da9b0f54382c54ef95fbd0931f",
+    "comparison": "New contextual metric has no prior baseline. Full old assertions remain unchanged; new acceptance comparisons must use this frozen registry on both sides."
+  },
+  "previous_revision": {
     "previous_version": "v1.2",
     "previous_manifest_sha256": "b621dbc26c8ed23c03fb7f170e42fca4b780b1953937ee71932a9172bd66ee99",
     "changed_checks": [
@@ -49,6 +58,10 @@
   ],
   "files": [
     {
+      "file": "current_turn_grounding.md",
+      "sha256": "3df0d2afd36a2b22699c055d1548d629ac1919409521ddeedfb8debfb8531a05"
+    },
+    {
       "file": "contract_validity.js",
       "sha256": "c5fffb14bd98bfdd2742b3ccf548c19be95131d4d57199e0d005d635a0ad5f49"
     },
@@ -58,7 +71,7 @@
     },
     {
       "file": "decision-metrics.test.js",
-      "sha256": "f984e97c86c2e776d99bbad4d83dfeb2fcef9e06689a62466ec9e8d8cd629601"
+      "sha256": "4e6aa9c507e09a9cca93347e056f12ce145c2786b33dfbcc031507b1d8e7e1da"
     },
     {
       "file": "decision_reasoning.md",
@@ -114,6 +127,21 @@
     }
   ],
   "checks": [
+    {
+      "id": "current_turn_grounding",
+      "requirements": ["C01", "H4"],
+      "method": "llm_rubric",
+      "checked_field": "reasoning; mode_reason; decision; suggested_response",
+      "file": "current_turn_grounding.md",
+      "title": "Current contribution grounding",
+      "intent": "Resolve a contextual learner reply against the current proposition without substituting older evidence.",
+      "version": "v1",
+      "role": "supporting",
+      "status": "focused_calibration_3_of_3",
+      "label_review": "2026-10-16 user clarified contextual affirmation in the live room",
+      "threshold": 1,
+      "applicability": "Cases explicitly exercising short contextual replies after a topic change. Existing assertions retain their original scope."
+    },
     {
       "id": "instruction_selection",
       "requirements": [
@@ -469,8 +497,8 @@
       "evals/promptfoo/audits/tutor-v1-preparation-20260907/guard-scope-calibration-2.json"
     ]
   },
-  "evaluator_revision": 8,
-  "execution_revision": 8,
+  "evaluator_revision": 9,
+  "execution_revision": 9,
   "transfer_registry": {
     "intent": "Register the frozen W9-W10 transfer rubrics alongside the historical v0/v1 checks without altering any legacy meaning.",
     "owner": "component-104-transfer-evaluation",

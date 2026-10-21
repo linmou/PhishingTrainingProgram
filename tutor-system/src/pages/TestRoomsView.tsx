@@ -14,7 +14,6 @@ import DeleteConfirmModal from '../components/DeleteConfirmModal';
 import { RoomTemplate } from '../types';
 import {
   getDemoRoomTemplateSeeds,
-  getMultiAgentTestRoomTemplateSeeds,
   toRoomTemplateInsertRow
 } from '../services/demoRoomTemplates';
 import {
@@ -32,7 +31,7 @@ type Room = Database['public']['Tables']['rooms']['Row'];
  * shipped seeds that produced those records, used only when the database returns none.
  */
 const shippedDemoTemplateRows = (): RoomTemplate[] =>
-  [...getDemoRoomTemplateSeeds(), ...getMultiAgentTestRoomTemplateSeeds()].map((seed, index) => {
+  getDemoRoomTemplateSeeds().map((seed, index) => {
     const row = toRoomTemplateInsertRow(seed);
     return {
       ...row,

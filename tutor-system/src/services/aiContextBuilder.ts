@@ -5,7 +5,6 @@
 
 import { supabase } from './supabase';
 import { ConversationMessage } from '../types';
-import { decodeAgentMessage } from './tutorDecisionContract';
 
 // Enhanced conversation message with source tracking
 export interface EnhancedConversationMessage extends ConversationMessage {
@@ -93,6 +92,7 @@ export async function getChatMessagesForContext(roomId: string, limit: number = 
                 content,
                 user_role,
                 response_mode,
+                character, persona_id, persona_name,
                 created_at,
                 parent_message_id
             `)
@@ -113,21 +113,9 @@ export async function getChatMessagesForContext(roomId: string, limit: number = 
         return messages
             .reverse() // Put in chronological order (oldest first)
             .map(msg => {
-                const agent = decodeAgentMessage(msg);
-                if (agent) {
-                    return {
-                        role: 'assistant' as const,
-                        content: `${agent.character === 'riley' ? 'Simulated AI participant Riley' : 'AI Tutor'}: ${agent.content}`,
-                        source: 'chat_message' as const,
-                        user_role: msg.user_role as 'student' | 'tutor' | 'observer',
-                        timestamp: new Date(msg.created_at).getTime() / 1000,
-                        created_at: msg.created_at,
-                        parent_id: msg.parent_message_id
-                    };
-                }
                 return {
                 role: msg.user_role === 'tutor' ? 'assistant' as const : 'user' as const,
-                content: `${msg.user_role === 'student' ? 'Student' : msg.user_role === 'tutor' ? 'Tutor' : 'Observer'} said: ${msg.content}`,
+                content: `${msg.user_role === 'tutor' && msg.persona_name ? `AI character ${msg.persona_name} [${msg.persona_id}; ${msg.character}]` : msg.user_role === 'student' ? 'Student' : msg.user_role === 'tutor' ? 'Tutor' : 'Observer'} said: ${msg.content}`,
                 source: 'chat_message' as const,
                 user_role: msg.user_role as 'student' | 'tutor' | 'observer',
                 timestamp: new Date(msg.created_at).getTime() / 1000,

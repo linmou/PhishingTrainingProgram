@@ -227,3 +227,7 @@ US1 delivery -> US5 provider generation
 | SC-001-SC-004 | T018-T025, T033-T037 |
 | SC-005-SC-008 | T004, T006-T017, T026-T032, T035-T037 |
 | SC-009-SC-010 | T001-T003, T005-T009, T017, T025, T032, T037-T047 |
+
+## Assessment dialogue follow-up (2026-10-17)
+
+- [x] AR-20261017 Verify atomic saved results, backfill, provenance, readiness, public DTOs and staged production release. See [approved result-message contract](../../tutor-system/docs/assessment-result-messages.md) and its release record; completion requires the corresponding recorded acceptance evidence.

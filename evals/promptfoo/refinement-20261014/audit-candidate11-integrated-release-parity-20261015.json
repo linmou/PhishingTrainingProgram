@@ -1,0 +1,40 @@
+{
+  "intent": "Independently verify the committed integration artifacts against staged and deployed candidate11 sources before completing production acceptance.",
+  "date": "2026-10-15",
+  "reviewer": "/root/qwen38_audit",
+  "verdict": "clear_source_parity_only_production_acceptance_pending",
+  "integrated_commit": "079948105fae7173fbbc91192a856c1c45034891",
+  "branch": "no_sign_up",
+  "evidence_sha256": {
+    "integrated-release-manifest.json": "193fad037fc9b16ff288165ba872f2645ac5195d17e064e440f3e31263a16c66",
+    "integrated-artifact-comparison.json": "ec4d45da32bbbda7e65a8372987e2453b171962af9555c95099db52d6c9e55f8",
+    "production-deployed-source-readback.json": "6661d7af000d285cc959c684f253d42e3e9fdbcb56ef694944de1c2e568736c8"
+  },
+  "independent_verification": {
+    "commit_is_ancestor_of_no_sign_up": true,
+    "committed_runtime_sources_sha256_exact": 9,
+    "frontend_inputs_git_blob_sha256_and_worktree_exact": 293,
+    "production_mcp_returned_source_files_exact": 12,
+    "rebuilt_frontend_asset_sha256_exact": 3,
+    "method": "Read committed blobs using git cat-file --batch; compare manifest hashes, worktree bytes, saved MCP source readback and rebuilt asset bytes."
+  },
+  "function_artifacts": {
+    "assessment-api": {
+      "source_sha256": "a516340360fca59fc749fbef9df06208d91c681016e6f8cc6aedc399b5ba27de",
+      "staging_version": 60,
+      "production_version": 13,
+      "submitted_source_entries": 13,
+      "mcp_returned_source_files": 10
+    },
+    "ai-api": {
+      "source_sha256": "d74a6cf37a4624b7c4d41a8f994a00aee8598d8fd818dae80ef1f1c664d94cda",
+      "staging_version": 4,
+      "production_version": 3,
+      "submitted_source_entries": 2,
+      "mcp_returned_source_files": 2
+    }
+  },
+  "chronology": "Production versions 13/3 were promoted before the new merge-before-production instruction arrived during verification. Root then paused further production mutations, committed the exact tested artifacts and verified committed/staged/deployed parity before resuming verification. This audit does not claim the commit preceded the original promotion.",
+  "scope": "Exact full Tutor11 and Qwen3.8 nonthinking 0.3/600 tutoring/default ai-api configuration; specialized assessment and transfer remain Qwen3.5 with inherited unified-target transfer behavior. Native benchmark failures and failed transfer semantic diagnostics remain recorded in earlier audits.",
+  "remaining": "Verify all selected production journeys and final cleanup/source/configuration evidence. Identical committed and deployed source requires no redundant deployment. Local frontend build parity does not establish hosted frontend publication."
+}

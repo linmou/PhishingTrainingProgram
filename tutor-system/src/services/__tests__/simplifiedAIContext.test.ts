@@ -1,300 +1,309 @@
 /**
- * Test suite for simplified AI context builder
- * Verifies that AI context includes room title, description, and previous comments
+ * Tests simplifiedAIContext.ts: full chronological history retrieval, cursor pagination,
+ * failure propagation, scenario setup and stored message role formatting.
  */
 
 import { buildAIContextFromExistingData } from '../simplifiedAIContext';
 import { supabase } from '../supabase';
+import { assessmentResultMessage, deliveredAnswerRow, deliveredQuestionRow } from '../../test-support/transferRoomFixtures';
+import {transferAssessmentService} from '../transferAssessmentService';
 
-// Mock the supabase client
-jest.mock('../supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(),
-          order: jest.fn(() => ({
-            limit: jest.fn()
-          }))
-        }))
-      }))
-    }))
-  }
-}));
+jest.mock('../supabase', () => ({ supabase: { from: jest.fn() } }));
+jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{readReview:jest.fn().mockResolvedValue({history_readiness:{
+  ready:true,result_message_ids:[],handled_answer_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[],
+}})}}));
+
+type Message = {
+  character?: string;
+  persona_id?: string;
+  persona_name?: string;
+  id: string;
+  content: string;
+  user_role: string;
+  response_mode: string | null;
+  created_at: string;
+};
+
+const room = {
+  title: 'Phishing Email Detection Training',
+  description: 'Learn to identify suspicious emails',
+  pre_populated_dialogue: null,
+  created_at: '2024-01-15T10:00:00Z'
+};
+
+function mockRoom(data: object | null = room, error: object | null = null) {
+  (supabase.from as jest.Mock).mockReturnValueOnce({
+    select: jest.fn().mockReturnValue({
+      eq: jest.fn().mockReturnValue({
+        single: jest.fn().mockResolvedValue({ data, error })
+      })
+    })
+  });
+}
+
+function mockPage(data: Message[] | null, error: object | null = null) {
+  const query = {
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    or: jest.fn().mockReturnThis(),
+    range: jest.fn().mockResolvedValue({ data, error })
+    ,in:jest.fn().mockResolvedValue({data,error})
+  };
+  (supabase.from as jest.Mock).mockReturnValueOnce(query);
+  return query;
+}
+
+function messages(count: number): Message[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`,
+    content: `message ${index}`,
+    user_role: index % 2 === 0 ? 'tutor' : 'student',
+    response_mode: null,
+    created_at: new Date(Date.parse(room.created_at) + index * 1000).toISOString()
+  }));
+}
 
 describe('buildAIContextFromExistingData', () => {
-  const mockSupabase = supabase as jest.Mocked<typeof supabase>;
-  
   beforeEach(() => {
     jest.clearAllMocks();
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({history_readiness:{
+      ready:true,result_message_ids:[],handled_answer_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[],
+    }});
   });
 
-  it('should include room title and description in AI context', async () => {
-    const roomId = 'test-room-123';
-    const mockRoomData = {
-      title: 'Phishing Email Detection Training',
-      description: 'Learn to identify suspicious emails and protect yourself from phishing attacks',
+  it('keeps scenario, valid pre-populated posts and chat role formatting', async () => {
+    mockRoom({
+      ...room,
       pre_populated_dialogue: {
         posts: [
-          { content: 'Suspicious email: "Click here to verify your account immediately!"' },
-          { content: 'Another example: "You have won $1000! Claim now!"' }
+          { content: 'Email from bank: verify immediately' },
+          { text: 'SMS message: claim your prize' },
+          { content: null },
+          { other: 'Invalid post structure' }
         ]
-      },
-      created_at: '2024-01-15T10:00:00Z'
-    };
-
-    const mockMessages = [
-      {
-        content: 'What makes this email suspicious?',
-        user_role: 'student',
-        created_at: '2024-01-15T10:05:00Z'
-      },
-      {
-        content: 'Great question! The urgency and suspicious link are red flags.',
-        user_role: 'tutor', 
-        created_at: '2024-01-15T10:06:00Z'
-      },
-      {
-        content: 'I can help explain the key warning signs in this phishing attempt.',
-        user_role: 'tutor',
-        created_at: '2024-01-15T10:07:00Z'
       }
-    ];
+    });
+    mockPage([
+      { ...messages(1)[0], content: 'Student question', user_role: 'student' },
+      { ...messages(1)[0], id:'second', content: 'Tutor explanation', user_role: 'tutor' },
+      { ...messages(1)[0], id:'third', content: 'Observer note', user_role: 'observer' }
+    ]);
+    mockPage([]);
 
-    // Mock the room query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          single: jest.fn().mockResolvedValueOnce({
-            data: mockRoomData,
-            error: null
-          })
-        })
-      })
-    } as any);
-
-    // Mock the messages query  
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          order: jest.fn().mockReturnValueOnce({
-            limit: jest.fn().mockResolvedValueOnce({
-              data: mockMessages,
-              error: null
-            })
-          })
-        })
-      })
-    } as any);
-
-    const context = await buildAIContextFromExistingData(roomId);
-
-    // Verify the context structure
-    expect(context).toHaveLength(6); // 1 system + 2 posts + 3 chat messages
-
-    // Check system message includes room title and description
-    const systemMessage = context[0];
-    expect(systemMessage.role).toBe('system');
-    expect(systemMessage.content).toContain('Phishing Email Detection Training');
-    expect(systemMessage.content).toContain('Learn to identify suspicious emails');
-
-    // Check that phishing example posts are included
-    const firstPost = context[1];
-    expect(firstPost.role).toBe('user');
-    expect(firstPost.content).toContain('Student shared for analysis');
-    expect(firstPost.content).toContain('Click here to verify your account');
-
-    const secondPost = context[2];
-    expect(secondPost.role).toBe('user');
-    expect(secondPost.content).toContain('You have won $1000');
-
-    // Check that chat messages are included with proper role mapping
-    const studentMessage = context[3];
-    expect(studentMessage.role).toBe('user');
-    expect(studentMessage.content).toContain('Student: What makes this email suspicious?');
-
-    const tutorMessage = context[4];
-    expect(tutorMessage.role).toBe('assistant');
-    expect(tutorMessage.content).toContain('Tutor: Great question!');
-
-    const aiMessage = context[5];
-    expect(aiMessage.role).toBe('assistant');
-    expect(aiMessage.content).toContain('Tutor: I can help explain');
+    const context = await buildAIContextFromExistingData('room');
+    expect(context).toHaveLength(8);
+    expect(context[0]).toMatchObject({ role: 'system' });
+    expect(context[0].content).toContain(room.title);
+    expect(context[0].content).toContain(room.description);
+    expect(context[1].content).toContain('Student shared for analysis');
+    expect(context[1].content).toContain('verify immediately');
+    expect(context[2].content).toContain('claim your prize');
+    expect(context.slice(3, 5).map(message => message.content)).toEqual([
+      'Student shared for analysis: ',
+      'Student shared for analysis: '
+    ]);
+    expect(context.slice(5).map(({ role, content }) => ({ role, content }))).toEqual([
+      { role: 'user', content: 'Student: Student question' },
+      { role: 'assistant', content: 'Tutor: Tutor explanation' },
+      { role: 'user', content: 'Observer: Observer note' }
+    ]);
   });
 
-  it('should handle room without pre_populated_dialogue', async () => {
-    const roomId = 'simple-room-456';
-    const mockRoomData = {
-      title: 'Basic Phishing Training',
-      description: 'Simple training session',
-      pre_populated_dialogue: null,
-      created_at: '2024-01-15T11:00:00Z'
-    };
+  it('includes all 24 saved turns, with the latest instruction and reply adjacent', async () => {
+    const history = messages(24);
+    history[22].content = 'Check whether the shortened link leads to Apple.';
+    history[23].content = 'Looks like it does';
+    mockRoom();
+    const page = mockPage(history);
+    mockPage([]);
 
-    const mockMessages = [
-      {
-        content: 'Hello, let\'s start the training',
-        user_role: 'tutor',
-        created_at: '2024-01-15T11:01:00Z'
-      }
-    ];
+    const context = await buildAIContextFromExistingData('real-room');
+    expect(context).toHaveLength(25);
+    expect(context.slice(1).map(message => message.content)).toEqual(
+      history.map(message => `${message.user_role === 'tutor' ? 'Tutor' : 'Student'}: ${message.content}`)
+    );
+    expect(context.slice(-2).map(message => message.content)).toEqual([
+      'Tutor: Check whether the shortened link leads to Apple.',
+      'Student: Looks like it does'
+    ]);
+    expect(page.order.mock.calls).toEqual([
+      ['created_at', { ascending: true }],
+      ['id', { ascending: true }]
+    ]);
+    expect(page.eq).toHaveBeenCalledWith('room_id', 'real-room');
+  });
 
-    // Mock room query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          single: jest.fn().mockResolvedValueOnce({
-            data: mockRoomData,
-            error: null
-          })
-        })
-      })
-    } as any);
+  it.each([1000, 1007])('loads %i messages once, including an exact page boundary', async count => {
+    const history = messages(count);
+    mockRoom();
+    const first = mockPage(history.slice(0, 1000));
+    const second = mockPage(history.slice(1000));
+    const last = count > 1000 ? mockPage([]) : second;
 
-    // Mock messages query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          order: jest.fn().mockReturnValueOnce({
-            limit: jest.fn().mockResolvedValueOnce({
-              data: mockMessages,
-              error: null
-            })
-          })
-        })
-      })
-    } as any);
+    const context = await buildAIContextFromExistingData('long-room');
+    expect(context).toHaveLength(count + 1);
+    expect(new Set(context.slice(1).map(message => message.content)).size).toBe(count);
+    expect(context.slice(1).map(message => message.timestamp)).toEqual(
+      history.map(message => new Date(message.created_at).getTime() / 1000)
+    );
+    expect(first.range).toHaveBeenCalledWith(0, 999);
+    expect(second.range).toHaveBeenCalledWith(0, 999);
+    expect(second.or).toHaveBeenCalledWith(
+      `created_at.gt.${history[999].created_at},and(created_at.eq.${history[999].created_at},id.gt.${history[999].id})`
+    );
+    expect(last.range).toHaveBeenCalledWith(0, 999);
+  });
 
-    const context = await buildAIContextFromExistingData(roomId);
+  it('continues after a server returns fewer rows than the requested page size', async () => {
+    const history = messages(24);
+    mockRoom();
+    mockPage(history.slice(0, 10));
+    const second = mockPage(history.slice(10));
+    const last = mockPage([]);
 
-    // Should have system message + 1 chat message
+    const context = await buildAIContextFromExistingData('capped-room');
+    expect(context).toHaveLength(25);
+    expect(second.range).toHaveBeenCalledWith(0, 999);
+    expect(second.or).toHaveBeenCalledWith(
+      `created_at.gt.${history[9].created_at},and(created_at.eq.${history[9].created_at},id.gt.${history[9].id})`
+    );
+    expect(last.range).toHaveBeenCalledWith(0, 999);
+  });
+
+  it('keeps later rows when an earlier row is deleted between pages with matching timestamps', async () => {
+    const history = messages(6).map(message => ({ ...message, created_at: room.created_at }));
+    let stored = [...history];
+    const queries: Array<ReturnType<typeof mockPage>> = [];
+    mockRoom();
+    (supabase.from as jest.Mock).mockImplementation(() => {
+      const query = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        order: jest.fn().mockReturnThis(),
+        or: jest.fn().mockReturnThis(),
+        range: jest.fn()
+      };
+      query.range.mockImplementation((start: number, end: number) => {
+        const filter: string | undefined = query.or.mock.calls[0]?.[0];
+        const cursor = filter?.match(/^created_at.gt.([^,]+),and\(created_at.eq.[^,]+,id.gt.([^)]*)\)$/);
+        const eligible = cursor ? stored.filter(message =>
+          message.created_at > cursor[1] ||
+          (message.created_at === cursor[1] && message.id > cursor[2])
+        ) : stored;
+        const data = eligible.slice(start, Math.min(end + 1, start + 2));
+        if (queries.length === 1) stored = stored.slice(1);
+        return Promise.resolve({ data, error: null });
+      });
+      queries.push(query);
+      return query;
+    });
+
+    const context = await buildAIContextFromExistingData('changing-room');
+    expect(context.slice(1).map(message => message.content)).toEqual(history.map(message =>
+      `${message.user_role === 'tutor' ? 'Tutor' : 'Student'}: ${message.content}`
+    ));
+    expect(queries[0].or).not.toHaveBeenCalled();
+    expect(queries[1].or).toHaveBeenCalledWith(
+      `created_at.gt.${room.created_at},and(created_at.eq.${room.created_at},id.gt.${history[1].id})`
+    );
+    expect(queries).toHaveLength(4);
+  });
+
+  it('preserves scenario and pre-populated dialogue when no saved messages exist', async () => {
+    mockRoom({ ...room, pre_populated_dialogue: { posts: [{ content: 'Example post' }] } });
+    mockPage([]);
+    const context = await buildAIContextFromExistingData('empty-room');
     expect(context).toHaveLength(2);
-    
-    const systemMessage = context[0];
-    expect(systemMessage.content).toContain('Basic Phishing Training');
-    expect(systemMessage.content).toContain('Simple training session');
-
-    const chatMessage = context[1];
-    expect(chatMessage.content).toContain('Tutor: Hello, let\'s start');
+    expect(context[1].content).toContain('Example post');
   });
 
-  it('should handle empty messages gracefully', async () => {
-    const roomId = 'empty-room-789';
-    const mockRoomData = {
-      title: 'Empty Training Room',
-      description: 'No messages yet',
-      pre_populated_dialogue: null,
-      created_at: '2024-01-15T12:00:00Z'
-    };
-
-    // Mock room query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          single: jest.fn().mockResolvedValueOnce({
-            data: mockRoomData,
-            error: null
-          })
-        })
-      })
-    } as any);
-
-    // Mock empty messages query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          order: jest.fn().mockReturnValueOnce({
-            limit: jest.fn().mockResolvedValueOnce({
-              data: [],
-              error: null
-            })
-          })
-        })
-      })
-    } as any);
-
-    const context = await buildAIContextFromExistingData(roomId);
-
-    // Should only have system message
-    expect(context).toHaveLength(1);
-    
-    const systemMessage = context[0];
-    expect(systemMessage.content).toContain('Empty Training Room');
-    expect(systemMessage.content).toContain('No messages yet');
+  it('preserves simulated participant identity without turning it into learner evidence', async () => {
+    mockRoom();
+    mockPage([
+      { ...messages(1)[0], content: 'Participant comment', user_role: 'tutor', character: 'victim', persona_id: 'copilot:dylan', persona_name: 'Dylan', response_mode: 'tutoring' },
+      { ...messages(1)[0], id:'second', content: 'Tutor comment', user_role: 'tutor', response_mode: 'tutoring' },
+      { ...messages(1)[0], id:'third', content: '[agent:riley] Learner typed tag', user_role: 'student', response_mode: null }
+    ]);
+    mockPage([]);
+    const context = await buildAIContextFromExistingData('character-room');
+    expect(context.slice(1).map(({ role, content }) => ({ role, content }))).toEqual([
+      { role: 'assistant', content: 'AI character Dylan [copilot:dylan; victim]: Participant comment' },
+      { role: 'assistant', content: 'Tutor: Tutor comment' },
+      { role: 'user', content: 'Student: [agent:riley] Learner typed tag' }
+    ]);
   });
 
-  it('should handle database errors gracefully', async () => {
-    const roomId = 'error-room-000';
-
-    // Mock room query with error
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          single: jest.fn().mockResolvedValueOnce({
-            data: null,
-            error: { message: 'Room not found', code: 'PGRST116' }
-          })
-        })
-      })
-    } as any);
-
-    const context = await buildAIContextFromExistingData(roomId);
-
-    // Should return empty context when room not found
-    expect(context).toHaveLength(0);
+  it.each([false, true])('rejects page errors instead of returning partial history (later page: %s)', async later => {
+    const error = { message: 'Messages unavailable' };
+    mockRoom();
+    if (later) mockPage(messages(24));
+    mockPage(null, error);
+    await expect(buildAIContextFromExistingData('error-room')).rejects.toEqual(error);
   });
 
-  it('should properly format pre_populated_dialogue posts', async () => {
-    const roomId = 'dialogue-room-999';
-    const mockRoomData = {
-      title: 'Complex Phishing Scenario',
-      description: 'Advanced training with multiple examples',
-      pre_populated_dialogue: {
-        posts: [
-          { content: 'Email from bank: Your account will be closed unless you verify immediately' },
-          { text: 'SMS message: Click link to claim your prize' }, // Different field name
-          { content: null }, // Null content
-          { other: 'Invalid post structure' } // No content/text field
-        ]
-      },
-      created_at: '2024-01-15T13:00:00Z'
-    };
+  it('rejects room lookup errors before fetching messages', async () => {
+    const error = { message: 'Room not found', code: 'PGRST116' };
+    mockRoom(null, error);
+    await expect(buildAIContextFromExistingData('missing-room')).rejects.toEqual(error);
+    expect(supabase.from).toHaveBeenCalledTimes(1);
+  });
 
-    // Mock room query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          single: jest.fn().mockResolvedValueOnce({
-            data: mockRoomData,
-            error: null
-          })
-        })
-      })
-    } as any);
+  it('packages saved question options, learner answer and trusted result in causal dialogue order', async () => {
+    const result = assessmentResultMessage('retry',1,deliveredAnswerRow.id);
+    mockRoom();
+    mockPage([{...result,created_at:'2020-01-01T00:00:00Z'},deliveredAnswerRow,deliveredQuestionRow] as Message[]);
+    mockPage([]);
+    const context = await buildAIContextFromExistingData('room',[result.id]);
+    expect(context).toHaveLength(4);
+    expect(context[1].content).toContain(deliveredQuestionRow.content);
+    deliveredQuestionRow.assessment_options.forEach(option => expect(context[1].content).toContain(`${option.id}. ${option.text}`));
+    expect(context[2].content).toContain(`answer ${deliveredAnswerRow.id}`);
+    expect(context[3].content).toContain(result.id);
+    expect(context[3].content).toContain(deliveredAnswerRow.user_id);
+    expect(context[3].content).toContain(result.content);
+  });
 
-    // Mock empty messages query
-    mockSupabase.from.mockReturnValueOnce({
-      select: jest.fn().mockReturnValueOnce({
-        eq: jest.fn().mockReturnValueOnce({
-          order: jest.fn().mockReturnValueOnce({
-            limit: jest.fn().mockResolvedValueOnce({
-              data: [],
-              error: null
-            })
-          })
-        })
-      })
-    } as any);
+  it('refuses incomplete saved result history before returning provider context', async () => {
+    mockRoom(); mockPage([deliveredAnswerRow] as Message[]); mockPage([]);mockPage([]);
+    await expect(buildAIContextFromExistingData('room',['missing-result'])).rejects.toThrow('ASSESSMENT_RESULT_UNAVAILABLE');
+  });
 
-    const context = await buildAIContextFromExistingData(roomId);
+  it('reads private readiness in disabled transfer rooms and identifies a handled response as unscored',async ()=>{
+    mockRoom({...room,transfer_learning_enabled:false});mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[],
+      handled_answer_message_ids:[deliveredAnswerRow.id],pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
+    const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
+    expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredAnswerRow.assessment_id);
+    expect(context[2].content).toContain('Unscored assessment response');
+    expect(context[2].content).not.toContain('Correct.');
+  });
 
-    // Should have system message + 2 valid posts (only first 2 with content)
-    expect(context).toHaveLength(3);
+  it('omits another learner unfinished answer without blocking the focused learner',async ()=>{
+    const result=assessmentResultMessage('passed',1,deliveredAnswerRow.id);
+    mockRoom();mockPage([deliveredQuestionRow,deliveredAnswerRow,result,
+      {...deliveredAnswerRow,id:'unrelated-pending',user_id:'other-learner',assessment_id:'other-assessment',content:'Other unfinished answer'}] as Message[]);mockPage([]);
+    const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
+    expect(context.map(message=>message.content).join('\n')).not.toContain('Other unfinished answer');
+    expect(context[3].content).toContain('lifecycle passed');
+    expect(context[3].content).toContain('progress deferred false');
+  });
 
-    const firstPost = context[1];
-    expect(firstPost.content).toContain('Your account will be closed');
+  it('fails missing public options even in a disabled transfer room',async ()=>{
+    mockRoom({...room,transfer_learning_enabled:false});
+    mockPage([{...deliveredQuestionRow,assessment_options:null}, {...deliveredAnswerRow,assessment_id:null}] as Message[]);mockPage([]);
+    await expect(buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id)).rejects.toThrow('Assessment question options are incomplete');
+    expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredQuestionRow.assessment_id);
+  });
 
-    const secondPost = context[2];
-    expect(secondPost.content).toContain('Click link to claim your prize');
+  it('fetches the exact result messages committed by trusted read recovery after history was read',async ()=>{
+    const result=assessmentResultMessage('passed',1,deliveredAnswerRow.id);
+    mockRoom();mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
+    const catchup=mockPage([result] as Message[]);
+    (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[result.id],
+      pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
+    const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
+    expect(catchup.in).toHaveBeenCalledWith('id',[result.id]);
+    expect(context[3].content).toContain(result.id);
   });
 });

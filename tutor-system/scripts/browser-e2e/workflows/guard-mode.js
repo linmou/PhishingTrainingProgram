@@ -14,7 +14,7 @@ function decisionFrom(calls) {
     ?.response.data.content;
   assert(content, 'Tutor provider returned no decision');
   const parsed = JSON.parse(content);
-  assert(['guard', 'tutoring'].includes(parsed.decision?.mode), 'Tutor provider returned no valid participation mode');
+  assert.equal(typeof parsed.decision?.guard_mode, 'boolean', 'Tutor provider returned no valid Guard boolean');
   assert(parsed.response?.trim(), 'Tutor provider returned no learner-facing response');
   return parsed;
 }
@@ -43,11 +43,11 @@ module.exports = async function guardMode(ctx) {
   const toggle = tutorPage.locator('button[title="Manually change Guard Mode"]');
   tutorPage.once('dialog', (dialog) => dialog.dismiss());
   await toggle.click();
-  assert.equal((await query(client, 'rooms', 'active_response_mode', 'id', room.id))[0].active_response_mode, 'tutoring');
+  assert.equal((await query(client, 'rooms', 'guard_mode', 'id', room.id))[0].guard_mode, false);
   tutorPage.once('dialog', (dialog) => dialog.accept());
   await toggle.click();
   await tutorPage.getByTitle('Security Supervisor').waitFor({ timeout: TIMEOUT });
-  assert.equal((await query(client, 'rooms', 'active_response_mode,mode_change_source', 'id', room.id))[0].mode_change_source, 'manual_override');
+  assert.equal((await query(client, 'rooms', 'guard_mode,guard_mode_change_source', 'id', room.id))[0].guard_mode_change_source, 'manual_override');
   const itemView = tutorPage.locator('.checklist-item').filter({ hasText: 'A lock icon does not prove' });
   await itemView.locator('.checklist-item-header').click();
   assert.equal(await itemView.locator('.status-select').isDisabled(), true);
@@ -56,7 +56,7 @@ module.exports = async function guardMode(ctx) {
   tutorPage.once('dialog', (dialog) => dialog.accept());
   await toggle.click();
   await tutorPage.locator('.comment-input-profile .comment-input-author-name').filter({ hasText: ctx.tutor.display_name }).waitFor({ timeout: TIMEOUT });
-  assert.equal((await query(client, 'rooms', 'active_response_mode', 'id', room.id))[0].active_response_mode, 'tutoring');
+  assert.equal((await query(client, 'rooms', 'guard_mode', 'id', room.id))[0].guard_mode, false);
 
   const turns = [];
   async function reviewedTurn(studentText, expectedMode) {
@@ -86,7 +86,7 @@ module.exports = async function guardMode(ctx) {
     await tutorPage.locator('.post-comment').filter({ hasText: studentText }).last().waitFor({ timeout: TIMEOUT });
     const checklistClose = tutorPage.locator('.checklist-close');
     if (await checklistClose.isVisible()) await checklistClose.click();
-    const before = (await query(client, 'rooms', 'active_response_mode', 'id', room.id))[0].active_response_mode;
+    const before = (await query(client, 'rooms', 'guard_mode', 'id', room.id))[0].guard_mode;
     const stop = await captureResponses(tutorPage, (response) => response.url().includes('/functions/v1/ai-api') || response.url().includes('/functions/v1/assessment-api'));
     let calls;
     try {
@@ -99,8 +99,8 @@ module.exports = async function guardMode(ctx) {
     } finally { calls = await stop(); }
     writeJson(path.join(evidenceDir, `guard-mode-provider-${turns.length + 1}.json`), calls);
     const decision = decisionFrom(calls);
-    assert.equal(decision.decision.mode, expectedMode, `Unexpected AI mode for: ${studentText}`);
-    assert.equal((await query(client, 'rooms', 'active_response_mode', 'id', room.id))[0].active_response_mode,
+    assert.equal(decision.decision.guard_mode, expectedMode === 'guard', `Unexpected AI mode for: ${studentText}`);
+    assert.equal((await query(client, 'rooms', 'guard_mode', 'id', room.id))[0].guard_mode,
       before, 'An unreviewed suggestion changed the room mode');
     await tutorPage.getByRole('button', { name: /copy to input/i }).click();
     const reviewed = await tutorPage.locator('textarea.comment-input-field').inputValue();
@@ -112,15 +112,15 @@ module.exports = async function guardMode(ctx) {
       'reviewed tutor Guard message'
     )).find((row) => row.parent_message_id === studentMessage.id && row.user_role === 'tutor');
     const feedback = (await waitForMatch(
-      () => query(client, 'ai_suggestion_feedback', 'id,tutor_message_id,raw_mode,final_mode,tutor_final_response', 'room_id', room.id),
+      () => query(client, 'ai_suggestion_feedback', 'id,tutor_message_id,raw_guard_mode,final_guard_mode,tutor_final_response', 'room_id', room.id),
       (rows) => rows.some((row) => row.tutor_message_id === message.id),
       'reviewed Guard feedback'
     )).find((row) => row.tutor_message_id === message.id);
     assert.equal(message.response_mode, expectedMode);
-    assert.equal(feedback.raw_mode, expectedMode);
-    assert.equal(feedback.final_mode, expectedMode);
+    assert.equal(feedback.raw_guard_mode, expectedMode === 'guard');
+    assert.equal(feedback.final_guard_mode, expectedMode === 'guard');
     assert.equal(feedback.tutor_final_response, reviewed);
-    assert.equal((await query(client, 'rooms', 'active_response_mode', 'id', room.id))[0].active_response_mode, expectedMode);
+    assert.equal((await query(client, 'rooms', 'guard_mode', 'id', room.id))[0].guard_mode, expectedMode === 'guard');
     await studentPage.reload({ waitUntil: 'domcontentloaded' });
     await studentPage.locator('.post-comment').filter({ hasText: reviewed }).waitFor({ timeout: TIMEOUT });
     turns.push({ student_message: studentMessage, decision, provider_calls: calls, tutor_message: message, feedback });

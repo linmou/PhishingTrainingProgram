@@ -1,10 +1,10 @@
 # Component 102 Edge API Contract
 
-<!-- Intent: freeze the six browser-facing operations and their role-safe request/response DTOs. -->
+<!-- Intent: define browser-facing assessment operations and their role-safe request/response DTOs. -->
 
-Updated: 2026-10-14. Baseline commit: `88b3ccd`.
+Updated: 2026-10-17. Revision baseline commit: `c6d5129`.
 
-This contract describes the component-102 Edge Function in the repository. The matching assessment-api is deployed as staging version 54 and production version 10. The [release record](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) records source hashes and live workflow evidence.
+This contract describes the component-102 Edge Function in the repository. Current artifact versions and live evidence are recorded in the [assessment dialogue release record](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_17_assessment_result_messages.md). The [2026-10-14 record](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) preserves that earlier release's source and workflow evidence.
 
 ## Envelope and Identity
 
@@ -53,6 +53,10 @@ Assessment generation retains one format-only repair attempt. Its user input inc
 | `prepare_turn` | `room_id`, `focus_student_message_id`, `checklist_id` | authorized teacher | validated candidate decision and stable scope; nothing delivered is persisted |
 | `send_reviewed` | reviewed decision plus `room_id`, `student_id`, `checklist_id`, `item_id`, `focus_student_message_id` | authorized teacher | public tutor message and room projection |
 | `process_message` | stored learner `message_id` and `assessment_id` | verified target learner or trusted backend for that learner | authoritative attempt/result DTO |
+| `read_review` | `room_id`, `assessment_id` | authorized teacher | private review plus learner-scoped readiness; deterministic recovery of pending answers before rereading readiness |
+| `join_room` | `room_id` | current app user | room/learner identity and participation role |
+| `edit_learning_progress` | `room_id`, `item_id`, `action`, `updates` | authorized teacher | validated progress/target edit; obsolete questions close through saved closure events |
+| `clear_chat_history` | `room_id` | room-owning teacher | atomic deletion of scoped private assessment sources and room messages; pre-populated dialogue preserved |
 
 There is no browser grading fallback, persisted draft/revision, reject operation, regenerate operation, or client-selected attempt number.
 
@@ -80,6 +84,7 @@ interface PublicMessageDTO {
   parent_message_id: string | null;
   response_mode: string | null;
   assessment?: PublicAssessmentDTO | null;
+  assessment_event?: AssessmentEvent | null;
   created_at: string;
 }
 
@@ -119,6 +124,7 @@ interface ProcessedMessageDTO {
   code: string | null;
   already_processed: boolean;
   terminal_failure_feedback: TerminalFailureFeedbackDTO | null;
+  result_message: PublicMessageDTO | null;
 }
 ```
 
@@ -140,6 +146,18 @@ Rules:
 | Field | Teacher candidate | Public message | First wrong | Pass | Second wrong learner response |
 |---|---:|---:|---:|---:|---:|
 | stem/options/selection type | yes | yes | yes | yes | yes |
-| correct option IDs | yes | no | no | no | yes |
-| learner-safe explanation | yes | no | no | no | yes |
+| correct option IDs | yes | terminal-failure result only | no | no | yes |
+| learner-safe explanation | yes | terminal-failure result only | no | no | yes |
 | transfer basis/rationale/raw output | authorized private scope only | no | no | no | no |
+
+## Saved result and readiness contract
+
+`AssessmentEvent` is the safe backend-owned event projection defined in `src/types/assessment.ts`: event key/kind, assessment/question/student/answer identities, attempt/outcome/counts, terminal/lifecycle, progress deferral and closure cause. It contains no answer key or reviewed explanation fields. Published terminal-failure feedback lives in result message content. Event rows have no nested public question. Direct participant writes cannot create or edit trusted event provenance/content.
+
+`process_message` returns the saved `result_message` for accepted and duplicate outcomes and assistance closure. Invalid/unscored outcomes return null. Historical duplicate outcomes reference the same backfilled row. No LLM call creates the grade or message.
+
+Tutor `read_review` additionally returns trusted `student_id` and `history_readiness: {ready, result_message_ids, handled_answer_message_ids, pending_answer_message_ids, pending_answers, unavailable_assessment_ids}`. Pending entries contain only message/assessment IDs for authorized recovery. Scope covers the assessment's learner throughout the room, so another tab or selected historical answer cannot bypass pending processing. The readiness operation recovers pending answers through the existing deterministic processor, in source chronological order, then rereads readiness. It never invokes a provider. A private `transfer_assessment_processing` ledger stores non-consuming dispositions so rejected/unscored answers do not remain pending forever; Guard-only deferrals become recoverable when Guard clears. Accepted attempt counts and grades remain in their existing authority.
+
+Generation requires ready=true and every required saved result in fetched dialogue, including after transfer learning is disabled. Handled-answer IDs distinguish unscored dialogue from a pending grade. Another learner's unfinished answer is omitted from this focused request instead of blocking it. Existing private review fields and processing bookkeeping remain outside the tutor prompt. Individual result deletion stays protected; `clear_chat_history` is the owner-authorized whole-room clearing path and preserves the existing backup flow.
+
+Published results inherit ordinary room-message read visibility and exports. Current research-deployment message policies permit direct anonymous reads; this change does not establish stronger reader identity than the existing room transport. Backend assessment mutation/review role checks and immutable result provenance remain enforced.

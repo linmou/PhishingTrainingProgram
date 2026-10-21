@@ -12,6 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const ts = require('typescript');
+const { isDeepStrictEqual } = require('node:util');
 const { createClient } = require('@supabase/supabase-js');
 
 const tutorRoot = path.resolve(__dirname, '..');
@@ -40,6 +41,7 @@ loadEnv();
 
 const {
   getDemoRoomTemplateSeeds,
+  getPrivacyTeachingTemplateSeeds,
   getMultiAgentTestRoomTemplateSeeds,
   getPromptComparisonTemplateSeeds,
   toRoomTemplateInsertRow,
@@ -56,9 +58,11 @@ async function main() {
     .map((arg) => arg.slice('--case-id='.length));
   const allSeeds = [
     ...getDemoRoomTemplateSeeds(),
+    ...getPrivacyTeachingTemplateSeeds(),
     ...getMultiAgentTestRoomTemplateSeeds(),
     ...getPromptComparisonTemplateSeeds()
   ];
+  const privacyTemplateNames = new Set(getPrivacyTeachingTemplateSeeds().map((seed) => seed.template_name));
   const seeds = requestedCaseIds.length === 0
     ? allSeeds
     : allSeeds.filter((seed) => requestedCaseIds.includes(seed.case_id));
@@ -78,7 +82,7 @@ async function main() {
     const row = toRoomTemplateInsertRow(seed);
     const { data: existing, error: findError } = await supabase
       .from('room_templates')
-      .select('id')
+      .select('id, ai_config_template')
       .eq('tutor_id', GLOBAL_TEMPLATE_TUTOR_ID)
       .eq('template_name', seed.template_name)
       .maybeSingle();
@@ -88,6 +92,20 @@ async function main() {
     }
 
     if (existing?.id) {
+      if (privacyTemplateNames.has(seed.template_name)) {
+        if (existing.ai_config_template !== null &&
+            !isDeepStrictEqual(existing.ai_config_template, row.ai_config_template)) {
+          throw new Error(`Existing privacy AI configuration differs for ${seed.template_name}; use the scoped knowledge migration.`);
+        }
+        const { error } = await supabase.from('room_templates').update({
+          ai_config_template: row.ai_config_template,
+          updated_at: new Date().toISOString()
+        }).eq('id', existing.id);
+        if (error) throw new Error(`Update failed for ${seed.template_name}: ${error.message}`);
+        updated += 1;
+        console.log(`updated knowledge ${seed.template_name}`);
+        continue;
+      }
       const { error } = await supabase
         .from('room_templates')
         .update({

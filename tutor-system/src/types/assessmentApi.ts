@@ -10,6 +10,7 @@ export const ASSESSMENT_API_OPERATIONS = [
   'send_reviewed',
   'read_review',
   'process_message',
+  'clear_chat_history',
 ] as const;
 
 export type AssessmentApiOperation = (typeof ASSESSMENT_API_OPERATIONS)[number];

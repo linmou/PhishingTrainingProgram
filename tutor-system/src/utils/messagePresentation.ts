@@ -1,7 +1,6 @@
-// Purpose: resolve the role, response mode, and optional Multi-agent tag into one pure UI profile.
+// Purpose: resolve the role, Guard state, and stored character identity into one pure UI profile.
 
 import type { Message, TutorTurnMode, UserRole } from '../types';
-import { decodeAgentMessage } from '../services/tutorDecisionContract';
 
 export interface MessagePresentation {
   displayName: string;
@@ -13,8 +12,6 @@ export interface MessagePresentation {
   roleIcon: string;
   isGuard: boolean;
   isAssessment: boolean;
-  isMultiagent: boolean;
-  agentCharacter: 'riley' | 'tutor' | null;
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -33,19 +30,31 @@ const roleName = (role: UserRole): string => role === 'tutor' ? 'Tutor' : role =
 
 /** Resolve presentation without consulting room state or inferring AI authorship. */
 export function resolveMessagePresentation(
-  message: Pick<Message, 'content' | 'user_role' | 'response_mode' | 'display_name' | 'avatar_url'>,
+  message: Pick<Message, 'content' | 'user_role' | 'response_mode' | 'display_name' | 'avatar_url' | 'assessment_event' | 'guard_mode' | 'character' | 'persona_name' | 'persona_avatar'>,
   viewerRole?: string | null
 ): MessagePresentation {
   const mode: TutorTurnMode = message.response_mode ?? 'tutoring';
   const role = message.user_role as UserRole;
-  const isGuard = mode === 'guard';
+  const isGuard = message.guard_mode ?? mode === 'guard';
   const isAssessment = mode === 'assessment';
-  const isMultiagent = mode === 'multiagent' && message.user_role === 'tutor';
-  const agent = isMultiagent ? decodeAgentMessage(message) : null;
   const baseName = message.display_name || roleName(role) || role || 'User';
   const roleIcon = ROLE_ICONS[role] || '👤';
   const roleColor = ROLE_COLORS[role] || '#6b7280';
 
+  if (message.assessment_event) return {
+    displayName:'Assessment result',avatarName:'Assessment result',avatarUrl:null,
+    body:message.content,roleBadge:null,roleColor:'#6b7280',roleIcon:'✓',isGuard:false,
+    isAssessment:false,
+  };
+
+  if (message.character && message.persona_name) {
+    return {
+      displayName: message.persona_name, avatarName: message.persona_name,
+      avatarUrl: message.persona_avatar || null, body: message.content,
+      roleBadge: viewerRole === 'tutor' ? 'AI character' : null,
+      roleColor, roleIcon, isGuard, isAssessment: false,
+    };
+  }
   if (isGuard) {
     return {
       displayName: 'Security Supervisor',
@@ -57,26 +66,6 @@ export function resolveMessagePresentation(
       roleIcon: '🛡️',
       isGuard: true,
       isAssessment,
-      isMultiagent: false,
-      agentCharacter: null,
-    };
-  }
-
-  if (agent) {
-    const isRiley = agent.character === 'riley';
-    const characterName = isRiley ? 'Riley' : baseName;
-    return {
-      displayName: characterName,
-      avatarName: characterName,
-      avatarUrl: isRiley ? null : message.avatar_url || null,
-      body: agent.content,
-      roleBadge: viewerRole === 'student' ? null : `${ROLE_ICONS.tutor} AI chatbot`,
-      roleColor: isRiley ? '#d97706' : ROLE_COLORS.tutor,
-      roleIcon: isRiley ? '🧑‍💼' : ROLE_ICONS.tutor,
-      isGuard: false,
-      isAssessment: false,
-      isMultiagent: true,
-      agentCharacter: agent.character,
     };
   }
 
@@ -94,7 +83,5 @@ export function resolveMessagePresentation(
     roleIcon,
     isGuard: false,
     isAssessment,
-    isMultiagent: false,
-    agentCharacter: null,
   };
 }

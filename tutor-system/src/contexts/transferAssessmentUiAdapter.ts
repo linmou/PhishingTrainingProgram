@@ -4,6 +4,7 @@
 import type { Message, RoomParticipationMode } from '../types';
 import type { AssessmentOption, AssessmentOptionId, AssessmentSelectionType, TransferAssessmentDraft } from '../types/assessment';
 import { validateAssessmentDraft } from '../services/assessmentValidation';
+import { orderAssessmentMessages, parseAssessmentEvent } from '../services/assessmentRendering';
 import {
   PUBLIC_MESSAGE_DTO_KEYS,
   TransferAssessmentService,
@@ -98,7 +99,8 @@ const OPTION_ORDER: ReadonlyArray<AssessmentOption['id']> = ['A', 'B', 'C', 'D']
 type ReviewFailureStatus = 'superseded' | 'validation' | 'unavailable' | 'unauthorized' | 'retryable';
 
 /** Display-only message fields that are safe for every role and are not part of the public DTO. */
-const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_name', 'avatar_url'];
+const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_name', 'avatar_url',
+  'character', 'persona_id', 'persona_name', 'persona_avatar', 'guard_mode'];
 
 const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['ASSESSMENT_FEATURE_DISABLED', 'unavailable'],
@@ -234,9 +236,17 @@ export function projectRoomMessage(
     response_mode: (projected.response_mode ?? null) as Message['response_mode'],
     display_name: asNonEmptyString(projected.display_name) || undefined,
     avatar_url: asNonEmptyString(projected.avatar_url),
+    ...(typeof projected.guard_mode === 'boolean' || projected.guard_mode === null ? { guard_mode: projected.guard_mode as boolean | null } : {}),
+    ...(typeof projected.character === 'string' && ['same_age_peer', 'older_peer', 'victim', 'bully', 'educator'].includes(projected.character)
+      ? { character: projected.character as Message['character'] } : {}),
+    ...(typeof projected.persona_id === 'string' ? { persona_id: projected.persona_id } : {}),
+    ...(typeof projected.persona_name === 'string' ? { persona_name: projected.persona_name } : {}),
+    ...(typeof projected.persona_avatar === 'string' ? { persona_avatar: projected.persona_avatar } : {}),
     publicQuestion: publicQuestionFromStoredRow(source, explicit),
     assessmentId: asNonEmptyString(source.assessment_id),
     answerLifecycle: null,
+    assessment_event: parseAssessmentEvent(source.assessment_event),
+    assessment_selected_option_ids: Array.isArray(source.assessment_selected_option_ids) ? source.assessment_selected_option_ids as AssessmentOptionId[] : null,
   };
 }
 
@@ -441,10 +451,10 @@ export function classifyAssessmentFailure(error: unknown): { status: ReviewStatu
 
 /** Room participation is binary. An unexpected value is reported as unknown rather than coerced. */
 export function participationModeFromRoom(
-  room: { active_response_mode?: unknown } | null | undefined
+  room: { guard_mode?: unknown } | null | undefined
 ): RoomParticipationMode | null {
-  const value = room?.active_response_mode;
-  return value === 'tutoring' || value === 'guard' ? value : null;
+  const value = room?.guard_mode;
+  return typeof value === 'boolean' ? value : null;
 }
 
 /**
@@ -469,18 +479,43 @@ export function mergeRoomMessages(
         publicQuestion: incomingView.publicQuestion ?? currentView?.publicQuestion ?? null,
         answerLifecycle: incomingView.answerLifecycle ?? currentView?.answerLifecycle ?? null,
       }
-      : message;
+      : { ...message };
     byId.set(message.id, { message: merged, seen: current ? current.seen : byId.size });
   };
   existing.forEach(remember);
   incoming.forEach(remember);
 
-  const entries = Array.from(byId.values());
-  const time = (entry: { message: Message }) => new Date(entry.message.created_at).getTime() || 0;
-  const chronological = (left: { message: Message; seen: number }, right: { message: Message; seen: number }) =>
-    time(left) - time(right) || left.seen - right.seen;
-
-  const prePopulated = entries.filter((entry) => entry.message.id.startsWith('prepop-')).sort(chronological);
-  const persisted = entries.filter((entry) => !entry.message.id.startsWith('prepop-')).sort(chronological);
-  return [...prePopulated, ...persisted].map((entry) => entry.message);
+  const ordered = orderAssessmentMessages(Array.from(byId.values()).map(entry => entry.message));
+  // Rehydrate from persisted events on every ingress, including result-before-answer delivery.
+  for (const message of ordered) {
+    const event = message.assessment_event;
+    if (!event) continue;
+    const answer = event.answer_message_id ? byId.get(event.answer_message_id)?.message : undefined;
+    const lifecycle: AnswerLifecycleView = {
+      state: event.outcome ?? 'duplicate',messageId:event.answer_message_id ?? event.question_message_id,
+      assessmentId:event.assessment_id,processingState:event.progress_deferred ? 'deferred' : 'applied',
+      answerOutcome:event.outcome,attemptNumber:event.attempt_number,attemptsUsed:event.attempts_used,
+      attemptsRemaining:event.attempts_remaining,selectedOptionIds:answer?.assessment_selected_option_ids ?? null,
+      terminal:event.terminal,transition:null,code:event.closure_reason,feedbackRequired:event.kind==='result' && event.terminal,
+      alreadyProcessed:true,terminalFailureFeedback:null,
+    };
+    if (answer && event.kind==='result') {
+      const current=readAnswerLifecycle(answer);
+      if (!current || current.answerOutcome!==event.outcome || current.attemptNumber!==event.attempt_number) {
+        (answer as RoomMessageView).answerLifecycle=lifecycle;
+      }
+    }
+    const question = byId.get(event.question_message_id)?.message as RoomMessageView | undefined;
+    if (question?.publicQuestion) {
+      const current = question.answerLifecycle;
+      if (!current || (lifecycle.terminal && !current.terminal) ||
+        lifecycle.attemptsUsed>current.attemptsUsed || event.kind==='closure') {
+        question.answerLifecycle=lifecycle;
+      }
+      if (event.terminal && (question.publicQuestion.lifecycle==='delivered' || event.kind==='closure')) {
+        question.publicQuestion={...question.publicQuestion,lifecycle:event.lifecycle==='open' ? 'delivered' : event.lifecycle};
+      }
+    }
+  }
+  return ordered;
 }

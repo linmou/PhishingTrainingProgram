@@ -38,6 +38,8 @@ Non-goals: room administration, latency, multi-bot simulation, implementing the 
 
 Intent: make the existing learner-evidence rules independently measurable for `TRANSFER_ANALYSIS_SYSTEM_PROMPT`.
 
+The component is named the learning-progress analyzer; `transfer_analysis` remains its stable behavior ID and `TRANSFER_ANALYSIS_SYSTEM_PROMPT` its runtime identifier. Its classification evaluation is documented in the [analyzer suite](../../../evals/promptfoo/learning-progress-analyzer/README.md).
+
 Analysis behavior ID: `transfer_analysis`. Grounding review: resolved by Codex on 2026-10-13 against constitution 1.0 and the existing [transfer status response contract](transfer-status-response-contract.md). These clauses specify T02's analysis boundary; T09 retains assessment eligibility. The current contract permits direct coverage from pending/partial, but recovery from `needs_review` in the same situation first becomes partial. Different-situation spontaneous transfer can directly cover a review target. That recovery distinction is retained for measurement, not generalized into a new educational principle.
 
 | Requirement ID | Trigger and prior state | Required result | Prohibited result | Permitted alternatives | User-visible effect / consumer | Constitutional grounding |
@@ -106,6 +108,8 @@ Experimental linkage: the analysis evaluation plan and executed run record pin t
 | T08 | Every generated suggestion in either mode. | Non-empty `suggested_response`, at most three English sentence segments and 50 word-like segments; exact boundaries pass. | Counts only parsed suggestion text, not JSON, `mode_reason`, or `reasoning`. Preserve the existing limit; no unapproved exception for teaching or supervision. | Any wording within the stated non-empty, sentence, and word limits. | The human tutor receives a bounded-length suggestion to review and send. | Implementation constraint from [responsePolicy.ts](../../src/services/prompts/responsePolicy.ts) and [the length check](../../scripts/response-length-rubric.js); the constitution does not prescribe these numeric limits. It grants no exception to [H1–H4](constitution.md#non-negotiable-constraints). |
 
 ### T09: Transfer assessment and verification lifecycle
+
+Assessment dialogue revision approved 2026-10-17 (baseline `c6d5129`): [saved result messages](../assessment-result-messages.md) extend T09.3's publication exception only after a second incorrect attempt. T09.4 records each authoritative grade as an attributed automatic message; T09.6 continues to require a human tutor feedback reply before a later assessment. Automatic result messages carry the facts through ordinary dialogue and are separate from that tutor reply. Retry/pass do not publish the stored answer/explanation. Implementation and release evidence are tracked in the linked record.
 
 T09 is one behavior family with six independently testable responsibilities. T02 remains the sole owner of general learning-state interpretation, recording all newly signaled concepts, and selecting one next target. T09 consumes T02's selected target and evidence classification; it does not select a second target, discard other evidence updates, or reinterpret learner evidence independently.
 

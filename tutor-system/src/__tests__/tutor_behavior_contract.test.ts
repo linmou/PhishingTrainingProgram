@@ -21,7 +21,7 @@ describe('Tutor behavior production contract', () => {
       scenario_context: 'Account alert with a suspicious link.',
       conversation_history: 'Tutor/AI: What would you do?\nParticipant: Student: I would click it.',
       student_message: 'I would click it.',
-      prior_mode: null
+      prior_guard_mode: 'unknown'
     });
 
     expect(messages.map((message) => message.role)).toEqual(['system', 'user']);
@@ -35,12 +35,12 @@ describe('Tutor behavior production contract', () => {
   it('preserves all fields from a valid tutoring decision', () => {
     expect(parseTutorActionDecision(JSON.stringify({
       reason: 'The learner plans to click an unsafe link.',
-      decision: { mode: 'tutoring', instruction: 'protective_instruction' },
+      decision: { guard_mode: false, instruction: 'protective_instruction' },
       response: 'Do not click it. Open the real app and check there.'
     }))).toEqual({
-      mode: 'tutoring',
+      guard_mode: false,
       instruction: 'protective_instruction',
-      mode_reason: 'The learner plans to click an unsafe link.',
+      guard_reason: 'The learner plans to click an unsafe link.',
       suggested_response: 'Do not click it. Open the real app and check there.'
     });
   });
@@ -48,13 +48,13 @@ describe('Tutor behavior production contract', () => {
   it('accepts Guard with null instruction and rejects tutoring with null instruction', () => {
     expect(parseTutorActionDecision(JSON.stringify({
       reason: 'The learner deliberately disrupts the discussion.',
-      decision: { mode: 'guard', instruction: null },
+      decision: { guard_mode: true, instruction: null },
       response: 'Stop the disruption and make one relevant attempt.'
-    }))).toMatchObject({ mode: 'guard', instruction: null });
+    }))).toMatchObject({ guard_mode: true, instruction: null });
 
     expect(() => parseTutorActionDecision(JSON.stringify({
       reason: 'The learner needs help.',
-      decision: { mode: 'tutoring', instruction: null },
+      decision: { guard_mode: false, instruction: null },
       response: 'Check the sender first.'
     }))).toThrow(/instruction/i);
   });

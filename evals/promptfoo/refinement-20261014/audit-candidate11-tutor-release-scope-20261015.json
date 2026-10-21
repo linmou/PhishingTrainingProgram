@@ -1,0 +1,61 @@
+{
+  "intent": "Independently assess whether the explicit Tutor11 release can proceed through its own live checks while preserving an unchanged but failing inherited transfer-semantic diagnostic.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "scope_verdict": "clear for the explicitly narrowed tutor/extraction release; operational acceptance and production verification remain pending",
+  "benchmark_verdict": "failed; unchanged",
+  "transfer_semantic_diagnostic_verdict": "failed; not reclassified as passing",
+  "authority_and_scope": "The user explicitly requested deploying candidate11 after disclosure of its failures. Root narrows the release to full Tutor11/Qwen3.8/600 and the app's tutor/extraction default, preserving the preexisting production Qwen3.5 transfer/assessment configuration. This is not a transfer-prompt refinement or transfer quality promotion.",
+  "independent_live_source_inspection": {
+    "method": "Read-only Supabase MCP get_edge_function for production assessment-api; no model calls or host mutations.",
+    "production_version": 12,
+    "production_bundle_sha256": "5c93f37caddda628de0e3dae4b90214a87eeb71d4b35b5ab9ae6c475412060af",
+    "preserved_source_artifact": "output/candidate11-release-20261015/production-v12-before-source.json",
+    "preserved_source_artifact_sha256": "edb1e5ac909aeb2126faacf94aff72795c6bf51e88face9e4900fb0db64cb08a",
+    "independence_artifact": "output/candidate11-release-20261015/transfer-independence.json",
+    "independence_artifact_sha256": "cd27dea5d589840ec6e3f3dff637f94b31fda96b6fa9386ba6bd7f4f028e780c",
+    "entry_source_comparison": "Independently verified the entire candidate entry equals deployedv12 after normalizing only providerConfig and its explanatory comment. Independently compared all20 other function declarations using TypeScript AST text; exact matches.",
+    "provider_configuration_difference": "Productionv12 reads the existing valid3.5 model secret and checks it against its3.5 pin. Candidate explicitly returns the same3.5 pin while requiring the same key/base. Under the captured correct production configuration, outgoing model/endpoint/credentials are unchanged.",
+    "dependencies": "Eight other deployed files are byte-identical. The sole additional changed imported file is the explicitly selected Tutor07-to-Tutor11 policy.",
+    "call_graph": "analyzeMessage builds its own transfer prompt and user payload from RPC context; it never consumes ACTIVE_TUTOR_AGENT_PROMPT. prepareAssessment uses canonical context/assessment packaging helpers that also do not consume this policy. The active policy affects ecological tutor chat construction in a separate function.",
+    "conclusion": "For identical trusted RPC context and unchanged provider configuration, transfer/assessment requests, evidence validation, progress application and lifecycle consumers remain equivalent. This source evidence does not establish that stochastic model outputs are identical across executions."
+  },
+  "preserved_diagnostics": [
+    {
+      "run":"tmp/browser_demo_runs/staging-template-20261015220918-9954b5e5",
+      "condition":"Broader attempted Qwen3.8 transfer configuration",
+      "verdict":"failed",
+      "failure":"Safe action credited unrelated explanation target; fourteen target events were persisted.",
+      "cleanup":"pass"
+    },
+    {
+      "run":"tmp/browser_demo_runs/staging-template-20261015221503-d8145ba6",
+      "condition":"Restored Qwen3.5 staging transfer configuration",
+      "verdict":"failed",
+      "failure":"Unmentioned target credit remains reported by the native diagnostic.",
+      "cleanup":"pass"
+    },
+    {
+      "run":"tmp/browser_demo_runs/production-template-20261015221743-57ff3c8b",
+      "condition":"Unchanged productionv12 baseline control before Tutor11 promotion",
+      "verdict":"failed",
+      "failure":"First safe-action event is initial_signal rather than the expected demonstrated_understanding.",
+      "cleanup":"pass",
+      "independent_review":"Auditor inspected the actual production report, project identity and cleanup result."
+    }
+  ],
+  "interpretation_limits": [
+    "The unchanged production diagnostic also fails, but with a different failure. Do not claim identical overcredit reproduced on production or that a single baseline run proves the same error frequency.",
+    "Code/request-policy parity supports implementation independence. Cross-project input/state differences and model variability remain possible explanations for differing observed semantic errors.",
+    "The diagnostic is outside the narrowed tutor quality promotion, but remains a visible inherited defect. No assertion, case, expected event, benchmark gate or denominator was weakened.",
+    "The user's Tutor11 release override does not waive newly introduced transport, schema, identity, lifecycle or cleanup failures. Those must be fixed or block promotion."
+  ],
+  "remaining_tutor_release_acceptance": [
+    "Verify actual full11 configured-base tutoring and Guard entry/recovery with0.3/600/nonthinking and server-reported Qwen3.8, in addition to separately recorded legacy-base compatibility.",
+    "Verify ordinary coverage and the affected assessment delivery/answer/retry/terminal-failure contracts with the preserved Qwen3.5 route; do not report the full transfer semantic diagnostic as passing.",
+    "Preserve the narrowed assessment source manifest a516340360fca59fc749fbef9df06208d91c681016e6f8cc6aedc399b5ba27de and ai-api manifest d74a6cf37a4624b7c4d41a8f994a00aee8598d8fd818dae80ef1f1c664d94cda through staging/production promotion.",
+    "Record source versions, route-specific model identity, exact accepted scope, failed inherited diagnostics and fixture cleanup before declaring the tutor release complete."
+  ],
+  "auditor_model_calls": 0,
+  "auditor_host_mutations": 0
+}

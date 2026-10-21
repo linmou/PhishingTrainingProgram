@@ -21,7 +21,7 @@ function baseInput(overrides: Partial<TransferTutorRequestContextInputV3> = {}):
       user_role: 'student',
       content: '  A teammate sent me a prize link.  ',
     },
-    prior_participation_mode: 'tutoring',
+    prior_guard_mode: false,
     checklist_items: [
       {
         id: 'item-b',

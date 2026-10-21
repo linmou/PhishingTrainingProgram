@@ -169,29 +169,30 @@ describe('PostComment role badges', () => {
         expect(screen.getByText('· 1250ms')).toHaveClass('comment-response-time');
     });
 
-    it('uses the tagged Riley profile only for an explicit Multi-agent tutor message', () => {
+    it('uses the stored character profile for an approved role reply', () => {
         const tutorAvatarUrl = 'https://example.test/tutor-avatar.png';
 
         render(
             <PostComment
                 message={buildMessage({
-                    content: '[agent:riley] Trust the logo.',
+                    content: 'Character reply.',
+                    character: 'victim', persona_id: 'copilot:dylan', persona_name: 'Dylan', persona_avatar: '/images/victim_profile.jpeg',
                     avatar_url: tutorAvatarUrl,
-                    response_mode: 'multiagent' as any
+                    response_mode: 'tutoring'
                 })}
                 currentUserId="viewer-1"
                 currentUserRole="tutor"
             />
         );
 
-        expect(screen.getByText('Riley')).toBeInTheDocument();
-        expect(screen.getByTitle('Riley')).toBeInTheDocument();
-        expect(screen.queryByRole('img')).not.toBeInTheDocument();
-        expect(screen.getByText('Trust the logo.')).toBeInTheDocument();
+        expect(screen.getByText('Dylan')).toBeInTheDocument();
+        expect(screen.getByTitle('Dylan')).toBeInTheDocument();
+        expect(screen.getByRole('img', { name: 'Dylan' })).toHaveAttribute('src', '/images/victim_profile.jpeg');
+        expect(screen.getByText('Character reply.')).toBeInTheDocument();
         expect(screen.queryByText(/\[agent:riley\]/)).not.toBeInTheDocument();
     });
 
-    it('uses the stored tutor profile for a valid Tutor tag and strips the tag from the body', () => {
+    it('keeps literal learner-supplied tags in ordinary transcript text', () => {
         const tutorAvatarUrl = 'https://example.test/tutor-avatar.png';
 
         render(
@@ -199,7 +200,7 @@ describe('PostComment role badges', () => {
                 message={buildMessage({
                     content: '[agent:tutor] Check the sender independently.',
                     avatar_url: tutorAvatarUrl,
-                    response_mode: 'multiagent' as any
+                    response_mode: 'tutoring'
                 })}
                 currentUserId="viewer-1"
                 currentUserRole="tutor"
@@ -209,8 +210,8 @@ describe('PostComment role badges', () => {
         expect(screen.getByText('Training Tutor')).toBeInTheDocument();
         expect(screen.queryByText('AI Tutor')).not.toBeInTheDocument();
         expect(screen.getByRole('img', { name: 'Training Tutor' })).toHaveAttribute('src', tutorAvatarUrl);
-        expect(screen.getByText('Check the sender independently.')).toBeInTheDocument();
-        expect(screen.queryByText(/\[agent:tutor\]/)).not.toBeInTheDocument();
+        expect(screen.getByText('[agent:tutor] Check the sender independently.')).toBeInTheDocument();
+        expect(screen.queryByText(/\[agent:tutor\]/)).toBeInTheDocument();
     });
 
     it.each([

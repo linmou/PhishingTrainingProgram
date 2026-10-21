@@ -1,4 +1,10 @@
 ## Intent
+
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Extend QA-TA pass/retry/failure cases to assert one saved result per accepted answer and persistence after reload. Final failure publishes the stored reviewed explanation to room participants; pass/retry do not. Verify cancellation, backfill, out-of-order/reconnect restoration, automatic-rating exclusion and that only a human feedback reply satisfies the next-assessment gate. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
 Provide a human-readable QA guide for the transfer-assessment room workflow, including setup, tutor review, learner answers, progress changes, privacy, and recovery behavior.
 
 ## Metadata

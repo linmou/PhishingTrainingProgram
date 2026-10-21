@@ -205,9 +205,9 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'Initial suggestion',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'scaffolding',
-                    mode_reason: 'The learner needs a prompt to inspect the message.',
+                    guard_reason: 'The learner needs a prompt to inspect the message.',
                     suggested_response: 'Initial suggestion'
                 },
                 success: true,
@@ -224,9 +224,9 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'Regenerated suggestion',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'correction',
-                    mode_reason: 'The learner needs a more direct prompt.',
+                    guard_reason: 'The learner needs a more direct prompt.',
                     suggested_response: 'Regenerated suggestion'
                 },
                 success: true,
@@ -304,9 +304,9 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'What makes this message suspicious?',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'scaffolding',
-                    mode_reason: 'The learner has not yet identified a red flag.',
+                    guard_reason: 'The learner has not yet identified a red flag.',
                     suggested_response: 'What makes this message suspicious?'
                 },
                 success: true,
@@ -323,9 +323,9 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'Which red flags stand out first?',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'correction',
-                    mode_reason: 'The learner needs a direct correction after the first attempt.',
+                    guard_reason: 'The learner needs a direct correction after the first attempt.',
                     suggested_response: 'Which red flags stand out first?'
                 },
                 success: true,
@@ -495,9 +495,9 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'What makes this message suspicious?',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'scaffolding',
-                    mode_reason: 'The learner has not yet identified a red flag.',
+                    guard_reason: 'The learner has not yet identified a red flag.',
                     suggested_response: 'What makes this message suspicious?'
                 },
                 success: true,
@@ -507,9 +507,9 @@ describe('RoomContext Quick Adjust persistence', () => {
             .mockResolvedValueOnce({
                 suggestion: 'Which red flags stand out first?',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'correction',
-                    mode_reason: 'The learner needs a direct correction after the first attempt.',
+                    guard_reason: 'The learner needs a direct correction after the first attempt.',
                     suggested_response: 'Which red flags stand out first?'
                 },
                 success: true,

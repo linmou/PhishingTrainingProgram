@@ -411,7 +411,7 @@ describe('RoomContext learner answer path', () => {
     const answer = room!.messages.find((message) => message.id === DELIVERED_ANSWER_ID);
     expect(answer!.content).toBe('B or D');
     expect(analyzeMessage).not.toHaveBeenCalled();
-    expect(JSON.stringify(room!.messages)).not.toContain('selected_option_ids');
+    expect(answer?.assessment_selected_option_ids).toBeNull();
   });
 
   it.each([
@@ -444,6 +444,7 @@ describe('RoomContext learner answer path', () => {
       name: 'duplicate unresolved result',
       result: {
         ...processedAlreadyTerminalReplay,
+        result_message:null,
         message_id: DELIVERED_ANSWER_ID,
         answer_outcome: null,
         attempt_number: null,
@@ -462,6 +463,7 @@ describe('RoomContext learner answer path', () => {
       result: {
         ...processedFirstIncorrectRetry,
         processing_state: 'deferred' as const,
+        result_message:null,
         answer_outcome: null,
         attempt_number: null,
         attempts_used: 0 as const,
@@ -475,6 +477,7 @@ describe('RoomContext learner answer path', () => {
       result: {
         ...processedFirstIncorrectRetry,
         processing_state: 'rejected' as const,
+        result_message:null,
         answer_outcome: null,
         attempt_number: null,
         attempts_used: 0 as const,
