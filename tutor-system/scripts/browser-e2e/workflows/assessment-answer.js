@@ -38,8 +38,8 @@ async function draftRetryFeedback(ctx, roomId, label) {
     try { return [JSON.parse(call.response.data.content)]; } catch { return []; }
   });
   const valid = decision => typeof decision.response === 'string' && decision.response.trim() &&
-    ((decision.decision?.mode === 'guard' && decision.decision.instruction === null) ||
-      (decision.decision?.mode === 'tutoring' && ['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation'].includes(decision.decision.instruction)));
+    ((decision.decision?.guard_mode === true && decision.decision.instruction === null) ||
+      (decision.decision?.guard_mode === false && ['protective_instruction', 'correction', 'scaffolding', 'explanation', 'consolidation'].includes(decision.decision.instruction)));
   assert(decisions.filter(valid).length >= 2 && valid(decisions.at(-1)), 'Initial/regenerated provider decisions violated the response contract');
   assert(calls.every(call => !JSON.stringify(call.request).includes('VERIFIED ASSESSMENT STATE')),
     'Retry request retained the removed state section');
@@ -190,7 +190,7 @@ async function recovery(ctx) {
     message_id: ambiguous.id, assessment_id: delivered.assessment_id });
   assert.equal(rejected.attempts_used, 0, 'Ambiguous answer consumed an attempt');
   assert.equal(rejected.result_message, null, 'Ambiguous answer acquired a grade');
-  await managementQuery(ctx.config, `update public.rooms set active_response_mode='guard' where id='${fixture.room.id}'::uuid`);
+  await managementQuery(ctx.config, `update public.rooms set guard_mode=true where id='${fixture.room.id}'::uuid`);
   const deferred = await insert(ctx.client, 'messages', {
     room_id: fixture.room.id, user_id: ctx.student.id, user_role: 'student', content: 'B',
     parent_message_id: delivered.question_message_id, assessment_id: delivered.assessment_id,
@@ -204,7 +204,7 @@ async function recovery(ctx) {
     `select * from private.transfer_assessment_attempts where assessment_id='${delivered.assessment_id}'::uuid`);
   assert.equal(attempts.length, 0, 'Guard-only deferral consumed an attempt');
   const guardDrafts = await draftRetryFeedback(ctx, fixture.room.id, 'guard-deferred');
-  await managementQuery(ctx.config, `update public.rooms set active_response_mode='tutoring' where id='${fixture.room.id}'::uuid`);
+  await managementQuery(ctx.config, `update public.rooms set guard_mode=false where id='${fixture.room.id}'::uuid`);
   const recovered = await operation(ctx.tutor.id, { operation: 'read_review', room_id: fixture.room.id,
     assessment_id: delivered.assessment_id });
   assert.equal(recovered.history_readiness.ready, true);

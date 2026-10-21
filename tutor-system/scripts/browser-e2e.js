@@ -12,6 +12,7 @@ const { createClient } = require('@supabase/supabase-js');
 const support = require('./browser-e2e/browser-e2e-support');
 
 const workflows = {
+  'cyberbullying': require('./browser-e2e/workflows/cyberbullying'),
   'tutor-response': require('./browser-e2e/workflows/tutor-response'),
   'checklist-generation': require('./browser-e2e/workflows/checklist-generation'),
   'room-assessment-setup': require('./browser-e2e/workflows/room-assessment-setup'),
@@ -82,7 +83,7 @@ async function main(argv = process.argv.slice(2)) {
     selected, started_at: new Date().toISOString(), room_ids: [], user_ids: [], results: {}, status: 'running'
   };
   support.writeJson(path.join(evidenceDir, 'report.json'), report);
-  const client = createClient(config.projectUrl, config.serviceKey, { auth: { persistSession: false } });
+  const client = createClient(config.projectUrl, config.serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } }, auth: { persistSession: false } });
   let browser;
   try {
     await support.managementQuery(config, 'select 1 as ready');

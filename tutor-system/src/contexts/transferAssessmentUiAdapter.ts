@@ -99,7 +99,8 @@ const OPTION_ORDER: ReadonlyArray<AssessmentOption['id']> = ['A', 'B', 'C', 'D']
 type ReviewFailureStatus = 'superseded' | 'validation' | 'unavailable' | 'unauthorized' | 'retryable';
 
 /** Display-only message fields that are safe for every role and are not part of the public DTO. */
-const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_name', 'avatar_url'];
+const DISPLAY_MESSAGE_KEYS = ['ai_model_used', 'ai_response_time_ms', 'display_name', 'avatar_url',
+  'character', 'persona_id', 'persona_name', 'persona_avatar', 'guard_mode'];
 
 const ERROR_STATUS: ReadonlyArray<readonly [string, ReviewFailureStatus]> = [
   ['ASSESSMENT_FEATURE_DISABLED', 'unavailable'],
@@ -235,6 +236,12 @@ export function projectRoomMessage(
     response_mode: (projected.response_mode ?? null) as Message['response_mode'],
     display_name: asNonEmptyString(projected.display_name) || undefined,
     avatar_url: asNonEmptyString(projected.avatar_url),
+    ...(typeof projected.guard_mode === 'boolean' || projected.guard_mode === null ? { guard_mode: projected.guard_mode as boolean | null } : {}),
+    ...(typeof projected.character === 'string' && ['same_age_peer', 'older_peer', 'victim', 'bully', 'educator'].includes(projected.character)
+      ? { character: projected.character as Message['character'] } : {}),
+    ...(typeof projected.persona_id === 'string' ? { persona_id: projected.persona_id } : {}),
+    ...(typeof projected.persona_name === 'string' ? { persona_name: projected.persona_name } : {}),
+    ...(typeof projected.persona_avatar === 'string' ? { persona_avatar: projected.persona_avatar } : {}),
     publicQuestion: publicQuestionFromStoredRow(source, explicit),
     assessmentId: asNonEmptyString(source.assessment_id),
     answerLifecycle: null,
@@ -444,10 +451,10 @@ export function classifyAssessmentFailure(error: unknown): { status: ReviewStatu
 
 /** Room participation is binary. An unexpected value is reported as unknown rather than coerced. */
 export function participationModeFromRoom(
-  room: { active_response_mode?: unknown } | null | undefined
+  room: { guard_mode?: unknown } | null | undefined
 ): RoomParticipationMode | null {
-  const value = room?.active_response_mode;
-  return value === 'tutoring' || value === 'guard' ? value : null;
+  const value = room?.guard_mode;
+  return typeof value === 'boolean' ? value : null;
 }
 
 /**

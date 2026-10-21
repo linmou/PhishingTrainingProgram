@@ -235,7 +235,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Verify the request through an official channel.',
-      decision: { mode: 'tutoring', instruction: 'scaffolding', suggested_response: 'Verify the request through an official channel.' },
+      decision: { guard_mode: false, instruction: 'scaffolding', suggested_response: 'Verify the request through an official channel.' },
       contextMessages: [LEARNER_A_MESSAGE_ID],
     });
     await mountRoom();
@@ -273,7 +273,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Tutor feedback',
-      decision: { mode: 'tutoring', instruction: 'correction', suggested_response: 'Tutor feedback' },
+      decision: { guard_mode: false, instruction: 'correction', suggested_response: 'Tutor feedback' },
       contextMessages: [deliveredAnswerRow.id],
     });
     await mountRoom();
@@ -378,7 +378,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     });
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
     expect(room!.messages.map((message) => message.id)).toContain('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
     expect(Array.from(new Set((supabase.from as jest.Mock).mock.calls.map(([table]) => table))).sort())
       .toEqual(['ai_suggestion_feedback', 'messages', 'rooms', 'users']);
   });

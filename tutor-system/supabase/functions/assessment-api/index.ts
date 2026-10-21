@@ -88,7 +88,7 @@ export interface AssessmentApiDependencies {
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-user-id',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-application-user-id, x-practice-contract',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -341,34 +341,49 @@ async function analyzeMessage(
   const provider = providerConfig(deps);
   const allowedKinds = new Set(['initial_signal', 'demonstrated_understanding', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
   const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);
-  const analyses = await Promise.all(items.map(async (item: any) => {
-    let providerResponse: Response;
-    try {
-      providerResponse = await deps.fetch(`${provider.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
-        body: JSON.stringify({
+  const outcomes = await Promise.allSettled(items.map(async (item: any) => {
+    const auditRequestId = crypto.randomUUID();
+    const attemptLimit = scope.practice_type === 'cyberbullying' ? 2 : 1;
+    for (let ordinal = 1; ordinal <= attemptLimit; ordinal += 1) {
+    const requestPayload = {
           model: provider.model,
           messages: [
-            { role: 'system', content: TRANSFER_ANALYSIS_SYSTEM_PROMPT },
+            { role: 'system', content: scope.practice_type === 'cyberbullying'
+              ? TRANSFER_ANALYSIS_SYSTEM_PROMPT.replace('an expanded security procedure', 'an expanded procedure') +
+                '\nThis is Cyberbullying practice. Evaluate the supplied shared target using the learner’s own contribution in this fictional social interaction. Character dialogue and initial scenario comments provide context; evidence belongs to the current learner message. Copy evidence_quote as one exact contiguous passage from that message, without joining separate passages or adding ellipses.'
+              : TRANSFER_ANALYSIS_SYSTEM_PROMPT },
             { role: 'user', content: JSON.stringify({
               focus_student_id: scope.student_id,
               evidence_message_id: messageId,
+              ...(scope.practice_type === 'cyberbullying' ? { practice_type: scope.practice_type, scenario: scope.scenario } : {}),
               message, items: [item], dialogue_history: history.slice(0, focusIndex + 1),
             }) },
+            ...(ordinal > 1 ? [{ role: 'system', content: 'The previous attempt violated the output contract. Return valid JSON using the supplied item/message IDs and eligible event categories. Each evidence_quote must be one exact contiguous substring of the current learner message; do not combine passages or insert ellipses. Preserve the evidence judgment and omit an event when the current learner supplies no relevant evidence.' }] : []),
           ],
           temperature: 0,
           max_tokens: 600,
           enable_thinking: false,
           response_format: { type: 'json_object' },
-        }),
+        };
+    let rawResponse: unknown = null;
+    let finishReason: string | null = null;
+    let errorCode: string | null = null;
+    try {
+    let providerResponse: Response;
+    try {
+      providerResponse = await deps.fetch(`${provider.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${provider.key}` },
+        body: JSON.stringify(requestPayload),
       });
     } catch {
       throw new Error('AI_PROVIDER_ERROR');
     }
-    if (!providerResponse.ok) throw new Error('AI_PROVIDER_ERROR');
     const payload = asRecord(await providerResponse.json().catch(() => ({})));
+    rawResponse = payload;
+    if (!providerResponse.ok) throw new Error('AI_PROVIDER_ERROR');
     const choice = asRecord(payload.choices?.[0]);
+    finishReason = typeof choice.finish_reason === 'string' ? choice.finish_reason : null;
     if (choice.finish_reason === 'length') throw new Error('AI_OUTPUT_TRUNCATED');
     let analysis: Record<string, any>;
     try {
@@ -397,7 +412,32 @@ async function analyzeMessage(
       rejected_events: reason ? [{ ...event, rejection_reason: reason }] : [],
       explanation: analysis.explanation,
     };
+    } catch (error) {
+      errorCode = error instanceof Error ? error.message : 'AI_PROVIDER_ERROR';
+      if (errorCode === 'AI_OUTPUT_INVALID' && ordinal < attemptLimit) continue;
+      throw error;
+    } finally {
+      if (scope.practice_type === 'cyberbullying') {
+        await rpc(deps, 'record_transfer_provider_attempt_v1', {
+          p_request_id: auditRequestId, p_room_id: roomId, p_student_id: scope.student_id,
+          p_checklist_id: scope.checklist_id, p_focus_student_message_id: messageId,
+          p_attempt_ordinal: ordinal, p_provider_base_url: provider.baseUrl, p_provider_model: provider.model,
+          p_max_tokens: 600, p_request_hash: await sha256(JSON.stringify(requestPayload)),
+          p_request_payload: { operation: 'analyze_message', analysis_request_id: requestId, provider_request: requestPayload },
+          p_raw_response: rawResponse, p_finish_reason: finishReason,
+          p_validation_outcome: errorCode ? 'invalid' : 'valid', p_error_code: errorCode,
+        });
+      }
+    }
+    }
+    throw new Error('AI_OUTPUT_INVALID');
   }));
+  const failed = outcomes.find((outcome): outcome is PromiseRejectedResult => outcome.status === 'rejected');
+  if (failed) throw failed.reason;
+  const analyses = outcomes.map(outcome => (outcome as PromiseFulfilledResult<{
+    events: any[]; rejected_events: any[]; explanation: string;
+  }>).value);
+
   const analysis = {
     events: analyses.flatMap((result) => result.events),
     rejected_events: analyses.flatMap((result) => result.rejected_events),
@@ -743,7 +783,7 @@ function createDefaultDependencies(): AssessmentApiDependencies {
       resolveAnswer: resolveTransferAnswer,
     };
   }
-  const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } }, auth: { autoRefreshToken: false, persistSession: false } });
   const verifier: AssessmentPrincipalVerifier = {
     verify: async (request) => {
       const userId = request.headers.get('x-application-user-id')?.trim();

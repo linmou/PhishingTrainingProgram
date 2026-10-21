@@ -105,7 +105,7 @@ const rowsAsChecklistItems = (): ChecklistItem[] => database.state.checklist_ite
 
 const aiBackground = async ({ given, and }: any) => {
   given('the AI assistant is enabled for a tutoring room', () => {
-    database.state.rooms = [{ id: ROOM_ID, active_response_mode: 'tutoring', ai_assistant_enabled: true }];
+    database.state.rooms = [{ id: ROOM_ID, guard_mode: false, ai_assistant_enabled: true }];
   });
   and('a student has joined the room', () => {
     expect({ id: 'student-1', room_id: ROOM_ID }).toHaveProperty('room_id', ROOM_ID);

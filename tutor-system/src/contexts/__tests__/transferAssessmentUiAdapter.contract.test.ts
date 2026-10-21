@@ -121,7 +121,7 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
   it('refuses a draft with a tutor decision field', () => {
     const decision = {
       ...preparedCandidate,
-      decision: { mode: 'tutoring' as const, instruction: 'scaffolding' as const, target_item_id: null },
+      decision: { guard_mode: false as const, instruction: 'scaffolding' as const, target_item_id: null },
     };
 
     const result = assertDeliverableReview(decision, scope);
@@ -157,10 +157,10 @@ describe('transferAssessmentUiAdapter mode and target contract', () => {
   });
 
   it('never lets assessment become a room participation mode', () => {
-    expect(participationModeFromRoom({ active_response_mode: 'guard' })).toBe('guard');
-    expect(participationModeFromRoom({ active_response_mode: 'tutoring' })).toBe('tutoring');
-    expect(participationModeFromRoom({ active_response_mode: 'assessment' })).toBeNull();
-    expect(participationModeFromRoom({ active_response_mode: 'nonsense' })).toBeNull();
+    expect(participationModeFromRoom({ guard_mode: true })).toBe(true);
+    expect(participationModeFromRoom({ guard_mode: false })).toBe(false);
+    expect(participationModeFromRoom({ guard_mode: 'assessment' })).toBeNull();
+    expect(participationModeFromRoom({ guard_mode: 'nonsense' })).toBeNull();
     expect(participationModeFromRoom({})).toBeNull();
   });
 

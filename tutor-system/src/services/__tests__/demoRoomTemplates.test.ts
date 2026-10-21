@@ -11,7 +11,6 @@ import {
   getNormalTeachingTemplateSeeds,
   getPrivacyTeachingTemplateSeeds,
   getPromptComparisonTemplateSeeds,
-  getMultiAgentTestRoomTemplateSeeds,
   getEcologicalCasesFromTemplates,
   toRoomTemplateInsertRow,
   GLOBAL_TEMPLATE_TUTOR_ID
@@ -81,12 +80,11 @@ describe('demoRoomTemplates', () => {
     });
   });
 
-  it('shares account targets across behavior, comparison, and multi-agent demo variants', () => {
+  it('shares account targets across behavior and comparison demo variants', () => {
     const account = SCENARIO_TEMPLATES['Account Security Alert'];
     const seeds = [
       ...getDemoRoomTemplateSeeds().filter((seed) => seed.test_only),
-      ...getPromptComparisonTemplateSeeds(),
-      ...getMultiAgentTestRoomTemplateSeeds()
+      ...getPromptComparisonTemplateSeeds()
     ];
     for (const seed of seeds) {
       expect(seed.ai_config_template.scenario).toBe('Account Security Alert');
@@ -114,17 +112,10 @@ describe('demoRoomTemplates', () => {
     }
   });
 
-  it('ships a dedicated Multi-agent-only test room seed', () => {
-    const seeds = getMultiAgentTestRoomTemplateSeeds();
-    expect(seeds).toHaveLength(1);
-    expect(seeds[0].case_id).toBe('multiagent_test_room');
-    expect(seeds[0].template_name).toBe('Demo: Multi-agent Response Room');
-    expect(seeds[0].test_only).toBe(true);
-    expect(seeds[0].ai_config_template.enabled).toBe(true);
-    expect(seeds[0].ai_config_template.prompt_config.interaction_mode).toBe('multi_agent');
-    expect(seeds[0].pre_populated_dialogue.map((message) => message.role)).toEqual(
-      expect.arrayContaining(['others', 'tutor', 'student'])
-    );
+  it('keeps every demo template usable as an ordinary tutor configuration', () => {
+    for (const seed of getDemoRoomTemplateSeeds()) {
+      expect(seed.ai_config_template).toBeDefined();
+    }
   });
 
   it('builds an AI config with the shared policy and selected peer role', () => {

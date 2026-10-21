@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
+import type { PracticeType, CyberbullyingScenario } from '../types'
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY!
@@ -10,6 +11,7 @@ console.log('🔧 Supabase Service: Initializing client', {
 });
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } },
     auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -90,6 +92,10 @@ export const updateUserProfile = async (userId: string, updates: any) => {
 
 // Room management functions
 export const createRoom = async (roomData: {
+    practice_type?: PracticeType;
+    scenario_config?: CyberbullyingScenario | null;
+    ai_assistant_enabled?: boolean;
+    ai_assistant_model?: string;
     title: string;
     description: string;
     tutor_id: string;
@@ -850,6 +856,8 @@ export const clearChatHistory = async (roomId: string, userId: string) => {
 
 // Room Template Management Functions
 export const createRoomTemplate = async (templateData: {
+    practice_type?: PracticeType;
+    scenario_config?: CyberbullyingScenario | null;
     tutor_id: string;
     template_name: string;
     template_description?: string | null;

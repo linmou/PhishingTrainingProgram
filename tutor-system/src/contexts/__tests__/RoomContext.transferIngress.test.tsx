@@ -392,13 +392,13 @@ describe('RoomContext transfer ingress', () => {
 
   it('never adopts an unrecognized room participation value', async () => {
     await mountRoom();
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
 
     await act(async () => {
-      roomsUpdateHandler({ new: { ...transferRoom, title: 'Renamed room', active_response_mode: 'assessment' } });
+      roomsUpdateHandler({ new: { ...transferRoom, title: 'Renamed room', guard_mode: 'assessment' } });
     });
 
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
     expect(room!.currentRoom!.title).toBe('Renamed room');
   });
 
@@ -406,9 +406,9 @@ describe('RoomContext transfer ingress', () => {
     await mountRoom();
 
     await act(async () => {
-      roomsUpdateHandler({ new: { ...transferRoom, active_response_mode: 'guard' } });
+      roomsUpdateHandler({ new: { ...transferRoom, guard_mode: true } });
     });
 
-    expect(room!.currentRoom!.active_response_mode).toBe('guard');
+    expect(room!.currentRoom!.guard_mode).toBe(true);
   });
 });

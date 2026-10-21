@@ -31,19 +31,19 @@ describe('AI feedback raw instruction persistence', () => {
       undefined,
       120,
       ['message-1'],
-      'tutoring',
+      false,
       'correction',
       'The learner made a false inference.',
-      'guard'
+      true
     );
 
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
       tutor_action: 'rejected',
-      raw_mode: 'tutoring',
+      raw_guard_mode: false,
       raw_instruction: 'correction',
-      mode_reason: 'The learner made a false inference.',
-      final_mode: 'guard',
-      mode_rectified: true
+      guard_reason: 'The learner made a false inference.',
+      final_guard_mode: true,
+      guard_rectified: true
     }));
   });
 
@@ -58,18 +58,18 @@ describe('AI feedback raw instruction persistence', () => {
       undefined,
       90,
       ['message-2'],
-      'guard',
+      true,
       null,
       'The learner deliberately repeated unrelated content.',
-      'guard'
+      true
     );
 
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
       tutor_action: 'ignored',
-      raw_mode: 'guard',
+      raw_guard_mode: true,
       raw_instruction: null,
-      final_mode: 'guard',
-      mode_rectified: false
+      final_guard_mode: true,
+      guard_rectified: false
     }));
   });
 
@@ -84,10 +84,10 @@ describe('AI feedback raw instruction persistence', () => {
       undefined,
       75,
       ['prepop-room-1-0'],
-      'tutoring',
+      false,
       'protective_instruction',
       'The learner proposed an unsafe action.',
-      'tutoring'
+      false
     );
 
     expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({

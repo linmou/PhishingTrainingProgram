@@ -47,7 +47,8 @@ describe('buildRoomExportData', () => {
       parent_message_id: 'msg-1',
       created_at: '2026-03-28T12:02:00Z',
       display_name: 'Tutor',
-      response_mode: 'multiagent',
+      response_mode: 'tutoring',
+      character: 'victim', persona_name: 'Dylan',
     },
   ];
 
@@ -70,11 +71,11 @@ describe('buildRoomExportData', () => {
       tutor_action: 'modified',
       tutor_final_response: 'Look at the domain and the urgency language.',
       response_time_ms: 5000,
-      raw_mode: 'tutoring',
+      raw_guard_mode: false,
       raw_instruction: 'correction',
-      mode_reason: 'The learner trusted an unsafe signal.',
-      final_mode: 'guard',
-      mode_rectified: true,
+      guard_reason: 'The learner trusted an unsafe signal.',
+      final_guard_mode: true,
+      guard_rectified: true,
       ai_config_snapshot: {
         model_name: 'gpt-4o-mini',
         system_prompt: 'Stay focused on scam detection.',
@@ -123,16 +124,17 @@ describe('buildRoomExportData', () => {
         id: 'msg-2',
         feedback_stats: messageFeedbackStats['msg-2'],
         ai_model_used: 'gpt-4o-mini',
-        response_mode: 'multiagent',
+        response_mode: 'tutoring',
+      character: 'victim', persona_name: 'Dylan',
       }),
     ]);
     expect(exportData.ai_interactions?.[0]).toEqual(
       expect.objectContaining({
-        raw_mode: 'tutoring',
+        raw_guard_mode: false,
         raw_instruction: 'correction',
-        mode_reason: 'The learner trusted an unsafe signal.',
-        final_mode: 'guard',
-        mode_rectified: true,
+        guard_reason: 'The learner trusted an unsafe signal.',
+        final_guard_mode: true,
+        guard_rectified: true,
         ai_config_snapshot: {
           model_name: 'gpt-4o-mini',
           system_prompt: 'Stay focused on scam detection.',
@@ -175,27 +177,27 @@ describe('buildRoomExportData', () => {
   it('formats the complete raw and reviewed decision trail for tutor TXT exports', () => {
     const text = buildTutorInteractionText(aiInteractions[0], 0);
 
-    expect(text).toContain('Raw Mode: tutoring');
+    expect(text).toContain('Raw Guard: false');
     expect(text).toContain('Raw Instruction: correction');
-    expect(text).toContain('Mode Reason: The learner trusted an unsafe signal.');
-    expect(text).toContain('Final Mode: guard');
-    expect(text).toContain('Mode Changed: yes');
+    expect(text).toContain('Guard Reason: The learner trusted an unsafe signal.');
+    expect(text).toContain('Final Guard: true');
+    expect(text).toContain('Guard Changed: yes');
   });
 
   it('formats a contract-valid Guard decision without inventing an instruction', () => {
     const text = buildTutorInteractionText(
       {
         ...aiInteractions[0],
-        raw_mode: 'guard',
+        raw_guard_mode: true,
         raw_instruction: null,
-        final_mode: 'guard',
-        mode_rectified: false,
+        final_guard_mode: true,
+        guard_rectified: false,
       },
       0
     );
 
     expect(text).toContain('Raw Instruction: none');
-    expect(text).toContain('Mode Changed: no');
+    expect(text).toContain('Guard Changed: no');
     expect(text).not.toContain('undefined');
   });
 
@@ -203,11 +205,11 @@ describe('buildRoomExportData', () => {
     const text = buildTutorInteractionText(
       {
         ...aiInteractions[0],
-        raw_mode: 'tutoring',
+        raw_guard_mode: false,
         raw_instruction: null,
-        mode_reason: undefined,
-        final_mode: undefined,
-        mode_rectified: undefined,
+        guard_reason: undefined,
+        final_guard_mode: undefined,
+        guard_rectified: undefined,
       },
       0
     );
@@ -220,25 +222,25 @@ describe('buildRoomExportData', () => {
     const text = buildTutorInteractionText(
       {
         ...aiInteractions[0],
-        raw_mode: 'guard',
-        final_mode: 'guard',
-        mode_rectified: true,
+        raw_guard_mode: true,
+        final_guard_mode: true,
+        guard_rectified: true,
       },
       0
     );
 
-    expect(text).toContain('Mode Changed: no');
+    expect(text).toContain('Guard Changed: no');
 
     const changedText = buildTutorInteractionText(
       {
         ...aiInteractions[0],
-        raw_mode: 'guard',
-        final_mode: 'tutoring',
-        mode_rectified: false,
+        raw_guard_mode: true,
+        final_guard_mode: false,
+        guard_rectified: false,
       },
       0
     );
-    expect(changedText).toContain('Mode Changed: yes');
+    expect(changedText).toContain('Guard Changed: yes');
   });
 
   it('keeps the decision trail in the tutor TXT export and out of the student TXT export', () => {
@@ -247,12 +249,12 @@ describe('buildRoomExportData', () => {
     const tutorText = buildRoomTextExport({ ...args, userRole: 'tutor' });
     const studentText = buildRoomTextExport({ ...args, userRole: 'student', userId: 'student-1' });
 
-    expect(tutorText).toContain('Raw Mode: tutoring');
+    expect(tutorText).toContain('Raw Guard: false');
     expect(tutorText).toContain('Raw Instruction: correction');
-    expect(tutorText).toContain('Mode Reason: The learner trusted an unsafe signal.');
-    expect(tutorText).toContain('Final Mode: guard');
-    expect(tutorText).toContain('Mode Changed: yes');
-    expect(studentText).not.toMatch(/Raw Mode:|Raw Instruction:|Mode Reason:|Final Mode:|Mode Changed:/);
+    expect(tutorText).toContain('Guard Reason: The learner trusted an unsafe signal.');
+    expect(tutorText).toContain('Final Guard: true');
+    expect(tutorText).toContain('Guard Changed: yes');
+    expect(studentText).not.toMatch(/Raw Guard:|Raw Instruction:|Guard Reason:|Final Guard:|Guard Changed:/);
   });
 
   it('wires the tested TXT export builder into the room download path', () => {

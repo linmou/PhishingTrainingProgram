@@ -43,7 +43,7 @@ const student: User = {
   updated_at: '2026-09-01T00:00:00Z'
 };
 
-const room = (mode: 'tutoring' | 'guard'): Room => ({
+const room = (guard_mode: boolean): Room => ({
   id: 'room-1',
   tutor_id: tutor.id,
   title: 'Guard composer room',
@@ -57,23 +57,23 @@ const room = (mode: 'tutoring' | 'guard'): Room => ({
   op_display_name: null,
   op_avatar_url: null,
   password: null,
-  active_response_mode: mode,
+  guard_mode,
   created_at: '2026-09-01T00:00:00Z',
   updated_at: '2026-09-01T00:00:00Z'
 });
 
 const renderRoom = (
   user: User,
-  mode: 'tutoring' | 'guard',
+  guard_mode: boolean,
   suggestion: string | null = null,
-  finalMode: 'tutoring' | 'guard' = mode
+  finalGuardMode: boolean = guard_mode
 ) => {
-  const setResponseMode = jest.fn();
-  const updateFinalMode = jest.fn();
+  const setGuardMode = jest.fn();
+  const updateFinalGuardMode = jest.fn();
 
   (useAuth as jest.Mock).mockReturnValue({ user, loading: false });
   (useRoom as jest.Mock).mockReturnValue({
-    currentRoom: room(mode),
+    currentRoom: room(guard_mode),
     messages: [],
     participants: [tutor, student],
     loading: false,
@@ -91,10 +91,10 @@ const renderRoom = (
     clearChatHistory: jest.fn(),
     aiSuggestion: suggestion,
     aiDecision: null,
-    finalMode,
+    finalGuardMode,
     updateFinalResponse: jest.fn(),
-    updateFinalMode,
-    setResponseMode,
+    updateFinalGuardMode,
+    setGuardMode,
     clearAISuggestion: jest.fn(),
     recordAIFeedback: jest.fn(),
     currentSuggestionContext: null,
@@ -110,7 +110,7 @@ const renderRoom = (
     </MemoryRouter>
   );
 
-  return { ...renderResult, setResponseMode, updateFinalMode };
+  return { ...renderResult, setGuardMode, updateFinalGuardMode };
 };
 
 describe('Guard Mode composer identity', () => {
@@ -120,7 +120,7 @@ describe('Guard Mode composer identity', () => {
   });
 
   it('shows the tutor name beside the normal composer profile', () => {
-    renderRoom(tutor, 'tutoring');
+    renderRoom(tutor, false);
 
     expect(screen.getByText('Taylor Tutor')).toBeInTheDocument();
     expect(screen.getByTitle('Taylor Tutor')).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe('Guard Mode composer identity', () => {
   });
 
   it('shows Security Supervisor for a tutor after Guard activates', () => {
-    renderRoom(tutor, 'guard');
+    renderRoom(tutor, true);
 
     expect(screen.getByText('Security Supervisor')).toBeInTheDocument();
     expect(screen.getByTitle('Security Supervisor')).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe('Guard Mode composer identity', () => {
   });
 
   it('keeps the student profile when Guard Mode is active', () => {
-    renderRoom(student, 'guard');
+    renderRoom(student, true);
 
     expect(screen.getByText('Sam Student')).toBeInTheDocument();
     expect(screen.getByTitle('Sam Student')).toBeInTheDocument();
@@ -144,11 +144,11 @@ describe('Guard Mode composer identity', () => {
   });
 
   it('shows parsed Guard on the suggestion card and edits only the pending review mode', () => {
-    const { setResponseMode, updateFinalMode } = renderRoom(
+    const { setGuardMode, updateFinalGuardMode } = renderRoom(
       tutor,
-      'tutoring',
+      false,
       'Guard suggestion',
-      'guard'
+      true
     );
     const confirm = jest.spyOn(window, 'confirm');
 
@@ -156,46 +156,46 @@ describe('Guard Mode composer identity', () => {
     expect(suggestionCard).not.toBeNull();
     fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Deactivate Guard' }));
 
-    expect(updateFinalMode).toHaveBeenCalledWith('tutoring');
-    expect(setResponseMode).not.toHaveBeenCalled();
+    expect(updateFinalGuardMode).toHaveBeenCalledWith(false);
+    expect(setGuardMode).not.toHaveBeenCalled();
     expect(confirm).not.toHaveBeenCalled();
   });
 
   it('shows parsed tutoring on the suggestion card even while the room remains in Guard', () => {
-    const { setResponseMode, updateFinalMode } = renderRoom(
+    const { setGuardMode, updateFinalGuardMode } = renderRoom(
       tutor,
-      'guard',
+      true,
       'Tutoring suggestion',
-      'tutoring'
+      false
     );
 
     const suggestionCard = screen.getByText('Tutoring suggestion').closest('.ai-suggestion-box');
     expect(suggestionCard).not.toBeNull();
     fireEvent.click(within(suggestionCard as HTMLElement).getByRole('button', { name: 'Activate Guard' }));
 
-    expect(updateFinalMode).toHaveBeenCalledWith('guard');
-    expect(setResponseMode).not.toHaveBeenCalled();
+    expect(updateFinalGuardMode).toHaveBeenCalledWith(true);
+    expect(setGuardMode).not.toHaveBeenCalled();
   });
 
   it('keeps the header toggle as the confirmed persisted room transition', () => {
-    const { setResponseMode, updateFinalMode } = renderRoom(tutor, 'tutoring', 'Guard suggestion', 'guard');
+    const { setGuardMode, updateFinalGuardMode } = renderRoom(tutor, false, 'Guard suggestion', true);
     jest.spyOn(window, 'confirm').mockReturnValue(true);
 
     fireEvent.click(screen.getByTitle('Manually change Guard Mode'));
 
     expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
-    expect(setResponseMode).toHaveBeenCalledWith('guard');
-    expect(updateFinalMode).not.toHaveBeenCalled();
+    expect(setGuardMode).toHaveBeenCalledWith(true);
+    expect(updateFinalGuardMode).not.toHaveBeenCalled();
   });
 
   it('does not persist a header mode transition when confirmation is cancelled', () => {
-    const { setResponseMode, updateFinalMode } = renderRoom(tutor, 'tutoring', null, 'tutoring');
+    const { setGuardMode, updateFinalGuardMode } = renderRoom(tutor, false, null, false);
     jest.spyOn(window, 'confirm').mockReturnValue(false);
 
     fireEvent.click(screen.getByTitle('Manually change Guard Mode'));
 
     expect(window.confirm).toHaveBeenCalledWith('Activate Guard Mode?');
-    expect(setResponseMode).not.toHaveBeenCalled();
-    expect(updateFinalMode).not.toHaveBeenCalled();
+    expect(setGuardMode).not.toHaveBeenCalled();
+    expect(updateFinalGuardMode).not.toHaveBeenCalled();
   });
 });

@@ -97,7 +97,7 @@ describe('RoomPagePost structured decision consumption', () => {
       clearAISuggestion: jest.fn(),
       recordAIFeedback: jest.fn().mockResolvedValue(undefined),
       aiSuggestion: null,
-      finalMode: 'tutoring',
+      finalGuardMode: false,
       messageFeedbackStats: {},
       ...overrides,
     });

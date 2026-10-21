@@ -9,7 +9,6 @@ import AIAssistantSettings from '../components/AIAssistantSettings';
 import StudentAIToneControl from '../components/StudentAIToneControl';
 import AISuggestionBox from '../components/AISuggestionBox';
 import AssessmentDraftEditor from '../components/AssessmentDraftEditor';
-import MultiAgentSuggestionEditor from '../components/MultiAgentSuggestionEditor';
 import { classifyAssessmentFailure as classifyReviewFailure } from '../contexts/transferAssessmentUiAdapter';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { supabase } from '../services/supabase';
@@ -17,7 +16,6 @@ import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import { Download, Settings, ArrowLeft, Trash2, CheckSquare } from 'lucide-react';
 import { getConfigurationPreset } from '../services/prompts/parameterConfig';
-import { decodeAgentMessage, MULTI_AGENT_PLAYBACK_DELAY_MS } from '../services/tutorDecisionContract';
 import { getRatingLabel } from '../components/feedbackRatingLabels';
 import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
@@ -25,30 +23,6 @@ import type { AssessmentOptionId } from '../types/assessment';
 import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
 import type { Message } from '../types';
 import { findOpenLearnerAssessment, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
-
-const MULTI_AGENT_PAIR_WINDOW_MS = 5000;
-
-const agentMessageTime = (message: { content: string; is_ai_generated?: boolean | null; user_role?: string | null; response_mode?: string | null; created_at: string }): number | null =>
-    decodeAgentMessage(message) ? new Date(message.created_at).getTime() : null;
-
-const isSameMultiAgentPair = (
-    message: { parent_message_id?: string | null; created_at: string },
-    other: { parent_message_id?: string | null; created_at: string }
-): boolean => (message.parent_message_id && other.parent_message_id
-    ? message.parent_message_id === other.parent_message_id
-    : Math.abs(new Date(other.created_at).getTime() - new Date(message.created_at).getTime()) <= MULTI_AGENT_PAIR_WINDOW_MS);
-
-const earlierPairMember = <T extends { id: string; content: string; is_ai_generated?: boolean | null; user_role?: string | null; response_mode?: string | null; created_at: string; parent_message_id?: string | null }>(
-    message: T,
-    candidates: T[]
-): T | null => {
-    const revealAt = agentMessageTime(message);
-    if (revealAt === null) return null;
-    return candidates.find(candidate => candidate.id !== message.id
-        && agentMessageTime(candidate) !== null
-        && new Date(candidate.created_at).getTime() < revealAt
-        && isSameMultiAgentPair(message, candidate)) || null;
-};
 
 const COMPARISON_PAIR_LABELS = {
     lock_icon: 'Lock Icon Myth',
@@ -96,16 +70,14 @@ const RoomPagePost: React.FC = () => {
         aiSuggestion,
         transferDraft,
         confirmTransferDraft,
-        finalMode,
-        updateFinalMode,
-        setResponseMode,
+        finalGuardMode,
+        finalCharacter,
+        updateFinalCharacter,
+        updateFinalGuardMode,
+        setGuardMode,
         clearAISuggestion,
         recordAIFeedback,
         currentSuggestionContext,
-        multiAgentDraft,
-        approveMultiAgentDraft,
-        regenerateMultiAgentDraft,
-        rejectMultiAgentDraft,
         submitMessageFeedback,
         messageFeedbackStats
     } = useRoom();
@@ -119,7 +91,7 @@ const RoomPagePost: React.FC = () => {
     const [showChecklist, setShowChecklist] = useState(false);
     const [transferStudentId, setTransferStudentId] = useState<string | null>(null);
     const [replyingTo, setReplyingTo] = useState<{ id: string; authorName: string } | null>(null);
-    const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.active_response_mode === 'guard';
+    const isGuardComposer = user?.current_role === 'tutor' && currentRoom?.guard_mode === true;
     const composerIdentity = isGuardComposer
         ? { displayName: 'Security Supervisor', avatarUrl: null, isGuard: true }
         : undefined;
@@ -129,8 +101,6 @@ const RoomPagePost: React.FC = () => {
     const [ratingHoveredValue, setRatingHoveredValue] = useState(0);
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
-    const [multiAgentError, setMultiAgentError] = useState<string | null>(null);
-    const [now, setNow] = useState(() => Date.now());
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -175,46 +145,7 @@ const RoomPagePost: React.FC = () => {
         userDisliked: boolean;
     }>>({});
 
-    const [playbackAnchors, setPlaybackAnchors] = useState<Record<string, number>>({});
-    const mountedAtRef = useRef(Date.now());
-
-    const dueMessages = messages.filter(message => {
-        const revealAt = agentMessageTime(message);
-        return revealAt === null || revealAt <= now;
-    });
-
-    useEffect(() => {
-        const currentTime = Date.now();
-        const due = messages.filter(message => {
-            const revealAt = agentMessageTime(message);
-            return revealAt !== null && revealAt <= Math.max(now, currentTime);
-        });
-
-        if (due.length > 0 && currentTime > now) {
-            setNow(currentTime);
-            return;
-        }
-
-        const missing = due.filter(message => playbackAnchors[message.id] === undefined);
-        if (missing.length === 0) return;
-
-        setPlaybackAnchors(previous => {
-            const next = { ...previous };
-            missing.forEach(message => { next[message.id] = Date.now(); });
-            return next;
-        });
-    }, [messages, now, playbackAnchors]);
-
-    const isHeldByPairStagger = (message: typeof messages[number]): boolean => {
-        const revealAt = agentMessageTime(message);
-        if (revealAt === null || revealAt < mountedAtRef.current) return false;
-
-        const earlier = earlierPairMember(message, dueMessages);
-        const earlierSeenAt = earlier ? playbackAnchors[earlier.id] : undefined;
-        return earlierSeenAt !== undefined && Date.now() - earlierSeenAt < MULTI_AGENT_PLAYBACK_DELAY_MS;
-    };
-
-    const visibleMessages = dueMessages.filter(message => !isHeldByPairStagger(message));
+    const visibleMessages = messages;
     const openAssessment = user?.current_role === 'student'
         ? findOpenLearnerAssessment(messages, user.id)
         : null;
@@ -237,30 +168,6 @@ const RoomPagePost: React.FC = () => {
         });
     }
     const discussionMessages = visibleMessages.filter(message => !embeddedAnswerIds.has(message.id));
-    const pendingPlayback = visibleMessages.length !== messages.length;
-
-    useEffect(() => {
-        const currentTime = Date.now();
-        const deadlines = messages
-            .map(message => {
-                const revealAt = agentMessageTime(message);
-                if (revealAt === null) return null;
-                if (revealAt > currentTime) return revealAt;
-
-                const earlier = earlierPairMember(message, messages);
-                const earlierSeenAt = earlier ? playbackAnchors[earlier.id] : undefined;
-                if (earlierSeenAt === undefined || revealAt < mountedAtRef.current) return null;
-
-                const deadline = earlierSeenAt + MULTI_AGENT_PLAYBACK_DELAY_MS;
-                return deadline > currentTime ? deadline : null;
-            })
-            .filter((deadline): deadline is number => deadline !== null);
-        if (deadlines.length === 0) return;
-
-        const timer = setTimeout(() => setNow(Date.now()), Math.min(...deadlines) - currentTime + 50);
-        return () => clearTimeout(timer);
-    }, [messages, now, playbackAnchors]);
-
     // Join after the stored identity has been restored so saved learner results can be replayed.
     useEffect(() => {
         if (roomId && !authLoading) {
@@ -392,15 +299,8 @@ const RoomPagePost: React.FC = () => {
 
         if (!latest) return null;
 
-        const response = decodeAgentMessage(latest)?.character === 'riley'
-            ? [...visibleMessages].reverse().find(message => !message.assessment_event && decodeAgentMessage(message)?.character === 'tutor') || latest
-            : latest;
-
-        if (completedRatingMessageId === response.id) return null;
-        if (messageFeedbackStats[response.id]?.user_feedback) return null;
-
-        const agentBody = decodeAgentMessage(response)?.content;
-        return agentBody ? { ...response, content: agentBody } : response;
+        if (completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
+        return latest;
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
@@ -408,7 +308,6 @@ const RoomPagePost: React.FC = () => {
 
         if (!messageText.trim() || sendingMessage || openAssessment) return;
 
-        if (pendingPlayback) return;
 
         const unratedResponse = getUnratedResponse();
         if (unratedResponse) {
@@ -603,33 +502,6 @@ const RoomPagePost: React.FC = () => {
         });
     };
 
-    const handleApproveMultiAgent = async (editedMessages: string[]) => {
-        setMultiAgentError(null);
-        try {
-            await approveMultiAgentDraft(editedMessages);
-        } catch (error) {
-            setMultiAgentError(
-                error instanceof Error ? error.message : 'Failed to approve the Multi-agent response.'
-            );
-        }
-    };
-
-    const handleRegenerateMultiAgent = async () => {
-        setMultiAgentError(null);
-        try {
-            await regenerateMultiAgentDraft();
-        } catch (error) {
-            setMultiAgentError(
-                error instanceof Error ? error.message : 'Failed to regenerate the Multi-agent response.'
-            );
-        }
-    };
-
-    const handleRejectMultiAgent = () => {
-        setMultiAgentError(null);
-        void rejectMultiAgentDraft();
-    };
-
     const handleCopyAISuggestion = async (suggestion: string) => {
         setMessageText(suggestion);
         // Don't clear or record yet - wait for actual send
@@ -741,20 +613,20 @@ const RoomPagePost: React.FC = () => {
     const handleToggleGuardMode = async () => {
         if (!currentRoom) return;
 
-        const nextMode = currentRoom.active_response_mode === 'guard' ? 'tutoring' : 'guard';
-        if (!window.confirm(`${nextMode === 'guard' ? 'Activate' : 'Deactivate'} Guard Mode?`)) {
+        const nextMode = !currentRoom.guard_mode;
+        if (!window.confirm(`${nextMode ? 'Activate' : 'Deactivate'} Guard Mode?`)) {
             return;
         }
 
         try {
-            await setResponseMode(nextMode);
+            await setGuardMode(nextMode);
         } catch (error) {
             alert(error instanceof Error ? error.message : 'Failed to change Guard Mode');
         }
     };
 
     const handleToggleSuggestionMode = () => {
-        updateFinalMode(finalMode === 'guard' ? 'tutoring' : 'guard');
+        updateFinalGuardMode(!finalGuardMode);
     };
 
 
@@ -866,7 +738,7 @@ const RoomPagePost: React.FC = () => {
                                 className="btn btn-secondary btn-small"
                                 title="Manually change Guard Mode"
                             >
-                                {currentRoom.active_response_mode === 'guard' ? 'Deactivate Guard' : 'Activate Guard'}
+                                {currentRoom.guard_mode === true ? 'Deactivate Guard' : 'Activate Guard'}
                             </button>
                         )}
                         {user?.current_role === 'tutor' && canUseAI && (
@@ -879,7 +751,7 @@ const RoomPagePost: React.FC = () => {
                             </button>
                         )}
                         {/* AI Settings Button - Only for tutors */}
-                        {user?.current_role === 'tutor' && canUseAI && (
+                        {user?.current_role === 'tutor' && canUseAI && currentRoom.practice_type !== 'cyberbullying' && (
                             <button
                                 onClick={() => setShowAISettings(true)}
                                 className="btn btn-secondary btn-small"
@@ -896,7 +768,7 @@ const RoomPagePost: React.FC = () => {
                             <Download size={16} />
                         </button>
                         {/* Clear Chat Button - Only for tutors */}
-                        {user?.current_role === 'tutor' && canUseAI && (
+                        {user?.current_role === 'tutor' && canUseAI && currentRoom.practice_type !== 'cyberbullying' && (
                             <button
                                 onClick={() => setShowClearChatModal(true)}
                                 className="btn btn-secondary btn-small"
@@ -1024,23 +896,10 @@ const RoomPagePost: React.FC = () => {
                         onCancel={clearAISuggestion}
                     />
                 )}
-                {user?.current_role === 'tutor' && canUseAI && multiAgentDraft && !transferDraft && (
-                    <MultiAgentSuggestionEditor
-                        messages={multiAgentDraft.generatedMessages}
-                        tutorName={user.display_name}
-                        parentMessage={multiAgentDraft.parentMessageContent}
-                        isRegenerating={loadingAI}
-                        errorMessage={multiAgentError}
-                        onApprove={handleApproveMultiAgent}
-                        onReject={handleRejectMultiAgent}
-                        onRegenerate={handleRegenerateMultiAgent}
-                    />
-                )}
-
                 {/* Preparing and refused-preparation states for the transfer turn. */}
                 {user?.current_role === 'tutor' && canUseAI && loadingAI && !transferDraft && (
                     <p role="status" data-transfer-status="preparing" className="transfer-turn-status">
-                        Preparing the transfer turn…
+                        {currentRoom.practice_type === 'cyberbullying' ? 'Preparing a character reply…' : 'Preparing the transfer turn…'}
                     </p>
                 )}
                 {user?.current_role === 'tutor' && canUseAI && !transferDraft && transferTurnStatus && (
@@ -1055,7 +914,7 @@ const RoomPagePost: React.FC = () => {
                 )}
 
                 {/* Legacy AI Suggestion Box for tutors */}
-                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && !multiAgentDraft && (
+                {user?.current_role === 'tutor' && canUseAI && aiSuggestion && !transferDraft && (
                         <AISuggestionBox
                         suggestion={aiSuggestion}
                         onCopy={handleCopyAISuggestion}
@@ -1066,7 +925,10 @@ const RoomPagePost: React.FC = () => {
                         isRegenerating={loadingAI}
                         parameterConfig={getConfigurationPreset('standard')}
                         initialParameters={aiConfig?.prompt_config || undefined}
-                        isGuardMode={finalMode === 'guard'}
+                        quickAdjustEnabled={currentRoom.practice_type !== 'cyberbullying'}
+                        character={finalCharacter}
+                        onCharacterChange={updateFinalCharacter}
+                        isGuardMode={finalGuardMode}
                         onToggleGuard={handleToggleSuggestionMode}
                         lockedRole={
                             isTutorRoleLocked(aiConfig?.prompt_config)
@@ -1082,7 +944,7 @@ const RoomPagePost: React.FC = () => {
                         {openAssessment && (
                             <p role="status">Choose an option in your assessment and submit your answer to continue the discussion.</p>
                         )}
-                        <StudentAIToneControl />
+                        {currentRoom.practice_type !== 'cyberbullying' && <StudentAIToneControl />}
                         <div className="comment-input-with-ai">
                             <CommentInput
                                 user={user}
@@ -1096,7 +958,6 @@ const RoomPagePost: React.FC = () => {
                                     ? 'select the correct option(s) to finish the assessments first'
                                     : 'Write a comment...'}
                                 disabled={sendingMessage || Boolean(openAssessment)}
-                                submitBlocked={pendingPlayback}
                                 isLoading={sendingMessage}
                                 replyingTo={replyingTo}
                                 onCancelReply={() => setReplyingTo(null)}
@@ -1104,11 +965,9 @@ const RoomPagePost: React.FC = () => {
                             {user?.current_role === 'tutor' && canUseAI && isAIEnabled && (
                                 <button
                                     onClick={() => handleGenerateAIResponse()}
-                                    disabled={loadingAI || messages.length === 0 || pendingPlayback}
+                                    disabled={loadingAI || messages.length === 0}
                                     className="ai-generate-btn"
-                                    title={pendingPlayback
-                                        ? 'Waiting for the second AI message'
-                                        : loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
+                                    title={loadingAI ? 'Generating AI response...' : `Generate AI Response${aiConfig?.model_name ? ` (${aiConfig.model_name})` : ''}`}
                                 >
                                     {loadingAI ? (
                                         <>
@@ -1228,10 +1087,11 @@ const RoomPagePost: React.FC = () => {
                 <ChecklistPanel
                     roomId={roomId}
                     transferEnabled={currentRoom.transfer_learning_enabled === true}
+                    sharedTargets={currentRoom.practice_type === 'cyberbullying'}
                     studentId={transferStudentId}
                     isVisible={showChecklist}
                     onToggleVisibility={() => setShowChecklist(!showChecklist)}
-                    progressLocked={currentRoom.active_response_mode === 'guard'}
+                    progressLocked={currentRoom.guard_mode === true}
                 />
             )}
 

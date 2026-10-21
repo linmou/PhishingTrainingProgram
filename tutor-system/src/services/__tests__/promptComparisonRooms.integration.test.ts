@@ -53,7 +53,7 @@ describe('controlled prompt comparison integration', () => {
     const invoke = supabase.functions.invoke as jest.Mock;
     const content = JSON.stringify({
       reason: 'The learner stated a misconception.',
-      decision: { mode: 'tutoring', instruction: 'correction' },
+      decision: { guard_mode: false, instruction: 'correction' },
       response: 'Captured response',
     });
     invoke.mockResolvedValue({ data: { content, model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null });

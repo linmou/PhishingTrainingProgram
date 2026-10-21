@@ -90,7 +90,7 @@ describe('AI Service provider failure behavior', () => {
         mockSupabaseInvoke.mockResolvedValue({
             data: { content: JSON.stringify({
                 reason: 'The student is examining the sender address.',
-                decision: { mode: 'tutoring', instruction: 'scaffolding' },
+                decision: { guard_mode: false, instruction: 'scaffolding' },
                 response: 'What makes the sender address look suspicious to you?'
             }) },
             error: null

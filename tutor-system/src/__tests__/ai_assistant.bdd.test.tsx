@@ -91,7 +91,7 @@ const buildRoom = (overrides: Partial<Room> = {}): Room => ({
   ai_assistant_enabled: true,
   ai_assistant_model: 'qwen3.5-flash',
   ai_assistant_prompt: 'Teach phishing education clearly.',
-  active_response_mode: 'tutoring',
+  guard_mode: false,
   created_at: STARTED_AT,
   updated_at: STARTED_AT,
   ...overrides,
@@ -318,7 +318,7 @@ defineFeature(feature, (test) => {
         : nextSuggestion;
       return { data: { content: JSON.stringify({
           reason: 'The student asked a learning question.',
-          decision: { mode: 'tutoring', instruction: 'explanation' },
+          decision: { guard_mode: false, instruction: 'explanation' },
           response: responseText,
         }), model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null };
     });

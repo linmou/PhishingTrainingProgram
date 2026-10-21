@@ -113,3 +113,33 @@ export const SCENARIO_TEMPLATES = {
 };
 
 export type ScenarioTemplate = keyof typeof SCENARIO_TEMPLATES;
+
+/** One shared target inventory for every Cyberbullying scenario. */
+export const CYBERBULLYING_TARGET_VERSION = 'cyberbullying_v1';
+export const CYBERBULLYING_LEARNING_TARGETS = [
+  {
+    key: 'recognize_cyberbullying_impact',
+    title: 'Recognize cyberbullying and impact',
+    description: 'Recognize harmful online behavior and explain its impact on the person targeted.'
+  },
+  {
+    key: 'show_empathy_support',
+    title: 'Show empathy and support',
+    description: 'Acknowledge the targeted person’s feelings and offer a concrete supportive response.'
+  },
+  {
+    key: 'stand_up_constructively',
+    title: 'Stand up constructively',
+    description: 'Challenge bullying with a calm, respectful response that avoids escalating the conflict.'
+  },
+  {
+    key: 'avoid_reinforcing_bullying',
+    title: 'Avoid reinforcing bullying',
+    description: 'Choose responses that avoid joining in, amplifying, or rewarding harmful behavior.'
+  },
+  {
+    key: 'choose_safe_next_step',
+    title: 'Choose a safe next step',
+    description: 'Choose an appropriate next step such as supporting the person privately, saving evidence, reporting, blocking, or seeking trusted help.'
+  }
+] as const;

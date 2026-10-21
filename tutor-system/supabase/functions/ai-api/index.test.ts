@@ -1,5 +1,5 @@
 #!/usr/bin/env -S deno test --allow-env --allow-net
-// Test responsibility: verify the offline-client LLM boundary, provider configuration, and response projection.
+// Test responsibility: verify ai-api's provider boundary, server-owned role proposals, recoverable failures, and review dispatch.
 
 import { createAiApiHandler, type AiApiDependencies } from './index.ts';
 
@@ -28,6 +28,139 @@ function dependencies(overrides: Partial<AiApiDependencies> = {}): AiApiDependen
     ...overrides,
   };
 }
+
+const practiceIds = {
+  room: '10000000-0000-0000-0000-000000000001',
+  tutor: '10000000-0000-0000-0000-000000000002',
+  proposal: '10000000-0000-0000-0000-000000000003',
+};
+
+function practiceRequest(body: Record<string, unknown>) {
+  return new Request('http://localhost/ai-api', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-application-user-id': practiceIds.tutor },
+    body: JSON.stringify({ operation: 'cyberbullying_suggest', room_id: practiceIds.room, request_id: practiceIds.proposal, ...body }),
+  });
+}
+
+function practiceDependencies(overrides: Partial<AiApiDependencies> = {}) {
+  const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+  const providerBodies: Array<Record<string, any>> = [];
+  const context = {
+    practice_type: 'cyberbullying', scenario: { id: 'pinned-scenario' }, guard_mode: false,
+    dialogue: Array.from({ length: 61 }, (_, index) => ({ id: 'message-' + index, content: 'saved comment ' + index, user_role: 'student' })),
+  };
+  const deps = dependencies({
+    env: name => ({ OAI_API_KEY: 'secret', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    rpc: async (name, args) => {
+      calls.push({ name, args });
+      if (name === 'begin_cyberbullying_suggestion_v1') return {
+        data: { id: practiceIds.proposal, status: 'generating', requested_character: args.p_character, input_context: context }, error: null,
+      };
+      return { data: { id: practiceIds.proposal, status: args.p_result ? 'ready' : 'failed', ...args.p_result as Record<string, unknown> }, error: null };
+    },
+    fetch: async (_input, init) => {
+      providerBodies.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        student_role: 'Constructive upstanders', response_in_role: 'same_age_peer', final_response: 'A complete role reply.',
+      }) } }] }));
+    },
+    ...overrides,
+  });
+  return { deps, calls, context, providerBodies };
+}
+
+Deno.test('cyberbullying derives full context from storage and saves one unpublished response for each role', async () => {
+  for (const character of ['same_age_peer', 'older_peer', 'victim', 'bully', 'educator']) {
+    const fixture = practiceDependencies();
+    fixture.deps.fetch = async (_input, init) => {
+      fixture.providerBodies.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        student_role: 'Constructive upstanders', response_in_role: character, final_response: 'A complete role reply.',
+      }) } }] }));
+    };
+    const result = await createAiApiHandler(fixture.deps)(practiceRequest({
+      character, messages: [{ role: 'system', content: 'client replacement' }], practice_type: 'phishing',
+    }));
+    assertEquals(result.status, 200);
+    assertEquals((await result.json()).data.character, character);
+    assertEquals(fixture.calls.map(call => call.name), ['begin_cyberbullying_suggestion_v1', 'finish_cyberbullying_suggestion_v1']);
+    assertEquals(fixture.calls[0].args.p_actor_id, practiceIds.tutor);
+    const provider = fixture.providerBodies[0];
+    assertEquals(JSON.parse(provider.messages[2].content).dialogue, fixture.context.dialogue);
+    assertEquals(fixture.calls[1].args.p_result, { character, response: 'A complete role reply.', reason: 'Constructive upstanders' });
+    const provenance = fixture.calls[1].args.p_provenance as Record<string, any>;
+    assertEquals(provenance.attempts.length, 1);
+    assertEquals(provenance.model, 'qwen3.8-flash');
+    assert(!JSON.stringify(provenance).includes('secret'));
+  }
+});
+
+Deno.test('cyberbullying rejects missing identity and ownership before contacting the provider', async () => {
+  const fixture = practiceDependencies({
+    rpc: async () => ({ data: null, error: { message: 'FORBIDDEN' } }),
+  });
+  const handler = createAiApiHandler(fixture.deps);
+  const missingIdentity = await handler(request({ operation: 'cyberbullying_suggest' }));
+  assertEquals(missingIdentity.status, 403);
+  const wrongOwner = await handler(practiceRequest({}));
+  assertEquals(wrongOwner.status, 403);
+  assertEquals(fixture.providerBodies.length, 0);
+});
+
+Deno.test('cyberbullying retries malformed role output and records both attempts without publishing', async () => {
+  let calls = 0;
+  const fixture = practiceDependencies({
+    fetch: async () => {
+      calls += 1;
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: '{}' } }] }));
+    },
+  });
+  const result = await createAiApiHandler(fixture.deps)(practiceRequest({}));
+  assertEquals(result.status, 502);
+  assertEquals((await result.json()).error.code, 'AI_OUTPUT_INVALID');
+  assertEquals(calls, 2);
+  assertEquals(fixture.calls[1].args.p_result, null);
+  assertEquals((fixture.calls[1].args.p_provenance as any).attempts.length, 2);
+});
+
+Deno.test('cyberbullying records truncated and oversized-context failures as retryable proposals', async () => {
+  const truncated = practiceDependencies({
+    fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: '{}' } }] })),
+  });
+  const first = await createAiApiHandler(truncated.deps)(practiceRequest({}));
+  assertEquals(first.status, 502);
+  assertEquals((await first.json()).error.code, 'AI_OUTPUT_TRUNCATED');
+  assertEquals(truncated.calls[1].args.p_result, null);
+
+  const oversized = practiceDependencies();
+  oversized.context.dialogue[0].content = 'x'.repeat(51_000);
+  const second = await createAiApiHandler(oversized.deps)(practiceRequest({}));
+  assertEquals(second.status, 413);
+  assertEquals(oversized.providerBodies.length, 0);
+  assertEquals(oversized.calls[1].args.p_result, null);
+  assertEquals((oversized.calls[1].args.p_provenance as any).error, 'CONTEXT_TOO_LARGE');
+});
+
+Deno.test('cyberbullying surfaces stale persistence and preserves the review operation boundary', async () => {
+  const stale = practiceDependencies({
+    rpc: async (name) => name === 'begin_cyberbullying_suggestion_v1'
+      ? { data: { id: practiceIds.proposal, status: 'generating', requested_character: null, input_context: {} }, error: null }
+      : { data: null, error: { message: 'STALE_PROPOSAL' } },
+  });
+  const result = await createAiApiHandler(stale.deps)(practiceRequest({}));
+  assertEquals(result.status, 409);
+  assertEquals((await result.json()).error.code, 'STALE_PROPOSAL');
+
+  const review = practiceDependencies();
+  const rejected = await createAiApiHandler(review.deps)(practiceRequest({
+    operation: 'cyberbullying_review', suggestion_id: practiceIds.proposal, reject: true,
+  }));
+  assertEquals(rejected.status, 200);
+  assertEquals(review.calls[0].name, 'review_cyberbullying_suggestion_v1');
+  assertEquals(review.calls[0].args.p_reject, true);
+  assertEquals(review.providerBodies.length, 0);
+});
 
 const validBody = {
   messages: [

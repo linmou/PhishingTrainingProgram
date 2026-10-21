@@ -70,7 +70,7 @@ describe('AI service Edge Function boundary', () => {
     const invoke = supabase.functions.invoke as jest.Mock;
     const validDecision = {
       reason: 'The learner needs a concise safety reminder.',
-      decision: { mode: 'tutoring', instruction: 'scaffolding' },
+      decision: { guard_mode: false, instruction: 'scaffolding' },
       response: 'Verify the sender through the official app.',
     };
     invoke

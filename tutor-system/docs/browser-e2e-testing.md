@@ -1,5 +1,9 @@
 # Browser E2E Testing
 
+<!-- Cyberbullying workflow added 2026-10-21; implementation baseline 2807c52. -->
+
+The `cyberbullying` workflow creates a tagged situation through the tutor UI and verifies learner progress, character selection/regeneration, edited approval, rejection, ratings, observer access, reload and JSON export. Run it with `--workflow=cyberbullying` against the explicitly selected candidate app/project. Cleanup deletes the tagged room by cascade and checks its related rows. See [Cyberbullying practise](cyberbullying-practise.md) and its [cutover runbook](cyberbullying-cutover.md).
+
 <!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
 
 ## Assessment dialogue revision
@@ -27,7 +31,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
-| `test:e2e:staging` / `test:e2e:production` | Ten selectable Playwright tutor, room setup, checklist, assessment, status-event, early-message, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain; the new-room workflow deletes its tagged room | Explicit live suite against the selected project. |
+| `test:e2e:staging` / `test:e2e:production` | Eleven selectable Playwright workflows, including Cyberbullying, tutor, room setup, checklist, assessment, status-event, early-message and Guard | Test rows are deleted after each workflow; fixture rooms remain; new-room workflows delete their tagged rooms | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
@@ -39,7 +43,7 @@ The [early-message browser record](doc_update_record/documentation_update_record
 
 ## Select The Release Checks
 
-Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all ten workflows; use it when the combined change affects shared behavior that cannot be bounded.
+Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all eleven workflows; use it when the combined change affects shared behavior that cannot be bounded.
 
 | Changed behavior | Relevant existing browser checks |
 | --- | --- |

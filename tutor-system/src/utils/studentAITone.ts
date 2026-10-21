@@ -39,19 +39,14 @@ export function roleIntensityToTone(role: 'low' | 'high' | undefined): StudentAI
 }
 
 export function interactionModeForChoice(choice: StudentAIChoice): InteractionMode {
-  // Older direct callers may still persist this value; production requests normalize it.
-  return choice === 'multi_agent' ? 'multi_agent' : 'single_agent';
+  return 'single_agent';
 }
 
 export function isTutorRoleLocked(
   promptConfig: SystemPromptConfig | null | undefined
 ): boolean {
   const lock = promptConfig?.student_tone_lock;
-  return Boolean(
-    lock?.locked &&
-    lock.chosen_choice !== 'multi_agent' &&
-    promptConfig?.interaction_mode !== 'multi_agent'
-  );
+  return Boolean(lock?.locked);
 }
 
 /** Current selector value from the configured Peer/Adult role. */
@@ -66,6 +61,7 @@ export function applyStudentAIChoiceToPromptConfig(
   choice: StudentAIChoice,
   chosenByUserId: string
 ): SystemPromptConfig {
+  if (choice !== 'peer' && choice !== 'adult') throw new Error('Unsupported student AI choice');
   const base = promptConfig
     ? {
         ...PRESET_CONFIGS.supportive_adult,
@@ -95,12 +91,11 @@ export function applyStudentAIChoiceToPromptConfig(
   return {
     ...base,
     interaction_mode: interactionModeForChoice(choice),
-    // Multi-agent keeps the configured Tutor tone; Peer/Adult claim it.
-    role: choice === 'multi_agent' ? base.role : { role: choiceToRoleIntensity(choice) },
+    role: { role: choiceToRoleIntensity(choice) },
     student_tone_lock: {
       locked: true,
       chosen_by_user_id: chosenByUserId,
-      chosen_role: choice === 'multi_agent' ? base.role.role : choiceToRoleIntensity(choice),
+      chosen_role: choiceToRoleIntensity(choice),
       chosen_choice: choice,
     },
   };

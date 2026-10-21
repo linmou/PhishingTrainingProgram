@@ -1,0 +1,96 @@
+[
+    {
+        "id": 1,
+        "content": {
+            "text": "Dylan smells that he did not shower for a week.",
+            "image": "/images/EWWW_meme.jpg"
+        },
+        "timestamp": "2025-02-18T12:00:00Z",
+        "author": {
+            "id": "assistant_0",
+            "name": "Sarah",
+            "profile_picture": "/images/profile_1.png",
+            "role": "simulated_user"
+        },
+        "likes": 2,
+        "comments": [
+            {
+                "id": "1_1",
+                "content": {
+                    "text": "Hey, leave him alone. You smell worse than Dylan everyday!!"
+                },
+                "timestamp": "2025-02-18T12:04:00Z",
+                "author": {
+                    "id": "user_1",
+                    "name": "John Doe",
+                    "profile_picture": "/images/default_user_profile.png",
+                    "role": "simulated_user"
+                },
+                "likes": 1,
+                "dislikes": 1
+            },
+            {
+                "id": "1_2",
+                "content": {
+                    "text": "Thank you for standing up for Dylan! You are a good friend!"
+                },
+                "timestamp": "2025-02-18T12:10:00Z",
+                "author": {
+                    "id": "assistant_1",
+                    "name": "Jane Doe",
+                    "profile_picture": "/images/profile_2.png",
+                    "role": "simulated_user"
+                },
+                "likes": 2,
+                "dislikes": 0
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "content": {
+            "text": "omg lolll look at Dylan's sketchbook he's such a nerdddd",
+            "image": "/images/case_notebook.jpg"
+        },
+        "timestamp": "2025-02-18T11:17:00Z",
+        "author": {
+            "id": "user_2",
+            "name": "Keegan Scott",
+            "profile_picture": "/images/profile_2.png",
+            "role": "user"
+        },
+        "likes": 3,
+        "comments": [
+            {
+                "id": "2_1",
+                "content": {
+                    "text": "lol what a loser"
+                },
+                "timestamp": "2025-02-18T11:30:00Z",
+                "author": {
+                    "id": "user_3",
+                    "name": "Ella Sroni",
+                    "profile_picture": "/images/profile_1.png",
+                    "role": "simulated_user"
+                },
+                "likes": 1,
+                "dislikes": 0
+            },
+            {
+                "id": "2_2",
+                "content": {
+                    "text": "Cartoons are for babies!"
+                },
+                "timestamp": "2025-02-18T11:41:00Z",
+                "author": {
+                    "id": "user_4",
+                    "name": "Breana Summers",
+                    "profile_picture": "/images/profile_2.png",
+                    "role": "simulated_user"
+                },
+                "likes": 4,
+                "dislikes": 0
+            }
+        ]
+    }
+]

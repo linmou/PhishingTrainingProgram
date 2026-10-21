@@ -78,7 +78,7 @@ const checklistBackground = ({ given, and }: any) => {
     expect({ id: 'tutor-1', role: 'tutor' }).toMatchObject({ role: 'tutor' });
   });
   and('the tutor has created a room with AI assistant enabled', () => {
-    database.state.rooms = [{ id: ROOM_ID, active_response_mode: 'tutoring', ai_assistant_enabled: true }];
+    database.state.rooms = [{ id: ROOM_ID, guard_mode: false, ai_assistant_enabled: true }];
   });
   and('a student has joined the room', () => {
     expect({ id: 'student-1', room_id: ROOM_ID }).toHaveProperty('room_id', ROOM_ID);
@@ -375,7 +375,7 @@ defineFeature(feature, test => {
       cleanup();
       panelMounted = false;
       database.reset();
-      database.state.rooms = [{ id: ROOM_ID, active_response_mode: 'tutoring', ai_assistant_enabled: true }];
+      database.state.rooms = [{ id: ROOM_ID, guard_mode: false, ai_assistant_enabled: true }];
       mockAssessGenerationContext.mockResolvedValue({ type: 'empty_system_prompt' });
     });
     when('the tutor selects "Create from Template"', async () => {

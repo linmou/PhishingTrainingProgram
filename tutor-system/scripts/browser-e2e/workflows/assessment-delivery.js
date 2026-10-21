@@ -154,11 +154,15 @@ function assertTutorFeedback(message, assessment) {
 
 async function tutoringStep(ctx, journey, options) {
   const { label, focusMessageId, expectedAssessmentCount, target, terminalAssessment } = options;
+  const browserErrors = [];
+  const onConsole = message => { if (message.type() === 'error') browserErrors.push(message.text()); };
+  ctx.tutorPage.on('console', onConsole);
   await openRoom(ctx.tutorPage, ctx.appUrl, journey.room.id);
   const beforeMessages = await query(ctx.client, 'messages', '*', 'room_id', journey.room.id);
   const latestLearner = beforeMessages.filter(row => row.user_id === ctx.student.id)
     .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
   assert.equal(latestLearner?.id, focusMessageId, 'Tutoring step would focus a different learner message');
+  await ctx.tutorPage.locator('.post-comment').filter({ hasText: latestLearner.content }).last().waitFor({ timeout: TIMEOUT });
   const beforeIds = new Set(beforeMessages.map(row => row.id));
   const close = ctx.tutorPage.locator('.checklist-close');
   if (await close.isVisible()) await close.click();
@@ -177,6 +181,8 @@ async function tutoringStep(ctx, journey, options) {
     await ctx.tutorPage.getByRole('button', { name: /copy to input/i }).click();
     await ctx.tutorPage.locator('form.comment-input-form button[type="submit"]').click();
   } finally {
+    ctx.tutorPage.off('console', onConsole);
+    writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-browser-errors.json`), browserErrors);
     calls = await stop();
     writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-function.json`), calls);
   }

@@ -71,7 +71,7 @@ function providerScope(): Record<string, unknown> {
     context: {
       room_id: 'room-1', checklist_id: 'checklist-1', focus_student_id: 'learner-1',
       focus_student_message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'It looked familiar.' },
-      prior_participation_mode: 'tutoring',
+      prior_guard_mode: false,
       checklist_items: [{
         id: 'item-1', area_text: 'Verify independently', priority: 'critical',
         status: 'covered', understanding_level: 'good',
@@ -91,7 +91,7 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
       rpc: async (name, args) => {
         if (name === 'get_transfer_assessment_processing_context_v1') return { data: {
           context: { progress: { status: 'covered', understanding_level: 'good' },
-            participation_mode: 'tutoring', progress_snapshot_hash: 'h', feedback_required: false,
+            guard_mode: false, progress_snapshot_hash: 'h', feedback_required: false,
             eligible_assessment_item_ids: ['item-1'], unresolved_assessment: { id: 'a' },
             pending_repair_message_id: null,
             attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open', processed_answer_message_ids: [] } },
@@ -150,6 +150,102 @@ Deno.test('cancelled assessment replay bypasses grading and writes', async () =>
   assertEquals(payload.data.already_processed, true);
 });
 
+
+ // Covers Cyberbullying analysis: independent targets, attributed evidence, durable provider attempts and atomic retry.
+Deno.test('Cyberbullying settles all five target analyses before applying progress and records failed attempts', async () => {
+  const providerInputs: Record<string, any>[] = [];
+  const audits: Record<string, any>[] = [];
+  let failOne = true;
+  let applications = 0;
+  const content = 'I will support Dylan privately.';
+  const character = { id: 'role-1', user_id: 'teacher-1', user_role: 'tutor', character: 'victim', persona_id: 'copilot:dylan', content: 'A character reply.' };
+  const scope = {
+    practice_type: 'cyberbullying', scenario: { id: 'copilot-1' },
+    room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+    message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content },
+    items: Array.from({ length: 5 }, (_, index) => ({ id: 'item-' + index, area_text: 'Target ' + index, status: 'pending', understanding_level: 'none' })),
+    dialogue_history: [character, { id: 'focus-1', user_id: 'learner-1', user_role: 'student', content }],
+  };
+  const deps = dependencies({
+    env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    fetch: async (_input, init) => {
+      const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
+      providerInputs.push(input);
+      if (failOne && input.items[0].id === 'item-2') return new Response('{}', { status: 503 });
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: input.items[0].id, kind: 'initial_signal', evidence_type: 'action',
+          evidence_message_id: 'focus-1', evidence_quote: content, explanation: 'Current learner evidence.' }],
+        explanation: 'Recorded target analysis.',
+      }) } }] }));
+    },
+  });
+  deps.rpc = async (name, args) => {
+    if (name === 'get_transfer_message_analysis_context_v1') return { data: scope, error: null };
+    if (name === 'record_transfer_provider_attempt_v1') { audits.push(args); return { data: 'audit-id', error: null }; }
+    if (name === 'apply_transfer_message_analysis_v1') {
+      applications += 1;
+      assertEquals((args.p_analysis as Record<string, any>).events.length, 5);
+      return { data: { applied: scope.items }, error: null };
+    }
+    throw new Error('Unexpected RPC ' + name);
+  };
+  const handler = createAssessmentApiHandler(deps);
+  const first = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assert(first.status >= 400);
+  assertEquals(applications, 0);
+  assertEquals(providerInputs.length, 5);
+  assertEquals(audits.length, 5);
+  assertEquals(audits.filter(audit => audit.p_error_code !== null).length, 1);
+  for (const input of providerInputs) {
+    assertEquals(input.practice_type, 'cyberbullying');
+    assertEquals(input.focus_student_id, 'learner-1');
+    assertEquals(input.dialogue_history[0], character);
+    assertEquals(input.scenario, scope.scenario);
+  }
+  failOne = false;
+  const retry = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assertEquals(retry.status, 200);
+  assertEquals(applications, 1);
+  assertEquals(audits.length, 10);
+  assert(audits.every(audit => audit.p_max_tokens === 600 && audit.p_request_payload.operation === 'analyze_message'));
+});
+
+// Covers analyzer format repair: invalid evidence is never applied and both attempts retain their audit identity.
+Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records both attempts', async () => {
+  const audits: Record<string, any>[] = [];
+  let providerCalls = 0;
+  let applications = 0;
+  const content = 'First sentence. Second sentence. Third sentence.';
+  const message = { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content };
+  const handler = createAssessmentApiHandler({
+    ...dependencies(), env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    fetch: async () => {
+      providerCalls += 1;
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
+          evidence_quote: providerCalls === 1 ? 'First sentence. Third sentence.' : 'First sentence.', explanation: 'Controlled event.' }],
+        explanation: 'Controlled analysis.',
+      }) } }] }));
+    },
+    rpc: async (name, args) => {
+      if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+        practice_type: 'cyberbullying', room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+        message, dialogue_history: [message], items: [{ id: 'item-1', area_text: 'Fixture target', status: 'pending', understanding_level: 'none' }],
+      }, error: null };
+      if (name === 'record_transfer_provider_attempt_v1') { audits.push(args); return { data: 'audit', error: null }; }
+      if (name === 'apply_transfer_message_analysis_v1') { applications += 1; return { data: args.p_analysis, error: null }; }
+      throw new Error('Unexpected RPC ' + name);
+    },
+  });
+  const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assertEquals(response.status, 200);
+  assertEquals(providerCalls, 2);
+  assertEquals(applications, 1);
+  assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, 'valid']]);
+  assertEquals(audits[0].p_request_id, audits[1].p_request_id);
+  assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
+});
+
 Deno.test('missing saved result refuses duplicate processing before any provider call',async () => {
   let providerCalls=0;
   const handler=createAssessmentApiHandler(dependencies({
@@ -184,7 +280,7 @@ for (const scenario of ['ambiguity_then_pass','guard_then_clear','ordered_retry_
         if (name==='get_transfer_assessment_processing_context_v1') {
           const previous=stored.get(id);
           return {data:{lifecycle:resolution,context:{progress:{status:'covered',understanding_level:'good'},
-            participation_mode:guard ? 'guard':'tutoring',progress_snapshot_hash:'h',feedback_required:resolution!=='open',
+            guard_mode:guard,progress_snapshot_hash:'h',feedback_required:resolution!=='open',
             eligible_assessment_item_ids:['item-1'],unresolved_assessment:resolution==='open' ? {id:'a'}:null,
             pending_repair_message_id:null,attempt_snapshot:{assessment_id:'a',accepted_attempt_count:used,resolution,
               processed_answer_message_ids:ids.filter(answer=>stored.get(answer)?.answer_outcome)}},

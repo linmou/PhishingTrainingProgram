@@ -659,9 +659,9 @@ describe('RoomContext - Room Management Tests', () => {
                 success: true,
                 suggestion: 'Check the sender address before you open it.',
                 decision: {
-                    mode: 'tutoring',
+                    guard_mode: false,
                     instruction: 'scaffolding',
-                    mode_reason: 'Help the learner inspect evidence.',
+                    guard_reason: 'Help the learner inspect evidence.',
                     suggested_response: 'What does the sender address tell you?'
                 },
                 contextMessages: []

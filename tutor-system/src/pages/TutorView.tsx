@@ -15,6 +15,8 @@ import {
     markBehaviorTestDescription
 } from '../utils/behaviorTestRooms';
 import '../components/TutorView.css';
+import type { PracticeType, CyberbullyingScenario } from '../types';
+import { loadCyberbullyingScenarios, scenarioDialogue } from '../services/cyberbullyingScenarios';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 
@@ -29,6 +31,9 @@ const TutorView: React.FC = () => {
     const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [practiceType, setPracticeType] = useState<PracticeType>('phishing');
+    const [cyberbullyingScenarios, setCyberbullyingScenarios] = useState<CyberbullyingScenario[]>([]);
+    const [selectedScenario, setSelectedScenario] = useState<CyberbullyingScenario | null>(null);
     const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
     const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
     const [prePopulatedDialogue, setPrePopulatedDialogue] = useState<PrePopulatedMessage[]>([]);
@@ -101,6 +106,26 @@ const TutorView: React.FC = () => {
     }, [user, loadRooms, loadTemplates]);
 
 
+    useEffect(() => {
+        if (practiceType !== 'cyberbullying' || cyberbullyingScenarios.length) return;
+        let active = true;
+        loadCyberbullyingScenarios().then(scenarios => {
+            if (active) setCyberbullyingScenarios(scenarios);
+        }).catch(error => { if (active) setError(error.message); });
+        return () => { active = false; };
+    }, [practiceType, cyberbullyingScenarios.length]);
+
+    const selectScenario = (scenario: CyberbullyingScenario) => {
+        setSelectedScenario(scenario);
+        setTitle('Cyberbullying practise — ' + scenario.id);
+        setDescription(scenario.post.text);
+        setCustomImageUrl(scenario.post.image);
+        setSelectedImageId(null);
+        setPrePopulatedDialogue(scenarioDialogue(scenario));
+        setUseCustomOp(true);
+        setCustomOpName(scenario.post.author.name);
+    };
+
     const handleImageSelect = (imageId: string) => {
         setSelectedImageId(imageId);
         setCustomImageUrl(null); // Clear custom image when preset is selected
@@ -140,6 +165,8 @@ const TutorView: React.FC = () => {
 
         const template = templates.find(t => t.id === templateId);
         if (template) {
+            setPracticeType(template.practice_type ?? 'phishing');
+            setSelectedScenario(template.scenario_config ?? null);
             const presetImage = template.image_url
                 ? presetImages.find(img => img.url === template.image_url)
                 : null;
@@ -164,6 +191,10 @@ const TutorView: React.FC = () => {
         
         if (!title.trim()) {
             setError('Room title is required');
+            return;
+        }
+        if (practiceType === 'cyberbullying' && !selectedScenario) {
+            setError('Choose a Cyberbullying situation.');
             return;
         }
 
@@ -198,6 +229,26 @@ const TutorView: React.FC = () => {
                 : description.trim();
 
             const roomData = {
+                practice_type: practiceType,
+                scenario_config: practiceType === 'cyberbullying' && selectedScenario ? {
+                    ...selectedScenario,
+                    post: {
+                        ...selectedScenario.post, text: description.trim(), image: imageUrl,
+                        author: { ...selectedScenario.post.author, name: useCustomOp ? customOpName.trim() : user.display_name },
+                    },
+                    initial_comments: prePopulatedDialogue.map(comment => ({
+                        id: comment.source_comment_id || crypto.randomUUID(),
+                        text: comment.message,
+                        timestamp: comment.timestamp || new Date().toISOString(),
+                        author: {
+                            id: comment.persona_id || crypto.randomUUID(),
+                            name: comment.user_name,
+                            role: selectedScenario.initial_comments.find(source => source.author.id === comment.persona_id)?.author.role || 'simulated_user',
+                            profile_picture: comment.avatar_url || '/images/default_user_profile.png',
+                        },
+                    })),
+                } : null,
+                ...(practiceType === 'cyberbullying' ? { ai_assistant_enabled: true, ai_assistant_model: DEFAULT_AI_MODEL } : {}),
                 title: title.trim(),
                 description: roomDescription,
                 tutor_id: user.id,
@@ -205,7 +256,7 @@ const TutorView: React.FC = () => {
                 pre_populated_dialogue: prePopulatedDialogue.length > 0 ? prePopulatedDialogue : null,
                 op_id: useCustomOp ? null : user.id,
                 op_display_name: useCustomOp ? customOpName.trim() : user.display_name,
-                op_avatar_url: useCustomOp ? null : user.avatar_url,
+                op_avatar_url: practiceType === 'cyberbullying' ? selectedScenario?.post.author.profile_picture : useCustomOp ? null : user.avatar_url,
                 password: usePassword ? roomPassword.trim() : null
             };
 
@@ -214,7 +265,7 @@ const TutorView: React.FC = () => {
             // If a global template ships AI config (improved casual_peer prompts),
             // enable the AI assistant so the fixed tutor behavior is live in the room.
             const aiTemplate = selectedTemplate?.ai_config_template;
-            if (aiTemplate?.enabled && user?.id) {
+            if (practiceType === 'phishing' && aiTemplate?.enabled && user?.id) {
                 const modelName = aiTemplate.model_name || DEFAULT_AI_MODEL;
                 // Prefer regenerating from prompt_config so rooms always get the
                 // current improved prompt code; fall back to stored system_prompt.
@@ -277,6 +328,8 @@ const TutorView: React.FC = () => {
             
             // Reset form
             setTitle('');
+            setPracticeType('phishing');
+            setSelectedScenario(null);
             setDescription('');
             setSelectedImageId(null);
             setCustomImageUrl(null);
@@ -392,6 +445,25 @@ const TutorView: React.FC = () => {
                     <div className="form-section">
                         <h2 className="form-section-title">Create New Room</h2>
                         <form aria-label="Create room form" onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label htmlFor="practice-type" className="enhanced-label">Practice</label>
+                                <select id="practice-type" value={practiceType} disabled={isCreating}
+                                    onChange={event => { setPracticeType(event.target.value as PracticeType); setSelectedTemplateId(null); }}>
+                                    <option value="phishing">Phishing training</option>
+                                    <option value="cyberbullying">Cyberbullying practise</option>
+                                </select>
+                            </div>
+                            {practiceType === 'cyberbullying' && <div className="form-group">
+                                <label htmlFor="cyberbullying-situation" className="enhanced-label">Situation</label>
+                                <select id="cyberbullying-situation" value={selectedScenario?.id || ''} disabled={isCreating}
+                                    onChange={event => {
+                                        const scenario = cyberbullyingScenarios.find(value => value.id === event.target.value);
+                                        if (scenario) selectScenario(scenario);
+                                    }}>
+                                    <option value="">Choose a situation</option>
+                                    {cyberbullyingScenarios.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.post.text}</option>)}
+                                </select>
+                            </div>}
                             {/* Template Selection */}
                             {templates.length > 0 && (
                                 <div className="form-group template-selection-section">
@@ -406,6 +478,7 @@ const TutorView: React.FC = () => {
                                         <option value="">Create from scratch</option>
                                         {templates
                                             .filter((t) => !isBehaviorDemoTemplateName(t.template_name))
+                                            .filter(t => (t.practice_type ?? 'phishing') === practiceType)
                                             .map((template) => (
                                             <option key={template.id} value={template.id}>
                                                 {template.template_name}

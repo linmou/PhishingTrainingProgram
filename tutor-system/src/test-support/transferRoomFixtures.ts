@@ -83,10 +83,10 @@ export const transferRoom: Room = {
   op_avatar_url: null,
   password: null,
   pre_populated_dialogue: null,
-  active_response_mode: 'tutoring',
+  guard_mode: false,
   transfer_learning_enabled: true,
-  mode_changed_at: '2026-09-12T08:00:00Z',
-  mode_change_source: 'reviewed_response',
+  guard_mode_changed_at: '2026-09-12T08:00:00Z',
+  guard_mode_change_source: 'reviewed_response',
   created_at: '2026-09-12T08:00:00Z',
   updated_at: '2026-09-12T08:00:00Z',
 } as Room;
@@ -194,7 +194,7 @@ export const deliveredPublicMessage: PublicMessageDTO = {
 
 export const reviewedDelivery: ReviewedDeliveryDTO = {
   message: deliveredPublicMessage,
-  room: { ...transferRoom, active_response_mode: 'tutoring' },
+  room: { ...transferRoom, guard_mode: false },
 };
 
 /** Assessment draft returned for learner A, including the private key. */

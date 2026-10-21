@@ -106,7 +106,7 @@ test('existing room selection validates template and owner without inserting', a
       select: () => ({ eq: async () => ({ data: table === 'rooms' ? [{
         id: expected.id, title: expected.title, description: '[browser-e2e-template]', tutor_id: 'tutor-id', is_active: true,
         transfer_learning_enabled: false,
-        active_response_mode: 'tutoring', mode_changed_at: null, mode_change_source: null,
+        guard_mode: false, guard_mode_changed_at: null, guard_mode_change_source: null,
         ai_assistant_enabled: true, ai_assistant_prompt: 'Template prompt', pre_populated_dialogue: [{}]
       }] : [], error: null }) }),
       insert: () => { throw new Error('Room selection must not insert'); }
@@ -123,7 +123,7 @@ test('used template room is rejected before the workflow can write', async () =>
       select: () => ({ eq: async () => ({ data: table === 'rooms' ? [{
         id: expected.id, title: expected.title, description: '[browser-e2e-template]', tutor_id: 'tutor-id', is_active: true,
         transfer_learning_enabled: false,
-        active_response_mode: 'tutoring', mode_changed_at: null, mode_change_source: null,
+        guard_mode: false, guard_mode_changed_at: null, guard_mode_change_source: null,
         ai_assistant_enabled: true, ai_assistant_prompt: 'Template prompt', pre_populated_dialogue: [{}]
       }] : table === 'session_checklists' ? [{ id: 'used-checklist', is_active: true }] : [], error: null }) })
     })
@@ -133,6 +133,7 @@ test('used template room is rejected before the workflow can write', async () =>
 
 test('selects the transfer status workflow alongside the existing browser workflows', () => {
   assert.deepEqual(selectWorkflows([]), [
+    'cyberbullying',
     'tutor-response', 'checklist-generation', 'room-assessment-setup', 'checklist-management', 'checklist-coverage', 'guard-mode',
     'assessment-delivery', 'assessment-answer', 'transfer-status-events', 'early-message-recheck'
   ]);

@@ -46,15 +46,15 @@ describe('Guard Mode AI decision contract', () => {
     it('treats a newly created tutoring room with no mode history as unknown prior mode', async () => {
         const { resolveTutorPriorMode } = await import('../aiService');
 
-        expect(resolveTutorPriorMode({ active_response_mode: 'tutoring', mode_changed_at: null })).toBe('unknown');
-        expect(resolveTutorPriorMode({ active_response_mode: 'guard', mode_changed_at: null })).toBe('guard');
-        expect(resolveTutorPriorMode({ active_response_mode: 'tutoring', mode_changed_at: '2026-04-02T00:00:00Z' })).toBe('tutoring');
+        expect(resolveTutorPriorMode({ guard_mode: false, guard_mode_changed_at: null })).toBe('unknown');
+        expect(resolveTutorPriorMode({ guard_mode: true, guard_mode_changed_at: null })).toBe(true);
+        expect(resolveTutorPriorMode({ guard_mode: false, guard_mode_changed_at: '2026-04-02T00:00:00Z' })).toBe(false);
     });
 
     it('returns an independent semantic mode, reason, and response from the provider', async () => {
         const providerDecision = {
             reason: 'The student explicitly repeated the unsafe click to test the tutor after correction.',
-            decision: { mode: 'guard', instruction: null },
+            decision: { guard_mode: true, instruction: null },
             response: 'Stop repeating that behavior and make a relevant attempt.'
         };
         const invokeMock = jest.fn().mockResolvedValue({
@@ -75,7 +75,7 @@ describe('Guard Mode AI decision contract', () => {
                             ai_assistant_enabled: true,
                             ai_assistant_model: 'qwen3.5-flash',
                             ai_assistant_prompt: 'Use the room phishing-training guidance.',
-                            active_response_mode: 'guard',
+                            guard_mode: true,
                             created_at: '2026-04-02T00:00:00Z',
                             updated_at: '2026-04-02T00:00:00Z'
                         },
@@ -127,8 +127,8 @@ describe('Guard Mode AI decision contract', () => {
             success: true,
             suggestion: providerDecision.response,
             decision: {
-                mode: 'guard',
-                mode_reason: providerDecision.reason,
+                guard_mode: true,
+                guard_reason: providerDecision.reason,
                 suggested_response: providerDecision.response
             }
         });
@@ -146,18 +146,18 @@ describe('Guard Mode AI decision contract', () => {
         expect(request.messages[0].content).not.toContain('VERIFIED ASSESSMENT STATE');
         const {buildAIContextFromExistingData}=await import('../simplifiedAIContext');
         expect(buildAIContextFromExistingData).toHaveBeenCalledWith('room-guard',['saved-result'],undefined);
-        expect(request.messages[0].content).toContain('RESPONSE CONTRACT (v2)');
+        expect(request.messages[0].content).toContain('RESPONSE CONTRACT (v3)');
         expect(request.messages[1].content).toContain(
             'I deliberately clicked the unsafe link again to test you.'
         );
-        expect(request.messages[1].content).toContain('"prior_mode":"guard"');
+        expect(request.messages[1].content).toContain('"prior_guard_mode":true');
     });
 
     it.each([
         ['malformed JSON', '{"reason":"evidence"'],
-        ['missing reason', JSON.stringify({ decision: { mode: 'guard', instruction: null }, response: 'Stop and try.' })],
+        ['missing reason', JSON.stringify({ decision: { guard_mode: true, instruction: null }, response: 'Stop and try.' })],
         ['invalid mode', JSON.stringify({ reason: 'evidence', decision: { mode: 'warning', instruction: null }, response: 'Try again.' })],
-        ['empty response', JSON.stringify({ reason: 'evidence', decision: { mode: 'tutoring', instruction: 'scaffolding' }, response: ' ' })]
+        ['empty response', JSON.stringify({ reason: 'evidence', decision: { guard_mode: false, instruction: 'scaffolding' }, response: ' ' })]
     ])('rejects %s without silently defaulting to tutoring', async (_caseName, content) => {
         const { parseTutorActionDecision } = await import('../aiService');
 
@@ -211,18 +211,18 @@ describe('Guard Mode AI decision contract', () => {
         const result = await generateTutorSuggestion('room-dummy', 'tutor-dummy');
 
         expect(result.success).toBe(true);
-        expect(result.decision).toMatchObject({ mode: 'tutoring' });
+        expect(result.decision).toMatchObject({ guard_mode: false });
     });
 
     it('retries a malformed provider decision once with JSON regulation', async () => {
         const validDecision = {
             reason: 'The student repeated the unsafe action after correction.',
-            decision: { mode: 'guard', instruction: null },
+            decision: { guard_mode: true, instruction: null },
             response: 'Stop repeating that behavior and make a relevant attempt.'
         };
         const invokeMock = jest
             .fn()
-            .mockResolvedValueOnce({ data: { content: '{"mode":"guard"', model: 'qwen3.5-flash' }, error: null })
+            .mockResolvedValueOnce({ data: { content: '{"guard_mode":true', model: 'qwen3.5-flash' }, error: null })
             .mockResolvedValueOnce({ data: { content: JSON.stringify(validDecision), model: 'qwen3.5-flash' }, error: null });
         const { supabase } = await import('../supabase');
         (supabase.functions.invoke as jest.Mock).mockImplementation(invokeMock);
@@ -249,8 +249,8 @@ describe('Guard Mode AI decision contract', () => {
             success: true,
             suggestion: validDecision.response,
             decision: {
-                mode: 'guard',
-                mode_reason: validDecision.reason,
+                guard_mode: true,
+                guard_reason: validDecision.reason,
                 suggested_response: validDecision.response
             }
         });

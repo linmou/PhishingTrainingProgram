@@ -10,7 +10,7 @@ jest.mock('../supabase', () => ({
     }
 }));
 
-import { sendReviewedTutorResponse, setRoomResponseMode } from '../guardModeService';
+import { sendReviewedTutorResponse, setRoomGuardMode } from '../guardModeService';
 import { supabase } from '../supabase';
 
 describe('guardModeService', () => {
@@ -19,7 +19,7 @@ describe('guardModeService', () => {
     it('uses one RPC for the message, feedback, and room-mode transaction', async () => {
         const response = {
             message: { id: 'message-1', response_mode: 'guard' },
-            room: { id: 'room-1', active_response_mode: 'guard' }
+            room: { id: 'room-1', guard_mode: true }
         };
         (supabase.rpc as jest.Mock).mockResolvedValue({ data: response, error: null });
 
@@ -28,12 +28,12 @@ describe('guardModeService', () => {
             tutorId: 'tutor-1',
             parentMessageId: 'student-message-1',
             rawDecision: {
-                mode: 'guard',
+                guard_mode: true,
                 instruction: null,
-                mode_reason: 'Deliberate unsafe repetition after correction.',
+                guard_reason: 'Deliberate unsafe repetition after correction.',
                 suggested_response: 'Stop and verify the destination.'
             },
-            finalMode: 'guard',
+            finalGuardMode: true,
             finalResponse: 'Stop and verify the destination.',
             tutorAction: 'accepted',
             responseTimeMs: 321,
@@ -43,9 +43,9 @@ describe('guardModeService', () => {
         expect(supabase.rpc).toHaveBeenCalledWith('send_reviewed_tutor_response', expect.objectContaining({
             p_room_id: 'room-1',
             p_tutor_id: 'tutor-1',
-            p_raw_mode: 'guard',
+            p_raw_guard_mode: true,
             p_raw_instruction: null,
-            p_final_mode: 'guard',
+            p_final_guard_mode: true,
             p_tutor_action: 'accepted'
         }));
     });
@@ -61,12 +61,12 @@ describe('guardModeService', () => {
             tutorId: 'tutor-1',
             parentMessageId: null,
             rawDecision: {
-                mode: 'tutoring',
+                guard_mode: false,
                 instruction: 'correction',
-                mode_reason: 'The learner is asking for clarification.',
+                guard_reason: 'The learner is asking for clarification.',
                 suggested_response: 'Which part feels unclear?'
             },
-            finalMode: 'guard',
+            finalGuardMode: true,
             finalResponse: 'Please stop and verify first.',
             tutorAction: 'modified',
             responseTimeMs: 100,
@@ -83,15 +83,15 @@ describe('guardModeService', () => {
             eq: jest.fn(() => chain),
             select: jest.fn(() => chain),
             single: jest.fn().mockResolvedValue({
-                data: { id: 'room-1', active_response_mode: 'tutoring', mode_change_source: 'manual_override' },
+                data: { id: 'room-1', guard_mode: false, guard_mode_change_source: 'manual_override' },
                 error: null
             })
         };
         (supabase.from as jest.Mock).mockReturnValue({ update: jest.fn(() => chain) });
 
-        await expect(setRoomResponseMode('room-1', 'tutor-1', 'tutoring')).resolves.toMatchObject({
-            active_response_mode: 'tutoring',
-            mode_change_source: 'manual_override'
+        await expect(setRoomGuardMode('room-1', 'tutor-1', false)).resolves.toMatchObject({
+            guard_mode: false,
+            guard_mode_change_source: 'manual_override'
         });
         expect(supabase.from).toHaveBeenCalledWith('rooms');
     });

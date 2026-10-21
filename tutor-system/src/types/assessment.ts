@@ -5,7 +5,7 @@ import type { ProgressPolicyVersion, TransferProgress } from './learningProgress
 
 export type AssessmentOptionId = 'A' | 'B' | 'C' | 'D';
 export type AssessmentSelectionType = 'single' | 'multiple';
-export type RoomParticipationMode = 'tutoring' | 'guard';
+export type RoomParticipationMode = boolean;
 
 export interface AssessmentOption {
   id: AssessmentOptionId;
@@ -157,7 +157,7 @@ export interface TransferTurnContext {
   focus_student_id: string;
   focus_student_message_id: string;
   checklist_id: string | null;
-  prior_participation_mode: RoomParticipationMode | 'unknown';
+  prior_guard_mode: RoomParticipationMode | 'unknown';
   checklist_items: TransferChecklistItemSnapshot[];
   unresolved_assessment: (PublicAssessment & { id: string }) | null;
   eligible_assessment_item_ids: string[];

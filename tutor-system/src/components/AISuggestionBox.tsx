@@ -3,6 +3,7 @@ import { Copy, X, CheckCircle, Sparkles, Settings, RotateCcw, ChevronDown, Chevr
 import { DynamicParameterOverrides } from '../services/prompts/types';
 import { getParameterMetadata, createDefaultParameters, filterParameterOverrides, getDefaultParameterSelection } from '../services/prompts/parameterConfig';
 import './AISuggestionBox.css';
+import type { CyberbullyingCharacter } from '../types';
 
 // Use the dynamic parameter overrides interface
 type ParameterOverrides = DynamicParameterOverrides;
@@ -20,6 +21,9 @@ interface AISuggestionBoxProps {
     lockedRole?: 'low' | 'high';
     isGuardMode?: boolean;
     onToggleGuard?: () => void;
+    character?: CyberbullyingCharacter | null;
+    onCharacterChange?: (character: CyberbullyingCharacter) => void;
+    quickAdjustEnabled?: boolean;
 }
 
 const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
@@ -34,7 +38,10 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     initialParameters,
     lockedRole,
     isGuardMode = false,
-    onToggleGuard = () => undefined
+    onToggleGuard = () => undefined,
+    character,
+    onCharacterChange,
+    quickAdjustEnabled = true
 }) => {
     const [copied, setCopied] = useState(false);
     const [fadeIn, setFadeIn] = useState(false);
@@ -88,6 +95,10 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
     };
 
     const handleRegenerate = () => {
+        if (!quickAdjustEnabled) {
+            onRegenerate?.({});
+            return;
+        }
         const filteredParams = filterParameterOverrides(
             lockedRole ? { ...parameters, role: { role: lockedRole } } : parameters,
             parameterConfig
@@ -241,7 +252,20 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                 </button>
             </div>
 
-            <div className="ai-suggestion-parameters">
+            {character && onCharacterChange && (
+                <label className="ai-parameter-group">
+                    Character
+                    <select aria-label="Character" value={character} disabled={isRegenerating}
+                        onChange={event => onCharacterChange(event.target.value as CyberbullyingCharacter)}>
+                        <option value="same_age_peer">Jerry — Same-age peer</option>
+                        <option value="older_peer">Tom — Older peer</option>
+                        <option value="victim">Dylan — Victim</option>
+                        <option value="bully">Sarah — Bully</option>
+                        <option value="educator">Ms. Smith — Educator</option>
+                    </select>
+                </label>
+            )}
+            {quickAdjustEnabled && <div className="ai-suggestion-parameters">
                 <div className="ai-parameters-header" onClick={() => setQuickAdjustCollapsed(!quickAdjustCollapsed)}>
                     <div className="ai-parameters-header-content">
                         <Settings size={16} />
@@ -260,6 +284,7 @@ const AISuggestionBox: React.FC<AISuggestionBoxProps> = ({
                 )}
             </div>
             
+            }
             <div className="ai-suggestion-content">
                 {isRegenerating ? (
                     <p>Generating new response...</p>

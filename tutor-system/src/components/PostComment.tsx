@@ -161,7 +161,7 @@ const PostComment: React.FC<PostCommentProps> = ({
     return (
         <div data-testid={message.assessment_event ? `assessment-result-${message.id}` : undefined}
             data-assessment-event={message.assessment_event?.kind}
-            className={`post-comment ${isAIGenerated ? 'post-comment-ai' : ''} ${presentation.isGuard ? 'post-comment-guard' : ''} ${presentation.isMultiagent ? 'post-comment-character' : ''} ${className}`}>
+            className={`post-comment ${isAIGenerated ? 'post-comment-ai' : ''} ${presentation.isGuard ? 'post-comment-guard' : ''} ${message.character ? 'post-comment-character' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">

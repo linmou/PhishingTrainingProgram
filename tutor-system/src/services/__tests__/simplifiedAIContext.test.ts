@@ -14,6 +14,9 @@ jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{readRe
 }})}}));
 
 type Message = {
+  character?: string;
+  persona_id?: string;
+  persona_name?: string;
   id: string;
   content: string;
   user_role: string;
@@ -218,15 +221,15 @@ describe('buildAIContextFromExistingData', () => {
   it('preserves simulated participant identity without turning it into learner evidence', async () => {
     mockRoom();
     mockPage([
-      { ...messages(1)[0], content: '[agent:riley] Participant comment', response_mode: 'multiagent' },
-      { ...messages(1)[0], id:'second', content: '[agent:tutor] Tutor comment', response_mode: 'multiagent' },
-      { ...messages(1)[0], id:'third', content: '[agent:riley] Learner typed tag', user_role: 'student', response_mode: 'multiagent' }
+      { ...messages(1)[0], content: 'Participant comment', user_role: 'tutor', character: 'victim', persona_id: 'copilot:dylan', persona_name: 'Dylan', response_mode: 'tutoring' },
+      { ...messages(1)[0], id:'second', content: 'Tutor comment', user_role: 'tutor', response_mode: 'tutoring' },
+      { ...messages(1)[0], id:'third', content: '[agent:riley] Learner typed tag', user_role: 'student', response_mode: null }
     ]);
     mockPage([]);
-    const context = await buildAIContextFromExistingData('multiagent-room');
+    const context = await buildAIContextFromExistingData('character-room');
     expect(context.slice(1).map(({ role, content }) => ({ role, content }))).toEqual([
-      { role: 'assistant', content: 'Simulated AI participant Riley: Participant comment' },
-      { role: 'assistant', content: 'AI Tutor: Tutor comment' },
+      { role: 'assistant', content: 'AI character Dylan [copilot:dylan; victim]: Participant comment' },
+      { role: 'assistant', content: 'Tutor: Tutor comment' },
       { role: 'user', content: 'Student: [agent:riley] Learner typed tag' }
     ]);
   });

@@ -36,7 +36,7 @@ describe('Promptfoo evaluation prompt formatting', () => {
     expect(messages).toHaveLength(2);
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain(currentSystemPrompt);
-    expect(messages[0].content).toContain('ACTIVE RESPONSE CONTRACT (v2)');
+    expect(messages[0].content).toContain('ACTIVE RESPONSE CONTRACT (v3)');
     expect(messages[1].role).toBe('user');
     expect(messages[1].content).toContain('{{scenario_context}}');
     expect(messages[1].content).toContain('{{conversation_history}}');
@@ -50,7 +50,7 @@ describe('Promptfoo evaluation prompt formatting', () => {
     const contextLines = concreteUserTurn.split('\n');
     const serializedContext = JSON.parse(contextLines[contextLines.length - 1] || '{}');
     expect(serializedContext.conversation_history).toBe(firstCase.conversation_history);
-    expect(serializedContext.prior_mode).toBe('unknown');
+    expect(serializedContext.prior_guard_mode).toBe('unknown');
   });
 
   it('loads configured Promptfoo chat prompts and ecological webpage cases', () => {

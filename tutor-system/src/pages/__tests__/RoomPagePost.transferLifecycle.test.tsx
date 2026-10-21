@@ -107,7 +107,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
       confirmTransferDraft: jest.fn().mockResolvedValue(undefined),
       clearAISuggestion: jest.fn(),
       aiSuggestion: null,
-      finalMode: 'tutoring',
+      finalGuardMode: false,
       messageFeedbackStats: {},
       ...overrides,
     });

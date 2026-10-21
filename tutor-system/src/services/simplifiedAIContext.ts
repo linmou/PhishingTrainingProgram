@@ -9,13 +9,12 @@ import {
     formatRoomScenarioContext,
     prePopulatedToContextMessages
 } from './ecologicalTutorCall';
-import { decodeAgentMessage } from './tutorDecisionContract';
 import { DEFAULT_AI_MODEL } from './aiModels';
 import { orderAssessmentMessages, parseAssessmentEvent, renderAssessment } from './assessmentRendering';
 import type { AssessmentEvent, AssessmentOption } from '../types/assessment';
 import { transferAssessmentService } from './transferAssessmentService';
 
-const HISTORY_COLUMNS='id, content, user_role, user_id, parent_message_id, response_mode, created_at, assessment_id, assessment_options, assessment_selection_type, assessment_student_id, assessment_event';
+const HISTORY_COLUMNS='id, content, user_role, user_id, parent_message_id, response_mode, character, persona_id, persona_name, created_at, assessment_id, assessment_options, assessment_selection_type, assessment_student_id, assessment_event';
 
 /**
  * Build AI conversation context directly from existing tables
@@ -44,6 +43,9 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
             content: string;
             user_role: string;
             response_mode: string | null;
+            character?: string | null;
+            persona_id?: string | null;
+            persona_name?: string | null;
             created_at: string;
             user_id: string;
             parent_message_id: string | null;
@@ -162,19 +164,11 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
                         content:`${handledAnswerIds.includes(msg.id) ? 'Unscored assessment response' : 'Student'} [learner ${msg.user_id}; answer ${msg.id}; assessment ${msg.assessment_id}; question ${msg.parent_message_id}]: ${msg.content}`});
                     return;
                 }
-                // Character-tagged AI rows keep their identity; Riley is never learner evidence.
-                const agent = decodeAgentMessage(msg);
-                if (agent) {
-                    context.push({
-                        role: 'assistant',
-                        content: `${agent.character === 'riley' ? 'Simulated AI participant Riley' : 'AI Tutor'}: ${agent.content}`,
-                        timestamp: new Date(msg.created_at).getTime() / 1000
-                    });
-                    return;
-                }
 
                 const role = msg.user_role === 'tutor' ? 'assistant' : 'user';
-                const prefix = msg.user_role === 'student' ? 'Student: ' :
+                const prefix = msg.user_role === 'tutor' && msg.persona_name
+                    ? `AI character ${msg.persona_name} [${msg.persona_id}; ${msg.character}]: `
+                    : msg.user_role === 'student' ? 'Student: ' :
                               msg.user_role === 'tutor' ? 'Tutor: ' : 'Observer: ';
                 
                 context.push({

@@ -24,7 +24,7 @@ function parseDecision(calls) {
     call.status === 200 && call.response?.choices?.[0]?.message?.content)?.response.choices[0].message.content;
   assert(content, 'Tutor provider returned no usable response');
   const decision = JSON.parse(content);
-  assert(['tutoring', 'guard'].includes(decision.decision?.mode), 'Tutor provider returned no tutor decision');
+  assert.equal(typeof decision.decision?.guard_mode, 'boolean', 'Tutor provider returned no Guard boolean');
   assert(decision.response?.trim(), 'Tutor provider returned no learner-facing response');
   return decision;
 }
@@ -277,7 +277,7 @@ async function main() {
     }
     assert.equal(await tutorPage.getByRole('heading', { name: 'Review transfer assessment' }).count(), 0);
     const decision = parseDecision(tutorCalls);
-    assert.equal(decision.decision.mode, 'tutoring');
+    assert.equal(decision.decision.guard_mode, false);
     await tutorPage.getByRole('button', { name: /copy to input/i }).click();
     const reviewed = await tutorPage.locator('textarea.comment-input-field').inputValue();
     assert.equal(reviewed, decision.response);
