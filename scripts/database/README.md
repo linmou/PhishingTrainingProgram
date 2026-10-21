@@ -3,7 +3,7 @@
 Intent: identify the configured source and commands used to create disposable local migration baselines.
 
 Updated: 2026-10-21
-Repository baseline commit: `dec0fd6` (frontend CI repairs integrated before PR #7 verification).
+Repository baseline commit: `c2fe276` (PR #7 review fixes for connection isolation and allocation-time cancellation).
 
 From the repository root:
 
@@ -42,7 +42,7 @@ rtk proxy node scripts/database/disposable-database.js --template <verified-loca
 
 The manager reuses the running validation cluster's Unix socket at `~/.transfer-assessment-pg17/migration-validation/socket`, port `55433`, bootstrap user `local_bootstrap`. It creates a random database, clones the selected baseline, reapplies effective database grants (including grant options), database and per-role database settings, and compares owner, locale, encoding, connection limit, grants and settings before starting the command. Roles and extension installations already belong to the shared cluster; the manager never changes global roles or starts a cluster. `PG_VALIDATION_HOST`, `PG_VALIDATION_PORT`, `PG_VALIDATION_USER` and `PG_VALIDATION_PSQL` can select an existing local validation connection. Network hosts are rejected.
 
-The command receives `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, `MIGRATION_TEST_DB` and `PG_VALIDATION_LEASE_FILE`. Cleanup runs after success, nonzero exit, spawn error, SIGINT or SIGTERM. It checks the cluster identity, database identity and random ownership marker before dropping only the allocated database. Concurrent runs get distinct database names and private lease directories under `PG_VALIDATION_RUN_ROOT` (default `~/.transfer-assessment-pg17/runs`). Lease JSON retains source/clone metadata, command result and cleanup timestamps; failed runs retain errors.
+The command receives `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, `MIGRATION_TEST_DB` and `PG_VALIDATION_LEASE_FILE`. The manager and command discard inherited `PGHOSTADDR`, `PGSERVICE` and `PGSERVICEFILE` so libpq cannot redirect them away from the selected connection; the host must be one absolute socket directory, without comma-separated fallbacks. Cleanup runs after success, nonzero exit, spawn error, SIGINT or SIGTERM. Termination handling covers allocation: a signal received while synchronous PostgreSQL commands run is handled after allocation returns, before any scenario starts, then the owned database is removed. It checks the cluster identity, database identity and random ownership marker before dropping only the allocated database. Concurrent runs get distinct database names and private lease directories under `PG_VALIDATION_RUN_ROOT` (default `~/.transfer-assessment-pg17/runs`). Lease JSON retains source/clone metadata, command result and cleanup timestamps; failed runs retain errors.
 
 After a hard kill or host crash, stop any surviving scenario command, then use the retained lease:
 
@@ -59,4 +59,4 @@ rtk proxy node --test scripts/database/disposable-database.test.js
 rtk proxy env PG_DISPOSABLE_INTEGRATION=1 node --test scripts/database/disposable-database.integration.test.js
 ```
 
-The integrated test creates its own small baseline and verifies simultaneous allocation, baseline data isolation, grant/settings parity, nonzero exits, command startup failure and signal cleanup. It removes only its own databases and preserves lease evidence.
+The integrated test creates its own small baseline and verifies simultaneous allocation, baseline data isolation, grant/settings parity, nonzero exits, command startup failure and signal cleanup. It also supplies conflicting libpq service/address settings and sends SIGINT/SIGTERM during allocation, checking the actual command target, unchanged baseline and cleanup before exit. It removes only its own databases and preserves lease evidence.
