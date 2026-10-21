@@ -1,0 +1,15 @@
+{
+  "scenario_source_commit": "89e7fda14b9a330c1ae796ca605971a7dc7b1b9b",
+  "asset_source_commit": "1ee51e5c95f9c4fd3ed7ab2988e3bd90ef9a27dd",
+  "restoration": "The scenario commit UTF-8 re-encoded binary assets. Each restored predecessor blob reproduces that corrupted blob when UTF-8 decoded and re-encoded, confirming the same intended asset.",
+  "assets": [
+    { "path": "/images/EWWW_meme.jpg", "sha256": "816c45b9252bb6cec41d82162f401e2a0b079af98cb38bc96dc42e66bf4fabb5" },
+    { "path": "/images/bystander_profile.png", "sha256": "9f467040d1831c910c30454da7d672c9e814b33f679781f5d4c747ff64c3ef69" },
+    { "path": "/images/case_notebook.jpg", "sha256": "fab34636a3ae87d3daa44ca191dfd64bb3704ae969961a893f904168c5cb98d6" },
+    { "path": "/images/default_user_profile.png", "sha256": "0f0a35f79fca29e1889daad9c578bb6a4b46c9b918e9a902ee44eda732a168a7" },
+    { "path": "/images/educator_profile.jpeg", "sha256": "400d0a553b66bb95620caa571843eacae7b769d09aec67d5c4260904e168c918" },
+    { "path": "/images/profile_1.png", "sha256": "4ea791802ba17339155fe40a5f510f7a59cafcaadc2f36f7e245ffc376e9222d" },
+    { "path": "/images/profile_2.png", "sha256": "97c63a63d339d16b257d71bfb947dce8940932b4734d9990446d0c9e4b113e70" },
+    { "path": "/images/victim_profile.jpeg", "sha256": "b837ac86e5dec49337b31b4e5e99384bb5a045681b6b0a417b8792305e62ae02" }
+  ]
+}

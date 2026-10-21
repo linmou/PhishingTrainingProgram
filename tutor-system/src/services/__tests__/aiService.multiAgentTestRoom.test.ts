@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test responsible for preserving the Multi-agent interaction mode when a test-room
+ * Test responsible for preserving the Peer interaction mode when a test-room
  * template initializes and persists an AI assistant configuration.
  */
 
@@ -12,13 +12,13 @@ jest.mock('../supabase', () => ({
   supabase: { from: jest.fn() }
 }));
 
-describe('initializeAIAssistant Multi-agent test room', () => {
+describe('initializeAIAssistant peer test room', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
   });
 
-  it('persists interaction_mode=multi_agent in the extended AI config', async () => {
+  it('persists interaction_mode=single_agent in the extended AI config', async () => {
     const { supabase } = await import('../supabase');
     const from = supabase.from as jest.Mock;
     from
@@ -58,11 +58,11 @@ describe('initializeAIAssistant Multi-agent test room', () => {
       {
         role: 'peer',
         scenario: 'Account Security Alert',
-        interaction_mode: 'multi_agent'
+        interaction_mode: 'single_agent'
       }
     );
 
     const insertCall = from.mock.results[3].value.insert.mock.calls[0][0];
-    expect(insertCall.prompt_config.interaction_mode).toBe('multi_agent');
+    expect(insertCall.prompt_config.interaction_mode).toBe('single_agent');
   });
 });

@@ -1,6 +1,7 @@
 /** Purpose: define the concise, conditional tutoring response policy shared by product prompts and evaluation turns. */
 
 export const RESPONSE_POLICY = [
+  'Apply the teaching rules below after the tutor decision policy selects tutoring. When it selects Guard, follow its participation-correction rules; a task lesson is optional and any task content must remain accurate.',
   'Keep it short: use no more than 3 sentences and 50 words.',
   'Teach one point or ask one focused question; do not use question chains.',
   'Treat the configured Detection Areas and Verification Steps as the complete knowledge inventory for this room.',

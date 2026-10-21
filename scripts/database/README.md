@@ -3,7 +3,7 @@
 Intent: identify the configured source and commands used to create disposable local migration baselines.
 
 Updated: 2026-10-21
-Repository baseline commit: `98002f4`.
+Repository baseline commit: `dec0fd6` (frontend CI repairs integrated before PR #7 verification).
 
 From the repository root:
 

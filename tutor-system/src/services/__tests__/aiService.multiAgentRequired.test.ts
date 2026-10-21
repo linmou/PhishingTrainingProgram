@@ -32,7 +32,7 @@ const promptConfig = (interactionMode: 'single_agent' | 'multi_agent') => ({
 
 const decision = (mode: string, instruction: string | null, response: string) => JSON.stringify({
   reason: 'Observable evidence and the purpose of this decision.',
-  decision: { mode, instruction },
+  decision: mode === 'multiagent' ? { mode, instruction } : { guard_mode: mode === 'guard', instruction },
   response
 });
 
@@ -59,7 +59,7 @@ describe('aiService deprecated Multi-agent mode', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             single: jest.fn().mockResolvedValue({
-              data: { ai_assistant_enabled: true, ai_assistant_model: 'qwen3.5-flash', active_response_mode: 'tutoring' },
+              data: { ai_assistant_enabled: true, ai_assistant_model: 'qwen3.5-flash', guard_mode: false },
               error: null
             })
           })
@@ -139,19 +139,19 @@ describe('aiService deprecated Multi-agent mode', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
-    expect(result.decision).toMatchObject({ mode: 'tutoring', instruction: 'scaffolding' });
+    expect(result.decision).toMatchObject({ guard_mode: false, instruction: 'scaffolding' });
     expect(result.suggestion).not.toContain('[agent:riley]');
 
     const firstRequest = requestBody(fetchMock, 0);
-    expect(firstRequest.max_tokens).toBe(100);
+    expect(firstRequest.max_tokens).toBe(600);
     expect(firstRequest.messages[1].content).toContain('"interaction_mode":"single_agent"');
     expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
   });
 
   it.each([
-    ['protective_instruction', { mode: 'tutoring', instruction: 'protective_instruction' }, decision('tutoring', 'protective_instruction', 'Do not open that link. Open the real app instead.')],
-    ['explanation', { mode: 'tutoring', instruction: 'explanation' }, decision('tutoring', 'explanation', 'A lock protects the connection, not the owner. Use the real app to check the alert.')],
-    ['guard', { mode: 'guard', instruction: null }, decision('guard', null, 'Deliberately repeating that interrupts practice. Stop and make a task attempt.')]
+    ['protective_instruction', { guard_mode: false, instruction: 'protective_instruction' }, decision('tutoring', 'protective_instruction', 'Do not open that link. Open the real app instead.')],
+    ['explanation', { guard_mode: false, instruction: 'explanation' }, decision('tutoring', 'explanation', 'A lock protects the connection, not the owner. Use the real app to check the alert.')],
+    ['guard', { guard_mode: true, instruction: null }, decision('guard', null, 'Deliberately repeating that interrupts practice. Stop and make a task attempt.')]
   ])('accepts the exact %s exception without asking for a multiagent response', async (_label, expectedDecision, content) => {
     await mockSupabaseFor('multi_agent');
     const fetchMock = await mockModel([content]);
@@ -175,7 +175,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(result).toMatchObject({ success: true, decision: { mode: 'tutoring', instruction: 'correction' } });
+    expect(result).toMatchObject({ success: true, decision: { guard_mode: false, instruction: 'correction' } });
     const firstRequest = requestBody(fetchMock, 0);
     const repairRequest = requestBody(fetchMock, 1);
     expect(firstRequest.messages[0].content).not.toContain('MULTI-AGENT MODE');
@@ -193,7 +193,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     const result = await generateTutorSuggestion('room-1', 'tutor-1');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ success: true, decision: { mode: 'tutoring', instruction: 'correction' } });
+    expect(result).toMatchObject({ success: true, decision: { guard_mode: false, instruction: 'correction' } });
   });
 
   it('keeps the single-agent path untouched: no patch prompt, no multiagent decision allowed', async () => {
@@ -206,7 +206,7 @@ describe('aiService deprecated Multi-agent mode', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
     const request = requestBody(fetchMock, 0);
-    expect(request.max_tokens).toBe(100);
+    expect(request.max_tokens).toBe(600);
     expect(request.messages[0].content).not.toContain('MULTI-AGENT MODE');
     expect(request.messages[1].content).toContain('"interaction_mode":"single_agent"');
   });

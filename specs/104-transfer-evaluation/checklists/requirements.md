@@ -1,5 +1,7 @@
 # Specification Quality Checklist: Two-Attempt Transfer Behavior Evaluation
 
+<!-- Assessment dialogue revision: updated 2026-10-17; baseline commit c6d5129. -->
+
 **Purpose**: Validate that the W9-W10 evaluator contract is complete, testable, and bounded to Promptfoo evidence.
 **Created**: 2026-09-11  
 **Updated**: 2026-09-22
@@ -34,6 +36,10 @@
 - [x] Success criteria define the evidence needed to demonstrate each story.
 - [x] No production implementation is claimed or requested in this planning-only component.
 - [x] Historical first-valid-resolution evidence is not accepted as evidence for the upgraded lifecycle.
+
+## Assessment dialogue acceptance (2026-10-17)
+
+- [x] AR-20261017 Evaluation evidence: production request assembly, initial/regenerated retry and Guard/cancellation behavior, real provider outputs and fixture cleanup. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 

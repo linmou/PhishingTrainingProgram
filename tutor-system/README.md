@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-10-21
-Commit: 23a41af4608092ea2733eb8aa3e87e608dcda335
+Commit: a6c977b (integrated source baseline)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -24,6 +24,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Capacity Management**: 1 tutor + 1 student maximum
 - **Room System**: Tutors create rooms with content and images
 - **Real-time Chat**: Live messaging with role permissions
+- **Full AI Conversation Context**: Tutor suggestions include all saved room messages in chronological order, fetched in pages beyond the database response cap. Context lookup failures stop generation rather than supplying an incomplete history. See the [full-history verification record](docs/doc_update_record/documentation_update_record_v2026_10_16_full_tutor_history.md).
 - **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
 - **Transfer Assessments**: Room-approved learner targets drive semantic evidence analysis and teacher-reviewed questions; private keys, two-attempt grading, and terminal-only failure feedback stay behind the trusted assessment API
 - **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt
@@ -155,17 +156,20 @@ Create a `.env.local` file in the root directory:
 REACT_APP_SUPABASE_URL=your_supabase_project_url
 REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Tutor provider settings (Supabase Edge Function secrets only)
+# Tutor provider credentials (Supabase Edge Function secrets only)
 OAI_API_KEY=your_dashscope_api_key_here
 OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
-OAI_MODEL=qwen3.5-flash
+# Offline evaluations only; tutoring uses aiModels.ts and assessment-api pins its provider model.
+OAI_MODEL=qwen3.8-flash
 ```
 
-`OAI_API_KEY`, `OAI_BASE_URL`, and `OAI_MODEL` are read only by Supabase Edge Functions. The React bundle sends authenticated chat payloads to those functions and never receives the provider credentials. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true`.
+`OAI_API_KEY` and `OAI_BASE_URL` are read only by Supabase Edge Functions. The React bundle sends chat payloads to those functions and never receives the provider credentials. Tutoring and `ai-api` use Qwen3.8 from `src/services/aiModels.ts`; the learning-progress analyzer and assessment generation retain Qwen3.5 in `assessment-api`. `OAI_MODEL` selects the model only for offline evaluations. `TRANSFER_ASSESSMENT_ENABLED` defaults to `true`.
 
 ### Assessment API Deployment
 
-Run **Deploy Assessment API** from GitHub Actions to deploy `assessment-api` and `ai-api` to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `OAI_API_KEY`, and `OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets the provider secrets and `OAI_MODEL=qwen3.5-flash`, then deploys the assessment function with gateway JWT verification disabled because that flow uses its application identity; `ai-api` verifies the Supabase user token in the function. Apply the assessment database migration and provision test principals before running the full room assessment flow.
+Run **Deploy Assessment API** from GitHub Actions to deploy `assessment-api` and `ai-api` to `PhishingTutorStaging`. Configure these repository Actions secrets first: `SUPABASE_ACCESS_TOKEN`, `OAI_API_KEY`, and `OAI_BASE_URL`. The Supabase token needs `edge_functions_write` and `edge_functions_secrets_write` permissions. The workflow sets provider credentials and deploys functions with their explicit source model selections. The assessment function uses its application identity with gateway JWT verification disabled. Apply the assessment database migration and provision test principals before running the full room assessment flow.
+
+The selected tutor is full candidate11 at temperature0.3, max_tokens600 and thinking disabled. Its benchmark failures remain recorded under the user's explicit release selection. See the [candidate11 release record](docs/doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md) for current staging/production status and evidence.
 
 ### Supabase Setup Checklist
 
@@ -208,6 +212,9 @@ npm test -- --watchAll=false --runTestsByPath \
 # Run live Qwen integration suites explicitly
 npm run test:integration:qwen
 
+# Run live storage diagnostics explicitly with staging credentials and CI unset
+RUN_LIVE_STORAGE_TESTS=true npm run test:regression -- --runTestsByPath src/services/__tests__/storage-integration.test.ts
+
 # Run the real browser suite in staging template rooms
 npm run test:e2e:staging
 
@@ -225,6 +232,7 @@ npm test src/contexts/__tests__/AuthContext.test.tsx  # Task 3
 - `npm test` and `npm run test:regression` run deterministic Jest suites, including mocked page integration tests.
 - Pull requests run `npm ci` with npm 10.9.2, the complete deterministic Jest regression, and a React production build on Node 22. The build reports existing ESLint warnings without making them fatal; compilation and type errors still fail. Branch protection on `no_sign_up` requires `isolation-harness`, `frontend-jest`, and `frontend-build` on an up-to-date branch, including administrator merges.
 - `npm run test:integration:qwen` exercises the live provider without a browser.
+- Live storage diagnostics require `RUN_LIVE_STORAGE_TESTS=true`, configured staging credentials, and `CI` unset. Supabase environment variables alone do not opt a developer or CI run into hosted storage operations.
 - `npm run test:e2e:staging` runs ten Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
 
 ### Test Files Structure
@@ -283,4 +291,4 @@ If migrating from Firebase:
 
 ## 📄 License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.

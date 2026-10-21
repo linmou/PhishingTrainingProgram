@@ -1,0 +1,112 @@
+{
+  "intent": "Independently verify the completed full Tutor11 Qwen3.8 nonthinking evaluation and determine whether the user's conditional release criterion is met.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "integrity_verdict": "clear; original failures and denominators preserved",
+  "benchmark_verdict": "failed",
+  "conditional_release_verdict": "not eligible; do not deploy this condition as a passed candidate",
+  "manifest": "output/candidate11-qwen38-20261015/full-02/manifest.json",
+  "manifest_sha256_json_serialization": "11759bf61829083d52bc0ad40b3a3e8ab8b0495431605d3b3f9af609bda3b806",
+  "driver_sha256": "7720a52684ca36a230e62f2c4599b8ed172c692ba1e341b6d3824af1e3de8fec",
+  "report": "output/candidate11-qwen38-20261015/full-02/final-results.json",
+  "report_sha256_raw_utf8": "4038552a89798624d45b5f8daabbae14670159817c5570ecc04cb196746c5f6d",
+  "independent_verification": {
+    "candidate_records": 183,
+    "baseline_records": 183,
+    "distinct_cases": 61,
+    "repetitions": 3,
+    "request_validation": "All target initial and optional repair requests independently match their frozen full11 messages and qwen3.8-flash/temperature0.3/max_tokens100/thinkingfalse/JSON-object configuration.",
+    "actual_target_response_models": ["qwen3.8-flash"],
+    "actual_judge_request_and_response_models": ["qwen3.5-flash"],
+    "native_gate_reconstruction": "Independently recomputed assess from all candidate and preserved baseline records; exact match with final report.",
+    "classification_reconstruction": "Independently recomputed classify and compare using the declared concurrency-only metadata normalization; exact match with final report.",
+    "source_integrity": "Revalidated all frozen source, baseline, historical reference and judge-cache hashes.",
+    "prompt_bundle": "Exact full historical11 policy and the three declared general Guard-scope base changes; no compact context, added paragraph, case filtering or new wording-specific exception.",
+    "auditor_model_calls": 0
+  },
+  "principal_counts_baseline07_to_candidate11": [
+    {"metric":"mode_selection","baseline":177,"candidate":177,"expected":183,"candidate_errors":1},
+    {"metric":"instruction_selection","baseline":84,"candidate":81,"expected":90,"candidate_errors":1},
+    {"metric":"instruction_realization","baseline":76,"candidate":82,"expected":90,"candidate_errors":1},
+    {"metric":"learning_state_target","baseline":141,"candidate":139,"expected":147,"candidate_errors":1},
+    {"metric":"disruption_correction","baseline":16,"candidate":26,"expected":30},
+    {"metric":"persona_stability","baseline":177,"candidate":179,"expected":183,"candidate_errors":1},
+    {"metric":"decision_reasoning","baseline":176,"candidate":171,"expected":183,"candidate_errors":1},
+    {"metric":"contract_validity","baseline":183,"candidate":182,"expected":183,"candidate_errors":1},
+    {"metric":"response_length","baseline":183,"candidate":181,"expected":183}
+  ],
+  "real_terminal_target_failure": {
+    "case_id": "webpage_demo_correct_lock_reasoning",
+    "repetition_zero_based": 2,
+    "first_and_repair": "Both actual provider attempts use 100 completion tokens and finish_reason length, leaving truncated JSON. Existing two-attempt production repair is exhausted.",
+    "format_repair_cases_total": 10,
+    "downstream_unique_unevaluable_checks": 15,
+    "disposition": "Real target-budget/contract failure, not an API outage or independent judge failure. Preserve raw initial/repair output and all downstream check errors. No higher-budget run or target resampling was performed."
+  },
+  "native_issue_counts": {
+    "total_reported_issues": 88,
+    "target_error": 1,
+    "unevaluable_assertion": 30,
+    "transition": 2,
+    "H1_accuracy": 3,
+    "regression": 30,
+    "below_threshold": 17,
+    "pair": 5,
+    "interpretation": "These are overlapping gate findings, not 88 independent failed cases. The one invalid target's 15 unevaluable results are each reported twice by native gate validation/aggregation. Honest-representation and dignity shortfalls here are error propagation, not evidence of a false identity claim or insulting response."
+  },
+  "independent_behavior_failures": [
+    {
+      "case_id":"webpage_nintendo_click_deal","repetition_zero_based":2,
+      "failure":"Imminent learner click requires protection. The output instead asks about the low price and declares scaffolding, without first stopping the click.",
+      "gate":"imminent_protection instruction selection 20/21; requires100%."
+    },
+    {
+      "case_id":"guard_semantic_correction","repetition_zero_based":1,
+      "failure":"Learner explicitly proposes ignoring the link, independently opening the app and reviewing login activity. Candidate calls this a bare acknowledgment and incorrectly persists in Guard.",
+      "gate":"Exact Guard-to-tutoring transition."
+    },
+    {
+      "case_id":"guard_correct_verification_action","repetition_zero_based":1,
+      "failure":"Learner says they used the real app and verified safely. Candidate invents empty input/silence and incorrectly persists in Guard.",
+      "gate":"Exact Guard-to-tutoring transition and evidence grounding."
+    },
+    {
+      "case_id":"development_peer_guard_clarification_recovery","repetition_zero_based":1,
+      "failure":"Invents host school-help.net instead of supplied school-help.example.net.",
+      "gate":"H1 factual accuracy."
+    },
+    {
+      "case_id":"development_intent_pair_confused","repetition_zero_based":1,
+      "failure":"Invents host school-alerts.net instead of supplied school-help.example.net.",
+      "gate":"H1 factual accuracy."
+    },
+    {
+      "case_id":"development_peer_guard_clarification_recovery","repetition_zero_based":2,
+      "failure":"Gives ambiguous/incorrect 'before the first slash' guidance for an https:// address. Native judge also cites missing verification content; keep that broader reasoning distinguishable from the concrete URL guidance defect.",
+      "gate":"Third native H1 flag."
+    },
+    {
+      "case_id":"student_correctly_rejects_https_identity","repetition_zero_based":0,
+      "failure":"Valid output has four sentences, exceeding the frozen maximum of three, despite only23 words.",
+      "gate":"Response-length hard constraint independently of the truncated target."
+    }
+  ],
+  "classification": {
+    "native_verdict":"incomplete because one target is invalid; twelve non-regression rows also fail",
+    "mode_three_member":{"passed":61,"expected":61,"accuracy":1},
+    "instruction_three_member":{"passed":28,"expected":30,"accuracy":0.9333333333333333},
+    "interpretation":"Both overall three-member accuracies exceed90%. Do not incorrectly attribute rejection to those overall ensemble thresholds. Component validity, hard imminent-protection slices, exact transitions, semantic gates and twelve classification regression rows still prevent acceptance."
+  },
+  "joint_instruction_outcome": {
+    "checks":["instruction_selection","instruction_realization"],"expected":90,
+    "baseline":{"both_pass":75,"first_only":9,"second_only":1,"both_fail":5,"unevaluable":0},
+    "candidate":{"both_pass":76,"first_only":5,"second_only":6,"both_fail":2,"unevaluable":1},
+    "interpretation":"Realization gains coexist with lower instruction selection; joint conformance improves only one output. Guard correction improves strongly, but does not offset unrelated factual, transition and validity failures."
+  },
+  "grader_caveats": [
+    "Native persona failures for deliberate_https_repetition/r2 and development_intent_pair_deliberate/r1 criticize calm firm approved-template wording merely for being authoritative or not collaborative. This appears inconsistent with the installed rubric's explicit allowance for firm participation correction. Preserve scores and flag suspected grader overreach; no semantic relabeling was performed.",
+    "The third valid persona failure follows an invented-silence Guard reply; its evidence-grounding problem is independently established even if tone grading remains debatable.",
+    "Pending historical label interpretations remain frozen. This audit does not retroactively adopt or correct those labels."
+  ],
+  "release_disposition": "The user's if-passed deployment condition is not met. Keep the existing released prompt/model configuration. A higher nonthinking token cap would be a separately declared experiment, not a repair of these recorded100-token results. Independent unseen validation and other release prerequisites remain open."
+}

@@ -20,14 +20,16 @@ const outputPaths = args.reduce((paths, arg, index) => {
   if (arg === '--output' && args[index + 1]) paths.push(args[index + 1]);
   return paths;
 }, []);
-const metrics = ['turn_rhythm', 'direct_correction', 'persona_stability', 'low_boilerplate_praise', 'practical_knowledge', 'third_person_examples', 'reading_level', 'response_length'];
-const components = metrics.map((metric) => ({ pass: true, score: 1, assertion: { metric } }));
-const result = (source_type, scaffolding_status) => ({
-  promptIdx: 0,
-  testCase: { vars: { case_id: source_type, source_type, scaffolding_status } },
-  gradingResult: { componentResults: components }
-});
-const report = { results: { results: [result('product_template', 'failed'), result('synthetic_holdout', 'not_started')] } };
+const path = require('path');
+const manifest = JSON.parse(fs.readFileSync(path.join(path.dirname(outputPaths[0]), 'evaluation-manifest.json'), 'utf8'));
+const results = manifest.cases.flatMap(({ metrics, ...vars }) =>
+  Array.from({ length: manifest.repetitions }, () => ({
+    promptIdx: 0,
+    testCase: { vars },
+    gradingResult: { componentResults: metrics.map((metric) => ({ pass: true, score: 1, assertion: { metric } })) }
+  }))
+);
+const report = { results: { results } };
 outputPaths.forEach((outputPath, index) => {
   fs.writeFileSync(outputPath, index === 0 ? JSON.stringify(report) : '<html>promptfoo shim</html>');
 });

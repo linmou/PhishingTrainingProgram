@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
+import type { PracticeType, CyberbullyingScenario } from '../types'
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY!
@@ -10,6 +11,7 @@ console.log('🔧 Supabase Service: Initializing client', {
 });
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } },
     auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -90,6 +92,10 @@ export const updateUserProfile = async (userId: string, updates: any) => {
 
 // Room management functions
 export const createRoom = async (roomData: {
+    practice_type?: PracticeType;
+    scenario_config?: CyberbullyingScenario | null;
+    ai_assistant_enabled?: boolean;
+    ai_assistant_model?: string;
     title: string;
     description: string;
     tutor_id: string;
@@ -831,27 +837,9 @@ export const clearChatHistory = async (roomId: string, userId: string) => {
         throw new Error('You are not authorized to clear chat history for this room');
     }
 
-    // Delete all messages from the room (pre-populated messages are not stored in messages table)
-    const { error: deleteError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('room_id', roomId);
-
-    if (deleteError) {
-        console.error('❌ Supabase Service: Clear chat history error:', deleteError);
-        throw deleteError;
-    }
-
-    // Clear message feedback data
-    const { error: messageFeedbackError } = await supabase
-        .from('message_feedback')
-        .delete()
-        .eq('room_id', roomId);
-
-    if (messageFeedbackError) {
-        console.error('⚠️ Supabase Service: Message feedback cleanup warning:', messageFeedbackError);
-        // Don't throw error for message feedback cleanup - it's not critical
-    }
+    // The trusted transaction clears private assessment sources before immutable result rows.
+    const {transferAssessmentService}=await import('./transferAssessmentService');
+    await transferAssessmentService.clearChatHistory(roomId);
 
     console.log('✅ Supabase Service: Chat history cleared successfully:', {
         roomId,
@@ -868,6 +856,8 @@ export const clearChatHistory = async (roomId: string, userId: string) => {
 
 // Room Template Management Functions
 export const createRoomTemplate = async (templateData: {
+    practice_type?: PracticeType;
+    scenario_config?: CyberbullyingScenario | null;
     tutor_id: string;
     template_name: string;
     template_description?: string | null;
@@ -937,4 +927,4 @@ export const deleteRoomTemplate = async (templateId: string) => {
 
     console.log('✅ Supabase Service: Template deleted:', templateId);
     return { success: true };
-}; 
+};

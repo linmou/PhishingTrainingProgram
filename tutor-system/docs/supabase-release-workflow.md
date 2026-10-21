@@ -1,8 +1,8 @@
 # Supabase Release Workflow
 
-Intent: match verification cost to changed behavior, verify changes on staging, and promote coherent batches to production with evidence.
+Intent: match verification cost to changed behavior, verify integrated releases on staging, and promote committed batches to production with evidence.
 
-Updated: 2026-10-21. Workflow revision baseline commit: `98002f4`.
+Updated: 2026-10-21. Integrated workflow baselines: `18981cc`, `16c2f95`, `dec0fd6`.
 
 ## Task Completion
 
@@ -15,7 +15,8 @@ Use the existing dated release record to track the following evidence for the ex
 | Local validation | Applicable function/domain tests and SQL behavior/permission tests pass against the required baseline; commands and results are recorded |
 | Staging deployed | Project ref, application time, exact SQL hash when applicable, and deployed function version/source hash are recorded; SQL dependencies are verified before dependent functions deploy |
 | Staging verified | The selected live application/API/browser checks pass; relevant provider results, persisted state and fixture cleanup are recorded |
-| Awaiting production release | Batch name, member changes, release owner, exact artifacts, outstanding checks and release trigger are recorded; feature production acceptance stays open |
+| Awaiting production release | Batch name, member changes, release owner, merge status, exact artifacts, outstanding checks and release trigger are recorded; feature production acceptance stays open |
+| Integrated release verified | Deployable changes and dependencies are merged into `no_sign_up`; release commit and artifact manifest are recorded; staging evidence is valid for those integrated artifacts |
 | Production deployed | Production preconditions are rechecked and the same tested SQL/function source is applied; resulting versions are recorded |
 | Production verified | The selected production checks and cleanup pass for the exact promoted batch; final state and evidence are recorded |
 
@@ -53,13 +54,23 @@ Reuse successful evidence for unchanged artifacts and dependencies within the ba
 
 ## Production Batches
 
-Use a dated release record under `docs/doc_update_record/` for each active batch. Record its member task/commit IDs, release owner, changed contracts, combined verification scope, exact SQL/function/frontend artifacts, staging evidence, outstanding production checks and concrete release trigger. Ordinary features may wait only with this record and open production acceptance criteria; an unspecified future release is not a handoff.
+Use a dated release record under `docs/doc_update_record/` for each active batch. Record its member task/commit IDs, release owner, merge status and integrated release commit, changed contracts, combined verification scope, exact SQL/function/frontend artifacts, staging evidence, outstanding production checks and concrete release trigger. Ordinary features may wait only with this record and open production acceptance criteria; an unspecified future release is not a handoff.
 
-Release when the named batch's listed features and dependencies are verified together on staging. This is the default trigger, without a fixed feature-count threshold; record a user-requested milestone or schedule when applicable. At promotion, freeze the artifact set and deploy those exact artifacts, preserving unrelated production configuration/data. Recheck target preconditions, including production fixes made while the batch waited. Do not copy a staging database wholesale or treat a different per-project Edge version counter as source divergence.
+Release when the named batch passes the [merge-before-production gate](#merge-before-production) and its integrated features and dependencies are verified together on staging. This is the default trigger, without a fixed feature-count threshold; record a user-requested milestone or schedule when applicable. At promotion, deploy the frozen artifacts, preserving unrelated production configuration/data. Recheck target preconditions, including production fixes made while the batch waited. Do not copy a staging database wholesale or treat a different per-project Edge version counter as source divergence.
 
-Production incident fixes, security fixes and explicit release requests proceed through staging to production promptly. A change that requires coordinated SQL, Edge and frontend rollout must ship those dependencies together in the required order. A failed member blocks the batch; narrowing the batch requires verifying that the remaining artifact set is independently deployable and rerunning affected checks. Keep at most one pending migration in `tutor-system/supabase/migrations/` and one candidate in the shared staging deployment queue. Validate combined order and dependencies before release. Preserve staged SQL hashes and archive only after production verification.
+Production incident fixes, security fixes and explicit release requests follow the same integration and staging gates promptly. A change that requires coordinated SQL, Edge and frontend rollout must ship those dependencies together in the required order. A failed member blocks the batch; narrowing the batch requires verifying that the remaining artifact set is independently deployable and rerunning affected checks. Keep at most one pending migration in `tutor-system/supabase/migrations/` and one candidate in the shared staging deployment queue. Release the pending migration before introducing another; validate combined order and dependencies before release. Preserve staged SQL hashes and archive only after production verification.
 
 The release record's production evidence closes acceptance for each included feature. Until then, those features remain staging-verified and awaiting release. These rules govern agent execution; existing browser commands remain manually invoked.
+
+## Merge Before Production
+
+Worktree candidates may deploy to staging after local checks. Production promotion follows this sequence:
+
+1. **Integrate.** Commit deployable changes and required dependencies, merge them into `no_sign_up`, and record the integrated release commit in the batch record. Confirm it includes currently released changes to the affected components. If integration remains pending or blocked, retain `staging verified — awaiting production release` with the exact remaining integration action.
+2. **Compare and verify.** Freeze a manifest of SQL, function source including imported dependencies, required frontend artifacts, and relevant runtime configuration. Every deployed source file must match the recorded release commit; record frontend build inputs and artifact hashes. Compare the integrated manifest with the staging-tested artifacts. A fast-forward or merge with identical relevant artifacts may reuse staging evidence while dependencies, configuration and target preconditions remain valid. Conflict resolutions or other integration changes require affected local checks and staging deployment/verification; changed SQL or baseline also requires the applicable migration validation.
+3. **Promote.** Recheck staging source/configuration and production preconditions immediately before production mutations, then promote the exact integrated artifacts in dependency order. Changes after the freeze require a new manifest and affected verification before promotion.
+
+Before deploying, check active batch records and coordinate with their named release owner. That owner coordinates shared staging deployments and the production batch through verification and cleanup. Other worktrees hand off artifact versions and evidence. Deployments touching the batch or its dependencies wait until the active checks finish or the owner records a handoff. An intervening deployment requires a fresh comparison and invalidates evidence for any changed artifacts, dependencies, configuration or relevant state. Record the active owner and handoff in the existing batch record.
 
 ## Local Database Setup
 
@@ -83,7 +94,8 @@ Check `supabase/config.toml` and the target database for their current PostgreSQ
 4. **Establish Red, then implement.** Keep at most one pending SQL file under `supabase/migrations/` and one candidate queued for shared staging deployment. Reconcile dependencies and validate the ordered, combined SQL before deployment. Write behavior and permission assertions for the requested change, run them against a disposable database restored from the unmodified hosted baseline, and record the expected missing-behavior failure. Write the candidate migration from the current hosted schema and requirements, not from local or archived migration files. Follow this Red-Green sequence without invoking the `fast-multi-agent-tdd` skill.
 5. **Validate Green locally.** Apply the exact candidate SQL to a fresh disposable baseline under the online migration executor's role and transaction strategy. Rerun the same assertions under the actual application roles, including relevant edge cases and unaffected behavior. Repeat from the same baseline for success and failure scenarios. Record commands, exit codes, assertions, and resulting catalog changes. A parser or `EXPLAIN` check alone is not a migration test.
 6. **Apply and test on staging.** Recheck staging preconditions, apply the exact tested SQL through a verified Supabase MCP or Management API project connection, and verify schema, permissions, RPC behavior, and the matching application or Edge Function workflow. Stop on a failed check.
-7. **Apply and verify on production.** Recheck production preconditions and compare them with the tested baseline. Refresh and retest if they changed materially. Apply the same SQL through a verified project connection, verify schema, permissions, and behavior, then archive the script only after both projects are verified.
+7. **Integrate the release.** Pass the merge-before-production gate, recording the `no_sign_up` release commit, exact SQL hash and validity of staging evidence after integration. Revalidate affected changes before promotion.
+8. **Apply and verify on production.** Recheck production preconditions and compare them with the tested baseline. Refresh and retest if they changed materially. Apply the same integrated SQL through a verified project connection, verify schema, permissions, and behavior, then archive the script only after both projects are verified.
 
 Local snapshots do not need to be retained after the cycle. Keep baseline metadata and test evidence in the migration record so the result can still be understood. Credentials and exported user data belong outside Git.
 
@@ -93,12 +105,13 @@ Use this sequence for an Edge Function change with the selected verification sco
 
 1. **Test locally.** Run applicable Edge Function/domain tests, including affected request validation, permission, provider failure and database-contract cases. Record commands and results. Controlled provider tests cover branches; add real-provider verification where required by the scope above.
 2. **Release to staging.** Apply and verify required SQL first. Check required Edge secret names without recording values. Deploy through the API, then run the selected database and live application/API/browser checks. Record expected responses, relevant provider outcomes, persisted/visible results and cleanup. Stop and fix failures. An ordinary feature may now wait in its recorded production batch with production acceptance open.
-3. **Release the production batch.** Verify the combined staging scope against the frozen artifacts. Recheck production schema, configuration and secret names. Apply and verify the same SQL if needed, then deploy the same function source. Run the selected production checks against dedicated fixtures and verify cleanup. Deployment or HTTP success alone does not establish workflow acceptance.
-4. **Record and close.** Record both project refs, SQL hash when applicable, function version or hash, test commands and results, provider and application evidence, cleanup results, and any failures and reruns in a dated `docs/doc_update_record/` file. Archive the SQL only after both projects pass. Keep browser setup and commands in [browser-e2e-testing.md](browser-e2e-testing.md).
+3. **Integrate the release.** Pass the merge-before-production gate, recording the `no_sign_up` release commit and function source with imported dependencies. Confirm the combined staging scope remains valid for the integrated artifacts; revalidate affected changes.
+4. **Release the production batch.** Recheck production schema, configuration and secret names. Apply and verify the same integrated SQL if needed, then deploy the frozen function source. Run the selected production checks against dedicated fixtures and verify cleanup. Deployment or HTTP success alone does not establish workflow acceptance.
+5. **Record and close.** Record the integrated release commit, both project refs, SQL hash when applicable, function version or hash, test commands and results, provider and application evidence, cleanup results, and any failures and reruns in a dated `docs/doc_update_record/` file. Archive the SQL only after both projects pass. Keep browser setup and commands in [browser-e2e-testing.md](browser-e2e-testing.md).
 
 ## Acceptance Gates
 
-Every gate must pass before applying a migration to staging or production:
+The environment, scenario database, baseline, execution, behavior and current-target gates apply before staging and production migrations. Production also requires the integration gate:
 
 | Gate | Evidence required |
 | --- | --- |
@@ -108,6 +121,7 @@ Every gate must pass before applying a migration to staging or production:
 | Execution | The exact SQL succeeds under the intended executor and transaction strategy; a failed step stops the cycle |
 | Behavior | Required positive, negative, permission, rollback, and concurrency assertions pass under the relevant roles |
 | Current target | Staging and production schema and data preconditions are checked before each application; material differences are resolved before the same SQL is used |
+| Production integration | Before production mutations, the batch's deployable changes and dependencies are merged into `no_sign_up`; the recorded release commit and frozen manifest match valid staging evidence |
 
 Treat missing parity evidence as `local setup blocked`, not a passing test. Preserve restore errors and resolve their causes. Tests must exercise the same SQL and permission boundary that online execution will use.
 
@@ -243,7 +257,7 @@ Run the SQL assertions relevant to the candidate after applying it to the restor
 
 Prefer Supabase MCP for hosted application when it targets the intended project and has DDL permission. If it cannot select that project or lacks DDL permission, use the authenticated Supabase Management API with the explicit project ref and exact SQL file. Confirm the project ID, current schema, and tested script hash before each execution. If neither route can reach staging, stop rather than applying to production first. Apply to staging first, then run database and application tests against staging. A dependent Edge Function must be deployed to staging only after its SQL is applied there. Stop if the migration or any required staging test fails; inspect the hosted state and revise and retest the pending script before another attempt.
 
-After staging passes, recheck production against the tested preconditions and apply the same script there. Verify the resulting objects, permissions, and behavior. Deploy a dependent Edge Function to production only after the SQL is applied there. Record the MCP or Management API operation and result for each project. An observed SQL execution does not by itself establish a Supabase CLI migration-history entry; report one only if observed. Move the script to `supabase/archived_migrations/` after both projects are verified.
+After staging passes, complete the merge-before-production gate, recheck production against the tested preconditions and apply the same integrated script there. Verify the resulting objects, permissions, and behavior. Deploy a dependent Edge Function to production only after the SQL is applied there. Record the MCP or Management API operation and result for each project. An observed SQL execution does not by itself establish a Supabase CLI migration-history entry; report one only if observed. Move the script to `supabase/archived_migrations/` after both projects are verified.
 
 ## Test Coverage
 
@@ -262,6 +276,8 @@ The agent must write `docs/doc_update_record/documentation_update_record_vYYYY_M
 | Field | Required content |
 | --- | --- |
 | Migration | Pending SQL filename and tested Git commit or file hash, identical for staging and production |
+| Integration | Target branch `no_sign_up`, merge status, integrated release commit, frozen artifact manifest and post-merge staging evidence comparison |
+| Release owner | Named owner of shared deployments, active batch and any handoff through verification/cleanup |
 | Baseline | Staging and production project IDs, export time, PostgreSQL versions, relevant schema comparison, and observed migration history |
 | Local target | Cluster, port, database name for each scenario, migration executor, provisioned dependencies, database ACL and `ALTER DATABASE` settings comparison, baseline comparison and resolved differences |
 | Intended change | Affected schema objects, data transformations, permissions, and preconditions |

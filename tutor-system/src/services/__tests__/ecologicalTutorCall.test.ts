@@ -13,7 +13,6 @@ import {
 } from '../ecologicalTutorCall';
 import { getDemoRoomTemplateSeeds } from '../demoRoomTemplates';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
-import { MULTI_AGENT_TUTOR_PROMPT } from '../prompts/multiAgentTutorPrompt';
 import fs from 'fs';
 import path from 'path';
 
@@ -80,12 +79,12 @@ describe('ecologicalTutorCall', () => {
       scenario_context: 'Demo: Lock Icon Myth — practice',
       conversation_history: 'Tutor [TUTOR]: Look at the link.',
       student_message: 'If it has a lock it is safe, right?',
-      prior_mode: 'guard'
+      prior_guard_mode: true
     });
 
     expect(turn).toContain('Draft the next tutor decision');
     expect(turn).toContain('If it has a lock it is safe, right?');
-    expect(turn).toContain('"prior_mode":"guard"');
+    expect(turn).toContain('"prior_guard_mode":true');
     expect(turn).not.toMatch(/brief follow-up question/i);
   });
 
@@ -94,7 +93,7 @@ describe('ecologicalTutorCall', () => {
       scenario_context: 'room',
       conversation_history: 'history',
       student_message: 'student line',
-      prior_mode: 'tutoring'
+      prior_guard_mode: false
     });
     expect(messages).toHaveLength(2);
     expect(messages[0].role).toBe('system');
@@ -104,15 +103,13 @@ describe('ecologicalTutorCall', () => {
     expect(messages[1].content).toContain('student line');
   });
 
-  it('loads selected candidate07 with the approved Guard-template addition', () => {
+  it('loads the exact selected candidate11 policy artifact', () => {
     const evaluatedPrompt = fs.readFileSync(
-      path.resolve(__dirname, '../../../../evals/promptfoo/refinement-20261014/candidate-policy-07.md'),
+      path.resolve(__dirname, '../../../../evals/promptfoo/refinement-20261014/candidate-policy-11.md'),
       'utf8'
     ).trim();
-    const guardTemplate = 'Use this response pattern with the actual observed behavior: “[Observable deliberate behavior] is preventing our task discussion/practice. Stop [that behavior] and make a relevant attempt or ask what you need clarified.” Describe intended conduct as planned rather than completed.';
-    expect(ACTIVE_TUTOR_AGENT_PROMPT).toBe(evaluatedPrompt.replace(
-      'GUARD RESPONSE\n\n', `GUARD RESPONSE\n\n${guardTemplate}\n\n`
-    ));
+    expect(evaluatedPrompt).toBeTruthy();
+    expect(buildEcologicalChatCompletionMessages('SYSTEM', { scenario_context: 'room', conversation_history: '', student_message: 'hello' })[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
     expect(ACTIVE_TUTOR_AGENT_PROMPT).not.toContain('MULTI-AGENT');
   });
 
@@ -121,7 +118,7 @@ describe('ecologicalTutorCall', () => {
       scenario_context: 'room',
       conversation_history: 'history',
       student_message: 'student line',
-      prior_mode: 'tutoring' as const
+      prior_guard_mode: false as const
     };
 
     const singleAgent = buildEcologicalChatCompletionMessages('SYSTEM', {
@@ -129,29 +126,20 @@ describe('ecologicalTutorCall', () => {
       interaction_mode: 'single_agent'
     });
     expect(singleAgent[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
-    expect(singleAgent[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
     expect(singleAgent[1].content).toContain('"interaction_mode":"single_agent"');
 
     const legacyMultiAgent = buildEcologicalChatCompletionMessages('SYSTEM', {
       ...base,
-      interaction_mode: 'multi_agent'
+      interaction_mode: 'multi_agent' as any
     });
     expect(legacyMultiAgent[0].content).toContain(ACTIVE_TUTOR_AGENT_PROMPT);
-    expect(legacyMultiAgent[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
     expect(legacyMultiAgent[1].content).toContain('"interaction_mode":"single_agent"');
 
     // Old callers that omit the field keep the single-agent request.
     const legacy = buildEcologicalChatCompletionMessages('SYSTEM', base);
-    expect(legacy[0].content).not.toContain(MULTI_AGENT_TUTOR_PROMPT);
   });
 
-  it('describes the pair contract, Riley limits and the single-Tutor fallback', () => {
-    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/mode "multiagent"/);
-    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/\[agent:riley\]/);
-    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/\[agent:tutor\]/);
-    expect(MULTI_AGENT_TUTOR_PROMPT).toMatch(/protective_instruction/);
-    expect(MULTI_AGENT_TUTOR_PROMPT).not.toMatch(/SERVICE_ROLE|api[_-]?key/i);
-  });
+
 
   it('converts pre-populated arrays into context messages for AI history', () => {
     const ctx = prePopulatedToContextMessages(

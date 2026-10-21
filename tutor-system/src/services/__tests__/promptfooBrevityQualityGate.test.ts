@@ -1,19 +1,10 @@
 #!/usr/bin/env node
 /**
  * Purpose: verify the blocking Promptfoo gate applies one 80% threshold to all
- * eight metrics and rejects missing metrics or weak ecological/holdout groups.
+ * required metrics and rejects missing coverage or weak ecological/holdout groups.
  */
 
-const metricNames = [
-  'turn_rhythm',
-  'direct_correction',
-  'persona_stability',
-  'low_boilerplate_praise',
-  'practical_knowledge',
-  'third_person_examples',
-  'reading_level',
-  'response_length',
-];
+const { METRICS: metricNames } = require('../../../scripts/check-promptfoo-quality-gate.js');
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -35,6 +26,13 @@ const reportFor = (overrides: Record<string, { passed: number; total: number }> 
     },
   });
   return {
+    evaluation_manifest: {
+      repetitions: 1,
+      cases: [
+        { case_id: 'ecological_case', source_type: 'product_template', scaffolding_status: 'not_started', metrics: metricNames.flatMap((metric: string) => Array(10).fill(metric)) },
+        { case_id: 'holdout_case', source_type: 'synthetic_holdout', scaffolding_status: 'failed', metrics: metricNames.flatMap((metric: string) => Array(10).fill(metric)) },
+      ],
+    },
     results: {
       results: [
         makeResult('ecological_case', 'product_template', 'not_started'),
@@ -82,7 +80,9 @@ describe('Promptfoo brevity quality gate', () => {
     const { evaluateGate } = require('../../../scripts/check-promptfoo-quality-gate.js');
     const report = reportFor() as any;
     const failedCase = JSON.parse(JSON.stringify(report.results.results[0]));
+    failedCase.testCase.vars.case_id = 'ecological_failed';
     failedCase.testCase.vars.scaffolding_status = 'failed';
+    report.evaluation_manifest.cases.push({ ...report.evaluation_manifest.cases[0], case_id: 'ecological_failed', scaffolding_status: 'failed' });
     failedCase.gradingResult.componentResults = failedCase.gradingResult.componentResults
       .map((component: any) => component.assertion.metric === 'direct_correction' ? { ...component, pass: false, score: 0 } : component);
     report.results.results.push(failedCase);
@@ -95,6 +95,7 @@ describe('Promptfoo brevity quality gate', () => {
     const { evaluateGate } = require('../../../scripts/check-promptfoo-quality-gate.js');
     const report = reportFor() as any;
     report.results.results[0].testCase.vars.source_type = 'synthetic_holdout';
+    report.evaluation_manifest.cases[0].source_type = 'synthetic_holdout';
     report.results.results[0].gradingResult.componentResults = report.results.results[0].gradingResult.componentResults
       .map((component: any) => component.assertion.metric === 'practical_knowledge' ? { ...component, pass: false, score: 0 } : component);
     const result = evaluateGate(report, 0.8);
@@ -139,7 +140,9 @@ describe('Promptfoo brevity quality gate', () => {
       (() => {
         const report = reportFor() as any;
         const failed = JSON.parse(JSON.stringify(report.results.results[0]));
+        failed.testCase.vars.case_id = 'ecological_failed';
         failed.testCase.vars.scaffolding_status = 'failed';
+        report.evaluation_manifest.cases.push({ ...report.evaluation_manifest.cases[0], case_id: 'ecological_failed', scaffolding_status: 'failed' });
         failed.gradingResult.componentResults = failed.gradingResult.componentResults
           .map((component: any) => component.assertion.metric === 'direct_correction' ? { ...component, pass: false, score: 0 } : component);
         report.results.results.push(failed);
@@ -148,6 +151,7 @@ describe('Promptfoo brevity quality gate', () => {
       (() => {
         const report = reportFor() as any;
         report.results.results[0].testCase.vars.source_type = 'synthetic_holdout';
+        report.evaluation_manifest.cases[0].source_type = 'synthetic_holdout';
         report.results.results[0].gradingResult.componentResults = report.results.results[0].gradingResult.componentResults
           .map((component: any) => component.assertion.metric === 'practical_knowledge' ? { ...component, pass: false, score: 0 } : component);
         return report;

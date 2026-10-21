@@ -113,7 +113,7 @@ describe('RoomPagePost transfer review surface', () => {
       confirmTransferDraft,
       clearAISuggestion,
       aiSuggestion: null,
-      finalMode: 'tutoring',
+      finalGuardMode: false,
       messageFeedbackStats: {},
     });
   });

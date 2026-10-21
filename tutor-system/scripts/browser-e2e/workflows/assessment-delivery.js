@@ -68,10 +68,15 @@ async function assessmentCycle(ctx, journey, target, label) {
   if (process.env.E2E_RECORD_VIDEO === '1') await ctx.studentPage.waitForTimeout(2200);
   const answerStop = await captureResponses(ctx.studentPage, response => response.url().includes('/functions/v1/assessment-api'));
   let answerCalls;
+  let savedResult;
   try {
     for (const option of correctOptions) await question.locator(`input[value="${option}"]`).check();
     await question.getByRole('button', { name: 'Submit answer' }).click();
-    await question.getByRole('status').filter({ hasText: 'Correct.' }).waitFor({ timeout: TIMEOUT });
+    const saved = await waitForMatch(() => query(ctx.client, 'messages', '*', 'room_id', journey.room.id),
+      rows => rows.some(row => row.assessment_event?.assessment_id === questionMessage.assessment_id && row.assessment_event.kind === 'result'),
+      'saved assessment pass message');
+    savedResult = saved.find(row => row.assessment_event?.assessment_id === questionMessage.assessment_id && row.assessment_event.kind === 'result');
+    await ctx.studentPage.getByTestId(`assessment-result-${savedResult.id}`).waitFor({ timeout: TIMEOUT });
   } finally {
     answerCalls = await answerStop();
     writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-answer-function.json`), answerCalls);
@@ -116,7 +121,7 @@ async function assessmentCycle(ctx, journey, target, label) {
   const terminalGate = await assertAssessmentGate(ctx.studentPage, false);
   await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
   const restored = ctx.studentPage.locator(`[data-testid="public-assessment-${questionMessage.assessment_id}"]`);
-  await restored.getByRole('status').filter({ hasText: 'Correct.' }).waitFor({ timeout: TIMEOUT });
+  await ctx.studentPage.getByTestId(`assessment-result-${savedResult.id}`).waitFor({ timeout: TIMEOUT });
   assert.equal(await restored.getByRole('button', { name: 'Submit answer' }).isDisabled(), true);
   const restoredGate = await assertAssessmentGate(ctx.studentPage, false);
   await openRoom(ctx.tutorPage, ctx.appUrl, journey.room.id);
@@ -149,11 +154,15 @@ function assertTutorFeedback(message, assessment) {
 
 async function tutoringStep(ctx, journey, options) {
   const { label, focusMessageId, expectedAssessmentCount, target, terminalAssessment } = options;
+  const browserErrors = [];
+  const onConsole = message => { if (message.type() === 'error') browserErrors.push(message.text()); };
+  ctx.tutorPage.on('console', onConsole);
   await openRoom(ctx.tutorPage, ctx.appUrl, journey.room.id);
   const beforeMessages = await query(ctx.client, 'messages', '*', 'room_id', journey.room.id);
   const latestLearner = beforeMessages.filter(row => row.user_id === ctx.student.id)
     .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
   assert.equal(latestLearner?.id, focusMessageId, 'Tutoring step would focus a different learner message');
+  await ctx.tutorPage.locator('.post-comment').filter({ hasText: latestLearner.content }).last().waitFor({ timeout: TIMEOUT });
   const beforeIds = new Set(beforeMessages.map(row => row.id));
   const close = ctx.tutorPage.locator('.checklist-close');
   if (await close.isVisible()) await close.click();
@@ -172,6 +181,8 @@ async function tutoringStep(ctx, journey, options) {
     await ctx.tutorPage.getByRole('button', { name: /copy to input/i }).click();
     await ctx.tutorPage.locator('form.comment-input-form button[type="submit"]').click();
   } finally {
+    ctx.tutorPage.off('console', onConsole);
+    writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-browser-errors.json`), browserErrors);
     calls = await stop();
     writeJson(path.join(ctx.evidenceDir, `assessment-delivery-${label}-function.json`), calls);
   }
@@ -261,7 +272,13 @@ module.exports = async function assessmentDelivery(ctx) {
   assert.equal(secondTarget.status, 'pending', 'Second target advanced before its tutoring evidence');
   await journey.observe('I think I should contact the platform support team about the warning, but I do not know where to find their real contact details.',
     secondTarget, 'initial_signal', 'partially_covered', 'basic');
-  const between = await tutoringStep(ctx, journey, {
+  const interveningQueue = await completeAssessmentQueue(ctx, journey, 'before-support');
+  assert(!interveningQueue.cycles.some(cycle => cycle.assessed_item.id === secondTarget.id),
+    'Partial support target became assessment eligible');
+  const supportAfterQueue = (await query(ctx.client, 'checklist_items', 'status,understanding_level', 'id', secondTarget.id))[0];
+  assert.equal(supportAfterQueue.status, 'partially_covered');
+  assert.equal(supportAfterQueue.understanding_level, 'basic');
+  const between = interveningQueue.feedback.at(-1) || await tutoringStep(ctx, journey, {
     label: 'support-tutoring', focusMessageId: journey.observations.at(-1).message.id,
     expectedAssessmentCount: firstQueue.cycles.length, target: secondTarget, terminalAssessment: null
   });
@@ -270,7 +287,7 @@ module.exports = async function assessmentDelivery(ctx) {
   const secondQueue = await completeAssessmentQueue(ctx, journey, 'support');
   const second = secondQueue.cycles.find(cycle => cycle.assessed_item.id === secondTarget.id);
   assert(second, 'Official Support learning did not complete its assessment');
-  const cycles = [...firstQueue.cycles, ...secondQueue.cycles];
+  const cycles = [...firstQueue.cycles, ...interveningQueue.cycles, ...secondQueue.cycles];
   assert.equal(cycles.at(-1).room_assessments.length, cycles.length, 'Journey created unexpected assessment lifecycles');
   assert.equal(new Set(cycles.map(cycle => cycle.assessment_id)).size, cycles.length);
   assert.notEqual(first.assessment_id, second.assessment_id, 'Second target reused the first assessment');
@@ -283,8 +300,9 @@ module.exports = async function assessmentDelivery(ctx) {
   }
   return { room_id: journey.room.id, checklist_id: journey.checklist_id,
     template_target_count: journey.template_target_count, cycles,
-    first_target_tutoring: firstTutoring, assessment_queues: [firstQueue, secondQueue],
+    first_target_tutoring: firstTutoring, assessment_queues: [firstQueue, interveningQueue, secondQueue],
     between_cycles: between, status_observations: journey.observations, final_progress: finalProgress };
 };
 
 module.exports.assertTutorFeedback = assertTutorFeedback;
+module.exports.tutoringStep = tutoringStep;

@@ -1,0 +1,95 @@
+{
+  "intent": "Freeze assessment dialogue release artifacts for exact staging-to-production promotion.",
+  "updated": "2026-10-17",
+  "verification_status": "production_verified",
+  "release_commit": "518a07dfa519cd1f0cbd772d19408e1292be577d",
+  "branch": "no_sign_up",
+  "sql": {
+    "path_at_release": "tutor-system/supabase/migrations/20261017000000_assessment_result_messages.sql",
+    "archive_path": "tutor-system/supabase/archived_migrations/20261017000000_assessment_result_messages.sql",
+    "sha256": "830828444f5f91bb66378651cb47b37f402a8eb91ce63710b94fd83515680407"
+  },
+  "edge": {
+    "function": "assessment-api",
+    "source_sha256": "bec61a9a22f69467b36bd60882828a50eeb3f28431c00a910aaf7ef6451b8756",
+    "files": [
+      {
+        "path": "src/services/assessmentAnswerParser.ts",
+        "sha256": "6d8f63df7d7d0e1dd541742bc469b274e1c0d8c7f1d2f7317a196e05451782c6"
+      },
+      {
+        "path": "src/services/assessmentGrading.ts",
+        "sha256": "ee8cc75849d197370a182bb9563a3ea53ec79dffcb1a30bf9094e95b9d131f48"
+      },
+      {
+        "path": "src/services/assessmentRendering.ts",
+        "sha256": "c5a00d80d8035874f94ae9be169b2dfaf48672f90ef4f37d7cadbd418c9d2ece"
+      },
+      {
+        "path": "src/services/assessmentValidation.ts",
+        "sha256": "fe0164dcf2323da8399f63cd78337ac72b8ac8877105a1f269b5e0cc30d4d402"
+      },
+      {
+        "path": "src/services/ecologicalTutorCall.ts",
+        "sha256": "8cb81f7633a2ad2e6cdc89b4dcf9fb9c5c6c7118a709a7d48d97d43146ee9dfc"
+      },
+      {
+        "path": "src/services/learningProgressTransitions.ts",
+        "sha256": "9923270a5f38b8e871669c32da195dd1ce4c48829e68cba4dea06e61397a6ff4"
+      },
+      {
+        "path": "src/services/prompts/activeTutorAgentPrompt.ts",
+        "sha256": "2219d183d3e4fd1a4fda4bf44a8bfa798e9deb12e5d73fd6d21d0416c6a19e6e"
+      },
+      {
+        "path": "src/services/prompts/types.ts",
+        "sha256": "caff2d61d2870a2c337ebd088cfea7d9a009876269b238cc5a677f4ad37bbce2"
+      },
+      {
+        "path": "src/services/transferAssessmentOrchestrator.ts",
+        "sha256": "15eb5ae478746ca7d84096d697c4bafd306f52881b2da4bb8273ac64e0b7508c"
+      },
+      {
+        "path": "src/types/assessment.ts",
+        "sha256": "b6217aa1afc38a2ef809d35628f3a19c138597c54d6ec1a32103a0d7a1ebbd64"
+      },
+      {
+        "path": "src/types/index.ts",
+        "sha256": "485c280b52501d91a9948a65324d17ed44a36b5d9c59d9669393cb1107d7bf36"
+      },
+      {
+        "path": "src/types/learningProgress.ts",
+        "sha256": "a1250b67164adeefbcaf877ca761ffaacebe7a2006db76610790debb79f0745b"
+      },
+      {
+        "path": "supabase/functions/assessment-api/index.ts",
+        "sha256": "dc1c33ed38a79c47487e67b4ecb018409e67277337f11935075acd0b59030177"
+      }
+    ],
+    "staging": {
+      "version": 64,
+      "bundle_sha256": "c525ff9292b0a3a60c76b5d3c1f840974193cca07be36a9a87f82278b436813d"
+    },
+    "production": {
+      "version": 14,
+      "bundle_sha256": "2ca7e7edc74a45197ae9e77df734f3bfa87d19b74e8cabf5c4315422bfa83cb6"
+    }
+  },
+  "client": {
+    "source_sha256": "500f7c0de49c40c354a8485a30760ed23799c4fa99a8589c00a2b6ebc74f9b48",
+    "production_build_sha256": "e4a5a30c1b5d916680c6e258c50fa9e00797bee2ab3cc4896061c3aaff30828e",
+    "staging_build_sha256": "d06ca47ce146d13c6dd481621107c7734f35c7f93fc211e22f2ab0ae162ab356",
+    "production_main": "main.90f5bb61.js",
+    "staging_main": "main.00ca63cf.js",
+    "verification_origins": {
+      "staging": "http://localhost:3110",
+      "production": "http://localhost:3111"
+    }
+  },
+  "inherited_ai_api": {
+    "staging_version": 4,
+    "production_version": 3,
+    "source_unchanged": true
+  },
+  "evidence_manifest": "/Users/admin/.transfer-assessment-pg17/runs/assessment_result_messages/20261017/integrated-release-manifest.json"
+}

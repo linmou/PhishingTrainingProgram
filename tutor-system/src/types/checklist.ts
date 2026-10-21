@@ -7,6 +7,7 @@ import { ProgressPolicyVersion } from './learningProgress';
 
 // Core checklist item interface
 export interface ChecklistItem {
+  target_key?: string | null;
   id: string;                          // Unique identifier
   area_text: string;                   // The detection area or verification step text
   item_type: 'detection_area' | 'verification_step' | 'understanding' | 'behavior';
@@ -42,6 +43,7 @@ export interface CoverageEvidence {
 
 // Session-level checklist
 export interface SessionChecklist {
+  target_version?: string | null;
   id: string;
   room_id: string;
   /** New transfer-policy checklists are explicitly owned by one learner. */

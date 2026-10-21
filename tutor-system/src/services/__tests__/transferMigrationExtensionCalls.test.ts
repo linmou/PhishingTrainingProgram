@@ -4,7 +4,7 @@
 import { readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-const MIGRATIONS_DIR = join(__dirname, '..', '..', '..', 'supabase', 'migrations');
+const MIGRATIONS_DIR = join(__dirname, '..', '..', '..', 'supabase', 'archived_migrations');
 
 /** Functions whose SET search_path excludes the schema that holds pgcrypto. */
 const NARROW_SEARCH_PATH_FUNCTIONS = [

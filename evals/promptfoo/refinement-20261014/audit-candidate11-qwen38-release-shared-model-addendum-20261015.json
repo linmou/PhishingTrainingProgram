@@ -1,0 +1,46 @@
+{
+  "intent": "Independently review source-configured Qwen3.8 selection after the authorized release encountered a forbidden model-secret update, preserving prior audits and failed intermediate evidence.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "previous_audit": "evals/promptfoo/refinement-20261014/audit-candidate11-qwen38-release-source-20261015.json",
+  "source_integration_verdict": "clear",
+  "benchmark_verdict": "failed; unchanged under the explicit user release override",
+  "release_verdict": "pending corrected staging deployment, applicable regression checks, staging verification and exact production promotion/verification",
+  "reported_external_blocker": "Root reports staging assessment-api v58 was deployed, but POST to update OAI_MODEL secret returned HTTP403. Production has not been mutated by this attempted release. Retain this failed intermediate state and repair staging before acceptance checks.",
+  "declared_configuration_revision": {
+    "model_authority": "Both Edge Functions import DEFAULT_AI_MODEL from src/services/aiModels.ts, the same single source used by the frontend. It explicitly selects qwen3.8-flash; this is source configuration, not a fallback model.",
+    "credentials": "Both providerConfig functions continue requiring OAI_API_KEY and OAI_BASE_URL and fail closed when either is unavailable.",
+    "old_secret": "OAI_MODEL is not read by either runtime providerConfig. Its existing project value remains unused and is not removed or overwritten.",
+    "request_semantics": "Tutor policy/base,0.3/600/nonthinking settings, response/repair contracts, inherited transfer prompt and lifecycle logic remain unchanged. The actual intended provider model remains Qwen3.8.",
+    "workflow": "Workflow omits model-secret writes and still deploys both functions. .env.example explicitly identifies OAI_MODEL as offline-evaluation configuration.",
+    "helper": "Existing Management API helper now accepts a restricted --function=ai-api option, retaining assessment-api as the default. Slug-specific metadata, reads, bundling and deployment paths are consistent and names are allowlisted. Required secret names are only key/base."
+  },
+  "exact_artifacts": {
+    "assessment_api_entry_sha256": "09d0fc4bf2df2f99e8f7232d10f82504adbe9869f1e2504f262371d151fcb95f",
+    "assessment_api_source_manifest_sha256": "6f6c739577cb8535a012b1a58b0cb0a1ca68b8d3c37c7850c7f053e4b2692e79",
+    "ai_api_entry_sha256": "7b1ce41d663ee5ae7be91990cbf2ecdc67eb66a7033d1900948b0835f8e59a21",
+    "ai_api_source_manifest_sha256": "d74a6cf37a4624b7c4d41a8f994a00aee8598d8fd818dae80ef1f1c664d94cda",
+    "shared_model_catalog_sha256": "3ee23ac0d8ec3f1583dd82ae25bb0fa1062b241c97b3ad44ca76671c04ea3694",
+    "deployment_helper_sha256": "995338149c59d87c3796de43d026a32ba4dc7f93b8a0068630e9a542fb0fea27",
+    "workflow_sha256": "f6f8b8d3a06ca110d082fdc6eccb1ed8ef0ef85e724d7073b597a5175323cf38",
+    "env_example_sha256": "7e5520e941a22c028b8de072440e32839e92806cd60a834b84a1cd41739c8458",
+    "unchanged_tutor_service_sha256": "f8ca52c11201295b314cda18a00a5c1c5f106f3917718d7f5a640d225ed5e3e1",
+    "unchanged_active_tutor_file_sha256": "2219d183d3e4fd1a4fda4bf44a8bfa798e9deb12e5d73fd6d21d0416c6a19e6e"
+  },
+  "independent_verification": {
+    "source_review": "Inspected both providerConfig changes, shared catalog, workflow/env example and complete helper diff. No prompt refinement, changed decoders, client model override, credential fallback or lifecycle modification appears in this revision.",
+    "dry_runs": "Independently ran the existing helper in dry-run mode for assessment-api and ai-api. Both exact source manifests match the declared hashes and include the same shared aiModels.ts dependency. No remote calls or deployment occurred.",
+    "integrated_tests": "Independently ran Deno tests filtered to 'shared model' across both Edge test files:2passed,0failed,40filtered. The actual handlers send Qwen3.8 despite a stale Qwen3.5 model secret; ai-api also ignores client model override. Type checking passed.",
+    "followup_test_finding": "Notified root that transferAssessmentApiContract.test.ts retained a stale expectation for deps.env('OAI_MODEL'); update the structural expectation and rerun affected checks before release. This is not a semantic grader change.",
+    "model_calls": 0,
+    "deployments": 0
+  },
+  "remaining_release_conditions": [
+    "Correct staging by deploying both revised functions and verify actual provider response models are Qwen3.8 while project OAI_MODEL remains unchanged/unused.",
+    "Complete applicable deterministic regressions and both function type checks; fix any new contract or lifecycle failure before promotion.",
+    "Retain prior exact full11 parity evidence and inherited productionv12 unified-target provenance. Historical candidate02 results still do not validate the inherited transfer prompt.",
+    "Verify configured-base and legacy tutor paths, Guard recovery, transfer persistence, assessment lifecycle, identity and cleanup in staging and production.",
+    "Promote the same two source manifests; record function versions and provider evidence. The earlier single-function source manifest and old model-secret assumptions are superseded, not silently rewritten.",
+    "Known benchmark failures remain recorded and accepted only through the user's explicit deployment instruction; unexpected operational failures remain blockers."
+  ]
+}

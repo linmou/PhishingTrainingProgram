@@ -23,8 +23,10 @@ import { RoomFeaturesService } from '../services/roomFeaturesService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import { useOptionalAuth } from '../contexts/AuthContext';
 import './ChecklistPanel.css';
+import { CYBERBULLYING_LEARNING_TARGETS } from '../services/detectionTemplates';
 
 interface ChecklistPanelProps {
+  sharedTargets?: boolean;
   roomId: string;
   transferEnabled?: boolean;
   studentId?: string | null;
@@ -47,6 +49,7 @@ interface ChecklistItemComponentProps {
 
 const serializeChecklistItem = (item: ChecklistItem) => ({
   id: item.id,
+  target_key: item.target_key ?? null,
   area_text: item.area_text,
   item_type: item.item_type,
   priority: item.priority ?? 'optional',
@@ -322,12 +325,13 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   roomId,
   transferEnabled = false,
   studentId = null,
+  sharedTargets = false,
   isVisible,
   onToggleVisibility,
   progressLocked = false
 }) => {
   const auth = useOptionalAuth();
-  const canSetupTargets = !transferEnabled || auth?.user?.current_role === 'tutor';
+  const canSetupTargets = !sharedTargets && (!transferEnabled || auth?.user?.current_role === 'tutor');
   // Use the enhanced service layer hook
   const { 
     checklist,
@@ -351,7 +355,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
   const setupRequired = transferEnabled && (!checklist ||
     checklist.detection_areas.length + checklist.verification_steps.length === 0);
-  const progressControlsLocked = progressLocked;
+  const progressControlsLocked = progressLocked || sharedTargets;
 
   const handleStatusChange = async (itemId: string, newStatus: ChecklistItem['status']) => {
     if (progressControlsLocked) return;
@@ -412,6 +416,9 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         partially_covered_items: progress?.partially_covered_areas ?? allItems.filter(item => item.status === 'partially_covered').length,
         pending_items: progress?.pending_areas ?? allItems.filter(item => item.status === 'pending').length
       },
+      target_version: checklist.target_version ?? null,
+      student_id: checklist.student_id ?? null,
+      progress_policy_version: checklist.progress_policy_version,
       detection_areas: checklist.detection_areas.map(serializeChecklistItem),
       verification_steps: checklist.verification_steps.map(serializeChecklistItem)
     };
@@ -533,6 +540,15 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
     );
   }
 
+  if (!checklist && sharedTargets) {
+    return <section className="checklist-panel">
+      <div className="checklist-header"><h3>Learning Progress</h3>
+        <button onClick={onToggleVisibility} aria-label="Close Learning Progress"><EyeOff size={16} /></button>
+      </div>
+      <p>Learner progress begins when a learner joins.</p>
+      <ol>{CYBERBULLYING_LEARNING_TARGETS.map(target => <li key={target.key}>{target.description}</li>)}</ol>
+    </section>;
+  }
   if (!checklist || setupRequired) {
     return (
       <div className="checklist-panel">
@@ -624,7 +640,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
             Learning progression is locked while Guard Mode is active. Corrective messages remain enabled.
           </div>
         )}
-        {transferPolicy && (
+        {transferPolicy && !sharedTargets && (
           <div role="status" className="checklist-transfer-notice">
             Transfer policy is active. Progress is derived from recorded learner evidence or an explicit teacher confirmation.
           </div>
@@ -756,14 +772,14 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
               </button>
             </>
           )}
-          <button 
+          {!sharedTargets && <button
             className="action-button primary"
             onClick={() => setShowAddCustomArea(true)}
             disabled={progressControlsLocked}
           >
             <Plus size={16} />
             Add Custom Area
-          </button>
+          </button>}
           <button 
             className="action-button secondary"
             onClick={handleExportReport}

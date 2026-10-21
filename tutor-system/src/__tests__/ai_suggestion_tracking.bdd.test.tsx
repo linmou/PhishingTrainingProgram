@@ -124,10 +124,10 @@ defineFeature(feature, (test) => {
         tutor_message_id: message.id,
         response_time_ms: args.p_response_time_ms,
         context_messages: args.p_context_messages,
-        raw_mode: args.p_raw_mode,
+        raw_guard_mode: args.p_raw_guard_mode,
         raw_instruction: args.p_raw_instruction,
-        mode_reason: args.p_mode_reason,
-        final_mode: args.p_final_mode,
+        guard_reason: args.p_guard_reason,
+        final_guard_mode: args.p_final_guard_mode,
         created_at: message.created_at,
       });
       return { data: { message, room: { ...roomRecord } }, error: null };
@@ -229,7 +229,7 @@ defineFeature(feature, (test) => {
       data: {
         content: JSON.stringify({
           reason: 'The learner asks for phishing advice.',
-          decision: { mode: 'tutoring', instruction: 'explanation' },
+          decision: { guard_mode: false, instruction: 'explanation' },
           response: suggestionText,
         }),
         model: 'qwen3.5-flash',

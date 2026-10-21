@@ -17,7 +17,7 @@ function assertEquals(actual: unknown, expected: unknown): void {
 function request(operation: string, body: Record<string, unknown> = {}): Request {
   return new Request('http://localhost/assessment-api', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: 'Bearer test' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer test', 'x-practice-contract': 'cyberbullying-v1' },
     body: JSON.stringify({ operation, request_id: '00000000-0000-4000-8000-000000000001', ...body }),
   });
 }
@@ -41,10 +41,47 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
       if (name === 'prepare_transfer_assessment_context_v1') {
         return { data: { ...providerScope(), selected_target_item_id: 'item-1' }, error: null };
       }
-      return suppliedRpc(name, args);
+      const result = await suppliedRpc(name, args);
+      const data = result.data as Record<string,any>;
+      const processed = data?.authoritative_result ?? data;
+      if (processed && (processed.answer_outcome || processed.code==='assisted' || processed.code==='cancelled') &&
+        !Object.prototype.hasOwnProperty.call(processed,'result_message')) {
+        const closure = !processed.answer_outcome;
+        const attempt = processed.attempt_number ?? processed.attempts_used ?? 1;
+        processed.result_message={id:`result-${processed.message_id}`,room_id:'room-1',user_id:'teacher-1',user_role:'tutor',
+          content:closure ? 'Assessment cancelled.' : 'Recorded grade.',parent_message_id:processed.message_id,
+          response_mode:null,assessment:null,created_at:'2026-10-17T00:00:00Z',assessment_event:{
+            event_key:closure ? 'assessment-closure:q' : `assessment-result:${processed.message_id}`,
+            kind:closure ? 'closure' : 'result',assessment_id:processed.assessment_id,question_message_id:'q',student_id:'learner-1',
+            answer_message_id:processed.message_id,attempt_number:closure ? null : attempt,outcome:processed.answer_outcome ?? null,
+            attempts_used:closure ? processed.attempts_used : attempt,attempts_remaining:processed.answer_outcome==='retry' ? 1 : 0,
+            terminal:processed.answer_outcome!=='retry',lifecycle:closure ? 'cancelled' : processed.answer_outcome==='retry' ? 'open' : processed.answer_outcome,
+            progress_deferred:processed.processing_state==='deferred',closure_reason:closure ? 'assisted' : null,
+          }};
+      }
+      return result;
     },
   };
 }
+
+// Covers assessment-api/index.ts: stale clients must fail before identity, database or provider access.
+Deno.test('rejects missing and outdated client contracts before assessment side effects', async () => {
+  let touched = false;
+  const handler = createAssessmentApiHandler(dependencies({
+    verifier: { verify: async () => { touched = true; throw new Error('unexpected identity call'); } },
+    rpc: async () => { touched = true; throw new Error('unexpected database call'); },
+    fetch: async () => { touched = true; throw new Error('unexpected provider call'); },
+  }));
+  for (const contract of [null, 'outdated']) {
+    const stale = request('join_room', { room_id: 'room-1' });
+    if (contract === null) stale.headers.delete('x-practice-contract');
+    else stale.headers.set('x-practice-contract', contract);
+    const result = await handler(stale);
+    assertEquals(result.status, 409);
+    assertEquals((await result.json()).error.code, 'CLIENT_RELOAD_REQUIRED');
+  }
+  assertEquals(touched, false);
+});
 
 function providerScope(): Record<string, unknown> {
   return {
@@ -53,7 +90,7 @@ function providerScope(): Record<string, unknown> {
     context: {
       room_id: 'room-1', checklist_id: 'checklist-1', focus_student_id: 'learner-1',
       focus_student_message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'It looked familiar.' },
-      prior_participation_mode: 'tutoring',
+      prior_guard_mode: false,
       checklist_items: [{
         id: 'item-1', area_text: 'Verify independently', priority: 'critical',
         status: 'covered', understanding_level: 'good',
@@ -73,7 +110,7 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
       rpc: async (name, args) => {
         if (name === 'get_transfer_assessment_processing_context_v1') return { data: {
           context: { progress: { status: 'covered', understanding_level: 'good' },
-            participation_mode: 'tutoring', progress_snapshot_hash: 'h', feedback_required: false,
+            guard_mode: false, progress_snapshot_hash: 'h', feedback_required: false,
             eligible_assessment_item_ids: ['item-1'], unresolved_assessment: { id: 'a' },
             pending_repair_message_id: null,
             attempt_snapshot: { assessment_id: 'a', accepted_attempt_count: 0, resolution: 'open', processed_answer_message_ids: [] } },
@@ -83,6 +120,10 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
           answer: { content, selected_option_ids: null, references_message_id: 'q' },
         }, error: null };
         writes.push({ name, args });
+        if (name==='record_transfer_assessment_processing_v1') return {data:{
+          message_id:'m',assessment_id:'a',processing_state:'rejected',answer_outcome:null,attempt_number:null,
+          attempts_used:0,attempts_remaining:2,terminal:false,code:args.p_code,result_message:null,
+        },error:null};
         return { data: { message_id: 'm', assessment_id: 'a', processing_state: 'applied',
           answer_outcome: name === 'cancel_transfer_assessment_v1' ? null : 'passed',
           terminal: true, code: name === 'cancel_transfer_assessment_v1' ? 'assisted' : null,
@@ -93,7 +134,7 @@ for (const content of ['B or D', 'Can you explain how to choose?', 'B?']) {
     const payload = await response.json();
     assertEquals(response.status, 200);
     if (content === 'B or D') {
-      assertEquals(writes, []);
+      assertEquals(writes[0].name,'record_transfer_assessment_processing_v1');
       assertEquals(payload.data.code, 'AMBIGUOUS_SELECTION');
       assertEquals(payload.data.attempts_used, 0);
       assertEquals(payload.data.terminal, false);
@@ -127,6 +168,191 @@ Deno.test('cancelled assessment replay bypasses grading and writes', async () =>
   assertEquals(payload.data.terminal, true);
   assertEquals(payload.data.already_processed, true);
 });
+
+
+ // Covers Cyberbullying analysis: independent targets, attributed evidence, durable provider attempts and atomic retry.
+Deno.test('Cyberbullying settles all five target analyses before applying progress and records failed attempts', async () => {
+  const providerInputs: Record<string, any>[] = [];
+  const audits: Record<string, any>[] = [];
+  let failOne = true;
+  let applications = 0;
+  const content = 'I will support Dylan privately.';
+  const character = { id: 'role-1', user_id: 'teacher-1', user_role: 'tutor', character: 'victim', persona_id: 'copilot:dylan', content: 'A character reply.' };
+  const scope = {
+    practice_type: 'cyberbullying', scenario: { id: 'copilot-1' },
+    room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+    message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content },
+    items: Array.from({ length: 5 }, (_, index) => ({ id: 'item-' + index, area_text: 'Target ' + index, status: 'pending', understanding_level: 'none' })),
+    dialogue_history: [character, { id: 'focus-1', user_id: 'learner-1', user_role: 'student', content }],
+  };
+  const deps = dependencies({
+    env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    fetch: async (_input, init) => {
+      const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
+      providerInputs.push(input);
+      if (failOne && input.items[0].id === 'item-2') return new Response('{}', { status: 503 });
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: input.items[0].id, kind: 'initial_signal', evidence_type: 'action',
+          evidence_message_id: 'focus-1', evidence_quote: content, explanation: 'Current learner evidence.' }],
+        explanation: 'Recorded target analysis.',
+      }) } }] }));
+    },
+  });
+  deps.rpc = async (name, args) => {
+    if (name === 'get_transfer_message_analysis_context_v1') return { data: scope, error: null };
+    if (name === 'record_transfer_provider_attempt_v1') { audits.push(args); return { data: 'audit-id', error: null }; }
+    if (name === 'apply_transfer_message_analysis_v1') {
+      applications += 1;
+      assertEquals((args.p_analysis as Record<string, any>).events.length, 5);
+      return { data: { applied: scope.items }, error: null };
+    }
+    throw new Error('Unexpected RPC ' + name);
+  };
+  const handler = createAssessmentApiHandler(deps);
+  const first = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assert(first.status >= 400);
+  assertEquals(applications, 0);
+  assertEquals(providerInputs.length, 5);
+  assertEquals(audits.length, 5);
+  assertEquals(audits.filter(audit => audit.p_error_code !== null).length, 1);
+  for (const input of providerInputs) {
+    assertEquals(input.practice_type, 'cyberbullying');
+    assertEquals(input.focus_student_id, 'learner-1');
+    assertEquals(input.dialogue_history[0], character);
+    assertEquals(input.scenario, scope.scenario);
+  }
+  failOne = false;
+  const retry = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assertEquals(retry.status, 200);
+  assertEquals(applications, 1);
+  assertEquals(audits.length, 10);
+  assert(audits.every(audit => audit.p_max_tokens === 600 && audit.p_request_payload.operation === 'analyze_message'));
+});
+
+// Covers analyzer format repair: invalid evidence is never applied and both attempts retain their audit identity.
+for (const practiceType of ['cyberbullying', 'phishing']) {
+for (const repairFails of [false, true]) {
+Deno.test(`${practiceType} bounds evidence quote repair and applies only valid progress: repairFails=${repairFails}`, async () => {
+  const audits: Record<string, any>[] = [];
+  const requests: Record<string, any>[] = [];
+  let providerCalls = 0;
+  let applications = 0;
+  const content = 'First sentence. Second sentence. Third sentence.';
+  const message = { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content };
+  const handler = createAssessmentApiHandler({
+    ...dependencies(), env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
+    fetch: async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)));
+      providerCalls += 1;
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
+        events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
+          evidence_quote: providerCalls === 1 || repairFails ? 'First sentence. Third sentence.' : 'First sentence.', explanation: 'Controlled event.' }],
+        explanation: 'Controlled analysis.',
+      }) } }] }));
+    },
+    rpc: async (name, args) => {
+      if (name === 'get_transfer_message_analysis_context_v1') return { data: {
+        practice_type: practiceType, room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+        message, dialogue_history: [message], items: [{ id: 'item-1', area_text: 'Fixture target', status: 'pending', understanding_level: 'none' }],
+      }, error: null };
+      if (name === 'record_transfer_provider_attempt_v1') { audits.push(args); return { data: 'audit', error: null }; }
+      if (name === 'apply_transfer_message_analysis_v1') { applications += 1; return { data: args.p_analysis, error: null }; }
+      throw new Error('Unexpected RPC ' + name);
+    },
+  });
+  const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
+  assertEquals(response.status, repairFails ? 502 : 200);
+  assertEquals(providerCalls, 2);
+  assertEquals(applications, repairFails ? 0 : 1);
+  if (practiceType === 'cyberbullying') {
+    assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, repairFails ? 'invalid' : 'valid']]);
+    assertEquals(audits[0].p_request_id, audits[1].p_request_id);
+    assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
+  }
+  const repair = JSON.parse(requests[1].messages.at(-1).content);
+  assertEquals(requests.map(providerRequest => providerRequest.model), ['qwen3.8-flash', 'qwen3.8-flash']);
+  assertEquals(JSON.parse(repair.previous_response.choices[0].message.content).events[0].evidence_quote, 'First sentence. Third sentence.');
+  assertEquals(repair.evidence_message, message);
+});
+}
+}
+
+Deno.test('missing saved result refuses duplicate processing before any provider call',async () => {
+  let providerCalls=0;
+  const handler=createAssessmentApiHandler(dependencies({
+    resolveAnswer:()=>({disposition:'duplicate'}),
+    fetch:async ()=>{providerCalls+=1;throw new Error('unexpected provider');},
+    rpc:async ()=>({data:{lifecycle:'passed',context:{attempt_snapshot:{}},assessment:{},answer:{content:'B'},
+      authoritative_result:{message_id:'m',assessment_id:'a',answer_outcome:'passed',terminal:true,result_message:null}},error:null}),
+  }));
+  const response=await handler(request('process_message',{assessment_id:'a',message_id:'m'}));
+  assertEquals(response.status,503);
+  assertEquals((await response.json()).error.code,'ASSESSMENT_RESULT_UNAVAILABLE');
+  assertEquals(providerCalls,0);
+});
+
+for (const scenario of ['ambiguity_then_pass','guard_then_clear','ordered_retry_then_pass']) {
+  Deno.test(`trusted review recovery: ${scenario}`,async ()=>{
+    let guard=scenario==='guard_then_clear'; let used=0; let resolution='open'; let providerCalls=0;
+    const ids=scenario==='guard_then_clear' ? ['first'] : ['first','second'];
+    const stored=new Map<string,Record<string,any>>(); const processedOrder:string[]=[];
+    const acceptedRequestIds=new Set<string>();
+    const handler=createAssessmentApiHandler(dependencies({resolveAnswer:resolveTransferAnswer,
+      fetch:async ()=>{providerCalls+=1;throw new Error('unexpected provider');},
+      rpc:async (name,args)=>{
+        const id=String(args.p_message_id);
+        if (name==='get_transfer_assessment_review_v1') {
+          const pending=ids.filter(answer=>!stored.has(answer) || (stored.get(answer)?.code==='guard_deferred' && !guard));
+          return {data:{student_id:'learner-1',history_readiness:{ready:pending.length===0,
+            pending_answers:pending.map(message_id=>({message_id,assessment_id:'a'})),
+            handled_answer_message_ids:ids.filter(answer=>stored.has(answer)&&!stored.get(answer)?.answer_outcome),
+            result_message_ids:[],pending_answer_message_ids:pending,unavailable_assessment_ids:[]}},error:null};
+        }
+        if (name==='get_transfer_assessment_processing_context_v1') {
+          const previous=stored.get(id);
+          return {data:{lifecycle:resolution,context:{progress:{status:'covered',understanding_level:'good'},
+            guard_mode:guard,progress_snapshot_hash:'h',feedback_required:resolution!=='open',
+            eligible_assessment_item_ids:['item-1'],unresolved_assessment:resolution==='open' ? {id:'a'}:null,
+            pending_repair_message_id:null,attempt_snapshot:{assessment_id:'a',accepted_attempt_count:used,resolution,
+              processed_answer_message_ids:ids.filter(answer=>stored.get(answer)?.answer_outcome)}},
+            assessment:{id:'a',item_id:'item-1',selection_type:'single',progress_snapshot_hash:'h',
+              options:['A','B','C','D'].map(id=>({id,text:`Option ${id}`})),correct_option_ids:['B'],learner_safe_explanation:'Reviewed explanation.'},
+            answer:{content:id==='first'&&scenario==='ambiguity_then_pass' ? 'A or B':id==='first'&&scenario==='ordered_retry_then_pass' ? 'A':'B',
+              selected_option_ids:null,references_message_id:'q'},
+            authoritative_result:previous?.code==='guard_deferred'&&!guard ? null:previous ?? null},error:null};
+        }
+        processedOrder.push(id);
+        let result:Record<string,any>;
+        if (name==='record_transfer_assessment_processing_v1') {
+          result={message_id:id,assessment_id:'a',processing_state:guard ? 'deferred':'rejected',answer_outcome:null,
+            attempt_number:null,attempts_used:used,attempts_remaining:2-used,terminal:false,code:args.p_code,result_message:null};
+        } else {
+          assertEquals(name,'process_assessment_message_v2');
+          const requestId=String(args.p_request_id);
+          assertEquals(acceptedRequestIds.has(requestId),false);
+          acceptedRequestIds.add(requestId); used+=1;
+          resolution=args.p_answer_outcome==='retry' ? 'open':String(args.p_answer_outcome);
+          result={message_id:id,assessment_id:'a',processing_state:'applied',answer_outcome:args.p_answer_outcome,
+            attempt_number:used,attempts_used:used,attempts_remaining:resolution==='open' ? 1:0,terminal:resolution!=='open'};
+        }
+        stored.set(id,result); return {data:result,error:null};
+      },
+    }));
+    let response=await handler(request('read_review',{room_id:'room-1',assessment_id:'a'}));
+    assertEquals(response.status,200); assertEquals((await response.json()).data.history_readiness.ready,true);
+    if (scenario==='guard_then_clear') {
+      assertEquals(used,0); guard=false;
+      response=await handler(request('read_review',{room_id:'room-1',assessment_id:'a'}));
+      assertEquals(response.status,200); assertEquals((await response.json()).data.history_readiness.ready,true);
+      assertEquals(used,1); assertEquals(processedOrder,['first','first']);
+    } else {
+      assertEquals(used,scenario==='ambiguity_then_pass' ? 1:2);
+      assertEquals(processedOrder,['first','second']);
+      if (scenario==='ordered_retry_then_pass') assertEquals(acceptedRequestIds.size,2);
+    }
+    assertEquals(providerCalls,0);
+  });
+}
 
 Deno.test('accepted retry replay after cancellation keeps its grade and marks it duplicate', async () => {
   const handler = createAssessmentApiHandler(dependencies({
@@ -316,7 +542,7 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
   const deps: AssessmentApiDependencies = {
     ...dependencies(),
     env: (name) => ({
-      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       operations.push(name);
@@ -371,6 +597,11 @@ Deno.test('approved custom target flows through evidence, assessment delivery, a
       if (name === 'process_assessment_message_v2') {
         assertEquals(args.p_answer_outcome, 'passed');
         return { data: { message_id: 'answer-1', assessment_id: 'question-1', processing_state: 'applied',
+          result_message:{id:'saved-result',room_id:'room-1',user_id:'teacher-1',user_role:'tutor',content:'Correct.',
+            response_mode:null,parent_message_id:'answer-1',created_at:'2026-10-17T00:00:00Z',assessment_event:{
+              event_key:'assessment-result:answer-1',kind:'result',assessment_id:'question-1',question_message_id:'question-1',
+              student_id:'learner-1',answer_message_id:'answer-1',attempt_number:1,outcome:'passed',attempts_used:1,
+              attempts_remaining:0,terminal:true,lifecycle:'passed',progress_deferred:false,closure_reason:null}},
           answer_outcome: 'passed', attempt_number: 1, attempts_used: 1, attempts_remaining: 0,
           selected_option_ids: ['B'], terminal: true, feedback_required: true }, error: null };
       }
@@ -421,7 +652,7 @@ Deno.test('accepts direct understanding evidence for the current learner message
   let stored: Record<string, unknown> | null = null;
   const deps = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
@@ -462,16 +693,16 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
   let applied: Record<string, unknown> | null = null;
   const deps = dependencies({
     env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
-      OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const input = JSON.parse(JSON.parse(String(init?.body)).messages[1].content);
       assertEquals(input.items.length, 1);
       const itemId = input.items[0].id;
       analyzedIds.push(itemId);
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
-        events: [{ item_id: itemId, kind: itemId === 'action-1' ? 'demonstrated_understanding' : 'initial_signal',
+        events: itemId === 'action-1' ? [{ item_id: itemId, kind: 'demonstrated_understanding',
           evidence_type: 'action', evidence_message_id: 'focus-1', evidence_quote: 'I will open the app',
-          explanation: 'The learner states the action.' }],
+          explanation: 'The learner states the action.' }] : [],
         explanation: 'Target evaluated.',
       }) } }] }), { status: 200 });
     },
@@ -482,8 +713,8 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student',
         content: 'I will open the app instead of using this link.' },
       items: [
-        { id: 'action-1', area_text: 'Check the app', status: 'pending', understanding_level: 'none' },
-        { id: 'reason-1', area_text: 'Explain the scam', item_type: 'understanding',
+        { id: 'action-1', area_text: 'Check the app', item_type: 'detection_area', status: 'pending', understanding_level: 'none' },
+        { id: 'reason-1', area_text: 'Explain the scam', item_type: 'detection_area',
           status: 'pending', understanding_level: 'none' },
       ],
       dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1',
@@ -502,16 +733,14 @@ Deno.test('keeps one target evidence from advancing a related target', async () 
   assertEquals(analyzedIds, ['action-1', 'reason-1']);
   assertEquals((applied as unknown as { events: Array<{ item_id: string }> }).events.map(event => event.item_id), ['action-1']);
   assertEquals((applied as unknown as { rejected_events: Array<{ item_id: string; rejection_reason: string }> }).rejected_events,
-    [{ item_id: 'reason-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
-      evidence_quote: 'I will open the app', explanation: 'The learner states the action.',
-      rejection_reason: 'EVIDENCE_TYPE_MISMATCH' }]);
+    []);
 });
 
-// Test responsible for assessment-api/index.ts: action evidence cannot fully cover a detection-area target.
-Deno.test('rejects action-only evidence for detection areas', async () => {
+// Test responsible for assessment-api/index.ts: unified targets accept relevant action evidence.
+Deno.test('accepts action evidence for a detection-area target', async () => {
   let stored: Record<string, any> | null = null;
   const deps = dependencies({
-    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
       events: [{ item_id: 'item-1', kind: 'demonstrated_understanding', evidence_type: 'action', evidence_message_id: 'focus-1',
         evidence_quote: 'I will open the official app', explanation: 'The learner chooses a safe action.' }],
@@ -522,7 +751,7 @@ Deno.test('rejects action-only evidence for detection areas', async () => {
     if (name === 'get_transfer_message_analysis_context_v1') return { data: {
       room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
       message: { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content: 'I will open the official app.' },
-      items: [{ id: 'item-1', area_text: 'Suspicious URL', item_type: 'detection_area', status: 'pending', understanding_level: 'none' }],
+      items: [{ id: 'item-1', area_text: 'Open the official app independently', item_type: 'detection_area', status: 'pending', understanding_level: 'none' }],
       dialogue_history: [{ id: 'focus-1', source: 'message', user_id: 'learner-1', user_role: 'student', content: 'I will open the official app.' }],
     }, error: null };
     stored = args.p_analysis as Record<string, any>;
@@ -530,23 +759,21 @@ Deno.test('rejects action-only evidence for detection areas', async () => {
   };
   const response = await createAssessmentApiHandler(deps)(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
   assertEquals(response.status, 200);
-  assertEquals((stored as unknown as { events: unknown[] }).events, []);
-  assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
-    'EVIDENCE_TYPE_MISMATCH');
+  assertEquals((stored as unknown as { events: Array<{ evidence_type: string }> }).events[0].evidence_type, 'action');
+  assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events, []);
 });
 
 // Test responsible for assessment-api/index.ts: preserve valid analysis while recording unsupported proposals.
-Deno.test('records and omits ineligible transitions and wrong evidence forms', async () => {
+Deno.test('records and omits ineligible transitions for unified targets', async () => {
   for (const [status, level, kind, itemType] of [
-    ['partially_covered', 'basic', 'initial_signal', 'verification_step'],
-    ['pending', 'none', 'post_repair_signal', 'verification_step'],
-    ['pending', 'none', 'initial_signal', 'understanding'],
+    ['partially_covered', 'basic', 'initial_signal', 'detection_area'],
+    ['pending', 'none', 'post_repair_signal', 'detection_area'],
   ]) {
     let applyCalls = 0;
     let stored: Record<string, any> | null = null;
     const deps = dependencies({
       env: (name) => ({ OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1',
-        OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+        OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind, evidence_type: 'action', evidence_message_id: 'focus-1',
           evidence_quote: 'I will check the app', explanation: 'The learner describes a check.' }],
@@ -574,7 +801,7 @@ Deno.test('records and omits ineligible transitions and wrong evidence forms', a
     assertEquals((stored as unknown as { events: unknown[] }).events, []);
     assertEquals((stored as unknown as { rejected_events: unknown[] }).rejected_events.length, 1);
     assertEquals((stored as unknown as { rejected_events: Array<{ rejection_reason: string }> }).rejected_events[0].rejection_reason,
-      itemType === 'understanding' ? 'EVIDENCE_TYPE_MISMATCH' : 'INELIGIBLE_TRANSITION');
+      'INELIGIBLE_TRANSITION');
     assertEquals(applyCalls, 1);
   }
 });
@@ -585,7 +812,7 @@ Deno.test('rejects historical speaker evidence before updating learner status', 
     let applyCalls = 0;
     const deps = dependencies({
       env: (name) => ({
-        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+        OAI_API_KEY: 'test-key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
       } as Record<string, string>)[name],
       fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: evidenceMessageId,
@@ -654,6 +881,16 @@ Deno.test('disabled feature makes no storage call', async () => {
   assertEquals(response.status, 503);
   assertEquals(payload.error.code, 'ASSESSMENT_FEATURE_DISABLED');
   assertEquals(calls, 0);
+});
+
+Deno.test('owner clear remains available with assessment feature disabled and passes only verified identity',async ()=>{
+  const calls:unknown[]=[];
+  const handler=createAssessmentApiHandler(dependencies({featureEnabled:false,rpc:async(name,args)=>{
+    calls.push({name,args});return {data:{success:true,title:'Room',prePopulatedMessagesPreserved:true},error:null};
+  }}));
+  const response=await handler(request('clear_chat_history',{room_id:'room-1',actor_id:'forged'}));
+  assertEquals(response.status,200);
+  assertEquals(calls,[{name:'clear_room_chat_history_v1',args:{p_room_id:'room-1',p_actor_id:'teacher-1'}}]);
 });
 
 Deno.test('projects the approved checklist UUID into the browser initialization contract', async () => {
@@ -733,16 +970,15 @@ Deno.test('returns the exact public assessment target and strips private fields'
   assert(!JSON.stringify(payload).includes('learner_safe_explanation'));
 });
 
-Deno.test('requires every configured provider setting with no model fallback', async () => {
+Deno.test('requires provider credentials before any provider or audit call', async () => {
   const configured = {
-    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+    OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
   };
-  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL', 'wrong_model']) {
+  for (const missing of ['OAI_API_KEY', 'OAI_BASE_URL']) {
     let providerCalls = 0;
     let auditCalls = 0;
     const settings = { ...configured } as Record<string, string | undefined>;
-    if (missing === 'wrong_model') settings.OAI_MODEL = 'other-model';
-    else settings[missing] = undefined;
+    settings[missing] = undefined;
     const handler = createAssessmentApiHandler(dependencies({
       env: (name) => settings[name],
       rpc: async (name) => {
@@ -766,12 +1002,12 @@ Deno.test('requires every configured provider setting with no model fallback', a
   }
 });
 
-Deno.test('uses the configured qwen request, 1200-token budget, JSON mode, and private audit', async () => {
+Deno.test('preserves the assessment model despite a different model secret, 1200-token budget, JSON mode, and private audit', async () => {
   const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -806,7 +1042,7 @@ Deno.test('returns a valid second response after one format repair', async () =>
   const requests: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
@@ -844,7 +1080,7 @@ Deno.test('format repair forwards a rendering violation without accepting the in
   draft.assessment.stem = 'There is a new warning. It asks for a response. What should you do?';
   invalid.choices[0].message.content = JSON.stringify(draft);
   const handler = createAssessmentApiHandler(dependencies({
-    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string,string>)[name],
+    env: name => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string,string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -869,7 +1105,7 @@ Deno.test('performs one format-only repair and rejects a second invalid result',
   let providerCalls = 0;
   const audits: Record<string, unknown>[] = [];
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     rpc: async (name, args) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       if (name === 'record_transfer_provider_attempt_v1') audits.push(args);
@@ -893,7 +1129,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
   for (const scenario of ['truncated', 'http', 'network']) {
     let providerCalls = 0;
     const handler = createAssessmentApiHandler(dependencies({
-      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+      env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
       rpc: async (name) => name === 'prepare_transfer_turn_v1'
         ? { data: providerScope(), error: null }
         : { data: 'audit', error: null },
@@ -916,7 +1152,7 @@ Deno.test('does not repair truncation, HTTP failure, or network failure', async 
 Deno.test('fails preparation without retry when provider audit persistence fails', async () => {
   let providerCalls = 0;
   const handler = createAssessmentApiHandler(dependencies({
-    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash' } as Record<string, string>)[name],
+    env: (name) => ({ OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash' } as Record<string, string>)[name],
     rpc: async (name) => {
       if (name === 'prepare_transfer_turn_v1') return { data: providerScope(), error: null };
       return { data: null, error: { message: 'audit insert failed' } };
@@ -940,12 +1176,12 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
   let assessmentCalls = 0;
   const base = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'server-secret', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     fetch: async (_input, init) => {
       const body = JSON.parse(String(init?.body));
       if (JSON.parse(body.messages[1].content).dialogue_history !== undefined) {
-        assertEquals(body.model, 'qwen3.5-flash');
+        assertEquals(body.model, 'qwen3.8-flash');
         assertEquals(body.temperature, 0);
         assertEquals(body.max_tokens, 600);
         assertEquals(body.enable_thinking, false);
@@ -958,6 +1194,7 @@ Deno.test('analyzes persisted learner evidence before mandatory assessment prepa
         }) } }] }), { status: 200 });
       }
       assessmentCalls += 1;
+      assertEquals(body.model, 'qwen3.5-flash');
       return new Response(JSON.stringify(validProviderPayload()), { status: 200 });
     },
   });
@@ -1011,7 +1248,7 @@ Deno.test('explicit no-assessment result avoids the provider, while an eligible 
 
   const failing = dependencies({
     env: (name) => ({
-      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.5-flash',
+      OAI_API_KEY: 'key', OAI_BASE_URL: 'https://provider.invalid/v1', OAI_MODEL: 'qwen3.8-flash',
     } as Record<string, string>)[name],
     fetch: async () => { calls += 1; throw new Error('offline'); },
   });

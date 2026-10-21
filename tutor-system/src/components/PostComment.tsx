@@ -159,7 +159,9 @@ const PostComment: React.FC<PostCommentProps> = ({
     const presentation = resolveMessagePresentation(message, currentUserRole);
 
     return (
-        <div className={`post-comment ${isAIGenerated ? 'post-comment-ai' : ''} ${presentation.isGuard ? 'post-comment-guard' : ''} ${presentation.isMultiagent ? 'post-comment-character' : ''} ${className}`}>
+        <div data-testid={message.assessment_event ? `assessment-result-${message.id}` : undefined}
+            data-assessment-event={message.assessment_event?.kind}
+            className={`post-comment ${isAIGenerated ? 'post-comment-ai' : ''} ${presentation.isGuard ? 'post-comment-guard' : ''} ${message.character ? 'post-comment-character' : ''} ${className}`}>
             <div className="comment-main">
                 {/* Comment Avatar */}
                 <div className="comment-avatar-container">
@@ -263,7 +265,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                     </div>
 
                     {/* Comment Actions */}
-                    <div className="comment-actions">
+                    {!message.assessment_event && <div className="comment-actions">
                         <div className="comment-actions-left">
                             {/* Like Button - Two-step feedback */}
                             <button
@@ -327,7 +329,7 @@ const PostComment: React.FC<PostCommentProps> = ({
                                 <MoreHorizontal className="comment-action-icon" />
                             </button>
                         </div>
-                    </div>
+                    </div>}
                     
                     {/* Two-step Feedback Rating Component */}
                     {showRating && (

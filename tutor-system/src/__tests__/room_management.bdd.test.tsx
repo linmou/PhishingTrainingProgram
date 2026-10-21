@@ -11,8 +11,12 @@ import RoomPagePost from '../pages/RoomPagePost';
 import { RoomProvider } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
 import * as supabaseService from '../services/supabase';
+import { transferAssessmentService } from '../services/transferAssessmentService';
 
 jest.mock('../services/supabase');
+jest.mock('../services/transferAssessmentService', () => ({
+  transferAssessmentService: { joinRoom: jest.fn() }
+}));
 jest.mock('../contexts/AuthContext', () => ({
   ...jest.requireActual('../contexts/AuthContext'),
   useAuth: jest.fn()
@@ -160,6 +164,7 @@ const makeSupabaseQuery = (table: string) => {
 };
 
 beforeEach(() => {
+  (transferAssessmentService.joinRoom as jest.Mock).mockResolvedValue({ room_role: 'student' });
   cleanup();
   jest.clearAllMocks();
   mockRoomRows = [];

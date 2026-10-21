@@ -1,5 +1,11 @@
 # Data Model: Transfer Room Lifecycle and UI Integration
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+RoomMessageView carries the upstream safe assessment_event projection. Saved result and closure identity, source answer linkage and authoritative lifecycle survive response/realtime/poll/reconnect merges; the UI orders dependencies consistently with AI history and never regrades. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 ## Intent
 
 Define the React-owned view state and identity relationships for W7-W8. Component 101 owns shared assessment/progress domain type exports, while component 102 owns API DTO definitions and service operation mapping; backend storage, authorization, progress transitions, and answer keys also remain upstream. Component 103 defines only adapter-local UI view-state types in `src/contexts/transferAssessmentUiAdapter.ts` and consumes 101/102 exports unchanged.

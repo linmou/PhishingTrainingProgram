@@ -163,13 +163,13 @@ async function sendStudentMessage(page, content) {
 async function existingRoom(client, kind, tutorId) {
   const expected = ROOMS[kind];
   if (!expected) throw new Error(`No existing template room is configured for ${kind}`);
-  const room = (await query(client, 'rooms', 'id,title,description,tutor_id,is_active,ai_assistant_enabled,ai_assistant_prompt,pre_populated_dialogue,transfer_learning_enabled,active_response_mode,mode_changed_at,mode_change_source', 'id', expected.id))[0];
+  const room = (await query(client, 'rooms', 'id,title,description,tutor_id,is_active,ai_assistant_enabled,ai_assistant_prompt,pre_populated_dialogue,transfer_learning_enabled,guard_mode,guard_mode_changed_at,guard_mode_change_source', 'id', expected.id))[0];
   assert(room && room.title === expected.title && room.tutor_id === tutorId && room.is_active && room.ai_assistant_enabled,
     `${TARGET} room ${expected.id} no longer matches the ${kind} fixture`);
   assert(room.ai_assistant_prompt && room.pre_populated_dialogue?.length > 0, `Room ${expected.id} has no template content`);
   assert(room.description.includes('[browser-e2e-template]'), `Room ${expected.id} is not a browser fixture`);
   assert.equal(room.transfer_learning_enabled, kind.startsWith('assessment-'), `Room ${expected.id} has the wrong transfer mode`);
-  assert(room.active_response_mode === 'tutoring' && !room.mode_changed_at && !room.mode_change_source,
+  assert(room.guard_mode === false && !room.guard_mode_changed_at && !room.guard_mode_change_source,
     `Room ${expected.id} still has response-mode state from a previous run`);
   for (const table of ['messages', 'session_checklists', 'sessions', 'ai_suggestion_feedback', 'message_feedback']) {
     const rows = await query(client, table, 'id', 'room_id', room.id);
@@ -183,7 +183,7 @@ async function cleanupRoom(config, roomId) {
   const rows = await managementQuery(config, `select description from public.rooms where id='${roomId}'::uuid`);
   assert(rows[0]?.description?.includes('[browser-e2e-template]'), `Refusing to clean non-template room ${roomId}`);
   await managementQuery(config, `do $$ begin
-    update public.rooms set active_response_mode='tutoring',mode_changed_at=null,mode_change_source=null
+    update public.rooms set guard_mode=false,guard_mode_changed_at=null,guard_mode_change_source=null
       where id='${roomId}'::uuid;
     delete from private.transfer_assessment_attempts where assessment_id in
       (select id from private.transfer_assessments where room_id='${roomId}'::uuid);
@@ -204,21 +204,31 @@ async function cleanupRoom(config, roomId) {
     const remaining = await managementQuery(config, `select count(*)::integer as count from private.${table} where room_id='${roomId}'::uuid`);
     assert.equal(remaining[0].count, 0, `Cleanup left private.${table} in room ${roomId}`);
   }
-  const restored = await managementQuery(config, `select active_response_mode,mode_changed_at,mode_change_source from public.rooms where id='${roomId}'::uuid`);
-  assert.equal(restored[0]?.active_response_mode, 'tutoring', `Cleanup left response mode in room ${roomId}`);
-  assert.equal(restored[0]?.mode_changed_at, null, `Cleanup left mode timestamp in room ${roomId}`);
-  assert.equal(restored[0]?.mode_change_source, null, `Cleanup left mode source in room ${roomId}`);
+  const restored = await managementQuery(config, `select guard_mode,guard_mode_changed_at,guard_mode_change_source from public.rooms where id='${roomId}'::uuid`);
+  assert.equal(restored[0]?.guard_mode, false, `Cleanup left response mode in room ${roomId}`);
+  assert.equal(restored[0]?.guard_mode_changed_at, null, `Cleanup left mode timestamp in room ${roomId}`);
+  assert.equal(restored[0]?.guard_mode_change_source, null, `Cleanup left mode source in room ${roomId}`);
 }
 
 async function cleanupCreatedRoom(config, roomId, tutorId) {
   assert.match(roomId, /^[0-9a-f-]{36}$/i);
   assert.match(tutorId, /^[0-9a-f-]{36}$/i);
   const rows = await managementQuery(config,
-    `select tutor_id,description from public.rooms where id='${roomId}'::uuid`);
+    `select tutor_id,description,practice_type from public.rooms where id='${roomId}'::uuid`);
   assert.equal(rows.length, 1, `Created room ${roomId} is missing`);
   assert.equal(rows[0].tutor_id, tutorId, `Refusing to delete room ${roomId} owned by another tutor`);
   assert(rows[0].description?.includes('[browser-e2e-created]'),
     `Refusing to delete room ${roomId} without the browser test marker`);
+  if (rows[0].practice_type === 'cyberbullying') {
+    const deleted = await managementQuery(config,
+      `delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid returning id`);
+    assert.equal(deleted.length, 1, `Failed to delete created room ${roomId}`);
+    for (const table of ['public.messages', 'public.session_checklists', 'public.sessions', 'public.ai_suggestion_feedback', 'public.message_feedback', 'private.cyberbullying_suggestions', 'private.transfer_provider_attempts', 'private.learning_event_inbox']) {
+      const remaining = await managementQuery(config, `select count(*)::integer as count from ${table} where room_id='${roomId}'::uuid`);
+      assert.equal(remaining[0].count, 0, `Cleanup left ${table} in room ${roomId}`);
+    }
+    return;
+  }
   await managementQuery(config, `do $$ begin
     delete from private.transfer_assessment_attempts where assessment_id in
       (select id from private.transfer_assessments where room_id='${roomId}'::uuid);
@@ -257,14 +267,14 @@ async function captureResponses(page, predicate) {
 
 function extractedTargets(calls) {
   for (const call of calls) {
-    if (call.status !== 200 || !JSON.stringify(call.request).includes('Extract cybersecurity learning content')) continue;
+    if (call.status !== 200 || !JSON.stringify(call.request).includes('Extract the cybersecurity learning targets')) continue;
     const content = call.response?.data?.content;
     if (typeof content !== 'string') continue;
     try {
-      const parsed = JSON.parse(content.trim().replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, ''));
-      const items = [...(Array.isArray(parsed.understanding) ? parsed.understanding : []),
-        ...(Array.isArray(parsed.behavior) ? parsed.behavior : [])];
-      if (items.length >= 2 && items.every((item) => typeof item === 'string' && !/\]\s*none$/i.test(item))) return items;
+      const parsed = JSON.parse(content);
+      const items = parsed?.detection_areas;
+      if (Object.keys(parsed).length === 1 && Array.isArray(items) && items.length > 0 &&
+          items.every((item) => typeof item === 'string' && item.trim())) return [...new Set(items.map(item => item.trim()))];
     } catch { /* Invalid provider output is not an extraction result. */ }
   }
   return [];

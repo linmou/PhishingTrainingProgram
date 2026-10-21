@@ -70,7 +70,7 @@ describe('AI service Edge Function boundary', () => {
     const invoke = supabase.functions.invoke as jest.Mock;
     const validDecision = {
       reason: 'The learner needs a concise safety reminder.',
-      decision: { mode: 'tutoring', instruction: 'scaffolding' },
+      decision: { guard_mode: false, instruction: 'scaffolding' },
       response: 'Verify the sender through the official app.',
     };
     invoke
@@ -102,7 +102,7 @@ describe('AI service Edge Function boundary', () => {
       expect(name).toBe('ai-api');
       expect(options.body).toMatchObject({
         temperature: 0.3,
-        max_tokens: 100,
+        max_tokens: 600,
         enable_thinking: false,
         response_format: { type: 'json_object' },
       });
@@ -118,8 +118,7 @@ describe('AI service Edge Function boundary', () => {
     invoke.mockResolvedValue({
       data: {
         content: JSON.stringify({
-          understanding: ['[understanding] Suspicious domains'],
-          behavior: ['[behavior] Verify through the official app'],
+          detection_areas: ['Suspicious domains', 'Verify through the official app'],
         }),
         model: 'qwen3.5-flash',
         finish_reason: 'stop',
@@ -130,8 +129,7 @@ describe('AI service Edge Function boundary', () => {
     const { LLMExtractionService } = await import('../llmExtractionService');
     await expect(LLMExtractionService.extractFromSystemPrompt('## Detection Areas\n- Suspicious domains'))
       .resolves.toEqual({
-        understanding: ['[understanding] Suspicious domains'],
-        behavior: ['[behavior] Verify through the official app'],
+        detection_areas: ['Suspicious domains', 'Verify through the official app'],
       });
     expect(invoke).toHaveBeenCalled();
 

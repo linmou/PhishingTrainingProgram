@@ -1,0 +1,98 @@
+{
+  "feature_name": "cyberbullying-practise",
+  "phase": "draft01",
+  "iteration": 1,
+  "reviewer_id": "audit2",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.94,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "Every acceptance criterion in request.md is covered by an executable plan step and validation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.94,
+      "evidence": [
+        {"kind": "reference", "location": "draft_final_plan.md: Requirement-to-evidence traceability", "text": "All R1–R12 have explicit executable-step references and required acceptance; steps 1–8 independently specify dependencies, actions, deliverables and acceptance."},
+        {"kind": "quote", "location": "draft_final_plan.md: step 4", "text": "All five target analyses settle before marking this analysis attempt processed; failed targets remain retryable without duplicating successful events."},
+        {"kind": "quote", "location": "draft_final_plan.md: step 7", "text": "Run complete student/tutor/observer journeys for both subjects: new/migrated room/template, join/allocation, Guard override/locks/replay, saved comments, progress, tutor editing/regeneration/rejection/approval, stale/concurrent calls, ratings, reload/realtime and exports."}
+      ],
+      "reasoning": "The traceability table is backed by concrete actions rather than requirement repetition: data conversion and actual-role migration tests in step 3, orchestration and retry tests in step 4, identity/privacy/approval tests in step 5, cleanup and regressions in step 6, and complete hosted journeys/provider acceptance in steps 7–8. Step 1 requires the browser-testing guide. These cover the requested future implementation acceptance without claiming the implementation already exists.",
+      "counterevidence": []
+    },
+    {
+      "id": "c2",
+      "text": "Scope, constraints, and assumptions are internally consistent with request.md.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.96,
+      "evidence": [
+        {"kind": "quote", "location": "draft_final_plan.md: Assumptions and execution gates", "text": "This document specifies future execution. Baseline tests in request E13 establish prior behavior only. All implementation acceptance below remains open."},
+        {"kind": "quote", "location": "draft_final_plan.md: Product and data contracts", "text": "A tutor's character choice applies to the current proposal; regeneration retains an explicitly edited choice. A subsequent conversation proposal resumes scenario role selection. Guard override is independent of character choice."},
+        {"kind": "reference", "location": "draft_final_plan.md: Product and data contracts; steps 1, 3 and 6", "text": "The draft defines immutable practice_type, boolean Guard participation with unknown historical provenance, exactly five shared targets and role values, R6's complete supported operation/control set, direct MCP inspection, native PostgreSQL validation, inventoried preservation and applicable file-edit/documentation rules."}
+      ],
+      "reasoning": "The draft retains the requested shared infrastructure and phishing behavior, separates future gates from inspected evidence, and carries unresolved access/data/provider assumptions into bounded investigations. Proposal-local character selection and independent Guard override resolve the stated interaction consistently. No added product behavior contradicts the request.",
+      "counterevidence": []
+    },
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.93,
+      "evidence": [
+        {"kind": "quote", "location": "draft_final_plan.md: step 3", "text": "Application implementation can proceed against the validated local schema; hosted mutation waits for step 7."},
+        {"kind": "quote", "location": "draft_final_plan.md: step 8", "text": "Merge into no_sign_up. Record integrated commit and artifact hashes; deploy/verify the exact integrated artifacts together on staging."},
+        {"kind": "reference", "location": "draft_final_plan.md: steps 1–8 dependency declarations", "text": "Inventory precedes contracts, contracts precede schema proof, local schema precedes orchestration, orchestration precedes UI integration, development acceptance precedes staging, and accepted staging plus ready inherited dependencies precedes integration and production."}
+      ],
+      "reasoning": "The order has no circular hosted-verification dependency. It distinguishes local SQL proof from deployment, requires SQL before dependent server/client artifacts, coordinates shared-environment ownership and delays deployment when access or cutover prerequisites are unresolved. Future infrastructure investigations do not invalidate this executable planning order.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.96,
+      "evidence": [
+        {"kind": "reference", "location": "draft_final_plan.md: Selected architecture and provenance", "text": "Six table rows name candidate sections and destination steps for characterization, contract parity, overflow/member repair, identity/recovery/staleness, requirement traceability and authoritative proposal conflicts."},
+        {"kind": "reference", "location": "candidates/plan_2.md: steps 1–2, Major Decision 3 and step 4", "text": "These sections explicitly supply ordinary/transfer characterization, frontend/Edge parity, complete-history overflow handling and existing-member/concurrent initialization."},
+        {"kind": "reference", "location": "candidates/plan_3.md: Major Decision 3, step 4 and Validation Criteria; candidates/plan_4.md: Major Decision 4 and step 3", "text": "The cited sources explicitly supply separate stable persona/human identity, saved-comment recovery and delayed-result checks, R-by-R acceptance rows, and owner/revision/context/status checks with typed conflicts."},
+        {"kind": "reference", "location": "candidates/plan_1.md: Assigned Approach; judgements_1st/summary.md: ranking table", "text": "Plan 1 retains existing RoomContext/services/RPC ownership; all five judges rank it first, with rank sum 5 and score sum 143, matching the draft's selection claim."}
+      ],
+      "reasoning": "Each import can be located in the named source and in the final steps. They strengthen contracts, fixtures and failure handling within existing ownership; the final plan does not import the competing adapter/controller/API architectures. Canonical keys are explicitly settled on plan 1's definitions.",
+      "counterevidence": []
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.92,
+      "evidence": [
+        {"kind": "quote", "location": "draft_final_plan.md: step 3", "text": "The gate must cover direct writes and RPCs; prove its enforcement under actual application roles."},
+        {"kind": "quote", "location": "draft_final_plan.md: step 4", "text": "Measure payload/model bounds; return a visible recoverable context-size failure if full context cannot fit."},
+        {"kind": "reference", "location": "draft_final_plan.md: Material risks and controls; steps 3–8", "text": "The draft maps coupling, live schema drift, cutover, historical preservation, retries/isolation, stale approval/privacy, model fidelity and release drift to specific inventories, tests, recorded provider judgments or explicit blocked prerequisites."}
+      ],
+      "reasoning": "The principal request-derived risks have operational mitigations: real-role and concurrent transaction tests, preserved counts/content hashes, per-target retry state, authoritative proposal revisions, full-history failures, separately reviewed provider runs, and integrated-artifact revalidation. Cutover feasibility is explicitly a proof gate rather than an assumed capability. This is adequate planning evidence, not a claim those controls have passed.",
+      "counterevidence": []
+    },
+    {
+      "id": "c6",
+      "text": "The draft avoids unnecessary complexity.",
+      "blocking": false,
+      "verdict": "pass",
+      "confidence": 0.94,
+      "evidence": [
+        {"kind": "quote", "location": "draft_final_plan.md: Selected architecture and provenance", "text": "Retain RoomContext, existing AI service dispatch, server-side AI transport, progress storage/panel, and the shared atomic approval RPC."},
+        {"kind": "quote", "location": "draft_final_plan.md: step 2", "text": "Reuse existing fields where sufficient."},
+        {"kind": "quote", "location": "draft_final_plan.md: Selected architecture and provenance", "text": "Add explicit subject branches at their existing integration points, with small helpers for prompt construction and validation."}
+      ],
+      "reasoning": "The plan selects one existing orchestration path and adds fixed contracts and bounded helpers. Revision, provenance, retry and cutover controls directly serve required concurrency, attribution, migration and release behavior; they do not introduce a generalized framework or parallel workflow owner.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": []
+}

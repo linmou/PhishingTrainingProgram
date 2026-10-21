@@ -1,3 +1,7 @@
+/**
+ * File: src/services/prompts/index.ts
+ * Purpose: verify all configured targets share one prompt section and empty inventories render safely.
+ */
 import { generateSystemPrompt } from '../systemPrompts';
 
 describe('Custom Detection Areas and Verification Steps Test', () => {
@@ -54,9 +58,10 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
             expect(generatedPrompt).toContain(step);
         });
 
-        // Test that they appear in the correct sections
+        // All supplied targets share the same learning inventory.
         expect(generatedPrompt).toContain('## Detection Areas to Focus On:');
-        expect(generatedPrompt).toContain('## Verification Steps to Teach:');
+        const targetSection = generatedPrompt.split('## Detection Areas to Focus On:')[1].split('## Default Safe Actions:')[0];
+        expect(targetSection.match(/^- /gm)).toHaveLength(7);
 
         // Test that the content is properly formatted
         expect(generatedPrompt).toContain('- Custom red flag: Suspicious email domains');
@@ -89,19 +94,15 @@ describe('Custom Detection Areas and Verification Steps Test', () => {
 
         const generatedPrompt = generateSystemPrompt(config);
 
-        // Should still have the sections but empty
+        // An empty inventory retains its section without adding targets.
         expect(generatedPrompt).toContain('## Detection Areas to Focus On:');
-        expect(generatedPrompt).toContain('## Verification Steps to Teach:');
         
         // Should not have any bullet points under these sections
         const detectionSectionIndex = generatedPrompt.indexOf('## Detection Areas to Focus On:');
-        const verificationSectionIndex = generatedPrompt.indexOf('## Verification Steps to Teach:');
         const nextSectionIndex = generatedPrompt.indexOf('## Default Safe Actions:');
         
-        const detectionSection = generatedPrompt.substring(detectionSectionIndex, verificationSectionIndex);
-        const verificationSection = generatedPrompt.substring(verificationSectionIndex, nextSectionIndex);
+        const detectionSection = generatedPrompt.substring(detectionSectionIndex, nextSectionIndex);
         
         expect(detectionSection).not.toContain('- ');
-        expect(verificationSection).not.toContain('- ');
     });
 });

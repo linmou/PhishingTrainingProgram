@@ -1,5 +1,11 @@
 # Feature Specification: Transfer Assessment Evaluation
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+FR-023/FR-026/FR-028 now cover saved message identity, source linkage, history ordering/readiness, duplicates/backfill and the approved terminal-failure room audience. Retry/pass still publish no stored key/explanation. Semantic checks use production request assembly and verify recorded-grade/retry/cancellation/Guard handling. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 <!-- Intent: define the evidence needed to judge transfer-assessment behavior, answer sequences, and learner-safe explanations. -->
 
 **Feature Branch**: `104-transfer-evaluation`  

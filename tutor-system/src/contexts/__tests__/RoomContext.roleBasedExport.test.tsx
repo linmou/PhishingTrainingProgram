@@ -177,9 +177,9 @@ describe('RoomContext - Role-based Export Filtering', () => {
             success: true,
             suggestion: 'Phishing is a type of cyber attack where...',
             decision: {
-                mode: 'tutoring',
+                guard_mode: false,
                 instruction: 'explanation',
-                mode_reason: 'A direct explanation is appropriate.',
+                guard_reason: 'A direct explanation is appropriate.',
                 suggested_response: 'Phishing is a type of cyber attack where...',
             },
             contextMessages: ['What is phishing?'],

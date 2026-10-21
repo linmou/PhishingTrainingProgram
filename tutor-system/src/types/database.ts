@@ -1,3 +1,5 @@
+import type { PracticeType, CyberbullyingScenario } from './index';
+
 export type Json =
     | string
     | number
@@ -43,6 +45,9 @@ export interface Database {
             }
             rooms: {
                 Row: {
+                    practice_type?: PracticeType
+                    scenario_config?: CyberbullyingScenario | null
+                    conversation_revision?: number
                     id: string
                     tutor_id: string
                     title: string
@@ -58,15 +63,17 @@ export interface Database {
                     op_display_name: string | null
                     op_avatar_url: string | null
                     password: string | null
-                    active_response_mode: 'tutoring' | 'guard'
-                    mode_changed_at: string | null
-                    mode_change_source: 'reviewed_response' | 'manual_override' | null
+                    guard_mode: boolean
+                    guard_mode_changed_at: string | null
+                    guard_mode_change_source: 'reviewed_response' | 'manual_override' | null
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     id?: string
                     tutor_id: string
+                    practice_type?: PracticeType
+                    scenario_config?: CyberbullyingScenario | null
                     title: string
                     description?: string | null
                     image_url?: string | null
@@ -80,15 +87,17 @@ export interface Database {
                     op_display_name?: string | null
                     op_avatar_url?: string | null
                     password?: string | null
-                    active_response_mode?: 'tutoring' | 'guard'
-                    mode_changed_at?: string | null
-                    mode_change_source?: 'reviewed_response' | 'manual_override' | null
+                    guard_mode?: boolean
+                    guard_mode_changed_at?: string | null
+                    guard_mode_change_source?: 'reviewed_response' | 'manual_override' | null
                     created_at?: string
                     updated_at?: string
                 }
                 Update: {
                     id?: string
                     tutor_id?: string
+                    practice_type?: PracticeType
+                    scenario_config?: CyberbullyingScenario | null
                     title?: string
                     description?: string | null
                     image_url?: string | null
@@ -102,9 +111,9 @@ export interface Database {
                     op_display_name?: string | null
                     op_avatar_url?: string | null
                     password?: string | null
-                    active_response_mode?: 'tutoring' | 'guard'
-                    mode_changed_at?: string | null
-                    mode_change_source?: 'reviewed_response' | 'manual_override' | null
+                    guard_mode?: boolean
+                    guard_mode_changed_at?: string | null
+                    guard_mode_change_source?: 'reviewed_response' | 'manual_override' | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -119,6 +128,11 @@ export interface Database {
                     ai_model_used: string | null
                     ai_response_time_ms: number | null
                     parent_message_id: string | null
+                    character?: string | null
+                    persona_id?: string | null
+                    persona_name?: string | null
+                    persona_avatar?: string | null
+                    guard_mode?: boolean | null
                     response_mode: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id: string | null
                     assessment_student_id: string | null
@@ -143,6 +157,11 @@ export interface Database {
                     ai_model_used?: string | null
                     ai_response_time_ms?: number | null
                     parent_message_id?: string | null
+                    character?: string | null
+                    persona_id?: string | null
+                    persona_name?: string | null
+                    persona_avatar?: string | null
+                    guard_mode?: boolean | null
                     response_mode?: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id?: string | null
                     assessment_student_id?: string | null
@@ -167,6 +186,11 @@ export interface Database {
                     ai_model_used?: string | null
                     ai_response_time_ms?: number | null
                     parent_message_id?: string | null
+                    character?: string | null
+                    persona_id?: string | null
+                    persona_name?: string | null
+                    persona_avatar?: string | null
+                    guard_mode?: boolean | null
                     response_mode?: 'tutoring' | 'guard' | 'assessment' | 'multiagent' | null
                     assessment_id?: string | null
                     assessment_student_id?: string | null
@@ -689,4 +713,4 @@ export interface Database {
             [_ in never]: never
         }
     }
-} 
+}

@@ -1,3 +1,7 @@
+/**
+ * File: src/services/prompts/index.ts and aiService.ts
+ * Purpose: verify configured target inventory and preset composition in generated prompts.
+ */
 import { generateSystemPrompt, PRESET_CONFIGS } from '../systemPrompts';
 import { applyPresetConfiguration } from '../aiService';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
@@ -99,8 +103,9 @@ describe('System Prompts', () => {
             );
 
             expect(prompt).toContain('## Your Role: Peer Learner');
-            expect(prompt).toContain('$19.99 for a $300+ gaming console');
-            expect(prompt).toContain("Don't click the shortened link");
+            for (const target of SCENARIO_TEMPLATES['Nintendo Switch Deal ($19.99)'].detection_areas) {
+                expect(prompt).toContain(target);
+            }
         });
 
         it('should apply supportive adult preset with custom areas', () => {

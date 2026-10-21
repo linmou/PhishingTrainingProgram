@@ -40,14 +40,14 @@ Feature: Room Discovery and Joining
     And I should see "John Tutor" as the tutor name
     And I should be able to send messages in the chat
 
-  Scenario: Student cannot join a full room
+  Scenario: Student can observe an occupied room
     Given I am logged in as "Jane Student" with role "student"
     And the tutor "John Tutor" has created a room titled "Chemistry Lab"
     And the student "Bob Student" has already joined the room
     When I view the student dashboard
     Then I should see the "Chemistry Lab" room card
-    And the room card should show "Room Full" status
-    And the "Join Room" button should be disabled
+    And the room card should show "Observer Available" status
+    And the "Observe Room" button should be enabled
 
   Scenario: Observer views available rooms
     Given I am logged in as "Alice Observer" with role "observer"
@@ -91,8 +91,8 @@ Feature: Room Discovery and Joining
     And the tutor "John Tutor" has created a room titled "Programming 101"
     And I am viewing the student dashboard
     When another student "Bob Student" joins the "Programming 101" room
-    Then I should see the room status change to "Room Full"
-    And the "Join Room" button should become disabled
+    Then I should see the room status change to "Observer Available"
+    And the "Observe Room" button should become enabled
 
   Scenario: Room displays preview image
     Given I am logged in as "Jane Student" with role "student"

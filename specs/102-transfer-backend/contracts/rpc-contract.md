@@ -1,5 +1,11 @@
 # Production RPC Inventory: Transfer Assessment
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+process_assessment_message_v2 and cancellation paths persist unique result/closure messages atomically and return result_message. Processing-context duplicate results include the saved result. Tutor review returns history_readiness for learner-scoped results/pending answers. Private result-writing helpers and event metadata are protected from participant/legacy writes; source role checks and two-attempt grading remain authoritative. See [Assessment result messages](../../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 <!-- Intent: record current production assessment RPC definitions and their storage behavior, inspected 2026-09-28. -->
 
 ## Final-assessment revision — 2026-10-13

@@ -2,11 +2,15 @@
 
 Intent: define application development conventions and connect them to the repository's delivery requirements.
 
-Updated: 2026-10-14. Workflow revision baseline commit: `2bd3143`.
+Updated: 2026-10-15. Workflow revision baseline commit: `18981cc`.
 
 ## Server Delivery
 
-Follow [Mandatory Server Delivery](../AGENTS.md#mandatory-server-delivery) for server behavior changes, including inherited backend dependencies. Select tests by changed behavior using [the Supabase release workflow](docs/supabase-release-workflow.md#verification-scope). Ordinary features may wait in a recorded production batch after staging deployment and verification; report `staging verified — awaiting production release` and keep production acceptance open. Complete delivery only after the exact batch is released and its selected production checks pass.
+Follow [Mandatory Server Delivery](../AGENTS.md#mandatory-server-delivery) for server behavior changes, including inherited backend dependencies. Select tests by changed behavior using [the Supabase release workflow](docs/supabase-release-workflow.md#verification-scope). Worktree candidates may deploy to staging.
+
+Before production mutations, merge deployable changes and dependencies into `no_sign_up`, record the release commit, and pass the [merge-before-production gate](docs/supabase-release-workflow.md#merge-before-production). Reuse staging evidence when the integrated artifacts, dependencies, configuration and relevant preconditions still match; otherwise revalidate affected checks. One named release owner coordinates shared deployments.
+
+Ordinary features may wait in a recorded production batch after staging deployment and verification; report `staging verified — awaiting production release`, record pending integration, and keep production acceptance open. Complete delivery only after the exact integrated batch is released and its selected production checks pass.
 
 ## Project Structure & Module Organization
 - Source in `src/`: `components/`, `pages/`, `services/` (Supabase, AI helpers), `contexts/`, `hooks/`, `types/`, `utils/`.
