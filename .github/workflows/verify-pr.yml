@@ -2,7 +2,6 @@ name: Verify PR (no hosted state)
 
 on:
   pull_request:
-    branches: [no_sign_up]
   push:
     branches: [no_sign_up]
   merge_group:
