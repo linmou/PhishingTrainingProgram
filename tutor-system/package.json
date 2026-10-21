@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "1v1 tutor-student training platform with Supabase backend",
     "private": true,
+    "packageManager": "npm@10.9.2",
     "dependencies": {
         "@supabase/supabase-js": "^2.39.0",
         "@types/node": "^16.18.68",
@@ -73,6 +74,9 @@
         ]
     },
     "jest": {
+        "testMatch": [
+            "<rootDir>/src/**/?(*.)+(spec|test).[jt]s?(x)"
+        ],
         "collectCoverageFrom": [
             "src/**/*.{js,jsx,ts,tsx}",
             "!src/index.tsx",

@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-09-30
-Commit: 01aa7d86d4f26ae0dce5140af8ef39ac77892ea0
+Updated: 2026-10-21
+Commit: 23a41af4608092ea2733eb8aa3e87e608dcda335
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -38,7 +38,7 @@ Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesg
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js 22 and npm 10.9.2 (the CI toolchain)
 - Supabase account
 - Git
 
@@ -52,7 +52,8 @@ Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesg
 
 2. **Install dependencies**
    ```bash
-   npm install
+   npm install --global npm@10.9.2
+   npm ci
    ```
 
 3. **Set up Supabase**
@@ -222,8 +223,9 @@ npm test src/contexts/__tests__/AuthContext.test.tsx  # Task 3
 ### Test Tiers
 
 - `npm test` and `npm run test:regression` run deterministic Jest suites, including mocked page integration tests.
+- Pull requests run `npm ci` with npm 10.9.2, the complete deterministic Jest regression, and a React production build on Node 22. The build reports existing ESLint warnings without making them fatal; compilation and type errors still fail. Branch protection on `no_sign_up` requires `isolation-harness`, `frontend-jest`, and `frontend-build` on an up-to-date branch, including administrator merges.
 - `npm run test:integration:qwen` exercises the live provider without a browser.
-- `npm run test:e2e:staging` runs seven Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
+- `npm run test:e2e:staging` runs ten Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
 
 ### Test Files Structure
 
