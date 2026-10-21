@@ -6,6 +6,8 @@ Date: 2026-10-21. Source baseline commit: `98002f4`. PR: #6, `fix/frontend-ci-lo
 
 Integration baseline: `a6c977b` (PR #9), merged into this branch after it advanced during verification. Its current contracts use Qwen3.8 Flash for tutoring, 600 generation tokens, boolean Guard state, one target inventory, complete history, and saved assessment results. The PR retains the complete Jest gate on Node 22 / npm 10.9.2 instead of the base's focused test selection.
 
+Final base sync: `9857b94`, including the Cyberbullying plan-version documentation and the assessment API's invalid-progress repair. These inherited changes leave the frontend source and dependencies tested here unchanged; their server delivery remains owned by the Cyberbullying release record.
+
 The restored gate initially reported 29 failed suites and 77 failed tests. The user expanded this PR to repair the regressions before proposing it again.
 
 ## Repairs
@@ -34,6 +36,7 @@ Local machine evidence is retained under `output/jest-repair/`, excluded from Gi
 - Production build: PASS using Node 22 and `CI=false npm run build`; existing ESLint warnings remain. Evidence after integration: `integrated-build.log`.
 - Isolation harness: PASS, six tests. Evidence after integration: `integrated-isolation.log`.
 - After correcting the CI rating race, the focused chat suite passed all seven scenarios (`chat-final.json` / `chat-final.log`); GitHub reruns the complete gate on the pushed correction.
+- GitHub [run 39588486489](https://github.com/linmou/PhishingTrainingProgram/actions/runs/39588486489) on `7a7366c`: all three required jobs PASS, including clean installs, **143 Jest suites / 1437 tests passed, zero failures**, and the production build. Full CI evidence is retained as `github-ci-passed.log`. The final base sync triggers the same complete checks again.
 - GitHub's `no_sign_up` protection was read back: strict up-to-date checks `isolation-harness`, `frontend-jest`, and `frontend-build`, bound to GitHub Actions app 15368; administrators are covered.
 
 PR #6 carries the GitHub Actions verification for the pushed commit. No hosted deployment or live LLM evaluation was required for these frontend, fixture, and test changes.
