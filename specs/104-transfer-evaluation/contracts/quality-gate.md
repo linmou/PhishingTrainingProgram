@@ -1,5 +1,11 @@
 # Transfer Quality Gate Contract
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Block acceptance for missing/duplicate/forged result events, incomplete or misattributed history, generation before grade/result persistence, lost option context, reset/incorrect lifecycle or improper disclosure. Real-provider checks must follow recorded grading and preserve retry privacy, required feedback and Guard priority. See [Assessment result messages](../../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 **Intent**: define the blocking verdict for frozen W9-W10 Promptfoo evidence and the conditions that prevent false acceptance.
 
 ## Required gate inputs

@@ -1,0 +1,12 @@
+# Preserve audit snapshots despite machine-local planning exclusions.
+!/audits/
+!/audits/**
+
+# Generated deployment payloads and hosted database inventories
+/implementation/
+
+# Local artifact-checker caches
+/tools/mypy-cache/
+/tools/.mypy_cache/
+/tools/__pycache__/
+*.pyc

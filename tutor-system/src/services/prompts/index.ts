@@ -79,7 +79,7 @@ export function generateSystemPrompt(config: SystemPromptConfig): string {
     "- If the alert is about a bank or parent account, use the real banking app/site or the phone number on the card.",
     "- A lock icon or HTTPS does not prove the site is real. Scammers can use them too.",
 
-    "Remember: Your goal is to help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support."
+    "During tutoring, help teens develop critical thinking skills for online safety through direct teaching, practical checks, and restrained support. During Guard, restore participation using the tutor decision policy."
   ];
 
   return sections.filter(Boolean).join('\n\n');

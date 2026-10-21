@@ -1,5 +1,7 @@
 # Specification Quality Checklist: Server-Authoritative Transfer Attempts
 
+<!-- Assessment dialogue revision: updated 2026-10-17; baseline commit c6d5129. -->
+
 **Purpose**: Validate that the component specification is complete, traceable, and ready for deterministic planning.
 **Created**: 2026-09-11  
 **Revalidated**: 2026-09-22
@@ -30,6 +32,10 @@
 - [x] User stories cover the P1 deterministic core before the P2 sequence integration boundary.
 - [x] The approved server-authoritative policy, unchanged 28-cell reducer matrix, exhaustive grader subsets, rendering limits, v3 explanation contract, and two-attempt lifecycle sequences are explicit.
 - [x] The specification does not claim implementation or release acceptance.
+
+## Assessment dialogue acceptance (2026-10-17)
+
+- [x] AR-20261017 Domain preservation: exact-set grading, two attempts, correctness-only pass and terminal-failure-only reviewed disclosure. See the [governing contract](../../../tutor-system/docs/assessment-result-messages.md) and linked release evidence; historical checks above retain their original scope.
 
 ## Notes
 

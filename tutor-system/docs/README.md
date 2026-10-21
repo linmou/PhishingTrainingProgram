@@ -2,10 +2,11 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-10-15
-- Learning Progress layout update base commit: `83690fe`; final assessment release baseline: `88b3ccd`.
+- Updated: 2026-10-17
+- Learning Progress original-position restoration commit: `ecabba2`; integration base commit: `860b81a`; final assessment release baseline: `88b3ccd`.
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
+- Learning-progress analyzer naming review baseline: `c6d5129`.
 - Final-assessment policy implementation base commit: `7737cfb`.
 - Scoped release workflow revision base commit: `2bd3143`.
 - Early-message browser verification base commit: `73f5908`.
@@ -19,6 +20,7 @@ This directory contains comprehensive architectural and implementation documenta
 
 ### Core System Architecture
 - **[Selected AI candidates release](./doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md)** - Tutor candidate07 and transfer candidate02 with non-thinking settings, source identities, explicit known-error acceptance and staging/production verification.
+- **[Candidate11 and Qwen3.8 release](./doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md)** - Exact full tutor candidate11 at600tokens with thinking disabled, benchmark findings, explicit release selection and current environment verification.
 - **[AuthContext.md](./AuthContext.md)** - Simplified authentication system with deterministic user IDs
 - **[RoomContext.md](./RoomContext.md)** - Real-time messaging with WebSocket + polling hybrid approach  
 - **[supabase-service.md](./supabase-service.md)** - Database service layer with type-safe operations
@@ -37,8 +39,9 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Tutor behavior specification](./ai-behaviors/tutor-behavior-specification.md)** - Authoritative requirements with constitutional grounding on each item
 - **[Tutor response contract](./ai-behaviors/tutor-response-contract.md)** - Legacy tutor decoding, assessment-only teacher review, exact question payload, and private-key rules
 - **[Transfer status response contract](./ai-behaviors/transfer-status-response-contract.md)** - Item-level evidence, direct coverage, transfer, and open classification limits
-- **[Transfer analysis evaluation](./ai-behaviors/transfer-analysis-evaluation-record.md)** - Production-grounded gold-label baseline, per-class results, consumer effects, and label-review limits
-- **[Transfer analysis evaluation plan](./ai-behaviors/transfer-analysis-evaluation-plan.md)** - Classification metrics, production provenance, holdouts, repetitions, and frozen gates
+- **[Learning-progress analyzer dialogue contract](./transfer-status-analysis.md)** - Product input, speaker attribution, per-target calls and progress application
+- **[Learning-progress analyzer evaluation](./ai-behaviors/learning-progress-analyzer-evaluation-record.md)** - Production-grounded gold-label baseline, per-class results, consumer effects, and label-review limits
+- **[Learning-progress analyzer evaluation plan](./ai-behaviors/learning-progress-analyzer-evaluation-plan.md)** - Classification metrics, production provenance, holdouts, repetitions, and frozen gates
 - **[Final assessment evaluation](./ai-behaviors/transfer-final-assessment-evaluation-record.md)** - Partial-only routing comparison, preserved model outputs, and remaining conformance gaps
 - **[Final assessment implementation](./doc_update_record/documentation_update_record_v2026_10_13_final_assessment_implementation.md)** - Local SQL/application validation and model evaluation boundaries
 - **[Final assessment release](./doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md)** - Verified staging/production SQL and Edge delivery, full-inventory browser journeys, option gates, and cleanup
@@ -154,7 +157,7 @@ npm test src/services/__tests__/database.test.ts
 - **Template library**: Reusable educational scenarios
 - **Analytics foundation**: Complete audit trails for learning effectiveness
 - **Tutor export**: Learning Progress can be exported as JSON from the checklist panel, including summary counts and serialized checklist items
-- **Progress panel layout**: The desktop room reserves space for Learning Progress beside the discussion. At widths of 1100px or less, the panel follows the discussion so the tutor's AI button stays accessible. Guard and transfer notices use full-width rows below the panel title; the panel remains scrollable during manual setup.
+- **Progress panel layout**: Learning Progress uses its original fixed upper-right position: the collapsed button sits 20px from the top/right, or 10px at widths of 768px or less. The opened panel is fixed at top/right zero, 400px wide, and becomes full-width at 768px or less. Desktop rooms retain reserved sidebar space; notices use full-width rows and manual setup scrolls. See the [original-position restoration record](./doc_update_record/documentation_update_record_v2026_10_14_learning_progress_original_position.md) for verification and inherited compact navigation overlap.
 
 ### 5. Context + Service Layer Pattern
 - **React Context**: Global state management for auth and room state

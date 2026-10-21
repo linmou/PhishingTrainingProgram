@@ -214,16 +214,16 @@ defineFeature(feature, test => {
             renderStudentView();
         });
 
-        then('the "Join" button for the "Phishing 101" room should be disabled', async () => {
+        then('the "Observe Room" button for the "Phishing 101" room should be enabled', async () => {
             await waitFor(() => {
-                const joinButton = screen.getByRole('button', { name: /join/i });
-                expect(joinButton).toBeDisabled();
+                const joinButton = screen.getByRole('button', { name: /observe room/i });
+                expect(joinButton).toBeEnabled();
             });
         });
 
-        and('the student should see a "Room Full" status indicator for that room', async () => {
+        and('the student should see an "Observer Available" status indicator for that room', async () => {
             await waitFor(() => {
-                expect(screen.getByText(/Room Full/)).toBeInTheDocument();
+                expect(screen.getByText(/Observer Available/)).toBeInTheDocument();
             });
         });
     });

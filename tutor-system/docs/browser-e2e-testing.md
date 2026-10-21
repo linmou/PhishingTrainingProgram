@@ -1,5 +1,15 @@
 # Browser E2E Testing
 
+<!-- Cyberbullying workflow added 2026-10-21; implementation baseline 2807c52. -->
+
+The `cyberbullying` workflow creates a tagged situation through the tutor UI and verifies learner progress, character selection/regeneration, edited approval, rejection, ratings, observer access, reload and JSON export. Run it with `--workflow=cyberbullying` against the explicitly selected candidate app/project. Cleanup deletes the tagged room by cascade and checks its related rows. See [Cyberbullying practise](cyberbullying-practise.md) and its [cutover runbook](cyberbullying-cutover.md).
+
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Extend assessment-answer and tutor-response checks with saved result identities, complete option/result dialogue, no VERIFIED ASSESSMENT STATE section, retry/pass/failure/cancellation disclosure, reload/deduplication, required-rating exclusions and actual provider response evidence. Run matching staging and production journeys in the approved SQL→Edge→client batch. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
 Updated: 2026-10-21. Workflow revision baseline commit: `72f1087`; assessment release browser baseline: `88b3ccd`.
@@ -29,7 +39,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | --- | --- | --- | --- |
 | Jest unit and `*.integration.test.tsx` | jsdom, mocked services | None | Default regression suite. |
 | `test:integration:qwen` | Real provider, no browser | None | Opt-in provider contract checks. |
-| `test:e2e:staging` / `test:e2e:production` | Ten selectable Playwright tutor, room setup, checklist, assessment, status-event, early-message, and Guard workflows | Test rows are deleted after each workflow; fixture rooms remain; the new-room workflow deletes its tagged room | Explicit live suite against the selected project. |
+| `test:e2e:staging` / `test:e2e:production` | Eleven selectable Playwright workflows, including Cyberbullying, tutor, room setup, checklist, assessment, status-event, early-message and Guard | Test rows are deleted after each workflow; fixture rooms remain; new-room workflows delete their tagged rooms | Explicit live suite against the selected project. |
 | `eval:behavior:web` | Playwright and seven real tutor calls with rubric judge | Seven staging Test Rooms | Deeper behavior evaluation; separate from the workflow suite. |
 | `scripts/browser-capture-prompt-contrast.js` | Playwright and six prompt comparisons | Six staging Test Rooms | Specialized capture utility. |
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
@@ -41,7 +51,7 @@ The [early-message browser record](doc_update_record/documentation_update_record
 
 ## Select The Release Checks
 
-Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all ten workflows; use it when the combined change affects shared behavior that cannot be bounded.
+Use the [verification scope](supabase-release-workflow.md#verification-scope) and [production batch](supabase-release-workflow.md#production-batches) rules before choosing commands. Record selected workflows and their behavioral coverage in the release record. A full-suite command without `--workflow` runs all eleven workflows; use it when the combined change affects shared behavior that cannot be bounded.
 
 | Changed behavior | Relevant existing browser checks |
 | --- | --- |
@@ -118,9 +128,9 @@ The recorder reuses the `assessment-delivery` staging copy of the production `Tr
 | `room-assessment-setup` | Create a room through the tutor UI, enable in-room assessment, have a learner join without posting, and verify Generate Learning Targets is enabled. |
 | `checklist-management` | Manual creation, status/priority/text edits, and persistence after reload. |
 | `checklist-coverage` | Learner message, real coverage call, stored progress, and the next tutor request. Ordinary learner sends invoke analysis after persistence; tutor requests read current progress without replacing the authored prompt. |
-| `assessment-delivery` | One full-template room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback. Drains all scheduler-selected ready targets before moving to the next topic; asserts both named targets complete and every delivered assessment closes. Checks hosted policy before fixture mutations. |
+| `assessment-delivery` | One full-template room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback. Drains all scheduler-selected ready targets, including other targets becoming due during a new topic; the partial target must remain partial and ineligible throughout that queue. Asserts both named targets complete and every delivered assessment closes. Checks hosted policy before fixture mutations. |
 | `assessment-answer` | Learner pass and retry/failure in separate template rooms; disabled chat/Reply during the assessment, selected-option submissions, persisted identities/attempts, terminal chat recovery and reload. |
-| `transfer-status-events` | Real transfer analysis against the full persisted room target inventory: direct understanding, initial signal, later full understanding, spontaneous transfer, no evidence, and contradiction. Checks Edge responses, private event kinds, stored progress, and learner/tutor screenshots. Shares the opening learner journey with `assessment-delivery`, then tests the remaining events in the same empty assessment-delivery fixture. |
+| `transfer-status-events` | Real learning-progress analysis against the full persisted room target inventory: direct understanding, initial signal, later full understanding, spontaneous transfer, no evidence, and contradiction. Checks Edge responses, private event kinds, stored progress, and learner/tutor screenshots. Shares the opening learner journey with `assessment-delivery`, then tests the remaining events in the same empty assessment-delivery fixture. |
 | `early-message-recheck` | Two learner posts before any goals exist, then manual goal creation through the tutor UI. Verifies chronological real analysis, one backend completion marker per post, visible covered progress, server completion confirmations, an unrelated later post without duplicate effects, and persistence after reload. Captures request/response bodies and database states before cleanup. Reuses the empty assessment-delivery fixture and waits for the tutor panel's learner lookup before entering goals. |
 | `guard-mode` | One student-tutor Guard journey: manual mode confirmation, locked checklist controls, real LLM Guard entry and persistence, recovery to tutoring, and response-mode audit rows. |
 

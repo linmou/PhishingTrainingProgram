@@ -2,7 +2,7 @@
 
 Intent: prevent fixture interference and deployment races across machines while verifying the combined candidate.
 
-Updated: 2026-10-21. Baseline commit: `72f1087`.
+Updated: 2026-10-21. Integrated baseline commit: `5d94e24` (allocator, frontend CI and Cyberbullying client merged).
 
 ## One Owner per Shared Project
 
@@ -39,7 +39,7 @@ rtk proxy node scripts/verify-agent-integration.js --workflow=checklist-manageme
 
 Select the affected browser journey using the release scope; the example covers harness/fixture changes. The verifier records the clean Git commit and SHA-256 hashes of tracked frontend, SQL, Edge, dependency and harness artifacts. It rejects multiple pending SQL candidates, runs the combined deterministic harness tests, real disposable-database integration and browser-runner tests, proves remote lock contention, and runs the selected Staging browser workflow under the same lease. Hosted function IDs/versions/timestamps must match before and after. Its evidence includes commands, exit statuses, stdout/stderr, artifact manifest, backend versions and the browser report/cleanup path.
 
-For a deployed batch, set `PTP_COORDINATION_LEASE` to the downloaded release lease before verification; exact-commit validation prevents borrowing it from another candidate. Passing this harness verification does not replace affected behavior/lifecycle tests, source/schema preconditions, frontend required checks or production acceptance. The inherited frontend Jest failures remain a merge blocker tracked in PR #6.
+For a deployed batch, set `PTP_COORDINATION_LEASE` to the downloaded release lease before verification; exact-commit validation prevents borrowing it from another candidate. Passing this harness verification does not replace affected behavior/lifecycle tests, source/schema preconditions, frontend required checks or production acceptance. PR #6's Jest repairs and PR #7's allocator fixes are integrated; required frontend checks must pass on the current combined candidate.
 
 ## Release and Recovery
 

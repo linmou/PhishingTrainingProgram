@@ -97,7 +97,7 @@ function loadLocalEnvironment(env = process.env) {
   const url = env.REACT_APP_SUPABASE_STAGING_URL;
   const key = env.REACT_APP_SUPABASE_STAGING_ANON_KEY;
   if (url !== STAGING_URL || !key) throw new Error('Behavior browser evaluation requires explicit staging Supabase configuration.');
-  return { env: { ...env, REACT_APP_SUPABASE_URL: url }, supabase: createClient(url, key), secrets: [key, env.OAI_API_KEY].filter(Boolean) };
+  return { env: { ...env, REACT_APP_SUPABASE_URL: url }, supabase: createClient(url, key, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } } }), secrets: [key, env.OAI_API_KEY].filter(Boolean) };
 }
 
 async function loginAsTutor(page, displayName) {
@@ -235,7 +235,7 @@ async function readAuditRecord(supabase, roomId) {
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const { data, error } = await supabase
       .from('ai_suggestion_feedback')
-      .select('room_id, tutor_action, raw_mode, raw_instruction, mode_reason, final_mode, mode_rectified, ai_suggestion, tutor_final_response')
+      .select('room_id, tutor_action, raw_guard_mode, raw_instruction, guard_reason, final_guard_mode, guard_rectified, ai_suggestion, tutor_final_response')
       .eq('room_id', roomId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -268,10 +268,10 @@ function containsEvaluatorLabels(attempts) {
 
 function persistenceMatches(audit, parsed) {
   return Boolean(audit && parsed
-    && audit.raw_mode === parsed.decision.mode
+    && audit.raw_guard_mode === parsed.decision.guard_mode
     && audit.raw_instruction === parsed.decision.instruction
-    && audit.mode_reason === parsed.reason
-    && audit.final_mode === parsed.decision.mode
+    && audit.guard_reason === parsed.reason
+    && audit.final_guard_mode === parsed.decision.guard_mode
     && audit.ai_suggestion === parsed.response
     && audit.tutor_final_response === parsed.response);
 }
@@ -324,7 +324,7 @@ async function runCase({ page, seed, caseDefinition, settings, supabase, screens
       configured_role: seed.ai_config_template.preset === 'casual_peer' ? 'peer' : 'adult',
       detection_areas: seed.ai_config_template.prompt_config.detection_areas,
       verification_steps: seed.ai_config_template.prompt_config.verification_steps,
-      prior_mode: derivedInput.prior_mode
+      prior_guard_mode: derivedInput.prior_guard_mode
     },
     target_attempts: attempts,
     displayed_suggestion: ui?.suggestion || null,

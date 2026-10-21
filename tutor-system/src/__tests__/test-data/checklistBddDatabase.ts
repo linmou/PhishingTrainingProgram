@@ -195,7 +195,7 @@ export class ChecklistBddDatabase {
   seedChecklist(roomId: string, templateName: string, items: ChecklistBddSeedItem[]): void {
     const timestamp = '2026-01-15T14:23:45.000Z';
     const checklistId = this.id(900);
-    this.state.rooms = [{ id: roomId, active_response_mode: 'tutoring', ai_assistant_enabled: true }];
+    this.state.rooms = [{ id: roomId, guard_mode: false, ai_assistant_enabled: true }];
     this.state.session_checklists = [{
       id: checklistId,
       room_id: roomId,

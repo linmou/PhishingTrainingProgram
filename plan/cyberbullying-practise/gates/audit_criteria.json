@@ -1,0 +1,36 @@
+{
+  "feature_name": "cyberbullying-practise",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "Every acceptance criterion in request.md is covered by an executable plan step and validation.",
+      "blocking": true
+    },
+    {
+      "id": "c2",
+      "text": "Scope, constraints, and assumptions are internally consistent with request.md.",
+      "blocking": true
+    },
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true
+    },
+    {
+      "id": "c6",
+      "text": "The draft avoids unnecessary complexity.",
+      "blocking": false
+    }
+  ]
+}

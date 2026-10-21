@@ -12,14 +12,13 @@ const {
 function templateChecklistItems(promptConfig) {
   const detectionAreas = promptConfig?.detection_areas;
   const verificationSteps = promptConfig?.verification_steps;
-  assert(Array.isArray(detectionAreas) && detectionAreas.length > 0 &&
+  assert(Array.isArray(detectionAreas) &&
     detectionAreas.every(text => typeof text === 'string' && text.trim()), 'Room template has no valid detection areas');
-  assert(Array.isArray(verificationSteps) && verificationSteps.length > 0 &&
+  assert(Array.isArray(verificationSteps) &&
     verificationSteps.every(text => typeof text === 'string' && text.trim()), 'Room template has no valid verification steps');
-  return [
-    ...detectionAreas.map(area_text => ({ area_text, item_type: 'detection_area', priority: 'important' })),
-    ...verificationSteps.map(area_text => ({ area_text, item_type: 'verification_step', priority: 'critical' }))
-  ];
+  const targets = [...detectionAreas, ...verificationSteps];
+  assert(targets.length > 0, 'Room template has no learning targets');
+  return targets.map(area_text => ({ area_text, item_type: 'detection_area', priority: 'important' }));
 }
 
 async function startStatusJourney(ctx) {
@@ -71,7 +70,8 @@ async function startStatusJourney(ctx) {
         sendStudentMessage(ctx.studentPage, content),
         ctx.studentPage.waitForResponse(response =>
           response.url().includes('/functions/v1/assessment-api') &&
-          response.request().postDataJSON()?.operation === 'analyze_message', { timeout: analysisTimeoutMs })
+          response.request().postDataJSON()?.operation === 'analyze_message' &&
+          !before.has(response.request().postDataJSON()?.message_id), { timeout: analysisTimeoutMs })
       ]);
     } finally {
       ctx.studentPage.off('request', captureRequest);
@@ -84,7 +84,7 @@ async function startStatusJourney(ctx) {
     const message = (await query(ctx.client, 'messages', 'id,content,user_id', 'room_id', room.id))
       .find(row => !before.has(row.id) && row.user_id === ctx.student.id && row.content === content);
     assert(message?.id, 'Student message was not persisted');
-    const analysis = calls.find(call => call.request?.operation === 'analyze_message');
+    const analysis = calls.find(call => call.request?.operation === 'analyze_message' && call.request.message_id === message.id);
     const rows = await managementQuery(ctx.config,
       `select event_kind,event_payload,processing_state from private.learning_event_inbox where room_id='${room.id}'::uuid and source_message_id='${message.id}'::uuid order by created_at`);
     const context = await ctx.client.rpc('get_transfer_message_analysis_context_v1', {

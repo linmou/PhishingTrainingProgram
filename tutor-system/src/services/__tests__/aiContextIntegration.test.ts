@@ -1,11 +1,12 @@
 /**
- * Integration test for AI context generation
- * Tests the complete flow from room data to AI system prompts
+ * Integration test for simplifiedAIContext.ts and AI context generation
+ * Tests complete cursor-paginated room history and its AI system prompt integration
  */
 
 import { buildAIContextFromExistingData } from '../simplifiedAIContext';
 import { generateSystemPrompt } from '../systemPrompts';
-import { generateTutorSuggestion, getAIConfig } from '../aiService';
+import { getAIConfig } from '../aiService';
+import { DEFAULT_AI_MODEL } from '../aiModels';
 
 // Mock the supabase client
 jest.mock('../supabase', () => ({
@@ -15,13 +16,26 @@ jest.mock('../supabase', () => ({
         eq: jest.fn(() => ({
           single: jest.fn(),
           order: jest.fn(() => ({
-            limit: jest.fn()
+            order: jest.fn().mockReturnThis(),
+            or: jest.fn().mockReturnThis(),
+            range: jest.fn().mockResolvedValue({ data: [], error: null })
           }))
         }))
       }))
     }))
   }
 }));
+
+beforeEach(() => {
+  const { supabase } = require('../supabase');
+  supabase.from.mockImplementation(() => ({
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    or: jest.fn().mockReturnThis(),
+    range: jest.fn().mockResolvedValue({ data: [], error: null })
+  }));
+});
 
 describe('AI Context Integration', () => {
   it('should build complete context with room posts and chat history', async () => {
@@ -61,7 +75,9 @@ describe('AI Context Integration', () => {
       select: jest.fn().mockReturnValueOnce({
         eq: jest.fn().mockReturnValueOnce({
           order: jest.fn().mockReturnValueOnce({
-            limit: jest.fn().mockResolvedValueOnce({
+            order: jest.fn().mockReturnThis(),
+            or: jest.fn().mockReturnThis(),
+            range: jest.fn().mockResolvedValueOnce({
               data: [
                 {
                   content: 'Is this message legitimate?',
@@ -77,8 +93,26 @@ describe('AI Context Integration', () => {
                   content: 'The urgency and suspicious URL are major red flags',
                   user_role: 'student',
                   created_at: '2024-01-15T14:07:00Z'
+                },
+                ...Array.from({ length: 19 }, (_, index) => ({
+                  content: `Intermediate turn ${index}`,
+                  user_role: 'student',
+                  created_at: new Date(Date.parse('2024-01-15T14:08:00Z') + index * 1000).toISOString()
+                })),
+                {
+                  content: 'Check whether the shortened link leads to Apple.',
+                  user_role: 'tutor',
+                  created_at: '2024-01-15T14:09:00Z'
+                },
+                {
+                  content: 'Looks like it does',
+                  user_role: 'student',
+                  created_at: '2024-01-15T14:10:00Z'
                 }
-              ],
+              ].map((message, index) => ({
+                ...message,
+                id: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`
+              })),
               error: null
             })
           })
@@ -89,7 +123,11 @@ describe('AI Context Integration', () => {
     const context = await buildAIContextFromExistingData(roomId);
 
     // Verify complete context structure
-    expect(context).toHaveLength(6);
+    expect(context).toHaveLength(27); // scenario + 2 posts + all 24 saved turns
+    expect(context.slice(-2).map(message => message.content)).toEqual([
+      'Tutor: Check whether the shortened link leads to Apple.',
+      'Student: Looks like it does'
+    ]);
 
     // Check system message with room context
     const systemMessage = context[0];
@@ -138,13 +176,13 @@ describe('AI Context Integration', () => {
         uncertainty_expression: 'low' as const
       },
       cognitive_parameters: {
-        concept_density: 'medium' as const,
+        concept_density: 'high' as const,
         perspective_taking: 'high' as const,
         personal_examples: 'high' as const,
         consequence_highlighting: 'high' as const
       },
       emotional_parameters: {
-        enthusiasm_level: 'medium' as const,
+        enthusiasm_level: 'high' as const,
         validation_frequency: 'high' as const,
         mistake_normalization: 'high' as const,
         confidence_building: 'high' as const
@@ -207,7 +245,9 @@ describe('Context Message Formatting', () => {
       select: jest.fn().mockReturnValueOnce({
         eq: jest.fn().mockReturnValueOnce({
           order: jest.fn().mockReturnValueOnce({
-            limit: jest.fn().mockResolvedValueOnce({
+            order: jest.fn().mockReturnThis(),
+            or: jest.fn().mockReturnThis(),
+            range: jest.fn().mockResolvedValueOnce({
               data: [
                 {
                   content: 'Student question about phishing',
@@ -229,7 +269,10 @@ describe('Context Message Formatting', () => {
                   user_role: 'tutor',
                   created_at: '2024-01-15T15:04:00Z'
                 }
-              ],
+              ].map((message, index) => ({
+                ...message,
+                id: `00000000-0000-0000-0000-${String(index).padStart(12, '0')}`
+              })),
               error: null
             })
           })
@@ -299,7 +342,7 @@ describe('AI config loading edge cases', () => {
     await expect(getAIConfig(roomId)).resolves.toMatchObject({
       id: roomId,
       room_id: roomId,
-            model_name: 'qwen3.5-flash',
+      model_name: DEFAULT_AI_MODEL,
       system_prompt: 'Use the room-level tutor guidance.',
       is_active: true
     });

@@ -1,5 +1,11 @@
 # Implementation Plan: Transfer Room Lifecycle and UI Integration
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Assign event projection and lifecycle merge to the UI adapter/RoomContext; causal order, result attribution and rating exclusions to room/presentation code; move duplicate inline verdicts to result messages while retaining question controls/answer navigation; preserve event identity in exports. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 **Branch**: `103-transfer-room-ui` | **Date**: 2026-09-11 | **Spec**: [spec.md](spec.md)
 **Input**: Component 103 ownership for W7-W8 room lifecycle and teacher/learner UI integration.
 

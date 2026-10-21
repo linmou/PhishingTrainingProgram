@@ -13,6 +13,9 @@ test('validation uses the existing local socket and rejects a network host', () 
   assert.equal(connectionFromEnv({}).port, '55433');
   assert.match(connectionFromEnv({}).host, /migration-validation\/socket$/);
   assert.throws(() => connectionFromEnv({ PG_VALIDATION_HOST: 'production.example' }), /local Unix socket/);
+  for (const host of ['/missing,127.0.0.1', '/one,/two', '/socket\0other']) {
+    assert.throws(() => connectionFromEnv({ PG_VALIDATION_HOST: host }), /local Unix socket/);
+  }
   assert.throws(() => connectionFromEnv({ PG_VALIDATION_PORT: '55433;drop' }), /port/);
 });
 

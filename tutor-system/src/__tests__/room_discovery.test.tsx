@@ -335,8 +335,8 @@ describe('Feature: Room Discovery and Joining', () => {
       });
     });
 
-    describe('Scenario: Student cannot join a full room', () => {
-      it('should disable join button when room is full', async () => {
+    describe('Scenario: Student can observe an occupied room', () => {
+      it('offers observation when another student owns the session', async () => {
         // Given I am logged in as "Jane Student" with role "student"
         // And the tutor "John Tutor" has created a room titled "Chemistry Lab"
         // And the student "Bob Student" has already joined the room
@@ -407,11 +407,11 @@ describe('Feature: Room Discovery and Joining', () => {
 
         // And the room card should show the current full-room status label
         const fullRoomCard = screen.getByTestId('room-card-3');
-        expect(within(fullRoomCard).getByText(/Room Full/)).toBeInTheDocument();
+        expect(within(fullRoomCard).getByText(/Observer Available/)).toBeInTheDocument();
 
-        // And the "Join Room" button should be disabled
-        const joinButton = within(fullRoomCard).getByRole('button', { name: /join room/i });
-        expect(joinButton).toBeDisabled();
+        // And the learner can join as an observer
+        const joinButton = within(fullRoomCard).getByRole('button', { name: /observe room/i });
+        expect(joinButton).toBeEnabled();
       });
     });
 
@@ -890,13 +890,13 @@ describe('Feature: Room Discovery and Joining', () => {
 
         // Then I should see the room status change to "Room Full"
         await waitFor(() => {
-          expect(within(screen.getByTestId('room-card-7')).getByText(/Room Full/)).toBeInTheDocument();
+          expect(within(screen.getByTestId('room-card-7')).getByText(/Observer Available/)).toBeInTheDocument();
         });
 
-        // And the "Join Room" button should become disabled
+        // And the learner can join as an observer
         await waitFor(() => {
-          const updatedJoinButton = screen.getByRole('button', { name: /join room/i });
-          expect(updatedJoinButton).toBeDisabled();
+          const updatedJoinButton = screen.getByRole('button', { name: /observe room/i });
+          expect(updatedJoinButton).toBeEnabled();
         });
       });
     });

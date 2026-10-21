@@ -14,17 +14,24 @@ const literal = value => "'" + String(value).replaceAll("'", "''") + "'";
 
 function connectionFromEnv(env = process.env) {
   const host = env.PG_VALIDATION_HOST || path.join(os.homedir(), '.transfer-assessment-pg17/migration-validation/socket');
-  if (!path.isAbsolute(host)) throw new Error('PG_VALIDATION_HOST must be a local Unix socket directory');
+  if (!path.isAbsolute(host) || /[,\0]/.test(host)) throw new Error('PG_VALIDATION_HOST must be a single local Unix socket directory');
   const port = env.PG_VALIDATION_PORT || '55433';
   if (!/^\d{1,5}$/.test(port)) throw new Error('Invalid validation port');
   return { host, port, user: env.PG_VALIDATION_USER || 'local_bootstrap' };
+}
+
+function connectionEnv() {
+  const env = { ...process.env };
+  // libpq address/service selectors can override explicit sockets or scenario PGDATABASE.
+  for (const key of ['PGHOSTADDR', 'PGSERVICE', 'PGSERVICEFILE']) delete env[key];
+  return env;
 }
 
 function postgres(connection) {
   return sql => execFileSync(process.env.PG_VALIDATION_PSQL || 'psql', [
     '-X', '-v', 'ON_ERROR_STOP=1', '-h', connection.host, '-p', connection.port,
     '-U', connection.user, '-d', 'postgres', '-At', '-c', sql
-  ], { encoding: 'utf8', env: { ...process.env, PGCONNECT_TIMEOUT: '10', PGOPTIONS: '-c statement_timeout=30000' },
+  ], { encoding: 'utf8', env: { ...connectionEnv(), PGCONNECT_TIMEOUT: '10', PGOPTIONS: '-c statement_timeout=30000' },
     stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
 
@@ -150,31 +157,45 @@ async function main(args = process.argv.slice(2)) {
   if (args[0] !== '--template' || args[2] !== '--' || args.length < 4) {
     throw new Error('Usage: disposable-database.js --template <validated-local-db> -- <command> [args]; or --cleanup <lease.json>');
   }
-  const { lease, leaseFile, query } = allocate(args[1]);
-  process.stderr.write(`Scenario ${lease.database}; local clone parity passed; evidence: ${leaseFile}\n`);
+  let allocation;
   let child;
-  const output = fs.createWriteStream(path.join(path.dirname(leaseFile), 'stdout.log'), { mode: 0o600 });
-  const errors = fs.createWriteStream(path.join(path.dirname(leaseFile), 'stderr.log'), { mode: 0o600 });
+  let output;
+  let errors;
   const signalHandlers = {};
   let receivedSignal;
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    signalHandlers[signal] = () => {
+      receivedSignal = signal;
+      if (child?.pid) {
+        try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+      }
+    };
+    process.on(signal, signalHandlers[signal]);
+  }
   try {
+    allocation = allocate(args[1]);
+    const { lease, leaseFile } = allocation;
+    // Synchronous psql work defers JS signal callbacks; drain them before starting a scenario.
+    await new Promise(resolve => setImmediate(resolve));
+    if (receivedSignal) {
+      lease.result = { code: null, signal: receivedSignal };
+      save(leaseFile, lease);
+      process.exitCode = receivedSignal === 'SIGINT' ? 130 : 143;
+      return;
+    }
+    process.stderr.write(`Scenario ${lease.database}; local clone parity passed; evidence: ${leaseFile}\n`);
+    output = fs.createWriteStream(path.join(path.dirname(leaseFile), 'stdout.log'), { mode: 0o600 });
+    errors = fs.createWriteStream(path.join(path.dirname(leaseFile), 'stderr.log'), { mode: 0o600 });
     lease.command = args.slice(3);
     save(leaseFile, lease);
     child = spawn(args[3], args.slice(4), { stdio: ['inherit', 'pipe', 'pipe'], detached: true,
-      env: { ...process.env, PGHOST: lease.connection.host, PGPORT: lease.connection.port,
+      env: { ...connectionEnv(), PGHOST: lease.connection.host, PGPORT: lease.connection.port,
         PGUSER: lease.connection.user, PGDATABASE: lease.database, MIGRATION_TEST_DB: lease.database,
         PG_VALIDATION_LEASE_FILE: leaseFile } });
     child.stdout.pipe(output);
     child.stdout.pipe(process.stdout, { end: false });
     child.stderr.pipe(errors);
     child.stderr.pipe(process.stderr, { end: false });
-    for (const signal of ['SIGINT', 'SIGTERM']) {
-      signalHandlers[signal] = () => {
-        receivedSignal = signal;
-        try { process.kill(-child.pid, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
-      };
-      process.on(signal, signalHandlers[signal]);
-    }
     const result = await new Promise((resolve, reject) => {
       child.once('error', reject);
       child.once('close', (code, signal) => resolve({ code, signal }));
@@ -183,15 +204,23 @@ async function main(args = process.argv.slice(2)) {
     save(leaseFile, lease);
     process.exitCode = receivedSignal === 'SIGINT' ? 130 : receivedSignal ? 143 : result.code ?? 1;
   } catch (error) {
-    lease.error = error.stack || String(error);
-    save(leaseFile, lease);
+    if (allocation) {
+      allocation.lease.error = error.stack || String(error);
+      save(allocation.leaseFile, allocation.lease);
+    }
     throw error;
   } finally {
-    output.end();
-    errors.end();
-    for (const [signal, handler] of Object.entries(signalHandlers)) process.off(signal, handler);
-    cleanup(leaseFile, { query, requireStopped: false });
-    process.stderr.write(`Cleaned ${lease.database}; evidence: ${leaseFile}\n`);
+    output?.end();
+    errors?.end();
+    try {
+      if (allocation) {
+        const { lease, leaseFile, query } = allocation;
+        cleanup(leaseFile, { query, requireStopped: false });
+        process.stderr.write(`Cleaned ${lease.database}; evidence: ${leaseFile}\n`);
+      }
+    } finally {
+      for (const [signal, handler] of Object.entries(signalHandlers)) process.off(signal, handler);
+    }
   }
 }
 

@@ -75,6 +75,7 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
       className="public-assessment"
       data-testid={`public-assessment-${question.id}`}
       data-selection-type={question.selectionType}
+      data-lifecycle={question.lifecycle}
     >
       <p className="public-assessment-stem">{question.stem}</p>
       <p className="public-assessment-instruction">
@@ -140,21 +141,6 @@ const PublicAssessmentQuestion: React.FC<PublicAssessmentQuestionProps> = ({
       )}
       {attempts.length > 0 && !displayedLifecycle && (
         <p role="status">Your answer is still processing.</p>
-      )}
-      {displayedLifecycle?.answerOutcome === 'retry' && (
-        <p role="status">
-          Incorrect. {displayedLifecycle.attemptsRemaining} {displayedLifecycle.attemptsRemaining === 1 ? 'attempt' : 'attempts'} remaining.
-        </p>
-      )}
-      {displayedLifecycle?.answerOutcome === 'passed' && <p role="status">Correct.</p>}
-      {(question.lifecycle === 'cancelled' || (displayedLifecycle?.code === 'assisted' && displayedLifecycle.terminal)) && (
-        <p role="status">This question is closed so your tutor can help. No attempt was counted.</p>
-      )}
-      {displayedLifecycle?.answerOutcome === 'failed' && displayedLifecycle.terminalFailureFeedback && (
-        <div role="status">
-          <p>{displayedLifecycle.terminalFailureFeedback.learner_safe_explanation}</p>
-          <p>Correct option(s): {displayedLifecycle.terminalFailureFeedback.correct_option_ids.join(', ')}</p>
-        </div>
       )}
       {displayedLifecycle?.processingState === 'deferred' && displayedLifecycle.answerOutcome === null && (
         <p role="status">Your answer is still processing.</p>

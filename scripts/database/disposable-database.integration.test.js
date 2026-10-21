@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawn } = require('node:child_process');
-const { connectionFromEnv, identifier } = require('./disposable-database');
+const { connectionFromEnv, identifier, cleanup } = require('./disposable-database');
 
 test('real shared-cluster allocation and cleanup', { skip: process.env.PG_DISPOSABLE_INTEGRATION !== '1' }, async t => {
   const connection = connectionFromEnv();
@@ -20,8 +20,9 @@ test('real shared-cluster allocation and cleanup', { skip: process.env.PG_DISPOS
   const env = { ...process.env, PG_VALIDATION_RUN_ROOT: root };
   const runner = path.join(__dirname, 'disposable-database.js');
   const leases = () => fs.readdirSync(root).map(dir => path.join(root, dir, 'lease.json'));
-  const launch = command => {
-    const child = spawn(process.execPath, [runner, '--template', template, '--', process.execPath, '-e', command], { env });
+  const launch = (command, overrides = {}) => {
+    const child = spawn(process.execPath, [runner, '--template', template, '--', process.execPath, '-e', command],
+      { env: { ...env, ...overrides } });
     let output = '';
     child.stdout.on('data', chunk => { output += chunk; });
     child.stderr.on('data', chunk => { output += chunk; });
@@ -96,6 +97,63 @@ test('real shared-cluster allocation and cleanup', { skip: process.env.PG_DISPOS
       assert.ok(leaseFile);
       execFileSync(process.execPath, [runner, '--cleanup', leaseFile], { env });
       assert.equal(JSON.parse(fs.readFileSync(leaseFile)).status, 'cleaned');
+    });
+
+    // Regression for disposable-database.js: inherited libpq selectors must not redirect manager or scenario SQL.
+    await t.test('conflicting service and address settings cannot redirect the scenario to its baseline', async () => {
+      const serviceFile = path.join(os.tmpdir(), 'scenario-service-' + crypto.randomBytes(10).toString('hex') + '.conf');
+      fs.writeFileSync(serviceFile, `[baseline]\nhost=${connection.host}\nport=${connection.port}\nuser=${connection.user}\ndbname=${template}\n`, { mode: 0o600 });
+      const command = `const cp=require('node:child_process');
+        const target=cp.execFileSync('psql',['-X','-At','-v','ON_ERROR_STOP=1','-c','select current_database()'],{encoding:'utf8'}).trim();
+        if(target!==process.env.PGDATABASE) throw new Error('Wrong database: '+target);
+        cp.execFileSync('psql',['-X','-v','ON_ERROR_STOP=1','-c','update public.scenario_sentinel set value=9']);`;
+      for (const overrides of [
+        { PGSERVICE: 'baseline', PGSERVICEFILE: serviceFile },
+        { PGHOSTADDR: '127.0.0.1' },
+        { PGHOSTADDR: '127.0.0.1', PGSERVICE: 'baseline', PGSERVICEFILE: serviceFile }
+      ]) {
+        const result = await launch(command, overrides).done;
+        assert.equal(result.code, 0, result.output);
+        assert.equal(sql(template, 'select value from public.scenario_sentinel'), '7');
+      }
+    });
+
+    // Regression for disposable-database.js: ordinary termination after ownership marking must clean before exit.
+    await t.test('SIGINT and SIGTERM during synchronous allocation clean up without launching the scenario', async () => {
+      for (const signal of ['SIGINT', 'SIGTERM']) {
+        const code = `const cp=require('node:child_process');
+          const original=cp.execFileSync;
+          cp.execFileSync=(file,args,options)=>{
+            const result=original(file,args,options);
+            if(args.at(-1).startsWith('COMMENT ON DATABASE')) {
+              require('node:fs').writeSync(2,'allocation-marked\\n');
+              Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,1000);
+            }
+            return result;
+          };
+          require(${JSON.stringify(runner)}).main(['--template',${JSON.stringify(template)},'--',process.execPath,'-e',"console.log('unexpected-scenario-start')"])
+            .catch(error=>{console.error(error.message);process.exitCode=1;});`;
+        const child = spawn(process.execPath, ['-e', code], { env });
+        let output = '';
+        const done = new Promise(resolve => child.once('close', (code, signal) => resolve({ code, signal })));
+        child.stdout.on('data', chunk => { output += chunk; });
+        child.stderr.on('data', chunk => {
+          output += chunk;
+          if (String(chunk).includes('allocation-marked')) child.kill(signal);
+        });
+        try {
+          const result = await done;
+          assert.equal(result.code, signal === 'SIGINT' ? 130 : 143, output);
+          assert.equal(result.signal, null);
+          assert.ok(!output.includes('unexpected-scenario-start'), output);
+          const leaseFile = leases().find(file => JSON.parse(fs.readFileSync(file)).pid === child.pid);
+          assert.ok(leaseFile, output);
+          assert.equal(JSON.parse(fs.readFileSync(leaseFile)).status, 'cleaned');
+        } finally {
+          const leaseFile = leases().find(file => JSON.parse(fs.readFileSync(file)).pid === child.pid);
+          if (leaseFile && JSON.parse(fs.readFileSync(leaseFile)).status !== 'cleaned') cleanup(leaseFile);
+        }
+      }
     });
 
     for (const file of leases()) {

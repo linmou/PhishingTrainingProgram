@@ -176,19 +176,6 @@ function buildChecklistContext(data: ChecklistSystemPromptData): string {
     }
   }
 
-  // Add cognitive/behavioral balance guidance
-  const cognitiveItems = [...data.uncovered_critical, ...data.uncovered_important, ...data.partially_covered, ...data.well_covered]
-    .filter(item => item.area_text.includes('[understanding]')).length;
-  const behavioralItems = [...data.uncovered_critical, ...data.uncovered_important, ...data.partially_covered, ...data.well_covered]
-    .filter(item => item.area_text.includes('[behavior]')).length;
-    
-  if (cognitiveItems > 0 && behavioralItems === 0) {
-    sections.push(
-      "**LEARNING BALANCE**: Student has strong conceptual understanding. Now transition from concept explanation to practical application and focus on behavioral items.",
-      ""
-    );
-  }
-
   return sections.join('\n');
 }
 

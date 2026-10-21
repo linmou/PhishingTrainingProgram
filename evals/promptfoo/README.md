@@ -2,9 +2,24 @@
 
 Intent: document how to review and run the local Promptfoo benchmark for tutor prompt behavior before spending live LLM calls or changing production prompts.
 
-Updated: 2026-10-15
+Updated: 2026-10-21
 
-Source baseline commit: `8dc7271`
+Source baseline commit: `a6c977b`
+
+Naming review baseline: `c6d5129`.
+
+## Evaluation map
+
+| Responsibility | Entry point | Scoring |
+| --- | --- | --- |
+| Classify student learning evidence and apply progress | [learning-progress-analyzer/](learning-progress-analyzer/README.md), formerly `transfer-analysis/` | Reference-label classification metrics and deterministic consumer checks |
+| Classify tutor mode and teaching action | [v1/classification.js](v1/classification.js), using the tutor suite's cases and saved outputs | Reference labels/allowed sets, accuracy and classification metrics |
+| Evaluate the tutor's generated response | [v1/](v1/README.md) | Semantic judges plus deterministic contract/length checks |
+| Evaluate transfer assessments and lifecycle | [v1/transfer/](v1/transfer/) | Semantic assessment checks plus deterministic lifecycle/contract checks |
+| Diagnose contextual reply interpretation | [contextual-reply cases](v1/contextual-reply-plan.md) | Existing tutor checks plus current-turn grounding |
+| Explore evolving learner/tutor conversations | [v1/simulated/](v1/simulated/README.md) | Exploratory conversation judges and structural checks |
+
+`classification.js` is a scorer, not a separate case suite. Analyzer prompt candidates are in `learning-progress-analyzer/refinement-policy-*.md`; tutor candidates are in `v1/candidate-policy*.md` and `refinement-20261014/`. Run snapshots identify the exact tested prompt and evaluator. The commands and scoring below document the legacy Promptfoo benchmark; the current specification-derived runner is documented in `v1/README.md`.
 
 The [current shortcut-removal experiment](refinement-20261014/README.md) uses the specification-derived [v1 runner](v1/README.md), production request packaging and three repetitions. The legacy commands below retain their own scoring contract. Their quality gate now requires a frozen expected-case/assertion manifest and rejects missing, duplicate, malformed, or errored evidence. `npm run eval:prompts` writes that manifest before generation and includes it in `gated-report.json` and `latest.json`.
 
@@ -32,6 +47,8 @@ The v1 benchmark stays on one fixture, but the case set includes holdout-style a
 Ecological demo-room templates must be based on real `room_templates` records used by the web app. Before adding or changing an ecological case, inspect the corresponding database record and preserve its scenario fields, pre-populated dialogue, and AI configuration in `tutor-system/src/services/demoRoomTemplates.ts`. A derived behavior variant may use a distinct template name and replace only the turn under test; for example, a correct-student variant preserves the source room through the tutor question and changes the final student answer. Do not invent an ecological dialogue only in TypeScript or edit `cases/webpage-ecological.yaml` by hand.
 
 After aligning the version-controlled template with the database record, run `npm run eval:prompts:export-ecological-cases`. Synthetic holdouts in `cases/account-security-alert.yaml` remain independently authored and must stay labeled `source_type: synthetic_holdout`.
+
+The checked-in YAML is also checked by deterministic Jest against a fresh export. On 2026-10-21 it was refreshed from the existing committed seeds to include the simplified `webpage_demo_correct_safe_action` dialogue already present in the frozen v1 case and the current participant name in the personal-story case. This fixture refresh changes no room template or hosted record.
 
 Seed only the intended derived records with `npm run seed:behavior-templates -- --case-id=<case_id>`; repeat `--case-id` to select more than one record. Correctness-sensitive rubrics must infer the student's behavior from the scenario and messages instead of introducing another `student_answer_state` value.
 
@@ -81,7 +98,7 @@ npm run eval:prompts:gate             # only score latest.json
 npm run eval:prompts:view             # open HTML report
 ```
 
-The blocking quality gate applies the same 80% threshold to all eight metrics (`turn_rhythm`, `direct_correction`, `persona_stability`, `low_boilerplate_praise`, `practical_knowledge`, `third_person_examples`, `reading_level`, and deterministic `response_length`). It requires ecological and synthetic-holdout suites to pass independently, and requires `direct_correction` to pass independently for `not_started` and `failed` scaffold states. There is no improved-prompt comparison and no 100% requirement.
+The blocking quality gate applies the same 80% threshold to all required metrics exported by `tutor-system/scripts/check-promptfoo-quality-gate.js`: `turn_rhythm`, `direct_correction`, `persona_stability`, `low_boilerplate_praise`, `practical_knowledge`, `third_person_examples`, `reading_level`, `response_length`, `structured_output`, `mode_selection`, `mode_reason_grounding`, `guard_response_quality`, and `guard_tone_safety`. It reconciles case, assertion, and repetition coverage against the frozen evaluation manifest before scoring. Ecological and synthetic-holdout suites pass independently; `direct_correction` must pass independently for `not_started` and `failed` scaffold states. There is no improved-prompt comparison and no 100% requirement.
 
 `response_length` counts English word-like and sentence segments with `Intl.Segmenter`; empty output, over three sentences, or over 50 words fails. Runtime code does not clip, summarize, retry, or replace an over-limit Qwen answer.
 

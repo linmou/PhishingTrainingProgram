@@ -1,0 +1,77 @@
+{
+  "intent": "Independently compare completed fixed-input transfer predictions while keeping propagated-sequence and tutor evaluation completion separate.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "manifest": "output/model-comparison-20261015/paired-04/manifest.json",
+  "manifest_sha256_json_serialization": "3ad24d07d42d8e4124cf0e9e08c78dd9743fcf794c798776b0588c81fb4c53ea",
+  "candidate_model": "qwen3.8-flash",
+  "baseline_model": "qwen3.5-flash",
+  "settings": {"temperature": 0, "max_tokens": 600, "enable_thinking": false},
+  "scope": {
+    "fixed_input_cases": 113,
+    "repetitions": 3,
+    "logical_records_complete": 339,
+    "physical_calls": 333,
+    "dependent_alias_records": 6,
+    "alias_policy": "Reuse the frozen corresponding canonical generation in memory, preserving case/repetition identity. Aliases are dependent observations.",
+    "fixed_input_refs_sha256": "f82348ab34433123cecb48acffb672eb51cb5e746f6d8cc89cb29affbee86fe3",
+    "refs_digest_definition": "SHA-256 of JSON.stringify of manifest-order fixed cases and repetitions 1,2,3, each entry {case_id,repetition,file,sha256,alias}; file points to paired-04 canonical generation and sha256 hashes its raw UTF-8 file content.",
+    "excluded_from_this_completed_slice": "15 propagated-sequence logical records; full-suite and tutor completion must be established separately.",
+    "coverage_status": "Fixed-input classification complete; this audit does not declare the full 354-record experiment complete."
+  },
+  "conclusion": "Qwen3.8 Flash improves fixed-input classification and state scores, but fails acceptance because of remaining semantic errors, regression slices and four newly invalid structured outputs.",
+  "classification_macro_f1": [
+    {"view":"individual_1","baseline":0.6948227631312132,"candidate":0.781275487797227},
+    {"view":"individual_2","baseline":0.7141638981173865,"candidate":0.7784116469551653},
+    {"view":"individual_3","baseline":0.7204131256762835,"candidate":0.7975040257648954},
+    {"view":"pooled","baseline":0.7107438583048339,"candidate":0.7854228382074696},
+    {"view":"ensemble_2_diagnostic","baseline":0.6933246357903893,"candidate":0.775243619429666},
+    {"view":"ensemble_3","baseline":0.6939776052135603,"candidate":0.7998976434736083}
+  ],
+  "supporting_fixed_input_counts": [
+    {"metric":"raw_event","baseline_passed":254,"candidate_passed":279,"expected":339,"candidate_errors":0},
+    {"metric":"applied_state","baseline_passed":260,"candidate_passed":285,"expected":339,"candidate_errors":4},
+    {"metric":"assessment_route","baseline_passed":332,"candidate_passed":332,"expected":339,"candidate_errors":4},
+    {"metric":"validity","baseline_passed":339,"candidate_passed":335,"expected":339,"candidate_errors":0}
+  ],
+  "score_interpretation": "Raw event scoring can match a predicted class even when evidence fields fail the frozen consumer validator. It is not equivalent to consumed classification accuracy. The classifier correctly treats all four rejected outputs as invalid, and state/routing checks retain their downstream errors.",
+  "material_slices": [
+    {"slice":"ecological","ensemble_3_f1_baseline":0.4188596491228071,"ensemble_3_f1_candidate":0.6532356532356532,"raw_event_baseline_passed":37,"raw_event_candidate_passed":46,"expected":60},
+    {"slice":"refinement_regression","ensemble_3_f1_baseline":0.95,"ensemble_3_f1_candidate":0.75,"raw_event_baseline_passed":15,"raw_event_candidate_passed":14,"expected":18},
+    {"slice":"surface-cases","ensemble_3_f1_baseline":0.6666666666666666,"ensemble_3_f1_candidate":0.6666666666666666,"raw_event_baseline_passed":8,"raw_event_candidate_passed":6,"expected":12},
+    {"slice":"partition:partial","ensemble_3_f1_baseline":0.3,"ensemble_3_f1_candidate":0.7045454545454546}
+  ],
+  "remaining_classification_failures": {
+    "ensemble_3_primary_threshold": "Strictly greater than 0.90; candidate 0.7998976434736083 fails.",
+    "no_event_recall_minimum": 0.9,
+    "ensemble_3_no_event_recall_baseline": 0.675,
+    "ensemble_3_no_event_recall_candidate": 0.725,
+    "ensemble_3_initial_signal_precision": 0.2777777777777778,
+    "ensemble_3_initial_signal_false_positives": 13,
+    "pair_repetition_failures_baseline": 38,
+    "pair_repetition_failures_candidate": 32,
+    "pair_repetition_total": 84,
+    "new_pass_to_nonpass_check_results": 58
+  },
+  "invalid_outputs": [
+    {"case_id":"N04","repetition":3,"cause":"evidence_quote inserts ellipsis across omitted source text; not a verbatim substring"},
+    {"case_id":"R01","repetition":2,"cause":"evidence_quote inserts ellipsis across omitted source text; not a verbatim substring"},
+    {"case_id":"V02","repetition":3,"cause":"evidence_quote inserts ellipsis across omitted source text; not a verbatim substring"},
+    {"case_id":"af86353_NH14","repetition":2,"cause":"item_id is truncated to 44444444-4444-4444-8444-44444444 rather than the supplied complete identifier"}
+  ],
+  "invalid_output_disposition": "All four provider requests return HTTP 200 and finish_reason stop; the frozen handler returns HTTP 502 AI_OUTPUT_INVALID. These are model evidence/schema failures, not transport outages or token truncation. No retry or output repair was added to erase them.",
+  "all_three_raw_event_failures": ["E05","E07","E13","D10","H03","N03","af86353_N02","af86353_N09","af86353_N19","af86353_V04","af86353_NH03"],
+  "systematic_new_regressions": [
+    {"case_id":"E13","situation":"Learner asks how expanding a shortened link helps; uncertainty is credited as initial_signal.","baseline":"none, none, none","candidate":"initial_signal, initial_signal, initial_signal"},
+    {"case_id":"H03","situation":"Learner explains deadline pressure but explicitly does not understand the target's password-theft mechanism; incomplete target is credited.","baseline":"none, none, none","candidate":"initial_signal, initial_signal, initial_signal"},
+    {"case_id":"N03","situation":"Learner remains unsure how a matching display name relates to sender identity; uncertainty is marked as contradiction.","baseline":"none, none, none","candidate":"contradiction, contradiction, contradiction"},
+    {"case_id":"af86353_V04","situation":"Learner explicitly proposes investigating a seller profile's age; specific verification action is undercredited.","baseline":"demonstrated_understanding, demonstrated_understanding, demonstrated_understanding","candidate":"initial_signal, initial_signal, initial_signal"}
+  ],
+  "limitations": [
+    "Existing expected labels and semantic ambiguities remain frozen, with their recorded pending human review. This model comparison does not retroactively validate those labels.",
+    "Sources historically named holdout are already exposed regression cases. No new unseen holdout validation is claimed.",
+    "Candidate transfer records omit generation_id; case_id, repetition and experiment_fingerprint identify each preserved output. The auditor reconstructs reporting IDs without altering records.",
+    "Observed candidate call latency is higher than the historical baseline, but serving time and concurrency differ. It is not a randomized causal latency comparison.",
+    "Full propagated sequence totals and full tutor judgments remain outside this completed slice."
+  ]
+}

@@ -21,14 +21,14 @@ export class ChecklistService {
   private static async assertProgressUnlocked(roomId: string): Promise<void> {
     const { data, error } = await supabase
       .from('rooms')
-      .select('active_response_mode')
+      .select('guard_mode')
       .eq('id', roomId)
       .single();
 
     if (error) {
       throw new Error(`Failed to verify room response mode: ${error.message}`);
     }
-    if (data?.active_response_mode === 'guard') {
+    if (data?.guard_mode === true) {
       throw new Error('Learning progression is locked while Guard Mode is active');
     }
   }
@@ -424,13 +424,14 @@ export class ChecklistService {
       room_id: checklist.room_id,
       student_id: checklist.student_id,
       progress_policy_version: 'transfer_v1',
+      target_version: checklist.target_version ?? null,
       template_name: checklist.template_name,
       session_start: new Date(checklist.session_start),
       detection_areas: (items || [])
         .filter((item: any) => item.item_type === 'detection_area' || item.item_type === 'understanding')
         .map(this.transformDatabaseItem),
       verification_steps: (items || [])
-        .filter((item: any) => item.item_type === 'verification_step')
+        .filter((item: any) => item.item_type === 'verification_step' || item.item_type === 'behavior')
         .map(this.transformDatabaseItem),
       total_items: checklist.total_items,
       completed_items: checklist.completed_items,
@@ -881,6 +882,7 @@ export class ChecklistService {
    */
   private static transformDatabaseItem(dbItem: any): ChecklistItem {
     return {
+      target_key: dbItem.target_key ?? null,
       id: dbItem.id,
       area_text: dbItem.area_text,
       item_type: dbItem.item_type,

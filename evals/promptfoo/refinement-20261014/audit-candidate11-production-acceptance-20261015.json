@@ -1,0 +1,36 @@
+{
+  "intent": "Independently verify production acceptance of the explicitly selected full Tutor11 release and preserve the limits of that acceptance.",
+  "date": "2026-10-15",
+  "reviewer": "/root/qwen38_audit",
+  "verdict": "clear_narrowed_production_release",
+  "integrated_commit": "079948105fae7173fbbc91192a856c1c45034891",
+  "project_ref": "zgbufaxooqxeabewktzd",
+  "versions": {"assessment-api": 13, "ai-api": 3},
+  "evidence_sha256": {
+    "production-verified.json": "b8cebb6421522caeb1ecca03bedce523c6e781107c4fee49f2e799e26a827d27",
+    "production-cleanup-final.json": "8336d590507d0c7f3178c1b8034b4dd877416463c1cc149a84cc79d82a92a4ae",
+    "integrated-build-configuration.json": "4b93863fad989501096ff970856cdbd8c528275da50f09b9c10a8324746af103",
+    "audit-candidate11-integrated-release-parity-20261015.json": "9a341f25be9b7cd58ead3b57021ea8df63d7f498ef18c8ddcab94c72f22006da"
+  },
+  "independent_checks": {
+    "production_report_hashes_project_status_and_nonempty_cleanup_verified": 7,
+    "report_workflows": ["legacy tutor", "legacy Guard", "checklist generation", "checklist coverage", "configured tutor", "configured Guard", "assessment answer pass/retry/failure with terminal tutoring"],
+    "ai_api_calls_http200_reported_qwen38": 13,
+    "tutor_calls_exact_full11_policy_temperature03_max600_thinkingfalse": 11,
+    "configured_calls_exact_regenerated_base_and_full11_policy": 4,
+    "configured_record_hashes_and_restored_flags_verified": 2,
+    "runtime_source_hashes_unchanged": 9,
+    "assessment_answer": "Independently checked passed lifecycle/one attempt and failed lifecycle/two attempts; terminal tutor response has correct answer parent and tutoring mode after closure; verified assessment ID, resolution, lifecycle, attempt count and reviewed answer key B. Answer calls contain no analyze_message or prepare_turn operation.",
+    "fixture_cleanup": "Four fixtures across eight public/private tables: all 32 counts zero, modes tutoring, mode timestamps/source null. All four prompt configurations equal independently verified staging restoration, including ordinary null configuration.",
+    "process_cleanup_record": "Root-owned processes 90761 and 90103 stopped and staging port 3100 not listening; user's process 43549 remains running, as recorded in process-cleanup-final.json."
+  },
+  "scope_and_limits": {
+    "released": "Exact full Tutor11, Qwen3.8 tutoring and default ai-api/extraction; specialized assessment and transfer preserve Qwen3.5 and inherited unified-target behavior.",
+    "benchmark": "Native evaluation remains failed with 24 gate issues and classification regressions. User explicitly selected deployment after these failures were disclosed. Live operational acceptance does not relabel the benchmark.",
+    "transfer_semantics": "Failed broad-model and restored-model staging diagnostics plus the different unchanged-production baseline diagnostic remain preserved. No transfer semantic improvement or full semantic acceptance is claimed.",
+    "assessment_generation": "Fresh AI assessment-question generation was not exercised; terminal tutoring and answer lifecycle were exercised using reviewed fixed fixtures. Unchanged generation source/request parity is the limited reuse basis.",
+    "frontend": "Integrated local build uses NODE_ENV production and existing app_environment debug with the production project URL. Build/source parity is established; hosted frontend publication is not established by these records.",
+    "chronology": "Production promotion preceded receipt of the new merge gate. Root paused further mutations, committed exact tested sources, verified committed/staged/deployed parity and resumed verification. Prior integration audit preserves this chronology."
+  },
+  "blocking_findings": []
+}

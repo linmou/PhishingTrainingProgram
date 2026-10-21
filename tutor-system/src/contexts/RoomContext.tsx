@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, MultiAgentDraft, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
-import type { AssessmentOptionId, TutorAssessmentFeedback } from '../types/assessment';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
+import type { AssessmentOptionId } from '../types/assessment';
+import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
 import type { LearningTargetInput } from '../types/checklist';
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
@@ -9,15 +10,10 @@ import {
     recordAISuggestionFeedback,
     updateAIConfig,
     getAIConfig,
+    reviewCyberbullyingSuggestion,
     DEFAULT_AI_MODEL
 } from '../services/aiService';
 import { setStudentAITone as persistStudentAITone } from '../services/studentAIToneService';
-import {
-    decodeMultiAgentResponse,
-    formatAgentTaggedContent,
-    MULTI_AGENT_PLAYBACK_DELAY_MS,
-    toRoomParticipationMode
-} from '../services/tutorDecisionContract';
 import { 
     validateRoomPassword,
     submitMessageFeedback,
@@ -26,7 +22,7 @@ import {
     getRoomFeedbackSummary,
     clearChatHistory as clearChatHistoryService
 } from '../services/supabase';
-import { sendReviewedTutorResponse, setRoomResponseMode } from '../services/guardModeService';
+import { sendReviewedTutorResponse, setRoomGuardMode } from '../services/guardModeService';
 import { ChecklistService } from '../services/checklistService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import {
@@ -79,7 +75,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
     const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
     const [aiDecision, setAiDecision] = useState<TutorActionDecision | null>(null);
-    const [multiAgentDraft, setMultiAgentDraft] = useState<MultiAgentDraft | null>(null);
+    const [cyberbullyingDraft, setCyberbullyingDraft] = useState<CyberbullyingSuggestion | null>(null);
+    const [finalCharacter, setFinalCharacter] = useState<CyberbullyingCharacter | null>(null);
+    const generationEpoch = useRef(0);
+    const activeRoomId = useRef<string | null>(null);
+    activeRoomId.current = currentRoom?.id ?? null;
     const [transferDraft, setTransferDraft] = useState<{
         decision: TransferAssessmentDraft;
         progressSnapshotHash: string;
@@ -90,11 +90,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         focusStudentMessageId: string;
         itemLabel?: string;
     } | null>(null);
-    const [finalMode, setFinalMode] = useState<TutorResponseMode>('tutoring');
+    const [finalGuardMode, setFinalGuardMode] = useState<TutorResponseMode>(false);
     const [aiInteractions, setAIInteractions] = useState<AIInteraction[]>([]);
     const [currentSuggestionContext, setCurrentSuggestionContext] = useState<{ 
         rawDecision: TutorActionDecision;
-        finalMode: TutorResponseMode;
+        finalGuardMode: TutorResponseMode;
         finalResponse: string;
         parentMessageId: string; 
         parentMessageContent: string;
@@ -110,14 +110,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { user } = useAuth();
 
     const normalizeRoom = useCallback((room: Room): Room => {
-        if (!room.active_response_mode) {
+        if (!room.guard_mode) {
             return room;
         }
 
         return {
             ...room,
-            mode_changed_at: room.mode_changed_at || null,
-            mode_change_source: room.mode_change_source || null
+            guard_mode_changed_at: room.guard_mode_changed_at || null,
+            guard_mode_change_source: room.guard_mode_change_source || null
         };
     }, []);
 
@@ -166,18 +166,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ...message,
                 // Keep the original display_name from prepopulated data
                 display_name: message.display_name,
-                avatar_url: null // No avatar for prepopulated messages
+                avatar_url: message.avatar_url || null
             };
         }
         
         const isGuardMessage = message.response_mode === 'guard';
         return {
             ...message,
-            display_name: isGuardMessage ? 'Security Supervisor' : message.user_id === user?.id ? (user?.display_name || 'User') :
+            display_name: message.persona_name || (isGuardMessage ? 'Security Supervisor' : message.user_id === user?.id ? (user?.display_name || 'User') :
                          messageUser?.display_name || 
                          (message.user_role === 'tutor' ? 'Tutor' :
-                          message.user_role === 'student' ? 'Student' : 'Observer'),
-            avatar_url: isGuardMessage ? null : message.user_id === user?.id ? user?.avatar_url : messageUser?.avatar_url
+                          message.user_role === 'student' ? 'Student' : 'Observer')),
+            avatar_url: message.persona_avatar || (isGuardMessage ? null : message.user_id === user?.id ? user?.avatar_url : messageUser?.avatar_url)
         };
     }, [user?.id, user?.display_name, user?.avatar_url]);
 
@@ -209,6 +209,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             )
             .on(
                 'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${currentRoom.id}` },
+                payload => setMessages(prev => mergeRoomMessages(prev,[addDisplayNameToMessage(projectRoomMessage(payload.new as any),participants)]))
+            )
+            .on(
+                'postgres_changes',
                 {
                     event: 'UPDATE',
                     schema: 'public',
@@ -222,7 +227,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     // a mode, while the rest of the room row is still applied.
                     setCurrentRoom(prev => normalizeRoom({
                         ...incoming,
-                        active_response_mode: mode ?? prev?.active_response_mode ?? 'tutoring',
+                        guard_mode: mode ?? prev?.guard_mode ?? false,
                     }));
                 }
             )
@@ -520,7 +525,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         ai_response_time_ms: null,
                         parent_message_id: null,
                         created_at: baseTimestamp.toISOString(),
-                        display_name: item.user_name
+                        display_name: item.user_name,
+                        persona_id: item.persona_id || null,
+                        persona_name: item.user_name,
+                        persona_avatar: item.avatar_url || null,
+                        avatar_url: item.avatar_url || null
                     } as Message;
                 });
                 
@@ -595,6 +604,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             question,
                             preferredQuestionLifecycle(question, lifecycle)
                         );
+                        if (processed.result_message && !allMessages.some(message => message.id===processed.result_message?.id)) {
+                            allMessages.push(addDisplayNameToMessage(projectRoomMessage(processed.result_message as unknown as Record<string,unknown>),participantsData || []));
+                        }
                     } catch (restoreError) {
                         console.warn('Could not restore transfer assessment feedback:', restoreError);
                     }
@@ -622,11 +634,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             tutor_action: feedback.tutor_action,
                             tutor_final_response: feedback.tutor_final_response ?? undefined,
                             response_time_ms: feedback.response_time_ms ?? undefined,
-                            raw_mode: feedback.raw_mode,
+                            raw_guard_mode: feedback.raw_guard_mode,
                             raw_instruction: feedback.raw_instruction,
-                            mode_reason: feedback.mode_reason,
-                            final_mode: feedback.final_mode,
-                            mode_rectified: feedback.mode_rectified,
+                            guard_reason: feedback.guard_reason,
+                            final_guard_mode: feedback.final_guard_mode,
+                            guard_rectified: feedback.guard_rectified,
                         }));
                     }
                 } catch (feedbackLoadError) {
@@ -700,7 +712,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (currentRoom.transfer_learning_enabled) throw transferError;
             console.warn('Transfer checklist unavailable; using legacy message path:', transferError);
         }
-        if (user.current_role === 'student' && (options?.assessmentId ||
+        if (user.current_role === 'student' && (currentRoom.practice_type === 'cyberbullying' || options?.assessmentId ||
             (currentRoom.transfer_learning_enabled && transferChecklist?.progress_policy_version === 'transfer_v1'))) {
             const answerOptions = options;
             const result = await transferAssessmentService.postMessage({
@@ -756,6 +768,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             );
                         }) as RoomMessageView | undefined;
                         const incoming = [answerWithLifecycle];
+                        if (processed.result_message) incoming.push(addDisplayNameToMessage(
+                            projectRoomMessage(processed.result_message as unknown as Record<string,unknown>),participants
+                        ));
                         if (question) {
                             incoming.push(addDisplayNameToMessage(
                                 withAnswerLifecycle(question, preferredQuestionLifecycle(question, lifecycle)),
@@ -773,8 +788,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         console.log('Sending message:', { roomId: currentRoom.id, userId: user.id, content });
 
+        if (currentRoom.practice_type === 'cyberbullying' && user.current_role === 'tutor' &&
+            (!cyberbullyingDraft || cyberbullyingDraft.status !== 'ready' || !currentSuggestionContext || !aiDecision || !aiSuggestion || !finalCharacter)) {
+            throw new Error('Generate and review a character reply before sending.');
+        }
         if (user.current_role === 'tutor' && currentSuggestionContext && aiDecision && aiSuggestion) {
-            const tutorAction = content.trim() === currentSuggestionContext.rawDecision.suggested_response.trim()
+            const tutorAction = content.trim() === currentSuggestionContext.rawDecision.suggested_response.trim() &&
+                (!cyberbullyingDraft || (finalCharacter === cyberbullyingDraft.raw_character &&
+                finalGuardMode === cyberbullyingDraft.raw_guard_mode))
                 ? 'accepted'
                 : 'modified';
             const responseTimeMs = Date.now() - currentSuggestionContext.startTime;
@@ -785,11 +806,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     ? null
                     : currentSuggestionContext.parentMessageId,
                 rawDecision: currentSuggestionContext.rawDecision,
-                finalMode,
+                finalGuardMode,
                 finalResponse: content,
                 tutorAction,
                 responseTimeMs,
-                contextMessages: currentSuggestionContext.contextMessages
+                contextMessages: currentSuggestionContext.contextMessages,
+                suggestionId: cyberbullyingDraft?.id,
+                finalCharacter: currentRoom.practice_type === 'cyberbullying' ? finalCharacter : null,
             });
 
             setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(reviewedResult.message, participants)]));
@@ -803,18 +826,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 tutor_final_response: content,
                 response_time_ms: responseTimeMs,
                 ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
-                raw_mode: currentSuggestionContext.rawDecision.mode,
+                raw_guard_mode: currentSuggestionContext.rawDecision.guard_mode,
                 raw_instruction: currentSuggestionContext.rawDecision.instruction,
-                mode_reason: currentSuggestionContext.rawDecision.mode_reason,
-                final_mode: finalMode,
-                mode_rectified: currentSuggestionContext.rawDecision.mode !== finalMode
+                guard_reason: currentSuggestionContext.rawDecision.guard_reason,
+                final_guard_mode: finalGuardMode,
+                guard_rectified: currentSuggestionContext.rawDecision.guard_mode !== finalGuardMode
             }]);
             clearAISuggestion();
             return;
         }
 
         const responseMode = user.current_role === 'tutor'
-            ? currentRoom.active_response_mode || 'tutoring'
+            ? currentRoom.guard_mode ? 'guard' : 'tutoring'
             : null;
         const parentMessageId = options?.replyToMessageId || (
             currentSuggestionContext?.parentMessageId && !currentSuggestionContext.parentMessageId.startsWith('prepop-')
@@ -906,16 +929,17 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         suggestion: string,
         parentMessageId: string,
         parentMessageContent: string,
-        result: { contextMessages: string[]; appliedConfig?: AIAssistantConfigSnapshot }
+        result: { contextMessages: string[]; appliedConfig?: AIAssistantConfigSnapshot; cyberbullyingDraft?: CyberbullyingSuggestion }
     ) => {
-        const finalMode = toRoomParticipationMode(decision.mode);
-        setMultiAgentDraft(null);
+        const finalGuardMode = decision.guard_mode;
+        setCyberbullyingDraft(result.cyberbullyingDraft ?? null);
+        setFinalCharacter(result.cyberbullyingDraft?.raw_character ?? null);
         setAiSuggestion(suggestion);
         setAiDecision(decision);
-        setFinalMode(finalMode);
+        setFinalGuardMode(finalGuardMode);
         setCurrentSuggestionContext({
             rawDecision: decision,
-            finalMode,
+            finalGuardMode,
             finalResponse: decision.suggested_response,
             parentMessageId,
             parentMessageContent,
@@ -925,28 +949,37 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
-    /** @deprecated Production AI requests no longer generate Multi-agent drafts. */
-    const applyMultiAgentDraft = (
-        decision: TutorActionDecision,
-        parentMessageId: string,
-        parentMessageContent: string,
-        result: { contextMessages: string[]; appliedConfig?: AIAssistantConfigSnapshot }
-    ) => {
-        setMultiAgentDraft({
-            rawDecision: decision,
-            parentMessageId,
-            parentMessageContent,
-            generatedMessages: decodeMultiAgentResponse(decision.suggested_response),
-            startTime: Date.now(),
-            contextMessages: result.contextMessages,
-            aiConfigSnapshot: result.appliedConfig
-        });
-        setAiSuggestion(null);
-        setAiDecision(null);
-        setFinalMode('tutoring');
-        setCurrentSuggestionContext(null);
+    const generateCyberbullyingResponse = async (regenerate: boolean): Promise<void> => {
+        if (!currentRoom || !user || currentRoom.tutor_id !== user.id || user.current_role !== 'tutor') {
+            throw new Error('Only the room tutor can generate a role reply');
+        }
+        const roomId = currentRoom.id;
+        const learnerMessage = messages.filter(message => message.user_role === 'student' &&
+            !message.id.startsWith('temp-') && !message.id.startsWith('prepop-')).slice(-1)[0];
+        if (!learnerMessage) throw new Error('A learner comment is needed before generating a reply');
+        const epoch = ++generationEpoch.current;
+        setLoadingAI(true);
+        try {
+            await ChecklistService.analyzeStudentMessages(roomId, learnerMessage.user_id, learnerMessage.id);
+            const result = await generateTutorSuggestion(roomId, user.id, undefined, {
+                previousSuggestionId: regenerate && cyberbullyingDraft?.status === 'ready' ? cyberbullyingDraft.id : undefined,
+                character: regenerate ? finalCharacter : null,
+            });
+            if (epoch !== generationEpoch.current || activeRoomId.current !== roomId) return;
+            if (!result.success || !result.decision || !result.cyberbullyingDraft) {
+                throw new Error(result.error || 'Role generation failed. Generate a new suggestion to retry.');
+            }
+            applySingleAgentSuggestion(result.decision, result.suggestion,
+                result.cyberbullyingDraft.parent_message_id, learnerMessage.content, result);
+        } catch (error) {
+            if (epoch === generationEpoch.current && activeRoomId.current === roomId) {
+                setCyberbullyingDraft(previous => previous ? { ...previous, status: 'failed' } : null);
+            }
+            throw error;
+        } finally {
+            if (epoch === generationEpoch.current) setLoadingAI(false);
+        }
     };
-
     const createTransferPreparationError = (code: string, message: string, retryable = false) => {
         const error = new Error(`${code}: ${message}`) as Error & { code: string; retryable: boolean };
         error.code = code;
@@ -971,6 +1004,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('AI assistant is not enabled for this room');
         }
 
+        if (currentRoom.practice_type === 'cyberbullying') {
+            await generateCyberbullyingResponse(false);
+            return;
+        }
+
         setLoadingAI(true);
         try {
             // If there's an existing suggestion, mark it as ignored
@@ -978,17 +1016,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 await recordAIFeedback('ignored');
                 clearAISuggestion();
             }
-            if (multiAgentDraft) {
-                clearAISuggestion();
-            }
 
             // Keep an explicitly selected focus stable across regeneration.
             let parentMessageId: string | undefined;
+            let parentStudentId: string | undefined;
             let parentMessageContent: string = '';
             if (focusMessageId) {
                 const selectedMessage = messages.find(m => m.id === focusMessageId && m.user_role === 'student');
                 if (!selectedMessage) throw new Error('Selected learner message is no longer available');
                 parentMessageId = selectedMessage.id;
+                parentStudentId = selectedMessage.user_id;
                 parentMessageContent = selectedMessage.content;
                 prompt = selectedMessage.content;
             } else if (!prompt) {
@@ -998,6 +1035,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (latestMessage) {
                     parentMessageId = latestMessage.id;
+                    parentStudentId = latestMessage.user_id;
                     parentMessageContent = latestMessage.content;
                     prompt = latestMessage.content;
                 }
@@ -1007,7 +1045,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('No student message found to respond to');
             }
 
-            let assessmentFeedback: TutorAssessmentFeedback | undefined;
+            let expectedAssessmentResultIds: string[] = [];
             let transferChecklist: Awaited<ReturnType<typeof ChecklistService.getActiveTransferChecklistForRoom>> | null = null;
             try {
                 const checklistService = ChecklistService as typeof ChecklistService & {
@@ -1037,36 +1075,28 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     );
                 }
                 parentMessageId = checklistOwnerMessage.id;
+                parentStudentId = checklistOwnerMessage.user_id;
                 parentMessageContent = checklistOwnerMessage.content;
                 // Assessment answers already belong to the grading lifecycle. Re-analyzing
                 // them as ordinary learning evidence is rejected by the trusted API.
                 const assessmentId = readAssessmentId(checklistOwnerMessage);
                 const isAssessmentAnswer = Boolean(assessmentId);
-                if (assessmentId) {
-                    const review = await transferAssessmentService.readReview(currentRoom.id, assessmentId);
-                    if (!['open', 'passed', 'failed'].includes(review.resolution || '') ||
-                        !['delivered', 'passed', 'failed', 'cancelled'].includes(review.lifecycle || '') ||
-                        !Number.isInteger(review.attempt_count) || review.attempt_count! < 0 ||
-                        review.attempt_count! > 2 || typeof review.feedback_required !== 'boolean') {
+                const readinessAssessmentId = assessmentId ?? [...messages].reverse().map(message =>
+                    (message as Partial<RoomMessageView>).publicQuestion
+                ).find(question => question?.studentId === checklistOwnerId)?.id;
+                if (readinessAssessmentId) {
+                    const review = await transferAssessmentService.readReview(currentRoom.id, readinessAssessmentId);
+                    const readiness = review.history_readiness;
+                    if (!readiness || readiness.ready !== true || !Array.isArray(readiness.result_message_ids) ||
+                        !Array.isArray(readiness.pending_answer_message_ids) || readiness.pending_answer_message_ids.length ||
+                        !Array.isArray(readiness.unavailable_assessment_ids) || readiness.unavailable_assessment_ids.length) {
                         throw createTransferPreparationError(
-                            'ASSESSMENT_FEEDBACK_UNAVAILABLE',
-                            'The assessment result is unavailable. Refresh the room and retry.',
+                            'ASSESSMENT_RESULT_UNAVAILABLE',
+                            'Assessment results are still processing or unavailable. Refresh the room and retry.',
                             true
                         );
                     }
-                    assessmentFeedback = {
-                        assessment_id: assessmentId,
-                        resolution: review.resolution as TutorAssessmentFeedback['resolution'],
-                        lifecycle: review.lifecycle as TutorAssessmentFeedback['lifecycle'],
-                        attempt_count: review.attempt_count!,
-                        feedback_required: review.feedback_required,
-                        stem: review.assessment.stem,
-                        options: review.assessment.options,
-                        terminal_feedback: review.resolution === 'open' ? null : {
-                            correct_option_ids: review.assessment.correct_option_ids,
-                            learner_safe_explanation: review.assessment.learner_safe_explanation,
-                        },
-                    };
+                    expectedAssessmentResultIds = readiness.result_message_ids;
                 }
                 if (!isAssessmentAnswer) {
                     await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId);
@@ -1099,7 +1129,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     });
                     setAiSuggestion(candidate.decision.assessment.rendered_text);
                     setAiDecision(null);
-                    setFinalMode('tutoring');
+                    setFinalGuardMode(false);
                     setCurrentSuggestionContext(null);
                     return;
                 }
@@ -1112,7 +1142,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 {
                     // Same student line the tutor is responding to in the UI
                     focusStudentMessage: parentMessageContent || prompt,
-                    ...(assessmentFeedback ? { assessmentFeedback } : {}),
+                    focusStudentId:parentStudentId,
+                    expectedAssessmentResultIds,
                 }
             );
 
@@ -1124,10 +1155,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('AI response did not contain a structured tutor decision');
             }
 
-            if (result.decision.mode === 'multiagent') {
-                applyMultiAgentDraft(result.decision, parentMessageId, parentMessageContent, result);
-                return;
-            }
 
             // Store the AI suggestion for the tutor
             if (result.suggestion) {
@@ -1158,6 +1185,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('No current suggestion to regenerate');
         }
 
+        if (currentRoom.practice_type === 'cyberbullying') {
+            await generateCyberbullyingResponse(true);
+            return;
+        }
         if (currentRoom.transfer_learning_enabled) {
             await generateAIResponse(undefined, currentSuggestionContext.parentMessageId, parameterOverrides);
             return;
@@ -1184,7 +1215,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 user.id,
                 effectiveParameterOverrides,
                 {
-                    focusStudentMessage: currentSuggestionContext.parentMessageContent
+                    focusStudentMessage: currentSuggestionContext.parentMessageContent,
+                    focusStudentId:messages.find(message=>message.id===currentSuggestionContext.parentMessageId)?.user_id,
                 }
             );
 
@@ -1217,30 +1249,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     throw new Error('AI response did not contain a structured tutor decision');
                 }
 
-                if (result.decision.mode === 'multiagent') {
-                    applyMultiAgentDraft(
-                        result.decision,
-                        currentSuggestionContext.parentMessageId,
-                        currentSuggestionContext.parentMessageContent,
-                        result
-                    );
-                } else {
-                    const finalMode = toRoomParticipationMode(result.decision.mode);
-                    setAiSuggestion(result.suggestion);
-                    setAiDecision(result.decision);
-                    setFinalMode(finalMode);
-
-                    // Update context with new generation time
-                    setCurrentSuggestionContext({
-                        ...currentSuggestionContext,
-                        rawDecision: result.decision,
-                        finalMode,
-                        finalResponse: result.decision.suggested_response,
-                        startTime: Date.now(),
-                        contextMessages: result.contextMessages,
-                        aiConfigSnapshot: result.appliedConfig
-                    });
-                }
+                applySingleAgentSuggestion(result.decision, result.suggestion,
+                    currentSuggestionContext.parentMessageId, currentSuggestionContext.parentMessageContent, result);
             }
         } catch (error) {
             console.error('Failed to regenerate AI response:', error);
@@ -1248,132 +1258,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoadingAI(false);
         }
-    };
-
-    /**
-     * Regenerate the current Multi-agent draft through the ordinary generation path.
-     * The regenerated turn may come back as a single-Tutor decision; whichever decision
-     * returns decides which reviewer UI is shown. A failed attempt keeps the edited draft.
-     */
-    /** @deprecated Production AI requests no longer generate Multi-agent drafts. */
-    const regenerateMultiAgentDraft = async (): Promise<void> => {
-        if (!user || !currentRoom) {
-            throw new Error('No user or room available');
-        }
-        if (user.current_role !== 'tutor') {
-            throw new Error('Only tutors can regenerate AI responses');
-        }
-        if (!multiAgentDraft) {
-            throw new Error('No Multi-agent draft to regenerate');
-        }
-
-        const draft = multiAgentDraft;
-        // Regeneration answers the learner's latest turn, which may have moved on during review.
-        const latestLearnerMessage = messages
-            .filter(message => message.user_role === 'student')
-            .slice(-1)[0];
-        const parentMessageId = latestLearnerMessage?.id || draft.parentMessageId;
-        const parentMessageContent = latestLearnerMessage?.content || draft.parentMessageContent;
-
-        setLoadingAI(true);
-        try {
-            const result = await generateTutorSuggestion(
-                currentRoom.id,
-                user.id,
-                undefined,
-                { focusStudentMessage: parentMessageContent }
-            );
-
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to regenerate AI response');
-            }
-            if (!result.decision) {
-                throw new Error('AI response did not contain a structured tutor decision');
-            }
-
-            if (result.decision.mode === 'multiagent') {
-                applyMultiAgentDraft(result.decision, parentMessageId, parentMessageContent, result);
-                return;
-            }
-
-            applySingleAgentSuggestion(
-                result.decision,
-                result.suggestion,
-                parentMessageId,
-                parentMessageContent,
-                result
-            );
-        } catch (error) {
-            console.error('Failed to regenerate Multi-agent response:', error);
-            throw error;
-        } finally {
-            setLoadingAI(false);
-        }
-    };
-
-    /** @deprecated Production AI requests no longer generate Multi-agent drafts. */
-    const rejectMultiAgentDraft = async (): Promise<void> => {
-        if (!multiAgentDraft) return;
-        clearAISuggestion();
-    };
-
-    /**
-     * @deprecated Production AI requests no longer generate Multi-agent drafts.
-     * Persist an approved one-or-two-character response as ordinary AI-generated tutor messages.
-     * Row 1 keeps the approval time; a second row is future-dated by the playback delay.
-     */
-    const approveMultiAgentDraft = async (editedMessages: string[]): Promise<void> => {
-        if (!user || !currentRoom) {
-            throw new Error('No user or room available');
-        }
-        if (user.current_role !== 'tutor') {
-            throw new Error('Only tutors can approve AI responses');
-        }
-        const draft = multiAgentDraft;
-        if (!draft) {
-            throw new Error('No Multi-agent draft to approve');
-        }
-        if (editedMessages.some((content) => !content.trim())) {
-            throw new Error('Every character message is required');
-        }
-
-        // Stale draft: the learner moved the conversation forward while the tutor reviewed.
-        const latestLearnerMessage = messages
-            .filter(message => message.user_role === 'student')
-            .slice(-1)[0];
-        if (!latestLearnerMessage || latestLearnerMessage.id !== draft.parentMessageId) {
-            throw new Error('The learner sent a newer message, so this draft is stale. Regenerate before approving.');
-        }
-
-        const approvalTime = Date.now();
-        const rows = draft.generatedMessages.map((generated, index) => ({
-            room_id: currentRoom.id,
-            user_id: user.id,
-            user_role: 'tutor' as UserRole,
-            ai_model_used: draft.aiConfigSnapshot?.model_name || currentRoom.ai_assistant_model || DEFAULT_AI_MODEL,
-            ai_response_time_ms: approvalTime - draft.startTime,
-            parent_message_id: draft.parentMessageId.startsWith('prepop-') ? null : draft.parentMessageId,
-            response_mode: 'multiagent' as const,
-            content: formatAgentTaggedContent(generated.character, editedMessages[index]),
-            created_at: new Date(approvalTime + index * MULTI_AGENT_PLAYBACK_DELAY_MS).toISOString()
-        }));
-
-        const { data, error } = await supabase.from('messages').insert(rows).select();
-        if (error) {
-            throw new Error(`Failed to store the approved Multi-agent response: ${error.message}`);
-        }
-        if (!data || data.length !== rows.length) {
-            throw new Error('Approved Multi-agent response was not stored completely');
-        }
-
-        const stored = [...(data as Message[])].sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-        setMessages(prev => mergeRoomMessages(
-            prev,
-            stored.map(message => addDisplayNameToMessage(message, participants))
-        ));
-        clearAISuggestion();
     };
 
     const setStudentAITone = async (choice: StudentAIChoice): Promise<void> => {
@@ -1409,7 +1293,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const setResponseMode = async (mode: TutorResponseMode): Promise<void> => {
+    const setGuardMode = async (mode: TutorResponseMode): Promise<void> => {
         if (!user || !currentRoom) {
             throw new Error('No user or room available');
         }
@@ -1417,7 +1301,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('Only tutors can change Guard Mode');
         }
 
-        const updatedRoom = await setRoomResponseMode(currentRoom.id, user.id, mode);
+        const updatedRoom = await setRoomGuardMode(currentRoom.id, user.id, mode);
         setCurrentRoom(normalizeRoom(updatedRoom));
     };
 
@@ -1580,6 +1464,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         const userRole = user?.current_role ?? 'observer';
         const userId = user?.id ?? null;
+        const learningProgress = currentRoom.practice_type === 'cyberbullying'
+            ? userRole === 'student' && userId
+                ? await ChecklistService.getChecklistForStudent(currentRoom.id, userId)
+                : await ChecklistService.getActiveTransferChecklistForRoom(currentRoom.id)
+            : undefined;
         
         if (format === 'json') {
             // Get feedback summary for the room
@@ -1599,6 +1488,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 participants,
                 userRole,
                 userId,
+                learningProgress,
             });
             
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -1664,11 +1554,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const clearAISuggestion = () => {
+        generationEpoch.current += 1;
+        setCyberbullyingDraft(null);
+        setFinalCharacter(null);
         setAiSuggestion(null);
         setAiDecision(null);
         setTransferDraft(null);
-        setMultiAgentDraft(null);
-        setFinalMode('tutoring');
+        setFinalGuardMode(false);
         setCurrentSuggestionContext(null);
     };
 
@@ -1725,9 +1617,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentSuggestionContext(prev => prev ? { ...prev, finalResponse: response } : prev);
     };
 
-    const updateFinalMode = (mode: TutorResponseMode) => {
-        setFinalMode(mode);
-        setCurrentSuggestionContext(prev => prev ? { ...prev, finalMode: mode } : prev);
+    const updateFinalGuardMode = (mode: TutorResponseMode) => {
+        setFinalGuardMode(mode);
+        setCurrentSuggestionContext(prev => prev ? { ...prev, finalGuardMode: mode } : prev);
     };
 
     const recordAIFeedback = async (
@@ -1740,6 +1632,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const responseTime = Date.now() - currentSuggestionContext.startTime;
+        if (currentRoom.practice_type === 'cyberbullying') {
+            if (cyberbullyingDraft && (action === 'rejected' || action === 'ignored')) {
+                await reviewCyberbullyingSuggestion(currentRoom.id, user.id, cyberbullyingDraft.id, true);
+            }
+            return;
+        }
 
         try {
             // Record to database
@@ -1753,10 +1651,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 undefined, // tutor_message_id will be set later if needed
                 responseTime,
                 currentSuggestionContext.contextMessages,
-                currentSuggestionContext.rawDecision.mode,
+                currentSuggestionContext.rawDecision.guard_mode,
                 currentSuggestionContext.rawDecision.instruction,
-                currentSuggestionContext.rawDecision.mode_reason,
-                currentSuggestionContext.finalMode
+                currentSuggestionContext.rawDecision.guard_reason,
+                currentSuggestionContext.finalGuardMode
             );
 
             // Add to local interactions for export
@@ -1769,11 +1667,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 tutor_final_response: finalResponse,
                 response_time_ms: responseTime,
                 ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
-                raw_mode: currentSuggestionContext.rawDecision.mode,
+                raw_guard_mode: currentSuggestionContext.rawDecision.guard_mode,
                 raw_instruction: currentSuggestionContext.rawDecision.instruction,
-                mode_reason: currentSuggestionContext.rawDecision.mode_reason,
-                final_mode: currentSuggestionContext.finalMode,
-                mode_rectified: currentSuggestionContext.rawDecision.mode !== currentSuggestionContext.finalMode
+                guard_reason: currentSuggestionContext.rawDecision.guard_reason,
+                final_guard_mode: currentSuggestionContext.finalGuardMode,
+                guard_rectified: currentSuggestionContext.rawDecision.guard_mode !== currentSuggestionContext.finalGuardMode
             };
 
             setAIInteractions(prev => [...prev, interaction]);
@@ -1833,6 +1731,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [messages.length, user]);
 
     const value: RoomContextType = {
+        cyberbullyingDraft,
+        finalCharacter,
+        updateFinalCharacter: setFinalCharacter,
         currentRoom,
         messages,
         participants,
@@ -1842,7 +1743,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         joinRoom,
         leaveRoom,
         sendMessage,
-        setResponseMode,
+        setGuardMode,
         setTransferLearningEnabled,
         generateAIResponse,
         regenerateAIResponse,
@@ -1858,14 +1759,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         aiDecision,
         transferDraft,
         confirmTransferDraft,
-        finalMode,
+        finalGuardMode,
         updateFinalResponse,
-        updateFinalMode,
+        updateFinalGuardMode,
         clearAISuggestion,
-        multiAgentDraft,
-        approveMultiAgentDraft,
-        regenerateMultiAgentDraft,
-        rejectMultiAgentDraft,
         aiInteractions,
         currentSuggestionContext,
         recordAIFeedback,
@@ -1879,4 +1776,4 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             {children}
         </RoomContext.Provider>
     );
-}; 
+};

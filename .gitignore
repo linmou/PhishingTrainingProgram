@@ -49,3 +49,8 @@ evals/promptfoo/evalLastWritten
 
 # Local BMAD skills
 .agents/skills/bmad-*/
+
+# Version the Cyberbullying planning record, including local-exclude overrides.
+!/plan/
+/plan/*
+!/plan/cyberbullying-practise/

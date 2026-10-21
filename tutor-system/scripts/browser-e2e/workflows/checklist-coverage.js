@@ -15,7 +15,7 @@ module.exports = async function checklistCoverage(ctx) {
   });
   const item = await insert(client, 'checklist_items', {
     checklist_id: checklist.id, area_text: 'Open the official app instead of an urgent message link',
-    item_type: 'verification_step', priority: 'critical', status: 'pending', understanding_level: 'none'
+    item_type: 'detection_area', priority: 'critical', status: 'pending', understanding_level: 'none'
   });
   await insert(client, 'checklist_items', {
     checklist_id: checklist.id, area_text: 'Recognize pressure to respond immediately',
@@ -32,7 +32,8 @@ module.exports = async function checklistCoverage(ctx) {
   assert(analysisCalls.some((call) => call.status === 200 && JSON.stringify(call.request).includes('Analyze this student')), 'No successful live coverage analysis call');
   const updated = await waitForMatch(
     () => query(client, 'checklist_items', 'id,status,understanding_level', 'id', item.id),
-    (rows) => rows[0]?.status !== 'pending', 'analyzed checklist progress'
+    (rows) => rows[0]?.status === 'covered' && ['good', 'excellent'].includes(rows[0]?.understanding_level),
+    'sufficient safe-choice evidence covers the unified target'
   );
   await openRoom(tutorPage, appUrl, room.id);
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();

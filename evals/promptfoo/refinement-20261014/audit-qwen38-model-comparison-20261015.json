@@ -1,0 +1,89 @@
+{
+  "intent": "Independently review the frozen Qwen3.8 Flash model comparison before execution without changing prompts, cases, labels or scoring.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "verdict": "clear",
+  "verdict_scope": "Experimental integrity and readiness to execute the exact frozen comparison; no claim of benchmark acceptance or release readiness.",
+  "candidate": {
+    "driver": "evals/promptfoo/v1/model-comparison.js",
+    "driver_sha256": "eac5285a0f88a7a4f3545276216c74d071c1e2be51a65a69b45cfb0e24fe264f",
+    "manifest": "output/model-comparison-20261015/paired-02/manifest.json",
+    "manifest_sha256_json_serialization": "e0ee3df4e81f8ba8b3d77cfffe7262cbe37a651d2b03c9270433e99bc229d9e0",
+    "target_model": "qwen3.8-flash",
+    "baseline_target_and_fixed_judge_model": "qwen3.5-flash"
+  },
+  "inspected_artifacts": [
+    ".agents/skills/ai-behavior-design-eval/SKILL.md",
+    ".agents/skills/ai-behavior-design-eval/references/evaluation-contract.md",
+    "evals/promptfoo/v1/model-comparison.js",
+    "evals/promptfoo/v1/model-comparison.test.js",
+    "evals/promptfoo/v1/runner.js",
+    "evals/promptfoo/v1/evaluator.js",
+    "evals/promptfoo/v1/gate.js",
+    "evals/promptfoo/transfer-analysis/current.cjs",
+    "evals/promptfoo/transfer-analysis/evaluate.cjs",
+    "evals/promptfoo/transfer-analysis/refine.cjs",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-preflight/snapshot.json",
+    "evals/promptfoo/results/qwen3.5-flash/shortcut-removal-20261015-candidate07-preflight/preflight.json",
+    "output/model-comparison-20261015/paired-02/manifest.json"
+  ],
+  "changed_factors": {
+    "behavioral": "Target model identifier only, from qwen3.5-flash to qwen3.8-flash.",
+    "operational": "Configurable bounded workers and shared exact-request judge cache; source and baseline evidence remain immutable.",
+    "tutor": "Reuse all 183 saved frozen candidate07 baseline outputs and generate corresponding candidate requests with identical initial messages, temperature 0.3, max_tokens 100, thinking false, and the same production JSON repair. Reevaluate both arms symmetrically with the currently installed calibrated evaluator.",
+    "transfer": "Reuse 354 saved full candidate02 logical records, corresponding to 348 physical requests. Execute the same frozen handler for the new model with temperature 0, max_tokens 600, thinking false, preserved aliases and own-arm state propagation.",
+    "judge": "Fixed qwen3.5-flash, temperature 0, max_tokens 8000, thinking true. Original transport and formatting budgets retained."
+  },
+  "findings": [
+    {
+      "id": "MC01",
+      "status": "resolved",
+      "finding": "The original tutor request comparison replaced messages before comparing them, which could conceal message drift.",
+      "resolution": "matchingRequest now compares the actual initial request after normalizing only the declared model field; repaired requests must equal productionRepair(original.messages), and decoding fields must still match. A structural test rejects changed messages and token budgets."
+    },
+    {
+      "id": "MC02",
+      "status": "resolved",
+      "finding": "The unchanged tutor gate expects identical settings and would flag the declared target-model change as an incomparable baseline.",
+      "resolution": "Only the declared model field is normalized in the temporary gate comparison snapshot. Actual model settings and raw requests remain preserved; all other settings, cases, rubrics and manifests must match."
+    },
+    {
+      "id": "MC03",
+      "status": "resolved",
+      "finding": "Transfer candidate summaries initially omitted baseline non-regression and newly failing assertions.",
+      "resolution": "The driver now records non-regression for every native summary row and nondiagnostic classification row, plus all pass-to-nonpass assertions by case and repetition. Actual target_model is explicit."
+    },
+    {
+      "id": "MC04",
+      "status": "resolved",
+      "finding": "The first draft did not pin all legacy rubrics or current calibration provenance.",
+      "resolution": "The 54-source manifest includes v0/v1 rubric sources, evaluator/runner/gate/analyzer/classification code, source documents, and the v1.3 calibration proposal, independent adoption audit and calibration summary. validate() passed for the exact manifest and every baseline evidence hash."
+    },
+    {
+      "id": "MC05",
+      "status": "resolved",
+      "finding": "Concurrent identical judge requests could race to create the same immutable cache file.",
+      "resolution": "An in-flight promise map shares identical requests; the bounded limiter remains operationally separate from target semantics. Three structural tests passed, including limiter failure recovery."
+    },
+    {
+      "id": "MC06",
+      "status": "clear",
+      "finding": "No case-specific prompt rule, expected-answer lookup or transport request mutation was introduced.",
+      "evidence": "The wrapper changes deps.env('OAI_MODEL') before the frozen handler builds its own actual request. Original handler, prompts and scoring remain unchanged. Aliases and sequence scheduling use the frozen manifest; resumed transfer evidence is replayed through the handler and compared against saved consumer results."
+    }
+  ],
+  "verification": {
+    "manifest_validation": "Passed, including all pinned source hashes, 183 tutor baseline records and 354 transfer baseline records.",
+    "structural_tests": "node --test evals/promptfoo/v1/model-comparison.test.js: 3 passed, 0 failed.",
+    "model_calls_by_auditor": 0,
+    "holdout_inspection_by_auditor": "No sealed holdout contents inspected. Existing exposed regression sources remain exposed coverage."
+  },
+  "reporting_limits": [
+    "Tutor findings concern exact historical frozen candidate07, which lacks the subsequently approved Guard paragraph in the deployed prompt; do not describe this as validation of the complete current deployed tutor prompt.",
+    "Baseline and candidate must be compared on the fresh symmetric evaluator results, not mixed with historical tutor judge scores.",
+    "The 354 transfer logical records include dependent aliases; retain unique-input and sequence distinctions when interpreting sample counts.",
+    "Sequence arms use the same propagation policy but their later states can differ because earlier model predictions differ. Fixed-input classification and propagated sequence behavior answer different questions.",
+    "This audit authorizes execution on integrity grounds only. Missing, malformed, transport and evaluator errors remain visible failures; all native gates and non-regression checks must be assessed after completion.",
+    "A model identifier change can include provider implementation and serving differences. Saved baseline reuse is not a simultaneous randomized infrastructure comparison."
+  ]
+}

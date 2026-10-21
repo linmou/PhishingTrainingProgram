@@ -5,7 +5,7 @@ import type { ProgressPolicyVersion, TransferProgress } from './learningProgress
 
 export type AssessmentOptionId = 'A' | 'B' | 'C' | 'D';
 export type AssessmentSelectionType = 'single' | 'multiple';
-export type RoomParticipationMode = 'tutoring' | 'guard';
+export type RoomParticipationMode = boolean;
 
 export interface AssessmentOption {
   id: AssessmentOptionId;
@@ -50,16 +50,31 @@ export interface TransferTerminalFeedback {
   learner_safe_explanation: string;
 }
 
-/** Server-reviewed facts supplied only to the tutor's feedback generation. */
-export interface TutorAssessmentFeedback {
+/** Public provenance attached exclusively by trusted grading/cancellation SQL. */
+export interface AssessmentEvent {
+  event_key: string;
+  kind: 'result' | 'closure';
   assessment_id: string;
-  resolution: 'open' | 'passed' | 'failed';
-  lifecycle: 'delivered' | 'passed' | 'failed' | 'cancelled';
-  attempt_count: number;
-  feedback_required: boolean;
-  stem: string;
-  options: AssessmentOption[];
-  terminal_feedback: TransferTerminalFeedback | null;
+  question_message_id: string;
+  student_id: string;
+  answer_message_id: string | null;
+  attempt_number: 1 | 2 | null;
+  outcome: 'retry' | 'passed' | 'failed' | null;
+  attempts_used: 0 | 1 | 2;
+  attempts_remaining: 0 | 1;
+  terminal: boolean;
+  lifecycle: 'open' | 'passed' | 'failed' | 'cancelled';
+  progress_deferred: boolean;
+  closure_reason: 'assisted' | 'target_changed' | 'progress_invalidated' | 'cancelled' | null;
+}
+
+export interface AssessmentHistoryReadiness {
+  ready: boolean;
+  result_message_ids: string[];
+  pending_answer_message_ids: string[];
+  unavailable_assessment_ids: string[];
+  handled_answer_message_ids?: string[];
+  pending_answers?: Array<{message_id:string;assessment_id:string|null}>;
 }
 
 export type TransferAttemptResultNextAction =
@@ -142,7 +157,7 @@ export interface TransferTurnContext {
   focus_student_id: string;
   focus_student_message_id: string;
   checklist_id: string | null;
-  prior_participation_mode: RoomParticipationMode | 'unknown';
+  prior_guard_mode: RoomParticipationMode | 'unknown';
   checklist_items: TransferChecklistItemSnapshot[];
   unresolved_assessment: (PublicAssessment & { id: string }) | null;
   eligible_assessment_item_ids: string[];

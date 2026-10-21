@@ -1,12 +1,12 @@
 /**
- * Tests for AI Checklist Integration.
- * Covers real Qwen-backed extraction, coverage detection, and AI adaptation as an opt-in external integration suite.
+ * File: src/services/checklistIntegration.ts and coverageDetectionService.ts
+ * Purpose: opt-in real-provider extraction/coverage transport checks and learning-progress packaging.
  */
 
 import { CoverageDetectionService } from '../services/coverageDetectionService';
 import { ChecklistIntegration } from '../services/checklistIntegration';
 import { generateSystemPromptWithChecklist } from '../services/prompts/checklistPromptGenerator';
-import { ChecklistItem, CoverageEvidence } from '../types/checklist';
+import { ChecklistItem } from '../types/checklist';
 import { SystemPromptConfig } from '../services/prompts/types';
 
 // Use the real Qwen service - no mocking.
@@ -20,7 +20,7 @@ describeLiveQwen('AI Checklist Integration', () => {
   const mockChecklistItems: ChecklistItem[] = [
     {
       id: '1',
-      area_text: '[understanding] URL verification techniques',
+      area_text: 'URL verification techniques',
       item_type: 'detection_area',
       priority: 'critical',
       status: 'pending',
@@ -36,7 +36,7 @@ describeLiveQwen('AI Checklist Integration', () => {
     },
     {
       id: '2',
-      area_text: '[behavior] Check domain manually before clicking',
+      area_text: 'Check domain manually before clicking',
       item_type: 'detection_area',
       priority: 'critical',
       status: 'pending',
@@ -52,7 +52,7 @@ describeLiveQwen('AI Checklist Integration', () => {
     },
     {
       id: '3',
-      area_text: '[understanding] Social engineering recognition',
+      area_text: 'Social engineering recognition',
       item_type: 'detection_area',
       priority: 'important',
       status: 'covered',
@@ -80,93 +80,19 @@ describeLiveQwen('AI Checklist Integration', () => {
 
 
   describe('LLM Extraction from System Prompts', () => {
-    it('should extract cognitive understanding points from system prompt', async () => {
-      const systemPrompt = `
-        You are helping students identify phishing attempts. Guide them to:
-        - Understand how attackers create urgency to pressure victims
-        - Recognize suspicious URLs and domains
-        - Learn to manually verify sender authenticity
-        - Always hover over links before clicking
-        - Report suspicious content to appropriate authorities
-      `;
-
-      const extracted = await ChecklistIntegration.extractFromSystemPromptAsync(systemPrompt);
-
-      expect(extracted.understanding.length).toBeGreaterThan(0);
-      expect(extracted.behavior.length).toBeGreaterThan(0);
-
-      // Check for understanding items with semantic content
-      const understandingText = extracted.understanding.join(' ').toLowerCase();
-      expect(understandingText).toMatch(/urgency|pressure/);
-      expect(understandingText).toMatch(/url|domain/);
-      expect(understandingText).toMatch(/sender|authenticity/);
+    it('returns a single list with valid nonempty strings from the real provider', async () => {
+      const result = await ChecklistIntegration.extractFromSystemPromptAsync(
+        'Learning targets: inspect the exact sender domain and open the official app independently.'
+      );
+      expect(Object.keys(result)).toEqual(['detection_areas']);
+      expect(Array.isArray(result.detection_areas)).toBe(true);
+      expect(result.detection_areas.length).toBeGreaterThan(0);
+      expect(result.detection_areas.every((item) => typeof item === 'string' && item.trim().length > 0)).toBe(true);
+      expect(new Set(result.detection_areas).size).toBe(result.detection_areas.length);
     });
 
-    it('should extract behavioral action points from system prompt', async () => {
-      const systemPrompt = `
-        Students should learn to:
-        - Always hover over links before clicking
-        - Report suspicious content to appropriate authorities
-        - Manually verify sender through official channels
-      `;
-
-      const extracted = await ChecklistIntegration.extractFromSystemPromptAsync(systemPrompt);
-
-      // Check for behavior items with semantic content
-      const behaviorText = extracted.behavior.join(' ').toLowerCase();
-      
-      // Verify we have behavioral actions (very flexible to accommodate different LLM responses)
-      expect(extracted.behavior.length).toBeGreaterThan(0);
-      
-      // Check for any meaningful action verbs that indicate behavior
-      const hasActionVerbs = /hover|check|report|verify|validate|confirm|examine|navigate|contact|alert/.test(behaviorText);
-      expect(hasActionVerbs).toBe(true);
-      
-      // Ensure behaviors are properly formatted
-      extracted.behavior.forEach(item => {
-        expect(item).toMatch(/^\[behavior\]/);
-        expect(item.length).toBeGreaterThan(15);
-      });
-    });
-
-    it('should handle mixed cognitive and behavioral content', async () => {
-      const systemPrompt = `
-        Students should understand social engineering tactics and know to verify information through official channels.
-        They need to recognize urgency language and take time to validate urgent requests.
-      `;
-
-      const extracted = await ChecklistIntegration.extractFromSystemPromptAsync(systemPrompt);
-
-      const understandingText = extracted.understanding.join(' ').toLowerCase();
-      const behaviorText = extracted.behavior.join(' ').toLowerCase();
-
-      expect(understandingText).toMatch(/social engineering/);
-      expect(understandingText).toMatch(/urgency/);
-      expect(behaviorText).toMatch(/verify.*information/);
-      expect(behaviorText).toMatch(/validate.*request/);
-    });
-
-    it('should extract only content present in prompt (no external knowledge)', async () => {
-      const minimalPrompt = 'Help students identify suspicious links.';
-
-      const extracted = await ChecklistIntegration.extractFromSystemPromptAsync(minimalPrompt);
-
-      // Should have some extraction but focused on content present
-      expect(extracted.understanding.length + extracted.behavior.length).toBeGreaterThan(0);
-      const allText = [...extracted.understanding, ...extracted.behavior].join(' ').toLowerCase();
-      expect(allText).toMatch(/link|url|suspicious/);
-    });
-
-    it('should handle empty or insufficient prompts gracefully', async () => {
-      const emptyPrompt = '';
-      const vagueprompt = 'Be helpful.';
-
-      const emptyExtracted = await ChecklistIntegration.extractFromSystemPromptAsync(emptyPrompt);
-      const vagueExtracted = await ChecklistIntegration.extractFromSystemPromptAsync(vagueprompt);
-
-      expect(emptyExtracted.understanding.length + emptyExtracted.behavior.length).toBe(0);
-      // Vague prompts should have limited but some extraction due to default behavior
-      expect(vagueExtracted.understanding.length + vagueExtracted.behavior.length).toBeGreaterThanOrEqual(0);
+    it('returns an empty inventory for an empty prompt', async () => {
+      await expect(ChecklistIntegration.extractFromSystemPromptAsync('')).resolves.toEqual({ detection_areas: [] });
     });
   });
 
@@ -313,10 +239,10 @@ describeLiveQwen('AI Checklist Integration', () => {
       expect(afterWellCovered).toContain('Social engineering recognition');
     });
 
-    it('should adapt responses based on cognitive vs behavioral progress', () => {
+    it('should adapt responses based on covered and pending targets', () => {
       const cognitiveHeavyItems = mockChecklistItems.map(item => ({
         ...item,
-        status: item.area_text.includes('[understanding]') ? 'covered' as const : 'pending' as const
+        status: item.id === '2' ? 'pending' as const : 'covered' as const
       }));
 
       const prompt = generateSystemPromptWithChecklist({
@@ -333,7 +259,7 @@ describeLiveQwen('AI Checklist Integration', () => {
       expect(prompt.length).toBeGreaterThan(500); // Should have substantial content
     });
 
-    it('should provide progress summaries with cognitive/behavioral breakdown', () => {
+    it('should provide progress summaries for mixed target status', () => {
       const mixedProgressItems = [
         { ...mockChecklistItems[0], status: 'covered' as const }, // understanding - covered
         { ...mockChecklistItems[1], status: 'pending' as const }, // behavior - pending
@@ -351,7 +277,7 @@ describeLiveQwen('AI Checklist Integration', () => {
 
       // Check that prompt contains progress information
       expect(prompt).toContain('CURRENT LEARNING PROGRESS');
-      expect(prompt).toMatch(/understanding|behavior|cognitive|behavioral/i);
+      expect(prompt).toContain('CURRENT LEARNING PROGRESS');
     });
 
     it('should handle soft deleted items in prompt generation', () => {
@@ -378,20 +304,6 @@ describeLiveQwen('AI Checklist Integration', () => {
   });
 
   describe('AI Adaptation Based on Progress', () => {
-    it('should provide differentiated feedback for understanding vs behavior', () => {
-      const cognitiveResponse = "I recognized the urgency language in that message";
-      const behavioralResponse = "I hovered over the link to check where it goes";
-      const combinedResponse = "I recognized the urgency language and then verified by going to the official website";
-
-      const cognitiveFeedback = CoverageDetectionService.generateDifferentiatedFeedback(cognitiveResponse, 'understanding');
-      const behavioralFeedback = CoverageDetectionService.generateDifferentiatedFeedback(behavioralResponse, 'behavior');
-      const combinedFeedback = CoverageDetectionService.generateDifferentiatedFeedback(combinedResponse, 'both');
-
-      expect(typeof cognitiveFeedback).toBe('string');
-      expect(typeof behavioralFeedback).toBe('string');
-      expect(typeof combinedFeedback).toBe('string');
-    });
-
     it('should balance coverage goals with student interest', () => {
       const engagedResponse = "This social engineering stuff is really fascinating! I had no idea people could manipulate emotions like this.";
       const analysis = CoverageDetectionService.analyzeStudentInterest(engagedResponse, mockChecklistItems);
@@ -441,75 +353,6 @@ describeLiveQwen('AI Checklist Integration', () => {
       expect(progressIndicators.completion_percentage).toBeGreaterThanOrEqual(0);
       expect(progressIndicators.covered_count).toBeGreaterThanOrEqual(0);
       expect(progressIndicators.pending_count).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  describe('Template Fallback Integration', () => {
-    it('should fall back to templates when extraction fails', async () => {
-      const insufficientPrompt = 'Be helpful to students.';
-
-      const mockTemplate = {
-        id: 'fallback-1',
-        items: [
-          '[understanding] None',
-          '[behavior] None'
-        ]
-      };
-
-      const fallbackResult = await ChecklistIntegration.extractWithFallback(
-        insufficientPrompt,
-        [mockTemplate]
-      );
-
-      expect(fallbackResult.used_extraction).toBe(false);
-      expect(fallbackResult.used_template).toBe(true);
-      expect(fallbackResult.items.length).toBe(2);
-      expect(fallbackResult.items.every(item =>
-        item.includes('[understanding]') || item.includes('[behavior]')
-      )).toBe(true);
-    });
-
-    it('should categorize template items with cognitive/behavioral prefixes', async () => {
-      const templateItems = [
-        'Sender verification techniques',
-        'Check sender email manually',
-        'Link analysis methods',
-        'Hover over links without clicking'
-      ];
-
-      const categorized = await ChecklistIntegration.categorizeTemplateItems(templateItems);
-
-      // Check categories have items
-      expect(categorized.understanding).toBeDefined();
-      expect(categorized.behavior).toBeDefined();
-      expect(categorized.understanding.length + categorized.behavior.length).toBe(templateItems.length);
-
-      // Check prefixes
-      categorized.understanding.forEach(item => {
-        expect(item).toMatch(/^\[understanding\]/);
-      });
-      categorized.behavior.forEach(item => {
-        expect(item).toMatch(/^\[behavior\]/);
-      });
-    });
-
-    it('should maintain same functionality as extracted items', () => {
-      const extractedItems = [
-        '[understanding] URL verification techniques',
-        '[behavior] Check domain manually'
-      ];
-
-      const templateItems = [
-        '[understanding] Email authenticity assessment',
-        '[behavior] Verify sender through official channels'
-      ];
-
-      const extractedFunctionality = ChecklistIntegration.analyzeItemFunctionality(extractedItems);
-      const templateFunctionality = ChecklistIntegration.analyzeItemFunctionality(templateItems);
-
-      expect(extractedFunctionality.has_understanding).toBe(templateFunctionality.has_understanding);
-      expect(extractedFunctionality.has_behavior).toBe(templateFunctionality.has_behavior);
-      expect(extractedFunctionality.supports_coverage_detection).toBe(templateFunctionality.supports_coverage_detection);
     });
   });
 

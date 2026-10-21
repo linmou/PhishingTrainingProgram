@@ -118,7 +118,7 @@ function judgeMessages(caseDefinition, output, rubrics) {
     id,
     {
       instructions,
-      output: id === 'decision_reasoning' || id.startsWith('v0:')
+      output: id === 'decision_reasoning' || id === 'current_turn_grounding' || id.startsWith('v0:')
         ? output
         : id === 'instruction_realization'
           ? { suggested_response: output.suggested_response, mode: output.mode, decision: output.decision }

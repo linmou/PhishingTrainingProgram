@@ -178,6 +178,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
     jest.spyOn(transferAssessmentService, 'analyzeMessage').mockResolvedValue({ applied: [] });
     jest.spyOn(transferAssessmentService, 'readReview').mockResolvedValue({
+      history_readiness:{ready:true,result_message_ids:['saved-result'],pending_answer_message_ids:[],unavailable_assessment_ids:[]},
       item_label: 'Verify payment requests',
       assessment: preparedCandidate.assessment,
       resolution: 'passed',
@@ -234,7 +235,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Verify the request through an official channel.',
-      decision: { mode: 'tutoring', instruction: 'scaffolding', suggested_response: 'Verify the request through an official channel.' },
+      decision: { guard_mode: false, instruction: 'scaffolding', suggested_response: 'Verify the request through an official channel.' },
       contextMessages: [LEARNER_A_MESSAGE_ID],
     });
     await mountRoom();
@@ -259,6 +260,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     answer, resolution, lifecycle, attemptCount, feedbackRequired,
   }) => {
     (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
+      history_readiness:{ready:true,result_message_ids:['saved-result'],pending_answer_message_ids:[],unavailable_assessment_ids:[]},
       item_label: 'Verify payment requests', assessment: preparedCandidate.assessment,
       resolution, lifecycle, attempt_count: attemptCount, feedback_required: feedbackRequired,
     });
@@ -271,7 +273,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Tutor feedback',
-      decision: { mode: 'tutoring', instruction: 'correction', suggested_response: 'Tutor feedback' },
+      decision: { guard_mode: false, instruction: 'correction', suggested_response: 'Tutor feedback' },
       contextMessages: [deliveredAnswerRow.id],
     });
     await mountRoom();
@@ -286,16 +288,8 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(generateTutorSuggestion).toHaveBeenCalledWith(
       TRANSFER_ROOM_ID, 'tutor-1', undefined, {
         focusStudentMessage: answer,
-        assessmentFeedback: {
-          assessment_id: deliveredAnswerRow.assessment_id,
-          resolution, lifecycle, attempt_count: attemptCount, feedback_required: feedbackRequired,
-          stem: preparedCandidate.assessment.stem,
-          options: preparedCandidate.assessment.options,
-          terminal_feedback: resolution === 'open' ? null : {
-            correct_option_ids: preparedCandidate.assessment.correct_option_ids,
-            learner_safe_explanation: preparedCandidate.assessment.learner_safe_explanation,
-          },
-        },
+        focusStudentId:deliveredAnswerRow.user_id,
+        expectedAssessmentResultIds:['saved-result'],
       }
     );
 
@@ -313,7 +307,10 @@ describe('RoomContext teacher transfer review lifecycle', () => {
   });
 
   // RoomContext must not infer grading from answer text when the trusted read fails.
-  it.each([{}, { resolution: 'unknown', attempt_count: 1, feedback_required: true }])(
+  it.each([{}, { resolution: 'unknown', attempt_count: 1, feedback_required: true },
+    {history_readiness:{ready:false,result_message_ids:[],pending_answer_message_ids:[deliveredAnswerRow.id],unavailable_assessment_ids:[]}},
+    {history_readiness:{ready:false,result_message_ids:[],pending_answer_message_ids:[],unavailable_assessment_ids:[deliveredQuestionRow.assessment_id]}},
+  ])(
     'refuses tutor feedback without a verified lifecycle %j', async (lifecycle) => {
       mockTables([learnerAMessageRow, deliveredQuestionRow, deliveredAnswerRow]);
       (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
@@ -321,7 +318,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       });
       await mountRoom();
       await expect(act(async () => { await room!.generateAIResponse(); }))
-        .rejects.toThrow('ASSESSMENT_FEEDBACK_UNAVAILABLE');
+        .rejects.toThrow('ASSESSMENT_RESULT_UNAVAILABLE');
       expect(generateTutorSuggestion).not.toHaveBeenCalled();
       expect(prepareAssessment).not.toHaveBeenCalled();
     }
@@ -381,7 +378,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     });
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
     expect(room!.messages.map((message) => message.id)).toContain('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
     expect(Array.from(new Set((supabase.from as jest.Mock).mock.calls.map(([table]) => table))).sort())
       .toEqual(['ai_suggestion_feedback', 'messages', 'rooms', 'users']);
   });

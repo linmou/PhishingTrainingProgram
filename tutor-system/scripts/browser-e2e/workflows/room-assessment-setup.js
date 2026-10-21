@@ -12,6 +12,7 @@ module.exports = async function roomAssessmentSetup(ctx) {
   const title = `Browser assessment setup ${runId}`;
   await tutorPage.goto(`${appUrl}/#/tutor`, { waitUntil: 'domcontentloaded' });
   await tutorPage.getByRole('button', { name: /Create a new Room/i }).click();
+  await tutorPage.getByLabel('Use Template').selectOption({ label: 'Account Security Alert Scam' });
   await tutorPage.getByLabel('Room Title').fill(title);
   await tutorPage.getByLabel('Description').fill('[browser-e2e-created] New-room assessment setup');
 
@@ -27,6 +28,13 @@ module.exports = async function roomAssessmentSetup(ctx) {
   ctx.registerCreatedRoom(room.id);
   assert(room.title === title && room.tutor_id === ctx.tutor.id,
     'Room creation returned an unexpected room');
+  const createdConfig = (await waitForMatch(
+    () => query(client, 'ai_assistant_configs', 'prompt_config,is_active', 'room_id', room.id),
+    rows => rows.some(row => row.is_active), 'template AI configuration'
+  )).find(row => row.is_active);
+  assert.equal(createdConfig.prompt_config.detection_areas.length, 5,
+    'Created room did not inherit all five template targets');
+  assert.deepEqual(createdConfig.prompt_config.verification_steps, []);
 
   // DemoTutor-owned rooms are intentionally hidden from the public room list;
   // invoke the trusted join operation, then use the returned room URL.
@@ -44,21 +52,35 @@ module.exports = async function roomAssessmentSetup(ctx) {
     'active learner session'
   );
   await openRoom(tutorPage, appUrl, room.id);
+  await tutorPage.locator('button[title="AI Assistant Settings"]').click();
+  await waitForMatch(
+    () => tutorPage.getByLabel('Enable AI Assistant').isChecked(),
+    checked => checked, 'loaded template AI settings'
+  );
+  await tutorPage.getByLabel('Enable In-Room Assessment').uncheck();
+  await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
+  await waitForMatch(
+    () => query(client, 'rooms', 'transfer_learning_enabled', 'id', room.id),
+    rows => rows[0]?.transfer_learning_enabled === false, 'ordinary-room target setup'
+  );
   await tutorPage.locator('button[title="Learning Progress Checklist"]').click();
-  await tutorPage.getByRole('button', { name: 'Manual Input' }).click();
-  await tutorPage.getByRole('textbox', { name: 'Detection Areas' }).fill('Check the sender domain');
-  await tutorPage.getByRole('textbox', { name: 'Verification Steps' }).fill('Open the official app');
-  await tutorPage.locator('.manual-checklist-form button[type="submit"]').click();
+  await tutorPage.getByRole('button', { name: 'Smart Generate' }).click();
   const checklist = (await waitForMatch(
     () => query(client, 'session_checklists', 'id,room_id,is_active', 'room_id', room.id),
     rows => rows.length === 1 && rows[0].is_active, 'one initial checklist'
   ))[0];
-  const item = (await waitForMatch(
-    () => query(client, 'checklist_items', 'id,area_text,status', 'checklist_id', checklist.id),
-    rows => rows.length === 2, 'initial learning targets'
-  )).find(row => row.area_text === 'Check the sender domain');
+  const inheritedItems = await waitForMatch(
+    () => query(client, 'checklist_items', 'id,area_text,item_type,status', 'checklist_id', checklist.id),
+    rows => rows.length === 5, 'five inherited learning targets'
+  );
+  assert.deepEqual(inheritedItems.map(row => row.area_text).sort(),
+    [...createdConfig.prompt_config.detection_areas].sort(), 'Generated targets differ from the room template');
+  assert(inheritedItems.every(row => row.item_type === 'detection_area'), 'Generated targets use inconsistent types');
+  const actionText = createdConfig.prompt_config.detection_areas.at(-1);
+  const item = inheritedItems.find(row => row.area_text === actionText);
   assert(item, 'Initial target was not stored');
-  const target = tutorPage.locator('.checklist-item').filter({ hasText: 'Check the sender domain' });
+  assert.equal(item.item_type, 'detection_area', 'Action target must use the unified type');
+  const target = tutorPage.locator('.checklist-item').filter({ hasText: actionText });
   await target.locator('.checklist-item-header').click();
   await target.locator('.status-select').selectOption('partially_covered');
   await waitForMatch(
@@ -67,7 +89,10 @@ module.exports = async function roomAssessmentSetup(ctx) {
   );
 
   await tutorPage.locator('button[title="AI Assistant Settings"]').click();
-  await tutorPage.getByLabel('Enable AI Assistant').check();
+  await waitForMatch(
+    () => tutorPage.getByLabel('Enable AI Assistant').isChecked(),
+    checked => checked, 'loaded existing AI settings'
+  );
   await tutorPage.getByLabel('Enable In-Room Assessment').check();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
@@ -121,27 +146,26 @@ module.exports = async function roomAssessmentSetup(ctx) {
   });
   if (understandingError) throw new Error(`Assessment fixture understanding: ${understandingError.message}`);
 
-  const focusContent = 'I compared the sender domain with the real service domain. They differ, so I cannot trust the displayed sender name.';
-  await sendStudentMessage(studentPage, focusContent);
+  const focusContent = 'I will ignore the message link and open the real app myself. I will check its security alerts and recent login activity, contact support through the app if needed, and enable two-factor authentication in its settings.';
+  const stopAnalysis = await captureResponses(studentPage,
+    response => response.url().includes('/functions/v1/assessment-api'));
+  let analysisCalls;
+  try {
+    await sendStudentMessage(studentPage, focusContent);
+    await waitForMatch(
+      () => query(client, 'checklist_items', 'status,understanding_level', 'id', item.id),
+      rows => rows[0]?.status === 'covered' && ['good', 'excellent'].includes(rows[0]?.understanding_level),
+      'real analysis of the unified safe-action target'
+    );
+  } finally {
+    analysisCalls = await stopAnalysis();
+  }
+  assert(analysisCalls.some(call => call.request?.operation === 'analyze_message' &&
+    call.status === 200 && call.response?.ok === true), 'Learner action did not complete real target analysis');
   const focus = (await query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id))
     .filter(row => row.user_id === ctx.student.id && row.content === focusContent)
     .sort((left, right) => Date.parse(left.created_at) - Date.parse(right.created_at)).at(-1);
   assert(focus?.id, 'Learner evidence message was not persisted');
-  const { error: signalError } = await client.rpc('apply_learning_event_v1', {
-    p_event: {
-      event_id: requestId(),
-      dedupe_key: `room-assessment-setup:${focus.id}`,
-      kind: 'demonstrated_understanding',
-      room_id: room.id,
-      student_id: ctx.student.id,
-      item_id: item.id,
-      source_message_id: focus.id,
-      source_evidence_message_ids: [focus.id],
-      evidence_text: focusContent,
-      classified_by: 'trusted_backend',
-    },
-  });
-  if (signalError) throw new Error(`Assessment fixture signal: ${signalError.message}`);
 
   // Exercise the real tutor AI action in the newly created room. The previous
   // fixture delivery path bypassed this UI/API boundary entirely.
@@ -186,6 +210,9 @@ module.exports = async function roomAssessmentSetup(ctx) {
     assessment_id: delivered.assessment_id,
     assessment_result_persisted: true,
     observer_read_only: true,
+    inherited_targets: inheritedItems,
+    preparation_calls: prepareCalls,
+    analysis_calls: analysisCalls,
     screenshot: await screenshot(tutorPage, evidenceDir, 'room-assessment-setup')
   };
   writeJson(path.join(evidenceDir, 'room-assessment-setup.json'), evidence);

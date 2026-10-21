@@ -8,15 +8,19 @@ const ts = require('typescript');
 const dotenv = require('dotenv');
 
 const root = path.resolve(__dirname, '..');
-const entrypoint = 'supabase/functions/assessment-api/index.ts';
-const requiredSecrets = ['OAI_API_KEY', 'OAI_BASE_URL', 'OAI_MODEL'];
+const requiredSecrets = ['OAI_API_KEY', 'OAI_BASE_URL'];
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 
 async function main() {
   const args = process.argv.slice(2);
+  const functionFlag = args.find(arg => arg.startsWith('--function='));
+  const slug = functionFlag ? functionFlag.slice('--function='.length) : 'assessment-api';
+  if (!['assessment-api', 'ai-api'].includes(slug)) throw new Error('Select assessment-api or ai-api.');
+  if (functionFlag) args.splice(args.indexOf(functionFlag), 1);
+  const entrypoint = `supabase/functions/${slug}/index.ts`;
   const mode = args.shift();
   if (!['--dry-run', '--bundle-only', '--deploy'].includes(mode)) {
-    throw new Error('Usage: node scripts/deploy-assessment-api.js MODE PROJECT_REF [ENV_FILE]');
+    throw new Error('Usage: node scripts/deploy-assessment-api.js MODE PROJECT_REF [ENV_FILE] [--function=ai-api]');
   }
   const [projectRef, envFile] = args;
   if (!/^[a-z]{20}$/.test(projectRef || '') || args.length > 2) throw new Error('Provide one project ref and optional env file.');
@@ -43,7 +47,7 @@ async function main() {
   }
   visit(path.join(root, entrypoint));
   const sources = [...files.values()].sort((a, b) => a.path.localeCompare(b.path));
-  const metadata = { name: 'assessment-api', entrypoint_path: entrypoint, verify_jwt: false };
+  const metadata = { name: slug, entrypoint_path: entrypoint, verify_jwt: false };
   const manifest = sources.map(({ path: sourcePath, sha256: hash }) => ({ path: sourcePath, sha256: hash }));
   const report = {
     mode, projectRef, metadata, files: manifest, source_sha256: sha256(JSON.stringify(manifest)),
@@ -68,15 +72,15 @@ async function main() {
   const missing = requiredSecrets.filter(name => !names.has(name));
   if (missing.length) throw new Error(`Missing Edge secret names: ${missing.join(', ')}`);
   report.confirmedSecretNames = requiredSecrets;
-  const before = await read('/functions/assessment-api');
+  const before = await read(`/functions/${slug}`);
   const form = new FormData();
   form.set('metadata', JSON.stringify(metadata));
   for (const source of sources) form.append('file', new Blob([source.source], { type: 'application/typescript' }), source.path);
-  const query = mode === '--bundle-only' ? '?slug=assessment-api&bundleOnly=1' : '?slug=assessment-api';
+  const query = `?slug=${slug}${mode === '--bundle-only' ? '&bundleOnly=1' : ''}`;
   const response = await fetch(`${api}/functions/deploy${query}`, { method: 'POST', headers, body: form });
   if (!response.ok) throw new Error(`Function ${mode} returned HTTP ${response.status}`);
   const result = await response.json();
-  const after = await read('/functions/assessment-api');
+  const after = await read(`/functions/${slug}`);
   if (mode === '--bundle-only' && (before.id !== after.id || before.version !== after.version || before.updated_at !== after.updated_at)) {
     throw new Error('Function changed during bundle-only verification; inspect concurrent deployments.');
   }

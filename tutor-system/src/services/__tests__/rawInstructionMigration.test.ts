@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 
 const migration = fs.readFileSync(
-  path.resolve(process.cwd(), 'supabase/migrations/024_raw_instruction.sql'),
+  path.resolve(process.cwd(), 'supabase/archived_migrations/024_raw_instruction.sql'),
   'utf8'
 );
 

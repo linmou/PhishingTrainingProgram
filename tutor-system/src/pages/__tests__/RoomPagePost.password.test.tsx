@@ -37,9 +37,9 @@ describe('RoomPagePost password prompt', () => {
             aiSuggestion: null,
             transferDraft: null,
             confirmTransferDraft: jest.fn(),
-            finalMode: 'tutoring',
-            updateFinalMode: jest.fn(),
-            setResponseMode: jest.fn(),
+            finalGuardMode: false,
+            updateFinalGuardMode: jest.fn(),
+            setGuardMode: jest.fn(),
             clearAISuggestion: jest.fn(),
             recordAIFeedback: jest.fn(),
             currentSuggestionContext: null,
@@ -104,7 +104,7 @@ describe('RoomPagePost password prompt', () => {
             expect(screen.getByText('Incorrect password. Please try again.')).toBeInTheDocument();
         });
         expect(screen.getByRole('heading', { name: /Password Required/i })).toBeInTheDocument();
-        expect(input).toHaveValue('wrong-password');
+        expect(input).toHaveValue('');
         expect(joinRoom).toHaveBeenCalledTimes(2);
     });
 

@@ -13,6 +13,8 @@ import {
   projectRoomMessage,
   readAnswerLifecycle,
   withAnswerLifecycle,
+  mergeRoomMessages,
+  findOpenLearnerAssessment,
 } from '../transferAssessmentUiAdapter';
 import {
   processedAlreadyTerminalReplay,
@@ -24,6 +26,8 @@ import {
   DELIVERED_ANSWER_ID,
   DELIVERED_QUESTION_ID,
   deliveredQuestionRow,
+  deliveredAnswerRow,
+  LEARNER_A_ID,
 } from '../../test-support/transferRoomFixtures';
 import { expectNoPrivateAssessmentFields } from '../../test-support/transferPrivacyAssertions';
 import {
@@ -34,6 +38,19 @@ import {
 import type { Message } from '../../types';
 
 describe('transferAssessmentUiAdapter answer lifecycle', () => {
+  it('hydrates every participant from saved events arriving before the answer and ignores stale question updates', () => {
+    const question=projectRoomMessage(deliveredQuestionRow);
+    const result=projectRoomMessage(processedCorrectTerminal.result_message as unknown as Record<string,unknown>);
+    let room=mergeRoomMessages([question],[result]);
+    expect(findOpenLearnerAssessment(room,LEARNER_A_ID)).toBeNull();
+    room=mergeRoomMessages(room,[projectRoomMessage({...deliveredAnswerRow,assessment_selected_option_ids:['B']})]);
+    expect(room.map(message=>message.id)).toEqual([question.id,deliveredAnswerRow.id,result.id]);
+    expect(readAnswerLifecycle(room[1])).toMatchObject({answerOutcome:'passed',selectedOptionIds:['B'],terminal:true});
+    room=mergeRoomMessages(room,[projectRoomMessage(deliveredQuestionRow),result]);
+    expect(room).toHaveLength(3);
+    expect(findOpenLearnerAssessment(room,LEARNER_A_ID)).toBeNull();
+    expect((room[0] as ReturnType<typeof projectRoomMessage>).publicQuestion?.lifecycle).toBe('passed');
+  });
   it('projects a passed answer with the server attempt and transition metadata', () => {
     const original = JSON.stringify(processedCorrectTerminal);
     const lifecycle = answerLifecycleFromProcessed(processedCorrectTerminal);

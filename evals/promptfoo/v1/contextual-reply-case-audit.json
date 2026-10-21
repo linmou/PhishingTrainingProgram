@@ -1,0 +1,1583 @@
+{
+  "source_suite": "development-with-guard-scenario-rich.json",
+  "source_sha256": "f86df945af434c87462809a10a7a39141cfc13926201de39d3ba688c0bd0f517",
+  "original_cases": 61,
+  "originals": [
+    {
+      "id": "webpage_account_security_alert_classic",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_nintendo_click_deal",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_itunes_professional_photo",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_demo_lock_icon_myth",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_demo_click_impulse",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_demo_correct_safe_action",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_demo_correct_lock_reasoning",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_demo_pressure_words",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "webpage_demo_personal_story_trap",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_thinks_alert_is_real",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_wants_to_click",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_trusts_https",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_notices_misspelling_only",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_gives_vague_answer",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "younger_student_confused",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "overconfident_student",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_asks_what_to_do",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_asks_about_url_tools",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_mentions_panic_words",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_asks_about_bot_experience",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_correctly_lists_red_flags",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_thinks_design_proves_legit",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_correctly_uses_real_bank_channel",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_correctly_rejects_https_identity",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "student_asks_reverse_image",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "holdout_student_trusts_support_domain",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "holdout_parent_forwards_bank_alert",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "holdout_student_overuses_url_tool",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "deliberate_repeated_click",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "disruption_correction",
+        "guard_tone_safety",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "deliberate_https_repetition",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "disruption_correction",
+        "guard_tone_safety",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "explicit_system_testing",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "disruption_correction",
+        "guard_tone_safety",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "joking_deliberate_repetition",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "disruption_correction",
+        "guard_tone_safety",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "first_unsafe_mistake",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "repeated_genuine_confusion",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "four_improving_attempts",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "frustrated_but_engaged",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "clarification_seeking",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "equal_count_deliberate",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "disruption_correction",
+        "guard_tone_safety",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "equal_count_confused",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "guard_dodge",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "guard_acknowledgement_only",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "guard_semantic_correction",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "guard_correct_verification_action",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "guard_dodge_known_guard",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "disruption_correction",
+        "guard_tone_safety"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "guard_acknowledgement_only_known_guard",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "disruption_correction",
+        "guard_tone_safety"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_peer_all_targets_covered",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_peer_later_contradiction",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level",
+        "instruction_selection",
+        "instruction_realization"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_peer_incorrect_guard_recovery",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level",
+        "instruction_selection",
+        "instruction_realization"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_peer_guard_clarification_recovery",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_adult_all_targets_covered",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_adult_later_contradiction",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level",
+        "instruction_selection",
+        "instruction_realization"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_adult_incorrect_guard_recovery",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level",
+        "instruction_selection",
+        "instruction_realization"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_adult_guard_clarification_recovery",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_intent_pair_deliberate",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "disruption_correction",
+        "guard_tone_safety"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_intent_pair_confused",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_recovery_pair_promise",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "disruption_correction",
+        "guard_tone_safety"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "development_recovery_pair_attempt",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level",
+        "instruction_selection",
+        "instruction_realization"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "ecological_click_imminent",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "ecological_lock_clarification",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "ecological_participation_disruption",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "disruption_correction",
+        "guard_tone_safety"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    },
+    {
+      "id": "ecological_participation_confusion",
+      "disposition": "reuse",
+      "reason": "Original inputs, labels and assertions retained unchanged.",
+      "checks": [
+        "mode_selection",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "learning_state_target",
+        "reading_level"
+      ],
+      "proposed_changes": [],
+      "new_metric": {
+        "id": "current_turn_grounding",
+        "disposition": "not_applicable",
+        "reason": "This increment measures short context-dependent replies after a topic change; original inputs and prior assertions remain preserved."
+      }
+    }
+  ],
+  "added": [
+    {
+      "id": "room_itunes_contextual_link_affirmation",
+      "requirements": [
+        "T01",
+        "T02",
+        "T03",
+        "C01"
+      ],
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "current_turn_grounding"
+      ],
+      "holdout_eligible": false
+    },
+    {
+      "id": "room_itunes_contextual_link_negation",
+      "requirements": [
+        "T01",
+        "T02",
+        "T03",
+        "C01"
+      ],
+      "checks": [
+        "mode_selection",
+        "instruction_selection",
+        "instruction_realization",
+        "learning_state_target",
+        "contribution_feedback",
+        "contextual_knowledge_quality",
+        "persona_stability",
+        "honest_self_representation",
+        "reading_level",
+        "learner_dignity",
+        "response_length",
+        "contract_validity",
+        "decision_reasoning",
+        "current_turn_grounding"
+      ],
+      "holdout_eligible": false
+    }
+  ]
+}
