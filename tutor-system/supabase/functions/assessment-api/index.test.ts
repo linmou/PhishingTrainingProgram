@@ -17,7 +17,7 @@ function assertEquals(actual: unknown, expected: unknown): void {
 function request(operation: string, body: Record<string, unknown> = {}): Request {
   return new Request('http://localhost/assessment-api', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: 'Bearer test' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer test', 'x-practice-contract': 'cyberbullying-v1' },
     body: JSON.stringify({ operation, request_id: '00000000-0000-4000-8000-000000000001', ...body }),
   });
 }
@@ -63,6 +63,25 @@ function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): Asses
     },
   };
 }
+
+// Covers assessment-api/index.ts: stale clients must fail before identity, database or provider access.
+Deno.test('rejects missing and outdated client contracts before assessment side effects', async () => {
+  let touched = false;
+  const handler = createAssessmentApiHandler(dependencies({
+    verifier: { verify: async () => { touched = true; throw new Error('unexpected identity call'); } },
+    rpc: async () => { touched = true; throw new Error('unexpected database call'); },
+    fetch: async () => { touched = true; throw new Error('unexpected provider call'); },
+  }));
+  for (const contract of [null, 'outdated']) {
+    const stale = request('join_room', { room_id: 'room-1' });
+    if (contract === null) stale.headers.delete('x-practice-contract');
+    else stale.headers.set('x-practice-contract', contract);
+    const result = await handler(stale);
+    assertEquals(result.status, 409);
+    assertEquals((await result.json()).error.code, 'CLIENT_RELOAD_REQUIRED');
+  }
+  assertEquals(touched, false);
+});
 
 function providerScope(): Record<string, unknown> {
   return {

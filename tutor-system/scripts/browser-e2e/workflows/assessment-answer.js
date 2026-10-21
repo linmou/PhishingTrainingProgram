@@ -170,7 +170,7 @@ async function recovery(ctx) {
   async function operation(actorId, body, expectedStatus = 200) {
     const response = await fetch(`${ctx.config.projectUrl}/functions/v1/assessment-api`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ctx.config.anonKey,
-        Authorization: `Bearer ${ctx.config.anonKey}`, 'x-application-user-id': actorId },
+        Authorization: `Bearer ${ctx.config.anonKey}`, 'x-application-user-id': actorId, 'x-practice-contract': 'cyberbullying-v1' },
       body: JSON.stringify({ request_id: requestId(), ...body })
     });
     const payload = await response.json();

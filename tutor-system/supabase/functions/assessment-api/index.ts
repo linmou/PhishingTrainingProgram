@@ -101,6 +101,7 @@ function response(body: unknown, status = 200): Response {
 }
 
 const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
+  CLIENT_RELOAD_REQUIRED: { status: 409, retryable: false },
   INVALID_REQUEST: { status: 400, retryable: false },
   UNAUTHORIZED: { status: 401, retryable: false },
   FORBIDDEN: { status: 403, retryable: false },
@@ -364,7 +365,7 @@ async function analyzeMessage(
             }) },
             ...(scope.practice_type === 'cyberbullying' ? [] : [{ role: 'user', content:
               'Evaluate ONLY this target: ' + item.area_text +
-              '\nDo not credit another useful or safe action. Identify the concrete action or claim required by this target, then compare it to the current learner message. When no component of this target is present, return events: []. From pending, use demonstrated_understanding for the full required action or claim; use initial_signal for a real but incomplete component. For a recognition target, identifying its object while explicitly uncertain about its required property is incomplete recognition: emit initial_signal from pending, rather than no event or demonstrated_understanding. For an action target, partial evidence must describe part of that action; recognizing a related object or channel is not partial performance of the action. A different safe action is not a component of an unmentioned target. For every other current status, follow the state eligibility rules above.' }]),
+              '\nDo not credit another useful or safe action. Identify the concrete action or claim required by this target, then compare it to the current learner message. When no component of this target is present, return events: []. From pending, use demonstrated_understanding for the full required action or claim; use initial_signal for a real but incomplete component. For a recognition target, identifying its object while explicitly uncertain about its required property is incomplete recognition: emit initial_signal from pending, rather than no event or demonstrated_understanding. For an action target, partial evidence must describe part of that action; recognizing a related object or channel is not partial performance of the action. A different safe action is not a component of an unmentioned target. A learner saying they do not know a fact does not establish that the scenario omits that fact; require their own current observation of the missing feature. For every other current status, follow the state eligibility rules above.' }]),
             ...(ordinal > 1 ? [{ role: 'system', content: 'The previous attempt violated the output contract. Return valid JSON using the supplied item/message IDs and eligible event categories. Each evidence_quote must be one exact contiguous substring of the current learner message; do not combine passages or insert ellipses. Preserve the evidence judgment and omit an event when the current learner supplies no relevant evidence.' }] : []),
           ],
           temperature: 0,
@@ -630,6 +631,9 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
   return async (request: Request): Promise<Response> => {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
     if (request.method !== 'POST') return fail('INVALID_REQUEST');
+    if (request.headers.get('x-practice-contract') !== 'cyberbullying-v1') {
+      return fail('CLIENT_RELOAD_REQUIRED', 'Reload this page before continuing.');
+    }
     let body: Record<string, any>;
     try {
       body = asRecord(await request.json());

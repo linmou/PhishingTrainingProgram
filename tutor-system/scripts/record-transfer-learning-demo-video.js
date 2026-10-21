@@ -114,7 +114,7 @@ async function main() {
   const contactSheet = path.join(outputRoot, `transfer-learning-demo-video-${runId}-timestamped.png`);
   fs.mkdirSync(rawDir, { recursive: true });
 
-  const client = createClient(config.projectUrl, config.serviceKey, { auth: { persistSession: false } });
+  const client = createClient(config.projectUrl, config.serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } }, auth: { persistSession: false } });
   const learnerName = `Transfer Demo Learner ${runId}`;
   const startedAt = Date.now();
   const chapters = [];

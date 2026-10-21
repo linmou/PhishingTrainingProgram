@@ -16,7 +16,7 @@ function assertEquals(actual: unknown, expected: unknown): void {
 function request(body: Record<string, unknown>, authorization = 'Bearer test-token'): Request {
   return new Request('http://localhost/ai-api', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization },
+    headers: { 'content-type': 'application/json', authorization, 'x-practice-contract': 'cyberbullying-v1' },
     body: JSON.stringify(body),
   });
 }
@@ -38,7 +38,7 @@ const practiceIds = {
 function practiceRequest(body: Record<string, unknown>) {
   return new Request('http://localhost/ai-api', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-application-user-id': practiceIds.tutor },
+    headers: { 'content-type': 'application/json', 'x-application-user-id': practiceIds.tutor, 'x-practice-contract': 'cyberbullying-v1' },
     body: JSON.stringify({ operation: 'cyberbullying_suggest', room_id: practiceIds.room, request_id: practiceIds.proposal, ...body }),
   });
 }
@@ -69,6 +69,21 @@ function practiceDependencies(overrides: Partial<AiApiDependencies> = {}) {
   });
   return { deps, calls, context, providerBodies };
 }
+
+// Covers ai-api/index.ts: stale clients cannot create proposals or spend provider calls.
+Deno.test('rejects missing and outdated client contracts before proposal side effects', async () => {
+  const fixture = practiceDependencies();
+  for (const contract of [null, 'outdated']) {
+    const stale = practiceRequest({});
+    if (contract === null) stale.headers.delete('x-practice-contract');
+    else stale.headers.set('x-practice-contract', contract);
+    const result = await createAiApiHandler(fixture.deps)(stale);
+    assertEquals(result.status, 409);
+    assertEquals((await result.json()).error.code, 'CLIENT_RELOAD_REQUIRED');
+  }
+  assertEquals(fixture.calls.length, 0);
+  assertEquals(fixture.providerBodies.length, 0);
+});
 
 Deno.test('cyberbullying derives full context from storage and saves one unpublished response for each role', async () => {
   for (const character of ['same_age_peer', 'older_peer', 'victim', 'bully', 'educator']) {

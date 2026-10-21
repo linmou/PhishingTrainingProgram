@@ -240,6 +240,7 @@ export function createAiApiHandler(deps: AiApiDependencies) {
   return async (request: Request): Promise<Response> => {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
     if (request.method !== 'POST') return fail('INVALID_REQUEST', 400);
+    if (request.headers.get('x-practice-contract') !== 'cyberbullying-v1') return fail('CLIENT_RELOAD_REQUIRED', 409);
 
     let body: unknown;
     try {

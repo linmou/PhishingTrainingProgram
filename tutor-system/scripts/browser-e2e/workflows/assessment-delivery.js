@@ -272,7 +272,13 @@ module.exports = async function assessmentDelivery(ctx) {
   assert.equal(secondTarget.status, 'pending', 'Second target advanced before its tutoring evidence');
   await journey.observe('I think I should contact the platform support team about the warning, but I do not know where to find their real contact details.',
     secondTarget, 'initial_signal', 'partially_covered', 'basic');
-  const between = await tutoringStep(ctx, journey, {
+  const interveningQueue = await completeAssessmentQueue(ctx, journey, 'before-support');
+  assert(!interveningQueue.cycles.some(cycle => cycle.assessed_item.id === secondTarget.id),
+    'Partial support target became assessment eligible');
+  const supportAfterQueue = (await query(ctx.client, 'checklist_items', 'status,understanding_level', 'id', secondTarget.id))[0];
+  assert.equal(supportAfterQueue.status, 'partially_covered');
+  assert.equal(supportAfterQueue.understanding_level, 'basic');
+  const between = interveningQueue.feedback.at(-1) || await tutoringStep(ctx, journey, {
     label: 'support-tutoring', focusMessageId: journey.observations.at(-1).message.id,
     expectedAssessmentCount: firstQueue.cycles.length, target: secondTarget, terminalAssessment: null
   });
@@ -281,7 +287,7 @@ module.exports = async function assessmentDelivery(ctx) {
   const secondQueue = await completeAssessmentQueue(ctx, journey, 'support');
   const second = secondQueue.cycles.find(cycle => cycle.assessed_item.id === secondTarget.id);
   assert(second, 'Official Support learning did not complete its assessment');
-  const cycles = [...firstQueue.cycles, ...secondQueue.cycles];
+  const cycles = [...firstQueue.cycles, ...interveningQueue.cycles, ...secondQueue.cycles];
   assert.equal(cycles.at(-1).room_assessments.length, cycles.length, 'Journey created unexpected assessment lifecycles');
   assert.equal(new Set(cycles.map(cycle => cycle.assessment_id)).size, cycles.length);
   assert.notEqual(first.assessment_id, second.assessment_id, 'Second target reused the first assessment');
@@ -294,7 +300,7 @@ module.exports = async function assessmentDelivery(ctx) {
   }
   return { room_id: journey.room.id, checklist_id: journey.checklist_id,
     template_target_count: journey.template_target_count, cycles,
-    first_target_tutoring: firstTutoring, assessment_queues: [firstQueue, secondQueue],
+    first_target_tutoring: firstTutoring, assessment_queues: [firstQueue, interveningQueue, secondQueue],
     between_cycles: between, status_observations: journey.observations, final_progress: finalProgress };
 };
 
