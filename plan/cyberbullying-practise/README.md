@@ -7,7 +7,7 @@ Updated: 2026-10-21. Review-flow amendment baseline: `abb98036df67c1e173ed9b2ab7
 
 [final_plan.md](final_plan.md) is the current execution plan. Its review-flow amendment reuses the phishing ordinary-reply browser draft, publishes character replies through `public.messages`, and records original/final text, character and tutor decisions in `public.ai_suggestion_feedback`.
 
-The amendment retires the dedicated Cyberbullying proposal lifecycle and includes migration, history-preservation, verification and release requirements. It records the requested design; implementation acceptance is established by the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_21_cyberbullying_practise.md).
+The amendment retires the dedicated Cyberbullying proposal lifecycle and includes migration, history-preservation, verification and release requirements. On 2026-10-21, the user confirmed that this version 2 amendment is follow-up work. The current release implements the earlier approved proposal workflow and R1–R12; implementation acceptance is established by the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_21_cyberbullying_practise.md).
 
 ## Supporting history
 

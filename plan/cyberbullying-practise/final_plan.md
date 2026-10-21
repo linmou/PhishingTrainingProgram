@@ -4,6 +4,8 @@ Date: 2026-10-21. Amendments: user-directed inheritance of the current platform 
 Worktree: /Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/cyberbullying-practise
 Branch: feat/cyberbullying-practise.
 
+Release scope decision (2026-10-21): the user confirmed that the version 2 browser-draft amendment is follow-up work. The current production batch implements the earlier approved proposal workflow and R1–R12. This document retains the amended design for that next task; current delivery evidence is in the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_21_cyberbullying_practise.md).
+
 ## Selected architecture and provenance
 Backbone: [candidate 1](candidates/plan_1.md), inline-room-dispatch, steps 1–8. All five independent judges ranked it first: rank sum 5, rubric sum 143, five first-place votes. The fixed ranking rule selects it ahead of plans 2/3/4 (rank sums 10/15/20). See [ranking evidence](judgements_1st/summary.md).
 
