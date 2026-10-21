@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   deploy-staging:
@@ -29,12 +29,20 @@ jobs:
       run:
         working-directory: tutor-system
     env:
+      GH_TOKEN: ${{ github.token }}
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       OAI_API_KEY: ${{ secrets.OAI_API_KEY }}
       OAI_BASE_URL: ${{ secrets.OAI_BASE_URL }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Acquire cross-machine staging lease
+        run: node ../scripts/staging-coordination.js acquire ../output/staging-release
 
       - name: Check required secrets
         shell: bash
@@ -83,3 +91,12 @@ jobs:
         env:
           PROJECT_REF: ciubrzggdqesgvfkpolj
         run: supabase functions deploy ai-api --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
+
+      # Keep the lease across deployment and the release owner's acceptance checks.
+      # Download this artifact, verify the same commit under the lease, then release.
+      - name: Retain lease and exact candidate evidence for acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-release-${{ github.sha }}-${{ github.run_id }}
+          path: output/staging-release/

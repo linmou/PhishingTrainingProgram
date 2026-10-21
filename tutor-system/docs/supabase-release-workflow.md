@@ -2,7 +2,7 @@
 
 Intent: match verification cost to changed behavior, verify integrated releases on staging, and promote committed batches to production with evidence.
 
-Updated: 2026-10-21. Integrated workflow baselines: `18981cc`, `16c2f95`, `dec0fd6`.
+Updated: 2026-10-21. Integrated workflow baselines: `18981cc`, `16c2f95`, `dec0fd6`, `6196084`, `5d94e24`.
 
 ## Task Completion
 
@@ -29,8 +29,8 @@ This document remains the **release policy**, not an implementation of a verific
 - **Worktrees and files:** each Agent owns an isolated worktree/branch and unique temporary/evidence directories. One run must not delete another run's files.
 - **Database validation:** reuse the local validation cluster (port `55433`), allocating disposable databases per concurrent SQL test run rather than a new cluster/container per Agent. Use [disposable-database.js](../../scripts/database/README.md#disposable-scenario-databases) with an explicitly verified local baseline for automatic allocation, database ACL/settings parity and ownership-checked cleanup. Do not bypass hosted baseline, role, ACL, executor or Red/Green parity checks.
 - **Snapshots:** use the root `scripts/database/export_validation_baseline.sh` wrapper for parallel work to avoid clobbering fixed dump/role-export filenames. Record its private run path and hashes. The legacy exporter is single-owner only, and source dumps can contain real user data.
-- **Browser E2E:** the entrypoint guards shared fixture rooms with a same-host, project-wide lock through cleanup. It does **not** protect across machines. Separate hosted fixture ownership or serialize those runs across machines.
-- **Staging code/schema:** do not allow individual coding Agents to deploy their private candidate branches to the shared staging project while other Agents are verifying. Stage SQL and Edge updates via the named release owner, serially, with deployed source hashes and evidence invalidation. GitHub Actions concurrency alone does not govern direct/manual deployments.
+- **Browser E2E:** the entrypoint holds both its same-host fixture lock and the [cross-machine project lease](agent-coordination.md) through cleanup. Fixed fixtures are serialized across machines; distinct room IDs do not isolate shared code.
+- **Staging code/schema:** do not allow individual coding Agents to deploy their private candidate branches to the shared staging project while other Agents are verifying. The named release owner must acquire the same project lease for SQL, Edge, secrets and acceptance checks, including direct MCP/Management API work. The deployment workflow and local assessment deployer take that lease; Actions concurrency remains an additional guard. Record deployed source hashes and invalidate affected evidence after changes. Raw clients with write credentials can bypass the protocol and must not be used outside the owned lease.
 - **Production:** PR and verification-skill runs do not deploy production. The existing production release owner and acceptance gates apply to authorized releases, not independent feature verification runs.
 
 After combining PRs, verify the **combined** SQL/Edge/frontend artifacts and affected journeys, since individually passing PR tests do not prove compatibility. Keep at most one pending migration in `tutor-system/supabase/migrations/` and one candidate in the shared staging deployment queue. Order and revalidate interdependent migrations before any promotion.

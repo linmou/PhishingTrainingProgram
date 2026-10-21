@@ -34,9 +34,9 @@ For a migration, obtain a per-run source export without overwriting anyone else'
 
 Preserve that directory path and SHA256SUMS. An exported dump is not a validated or restorable baseline. Complete the existing documented role/ACL/extension setup, fresh per-run test database, restore, baseline comparison, Red/Green, and cleanup stages before claiming SQL verification.
 
-For authorized live browser E2E, use the documented environment setup and selected workflow. The runner locks fixed test rooms across setup/test/cleanup on the same host. This does not coordinate multiple machines. Use a shared coordinator or separately provisioned fixtures rather than allowing conflicting live tests. Never override a lock.
+For authorized live browser E2E, use the documented environment setup and selected workflow. The runner holds the same-host fixture lock and the GitHub project lease described in tutor-system/docs/agent-coordination.md across setup/test/cleanup. Authenticate gh; missing access or contention fails closed. Never override a lock.
 
-Only the named release owner may deploy SQL or Edge source to shared staging, and only under the existing serial release gates. PR verification itself never deploys production.
+Only the named release owner may deploy SQL or Edge source to shared staging, and only under the existing serial release gates and shared project lease, including direct MCP/API operations. Use scripts/verify-agent-integration.js for the committed combined harness/database/browser candidate under one lease. PR verification itself never deploys production.
 
 ## Evidence and cleanup
 

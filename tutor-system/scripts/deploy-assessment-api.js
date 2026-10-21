@@ -90,7 +90,10 @@ async function main() {
   console.log(JSON.stringify(report, null, 2));
 }
 
-main().catch(error => {
+const { STAGING, withProjectLock } = require('../../scripts/staging-coordination');
+const operation = process.argv[2] === '--deploy' && process.argv[3] === STAGING
+  ? () => withProjectLock(STAGING, 'deploy-assessment-api', main) : main;
+operation().catch(error => {
   console.error(error.message);
   process.exitCode = 1;
 });
