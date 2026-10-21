@@ -70,16 +70,16 @@ export async function assessChecklistGenerationContext(roomId: string, requireRo
     // Get system prompt (handle null/undefined)
     const systemPrompt = aiConfig.system_prompt || '';
 
-    const persistedDetectionAreas = aiConfig.prompt_config?.detection_areas?.filter(area => area.trim()) || [];
-    const persistedVerificationSteps = aiConfig.prompt_config?.verification_steps?.filter(step => step.trim()) || [];
-    const persistedItems = [...persistedDetectionAreas, ...persistedVerificationSteps];
-
-    if (persistedItems.length > 0) {
+    const persistedTargets = [
+      ...(aiConfig.prompt_config?.detection_areas || []),
+      ...(aiConfig.prompt_config?.verification_steps || [])
+    ].filter((target) => target.trim());
+    if (persistedTargets.length > 0) {
       return {
         type: 'ready_for_extraction',
         systemPrompt,
-        detectionAreas: persistedDetectionAreas,
-        verificationSteps: persistedVerificationSteps,
+        detectionAreas: persistedTargets,
+        verificationSteps: [],
         aiConfigId: aiConfig.id
       };
     }
@@ -90,14 +90,7 @@ export async function assessChecklistGenerationContext(roomId: string, requireRo
     
     // Try to extract detection areas using async LLM extraction
     const extraction = await ChecklistIntegration.extractFromSystemPromptAsync(systemPrompt);
-    const totalItems = extraction.understanding.length + extraction.behavior.length;
-    
-    // Check for None fallback
-    const isNoneFallback = 
-      extraction.understanding.length === 1 && extraction.understanding[0] === '[understanding] None' &&
-      extraction.behavior.length === 1 && extraction.behavior[0] === '[behavior] None';
-    
-    if (totalItems === 0 || isNoneFallback) {
+    if (extraction.detection_areas.length === 0) {
       return {
         type: 'empty_system_prompt',
         systemPrompt,
@@ -105,11 +98,11 @@ export async function assessChecklistGenerationContext(roomId: string, requireRo
       };
     }
     
-    const allItems = [...extraction.understanding, ...extraction.behavior];
     return {
       type: 'ready_for_extraction',
       systemPrompt,
-      detectionAreas: allItems,
+      detectionAreas: extraction.detection_areas,
+      verificationSteps: [],
       aiConfigId: aiConfig.id
     };
     

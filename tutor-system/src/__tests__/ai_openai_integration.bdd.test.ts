@@ -20,7 +20,7 @@ const ROOM_ID = 'qwen-feature-room';
 const RESPONSE = 'Check the sender and verify through the official site.';
 const DECISION = JSON.stringify({
   reason: 'The learner is checking an unexpected request.',
-  decision: { mode: 'tutoring', instruction: 'explanation' },
+  decision: { guard_mode: false, instruction: 'explanation' },
   response: RESPONSE,
 });
 const ROOM = {
@@ -30,8 +30,8 @@ const ROOM = {
   ai_assistant_enabled: true,
   ai_assistant_model: 'qwen3.5-flash',
   ai_assistant_prompt: 'Focus on cybersecurity education.',
-  active_response_mode: 'tutoring',
-  mode_changed_at: '2026-01-01T00:00:00.000Z',
+  guard_mode: false,
+  guard_mode_changed_at: '2026-01-01T00:00:00.000Z',
 };
 const CONFIG: AIAssistantConfig = {
   id: 'qwen-feature-config',
@@ -90,7 +90,7 @@ describe('Qwen API integration through Supabase', () => {
     expect(invoke).toHaveBeenCalledWith('ai-api', {
       body: expect.objectContaining({
         temperature: 0.3,
-        max_tokens: 100,
+        max_tokens: 600,
         enable_thinking: false,
         response_format: { type: 'json_object' },
       }),
@@ -120,7 +120,7 @@ describe('Qwen API integration through Supabase', () => {
 
     const result = await generateTutorSuggestion(ROOM_ID, 'tutor-1');
 
-    expect(result).toMatchObject({ success: true, decision: { mode: 'tutoring' } });
+    expect(result).toMatchObject({ success: true, decision: { guard_mode: false } });
     expect(invoke).not.toHaveBeenCalled();
     delete process.env.REACT_APP_USE_DUMMY_AI;
   });

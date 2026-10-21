@@ -1,5 +1,11 @@
 # Room UI Consumer Contracts
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Consume PublicMessageDTO.assessment_event and ProcessedMessageDTO.result_message through upstream allowlists. Hydrate lifecycle from saved server events on every ingress, preserve answer navigation/controls, and render verdict feedback once in the result message. Exports and attribution follow the approved room publication scope. See [Assessment result messages](../../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 ## Intent
 
 Specify how W7-W8 consumes component 101's shared assessment/progress types and component 102's allowlisted browser contract. Component 101 owns shared domain type files and exports; component 102 owns `tutor-system/src/services/transferAssessmentService.ts`, all API DTO/envelope declarations, and operation mapping. Component 103 owns only React-specific narrowing and adapter-local view-state types in UI-owned files; components do not consume raw provider or database responses.

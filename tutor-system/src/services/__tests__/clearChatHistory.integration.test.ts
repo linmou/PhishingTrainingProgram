@@ -1,39 +1,229 @@
-/** Tests supabase.ts clearChatHistory end to end against an in-memory SDK boundary: room isolation, template retention and permission denial. */
-jest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn(() => ({ from: jest.fn() })) }));
-import { supabase, clearChatHistory } from '../supabase';
+/**
+ * @jest-environment jsdom
+ */
+// Responsibility: supabase.ts clearChatHistory authorization and trusted transactional clear delegation.
 
-it('clears one owned room without changing another room or either template', async () => {
-  const users = [{ id: 'tutor-1', current_role: 'tutor' }, { id: 'student-1', current_role: 'student' }];
-  const rooms = [
-    { id: 'room-1', tutor_id: 'tutor-1', title: 'One', pre_populated_dialogue: [{ message: 'Original template' }] },
-    { id: 'room-2', tutor_id: 'tutor-2', title: 'Two', pre_populated_dialogue: [{ message: 'Other template' }] }
-  ];
-  const state: Record<string, any[]> = { users, rooms,
-    messages: [{ id: 'message-1', room_id: 'room-1' }, { id: 'message-2', room_id: 'room-2' }],
-    message_feedback: [{ id: 'feedback-1', room_id: 'room-1' }, { id: 'feedback-2', room_id: 'room-2' }]
-  };
-  (supabase.from as jest.Mock).mockImplementation((name: string) => {
-    const builder = {
-      select: () => builder,
-      eq: (column: string, value: string) => ({
-        single: async () => ({ data: state[name].find(row => row[column] === value), error: null })
-      }),
-      delete: () => ({
-        eq: async (column: string, value: string) => {
-          state[name] = state[name].filter(row => row[column] !== value);
-          return { error: null };
-        }
-      })
+import { clearChatHistory } from '../supabase';
+
+// Mock the supabase client and dependencies
+jest.mock('@supabase/supabase-js', () => ({
+    createClient: jest.fn(() => ({
+        auth: {
+            getUser: jest.fn()
+        },
+        from: jest.fn()
+    }))
+}));
+jest.mock('../transferAssessmentService',()=>({transferAssessmentService:{clearChatHistory:jest.fn()}}));
+
+// Import after mocking
+import { supabase } from '../supabase';
+import { transferAssessmentService } from '../transferAssessmentService';
+
+describe('Clear Chat History Integration Tests', () => {
+    const mockRoomId = 'test-room-id';
+    const mockUserId = 'test-user-id';
+    const mockTutorUser = {
+        id: mockUserId,
+        current_role: 'tutor'
     };
-    return builder;
-  });
-  const templatesBefore = JSON.parse(JSON.stringify(rooms));
-  await expect(clearChatHistory('room-1', 'student-1')).rejects.toThrow('Only tutors');
-  expect(state.messages).toHaveLength(2);
-  await expect(clearChatHistory('room-2', 'tutor-1')).rejects.toThrow('not authorized');
-  expect(state.messages).toHaveLength(2);
-  expect(await clearChatHistory('room-1', 'tutor-1')).toMatchObject({ success: true, prePopulatedMessagesPreserved: true });
-  expect(state.messages).toEqual([{ id: 'message-2', room_id: 'room-2' }]);
-  expect(state.message_feedback).toEqual([{ id: 'feedback-2', room_id: 'room-2' }]);
-  expect(rooms).toEqual(templatesBefore);
+
+    // No need for getCurrentUser in simplified auth
+    const mockSupabase = supabase as any;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (transferAssessmentService.clearChatHistory as jest.Mock).mockResolvedValue({success:true});
+    });
+
+    describe('GREEN PHASE - Tests should pass with implementation', () => {
+        it('should throw error when user is not found', async () => {
+            // Mock user not found
+            const mockSingle = jest.fn().mockResolvedValueOnce({
+                data: null,
+                error: { message: 'User not found' }
+            });
+            const mockEq = jest.fn().mockReturnValue({ single: mockSingle });
+            const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+            mockSupabase.from.mockReturnValue({ select: mockSelect });
+
+            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow('User not found or not authenticated');
+        });
+
+        it('should only allow tutors to clear chat history', async () => {
+            // Mock student user found
+            const mockStudentUser = { id: mockUserId, current_role: 'student', display_name: 'Student' };
+            const mockSingle = jest.fn().mockResolvedValueOnce({
+                data: mockStudentUser,
+                error: null
+            });
+            const mockEq = jest.fn().mockReturnValue({ single: mockSingle });
+            const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+            mockSupabase.from.mockReturnValue({ select: mockSelect });
+
+            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow('Only tutors can clear chat history');
+        });
+
+        it('should verify room ownership before clearing', async () => {
+            // Mock user found first
+            const mockUserSingle = jest.fn().mockResolvedValueOnce({
+                data: mockTutorUser,
+                error: null
+            });
+
+            // Mock room not found
+            const mockRoomSingle = jest.fn().mockResolvedValueOnce({
+                data: null,
+                error: { message: 'Room not found' }
+            });
+
+            const mockEq = jest.fn()
+                .mockReturnValueOnce({ single: mockUserSingle })  // First call for user
+                .mockReturnValueOnce({ single: mockRoomSingle }); // Second call for room
+
+            const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+            mockSupabase.from.mockReturnValue({ select: mockSelect });
+
+            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow('Room not found');
+        });
+
+        it('should only allow room owners to clear chat history', async () => {
+            // Mock user found first
+            const mockUserSingle = jest.fn().mockResolvedValueOnce({
+                data: mockTutorUser,
+                error: null
+            });
+
+            // Mock room owned by different user
+            const mockRoomSingle = jest.fn().mockResolvedValueOnce({
+                data: {
+                    tutor_id: 'different-user-id',
+                    title: 'Test Room',
+                    pre_populated_dialogue: null
+                },
+                error: null
+            });
+
+            const mockEq = jest.fn()
+                .mockReturnValueOnce({ single: mockUserSingle })  // First call for user
+                .mockReturnValueOnce({ single: mockRoomSingle }); // Second call for room
+
+            const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
+            mockSupabase.from.mockReturnValue({ select: mockSelect });
+
+            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow('You are not authorized to clear chat history for this room');
+        });
+
+        it('should successfully clear messages from the room', async () => {
+            // Mock successful user lookup
+            const mockUserSingle = jest.fn().mockResolvedValueOnce({
+                data: mockTutorUser,
+                error: null
+            });
+
+            // Mock successful room lookup
+            const mockRoomSingle = jest.fn().mockResolvedValueOnce({
+                data: {
+                    tutor_id: mockUserId,
+                    title: 'Test Room',
+                    pre_populated_dialogue: [{ user_name: 'Test', message: 'Hello', role: 'tutor' }]
+                },
+                error: null
+            });
+
+            // Mock successful deletions
+            const mockDeleteEq = jest.fn().mockResolvedValue({ error: null });
+            const mockDelete = jest.fn().mockReturnValue({ eq: mockDeleteEq });
+
+            // Mock table operations
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'users') {
+                    return {
+                        select: jest.fn().mockReturnValue({
+                            eq: jest.fn().mockReturnValue({
+                                single: mockUserSingle
+                            })
+                        })
+                    };
+                } else if (table === 'rooms') {
+                    return {
+                        select: jest.fn().mockReturnValue({
+                            eq: jest.fn().mockReturnValue({
+                                single: mockRoomSingle
+                            })
+                        })
+                    };
+                }
+                // For messages and message_feedback tables
+                return { delete: mockDelete };
+            });
+
+            const result = await clearChatHistory(mockRoomId, mockUserId);
+
+            expect(result).toEqual({
+                success: true,
+                title: 'Test Room',
+                prePopulatedMessagesPreserved: true
+            });
+
+            // The actual database transaction is covered by assessment_result_messages.sql.
+            expect(mockSupabase.from).toHaveBeenCalledWith('users');
+            expect(mockSupabase.from).toHaveBeenCalledWith('rooms');
+            expect(transferAssessmentService.clearChatHistory).toHaveBeenCalledWith(mockRoomId);
+            expect(mockDelete).not.toHaveBeenCalled();
+            expect(mockSupabase.from).not.toHaveBeenCalledWith('messages');
+            expect(mockSupabase.from).not.toHaveBeenCalledWith('message_feedback');
+        });
+
+        it('should handle database errors gracefully', async () => {
+            (transferAssessmentService.clearChatHistory as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+            // Mock successful user lookup
+            const mockUserSingle = jest.fn().mockResolvedValueOnce({
+                data: mockTutorUser,
+                error: null
+            });
+
+            // Mock successful room lookup
+            const mockRoomSingle = jest.fn().mockResolvedValueOnce({
+                data: {
+                    tutor_id: mockUserId,
+                    title: 'Test Room',
+                    pre_populated_dialogue: null
+                },
+                error: null
+            });
+
+            // Mock database error for messages deletion
+            const mockDeleteEq = jest.fn().mockResolvedValue({
+                error: { message: 'Database error' }
+            });
+
+            mockSupabase.from.mockImplementation((table: string) => {
+                if (table === 'users') {
+                    return {
+                        select: jest.fn().mockReturnValue({
+                            eq: jest.fn().mockReturnValue({
+                                single: mockUserSingle
+                            })
+                        })
+                    };
+                } else if (table === 'rooms') {
+                    return {
+                        select: jest.fn().mockReturnValue({
+                            eq: jest.fn().mockReturnValue({
+                                single: mockRoomSingle
+                            })
+                        })
+                    };
+                }
+                return {
+                    delete: jest.fn().mockReturnValue({
+                        eq: mockDeleteEq
+                    })
+                };
+            });
+
+            await expect(clearChatHistory(mockRoomId, mockUserId)).rejects.toThrow('Database error');
+        });
+    });
 });

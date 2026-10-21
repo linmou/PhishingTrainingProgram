@@ -10,7 +10,7 @@ import { execFileSync } from 'child_process';
 import os from 'os';
 import yaml from 'js-yaml';
 import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
-import { buildEcologicalChatCompletionMessages } from '../ecologicalTutorCall';
+import { ASSESSMENT_DIALOGUE_POLICY, buildEcologicalChatCompletionMessages } from '../ecologicalTutorCall';
 
 const repoRoot = path.resolve(__dirname, '../../..', '..');
 const readText = (relativePath: string): string => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -27,8 +27,8 @@ describe('Promptfoo brevity and ecological scaffold', () => {
   it('wires the active production policy into ecological requests exactly once', () => {
     const vars = { scenario_context: 'scenario', conversation_history: 'history', student_message: 'message' };
     const messages = buildEcologicalChatCompletionMessages('room configuration', vars);
-    expect(messages[0].content).toBe(`room configuration\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`);
-    expect(buildEcologicalChatCompletionMessages(messages[0].content, vars)[0]).toEqual(messages[0]);
+    expect(messages[0].content).toBe(`room configuration\n\n${ACTIVE_TUTOR_AGENT_PROMPT}\n\n${ASSESSMENT_DIALOGUE_POLICY}`);
+    expect(buildEcologicalChatCompletionMessages(messages[0].content, vars)[0].content.split(ACTIVE_TUTOR_AGENT_PROMPT)).toHaveLength(2);
   });
 
   it('keeps ecological cases product-derived and holdouts explicitly synthetic', () => {
@@ -134,9 +134,8 @@ describe('Promptfoo brevity and ecological scaffold', () => {
     });
 
     const source = require('../detectionTemplates').SCENARIO_TEMPLATES['Account Security Alert'];
-    expect(source.detection_areas.length).toBeGreaterThan(0);
-    expect(source.verification_steps.length).toBeGreaterThan(0);
-    expect(source.detection_areas.length + source.verification_steps.length).toBeGreaterThan(3);
+    expect(source.detection_areas).toHaveLength(5);
+    expect(source.verification_steps).toEqual([]);
     correctStudentCases
       .filter((testCase) => testCase.vars.source_type === 'synthetic_holdout')
       .forEach((testCase) => expect(testCase.vars.knowledge_inventory_source).toBe('Account Security Alert'));

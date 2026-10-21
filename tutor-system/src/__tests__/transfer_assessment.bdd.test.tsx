@@ -118,7 +118,7 @@ interface ScenarioState {
   draft: Record<string, unknown> | null;
   serviceCalls: Array<Record<string, unknown>>;
   delivered: Record<string, unknown> | null;
-  tutorTurn: { mode: string; instruction: string | null; response: string } | null;
+  tutorTurn: { guard_mode: boolean; instruction: string | null; response: string } | null;
   room: ReturnType<typeof useRoom> | null;
   prepareSpy: jest.SpyInstance | null;
   analyzeSpy: jest.SpyInstance | null;
@@ -146,7 +146,7 @@ function makeLifecycle(
 ): TransferLifecycleContext {
   return {
     progress,
-    participation_mode: 'tutoring',
+    guard_mode: false,
     progress_snapshot_hash: 'snapshot-1',
     feedback_required: false,
     eligible_assessment_item_ids: [CHECKLIST_ITEM_ID],
@@ -404,7 +404,7 @@ defineFeature(feature, (test) => {
       state.prepareSpy!.mockResolvedValue(null);
       (generateTutorSuggestion as jest.Mock).mockResolvedValue({
         success: true, suggestion: 'Tutor response', contextMessages: [LEARNER_A_MESSAGE_ID],
-        decision: { mode: 'tutoring', instruction: 'explain', suggested_response: 'Tutor response' },
+        decision: { guard_mode: false, instruction: 'explain', suggested_response: 'Tutor response' },
       });
       await act(async () => { await state.room!.generateAIResponse(); });
     });
@@ -422,7 +422,7 @@ defineFeature(feature, (test) => {
     given('the transfer assessment policy is enabled for a new learner-owned checklist', () => expectBackground(state));
     and('the checklist uses the existing status and understanding_level pair', () => expect(isValidTransferProgress(state.progress)).toBe(true));
     given('the room is in Guard mode', () => {
-      state.lifecycle = { ...state.lifecycle, participation_mode: 'guard' };
+      state.lifecycle = { ...state.lifecycle, guard_mode: true };
     });
     when('the tutor evaluates the next turn', async () => {
       await mountTeacherRoom(state);
@@ -431,7 +431,7 @@ defineFeature(feature, (test) => {
         success: true,
         suggestion: 'Stop before opening the link and verify it independently.',
         decision: {
-          mode: 'guard',
+          guard_mode: true,
           instruction: 'protective_instruction',
           suggested_response: 'Stop before opening the link and verify it independently.',
         },
@@ -440,20 +440,20 @@ defineFeature(feature, (test) => {
       await act(async () => {
         await state.room!.generateAIResponse();
       });
-      const decision = state.room!.aiDecision as unknown as Record<string, unknown>;
+      const decision = state.room!.aiDecision!;
       state.tutorTurn = {
-        mode: String(decision.mode),
+        guard_mode: decision.guard_mode,
         instruction: String(decision.instruction),
         response: state.room!.aiSuggestion || '',
       };
     });
     then('the tutor receives a Guard response without an assessment draft', () => {
-      expect(state.tutorTurn).toMatchObject({ mode: 'guard', instruction: 'protective_instruction' });
+      expect(state.tutorTurn).toMatchObject({ guard_mode: true, instruction: 'protective_instruction' });
       expect(state.prepareSpy).toHaveBeenCalledTimes(1);
       expect(state.room?.transferDraft).toBeNull();
     });
     and('the room remains in Guard mode', () => {
-      expect(state.room?.finalMode).toBe('guard');
+      expect(state.room?.finalGuardMode).toBe(true);
     });
   });
 
@@ -483,7 +483,7 @@ defineFeature(feature, (test) => {
       };
       const service = serviceFor({
         message: privateRow,
-        room: { ...transferRoom, active_response_mode: 'tutoring' },
+        room: { ...transferRoom, guard_mode: false },
       }, state);
       state.delivered = await service.sendReviewed({
         reviewedPayload: preparedCandidate,
@@ -512,7 +512,7 @@ defineFeature(feature, (test) => {
       expect(message.response_mode).toBe('assessment');
     });
     and('the room participation mode remains tutoring', () => {
-      expect((state.delivered?.room as Record<string, unknown>).active_response_mode).toBe('tutoring');
+      expect((state.delivered?.room as Record<string, unknown>).guard_mode).toBe(false);
     });
     and('the learner can see only the stem, instruction, and four options', () => {
       const message = state.delivered?.message as Record<string, unknown>;
@@ -793,7 +793,7 @@ defineFeature(feature, (test) => {
         success: true,
         suggestion: 'You used independent verification instead of trusting the display name.',
         decision: {
-          mode: 'tutoring',
+          guard_mode: false,
           instruction: 'consolidation',
           suggested_response: 'You used independent verification instead of trusting the display name.',
         },
@@ -802,15 +802,15 @@ defineFeature(feature, (test) => {
       await act(async () => {
         await state.room!.generateAIResponse();
       });
-      const decision = state.room!.aiDecision as unknown as Record<string, unknown>;
+      const decision = state.room!.aiDecision!;
       state.tutorTurn = {
-        mode: String(decision.mode),
+        guard_mode: decision.guard_mode,
         instruction: String(decision.instruction),
         response: state.room!.aiSuggestion || '',
       };
     });
     then('the next response is tutoring feedback or an independently required Guard response', () => {
-      expect(state.tutorTurn?.mode).toBe('tutoring');
+      expect(state.tutorTurn?.guard_mode).toBe(false);
       expect(state.tutorTurn?.instruction).toBe('consolidation');
       expect(state.tutorTurn?.response).toMatch(/verification/i);
     });
@@ -893,7 +893,7 @@ defineFeature(feature, (test) => {
       expect(createReviewCandidate(preparedTurnResult)?.scope.itemId).toBe(CHECKLIST_ITEM_ID);
     });
     and('no Guard, open assessment, or feedback blocker applies', () => {
-      expect(state.lifecycle.participation_mode).toBe('tutoring');
+      expect(state.lifecycle.guard_mode).toBe(false);
       expect(state.lifecycle.feedback_required).toBe(false);
       expect(state.lifecycle.unresolved_assessment).toBeNull();
     });

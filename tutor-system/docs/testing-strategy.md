@@ -2,7 +2,7 @@
 
 Intent: document the deterministic merge checks and explicit external verification tiers for the Online Tutor System.
 
-Updated: 2026-10-21. Source baseline commit: `98002f4`.
+Updated: 2026-10-21. Source baseline commit: `a6c977b`.
 
 ## Current Test Tiers
 

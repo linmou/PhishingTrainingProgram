@@ -4,7 +4,22 @@ Intent: document how to review and run the local Promptfoo benchmark for tutor p
 
 Updated: 2026-10-21
 
-Source baseline commit: `98002f4`
+Source baseline commit: `a6c977b`
+
+Naming review baseline: `c6d5129`.
+
+## Evaluation map
+
+| Responsibility | Entry point | Scoring |
+| --- | --- | --- |
+| Classify student learning evidence and apply progress | [learning-progress-analyzer/](learning-progress-analyzer/README.md), formerly `transfer-analysis/` | Reference-label classification metrics and deterministic consumer checks |
+| Classify tutor mode and teaching action | [v1/classification.js](v1/classification.js), using the tutor suite's cases and saved outputs | Reference labels/allowed sets, accuracy and classification metrics |
+| Evaluate the tutor's generated response | [v1/](v1/README.md) | Semantic judges plus deterministic contract/length checks |
+| Evaluate transfer assessments and lifecycle | [v1/transfer/](v1/transfer/) | Semantic assessment checks plus deterministic lifecycle/contract checks |
+| Diagnose contextual reply interpretation | [contextual-reply cases](v1/contextual-reply-plan.md) | Existing tutor checks plus current-turn grounding |
+| Explore evolving learner/tutor conversations | [v1/simulated/](v1/simulated/README.md) | Exploratory conversation judges and structural checks |
+
+`classification.js` is a scorer, not a separate case suite. Analyzer prompt candidates are in `learning-progress-analyzer/refinement-policy-*.md`; tutor candidates are in `v1/candidate-policy*.md` and `refinement-20261014/`. Run snapshots identify the exact tested prompt and evaluator. The commands and scoring below document the legacy Promptfoo benchmark; the current specification-derived runner is documented in `v1/README.md`.
 
 The [current shortcut-removal experiment](refinement-20261014/README.md) uses the specification-derived [v1 runner](v1/README.md), production request packaging and three repetitions. The legacy commands below retain their own scoring contract. Their quality gate now requires a frozen expected-case/assertion manifest and rejects missing, duplicate, malformed, or errored evidence. `npm run eval:prompts` writes that manifest before generation and includes it in `gated-report.json` and `latest.json`.
 
@@ -33,7 +48,7 @@ Ecological demo-room templates must be based on real `room_templates` records us
 
 After aligning the version-controlled template with the database record, run `npm run eval:prompts:export-ecological-cases`. Synthetic holdouts in `cases/account-security-alert.yaml` remain independently authored and must stay labeled `source_type: synthetic_holdout`.
 
-The checked-in YAML is also checked by deterministic Jest against a fresh export. On 2026-10-21 it was refreshed from the existing committed seeds to include the simplified `webpage_demo_correct_safe_action` dialogue already present in the frozen v1 case. This fixture refresh changes no room template or hosted record.
+The checked-in YAML is also checked by deterministic Jest against a fresh export. On 2026-10-21 it was refreshed from the existing committed seeds to include the simplified `webpage_demo_correct_safe_action` dialogue already present in the frozen v1 case and the current participant name in the personal-story case. This fixture refresh changes no room template or hosted record.
 
 Seed only the intended derived records with `npm run seed:behavior-templates -- --case-id=<case_id>`; repeat `--case-id` to select more than one record. Correctness-sensitive rubrics must infer the student's behavior from the scenario and messages instead of introducing another `student_answer_state` value.
 

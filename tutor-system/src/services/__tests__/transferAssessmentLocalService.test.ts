@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { TransferAssessmentService, type TransferAssessmentApi } from '../transferAssessmentService';
 import { supabase } from '../supabase';
+import { processedFirstIncorrectRetry } from '../../test-support/transferRoomFixtures';
 
 jest.mock('../supabase', () => ({ supabase: { functions: { invoke: jest.fn() } } }));
 
@@ -54,17 +55,13 @@ describe('transfer assessment browser facade', () => {
   });
 
   it('routes processing through the trusted operation with both causal identities', async () => {
-    const { api, invoke } = transport({
-      message_id: 'answer-1', assessment_id: 'assessment-1', processing_state: 'applied',
-      answer_outcome: 'retry', attempt_number: 1, attempts_used: 1, attempts_remaining: 1,
-      selected_option_ids: ['A'], terminal: false, transition: null, feedback_required: false,
-      code: null, already_processed: false, terminal_failure_feedback: null,
-    });
+    const { message_id, assessment_id } = processedFirstIncorrectRetry;
+    const { api, invoke } = transport(processedFirstIncorrectRetry);
     const service = new TransferAssessmentService({ api, requestId: () => 'request-2' });
-    const result = await service.processMessage('answer-1', 'assessment-1', 'room-1');
+    const result = await service.processMessage(message_id, assessment_id, 'room-1');
     expect(invoke).toHaveBeenCalledWith({
       operation: 'process_message', request_id: 'request-2',
-      message_id: 'answer-1', assessment_id: 'assessment-1',
+      message_id, assessment_id,
       room_id: 'room-1',
     });
     expect(result.attempts_remaining).toBe(1);

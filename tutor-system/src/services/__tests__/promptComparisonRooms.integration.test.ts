@@ -2,6 +2,7 @@
 /** Test responsibility: verify prompt-comparison variants use ai-api with identical non-prompt controls. */
 
 import type { AIAssistantConfig, ConversationMessage } from '../../types';
+import { ASSESSMENT_DIALOGUE_POLICY } from '../ecologicalTutorCall';
 
 jest.mock('../supabase', () => ({
   supabase: { functions: { invoke: jest.fn() } },
@@ -52,7 +53,7 @@ describe('controlled prompt comparison integration', () => {
     const invoke = supabase.functions.invoke as jest.Mock;
     const content = JSON.stringify({
       reason: 'The learner stated a misconception.',
-      decision: { mode: 'tutoring', instruction: 'correction' },
+      decision: { guard_mode: false, instruction: 'correction' },
       response: 'Captured response',
     });
     invoke.mockResolvedValue({ data: { content, model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null });
@@ -71,12 +72,14 @@ describe('controlled prompt comparison integration', () => {
     const phase0 = invoke.mock.calls[0][1].body;
     const refined = invoke.mock.calls[1][1].body;
     expect(phase0.temperature).toBe(0.3);
-    expect(refined.temperature).toBe(0.3);
-    expect(phase0.max_tokens).toBe(100);
-    expect(refined.max_tokens).toBe(100);
+    expect(refined.temperature).toBe(phase0.temperature);
+    expect(phase0.max_tokens).toBe(600);
+    expect(refined.max_tokens).toBe(phase0.max_tokens);
     expect(phase0.response_format).toEqual({ type: 'json_object' });
     expect(refined.response_format).toEqual({ type: 'json_object' });
-    expect(phase0.messages[0].content).toBe('RAW_SYSTEM');
+    expect(phase0.messages[0].content).toContain('RAW_SYSTEM');
+    expect(phase0.messages[0].content).toContain(ASSESSMENT_DIALOGUE_POLICY);
+    expect(refined.messages[0].content).toContain(ASSESSMENT_DIALOGUE_POLICY);
     expect(refined.messages[0].content).toContain('REFINED_SYSTEM');
     expect(JSON.stringify(phase0)).not.toContain('Bearer');
     expect(JSON.stringify(refined)).not.toContain('Bearer');

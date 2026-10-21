@@ -5,6 +5,7 @@
 import { AIInteraction, ChatExportData, Message, MessageFeedbackStats, Room, User, UserRole } from '../types';
 import { readAnswerLifecycle, readPublicQuestion } from './transferAssessmentUiAdapter';
 import type { AnswerLifecycleView } from './transferAssessmentUiAdapter';
+import type { AssessmentEvent } from '../types/assessment';
 
 interface PublicQuestionExport {
   id: string;
@@ -26,6 +27,8 @@ interface AnswerLifecycleExport {
 }
 
 type RoomExportMessage = ChatExportData['messages'][number] & {
+  assessment_event?: AssessmentEvent;
+  parent_message_id?: string | null;
   public_question?: PublicQuestionExport;
   answer_lifecycle?: AnswerLifecycleExport;
 };
@@ -61,6 +64,7 @@ interface BuildRoomExportDataArgs {
   participants?: Array<Pick<User, 'id' | 'display_name' | 'current_role'>>;
   userRole: UserRole;
   userId: string | null;
+  learningProgress?: ChatExportData['learning_progress'];
 }
 
 interface BuildRoomTextExportArgs {
@@ -70,6 +74,7 @@ interface BuildRoomTextExportArgs {
   aiInteractions: AIInteraction[];
   userRole: UserRole;
   userId: string | null;
+  learningProgress?: ChatExportData['learning_progress'];
 }
 
 const lifecycleForQuestion = (
@@ -161,12 +166,12 @@ const renderAnswerLifecycleLines = (lifecycle: AnswerLifecycleView | null): stri
 };
 
 export const buildTutorInteractionText = (interaction: AIInteraction, index: number): string => {
-  const modeChanged = interaction.raw_mode && interaction.final_mode
-    ? interaction.raw_mode !== interaction.final_mode
-    : interaction.mode_rectified;
+  const modeChanged = typeof interaction.raw_guard_mode === 'boolean' && typeof interaction.final_guard_mode === 'boolean'
+    ? interaction.raw_guard_mode !== interaction.final_guard_mode
+    : interaction.guard_rectified;
 
   const instruction = interaction.raw_instruction === null
-    ? interaction.raw_mode === 'guard' ? 'none' : 'not recorded'
+    ? interaction.raw_guard_mode === true ? 'none' : 'not recorded'
     : interaction.raw_instruction;
 
   return [
@@ -174,11 +179,11 @@ export const buildTutorInteractionText = (interaction: AIInteraction, index: num
     `Parent Message: "${interaction.parent_message_content}"`,
     `AI Suggestion: "${interaction.ai_suggestion}"`,
     `Tutor Action: ${interaction.tutor_action}`,
-    `Raw Mode: ${interaction.raw_mode ?? 'not recorded'}`,
+    `Raw Guard: ${interaction.raw_guard_mode ?? 'not recorded'}`,
     `Raw Instruction: ${instruction}`,
-    `Mode Reason: ${interaction.mode_reason ?? 'not recorded'}`,
-    `Final Mode: ${interaction.final_mode ?? 'not recorded'}`,
-    `Mode Changed: ${modeChanged === undefined ? 'not recorded' : modeChanged ? 'yes' : 'no'}`,
+    `Guard Reason: ${interaction.guard_reason ?? 'not recorded'}`,
+    `Final Guard: ${interaction.final_guard_mode ?? 'not recorded'}`,
+    `Guard Changed: ${modeChanged === undefined ? 'not recorded' : modeChanged ? 'yes' : 'no'}`,
     interaction.tutor_final_response ? `Final Response: "${interaction.tutor_final_response}"` : '',
     interaction.response_time_ms === undefined ? '' : `Response Time: ${interaction.response_time_ms}ms`,
   ].filter(Boolean).join('\n');
@@ -191,6 +196,7 @@ export const buildRoomTextExport = ({
   aiInteractions,
   userRole,
   userId,
+  learningProgress,
 }: BuildRoomTextExportArgs): string => {
   const isTutor = userRole === 'tutor';
   const aiSummary = isTutor && aiInteractions.length > 0 ? [
@@ -236,16 +242,25 @@ export const buildRoomTextExport = ({
       const feedbackInfo = feedbackStats && feedbackStats.total_feedback_count > 0
         ? ` [👍${feedbackStats.like_count} 👎${feedbackStats.dislike_count}${feedbackStats.overall_average_rating ? ` ★${feedbackStats.overall_average_rating.toFixed(1)}` : ''}]`
         : '';
-      const line = `[${message.created_at}] ${message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
+      const line = `[${message.created_at}] ${message.assessment_event ? 'Assessment result' : message.persona_name || message.display_name || message.user_role} (${message.user_role}): ${message.content}${feedbackInfo}`;
       const lifecycle = readPublicQuestion(message)
         ? lifecycleForQuestion(messages, message, userRole, userId)
         : null;
       return [
         line,
+        ...(message.assessment_event ? [`   Assessment event: ${JSON.stringify(message.assessment_event)}`] : []),
         ...renderPublicQuestionLines(message),
         ...renderAnswerLifecycleLines(lifecycle),
       ];
     }),
+    ...(learningProgress ? [
+      'Learning progress:',
+      `Learner: ${learningProgress.student_id}; policy: ${learningProgress.progress_policy_version}; targets: ${learningProgress.target_version ?? 'unknown'}`,
+      ...[...learningProgress.detection_areas, ...learningProgress.verification_steps].flatMap(item => [
+        `${item.target_key || item.id}: ${item.area_text} — ${item.status}; understanding: ${item.understanding_level ?? 'none'}`,
+        ...item.coverage_evidence.map(evidence => `  Evidence [${evidence.message_id ?? 'unknown'}]: ${evidence.evidence_text} — ${evidence.analysis}`),
+      ]),
+    ] : []),
     ...aiSummary,
   ].filter((line) => line !== '').join('\n');
 };
@@ -259,11 +274,16 @@ export const buildRoomExportData = ({
   participants,
   userRole,
   userId,
+  learningProgress,
 }: BuildRoomExportDataArgs): RoomExportData => {
   const isTutor = userRole === 'tutor';
   const exportData: RoomExportData = {
+    ...(learningProgress ? { learning_progress: learningProgress } : {}),
     room: {
       id: room.id,
+      practice_type: room.practice_type,
+      scenario_config: room.scenario_config,
+      guard_mode: room.guard_mode,
       title: room.title,
       created_at: room.created_at,
     },
@@ -274,6 +294,14 @@ export const buildRoomExportData = ({
         : null;
       return {
         id: msg.id,
+        user_id: msg.user_id,
+        guard_mode: msg.guard_mode,
+        character: msg.character,
+        persona_id: msg.persona_id,
+        persona_name: msg.persona_name,
+        persona_avatar: msg.persona_avatar,
+        parent_message_id: msg.parent_message_id,
+        ...(msg.assessment_event ? {assessment_event:msg.assessment_event} : {}),
         user_role: msg.user_role,
         display_name: msg.display_name,
         content: msg.content,

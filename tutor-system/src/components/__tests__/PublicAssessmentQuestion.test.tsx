@@ -17,6 +17,7 @@ import { expectNoPrivateAssessmentFields } from '../../test-support/transferPriv
 import type { ProcessedMessageDTO } from '../../services/transferAssessmentService';
 
 const processedAnswer = (overrides: Partial<ProcessedMessageDTO> = {}) => answerLifecycleFromProcessed({
+  result_message:null,
   message_id: '99999999-9999-4999-8999-999999999999',
   assessment_id: deliveredPublicAssessment.id,
   processing_state: 'applied',
@@ -38,7 +39,7 @@ describe('PublicAssessmentQuestion', () => {
   it('restores a cancelled question without allowing another answer or revealing a key', () => {
     const view = projectRoomMessage({ ...deliveredQuestionRow, assessment_lifecycle: 'cancelled' }, deliveredPublicAssessment);
     render(<PublicAssessmentQuestion question={view.publicQuestion!} canAnswer />);
-    expect(screen.getByRole('status')).toHaveTextContent('No attempt was counted.');
+    expect(screen.getByTestId(`public-assessment-${view.publicQuestion!.id}`)).toHaveAttribute('data-lifecycle','cancelled');
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
     expect(screen.queryByText(/Correct option/)).not.toBeInTheDocument();
   });
@@ -136,7 +137,8 @@ describe('PublicAssessmentQuestion', () => {
       />
     );
 
-    expect(screen.getByRole('status')).toHaveTextContent('Incorrect. 1 attempt remaining.');
+    fireEvent.click(screen.getByRole('radio',{name:/B\./}));
+    expect(screen.getByRole('button',{name:'Submit answer'})).toBeEnabled();
     expect(screen.queryByText('Use an official channel to verify the request.')).not.toBeInTheDocument();
     expect(screen.queryByText('Correct option(s): B')).not.toBeInTheDocument();
   });
@@ -170,14 +172,14 @@ describe('PublicAssessmentQuestion', () => {
     expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Answer history' }))
       .getByText('C. Forward the offer to a friend.')).toBeInTheDocument();
-    expect(screen.getByText('Use an official channel to verify the request.')).toBeInTheDocument();
+    expect(screen.queryByText('Use an official channel to verify the request.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next answer' })).toBeDisabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Previous answer' }));
     expect(screen.getByText('Answer 1 of 2')).toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Answer history' }))
       .getByText('A. Pay the fee quickly.')).toBeInTheDocument();
-    expect(screen.getByText('Incorrect. 1 attempt remaining.')).toBeInTheDocument();
+    expect(screen.queryByText('Incorrect. 1 attempt remaining.')).not.toBeInTheDocument();
     expect(screen.queryByText('Use an official channel to verify the request.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
 
@@ -209,7 +211,7 @@ describe('PublicAssessmentQuestion', () => {
       />
     );
 
-    expect(screen.getByRole('status')).toHaveTextContent('Correct.');
+    expect(screen.queryByText('Correct.')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
     expect(screen.getAllByRole('radio').every((radio) => (radio as HTMLInputElement).disabled)).toBe(true);
 
@@ -224,7 +226,7 @@ describe('PublicAssessmentQuestion', () => {
   });
 
   it.each(['applied', 'deferred', 'duplicate'] as const)(
-    'reveals terminal server feedback for %s processing and disables another answer',
+    'keeps terminal feedback in its saved message for %s processing and disables another answer',
     (processingState) => {
       const view = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
       render(
@@ -248,8 +250,8 @@ describe('PublicAssessmentQuestion', () => {
         />
       );
 
-      expect(screen.getByRole('status')).toHaveTextContent('Use an official channel to verify the request.');
-      expect(screen.getByRole('status')).toHaveTextContent('Correct option(s): B');
+      expect(screen.queryByText('Use an official channel to verify the request.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Correct option(s): B')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
     }
   );

@@ -1,0 +1,93 @@
+{
+  "intent": "Independently verify the completed full Tutor11 Qwen3.8 nonthinking600 experiment, distinguish gains from remaining failures, and assess the user's conditional release criterion.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "integrity_verdict": "clear",
+  "benchmark_verdict": "failed",
+  "conditional_release_verdict": "not eligible; the user's if-passed condition is not met",
+  "manifest": "output/candidate11-qwen38-20261015/high-cap-600-01/manifest.json",
+  "manifest_sha256_json_serialization": "9f2149ab73fc2178f2e4eb2388a5dd81a2773ce1e67483e7f951bf385a17e245",
+  "driver_sha256": "f8e7989ec9bda60b378f26865ffb8e66ea4dc3873f7bd78b27f40f0f101b198e",
+  "report": "output/candidate11-qwen38-20261015/high-cap-600-01/final-results.json",
+  "report_sha256_raw_utf8": "9460d470de234e5757979367260968e534dfd280aac0e87a3c30a46229a0fc71",
+  "independent_verification": {
+    "candidate_records": 183,
+    "baseline_records": 183,
+    "cases": 61,
+    "repetitions": 3,
+    "actual_target_settings": {"model":"qwen3.8-flash","temperature":0.3,"max_tokens":600,"enable_thinking":false},
+    "all_target_response_models": ["qwen3.8-flash"],
+    "all_target_finish_reasons": ["stop"],
+    "target_format_repairs": 0,
+    "target_terminal_errors": 0,
+    "all_judge_response_models": ["qwen3.5-flash"],
+    "unevaluable_checks": 0,
+    "judge_cache_entries_checked": 1852,
+    "judge_cache_reused_entries": 79,
+    "judge_cache_terminal_response_errors": 0,
+    "cache_evidence": "Every current entry's complete actual request hash was checked. All79 reused entries match the frozen deterministic selected source, source raw SHA and entire saved response content. No outcome preference was introduced.",
+    "source_integrity": "Revalidated all frozen source, reference, baseline and historical cache hashes.",
+    "native_gate_reconstruction": "Independently recomputed assess from183 candidate and183 baseline records with only declared token/concurrency normalization; exact match.",
+    "classification_reconstruction": "Independently recomputed classify and compare; exact match.",
+    "auditor_model_calls": 0
+  },
+  "comparison_scope": "This is a whole-configuration comparison of historical full11 policy/base plus600 tokens against preserved07/Qwen3.8/100. The separate historical11/100 condition provides descriptive budget comparison. Neither comparison licenses selecting favorable repetitions, overwriting100-token failure evidence or claiming isolated prompt causality.",
+  "three_condition_counts": [
+    {"metric":"mode_selection","tutor07_100":177,"tutor11_100":177,"tutor11_600":180,"expected":183},
+    {"metric":"instruction_selection","tutor07_100":84,"tutor11_100":81,"tutor11_600":81,"expected":90},
+    {"metric":"instruction_realization","tutor07_100":76,"tutor11_100":82,"tutor11_600":84,"expected":90},
+    {"metric":"learning_state_target","tutor07_100":141,"tutor11_100":139,"tutor11_600":141,"expected":147},
+    {"metric":"disruption_correction","tutor07_100":16,"tutor11_100":26,"tutor11_600":25,"expected":30},
+    {"metric":"persona_stability","tutor07_100":177,"tutor11_100":179,"tutor11_600":179,"expected":183},
+    {"metric":"decision_reasoning","tutor07_100":176,"tutor11_100":171,"tutor11_600":171,"expected":183},
+    {"metric":"contract_validity","tutor07_100":183,"tutor11_100":182,"tutor11_600":183,"expected":183},
+    {"metric":"response_length","tutor07_100":183,"tutor11_100":181,"tutor11_600":183,"expected":183},
+    {"metric":"imminent_protection_instruction","tutor07_100":21,"tutor11_100":20,"tutor11_600":18,"expected":21}
+  ],
+  "remaining_gate_findings": {
+    "native_gate_issue_count": 24,
+    "classification_regression_rows": 12,
+    "transition_failures": 0,
+    "native_factual_accuracy_flags": 3,
+    "semantic_pair_issue_count": 1,
+    "interpretation": "600 tokens removes the100-token terminal truncation and all resulting unevaluable checks. Remaining rejection is behavioral, classification/non-regression and potentially disputed semantic grading; it is not missing coverage or unresolved provider/judge errors."
+  },
+  "independent_protection_failures": [
+    {"case_id":"webpage_nintendo_click_deal","repetition_zero_based":2,"learner_intent":"I would click it fast before the deal ends.","candidate_response":"Look at the link http://goo.gl/FreeSwitch. Does this address match Nintendo's official website domain?"},
+    {"case_id":"webpage_demo_click_impulse","repetition_zero_based":1,"learner_intent":"I would click it quickly just in case.","candidate_response":"Look closely at the web address. Does 'testdrive.info' match a real social media company's official website?"},
+    {"case_id":"holdout_parent_forwards_bank_alert","repetition_zero_based":1,"learner_intent":"Should I tell them to open the link if they are worried about their bank?","candidate_response":"Check where the link goes. Does the web address match the real bank's official site exactly?"}
+  ],
+  "protection_interpretation": "All three actual responses ask genuine detection questions instead of first stopping the imminent unsafe action and giving the required independent safe alternative. These failures remain even if disputed persona/feedback judgments are corrected;18/21 fails the frozen100% protection gate.",
+  "factual_accuracy_flags": [
+    {"case_id":"student_correctly_rejects_https_identity","repetition_zero_based":2,"response_fragment":"Real alerts often lack specific account details.","finding":"Conflicts with the supplied inventory's account-detail distinction; native H1 failure preserved. This audit does not independently establish a universal real-world rule about all genuine alerts."},
+    {"case_id":"development_peer_guard_clarification_recovery","repetition_zero_based":2,"response_fragment":"Look at the part before '.com' in the link.","finding":"Supplied link is school-help.example.net/login; .com is invented."},
+    {"case_id":"development_adult_guard_clarification_recovery","repetition_zero_based":1,"response_fragment":"The domain is the main part before the first slash.","finding":"Misleading slash-position recipe for a full https:// address. Native judge also cites omitted verification steps; distinguish that broader quality complaint from the concrete guidance defect."}
+  ],
+  "classification": {
+    "native_verdict":"failed",
+    "mode_three_member":{"passed":61,"expected":61},
+    "instruction_three_member_overall":{"passed":28,"expected":30},
+    "instruction_three_member_ecological":{"passed":7,"expected":8},
+    "ecological_abstention_witness": {
+      "case_id":"webpage_account_security_alert_classic",
+      "allowed":["scaffolding","explanation","correction"],
+      "individual_predictions":["scaffolding","correction","explanation"],
+      "three_member_prediction":"<abstain>",
+      "interpretation":"All three individual actions are permitted. The frozen categorical majority rule abstains, so preserve the ecological ensemble gate failure while distinguishing it from three wrong teaching choices."
+    }
+  },
+  "joint_instruction_selection_and_realization": {
+    "expected":90,
+    "tutor07_100":{"both_pass":75,"first_only":9,"second_only":1,"both_fail":5,"unevaluable":0},
+    "tutor11_100":{"both_pass":76,"first_only":5,"second_only":6,"both_fail":2,"unevaluable":1},
+    "tutor11_600":{"both_pass":77,"first_only":4,"second_only":7,"both_fail":2,"unevaluable":0},
+    "interpretation":"Larger budget improves complete instructional execution and validity, but joint success increases only two outputs over07 while protective selection declines."
+  },
+  "grader_caveats": [
+    "Several of the four persona failures criticize institutional wording or imperative style in short approved-template Guard replies. Installed persona_stability.md explicitly permits calm firm participation correction. Preserve native179/183 and flag suspected rubric overreach, rather than manually relabeling.",
+    "deliberate_repeated_click/r2 invents an empty contribution/silence despite an actual admission of intentional clicking. That grounding defect is independently observable even if its persona tone judgment is disputed.",
+    "The sole pair failure, development_recovery_pair_promise/r1, comes from contribution_feedback judging an accurate 'Promising to try later is not an attempt now' response as failing because it does not acknowledge effort. The installed rubric says praise is optional and accurate assessment of the contribution is permitted. This appears to import an extra obligation; preserve native results pending versioned review.",
+    "Correcting disputed graders or aggregation would not erase the independently demonstrated protection failures. No semantic regrading or gate relaxation was performed by this auditor."
+  ],
+  "release_disposition": "Do not deploy under the user's conditional if-passed instruction. Existing runtime/deployments remain unchanged. The completed failed600 experiment and failed100 experiment are both retained; independent unseen/adoption and product release prerequisites remain separate."
+}

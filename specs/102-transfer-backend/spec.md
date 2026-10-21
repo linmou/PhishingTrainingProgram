@@ -1,5 +1,11 @@
 # Feature Specification: Trusted Transfer Assessment
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+FR-007–008, FR-013–018 and SC-004/SC-005 are extended by the approved result-message contract: immutable backend events and atomic public result persistence, including historical backfill. The public-message privacy exception applies only to the reviewed key/explanation after terminal second failure and explicitly includes room participants/exports. The September production snapshot below remains historical evidence. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 <!-- Intent: record the observed production assessment database behavior. -->
 
 **Feature Branch**: `102-transfer-backend`

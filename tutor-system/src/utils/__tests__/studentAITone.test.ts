@@ -103,11 +103,8 @@ describe('studentAITone policy (features/student_ai_tone.feature)', () => {
       expect(resolveStudentAIChoice(null)).toBe('adult');
     });
 
-    it('maps a legacy multi-agent config to its retained Peer/Adult role', () => {
-      const base = basePromptConfig();
-      expect(
-        resolveStudentAIChoice({ ...base, role: { role: 'low' }, interaction_mode: 'multi_agent' })
-      ).toBe('peer');
+    it('uses the configured role when no interaction metadata is present', () => {
+      expect(resolveStudentAIChoice({ ...basePromptConfig(), role: { role: 'low' } })).toBe('peer');
     });
   });
 
@@ -142,29 +139,15 @@ describe('studentAITone policy (features/student_ai_tone.feature)', () => {
       expect(next.student_tone_lock?.chosen_role).toBe('high');
     });
 
-    it('enables multi_agent while preserving the configured Tutor tone', () => {
-      const base = basePromptConfig();
-      base.role = { role: 'low' };
-      const next = applyStudentAIChoiceToPromptConfig(base, 'multi_agent', 'student-1');
-
-      expect(next.interaction_mode).toBe('multi_agent');
-      expect(next.role.role).toBe('low');
-      expect(next.student_tone_lock?.chosen_choice).toBe('multi_agent');
-      expect(next.student_tone_lock?.chosen_role).toBe('low');
-      expect(next.communication_style).toEqual(base.communication_style);
+    it('rejects unsupported choices', () => {
+      expect(() => applyStudentAIChoiceToPromptConfig(basePromptConfig(), 'multi_agent' as any, 'student-1')).toThrow('Unsupported');
     });
 
-    it('switches back to single_agent when Peer or Adult replaces Multi-agent', () => {
-      const multiAgent = applyStudentAIChoiceToPromptConfig(
-        basePromptConfig(),
-        'multi_agent',
-        'student-1'
-      );
-      const backToPeer = applyStudentAIChoiceToPromptConfig(multiAgent, 'peer', 'student-1');
-
-      expect(backToPeer.interaction_mode).toBe('single_agent');
-      expect(backToPeer.role.role).toBe('low');
-      expect(backToPeer.student_tone_lock?.chosen_choice).toBe('peer');
+    it('allows changing an existing Adult choice to Peer', () => {
+      const adult = applyStudentAIChoiceToPromptConfig(basePromptConfig(), 'adult', 'student-1');
+      const peer = applyStudentAIChoiceToPromptConfig(adult, 'peer', 'student-1');
+      expect(peer.role.role).toBe('low');
+      expect(peer.student_tone_lock?.chosen_choice).toBe('peer');
     });
 
     it('builds a minimal config with only role + lock when prior config is null', () => {
@@ -191,13 +174,10 @@ describe('studentAITone policy (features/student_ai_tone.feature)', () => {
       expect(isTutorRoleLocked(locked)).toBe(true);
     });
 
-    it('releases the legacy multi-agent tone lock', () => {
-      const legacy = applyStudentAIChoiceToPromptConfig(
-        basePromptConfig(),
-        'multi_agent',
-        'student-1'
-      );
-      expect(isTutorRoleLocked(legacy)).toBe(false);
+    it('respects an explicitly released lock', () => {
+      const config = applyStudentAIChoiceToPromptConfig(basePromptConfig(), 'peer', 'student-1');
+      delete config.student_tone_lock;
+      expect(isTutorRoleLocked(config)).toBe(false);
     });
   });
 });

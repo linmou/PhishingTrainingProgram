@@ -33,6 +33,17 @@ test('target builder never renders expected labels or rubric annotations',()=>{
  assert(!text.includes('expected'));assert(!text.includes('knowledge_required'));assert(!text.includes('hidden-case-name'));
  assert(text.includes('I would click.'));
 });
+// Responsible for evaluator.js: expose current-turn justification without leaking it into unrelated judges.
+test('current-turn grounding receives reason and latest input while unrelated checks remain scoped',()=>{
+ const c={input:{student_message:'current input',conversation_history:'prior input'},role:'peer',inventory:{},expected:{knowledge_required:false}};
+ const output={reasoning:'observable justification',mode:'tutoring',decision:{instruction:'correction'},suggested_response:'response data'};
+ const body=JSON.parse(judgeMessages(c,output,{current_turn_grounding:'grounding criterion',reading_level:'reading criterion'})[1].content);
+ assert.deepEqual(body.checks.current_turn_grounding.output,output);
+ assert.deepEqual(body.checks.reading_level.output,{suggested_response:output.suggested_response});
+ assert.equal(body.evidence.student_message,c.input.student_message);
+ assert.equal(body.evidence.conversation_history,c.input.conversation_history);
+ assert.equal(body.evidence.expected,undefined);
+});
 test('gate accepts complete passing evidence and rejects missing/duplicate generations',()=>{
  const {snapshot,report}=fixture();assert.equal(assess(report,snapshot).verdict,'accepted');
  assert(assess({results:[]},snapshot).issues.some(i=>i.type==='missing_generation'));

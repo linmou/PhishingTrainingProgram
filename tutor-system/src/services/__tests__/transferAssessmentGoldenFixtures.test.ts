@@ -352,7 +352,7 @@ describe('golden server-authoritative attempt sequences', () => {
         const result = resolveTransferAnswer(
           {
             progress: step.input_progress,
-            participation_mode: step.participation_mode,
+            guard_mode: step.guard_mode,
             progress_snapshot_hash: TRANSFER_ATTEMPT_FIXTURE_SNAPSHOT_HASH,
             feedback_required: step.input_snapshot.resolution !== 'open',
             eligible_assessment_item_ids: ['item-1'],

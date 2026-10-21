@@ -22,20 +22,19 @@ import {
 import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
 import { parseTutorDecision } from './tutorDecisionContract';
 import { ChecklistService } from './checklistService';
-import type { TutorAssessmentFeedback } from '../types/assessment';
+import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
 
 export { AI_MODELS, DEFAULT_AI_MODEL };
 export type { AIModelName };
 
 export const parseTutorActionDecision = (
-    content: unknown,
-    options?: { allowMultiagent?: boolean }
+    content: unknown
 ): TutorActionDecision => {
-    const candidate = parseTutorDecision(content, options);
+    const candidate = parseTutorDecision(content);
     return {
-        mode: candidate.decision.mode,
+        guard_mode: candidate.decision.guard_mode,
         instruction: candidate.decision.instruction,
-        mode_reason: candidate.reason,
+        guard_reason: candidate.reason,
         suggested_response: candidate.response
     };
 };
@@ -70,16 +69,13 @@ const QWEN_MODEL: AIModelName = DEFAULT_AI_MODEL;
 const MAX_TUTOR_DECISION_ATTEMPTS = 2;
 const TUTOR_GENERATION_SETTINGS = {
     temperature: 0.3,
-    max_tokens: 100,
+    max_tokens: 600,
     enable_thinking: false
 } as const;
 const TUTOR_DECISION_RESPONSE_FORMAT = { type: 'json_object' } as const;
 /** Appended to the last user turn when the model returns an unparsable tutor decision. */
 export const TUTOR_DECISION_REPAIR_INSTRUCTION =
-    'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"tutoring","instruction":"scaffolding"},"response":"learner-facing message"}. Do not emit legacy fields, markdown, code fences, or text outside the object.';
-/** @deprecated Retained for compatibility; production generation uses the single-agent contract. */
-export const MULTI_AGENT_REPAIR_INSTRUCTION =
-    'The learner enabled Multi-agent, so return a tagged Multi-agent response unless the learner is about to act unsafely, asks you to explain or stop, or participation is deliberately disrupted. Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"mode":"multiagent","instruction":"multiagent"},"response":"[agent:riley] one short wrong recommendation"}. Response must contain one tagged Riley or AI Tutor message, or one message from each character, with no duplicate tag. Keep every message under 35 words, and do not emit markdown, code fences, or text outside the object.';
+    'Return exactly one valid JSON object in this order: {"reason":"observable evidence and purpose","decision":{"guard_mode":false,"instruction":"scaffolding"},"response":"learner-facing message"}. Do not emit legacy fields, markdown, code fences, or text outside the object.';
 const getRuntimeEnvironment = (): 'debug' | 'production' =>
     process.env.REACT_APP_ENVIRONMENT === 'debug' ? 'debug' : 'production';
 const shouldTolerateAuditLogFailure = (): boolean => getRuntimeEnvironment() === 'debug';
@@ -104,6 +100,30 @@ const invokeAiApi = async (body: Record<string, unknown>): Promise<AiCompletionR
     }
     return payload as AiCompletionResponse;
 };
+
+async function invokeCyberbullyingOperation(userId: string, body: Record<string, unknown>): Promise<CyberbullyingSuggestion> {
+    const { data, error } = await (supabase as any).functions.invoke('ai-api', {
+        body, headers: { 'x-application-user-id': userId },
+    });
+    if (error || data?.error) {
+        let detail = data?.error?.code;
+        if (!detail && error?.context instanceof Response) {
+            const payload = await error.context.json().catch(() => null);
+            detail = payload?.error?.code;
+        }
+        throw new Error(detail || error?.message || 'Role suggestion request failed');
+    }
+    const draft = data?.data;
+    if (!draft || typeof draft.id !== 'string' || draft.room_id !== body.room_id) {
+        throw new Error('Role suggestion returned an invalid room or proposal');
+    }
+    return draft as CyberbullyingSuggestion;
+}
+
+export const reviewCyberbullyingSuggestion = (roomId: string, userId: string, suggestionId: string, reject: boolean) =>
+    invokeCyberbullyingOperation(userId, {
+        operation: 'cyberbullying_review', room_id: roomId, suggestion_id: suggestionId, reject,
+    });
 
 interface ParameterOverrides {
     role?: { role: 'low' | 'high' };
@@ -152,14 +172,14 @@ const stripWrappedQuotes = (value: string): string => {
 export const normalizeAIModel = (_modelName: unknown): AIModelName => DEFAULT_AI_MODEL;
 
 export const resolveTutorPriorMode = (roomData: {
-    active_response_mode?: TutorResponseMode | null;
-    mode_changed_at?: string | null;
-}): TutorResponseMode | 'unknown' => {
-    if (roomData.active_response_mode === 'guard') {
-        return 'guard';
+    guard_mode?: boolean | null;
+    guard_mode_changed_at?: string | null;
+}): boolean | 'unknown' => {
+    if (roomData.guard_mode === true) {
+        return true;
     }
-    if (roomData.active_response_mode && roomData.mode_changed_at) {
-        return roomData.active_response_mode;
+    if (roomData.guard_mode === false && roomData.guard_mode_changed_at) {
+        return roomData.guard_mode;
     }
     return 'unknown';
 };
@@ -629,7 +649,7 @@ export class TutorSuggestionService {
         options?: {
             focusStudentMessage?: string;
             scenarioContext?: string;
-            priorMode?: TutorResponseMode | 'unknown';
+            priorMode?: boolean | 'unknown';
         }
     ): Promise<{ suggestion: string; decision?: TutorActionDecision; success: boolean; error?: string }> {
         try {
@@ -670,7 +690,7 @@ export class TutorSuggestionService {
                     scenario_context: comparisonScenario,
                     conversation_history: historyText,
                     student_message: studentMessage,
-                    prior_mode: options?.priorMode || 'unknown',
+                    prior_guard_mode: options?.priorMode ?? 'unknown',
                     interaction_mode: interactionMode
                 });
 
@@ -843,7 +863,10 @@ export const generateTutorSuggestion = async (
     parameterOverrides?: ParameterOverrides,
     options?: {
         focusStudentMessage?: string;
-        assessmentFeedback?: TutorAssessmentFeedback;
+        focusStudentId?: string;
+        expectedAssessmentResultIds?: ReadonlyArray<string>;
+        previousSuggestionId?: string;
+        character?: CyberbullyingCharacter | null;
     }
 ): Promise<{
     suggestion: string;
@@ -852,10 +875,27 @@ export const generateTutorSuggestion = async (
     error?: string;
     contextMessages: string[];
     appliedConfig?: AppliedConfigSnapshot;
+    cyberbullyingDraft?: CyberbullyingSuggestion;
 }> => {
     try {
         // 1. Validate room and get basic data
         const roomData = await validateRoom(roomId);
+        if (roomData.practice_type === 'cyberbullying') {
+            if (parameterOverrides && Object.keys(parameterOverrides).length) throw new Error('Quick Adjust is unavailable for this practice');
+            const draft = await invokeCyberbullyingOperation(userId, {
+                operation: 'cyberbullying_suggest', room_id: roomId, request_id: crypto.randomUUID(),
+                previous_suggestion_id: options?.previousSuggestionId ?? null, character: options?.character ?? null,
+            });
+            if (draft.status !== 'ready') throw new Error('Role suggestion is not ready for review');
+            return {
+                success: true, suggestion: draft.raw_response, contextMessages: [draft.parent_message_id],
+                decision: {
+                    guard_mode: draft.raw_guard_mode,
+                    instruction: null, guard_reason: draft.reason, suggested_response: draft.raw_response,
+                },
+                cyberbullyingDraft: draft,
+            };
+        }
         
         // 2. Load and process AI configuration
         let aiConfig = await AIConfigurationManager.loadConfig(roomId, roomData);
@@ -877,18 +917,11 @@ export const generateTutorSuggestion = async (
             console.warn('Checklist progress unavailable for tutor suggestion:', error);
         }
         
-        if (options?.assessmentFeedback) {
-            aiConfig = {
-                ...aiConfig,
-                system_prompt: `${aiConfig.system_prompt}\n\nVERIFIED ASSESSMENT STATE\n${JSON.stringify(options.assessmentFeedback)}\nUse this server result for assessment feedback; do not re-grade the learner answer. When resolution is open and lifecycle is delivered, preserve the retry and do not reveal or infer the answer key. A cancelled lifecycle ends the question without implying a failed attempt. When feedback_required is true, give the required feedback before any new assessment. Continue to prioritize immediate safety and Guard handling.`,
-            };
-        }
-
         // 4. Log final configuration being used
         console.log('📋 Using AI config with system prompt:', aiConfig.system_prompt?.substring(0, 100) + '...');
         
         // 5. Get conversation history (includes pre-populated discussion for ecology)
-        const conversationHistory = await buildAIContextFromExistingData(roomId);
+        const conversationHistory = await buildAIContextFromExistingData(roomId,options?.expectedAssessmentResultIds,options?.focusStudentId);
         console.log(`📚 Conversation history length: ${conversationHistory.length} messages`);
 
         // Scenario string from room fields when available
@@ -952,7 +985,7 @@ export const generateTutorSuggestion = async (
 async function validateRoom(roomId: string) {
     const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model, active_response_mode, mode_changed_at')
+        .select('ai_assistant_enabled, ai_assistant_model, guard_mode, guard_mode_changed_at, practice_type')
         .eq('id', roomId)
         .single();
 
@@ -972,7 +1005,7 @@ async function generateSuggestionWithService(
     options?: {
         focusStudentMessage?: string;
         scenarioContext?: string;
-        priorMode?: TutorResponseMode | 'unknown';
+        priorMode?: boolean | 'unknown';
     }
 ): Promise<{
     suggestion: string;
@@ -992,9 +1025,9 @@ async function generateSuggestionWithService(
     return {
         suggestion,
         decision: {
-            mode: 'tutoring',
+            guard_mode: false,
             instruction: 'explanation',
-            mode_reason: 'Debug dummy responses do not classify Guard Mode.',
+            guard_reason: 'Debug dummy responses do not classify Guard Mode.',
             suggested_response: suggestion
         },
         success: true
@@ -1305,7 +1338,7 @@ export const recordAISuggestionFeedback = async (
     rawMode: TutorDecisionMode,
     rawInstruction: TutorInstruction | null,
     modeReason: string,
-    finalMode: TutorResponseMode
+    finalGuardMode: TutorResponseMode
 ): Promise<void> => {
     const persistedParentMessageId = !parentMessageId || parentMessageId.startsWith('prepop-')
         ? null
@@ -1323,11 +1356,11 @@ export const recordAISuggestionFeedback = async (
             tutor_message_id: tutorMessageId ?? null,
             response_time_ms: responseTimeMs ?? null,
             context_messages: contextMessages ?? [],
-            raw_mode: rawMode,
+            raw_guard_mode: rawMode,
             raw_instruction: rawInstruction,
-            mode_reason: modeReason,
-            final_mode: finalMode,
-            mode_rectified: rawMode !== finalMode
+            guard_reason: modeReason,
+            final_guard_mode: finalGuardMode,
+            guard_rectified: rawMode !== finalGuardMode
         });
 
     if (error) {

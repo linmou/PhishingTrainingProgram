@@ -63,16 +63,10 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         console.log('\n=== NINTENDO SWITCH SCENARIO PROMPT ===');
         console.log(practicalPrompt);
 
-        // Verify scenario-specific content is included
-        expect(practicalPrompt).toContain('$19.99 for a $300+ gaming console');
-        expect(practicalPrompt).toContain('nintendo.com or authorized retailer');
-        expect(practicalPrompt).toContain('Official Social Media: Check Nintendo\'s official social media accounts');
-        
-        // Verify peer role and high settings are reflected
-        expect(practicalPrompt).toContain('knowledgeable peer coach');
-        expect(practicalPrompt).toContain('relaxed teen-friendly language');
-        expect(practicalPrompt).toContain('scammer might hide the real website name');
-        expect(practicalPrompt).toContain('Keep energy restrained');
+        nintendoScenario.detection_areas.slice(0, 4).forEach(area => expect(practicalPrompt).toContain(area));
+        expect(practicalPrompt).toContain(ROLE_PARAMETERS.role.low);
+        expect(practicalPrompt).toContain(COMMUNICATION_STYLES.teen_slang.high);
+        expect(practicalPrompt).toContain(COGNITIVE_PARAMETERS.perspective_taking.high);
     });
 
     it('should demonstrate privacy protection scenario with trusted adult role', () => {
@@ -104,12 +98,10 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         console.log('\n=== PRIVACY PROTECTION SCENARIO PROMPT ===');
         console.log(privacyPrompt.substring(0, 800) + '...\n');
 
-        // Verify privacy-specific content
-        expect(privacyPrompt).toContain('Real-time location sharing');
-        expect(privacyPrompt).toContain('private messages');
-        expect(privacyPrompt).toContain('Trusted Adult Guide');
-        expect(privacyPrompt).toContain('multiple related concepts');
-        expect(privacyPrompt).toContain('Explicitly discuss potential consequences to build awareness');
+        privacyScenario.detection_areas.forEach(area => expect(privacyPrompt).toContain(area));
+        expect(privacyPrompt).toContain(ROLE_PARAMETERS.role.high);
+        expect(privacyPrompt).toContain(COGNITIVE_PARAMETERS.concept_density.high);
+        expect(privacyPrompt).toContain(COGNITIVE_PARAMETERS.consequence_highlighting.high);
     });
 
     it('should show length and complexity differences between configurations', () => {

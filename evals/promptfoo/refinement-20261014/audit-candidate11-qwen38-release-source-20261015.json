@@ -1,0 +1,62 @@
+{
+  "intent": "Independently verify the user-authorized full Tutor11/Qwen3.8/600 runtime integration while retaining failed benchmark results and inherited production dependencies.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "source_integration_verdict": "clear",
+  "release_verdict": "pending staging and production live verification owned by root",
+  "benchmark_verdict": "failed; unchanged",
+  "user_authorization": "After the failed600-token evaluation was explained, the user explicitly instructed 'then deploy candidate11'. This overrides the disclosed benchmark failures for release, without relabeling results or waiving unexpected contract/lifecycle failures.",
+  "tested_tutor_reference": {
+    "manifest": "output/candidate11-qwen38-20261015/high-cap-600-01/manifest.json",
+    "manifest_sha256_json_serialization": "9f2149ab73fc2178f2e4eb2388a5dd81a2773ce1e67483e7f951bf385a17e245",
+    "final_results_sha256_raw_utf8": "9460d470de234e5757979367260968e534dfd280aac0e87a3c30a46229a0fc71"
+  },
+  "exact_tutor_parity": {
+    "policy": "Current ACTIVE_TUTOR_AGENT_PROMPT equals the exact historical full11 reference policy after the same trim used for evaluation requests. No new Guard paragraph or refinement is added.",
+    "active_file_sha256": "2219d183d3e4fd1a4fda4bf44a8bfa798e9deb12e5d73fd6d21d0416c6a19e6e",
+    "policy_value_sha256": "68992a5f50aa8add13a599c35bf63626e16b01f4b3309ffeed96a68ccf39284e",
+    "base_files": [
+      {"path":"tutor-system/src/services/prompts/index.ts","sha256":"6ce299d8c6f491c2b4bac2a9a334a6314935cbaa66081b15256a26bc913937cc","parity":"byte-identical historical11 dependency"},
+      {"path":"tutor-system/src/services/prompts/responsePolicy.ts","sha256":"6d6cc22d3042bafa8fd8c126cc7d75e9efac7a8c3fedcbb899c85f33768c714d","parity":"byte-identical historical11 dependency"},
+      {"path":"tutor-system/src/services/prompts/pedagogy/parameters/roleParameters.ts","sha256":"f8facd8acbf763f08a15a199bed49b628b73745ca888d01bea523afea8432edf","parity":"byte-identical historical11 dependency"}
+    ],
+    "request_composition": "Independently regenerated all183 frozen case/repetition inputs through the current production adapter using the current runtime policy and base generator. Every system/user message matches the evaluated full11 request byte for byte.",
+    "generation_settings": {"temperature":0.3,"max_tokens":600,"enable_thinking":false},
+    "ai_service_sha256": "f8ca52c11201295b314cda18a00a5c1c5f106f3917718d7f5a640d225ed5e3e1"
+  },
+  "model_consistency": {
+    "frontend_default_and_only_catalog_model": "qwen3.8-flash",
+    "ai_models_sha256": "3ee23ac0d8ec3f1583dd82ae25bb0fa1062b241c97b3ad44ca76671c04ea3694",
+    "assessment_provider_pin": "qwen3.8-flash",
+    "workflow_secret_template_and_env_example": "Both now specify qwen3.8-flash.",
+    "workflow_sha256": "6ef254b67858f65204ed3654c1ca6cc5a2c034a2532396aa23ca8c541170d70e",
+    "env_example_sha256": "9652568fc5cf8aac78af29851a662d0538a27958691ccf02e6499dda19fbf338",
+    "ai_api_source": "Unchanged; uses deployed OAI_MODEL dynamically. Actual shared model-secret values must be verified separately in both projects.",
+    "ai_api_source_sha256": "06209c184f3602626cfc467807297ef98551102a93644649dfaac47102b3f892"
+  },
+  "assessment_deployable_artifact": {
+    "entry_sha256": "5ecd0f402c7d26470bc539816962d675c6befc0d9ab07eb750b39d17ccbd860e",
+    "source_manifest_sha256": "9e492c74540cb4ca6b93776c38a919ab8c7b020c61d7745a2c72a229a1454e5a",
+    "independent_check": "Ran the existing deployment helper in dry-run mode; no external calls or deployment. The manifest includes the exact current entry and inherited source dependencies."
+  },
+  "inherited_production_change": {
+    "authority_record": "tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_15_unified_learning_targets.md",
+    "production_baseline": "assessment-api v12, staging v57, unified target inventory and target-text evidence judgment already released and verified.",
+    "actual_transfer_prompt_sha256": "9f9c9eacb81790a48bf917eb208b2b6cad86a1c5739a201f7039b8005868bc6e",
+    "historical_candidate02_prompt_sha256": "9266debd11301743960684202116c9533cf57c0d9811b83d5ff2a89103b1c564",
+    "actual_difference": "The former type-specific evidence restriction is replaced by 'Judge sufficiency against the target’s text'. This is intentionally inherited from the already released unified-target feature, not introduced by the Tutor11 change.",
+    "root_confirmation": "Root inspected the production Edge source directly and confirmed local entry differs only in the new provider model pin; other inherited runtime dependencies match production. Auditor read the unified-target release record and independently extracted the current prompt hash.",
+    "decoding": "Inherited transfer analysis remains temperature0/max_tokens600/thinkingfalse. Assessment question generation remains its separate existing0.3/1200/nonthinking configuration.",
+    "scope_limit": "Historical candidate02/Qwen3.8 benchmark results do not validate this different inherited transfer prompt. Require scoped live transfer and assessment lifecycle checks on the actual released source. Do not claim exact historical02 prompt parity or roll back the unified-target backend."
+  },
+  "declared_base_restoration": "Restoring historical full11 index.ts reinstates separate Detection Areas and Verification Steps headings, whereas the intervening unified-target frontend rendered one combined target section. This is intentional tested full11 base parity. It does not revert the unified database inventory, target-text judgment, extraction contract or lifecycle. Live new-room inventory checks must verify all approved targets remain intact, and release documentation must disclose the rendering change.",
+  "remaining_live_checks": [
+    "Verify actual Qwen3.8 model-secret configuration and provider model readback in staging and production.",
+    "Verify the configured-base Tutor11 request, ordinary tutor response, Guard entry/recovery and actual0.3/600/nonthinking request settings.",
+    "Verify legacy prompt_config=null compatibility separately; legacy stored base text is not byte-identical to the regenerated evaluated base.",
+    "Verify actual inherited transfer prompt, persisted state, assessment scheduling/grading/retry/failure paths, identity and cleanup. Known semantic benchmark failures remain accepted under the override; unexpected contract/lifecycle failures remain blockers.",
+    "Promote the same assessed source manifest and record both project versions and cleanup evidence before declaring release complete."
+  ],
+  "auditor_model_calls": 0,
+  "auditor_deployments": 0
+}

@@ -12,14 +12,13 @@ const {
 function templateChecklistItems(promptConfig) {
   const detectionAreas = promptConfig?.detection_areas;
   const verificationSteps = promptConfig?.verification_steps;
-  assert(Array.isArray(detectionAreas) && detectionAreas.length > 0 &&
+  assert(Array.isArray(detectionAreas) &&
     detectionAreas.every(text => typeof text === 'string' && text.trim()), 'Room template has no valid detection areas');
-  assert(Array.isArray(verificationSteps) && verificationSteps.length > 0 &&
+  assert(Array.isArray(verificationSteps) &&
     verificationSteps.every(text => typeof text === 'string' && text.trim()), 'Room template has no valid verification steps');
-  return [
-    ...detectionAreas.map(area_text => ({ area_text, item_type: 'detection_area', priority: 'important' })),
-    ...verificationSteps.map(area_text => ({ area_text, item_type: 'verification_step', priority: 'critical' }))
-  ];
+  const targets = [...detectionAreas, ...verificationSteps];
+  assert(targets.length > 0, 'Room template has no learning targets');
+  return targets.map(area_text => ({ area_text, item_type: 'detection_area', priority: 'important' }));
 }
 
 async function startStatusJourney(ctx) {

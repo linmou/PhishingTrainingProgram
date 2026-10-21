@@ -2,7 +2,9 @@
 
 Intent: record the executed comparison of the previous assessment trigger with the approved Partial-only final-assessment trigger, including unchanged model failures and downstream consequences.
 
-Run: `final-assessment-comparison-01`; executed 2026-10-13 23:25:39–23:26:32 UTC. Git base: `7737cfb7026910e53684c6ad739c2f3005af3f54`, plus the exact working-tree handler, reducer, requirements, and harness snapshots in the [frozen package](../../../output/transfer-analysis-eval-20261013/final-assessment-comparison-01/frozen.json). Authority: [T09.1](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) and the [approved policy provenance](../doc_update_record/documentation_update_record_v2026_10_13_final_assessment_provenance.md). Plan: [revision checks](transfer-analysis-evaluation-plan.md#final-assessment-revision-checks).
+Navigation update, 2026-10-17: historical commands below used `evals/promptfoo/transfer-analysis/`; the suite is now [learning-progress-analyzer](../../../evals/promptfoo/learning-progress-analyzer/README.md). Use the frozen plan in each experiment package for its original section layout and source identities.
+
+Run: `final-assessment-comparison-01`; executed 2026-10-13 23:25:39–23:26:32 UTC. Git base: `7737cfb7026910e53684c6ad739c2f3005af3f54`, plus the exact working-tree handler, reducer, requirements, and harness snapshots in the [frozen package](../../../output/transfer-analysis-eval-20261013/final-assessment-comparison-01/frozen.json). Authority: [T09.1](tutor-behavior-specification.md#t09-transfer-assessment-and-verification-lifecycle) and the [approved policy provenance](../doc_update_record/documentation_update_record_v2026_10_13_final_assessment_provenance.md). Plan: [revision checks](learning-progress-analyzer-evaluation-plan.md#current-analysis-and-assessment-checks).
 
 ## Outcome
 
@@ -116,7 +118,7 @@ Across the three experiments, 682 provider calls completed and 402 paired case/r
 - [Frozen manifest and source snapshots](../../../output/transfer-analysis-eval-20261013/final-assessment-comparison-01/frozen.json): full inputs/history/prior states, gold labels and rationales, provenance, requirement mappings, settings, baseline/candidate sources, Git revision and worktree status, and preserved-case audit.
 - [Per-generation records](../../../output/transfer-analysis-eval-20261013/final-assessment-comparison-01/generations/): complete provider requests/responses and usage, parsed/validated outputs, rejection details, paired consumer results, and typed expected/actual checks.
 - [Execution metadata](../../../output/transfer-analysis-eval-20261013/final-assessment-comparison-01/execution-1791933992550.json): command, endpoint without credentials, timestamps, workers, and exit code 0.
-- [Independent case provenance](../../../evals/promptfoo/transfer-analysis/final-assessment-holdouts.json), [new boundary cases](../../../evals/promptfoo/transfer-analysis/final-assessment-cases.json), [runner](../../../evals/promptfoo/transfer-analysis/evaluate.cjs), and [harness checks](../../../evals/promptfoo/transfer-analysis/evaluate.test.cjs).
+- [Independent case provenance](../../../evals/promptfoo/learning-progress-analyzer/final-assessment-holdouts.json), [new boundary cases](../../../evals/promptfoo/learning-progress-analyzer/final-assessment-cases.json), [runner](../../../evals/promptfoo/learning-progress-analyzer/evaluate.cjs), and [harness checks](../../../evals/promptfoo/learning-progress-analyzer/evaluate.test.cjs).
 
 Commands from repository root:
 
@@ -126,7 +128,7 @@ rtk proxy node evals/promptfoo/transfer-analysis/evaluate.cjs freeze output/tran
 rtk proxy node evals/promptfoo/transfer-analysis/evaluate.cjs run output/transfer-analysis-eval-20261013/final-assessment-comparison-01 --num_workers 4
 ```
 
-Freeze requires a new directory. Run resumes preserved generations without resampling completed successes or failures, and rejects runner drift. Outputs remain outside Git; this tracked record preserves the executed conclusion and exact local evidence paths. The historical [baseline record](transfer-analysis-evaluation-record.md) retains its original policy and results.
+Freeze requires a new directory. Run resumes preserved generations without resampling completed successes or failures, and rejects runner drift. Outputs remain outside Git; this tracked record preserves the executed conclusion and exact local evidence paths. The historical [baseline record](learning-progress-analyzer-evaluation-record.md) retains its original policy and results.
 
 The prompt experiments used these additional commands with their candidate source restored before freezing:
 

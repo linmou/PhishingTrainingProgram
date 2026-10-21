@@ -1,0 +1,32 @@
+[
+  {
+    "id": "observed-stale-reason",
+    "case_index": 0,
+    "expected_status": "fail",
+    "output": {
+      "reason": "Student confirms the poster is suspicious. Remaining targets include the URL and value promise. I will scaffold attention to the link itself.",
+      "decision": { "mode": "tutoring", "instruction": "scaffolding" },
+      "response": "Good catch on the account. Now look at the link 'bit.ly/FREEGIFTS'. Does that address belong to Apple?"
+    }
+  },
+  {
+    "id": "grounded-current-affirmation",
+    "case_index": 0,
+    "expected_status": "pass",
+    "output": {
+      "reason": "The latest reply says the shortened link appears to lead to Apple. That mistaken inference follows a focused check, so I will correct it and give a safe verification action.",
+      "decision": { "mode": "tutoring", "instruction": "correction" },
+      "response": "The visible address is bit.ly, which hides the destination and does not establish that this offer comes from Apple. Avoid that link and open Apple's website yourself to check the offer."
+    }
+  },
+  {
+    "id": "grounded-negation-boundary",
+    "case_index": 1,
+    "expected_status": "pass",
+    "output": {
+      "reason": "The latest reply rejects the shortened link's apparent Apple affiliation. It does not show that the destination was checked; explain the limitation and safe verification route.",
+      "decision": { "mode": "tutoring", "instruction": "explanation" },
+      "response": "Right, that shortened address does not establish an Apple connection. It hides the destination, so open Apple's website yourself to check whether the offer exists."
+    }
+  }
+]

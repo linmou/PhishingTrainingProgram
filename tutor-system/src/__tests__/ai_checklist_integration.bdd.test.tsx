@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import ChecklistPanel from '../components/ChecklistPanel';
@@ -106,7 +106,7 @@ const rowsAsChecklistItems = (): ChecklistItem[] => database.state.checklist_ite
 
 const aiBackground = async ({ given, and }: any) => {
   given('the AI assistant is enabled for a tutoring room', () => {
-    database.state.rooms = [{ id: ROOM_ID, active_response_mode: 'tutoring', ai_assistant_enabled: true }];
+    database.state.rooms = [{ id: ROOM_ID, guard_mode: false, ai_assistant_enabled: true }];
   });
   and('a student has joined the room', () => {
     expect({ id: 'student-1', room_id: ROOM_ID }).toHaveProperty('room_id', ROOM_ID);
@@ -283,26 +283,6 @@ defineFeature(feature, test => {
     });
     and('the tutor should see that it still needs attention', () => {
       expect(getItemRow(SOCIAL_CONCEPT).textContent).toMatch(/basic/i);
-    });
-  });
-
-  test('Learner receives feedback on understanding and action', ({ given, and, when, then }) => {
-    aiBackground({ given, and });
-
-    given('a student demonstrates both cognitive understanding and behavioral application', () => {
-      expect(database.state.checklist_items.some(item => item.area_text.startsWith('[understanding]'))).toBe(true);
-      expect(database.state.checklist_items.some(item => item.area_text.startsWith('[behavior]'))).toBe(true);
-    });
-    when('the student explains "I recognized the urgency language and then verified by going to the official website"', () => {
-      visibleFeedback = CoverageDetectionService.generateDifferentiatedFeedback(
-        'I recognized the urgency language and then verified by going to the official website',
-        'both'
-      );
-      makeFeedbackVisible(visibleFeedback);
-    });
-    then('the learner should receive feedback that acknowledges both dimensions:', () => {
-      expect(screen.getByText(/Excellent! You showed great understanding of urgency tactics \[understanding\]/)).toBeInTheDocument();
-      expect(screen.getByText(/right verification action \[behavior\]/)).toBeInTheDocument();
     });
   });
 

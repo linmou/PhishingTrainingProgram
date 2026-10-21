@@ -49,7 +49,7 @@ describe('Promptfoo evaluation prompt formatting', () => {
     expect(serializedContext.conversation_history).toBe(firstCase.conversation_history);
     expect(serializedContext.scenario_context).toBe(firstCase.scenario_context);
     expect(serializedContext.student_message).toBe(firstCase.student_message);
-    expect(serializedContext.prior_mode).toBe('unknown');
+    expect(serializedContext.prior_guard_mode).toBe('unknown');
   });
 
   it('loads configured Promptfoo chat prompts and ecological webpage cases', () => {

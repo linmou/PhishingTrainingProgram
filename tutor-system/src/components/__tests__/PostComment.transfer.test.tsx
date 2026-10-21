@@ -25,9 +25,20 @@ import {
   deliveredPublicAssessment,
   deliveredQuestionRow,
   learnerAMessageRow,
+  assessmentResultMessage,
 } from '../../test-support/transferRoomFixtures';
 
 describe('PostComment transfer assessment rendering', () => {
+  it.each(['student','tutor','observer'])('shows the saved result to %s with automatic attribution and no rating controls',role => {
+    const result=assessmentResultMessage('failed',2,DELIVERED_ANSWER_ID);
+    const message=projectRoomMessage(result as unknown as Record<string,unknown>);
+    const {container}=render(<PostComment message={message} currentUserId={LEARNER_A_ID} currentUserRole={role} />);
+    expect(screen.getByTestId(`assessment-result-${result.id}`)).toHaveAttribute('data-assessment-event','result');
+    expect(container.querySelector('.comment-author-name')).toHaveTextContent('Assessment result');
+    expect(container.querySelector('.comment-text')).toHaveTextContent('Verify the request through an official channel.');
+    expect(screen.queryByTitle('Like this comment')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Dislike this comment')).not.toBeInTheDocument();
+  });
   it('renders the delivered public question with its options in order', () => {
     const message = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
 
@@ -155,11 +166,11 @@ describe('PostComment transfer assessment rendering', () => {
 
     fireEvent.click(within(firstView).getByRole('button', { name: 'Expand assessment question' }));
     expect(within(firstView).getByRole('radio', { name: /B\./ })).toBeChecked();
-    expect(within(firstView).getByText('Incorrect. 1 attempt remaining.')).toBeVisible();
+    expect(within(firstView).queryByText('Incorrect. 1 attempt remaining.')).not.toBeInTheDocument();
     expect(within(secondView).queryByText('Incorrect. 1 attempt remaining.')).not.toBeInTheDocument();
   });
 
-  it('renders terminal feedback only in the target learner question view', () => {
+  it('keeps terminal feedback out of every question view because the saved result owns it', () => {
     const explanation = 'Verify the request through an official channel.';
     const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
     const resolvedQuestion = withAnswerLifecycle(question, answerLifecycleFromProcessed({
@@ -191,8 +202,7 @@ describe('PostComment transfer assessment rendering', () => {
     );
 
     const views = container.querySelectorAll('.post-comment');
-    expect(within(views[0] as HTMLElement).getByText(explanation)).toBeInTheDocument();
-    for (const view of Array.from(views).slice(1)) {
+    for (const view of Array.from(views)) {
       expect(within(view as HTMLElement).queryByText(explanation)).not.toBeInTheDocument();
       expect(within(view as HTMLElement).queryByText('Correct option(s): B')).not.toBeInTheDocument();
     }

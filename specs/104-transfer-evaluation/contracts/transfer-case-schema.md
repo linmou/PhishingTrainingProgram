@@ -1,5 +1,11 @@
 # Two-Attempt Transfer Case Schema Contract
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Lifecycle evidence now includes assessment_event/result_message identities, question/answer linkage, persisted result order and actual outbound tutor history. Disclosure expectations permit reviewed key/explanation only in authorized second-failure room results, including exports/backfill. See [Assessment result messages](../../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 **Intent**: define the stable public evaluator input/expected-outcome contract for W9-W10 transfer cases.
 
 ## Top-level shape

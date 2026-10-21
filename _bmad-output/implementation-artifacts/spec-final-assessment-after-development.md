@@ -44,7 +44,7 @@ Keep per-target model calls and the events contract. Derive readiness from trust
 - `tutor-system/supabase/functions/assessment-api/index.ts`: message analysis and prepare-turn/answer handlers.
 - Live `prepare_transfer_assessment_context_v1`, `send_reviewed_tutor_response_v4`, `apply_learning_event_v1`: scheduling, delivery and durable progression.
 - `tutor-system/supabase/tests/`: real PostgreSQL RPC fixtures and permission checks.
-- `evals/promptfoo/transfer-analysis/evaluate.cjs`: baseline analysis consumer routing projection.
+- `evals/promptfoo/learning-progress-analyzer/evaluate.cjs`: baseline analysis consumer routing projection.
 
 ## Tasks & Acceptance
 
@@ -93,7 +93,7 @@ Release follow-up (2026-10-14, baseline commit `88b3ccd`): the inherited SQL and
 - Confirm pass records an applied result while retaining Covered.
   [learningProgressTransitions.ts:48](../../tutor-system/src/services/learningProgressTransitions.ts#L48)
 - Inspect the revised routing oracle and preserved classification checks.
-  [evaluate.cjs:48](../../evals/promptfoo/transfer-analysis/evaluate.cjs#L48)
+  [evaluate.cjs:48](../../evals/promptfoo/learning-progress-analyzer/evaluate.cjs#L48)
 - Review real RPC lifecycle and permission regression scenarios.
   [final_assessment_after_understanding.sql:89](../../tutor-system/supabase/tests/final_assessment_after_understanding.sql#L89)
 - Assess local test results and remaining release boundaries.

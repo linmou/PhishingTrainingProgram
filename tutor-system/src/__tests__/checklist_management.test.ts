@@ -134,7 +134,7 @@ describe('Checklist Management System', () => {
       ]);
       jest.spyOn(ChecklistService, 'getChecklistByRoom').mockResolvedValue(checklist);
       mockQuery.single.mockResolvedValueOnce({
-        data: { active_response_mode: 'tutoring' },
+        data: { guard_mode: false },
         error: null
       });
       mockSupabase.rpc.mockResolvedValueOnce({ error: null });
@@ -153,17 +153,15 @@ describe('Checklist Management System', () => {
       expect(result.verification_steps.every((item) => item.status === 'pending')).toBe(true);
     });
 
-    it('extracts learning prefixes through the current async extraction API', async () => {
+    it('passes the unified learning-target list through the async extraction API', async () => {
       (LLMExtractionService.extractFromSystemPrompt as jest.Mock).mockResolvedValue({
-        understanding: ['URL verification techniques'],
-        behavior: ['Hover over links before clicking']
+        detection_areas: ['URL verification techniques', 'Hover over links before clicking']
       });
 
       await expect(ChecklistIntegration.extractFromSystemPromptAsync(
         'Teach students how to inspect suspicious links.'
       )).resolves.toEqual({
-        understanding: ['[understanding] URL verification techniques'],
-        behavior: ['[behavior] Hover over links before clicking']
+        detection_areas: ['URL verification techniques', 'Hover over links before clicking']
       });
     });
 
@@ -250,7 +248,7 @@ describe('Checklist Management System', () => {
       mockQuery.single
         .mockResolvedValueOnce({ data: databaseItem({ attempts_count: 1 }), error: null })
         .mockResolvedValueOnce({ data: { room_id: 'room-1' }, error: null })
-        .mockResolvedValueOnce({ data: { active_response_mode: 'tutoring' }, error: null })
+        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
         .mockResolvedValueOnce({
           data: databaseItem({ status: 'covered', tutor_notes: note, attempts_count: 2 }),
           error: null
@@ -287,7 +285,7 @@ describe('Checklist Management System', () => {
           error: null
         })
         .mockResolvedValueOnce({ data: { room_id: 'room-1' }, error: null })
-        .mockResolvedValueOnce({ data: { active_response_mode: 'tutoring' }, error: null })
+        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
         .mockResolvedValueOnce({
           data: databaseItem({
             priority: undefined,
@@ -311,7 +309,7 @@ describe('Checklist Management System', () => {
 
     it('adds a custom detection or verification area with the selected priority', async () => {
       mockQuery.single
-        .mockResolvedValueOnce({ data: { active_response_mode: 'tutoring' }, error: null })
+        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
         .mockResolvedValueOnce({ data: { id: 'checklist-1' }, error: null })
         .mockResolvedValueOnce({
           data: databaseItem({
@@ -427,7 +425,7 @@ describe('Checklist Management System', () => {
       jest.spyOn(CoverageDetectionService, 'validateDetectionResults').mockReturnValue(detectionResults);
       jest.spyOn(CoverageDetectionService, 'convertToChecklistUpdates').mockResolvedValue([coverageUpdate]);
       mockQuery.single
-        .mockResolvedValueOnce({ data: { active_response_mode: 'tutoring' }, error: null })
+        .mockResolvedValueOnce({ data: { guard_mode: false }, error: null })
         .mockResolvedValueOnce({ data: { attempts_count: 0 }, error: null })
         .mockResolvedValueOnce({
           data: databaseItem({

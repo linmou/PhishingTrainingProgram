@@ -168,7 +168,7 @@ describe('RoomContext transfer turn modes', () => {
       await room!.confirmTransferDraft(preparedCandidate);
     });
 
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
     expect(room!.messages.map((message) => message.id)).toContain(DELIVERED_QUESTION_ID);
   });
 
@@ -195,41 +195,41 @@ describe('RoomContext transfer turn modes', () => {
   });
 
   it('does not clear Guard when an assessment delivery is refused', async () => {
-    sendReviewed.mockResolvedValue({ ...reviewedDelivery, room: { ...transferRoom, active_response_mode: 'guard' } });
+    sendReviewed.mockResolvedValue({ ...reviewedDelivery, room: { ...transferRoom, guard_mode: true } });
     await mountWithCandidate(preparedTurnResult);
 
     await act(async () => {
       await room!.confirmTransferDraft(preparedCandidate);
     });
 
-    expect(room!.currentRoom!.active_response_mode).toBe('guard');
+    expect(room!.currentRoom!.guard_mode).toBe(true);
   });
 
   it('lets a tutor manually move room participation between Guard and tutoring', async () => {
     await mountRoom();
-    const setRoomMode = jest.spyOn(guardModeService, 'setRoomResponseMode').mockImplementation(
-      async (_roomId, _tutorId, mode) => ({ ...transferRoom, active_response_mode: mode })
+    const setRoomMode = jest.spyOn(guardModeService, 'setRoomGuardMode').mockImplementation(
+      async (_roomId, _tutorId, mode) => ({ ...transferRoom, guard_mode: mode })
     );
 
     await act(async () => {
-      await room!.setResponseMode('guard');
+      await room!.setGuardMode(true);
     });
-    expect(room!.currentRoom!.active_response_mode).toBe('guard');
+    expect(room!.currentRoom!.guard_mode).toBe(true);
 
     await act(async () => {
-      await room!.setResponseMode('tutoring');
+      await room!.setGuardMode(false);
     });
 
-    expect(setRoomMode).toHaveBeenNthCalledWith(1, TRANSFER_ROOM_ID, 'tutor-1', 'guard');
-    expect(setRoomMode).toHaveBeenNthCalledWith(2, TRANSFER_ROOM_ID, 'tutor-1', 'tutoring');
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(setRoomMode).toHaveBeenNthCalledWith(1, TRANSFER_ROOM_ID, 'tutor-1', true);
+    expect(setRoomMode).toHaveBeenNthCalledWith(2, TRANSFER_ROOM_ID, 'tutor-1', false);
+    expect(room!.currentRoom!.guard_mode).toBe(false);
   });
 
   it('recovers from Guard through a reviewed tutoring response', async () => {
     await mountRoom();
-    const setRoomMode = jest.spyOn(guardModeService, 'setRoomResponseMode').mockResolvedValue({
+    const setRoomMode = jest.spyOn(guardModeService, 'setRoomGuardMode').mockResolvedValue({
       ...transferRoom,
-      active_response_mode: 'guard',
+      guard_mode: true,
     });
     const sendReviewed = jest.spyOn(guardModeService, 'sendReviewedTutorResponse').mockResolvedValue({
       message: {
@@ -241,33 +241,33 @@ describe('RoomContext transfer turn modes', () => {
         parent_message_id: LEARNER_A_MESSAGE_ID,
         response_mode: 'tutoring',
       } as never,
-      room: { ...transferRoom, active_response_mode: 'tutoring' },
+      room: { ...transferRoom, guard_mode: false },
     });
     jest.spyOn(transferAssessmentService, 'prepareAssessment').mockResolvedValue(null);
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Verify the request through the official portal.',
       decision: {
-        mode: 'guard',
+        guard_mode: true,
         instruction: 'guard',
-        mode_reason: 'The learner needs a protective response.',
+        guard_reason: 'The learner needs a protective response.',
         suggested_response: 'Verify the request through the official portal.',
       },
       contextMessages: [LEARNER_A_MESSAGE_ID],
     });
 
     await act(async () => {
-      await room!.setResponseMode('guard');
+      await room!.setGuardMode(true);
     });
     await act(async () => {
       await room!.generateAIResponse();
     });
-    expect(room!.finalMode).toBe('guard');
+    expect(room!.finalGuardMode).toBe(true);
 
     await act(async () => {
-      room!.updateFinalMode('tutoring');
+      room!.updateFinalGuardMode(false);
     });
-    expect(room!.currentRoom!.active_response_mode).toBe('guard');
+    expect(room!.currentRoom!.guard_mode).toBe(true);
 
     await act(async () => {
       await room!.sendMessage('Verify the request through the official portal.');
@@ -275,11 +275,11 @@ describe('RoomContext transfer turn modes', () => {
 
     expect(setRoomMode).toHaveBeenCalledTimes(1);
     expect(sendReviewed).toHaveBeenCalledWith(expect.objectContaining({
-      rawDecision: expect.objectContaining({ mode: 'guard' }),
-      finalMode: 'tutoring',
+      rawDecision: expect.objectContaining({ guard_mode: true }),
+      finalGuardMode: false,
       finalResponse: 'Verify the request through the official portal.',
     }));
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
   });
 
   it('refuses an assessment draft with a changed target', async () => {
@@ -300,7 +300,7 @@ describe('RoomContext transfer turn modes', () => {
 
     expect(String(error)).toMatch(/target/i);
     expect(sendReviewed).not.toHaveBeenCalled();
-    expect(room!.currentRoom!.active_response_mode).toBe('tutoring');
+    expect(room!.currentRoom!.guard_mode).toBe(false);
   });
 
   it('never turns a refused assessment into a room mode', async () => {
@@ -308,7 +308,7 @@ describe('RoomContext transfer turn modes', () => {
     await mountRoom();
     await expect(act(async () => { await room!.generateAIResponse(); })).rejects.toThrow(/candidate/i);
     expect(sendReviewed).not.toHaveBeenCalled();
-    expect(['tutoring', 'guard']).toContain(room!.currentRoom!.active_response_mode);
+    expect([false, true]).toContain(room!.currentRoom!.guard_mode);
     expect(CHECKLIST_ITEM_ID).toBeTruthy();
     expect(room!.transferDraft).toBeNull();
   });

@@ -20,14 +20,14 @@ describe('raw tutor instruction integration flow', () => {
   it('carries the parsed tutoring instruction into the atomic reviewed-send RPC', async () => {
     const rawOutput = JSON.stringify({
       reason: 'The learner incorrectly treats the lock icon as proof that the site is real.',
-      decision: { mode: 'tutoring', instruction: 'correction' },
+      decision: { guard_mode: false, instruction: 'correction' },
       response: 'A lock protects the connection, not the site identity. Open the real app instead.'
     });
     const parsedDecision = parseTutorActionDecision(rawOutput);
     (supabase.rpc as jest.Mock).mockResolvedValue({
       data: {
         message: { id: 'message-1', response_mode: 'tutoring' },
-        room: { id: 'room-1', active_response_mode: 'tutoring' }
+        room: { id: 'room-1', guard_mode: false }
       },
       error: null
     });
@@ -37,7 +37,7 @@ describe('raw tutor instruction integration flow', () => {
       tutorId: 'tutor-1',
       parentMessageId: 'student-message-1',
       rawDecision: parsedDecision,
-      finalMode: 'tutoring',
+      finalGuardMode: false,
       finalResponse: parsedDecision.suggested_response,
       tutorAction: 'accepted',
       responseTimeMs: 250,
@@ -47,10 +47,10 @@ describe('raw tutor instruction integration flow', () => {
     expect(parsedDecision.instruction).toBe('correction');
     expect(supabase.rpc).toHaveBeenCalledWith('send_reviewed_tutor_response',
       expect.objectContaining({
-        p_raw_mode: 'tutoring',
+        p_raw_guard_mode: false,
         p_raw_instruction: 'correction',
-        p_mode_reason: parsedDecision.mode_reason,
-        p_final_mode: 'tutoring'
+        p_guard_reason: parsedDecision.guard_reason,
+        p_final_guard_mode: false
       })
     );
   });

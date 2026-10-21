@@ -75,7 +75,7 @@ const ROOM: Room = {
   created_at: '2024-01-01T00:00:00.000Z',
   transfer_learning_enabled: false,
   ai_assistant_enabled: true,
-  active_response_mode: 'tutoring',
+  guard_mode: false,
 };
 
 const MESSAGES: Message[] = [
@@ -334,9 +334,9 @@ async function createAIInteractions(state: ScenarioState, actions: AIInteraction
       success: true,
       suggestion,
       decision: {
-        mode: 'tutoring',
+        guard_mode: false,
         instruction: 'explanation',
-        mode_reason: 'The learner asked for phishing guidance.',
+        guard_reason: 'The learner asked for phishing guidance.',
         suggested_response: finalResponse,
       },
       contextMessages: [latestLearnerMessage.id],

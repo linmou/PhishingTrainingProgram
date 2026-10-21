@@ -1,0 +1,38 @@
+{
+  "intent": "Verify the isolated legacy judge-format recovery and final postprocessed comparison without overwriting native evidence or changing semantic scores.",
+  "auditor": "/root/qwen38_audit",
+  "date": "2026-10-15",
+  "integrity_verdict": "clear",
+  "benchmark_acceptance": "failed; remaining behavioral gates and transfer consumer errors are preserved",
+  "previous_results_audit": "evals/promptfoo/refinement-20261014/audit-qwen38-final-native-results-20261015.json",
+  "final_report": "output/model-comparison-20261015/paired-04/final-results.json",
+  "final_report_sha256_raw_utf8": "c14e4dbe03157822d1381cb1f5901128bbaaa22c3beab22397edb5cf4ace8242",
+  "recovery_evidence": "output/model-comparison-20261015/paired-04/judge-schema-recovery-01.json",
+  "recovery_sha256_raw_utf8": "951a0c0c1251b8e6d7b706d06038d35166c04b383cb0f2770b4bb7a444b4fdb0",
+  "verified_recovery": {
+    "uniform_eligibility_scan": "Independently scanned all 183 preserved tutor records in each arm. Exactly one error/missing check is eligible: baseline student_correctly_rejects_https_identity, repetition 0, v0:student_correctly_rejects_https_identity:1.",
+    "request": "The recovery request equals the original second judge request plus one schema-only reminder naming the exact required check key. Model, temperature, token limit, thinking and response format are identical.",
+    "response": "Actual qwen3.5-flash payload, HTTP 200 after one transport attempt, exact required root key, valid pass/1/reason value.",
+    "scoring": "Independently reapplied existing evaluator.checkedResult to the raw response; result exactly matches the recorded recovered check. No key aliasing or inferred verdict was used.",
+    "allowed_change": "Only the eligible baseline legacy check is replaced from missing to pass in memory for the new report. Targets, cases, all other judge results and native evidence remain preserved."
+  },
+  "independent_reconstruction": {
+    "native_report_unchanged": "Verified original raw report SHA c75e46aa3ca870cc1e41cb7dd149e7cd5f10cdcd4467e37bbc90061ccce3e979.",
+    "tutor_gates": "Independently reconstructed both final tutor gates from preserved raw records plus exactly the one recovered check. Results match final-results.json exactly.",
+    "classification": "Independently reconstructed tutor classification rows with only the declared model factor normalized. Rows match the final report.",
+    "transfer": "All transfer summaries, non-regression rows, classification comparisons and newly failing checks are byte-equivalent as parsed JSON to the native report.",
+    "tutor_unresolved_judgments": 0,
+    "baseline_gate_issue_count": 11,
+    "candidate_gate_issue_count": 20,
+    "transfer_consumer_invalid_outputs": 4,
+    "core_tutor_metrics": "Unchanged from the native results audit; joint instruction selection/realization remains 66/90 baseline versus 75/90 candidate."
+  },
+  "remaining_interpretation_cautions": [
+    "Persona native scores remain 182/183 versus 177/183. Several short, calm Guard failures appear to conflict with the installed rubric's explicit allowance for firm direct participation correction. Treat this as suspected grader overreach, not demonstrated persona degradation; no semantic scores were changed.",
+    "The three-vote instruction result remains 27/30, exactly 90%, failing the frozen strict greater-than-90% threshold. student_thinks_design_proves_legit has three different individually allowed actions; majority voting abstains. Preserve the gate while distinguishing aggregation failure from three wrong decisions.",
+    "Six classification non-regression rows remain, including synthetic-development mode decline and the ecological third-repetition instruction decline. Equal overall mode accuracy does not erase partition regressions.",
+    "Zero unresolved tutor judgments does not mean zero target errors across the experiment: the four transfer evidence/schema failures remain unchanged.",
+    "Historical frozen Tutor07 lacks the later deployed Guard addition, and all evaluated regression cases were previously exposed. No deployment or unseen-generalization claim follows from this comparison."
+  ],
+  "model_calls_by_auditor": 0
+}

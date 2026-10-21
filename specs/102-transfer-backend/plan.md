@@ -1,5 +1,11 @@
 # Production Implementation Snapshot: Transfer Assessment Backend
 
+<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+
+## Assessment dialogue revision
+
+Implement result/closure messages atomically alongside trusted lifecycle changes, update SQL/Edge public projections and history readiness, backfill existing authoritative events before client cutover, and exclude automatic rows from human-feedback predicates. The earlier snapshot is retained as dated evidence. See [Assessment result messages](../../tutor-system/docs/assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
+
 <!-- Intent: summarize the assessment backend installed in production as inspected on 2026-09-28. -->
 
 **Branch**: `102-transfer-backend` | **Date**: 2026-09-22 | **Spec**: [spec.md](./spec.md)

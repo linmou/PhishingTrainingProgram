@@ -8,7 +8,9 @@ import {
   buildCasualPeerAIConfig,
   buildEcologicalCaseFromSeed,
   getDemoRoomTemplateSeeds,
-  getMultiAgentTestRoomTemplateSeeds,
+  getNormalTeachingTemplateSeeds,
+  getPrivacyTeachingTemplateSeeds,
+  getPromptComparisonTemplateSeeds,
   getEcologicalCasesFromTemplates,
   toRoomTemplateInsertRow,
   GLOBAL_TEMPLATE_TUTOR_ID
@@ -17,19 +19,103 @@ import fs from 'fs';
 import path from 'path';
 import { RESPONSE_POLICY } from '../prompts/responsePolicy';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
+import { SCENARIO_TEMPLATES } from '../detectionTemplates';
+import phase0Prompt from '../prompts/phase0AccountSecurityAlertPrompt.json';
 
 describe('demoRoomTemplates', () => {
-  it('ships a dedicated Multi-agent-only test room seed', () => {
-    const seeds = getMultiAgentTestRoomTemplateSeeds();
-    expect(seeds).toHaveLength(1);
-    expect(seeds[0].case_id).toBe('multiagent_test_room');
-    expect(seeds[0].template_name).toBe('Demo: Multi-agent Response Room');
-    expect(seeds[0].test_only).toBe(true);
-    expect(seeds[0].ai_config_template.enabled).toBe(true);
-    expect(seeds[0].ai_config_template.prompt_config.interaction_mode).toBe('multi_agent');
-    expect(seeds[0].pre_populated_dialogue.map((message) => message.role)).toEqual(
-      expect.arrayContaining(['others', 'tutor', 'student'])
-    );
+  it('packages six teaching scenarios with the matching five-target inventory', () => {
+    const expectedScenarios = [
+      'Account Security Alert',
+      'Nintendo Switch Deal ($19.99)',
+      'iTunes Gift Card Survey ($500)',
+      'Location Sharing Risks',
+      'Movie Meetup Social Engineering',
+      'Contact Information Exposure'
+    ];
+    const seeds = getNormalTeachingTemplateSeeds();
+    expect(seeds).toHaveLength(6);
+    expect(seeds.map((seed) => seed.ai_config_template.scenario)).toEqual(expectedScenarios);
+    expect(new Set(seeds.map((seed) => seed.case_id)).size).toBe(6);
+    for (const seed of seeds) {
+      const config = seed.ai_config_template.prompt_config;
+      const scenario = SCENARIO_TEMPLATES[seed.ai_config_template.scenario];
+      expect(seed.test_only).toBe(false);
+      expect(config.detection_areas).toEqual(scenario.detection_areas);
+      expect(config.verification_steps).toEqual(scenario.verification_steps);
+      expect(config.detection_areas).toHaveLength(5);
+      expect(config.verification_steps).toEqual([]);
+    }
+  });
+
+  it('retains the production privacy identities and original dialogue metadata in insert rows', () => {
+    const seeds = getPrivacyTeachingTemplateSeeds();
+    expect(seeds.map((seed) => seed.template_name)).toEqual([
+      'Location Sharing Safety', 'Movie Meetup Social Engineering', 'Phone Number Phishing Training'
+    ]);
+    expect(seeds.map((seed) => seed.description_template)).toEqual([
+      "321 Jefferson Ave come hang out guys, I'm bored.",
+      'Gonna be at the Regal THIS FRIDAY to see the new Marvel movie! Meet me there at 8 🍿',
+      'new phone who dis? my new number is 607-252-6771'
+    ]);
+    expect(seeds.map((seed) => seed.pre_populated_dialogue.map((message) => [message.user_name, message.message]))).toEqual([
+      [['Jasmina Weatherly', "Come hang out! I'm so bored"], ['Friend 1', "Maybe don't share your exact address publicly?"]],
+      [['Emily J', "I'll meet you there!"], ['Connor McCormack', 'Sounds like fun!']],
+      [['Vanessa Kemp', "KK I'll txt you"], ['Zoe Goodall', 'finally about time you got a new phone']]
+    ]);
+    expect(seeds.map((seed) => seed.image_url)).toEqual([
+      '/images/room-presets/privacy_2.png', '/images/room-presets/privacy_1.png', '/images/room-presets/phishing_1.png'
+    ]);
+    seeds.forEach((seed, index) => {
+      const row = toRoomTemplateInsertRow(seed);
+      const opName = ['Jasmina Weatherly', 'Ethan Kozloff', 'Vanessa Kemp'][index];
+      expect(row.op_config_template).toEqual({
+        op_id: null, op_avatar_url: null, use_custom_op: true,
+        custom_op_name: opName, op_display_name: opName
+      });
+      expect(row.template_description).toBeNull();
+      expect(row.password_config).toBeNull();
+      expect(row.pre_populated_dialogue).toHaveLength(2);
+      expect(row.pre_populated_dialogue.every((message) => message.role === 'student' && message.timestamp === '2025-08-20T06:21:49.877Z')).toBe(true);
+      expect(row.pre_populated_dialogue).toEqual(seed.pre_populated_dialogue);
+    });
+  });
+
+  it('shares account targets across behavior and comparison demo variants', () => {
+    const account = SCENARIO_TEMPLATES['Account Security Alert'];
+    const seeds = [
+      ...getDemoRoomTemplateSeeds().filter((seed) => seed.test_only),
+      ...getPromptComparisonTemplateSeeds()
+    ];
+    for (const seed of seeds) {
+      expect(seed.ai_config_template.scenario).toBe('Account Security Alert');
+      expect(seed.ai_config_template.prompt_config.detection_areas).toEqual(account.detection_areas);
+      expect(seed.ai_config_template.prompt_config.verification_steps).toEqual(account.verification_steps);
+      for (const target of [...account.detection_areas, ...account.verification_steps]) {
+        expect(seed.ai_config_template.system_prompt).toContain(`- ${target}`);
+      }
+    }
+  });
+
+  it('refreshes Phase 0 knowledge while preserving its frozen policy, examples, and comparison conditions', () => {
+    const seeds = getPromptComparisonTemplateSeeds();
+    expect(seeds).toHaveLength(6);
+    const frozenPrefix = phase0Prompt.system_prompt.split('## Detection Areas to Focus On:')[0];
+    const frozenSuffix = phase0Prompt.system_prompt.slice(phase0Prompt.system_prompt.indexOf('Remember: Your goal'));
+    for (const seed of seeds.filter((entry) => entry.ai_config_template.prompt_config.prompt_comparison?.version === 'phase0')) {
+      const ai = seed.ai_config_template;
+      expect(ai.system_prompt.startsWith(frozenPrefix)).toBe(true);
+      expect(ai.system_prompt.endsWith(frozenSuffix)).toBe(true);
+      expect(ai.system_prompt).not.toBe(phase0Prompt.system_prompt);
+      expect(ai.prompt_config.prompt_comparison?.system_prompt_source_commit).toBe(phase0Prompt.source_commit);
+      expect(ai.temperature).toBe(0);
+      expect(ai.max_tokens).toBe(100);
+    }
+  });
+
+  it('keeps every demo template usable as an ordinary tutor configuration', () => {
+    for (const seed of getDemoRoomTemplateSeeds()) {
+      expect(seed.ai_config_template).toBeDefined();
+    }
   });
 
   it('builds an AI config with the shared policy and selected peer role', () => {
@@ -101,12 +187,19 @@ describe('demoRoomTemplates', () => {
     expect(lockCorrect).toBeTruthy();
     expect(clickCorrect!.ai_config_template.prompt_config).toEqual(clickSource!.ai_config_template.prompt_config);
     expect(lockCorrect!.ai_config_template.prompt_config).toEqual(lockSource!.ai_config_template.prompt_config);
+    expect(clickCorrect!.description_template).toBe(clickSource!.description_template);
+    expect(clickCorrect!.pre_populated_dialogue.slice(0, -1).map(({ user_name, role }) => ({ user_name, role }))).toEqual(
+      clickSource!.pre_populated_dialogue.slice(0, -1).map(({ user_name, role }) => ({ user_name, role }))
+    );
+    expect(lockCorrect!.pre_populated_dialogue.slice(0, -1)).toEqual(
+      lockSource!.pre_populated_dialogue.slice(0, -1)
+    );
 
     [clickCorrect!, lockCorrect!].forEach((seed) => {
       expect(seed.test_only).toBe(true);
-      expect(seed.ai_config_template.model_name).toBe('qwen3.5-flash');
+      expect(seed.ai_config_template.model_name).toBe('qwen3.8-flash');
       expect(seed.ai_config_template.prompt_config.detection_areas.length).toBeGreaterThan(0);
-      expect(seed.ai_config_template.prompt_config.verification_steps.length).toBeGreaterThan(0);
+      expect(seed.ai_config_template.prompt_config.verification_steps).toEqual([]);
     });
   });
 
@@ -149,10 +242,10 @@ describe('demoRoomTemplates', () => {
       student_message: guardCase.input.student_message
     });
     expect(guardSeed!.ai_config_template.prompt_config.detection_areas).toEqual(
-      guardCase.inventory.detection_areas
+      SCENARIO_TEMPLATES['Account Security Alert'].detection_areas
     );
     expect(guardSeed!.ai_config_template.prompt_config.verification_steps).toEqual(
-      guardCase.inventory.verification_steps
+      SCENARIO_TEMPLATES['Account Security Alert'].verification_steps
     );
     expect(guardCase.expected.mode).toBe('guard');
   });

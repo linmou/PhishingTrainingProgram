@@ -47,7 +47,7 @@ export interface TransferAssessment {
 
 export interface TransferLifecycleContext {
   progress: TransferProgress;
-  participation_mode: RoomParticipationMode | 'unknown';
+  guard_mode: RoomParticipationMode | 'unknown';
   progress_snapshot_hash: string;
   feedback_required: boolean;
   eligible_assessment_item_ids: ReadonlyArray<string>;
@@ -71,7 +71,7 @@ export interface TransferTurnContextInput {
   focus_student_id: string;
   focus_student_message_id: string;
   checklist_id: string | null;
-  prior_participation_mode: RoomParticipationMode | 'unknown';
+  prior_guard_mode: RoomParticipationMode | 'unknown';
   progress: TransferProgress;
   progress_snapshot_hash: string;
   feedback_required: boolean;
@@ -165,7 +165,7 @@ function resolveWithAttemptSnapshot(
   if (assessment.progress_snapshot_hash !== context.progress_snapshot_hash) {
     return authoritativeResult('stale', context, snapshot, { feedback_required: false });
   }
-  if (context.participation_mode === 'guard') {
+  if (context.guard_mode === true) {
     return authoritativeResult('guard_deferred', context, snapshot, {
       feedback_required: false,
       next_action: 'defer_to_protective_response',
@@ -263,7 +263,7 @@ export function createTransferTurnContext(input: TransferTurnContextInput): Tran
   validateAttemptSnapshot(input.attempt_snapshot, input.unresolved_assessment?.id ?? null);
   const result: TransferLifecycleContext = {
     progress: input.progress,
-    participation_mode: input.prior_participation_mode,
+    guard_mode: input.prior_guard_mode,
     progress_snapshot_hash: input.progress_snapshot_hash,
     feedback_required: input.feedback_required,
     eligible_assessment_item_ids: [...input.eligible_assessment_item_ids],
