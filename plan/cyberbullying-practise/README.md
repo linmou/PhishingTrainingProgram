@@ -1,7 +1,7 @@
 # Cyberbullying planning record
 
 Intent: preserve the execution plan, user-directed amendments and supporting planning history in Git.
-Updated: 2026-10-21. Review-flow amendment baseline: `abb98036df67c1e173ed9b2ab7d1ab5a977869b7`.
+Updated: 2026-10-21. Review-flow amendment baseline: `abb98036df67c1e173ed9b2ab7d1ab5a977869b7`. Reconstructed version 1 commit: `c0de593`.
 
 ## Current direction
 
@@ -19,6 +19,8 @@ The amendment retires the dedicated Cyberbullying proposal lifecycle and include
 - [tools/check_artifacts.py](tools/check_artifacts.py): historical checker for the original planning stages. The candidate check remains applicable. The judge check expects the input directory before `summary.md` was generated, and the publication check expects the initial identical draft/final snapshot. Subsequent summaries and user amendments are retained as later history.
 
 ## Recording amendments
+
+The original import (`cdec6e4`) tracked the draft and amended plan together. The subsequent two-commit sequence reconstructs their intended version order without rewriting that import: `c0de593` records `final_plan.md` with the exact contents of `draft_final_plan.md` as version 1; the following amendment commit restores the current plan as version 2. Compare those two commits to trace the amendment on the same file path.
 
 Update the current plan with a dated decision and revise the affected execution steps and acceptance criteria together. Retain the earlier candidate/audit snapshots as their original evidence. Commit the amended plan so Git records each subsequent revision.
 
