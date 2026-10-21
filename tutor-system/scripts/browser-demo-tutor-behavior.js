@@ -97,7 +97,7 @@ function loadLocalEnvironment(env = process.env) {
   const url = env.REACT_APP_SUPABASE_STAGING_URL;
   const key = env.REACT_APP_SUPABASE_STAGING_ANON_KEY;
   if (url !== STAGING_URL || !key) throw new Error('Behavior browser evaluation requires explicit staging Supabase configuration.');
-  return { env: { ...env, REACT_APP_SUPABASE_URL: url }, supabase: createClient(url, key, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } } }), secrets: [key, env.OAI_API_KEY].filter(Boolean) };
+  return { env: { ...env, REACT_APP_SUPABASE_URL: url }, supabase: createClient(url, key, { global: { headers: { 'x-practice-contract': 'cyberbullying-v2' } } }), secrets: [key, env.OAI_API_KEY].filter(Boolean) };
 }
 
 async function loginAsTutor(page, displayName) {

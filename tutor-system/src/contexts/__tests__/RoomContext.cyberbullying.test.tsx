@@ -1,11 +1,11 @@
 // #!/usr/bin/env node
-// Test responsibility: RoomContext's Cyberbullying workflow, proposal review, saved comments, and character projection.
+// Test responsibility: RoomContext.tsx browser drafts, shared review logging, saved comments, and character projection.
 import React from 'react';
 import { act, render, waitFor } from '@testing-library/react';
 import { RoomProvider, useRoom } from '../RoomContext';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../../services/supabase';
-import { generateTutorSuggestion, reviewCyberbullyingSuggestion, getAIConfig } from '../../services/aiService';
+import { generateTutorSuggestion, recordAISuggestionFeedback, getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
 import { sendReviewedTutorResponse } from '../../services/guardModeService';
@@ -19,7 +19,7 @@ jest.mock('../../services/supabase', () => ({
   getMessageFeedbackStats: jest.fn(), getUserMessageFeedback: jest.fn(), getRoomFeedbackSummary: jest.fn(),
 }));
 jest.mock('../../services/aiService', () => ({
-  generateTutorSuggestion: jest.fn(), reviewCyberbullyingSuggestion: jest.fn(), getAIConfig: jest.fn(),
+  generateTutorSuggestion: jest.fn(), getAIConfig: jest.fn(),
   recordAISuggestionFeedback: jest.fn(), DEFAULT_AI_MODEL: 'qwen3.8-flash',
 }));
 jest.mock('../../services/checklistService', () => ({
@@ -31,9 +31,10 @@ jest.mock('../AuthContext', () => ({ useAuth: jest.fn() }));
 const cyberRoom: Room = { ...transferRoom, practice_type: 'cyberbullying', transfer_learning_enabled: false };
 const learnerMessage = { ...learnerAMessageRow, content: 'I can check how Dylan feels.' };
 const draft: CyberbullyingSuggestion = {
-  id: 'proposal-1', room_id: cyberRoom.id, parent_message_id: learnerMessage.id, context_revision: 1,
-  status: 'ready', requested_character: null, raw_character: 'victim', raw_response: 'A role reply.',
+  room_id: cyberRoom.id, parent_message_id: learnerMessage.id,
+  raw_character: 'victim', raw_response: 'A role reply.',
   raw_guard_mode: false, reason: 'Constructive upstanders',
+  context_messages: [learnerMessage.id], generation_provenance: { model: 'fixture' },
 };
 let room: ReturnType<typeof useRoom>;
 function Probe() {
@@ -64,7 +65,7 @@ beforeEach(() => {
   (ChecklistService.analyzeStudentMessages as jest.Mock).mockResolvedValue(undefined);
   (ChecklistService.getActiveTransferChecklistForRoom as jest.Mock).mockResolvedValue(null);
   (ChecklistService.getChecklistForStudent as jest.Mock).mockResolvedValue(null);
-  (reviewCyberbullyingSuggestion as jest.Mock).mockResolvedValue({ ...draft, status: 'rejected' });
+  (recordAISuggestionFeedback as jest.Mock).mockResolvedValue(undefined);
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -80,7 +81,7 @@ test('analyzes saved evidence and publishes the edited character through shared 
   await act(async () => { await room.generateAIResponse(); });
   expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, learnerMessage.id);
   expect(prepare).not.toHaveBeenCalled();
-  expect(room.cyberbullyingDraft?.id).toBe(draft.id);
+  expect(room.cyberbullyingDraft).toEqual(draft);
   expect(room.messages).toHaveLength(1);
   await act(async () => { room.updateFinalCharacter('older_peer'); });
   const stored = { ...learnerMessage, id: 'reply-1', user_id: tutorUser.id, user_role: 'tutor',
@@ -88,7 +89,9 @@ test('analyzes saved evidence and publishes the edited character through shared 
   (sendReviewedTutorResponse as jest.Mock).mockResolvedValue({ message: stored, room: cyberRoom });
   await act(async () => { await room.sendMessage('Reviewed reply'); });
   expect(sendReviewedTutorResponse).toHaveBeenCalledWith(expect.objectContaining({
-    suggestionId: draft.id, finalCharacter: 'older_peer', tutorId: tutorUser.id, tutorAction: 'modified',
+    rawCharacter: 'victim', finalCharacter: 'older_peer', tutorId: tutorUser.id, tutorAction: 'modified',
+    rawDecision: expect.objectContaining({ suggested_response: draft.raw_response }),
+    generationProvenance: draft.generation_provenance,
   }));
   expect(room.messages.find(message => message.id === 'reply-1')).toMatchObject({
     user_id: tutorUser.id, character: 'older_peer', display_name: 'Tom', avatar_url: '/images/profile_2.png',
@@ -96,19 +99,24 @@ test('analyzes saved evidence and publishes the edited character through shared 
   expect(room.cyberbullyingDraft).toBeNull();
 });
 
-test('keeps the edited character on regeneration and lets the next proposal choose its role', async () => {
+test('logs regeneration and rejection through shared feedback and lets a new draft choose its role', async () => {
   await mount();
   await act(async () => { await room.generateAIResponse(); });
   await act(async () => { room.updateFinalCharacter('educator'); });
-  (generateTutorSuggestion as jest.Mock).mockResolvedValue(response({ ...draft, id: 'proposal-2', raw_character: 'educator' }));
+  (generateTutorSuggestion as jest.Mock).mockResolvedValue(response({ ...draft, raw_character: 'educator' }));
   await act(async () => { await room.regenerateAIResponse({}); });
   expect(generateTutorSuggestion).toHaveBeenLastCalledWith(cyberRoom.id, tutorUser.id, undefined,
-    expect.objectContaining({ previousSuggestionId: 'proposal-1', character: 'educator' }));
+    expect.objectContaining({ parentMessageId: learnerMessage.id, character: 'educator' }));
+  expect((recordAISuggestionFeedback as jest.Mock).mock.calls[0]).toEqual([
+    cyberRoom.id, tutorUser.id, learnerMessage.id, draft.raw_response, 'modified', draft.raw_response,
+    undefined, expect.any(Number), [learnerMessage.id], false, null, draft.reason, false,
+    { rawCharacter: 'victim', finalCharacter: 'educator', generationProvenance: draft.generation_provenance },
+  ]);
   await act(async () => { await room.recordAIFeedback('rejected'); room.clearAISuggestion(); });
-  expect(reviewCyberbullyingSuggestion).toHaveBeenCalledWith(cyberRoom.id, tutorUser.id, 'proposal-2', true);
+  expect((recordAISuggestionFeedback as jest.Mock).mock.calls[1][4]).toBe('rejected');
   await act(async () => { await room.generateAIResponse(); });
   expect(generateTutorSuggestion).toHaveBeenLastCalledWith(cyberRoom.id, tutorUser.id, undefined,
-    expect.objectContaining({ previousSuggestionId: undefined, character: null }));
+    expect.objectContaining({ parentMessageId: learnerMessage.id, character: null }));
 });
 
 test('stores a learner comment before analysis and leaves it available when analysis fails', async () => {
@@ -135,7 +143,7 @@ test('realtime/reload projection keeps stored character identity for every viewe
   expect(projected.user_id).toBe(tutorUser.id);
 });
 
-test('retains the edited character after failed regeneration and retries without publishing the old draft', async () => {
+test('retains the browser draft and character when regeneration fails, following ordinary reply behavior', async () => {
   await mount();
   await act(async () => { await room.generateAIResponse(); });
   await act(async () => { room.updateFinalCharacter('educator'); });
@@ -143,10 +151,53 @@ test('retains the edited character after failed regeneration and retries without
   await act(async () => {
     await expect(room.regenerateAIResponse({})).rejects.toThrow('Provider unavailable');
   });
-  expect(room.cyberbullyingDraft?.status).toBe('failed');
-  await act(async () => { await expect(room.sendMessage('Old draft')).rejects.toThrow(); });
-  expect(sendReviewedTutorResponse).not.toHaveBeenCalled();
+  expect(room.cyberbullyingDraft).toEqual(draft);
+  expect(room.finalCharacter).toBe('educator');
   await act(async () => { await room.regenerateAIResponse({}); });
   expect(generateTutorSuggestion).toHaveBeenLastCalledWith(cyberRoom.id, tutorUser.id, undefined,
-    expect.objectContaining({ previousSuggestionId: undefined, character: 'educator' }));
+    expect.objectContaining({ parentMessageId: learnerMessage.id, character: 'educator' }));
+});
+
+test('records replacement as ignored with original text and edited character, then discard clears the draft', async () => {
+  await mount();
+  await act(async () => { await room.generateAIResponse(); });
+  await act(async () => { room.updateFinalResponse('Edited browser text'); room.updateFinalCharacter('educator'); });
+  await act(async () => { await room.generateAIResponse(); });
+  const review = (recordAISuggestionFeedback as jest.Mock).mock.calls[0];
+  expect(review[3]).toBe(draft.raw_response);
+  expect(review[4]).toBe('ignored');
+  expect(review[5]).toBe('Edited browser text');
+  expect(review[13]).toMatchObject({ rawCharacter: 'victim', finalCharacter: 'educator' });
+  await act(async () => { room.clearAISuggestion(); });
+  expect(room.cyberbullyingDraft).toBeNull();
+  expect(room.aiSuggestion).toBeNull();
+  expect(sendReviewedTutorResponse).not.toHaveBeenCalled();
+});
+
+test('Guard-only override is accepted and carries independent raw/final Guard values', async () => {
+  await mount();
+  await act(async () => { await room.generateAIResponse(); });
+  await act(async () => { room.updateFinalGuardMode(true); });
+  (sendReviewedTutorResponse as jest.Mock).mockResolvedValue({
+    message: { ...learnerMessage, id: 'guard-reply', user_role: 'tutor', user_id: tutorUser.id }, room: cyberRoom,
+  });
+  await act(async () => { await room.sendMessage(draft.raw_response); });
+  expect(sendReviewedTutorResponse).toHaveBeenCalledWith(expect.objectContaining({
+    tutorAction: 'accepted', rawCharacter: 'victim', finalCharacter: 'victim',
+    rawDecision: expect.objectContaining({ guard_mode: false }), finalGuardMode: true,
+  }));
+});
+
+test('discard invalidates a late generation result without publishing or restoring the draft', async () => {
+  await mount();
+  let resolve!: (value: ReturnType<typeof response>) => void;
+  (generateTutorSuggestion as jest.Mock).mockReturnValue(new Promise(done => { resolve = done; }));
+  let pending!: Promise<void>;
+  await act(async () => { pending = room.generateAIResponse(); });
+  await waitFor(() => expect(generateTutorSuggestion).toHaveBeenCalled());
+  await act(async () => { room.clearAISuggestion(); });
+  await act(async () => { resolve(response()); await pending; });
+  expect(room.cyberbullyingDraft).toBeNull();
+  expect(room.aiSuggestion).toBeNull();
+  expect(sendReviewedTutorResponse).not.toHaveBeenCalled();
 });

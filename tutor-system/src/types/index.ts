@@ -10,16 +10,14 @@ export type UserStatus = 'active' | 'inactive';
 export type PracticeType = 'phishing' | 'cyberbullying';
 export type CyberbullyingCharacter = 'same_age_peer' | 'older_peer' | 'victim' | 'bully' | 'educator';
 export interface CyberbullyingSuggestion {
-    id: string;
     room_id: string;
     parent_message_id: string;
-    context_revision: number;
-    status: 'generating' | 'ready' | 'failed' | 'rejected' | 'superseded' | 'approved';
-    requested_character: CyberbullyingCharacter | null;
     raw_character: CyberbullyingCharacter;
     raw_response: string;
     raw_guard_mode: boolean;
     reason: string;
+    context_messages: string[];
+    generation_provenance: Record<string, unknown>;
 }
 
 /** Stable scenario data retained across room/template copies and exports. */
@@ -70,7 +68,6 @@ export interface Room {
     id: string;
     practice_type?: PracticeType;
     scenario_config?: CyberbullyingScenario | null;
-    conversation_revision?: number;
     tutor_id: string;
     title: string;
     description: string | null;
@@ -499,6 +496,11 @@ export interface AIInteraction {
     guard_reason?: string;
     final_guard_mode?: TutorResponseMode;
     guard_rectified?: boolean;
+    raw_character?: CyberbullyingCharacter | null;
+    final_character?: CyberbullyingCharacter | null;
+    tutor_id?: string;
+    tutor_message_id?: string | null;
+    generation_provenance?: Record<string, unknown> | null;
 }
 
 export interface ChatExportData {

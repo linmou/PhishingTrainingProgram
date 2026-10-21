@@ -1,7 +1,7 @@
 # Cyberbullying practise
 
 Intent: describe the shared learning workflow and the contracts used by Cyberbullying rooms.
-Updated: 2026-10-21. Implementation baseline: `2807c52`.
+Updated: 2026-10-21. Browser-draft amendment baseline: `da87b36`.
 
 ## Room and scenario
 
@@ -35,9 +35,11 @@ The existing `ai-api` prepares one character reply from the stored scenario and 
 | Bully | Sarah |
 | Educator | Ms. Smith |
 
-Approval atomically saves the message, review metadata and final Guard state. A retry returns the same publication; conflicting or stale proposals fail. The saved message keeps both the human tutor ID and character identity. Ratings refer to that message ID. Realtime views, reloads and exports use the saved identity.
+The original AI text and character, editable final text and character, Guard values and generation metadata remain in the browser until review. Reload or discard expires an unsent draft. Replacement records `ignored`, regeneration records `modified`, and rejection records `rejected` through the existing feedback table without publishing. Failed regeneration retains the current draft and selected character, following the ordinary phishing reply flow.
 
-`guard_mode` is a boolean throughout the current room and review contract. The proposal records the room's Guard value at generation; the tutor can override it. Historical message categories remain available independently, and an unknown historic Guard value remains null.
+Sending atomically saves the message, review and final Guard state through the shared RPC. Unchanged text and character is `accepted`; editing either is `modified`. Guard rectification is recorded separately. Submission and retry behavior follows ordinary phishing sends. The saved message keeps both the human tutor ID and character identity. Ratings refer to that message ID. Realtime views, reloads and exports use the saved identity; tutor exports include original/final character and review linkage.
+
+`guard_mode` is a boolean throughout the current room and review contract. The browser draft retains the room's Guard value at generation; the tutor can override it. Historical message categories remain available independently, and an unknown historic Guard value remains null.
 
 ## Operation boundaries
 
@@ -47,12 +49,12 @@ Approval atomically saves the message, review metadata and final Guard state. A 
 | Join/rejoin | assessment-api → `join_room_v1`; active application profile | Serialized learner allocation; five targets initialized once |
 | Save learner reply | RoomContext → shared message boundary; active learner membership | Saved message precedes analysis; observers cannot contribute evidence |
 | Update progress | assessment-api → context/apply RPCs; learner or owning tutor | Per-target provider audit, validated current-message evidence, atomic application and retry |
-| Generate/regenerate | ai-api → begin/finish proposal RPCs; owning tutor and enabled AI | Stored input revision, raw output and provider attempts; late results cannot replace current context |
-| Review/reject | ai-api → review RPC; owning tutor | Terminal rejection persists; rejected text remains unpublished |
-| Approve/send | `send_reviewed_tutor_response`; owning tutor and current proposal | One message and review; duplicate replay and conflicting-retry detection |
-| Guard override | Shared Guard service and reviewed-send RPC | Room Guard revision; existing evidence freeze/replay |
+| Generate/regenerate | ai-api → `get_cyberbullying_context_v1`; owning tutor and enabled AI | Full saved context read without draft writes; browser request epoch protects against late results |
+| Review/reject/replace | Existing `ai_suggestion_feedback` insertion; owning tutor and scoped learner message | Original/final text, character, Guard, action and reviewer; unsent reviews remain unpublished |
+| Approve/send | `send_reviewed_tutor_response`; owning tutor and scoped learner message | Atomic message, feedback and Guard update, using browser-reported originals as phishing does |
+| Guard override | Shared Guard service and reviewed-send RPC | Existing evidence freeze/replay |
 | Rate/read/export | Existing message-feedback and view/export services | Approved message identity; canonical target keys, version and learner evidence |
 
-Room identity determines the available operations. Proposal generation and storage are service-owned. The platform continues to use its existing browser-supplied application-user identity, profile and membership conventions; ownership checks use that supplied identity.
+Room identity determines the available operations. Context retrieval is service-owned; drafts remain in the browser. The platform continues to use its existing browser-supplied application-user identity, profile and membership conventions; ownership checks use that supplied identity. Assessment questions retain their separate private delivery lifecycle.
 
-See the [cutover runbook](cyberbullying-cutover.md) and [implementation/release record](doc_update_record/documentation_update_record_v2026_10_21_cyberbullying_practise.md) for verification and deployed status.
+See the [cutover runbook](cyberbullying-cutover.md) and [browser-draft release record](doc_update_record/documentation_update_record_v2026_10_21_browser_draft.md) for verification and deployed status. The earlier proposal release remains documented in its historical release record.

@@ -11,7 +11,7 @@ console.log('🔧 Supabase Service: Initializing client', {
 });
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } },
+    global: { headers: { 'x-practice-contract': 'cyberbullying-v2' } },
     auth: {
         autoRefreshToken: true,
         persistSession: true,

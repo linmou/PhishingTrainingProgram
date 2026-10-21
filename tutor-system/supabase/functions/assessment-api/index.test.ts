@@ -17,7 +17,7 @@ function assertEquals(actual: unknown, expected: unknown): void {
 function request(operation: string, body: Record<string, unknown> = {}): Request {
   return new Request('http://localhost/assessment-api', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: 'Bearer test', 'x-practice-contract': 'cyberbullying-v1' },
+    headers: { 'content-type': 'application/json', authorization: 'Bearer test', 'x-practice-contract': 'cyberbullying-v2' },
     body: JSON.stringify({ operation, request_id: '00000000-0000-4000-8000-000000000001', ...body }),
   });
 }

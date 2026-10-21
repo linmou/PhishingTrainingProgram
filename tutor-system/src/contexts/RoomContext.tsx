@@ -10,7 +10,6 @@ import {
     recordAISuggestionFeedback,
     updateAIConfig,
     getAIConfig,
-    reviewCyberbullyingSuggestion,
     DEFAULT_AI_MODEL
 } from '../services/aiService';
 import { setStudentAITone as persistStudentAITone } from '../services/studentAIToneService';
@@ -639,6 +638,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             guard_reason: feedback.guard_reason,
                             final_guard_mode: feedback.final_guard_mode,
                             guard_rectified: feedback.guard_rectified,
+                            raw_character: feedback.raw_character,
+                            final_character: feedback.final_character,
+                            tutor_id: feedback.tutor_id,
+                            tutor_message_id: feedback.tutor_message_id,
+                            generation_provenance: feedback.generation_provenance,
                         }));
                     }
                 } catch (feedbackLoadError) {
@@ -789,13 +793,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Sending message:', { roomId: currentRoom.id, userId: user.id, content });
 
         if (currentRoom.practice_type === 'cyberbullying' && user.current_role === 'tutor' &&
-            (!cyberbullyingDraft || cyberbullyingDraft.status !== 'ready' || !currentSuggestionContext || !aiDecision || !aiSuggestion || !finalCharacter)) {
+            (!cyberbullyingDraft || !currentSuggestionContext || !aiDecision || !aiSuggestion || !finalCharacter)) {
             throw new Error('Generate and review a character reply before sending.');
         }
         if (user.current_role === 'tutor' && currentSuggestionContext && aiDecision && aiSuggestion) {
             const tutorAction = content.trim() === currentSuggestionContext.rawDecision.suggested_response.trim() &&
-                (!cyberbullyingDraft || (finalCharacter === cyberbullyingDraft.raw_character &&
-                finalGuardMode === cyberbullyingDraft.raw_guard_mode))
+                (!cyberbullyingDraft || finalCharacter === cyberbullyingDraft.raw_character)
                 ? 'accepted'
                 : 'modified';
             const responseTimeMs = Date.now() - currentSuggestionContext.startTime;
@@ -811,8 +814,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 tutorAction,
                 responseTimeMs,
                 contextMessages: currentSuggestionContext.contextMessages,
-                suggestionId: cyberbullyingDraft?.id,
+                rawCharacter: cyberbullyingDraft?.raw_character,
                 finalCharacter: currentRoom.practice_type === 'cyberbullying' ? finalCharacter : null,
+                generationProvenance: cyberbullyingDraft?.generation_provenance,
             });
 
             setMessages(prev => mergeRoomMessages(prev, [addDisplayNameToMessage(reviewedResult.message, participants)]));
@@ -830,7 +834,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 raw_instruction: currentSuggestionContext.rawDecision.instruction,
                 guard_reason: currentSuggestionContext.rawDecision.guard_reason,
                 final_guard_mode: finalGuardMode,
-                guard_rectified: currentSuggestionContext.rawDecision.guard_mode !== finalGuardMode
+                guard_rectified: currentSuggestionContext.rawDecision.guard_mode !== finalGuardMode,
+                raw_character: cyberbullyingDraft?.raw_character,
+                final_character: cyberbullyingDraft ? finalCharacter : undefined,
+                tutor_id: user.id,
+                tutor_message_id: reviewedResult.message.id,
+                generation_provenance: cyberbullyingDraft?.generation_provenance,
             }]);
             clearAISuggestion();
             return;
@@ -954,16 +963,31 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw new Error('Only the room tutor can generate a role reply');
         }
         const roomId = currentRoom.id;
-        const learnerMessage = messages.filter(message => message.user_role === 'student' &&
-            !message.id.startsWith('temp-') && !message.id.startsWith('prepop-')).slice(-1)[0];
+        const savedLearnerMessages = messages.filter(message => message.user_role === 'student' &&
+            !message.id.startsWith('temp-') && !message.id.startsWith('prepop-'));
+        const learnerMessage = regenerate && currentSuggestionContext
+            ? savedLearnerMessages.find(message => message.id === currentSuggestionContext.parentMessageId)
+            : savedLearnerMessages.slice(-1)[0];
         if (!learnerMessage) throw new Error('A learner comment is needed before generating a reply');
         const epoch = ++generationEpoch.current;
+        const selectedCharacter = regenerate ? finalCharacter : null;
         setLoadingAI(true);
         try {
+            if (currentSuggestionContext && aiSuggestion) {
+                await recordAIFeedback(regenerate ? 'modified' : 'ignored');
+                if (!regenerate) {
+                    setCyberbullyingDraft(null);
+                    setFinalCharacter(null);
+                    setAiSuggestion(null);
+                    setAiDecision(null);
+                    setCurrentSuggestionContext(null);
+                }
+            }
             await ChecklistService.analyzeStudentMessages(roomId, learnerMessage.user_id, learnerMessage.id);
+            if (epoch !== generationEpoch.current || activeRoomId.current !== roomId) return;
             const result = await generateTutorSuggestion(roomId, user.id, undefined, {
-                previousSuggestionId: regenerate && cyberbullyingDraft?.status === 'ready' ? cyberbullyingDraft.id : undefined,
-                character: regenerate ? finalCharacter : null,
+                parentMessageId: learnerMessage.id,
+                character: selectedCharacter,
             });
             if (epoch !== generationEpoch.current || activeRoomId.current !== roomId) return;
             if (!result.success || !result.decision || !result.cyberbullyingDraft) {
@@ -971,11 +995,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
             applySingleAgentSuggestion(result.decision, result.suggestion,
                 result.cyberbullyingDraft.parent_message_id, learnerMessage.content, result);
-        } catch (error) {
-            if (epoch === generationEpoch.current && activeRoomId.current === roomId) {
-                setCyberbullyingDraft(previous => previous ? { ...previous, status: 'failed' } : null);
-            }
-            throw error;
         } finally {
             if (epoch === generationEpoch.current) setLoadingAI(false);
         }
@@ -1632,29 +1651,27 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const responseTime = Date.now() - currentSuggestionContext.startTime;
-        if (currentRoom.practice_type === 'cyberbullying') {
-            if (cyberbullyingDraft && (action === 'rejected' || action === 'ignored')) {
-                await reviewCyberbullyingSuggestion(currentRoom.id, user.id, cyberbullyingDraft.id, true);
-            }
-            return;
-        }
-
         try {
             // Record to database
             await recordAISuggestionFeedback(
                 currentRoom.id,
                 user.id,
                 currentSuggestionContext.parentMessageId,
-                aiSuggestion,
+                currentSuggestionContext.rawDecision.suggested_response,
                 action,
-                finalResponse,
+                finalResponse ?? (cyberbullyingDraft ? aiSuggestion : undefined),
                 undefined, // tutor_message_id will be set later if needed
                 responseTime,
                 currentSuggestionContext.contextMessages,
                 currentSuggestionContext.rawDecision.guard_mode,
                 currentSuggestionContext.rawDecision.instruction,
                 currentSuggestionContext.rawDecision.guard_reason,
-                currentSuggestionContext.finalGuardMode
+                currentSuggestionContext.finalGuardMode,
+                cyberbullyingDraft && finalCharacter ? {
+                    rawCharacter: cyberbullyingDraft.raw_character,
+                    finalCharacter,
+                    generationProvenance: cyberbullyingDraft.generation_provenance,
+                } : undefined
             );
 
             // Add to local interactions for export
@@ -1662,16 +1679,20 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 timestamp: new Date().toISOString(),
                 parent_message_id: currentSuggestionContext.parentMessageId,
                 parent_message_content: currentSuggestionContext.parentMessageContent,
-                ai_suggestion: aiSuggestion,
+                ai_suggestion: currentSuggestionContext.rawDecision.suggested_response,
                 tutor_action: action,
-                tutor_final_response: finalResponse,
+                tutor_final_response: finalResponse ?? (cyberbullyingDraft ? aiSuggestion : undefined),
                 response_time_ms: responseTime,
                 ai_config_snapshot: currentSuggestionContext.aiConfigSnapshot,
                 raw_guard_mode: currentSuggestionContext.rawDecision.guard_mode,
                 raw_instruction: currentSuggestionContext.rawDecision.instruction,
                 guard_reason: currentSuggestionContext.rawDecision.guard_reason,
                 final_guard_mode: currentSuggestionContext.finalGuardMode,
-                guard_rectified: currentSuggestionContext.rawDecision.guard_mode !== currentSuggestionContext.finalGuardMode
+                guard_rectified: currentSuggestionContext.rawDecision.guard_mode !== currentSuggestionContext.finalGuardMode,
+                raw_character: cyberbullyingDraft?.raw_character,
+                final_character: cyberbullyingDraft ? finalCharacter : undefined,
+                tutor_id: user.id,
+                generation_provenance: cyberbullyingDraft?.generation_provenance,
             };
 
             setAIInteractions(prev => [...prev, interaction]);

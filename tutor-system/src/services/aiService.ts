@@ -114,16 +114,16 @@ async function invokeCyberbullyingOperation(userId: string, body: Record<string,
         throw new Error(detail || error?.message || 'Role suggestion request failed');
     }
     const draft = data?.data;
-    if (!draft || typeof draft.id !== 'string' || draft.room_id !== body.room_id) {
-        throw new Error('Role suggestion returned an invalid room or proposal');
+    if (!draft || draft.room_id !== body.room_id || typeof draft.parent_message_id !== 'string' ||
+        !['same_age_peer', 'older_peer', 'victim', 'bully', 'educator'].includes(draft.raw_character) ||
+        typeof draft.raw_response !== 'string' || !draft.raw_response.trim() ||
+        typeof draft.raw_guard_mode !== 'boolean' || typeof draft.reason !== 'string' || !draft.reason.trim() ||
+        !Array.isArray(draft.context_messages) || !draft.context_messages.every((value: unknown) => typeof value === 'string') ||
+        !draft.generation_provenance || typeof draft.generation_provenance !== 'object') {
+        throw new Error('Role suggestion returned an invalid draft');
     }
     return draft as CyberbullyingSuggestion;
 }
-
-export const reviewCyberbullyingSuggestion = (roomId: string, userId: string, suggestionId: string, reject: boolean) =>
-    invokeCyberbullyingOperation(userId, {
-        operation: 'cyberbullying_review', room_id: roomId, suggestion_id: suggestionId, reject,
-    });
 
 interface ParameterOverrides {
     role?: { role: 'low' | 'high' };
@@ -865,7 +865,7 @@ export const generateTutorSuggestion = async (
         focusStudentMessage?: string;
         focusStudentId?: string;
         expectedAssessmentResultIds?: ReadonlyArray<string>;
-        previousSuggestionId?: string;
+        parentMessageId?: string;
         character?: CyberbullyingCharacter | null;
     }
 ): Promise<{
@@ -883,12 +883,11 @@ export const generateTutorSuggestion = async (
         if (roomData.practice_type === 'cyberbullying') {
             if (parameterOverrides && Object.keys(parameterOverrides).length) throw new Error('Quick Adjust is unavailable for this practice');
             const draft = await invokeCyberbullyingOperation(userId, {
-                operation: 'cyberbullying_suggest', room_id: roomId, request_id: crypto.randomUUID(),
-                previous_suggestion_id: options?.previousSuggestionId ?? null, character: options?.character ?? null,
+                operation: 'cyberbullying_suggest', room_id: roomId,
+                parent_message_id: options?.parentMessageId ?? null, character: options?.character ?? null,
             });
-            if (draft.status !== 'ready') throw new Error('Role suggestion is not ready for review');
             return {
-                success: true, suggestion: draft.raw_response, contextMessages: [draft.parent_message_id],
+                success: true, suggestion: draft.raw_response, contextMessages: draft.context_messages,
                 decision: {
                     guard_mode: draft.raw_guard_mode,
                     instruction: null, guard_reason: draft.reason, suggested_response: draft.raw_response,
@@ -1338,7 +1337,12 @@ export const recordAISuggestionFeedback = async (
     rawMode: TutorDecisionMode,
     rawInstruction: TutorInstruction | null,
     modeReason: string,
-    finalGuardMode: TutorResponseMode
+    finalGuardMode: TutorResponseMode,
+    characterReview?: {
+        rawCharacter: CyberbullyingCharacter;
+        finalCharacter: CyberbullyingCharacter;
+        generationProvenance: Record<string, unknown>;
+    }
 ): Promise<void> => {
     const persistedParentMessageId = !parentMessageId || parentMessageId.startsWith('prepop-')
         ? null
@@ -1360,7 +1364,13 @@ export const recordAISuggestionFeedback = async (
             raw_instruction: rawInstruction,
             guard_reason: modeReason,
             final_guard_mode: finalGuardMode,
-            guard_rectified: rawMode !== finalGuardMode
+            guard_rectified: rawMode !== finalGuardMode,
+            ...(characterReview ? {
+                raw_character: characterReview.rawCharacter,
+                final_character: characterReview.finalCharacter,
+                generation_provenance: characterReview.generationProvenance,
+                contract_version: 'cyberbullying_v1'
+            } : {})
         });
 
     if (error) {

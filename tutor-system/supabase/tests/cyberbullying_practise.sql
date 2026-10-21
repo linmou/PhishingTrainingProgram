@@ -26,7 +26,7 @@ BEGIN
 END;
 $test$;
 UPDATE private.practice_write_gate SET closed=false WHERE singleton;
-SET LOCAL request.headers='{"x-practice-contract":"cyberbullying-v1"}';
+SET LOCAL request.headers='{"x-practice-contract":"cyberbullying-v2"}';
 DO $test$
 DECLARE
  tutor uuid:=gen_random_uuid();
@@ -70,114 +70,7 @@ BEGIN
  ASSERT (SELECT guard_mode FROM rooms WHERE id=room),'rejoin preserves Guard';
 END;
 $test$;
-DO $test$
-DECLARE
- tutor uuid:=gen_random_uuid(); learner uuid:=gen_random_uuid(); stranger uuid:=gen_random_uuid();
- room uuid:=gen_random_uuid(); phishing uuid:=gen_random_uuid(); parent uuid:=gen_random_uuid();
- proposal uuid:=gen_random_uuid(); second uuid:=gen_random_uuid(); third uuid:=gen_random_uuid();
- result jsonb; duplicate jsonb; baseline_count integer;
-BEGIN
- INSERT INTO users(id,display_name,"current_role",status) VALUES
- (tutor,'Approval tutor','tutor','active'),(learner,'Approval learner','student','active'),
- (stranger,'Other tutor','tutor','active');
- INSERT INTO rooms(id,tutor_id,title,practice_type,scenario_config) VALUES
- (room,tutor,'Approval fixture','cyberbullying','{"id":"fixture","source_commit":"fixture-commit","post":{"text":"Fixture post","image":"/images/EWWW_meme.jpg","timestamp":"2026-10-21T00:00:00Z","author":{"id":"fixture-author","name":"Sarah","role":"simulated_user","profile_picture":"/images/profile_1.png"}},"initial_comments":[]}'),
- (phishing,tutor,'Phishing fixture','phishing',NULL);
- UPDATE rooms SET ai_assistant_enabled=true WHERE id=room;
- PERFORM join_room_v1(room,learner);
- INSERT INTO messages(id,room_id,user_id,content,user_role)
- VALUES(parent,room,learner,'I can support Dylan privately.','student');
- SET LOCAL ROLE service_role;
- BEGIN
-   PERFORM begin_cyberbullying_suggestion_v1(room,stranger,proposal,NULL,NULL);
-   RAISE EXCEPTION 'wrong tutor accepted';
- EXCEPTION WHEN raise_exception THEN
-   IF SQLERRM<>'FORBIDDEN' THEN RAISE; END IF;
- END;
- result:=begin_cyberbullying_suggestion_v1(room,tutor,proposal,NULL,NULL);
- ASSERT result->>'status'='generating','generation begins unpublished';
- ASSERT jsonb_array_length(result->'input_context'->'dialogue')=1,'full saved dialogue';
- ASSERT result->>'parent_message_id'=parent::text,'linked learner comment';
- result:=finish_cyberbullying_suggestion_v1(room,tutor,proposal,
-   '{"character":"victim","response":"Thanks for supporting me.","reason":"Respond to support."}',
-   '{"model":"controlled-test","prompt_version":"fixture-v1"}');
- ASSERT result->>'status'='ready','valid output ready for review';
- SET LOCAL ROLE anon;
- BEGIN
-   PERFORM begin_cyberbullying_suggestion_v1(room,tutor,second,NULL,NULL);
-   RAISE EXCEPTION 'public generation storage accepted';
- EXCEPTION WHEN insufficient_privilege THEN NULL;
- END;
- BEGIN
-   PERFORM send_reviewed_tutor_response(room,stranger,parent,'Edited supportive reply',
-     false,NULL,'client supplied',false,'client text','modified',1,'[]',proposal,'older_peer');
-   RAISE EXCEPTION 'wrong owner approval accepted';
- EXCEPTION WHEN raise_exception THEN
-   IF SQLERRM<>'FORBIDDEN' THEN RAISE; END IF;
- END;
- result:=send_reviewed_tutor_response(room,tutor,parent,'Edited supportive reply',
-   true,NULL,'client supplied',false,'client text','modified',1,'[]',proposal,'older_peer');
- ASSERT result->'message'->>'character'='older_peer','reviewed character persisted';
- ASSERT result->'message'->>'persona_name'='Tom','canonical display identity';
- ASSERT result->'message'->>'user_id'=tutor::text,'human reviewer attribution preserved';
- ASSERT result->'feedback'->>'ai_suggestion'='Thanks for supporting me.','original text comes from stored generation';
- ASSERT result->'feedback'->>'raw_character'='victim','original character preserved';
- ASSERT result->'feedback'->>'raw_guard_mode'='false','original Guard from stored context';
- SET LOCAL ROLE authenticated;
- duplicate:=send_reviewed_tutor_response(room,tutor,parent,'Edited supportive reply',
-   false,NULL,'unused',false,'unused','modified',1,'[]',proposal,'older_peer');
- ASSERT duplicate->'message'->>'id'=result->'message'->>'id','retry returns same approved message';
- ASSERT (SELECT count(*) FROM messages WHERE room_id=room AND user_role='tutor')=1,'single publication';
- BEGIN
-   PERFORM send_reviewed_tutor_response(room,tutor,parent,'Conflicting reply',
-     false,NULL,'unused',false,'unused','modified',1,'[]',proposal,'older_peer');
-   RAISE EXCEPTION 'conflicting retry accepted';
- EXCEPTION WHEN raise_exception THEN
-   IF SQLERRM<>'PROPOSAL_CONFLICT' THEN RAISE; END IF;
- END;
- RESET ROLE;
- ASSERT (SELECT status FROM private.cyberbullying_suggestions WHERE id=proposal)='approved','terminal review persisted';
- SET LOCAL ROLE service_role;
- PERFORM begin_cyberbullying_suggestion_v1(room,tutor,second,NULL,'educator');
- BEGIN
-   PERFORM finish_cyberbullying_suggestion_v1(room,tutor,second,
-     '{"character":"bully","response":"Wrong selected character.","reason":"fixture"}',
-     '{"model":"controlled-test","prompt_version":"fixture-v1"}');
-   RAISE EXCEPTION 'character mismatch accepted';
- EXCEPTION WHEN raise_exception THEN
-   IF SQLERRM<>'AI_OUTPUT_INVALID' THEN RAISE; END IF;
- END;
- PERFORM finish_cyberbullying_suggestion_v1(room,tutor,second,
-   '{"character":"educator","response":"We can choose a safe next step.","reason":"fixture"}',
-   '{"model":"controlled-test","prompt_version":"fixture-v1"}');
- INSERT INTO messages(room_id,user_id,content,user_role) VALUES(room,learner,'A new comment.','student');
- BEGIN
-   PERFORM send_reviewed_tutor_response(room,tutor,parent,'Stale reply',
-     false,NULL,'fixture',false,'fixture','accepted',1,'[]',second,'educator');
-   RAISE EXCEPTION 'stale approval accepted';
- EXCEPTION WHEN raise_exception THEN
-   IF SQLERRM<>'STALE_PROPOSAL' THEN RAISE; END IF;
- END;
- ASSERT (SELECT count(*) FROM messages WHERE room_id=room AND user_role='tutor')=1,'stale send is atomic';
- PERFORM begin_cyberbullying_suggestion_v1(room,tutor,third,NULL,NULL);
- result:=review_cyberbullying_suggestion_v1(room,tutor,third,true);
- ASSERT result->>'status'='rejected','rejection is durable';
- BEGIN
-   PERFORM finish_cyberbullying_suggestion_v1(room,tutor,third,
-     '{"character":"victim","response":"Late reply.","reason":"fixture"}',
-     '{"model":"controlled-test","prompt_version":"fixture-v1"}');
-   RAISE EXCEPTION 'rejected late generation accepted';
- EXCEPTION WHEN raise_exception THEN
-   IF SQLERRM<>'PROPOSAL_CONFLICT' THEN RAISE; END IF;
- END;
- SET LOCAL ROLE anon;
- result:=send_reviewed_tutor_response(phishing,tutor,NULL,'Check the sender first.',
-   false,'scaffolding','Support verification.',false,'Check the sender first.','accepted',1,'[]',gen_random_uuid(),NULL);
- ASSERT result->'message'->>'guard_mode'='false','ordinary phishing approval uses boolean Guard';
- ASSERT result->'message'->>'character' IS NULL,'ordinary tutor identity retained';
- RESET ROLE;
-END;
-$test$;
+-- Browser draft approval and review assertions are in cyberbullying_browser_draft.sql.
 DO $test$
 DECLARE
  tutor uuid:=gen_random_uuid(); learner uuid:=gen_random_uuid(); observer uuid:=gen_random_uuid();
@@ -275,7 +168,7 @@ BEGIN
    IF SQLERRM NOT LIKE 'CLIENT_RELOAD_REQUIRED:%' THEN RAISE; END IF;
  END;
  RESET ROLE;
- PERFORM set_config('request.headers','{"x-practice-contract":"cyberbullying-v1"}',true);
+ PERFORM set_config('request.headers','{"x-practice-contract":"cyberbullying-v2"}',true);
  SET LOCAL ROLE anon;
  UPDATE public.rooms SET title=title WHERE false;
  RESET ROLE;
