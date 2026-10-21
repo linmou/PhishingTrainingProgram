@@ -1,7 +1,7 @@
 # Cyberbullying practise
 
 Intent: describe the shared learning workflow and the contracts used by Cyberbullying rooms.
-Updated: 2026-10-21. Browser-draft amendment baseline: `da87b36`.
+Updated: 2026-10-21. Browser-draft integrated release: `9c7364c`.
 
 ## Room and scenario
 

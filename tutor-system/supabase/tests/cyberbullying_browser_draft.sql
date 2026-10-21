@@ -1,5 +1,5 @@
 -- #!/usr/bin/env psql
--- Covers browser-draft migration: proposal retirement, scoped context, atomic shared reviews, metadata and application-role gates.
+-- Covers 20261021010000_cyberbullying_browser_draft.sql: proposal retirement, scoped context, atomic shared reviews, metadata and application-role gates.
 \set ON_ERROR_STOP on
 BEGIN;
 DO $$ BEGIN

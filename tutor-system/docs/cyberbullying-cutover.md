@@ -1,7 +1,7 @@
 # Cyberbullying contract cutover
 
 Intent: coordinate the browser-draft schema, dependent Edge functions and frontend while preserving accepted learner writes.
-Updated: 2026-10-21. Amendment baseline: `da87b36`. Release owner: Codex /root.
+Updated: 2026-10-21. Integrated release: `9c7364c`. Release owner: Codex /root.
 
 ## Preconditions
 
@@ -12,7 +12,7 @@ The production frontend is Render service `srv-d1pjtjnfte5s73ce0opg` in workspac
 ## Cutover sequence
 
 1. Apply `scripts/database/practice-write-gate.sql` through the selected project's MCP. Its transaction installs statement triggers across application tables. Trigger DDL waits for in-flight table writes; a five-second lock timeout aborts the whole installation. Confirm `private.practice_write_gate.closed=true`. An application-role write must return `PRACTICE_MAINTENANCE` before advancing.
-2. Apply the exact validated `20261021010000_cyberbullying_browser_draft.sql` through the project connection, with the existing gate closed. Its transaction locks rooms/messages/reviews/proposals to drain writes, compares message/review counts and content hashes, replaces the shared send, adds scoped context retrieval and review validation, and retires proposal storage and revision triggers. Existing feedback identifiers/provenance remain audit data. Unsent proposals expire at cutover. The transaction records `required_contract=cyberbullying-v2` and leaves the gate closed.
+2. Apply the exact validated `supabase/archived_migrations/20261021010000_cyberbullying_browser_draft.sql` (archived after both environments passed) through the project connection, with the existing gate closed. Its transaction locks rooms/messages/reviews/proposals to drain writes, compares message/review counts and content hashes, replaces the shared send, adds scoped context retrieval and review validation, and retires proposal storage and revision triggers. Existing feedback identifiers/provenance remain audit data. Unsent proposals expire at cutover. The transaction records `required_contract=cyberbullying-v2` and leaves the gate closed.
 3. Deploy the matching `assessment-api` and `ai-api`, including all imported dependencies, preserving their existing `verify_jwt=false` setting. Fetch deployed sources and compare them with the frozen payloads. Ensure the frontend built from the same integrated source is available and uses the intended Supabase project.
 4. Verify the new client sends `x-practice-contract: cyberbullying-v2`. Both Edge entry points reject missing/outdated headers before identity, database or provider calls. Reopen through a management SQL session: `UPDATE private.practice_write_gate SET closed=false,changed_at=now() WHERE singleton;`. Confirm current-client writes succeed and old/missing-header direct database and Edge requests fail with `CLIENT_RELOAD_REQUIRED`.
 5. Run the Cyberbullying tutor/learner/observer journey and shared phishing tutor, Guard and assessment journeys. Verify browser discard/reload, regeneration/rejection/replacement feedback, original/final metadata, message linkage, ratings and exports. Record provider outputs and cleanup counts. Archive the migration only after both environments pass.
