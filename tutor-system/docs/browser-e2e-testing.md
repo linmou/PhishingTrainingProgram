@@ -6,6 +6,14 @@ Updated: 2026-10-14. Workflow revision baseline commit: `73f5908`; assessment re
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
+## Concurrent Agent Runs (Shared Fixtures)
+
+The browser runner obtains an **exclusive same-host lock per Supabase project** before any live fixture work. The lock covers setup, all selected workflows, cleanup and browser close. A second run in another worktree on the same host fails closed rather than resetting the first run's test room. The lock is recorded in the E2E evidence report and located at `~/.cache/phishing-training-program/fixture-locks/<project-ref>.lock/owner.json`. Check the listed process PID/host and confirm that the owning run has stopped before manually clearing a stale lock. Locks are **never** automatically reclaimed by age.
+
+**Important boundary:** local filesystem locking does not coordinate different computers, GitHub-hosted runners, direct Management API writes or Edge Function/SQL deployments. Those must be explicitly serialized by a shared coordinator or use separately provisioned and independently cleanable fixtures. The existing `E2E_ROOM_FIXTURES_JSON` override supports room selection but does not, by itself, isolate global hosted code, provider quotas or cleanup. Do not run live suites from multiple machines against the same fixed room IDs simultaneously.
+
+The no-secret PR CI workflow deliberately omits hosted browser E2E. Only the existing operator-selected staging/production verification can exercise live Supabase. Production E2E must never be triggered by PR CI.
+
 ## Supabase Projects
 
 | Environment | Project reference | Current use |

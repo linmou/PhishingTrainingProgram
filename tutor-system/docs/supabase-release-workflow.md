@@ -21,6 +21,19 @@ Use the existing dated release record to track the following evidence for the ex
 
 Report `staging verified — awaiting production release` when a feature is waiting for its recorded batch. Mark it complete only after every applicable release stage passes. A failed stage blocks promotion; record the failure, correct it and rerun affected checks. An external blocker remains incomplete with its exact action, evidence and next step recorded. Preserve failed runs when a rerun passes; a passing rerun alone does not establish that an intermittent failure was fixed. Record any user-directed narrower endpoint.
 
+## Multi-Agent Verification and Shared Resource Ownership
+
+This document remains the **release policy**, not an implementation of a verification skill. For concurrent coding agents, run deterministic tests in parallel but explicitly own or serialize all mutable shared resources. Root `AGENTS.md` prohibits Docker, and the existing PostgreSQL validation cluster should be reused.
+
+- **Worktrees and files:** each Agent owns an isolated worktree/branch and unique temporary/evidence directories. One run must not delete another run's files.
+- **Database validation:** reuse the local validation cluster (port `55433`), allocating disposable databases per concurrent SQL test run rather than a new cluster/container per Agent. Do not bypass baseline, role, ACL, executor or Red/Green parity checks. The allocation/cleanup manager is follow-up work; the existing unique-database procedure remains authoritative.
+- **Snapshots:** use the root `scripts/database/export_validation_baseline.sh` wrapper for parallel work to avoid clobbering fixed dump/role-export filenames. Record its private run path and hashes. The legacy exporter is single-owner only, and source dumps can contain real user data.
+- **Browser E2E:** the entrypoint guards shared fixture rooms with a same-host, project-wide lock through cleanup. It does **not** protect across machines. Separate hosted fixture ownership or serialize those runs across machines.
+- **Staging code/schema:** do not allow individual coding Agents to deploy their private candidate branches to the shared staging project while other Agents are verifying. Stage SQL and Edge updates via the named release owner, serially, with deployed source hashes and evidence invalidation. GitHub Actions concurrency alone does not govern direct/manual deployments.
+- **Production:** PR and verification-skill runs do not deploy production. The existing production release owner and acceptance gates apply to authorized releases, not independent feature verification runs.
+
+After combining PRs, verify the **combined** SQL/Edge/frontend artifacts and affected journeys, since individually passing PR tests do not prove compatibility. Multiple feature branches may prepare SQL candidates in parallel; only one candidate may be pending deployment to shared staging at a time. Order and revalidate interdependent migrations before any promotion.
+
 ## Verification Scope
 
 Select checks from observable behavior, consumer contracts and affected dependencies, rather than lines changed or feature count. Record the selection and why it covers the change in the task/release record. When several rows apply, take their combined scope. If the affected scope is uncertain, broaden verification.
@@ -44,7 +57,7 @@ Use a dated release record under `docs/doc_update_record/` for each active batch
 
 Release when the named batch's listed features and dependencies are verified together on staging. This is the default trigger, without a fixed feature-count threshold; record a user-requested milestone or schedule when applicable. At promotion, freeze the artifact set and deploy those exact artifacts, preserving unrelated production configuration/data. Recheck target preconditions, including production fixes made while the batch waited. Do not copy a staging database wholesale or treat a different per-project Edge version counter as source divergence.
 
-Production incident fixes, security fixes and explicit release requests proceed through staging to production promptly. A change that requires coordinated SQL, Edge and frontend rollout must ship those dependencies together in the required order. A failed member blocks the batch; narrowing the batch requires verifying that the remaining artifact set is independently deployable and rerunning affected checks. Keep at most one pending SQL migration; release it before introducing another pending migration. Preserve staged SQL hashes and archive only after production verification.
+Production incident fixes, security fixes and explicit release requests proceed through staging to production promptly. A change that requires coordinated SQL, Edge and frontend rollout must ship those dependencies together in the required order. A failed member blocks the batch; narrowing the batch requires verifying that the remaining artifact set is independently deployable and rerunning affected checks. Keep at most one migration candidate in the shared staging deployment queue. Different branches may prepare candidates concurrently but must validate their combined order and dependencies before release. Preserve staged SQL hashes and archive only after production verification.
 
 The release record's production evidence closes acceptance for each included feature. Until then, those features remain staging-verified and awaiting release. These rules govern agent execution; existing browser commands remain manually invoked.
 
@@ -56,7 +69,7 @@ The local PostgreSQL clusters are under `/Users/admin/.transfer-assessment-pg17/
 | --- | --- |
 | Shared cluster | `data/`, socket `socket/`, port `55432`, log `server.log` |
 | Isolated validation cluster | `migration-validation/data/`, socket `migration-validation/socket/`, port `55433`, log `migration-validation/server.log` |
-| Custom-format dump output | `phishingtutor.dump` |
+| Run-specific dump | `runs/baseline.*/phishingtutor.dump` (and `source-roles.sql`) |
 
 The shared cluster may contain unrelated databases and roles. Use the isolated cluster for validation. The dump name does not establish the database name; inspect its archive header before choosing a target. Capture a fresh export per migration-validation cycle. Reuse that verified baseline for disposable Red/Green/scenario databases within the cycle; refresh it if migration-relevant source preconditions change. Edge-only, UI, documentation and test changes do not require an export/restore.
 
@@ -65,9 +78,9 @@ Check `supabase/config.toml` and the target database for their current PostgreSQ
 ## Upgrade Sequence
 
 1. **Inspect online state.** Use Supabase MCP to inspect staging (`ciubrzggdqesgvfkpolj`) and production (`zgbufaxooqxeabewktzd`), including migration history and relevant tables, constraints, functions, roles, extensions, and policies. Resolve material differences before applying the same script to both.
-2. **Capture the baseline.** Run the configured `pd_dump.sh` and `scripts/database/pg_dump_roles.sh`; both load the same connection settings. Inspect whether the archive includes every dependency of the changed objects. Obtain additional schema exports through the configured connection when needed. MCP schema inspection is not itself a restorable snapshot.
+2. **Capture the baseline.** For concurrent runs, invoke `scripts/database/export_validation_baseline.sh` to run the configured exporters into a unique directory; both load the same connection settings. Inspect whether the archive includes every dependency of the changed objects. Obtain additional schema exports through the configured connection when needed. MCP schema inspection is not itself a restorable snapshot.
 3. **Refresh locally.** Create a new disposable database for each scenario. Reapply and verify its source database ACLs and `ALTER DATABASE` settings, then restore source ownership, grants, policies, data, and dependencies. Pass the baseline comparison below before applying a candidate migration. Resolve missing dependencies in the local setup; incomplete setup blocks validation.
-4. **Establish Red, then implement.** Keep at most one pending SQL file under `supabase/migrations/`. Write behavior and permission assertions for the requested change, run them against a disposable database restored from the unmodified hosted baseline, and record the expected missing-behavior failure. Write the candidate migration from the current hosted schema and requirements, not from local or archived migration files. Follow this Red-Green sequence without invoking the `fast-multi-agent-tdd` skill.
+4. **Establish Red, then implement.** Only one SQL candidate may be queued for shared staging deployment. Independent feature branches may prepare migration candidates concurrently but must reconcile dependencies and validate the ordered, combined SQL before deployment. Write behavior and permission assertions for the requested change, run them against a disposable database restored from the unmodified hosted baseline, and record the expected missing-behavior failure. Write the candidate migration from the current hosted schema and requirements, not from local or archived migration files. Follow this Red-Green sequence without invoking the `fast-multi-agent-tdd` skill.
 5. **Validate Green locally.** Apply the exact candidate SQL to a fresh disposable baseline under the online migration executor's role and transaction strategy. Rerun the same assertions under the actual application roles, including relevant edge cases and unaffected behavior. Repeat from the same baseline for success and failure scenarios. Record commands, exit codes, assertions, and resulting catalog changes. A parser or `EXPLAIN` check alone is not a migration test.
 6. **Apply and test on staging.** Recheck staging preconditions, apply the exact tested SQL through a verified Supabase MCP or Management API project connection, and verify schema, permissions, RPC behavior, and the matching application or Edge Function workflow. Stop on a failed check.
 7. **Apply and verify on production.** Recheck production preconditions and compare them with the tested baseline. Refresh and retest if they changed materially. Apply the same SQL through a verified project connection, verify schema, permissions, and behavior, then archive the script only after both projects are verified.
@@ -104,31 +117,20 @@ The intended outcome is high predictive confidence. A measured 99% success rate 
 
 ### Agent Prerequisites
 
-Use the repository's configured exporters. `pd_dump.sh` writes `/Users/admin/.transfer-assessment-pg17/phishingtutor.dump`; `scripts/database/pg_dump_roles.sh` writes `/Users/admin/.transfer-assessment-pg17/source-roles.sql`. Both use `scripts/database/connection.sh` and its existing credentials. Run them from the repository root without requesting connection details again. Replacing both local outputs each cycle is expected.
+Use the existing configured database exporters but isolate each Agent's output. From the repository root:
 
 ```sh
 set -eu
-export PG_DUMP_DIR=/Users/admin/.transfer-assessment-pg17
-rtk proxy bash ./pd_dump.sh
-rtk proxy pg_restore --list /Users/admin/.transfer-assessment-pg17/phishingtutor.dump
-rtk proxy pg_restore --file=/dev/null /Users/admin/.transfer-assessment-pg17/phishingtutor.dump
-rtk proxy shasum -a 256 /Users/admin/.transfer-assessment-pg17/phishingtutor.dump
+SNAPSHOT_DIR="$(sh ./scripts/database/export_validation_baseline.sh)"
+export SNAPSHOT_DIR
+rtk proxy pg_restore --list "$SNAPSHOT_DIR/phishingtutor.dump"
+rtk proxy pg_restore --file=/dev/null "$SNAPSHOT_DIR/phishingtutor.dump"
+(cd "$SNAPSHOT_DIR" && rtk proxy shasum -a 256 -c SHA256SUMS)
 ```
 
-Export and hash roles separately so a hosted role-export restriction does not hide a successful application dump:
+Keep `SNAPSHOT_DIR` in the environment and record its absolute path in the run evidence. The wrapper writes private, non-overlapping `runs/baseline.*` directories, preserving an `.incomplete` marker if either configured exporter fails. Its `.exported` marker **only certifies completed exports and recorded hashes**: a successful restore, Supabase roles, extensions, ACL parity and actual migration behavior still must pass subsequent gates. Never use failed or incomplete exports.
 
-```sh
-set -eu
-export PG_DUMP_DIR=/Users/admin/.transfer-assessment-pg17
-rtk proxy sh ./scripts/database/pg_dump_roles.sh
-rtk proxy shasum -a 256 /Users/admin/.transfer-assessment-pg17/source-roles.sql
-```
-
-The application dump must pass archive checks and an actual restore. If role export is denied, use the authorized catalog fallback below and keep role parity blocked until it is established. Read configuration without exposing passwords or connection strings containing credentials in logs or replies.
-
-If `pd_dump.sh` fails, stop and report its status and error; do not use an existing archive. Do not request connection details or substitute another source when using the configured helpers. Use a human-provided dump only if the application exporter cannot be used.
-
-The configured helpers use `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, `PGSSLMODE`, and `PGPASSWORD`. `PG_DUMP_ENV_FILE` selects another credential/configuration file; `PGCLIENT_BIN_DIR` and `PG_DUMP_DIR` select the client and output directories.
+The older `pd_dump.sh` / `pg_dump_roles.sh` commands overwrite fixed paths under `/Users/admin/.transfer-assessment-pg17/`; use them only for explicitly serialized manual release-owner work. `scripts/database/connection.sh` supplies source credentials and, by default, points to the production database. Verify authorization, source identity and safe handling of sensitive data before export. Do not display credentials. `PG_VALIDATION_RUN_ROOT` can change the private output root without changing the configured source.
 
 ### Manual Export Commands
 
@@ -177,7 +179,7 @@ Use a separate local bootstrap administrator to apply role setup and restore the
 
 Before migration execution, capture comparable source and local catalogs for the affected objects and dependencies: PostgreSQL/extension versions, database owner/encoding/locale/ACL/settings, role settings, schema and object owners/ACLs, `pg_default_acl`, `pg_policies`, RLS flags, function definitions/security settings, constraints, and indexes. Compare row counts and migration-specific data preconditions against the exported baseline. Save queries, results, and differences in the run record. Resolve every migration-relevant difference before proceeding.
 
-Use the isolated PostgreSQL cluster by default. A PostgreSQL or extension version difference alone does not require another environment: record the difference and explain, with evidence, why it does not affect the candidate migration's execution, catalog result, permissions, data behavior, or test assertions. If that impact cannot be ruled out, or a required dependency cannot be reproduced, record `local setup blocked` with the specific gap. Start a Docker-backed Supabase environment only when the user explicitly requests it; do not infer that request from a version mismatch or this workflow.
+Use the isolated PostgreSQL cluster by default. A PostgreSQL or extension version difference alone does not require another environment: record the difference and explain, with evidence, why it does not affect the candidate migration's execution, catalog result, permissions, data behavior, or test assertions. If that impact cannot be ruled out, or a required dependency cannot be reproduced, record `local setup blocked` with the specific gap. Do not start Docker-backed Supabase: root `AGENTS.md` prohibits Docker. Record an explicit parity blocker rather than substituting a Docker environment.
 
 ## Restore and Apply Locally
 
@@ -220,7 +222,7 @@ Restore as the local bootstrap administrator. `--clean --if-exists` handles the 
 
 ```sh
 set -eu
-rtk proxy pg_restore --clean --if-exists --exit-on-error --single-transaction -h /Users/admin/.transfer-assessment-pg17/migration-validation/socket -p 55433 -U local_bootstrap -d "$MIGRATION_TEST_DB" /Users/admin/.transfer-assessment-pg17/phishingtutor.dump
+rtk proxy pg_restore --clean --if-exists --exit-on-error --single-transaction -h /Users/admin/.transfer-assessment-pg17/migration-validation/socket -p 55433 -U local_bootstrap -d "$MIGRATION_TEST_DB" "$SNAPSHOT_DIR/phishingtutor.dump"
 ```
 
 To refresh from a new snapshot or repeat a scenario, create another unique database, reapply and verify its database ACLs and `ALTER DATABASE` settings, then repeat dependency setup before restoring. Preserve extension schema grants and function ACLs from the source. Execute commands sequentially and stop on any nonzero exit status. A successful restore is not migration-ready until the baseline comparison passes.
