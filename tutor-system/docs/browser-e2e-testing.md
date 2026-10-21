@@ -2,7 +2,7 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-Updated: 2026-10-14. Workflow revision baseline commit: `73f5908`; assessment release browser baseline: `88b3ccd`.
+Updated: 2026-10-21. Workflow revision baseline commit: `16c2f95`; assessment release browser baseline: `88b3ccd`.
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
@@ -35,7 +35,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
 | `scripts/record-transfer-learning-demo-video.js` | Two real browser contexts, staging provider, and timestamped chapters | Reuses the assessment template room; all generated rows are cleaned afterward | Explicit recording run. |
 
-The only GitHub Actions workflow is a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
+GitHub Actions includes deterministic PR isolation checks and a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
 
 The [early-message browser record](doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_browser.md) verifies automatic replay after manual goal creation in the merged app against staging, including reload and duplicate prevention.
 
