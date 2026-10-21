@@ -2,7 +2,7 @@
 
 Intent: define the implementation and delivery requirements for work in this repository.
 
-Updated: 2026-10-21. Integrated workflow baselines: `18981cc`, `6196084`, `5d94e24`.
+Updated: 2026-10-21. Workflow and verification index baseline commit: `62f2b6b`.
 
 ## Mandatory Server Delivery
 
@@ -21,6 +21,17 @@ For Supabase changes, execute [supabase-release-workflow.md](tutor-system/docs/s
 Before any shared Staging SQL, Edge, secret or fixture mutation, acquire the [cross-machine project lease](tutor-system/docs/agent-coordination.md) with `scripts/staging-coordination.js`. Direct Supabase MCP and Management API operations follow the same rule as repository scripts and Actions. The named release owner holds the lease from deployment through the affected Staging acceptance checks; child tools borrow the exact candidate's lease using `PTP_COORDINATION_LEASE`. Missing access or contention blocks writes. Never reclaim a lease by age or delete a different owner's reference. Changes from an operator bypassing this protocol invalidate the affected verification evidence.
 
 If a check fails, fix it and rerun before advancing to the next environment. If an external blocker cannot be resolved within available authorization or access, keep the task incomplete and report the exact failing action, evidence, current deployed state, and next required action. A failed deployment prerequisite is work to resolve, not a completed verification step.
+
+## Verification Entry Points
+
+Use these repository documents to select and execute checks:
+
+- [Supabase release workflow](tutor-system/docs/supabase-release-workflow.md#verification-scope): verification scope, migration parity, staging acceptance and production release gates.
+- [Database helpers](scripts/database/README.md): isolated exports and disposable databases in the existing validation cluster.
+- [Browser E2E guide](tutor-system/docs/browser-e2e-testing.md): explicit environment setup, affected browser journeys and fixture cleanup.
+- [Shared Staging coordination](tutor-system/docs/agent-coordination.md): project lease ownership, serialized deployments and `scripts/verify-agent-integration.js` for combined candidate verification.
+
+Before live verification, record the intended environment, exact candidate commit and selected checks. Preserve artifact hashes, command results, relevant persisted evidence and cleanup outcomes in the dated verification record.
 
 ## Tool Restrictions
 
