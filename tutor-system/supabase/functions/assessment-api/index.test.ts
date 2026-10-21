@@ -230,7 +230,9 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
 });
 
 // Covers analyzer format repair: invalid evidence is never applied and both attempts retain their audit identity.
-Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records both attempts', async () => {
+for (const practiceType of ['cyberbullying', 'phishing']) {
+for (const repairFails of [false, true]) {
+Deno.test(`${practiceType} bounds evidence quote repair and applies only valid progress: repairFails=${repairFails}`, async () => {
   const audits: Record<string, any>[] = [];
   const requests: Record<string, any>[] = [];
   let providerCalls = 0;
@@ -244,13 +246,13 @@ Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records
       providerCalls += 1;
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
-          evidence_quote: providerCalls === 1 ? 'First sentence. Third sentence.' : 'First sentence.', explanation: 'Controlled event.' }],
+          evidence_quote: providerCalls === 1 || repairFails ? 'First sentence. Third sentence.' : 'First sentence.', explanation: 'Controlled event.' }],
         explanation: 'Controlled analysis.',
       }) } }] }));
     },
     rpc: async (name, args) => {
       if (name === 'get_transfer_message_analysis_context_v1') return { data: {
-        practice_type: 'cyberbullying', room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
+        practice_type: practiceType, room_id: 'room-1', student_id: 'learner-1', checklist_id: 'checklist-1',
         message, dialogue_history: [message], items: [{ id: 'item-1', area_text: 'Fixture target', status: 'pending', understanding_level: 'none' }],
       }, error: null };
       if (name === 'record_transfer_provider_attempt_v1') { audits.push(args); return { data: 'audit', error: null }; }
@@ -259,17 +261,21 @@ Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records
     },
   });
   const response = await handler(request('analyze_message', { room_id: 'room-1', message_id: 'focus-1' }));
-  assertEquals(response.status, 200);
+  assertEquals(response.status, repairFails ? 502 : 200);
   assertEquals(providerCalls, 2);
-  assertEquals(applications, 1);
-  assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, 'valid']]);
-  assertEquals(audits[0].p_request_id, audits[1].p_request_id);
-  assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
+  assertEquals(applications, repairFails ? 0 : 1);
+  if (practiceType === 'cyberbullying') {
+    assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, repairFails ? 'invalid' : 'valid']]);
+    assertEquals(audits[0].p_request_id, audits[1].p_request_id);
+    assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
+  }
   const repair = JSON.parse(requests[1].messages.at(-1).content);
   assertEquals(requests.map(providerRequest => providerRequest.model), ['qwen3.8-flash', 'qwen3.8-flash']);
-  assertEquals(repair.previous_response, audits[0].p_raw_response);
+  assertEquals(JSON.parse(repair.previous_response.choices[0].message.content).events[0].evidence_quote, 'First sentence. Third sentence.');
   assertEquals(repair.evidence_message, message);
 });
+}
+}
 
 Deno.test('missing saved result refuses duplicate processing before any provider call',async () => {
   let providerCalls=0;

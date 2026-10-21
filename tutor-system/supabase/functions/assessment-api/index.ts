@@ -348,7 +348,7 @@ async function analyzeMessage(
   const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);
   const outcomes = await Promise.allSettled(items.map(async (item: any) => {
     const auditRequestId = crypto.randomUUID();
-    const attemptLimit = scope.practice_type === 'cyberbullying' ? 2 : 1;
+    const attemptLimit = 2;
     let previousAttemptResponse: unknown = null;
     for (let ordinal = 1; ordinal <= attemptLimit; ordinal += 1) {
     const requestPayload = {
