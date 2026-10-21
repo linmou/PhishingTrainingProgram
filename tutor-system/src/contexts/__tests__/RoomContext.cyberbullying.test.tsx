@@ -188,6 +188,20 @@ test('Guard-only override is accepted and carries independent raw/final Guard va
   }));
 });
 
+test('a character-only edit is modified even when the original text and Guard are unchanged', async () => {
+  await mount();
+  await act(async () => { await room.generateAIResponse(); });
+  await act(async () => { room.updateFinalCharacter('older_peer'); });
+  (sendReviewedTutorResponse as jest.Mock).mockResolvedValue({
+    message: { ...learnerMessage, id: 'character-reply', user_role: 'tutor', user_id: tutorUser.id }, room: cyberRoom,
+  });
+  await act(async () => { await room.sendMessage(draft.raw_response); });
+  expect(sendReviewedTutorResponse).toHaveBeenCalledWith(expect.objectContaining({
+    tutorAction: 'modified', rawCharacter: 'victim', finalCharacter: 'older_peer',
+    finalResponse: draft.raw_response, finalGuardMode: false,
+  }));
+});
+
 test('discard invalidates a late generation result without publishing or restoring the draft', async () => {
   await mount();
   let resolve!: (value: ReturnType<typeof response>) => void;
