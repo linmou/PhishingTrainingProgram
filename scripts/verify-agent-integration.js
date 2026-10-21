@@ -60,7 +60,8 @@ async function main(args = process.argv.slice(2)) {
   assert.ok(args.length === 1 && args[0].startsWith('--workflow='), 'Select one affected staging workflow with --workflow=<name>');
   const manifest = artifactManifest();
   await withProjectLock(STAGING, 'combined-agent-integration', async lock => {
-    const evidenceDir = path.dirname(lock.leaseFile);
+    const evidenceDir = path.join(path.dirname(lock.leaseFile), 'integration-' + crypto.randomUUID());
+    fs.mkdirSync(evidenceDir, { mode: 0o700 });
     const reportFile = path.join(evidenceDir, 'integration-report.json');
     const report = { started_at: new Date().toISOString(), project: STAGING, runtime: process.version, manifest,
       coordination: { ref: lock.ref, tag_sha: lock.tag_sha, borrowed: lock.borrowed }, checks: {}, status: 'running' };
@@ -68,20 +69,26 @@ async function main(args = process.argv.slice(2)) {
     save();
     try {
       report.functions_before = await functionVersions();
+      save();
       check(report, evidenceDir, 'offline-harness', ['--test', 'scripts/staging-coordination.test.js',
         'scripts/database/disposable-database.test.js', 'scripts/database/export_validation_baseline.test.js',
         'tutor-system/scripts/browser-e2e/fixture-lock.test.js'], root, { LC_ALL: 'C', LC_CTYPE: 'C', LANG: 'C' });
+      save();
       check(report, evidenceDir, 'database-integration', ['--test', 'scripts/database/disposable-database.integration.test.js'], root,
         { PG_DISPOSABLE_INTEGRATION: '1' });
+      save();
       check(report, evidenceDir, 'browser-runner', ['--test', 'scripts/browser-e2e.test.js'], path.join(root, 'tutor-system'));
+      save();
       const independentEnv = { ...process.env };
       delete independentEnv[LEASE_ENV];
       assert.throws(() => acquireProjectLock(STAGING, { operation: 'contention-probe', commit: manifest.commit,
         evidenceDir: path.join(evidenceDir, 'contender'), env: independentEnv }), /lease unavailable/);
       verifyLease(lock, STAGING);
       report.checks.remote_contention = { status: 'pass' };
+      save();
       const result = JSON.parse(check(report, evidenceDir, 'staging-browser', ['scripts/browser-e2e.js', args[0]], path.join(root, 'tutor-system')));
       report.browser_evidence = result.evidence;
+      save();
       assert.equal(result.status, 'pass');
       report.functions_after = await functionVersions();
       assert.deepEqual(report.functions_after, report.functions_before, 'Hosted function versions changed during combined verification');

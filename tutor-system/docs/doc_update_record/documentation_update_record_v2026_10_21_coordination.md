@@ -8,4 +8,17 @@ Added an atomic GitHub-reference coordinator shared by browser fixtures and Stag
 
 The combined verifier hashes the committed frontend/SQL/Edge/dependency/harness artifact set, runs offline harness tests and real database allocation integration, tests shared-reference contention, and runs one affected Staging browser workflow while checking that hosted function versions remain stable. Matching release/lifecycle and production checks remain governed by the existing policy.
 
-Initial checks: 3 coordinator tests and 20 browser-runner tests passed. Live combined verification evidence will be added after committing the candidate. Full frontend Jest remains blocked by the inherited baseline regressions, as explicitly kept outside #5 by the user.
+Validation of candidate `dae6792b712194c038044684cb52181000f62015` on 2026-10-21:
+
+- 13 combined offline coordinator/allocator/export/fixture-lock tests: PASS.
+- 5 real PostgreSQL integration tests: PASS, including parallel allocation and hard-kill recovery.
+- 20 browser-runner tests: PASS.
+- Real GitHub-reference contention probe: PASS. A second independent client could not claim the held Staging reference; the original SHA/token remained valid.
+- Eight modified scripts passed Node syntax checks; both Actions workflows parsed successfully.
+- Live Staging `checklist-management`: FAILED before any fixture room was touched. Browser login timed out; a browser diagnostic identified HTTP 500 / SQLSTATE 55000, `CLIENT_RELOAD_REQUIRED`, on the existing tutor's user update. A project-scoped read-only Supabase MCP inspection confirmed `private.check_practice_write_gate` requires the configured `x-practice-contract` header. The matching `cyberbullying-v1` client header exists in the uncommitted `cyberbullying-practise` worktree, not this committed candidate. This is an inherited Staging cutover dependency.
+
+Evidence: `output/coordination/0bc165e5-b00d-4fa9-8d75-553aae20aff9/integration-report.json` and its stdout/stderr logs. Browser evidence: `tmp/browser_demo_runs/staging-template-20261021092958-6df54591/report.json` (zero user IDs and room IDs registered, browser closed, local lock released). Browser console diagnostic: `output/playwright/staging-login-diagnostic.log`. The combined runtime was Node v22.23.3; before-test Staging function versions were `ai-api` v5 and `assessment-api` v65. The failure and original artifacts are retained.
+
+After confirming the original verifier PID had stopped and no room cleanup was needed, released only its remote tag `80146c0e222c119561e1bfe099cac514b9a344d2`. GitHub returned 404 for that reference afterward, confirming cleanup. No Staging guard/configuration was changed. Report persistence now uses a unique subdirectory for every attempt, including borrowed release leases, and saves each completed stage before advancing.
+
+**Open acceptance:** the `cyberbullying-practise` cutover owner must commit the compatible frontend and identify the intended Staging artifacts. Form a clean combined candidate containing that dependency and rerun the selected Staging journey under the shared lease. Source/schema preconditions changed since PR #4's successful 08:53–08:54 UTC smoke; that earlier result cannot establish acceptance for this new cutover. Full frontend Jest also remains blocked by the inherited baseline regressions, as explicitly kept outside #5 by the user. No production release is required for these harness-only changes.
