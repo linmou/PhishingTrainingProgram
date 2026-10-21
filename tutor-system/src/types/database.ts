@@ -47,7 +47,6 @@ export interface Database {
                 Row: {
                     practice_type?: PracticeType
                     scenario_config?: CyberbullyingScenario | null
-                    conversation_revision?: number
                     id: string
                     tutor_id: string
                     title: string

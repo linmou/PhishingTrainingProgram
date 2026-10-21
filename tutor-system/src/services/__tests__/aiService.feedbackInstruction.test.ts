@@ -95,4 +95,17 @@ describe('AI feedback raw instruction persistence', () => {
       raw_instruction: 'protective_instruction'
     }));
   });
+
+  it('records an unsent character review with separate originals and edits through the shared table', async () => {
+    await recordAISuggestionFeedback('room-1', 'tutor-1', 'message-1', 'Original AI text', 'rejected',
+      'Edited tutor text', undefined, 120, ['saved context'], false, null, 'Support', true,
+      { rawCharacter: 'victim', finalCharacter: 'educator', generationProvenance: { model: 'fixture' } });
+    expect(supabase.from).toHaveBeenCalledWith('ai_suggestion_feedback');
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({
+      tutor_id: 'tutor-1', parent_message_id: 'message-1', tutor_message_id: null,
+      ai_suggestion: 'Original AI text', tutor_final_response: 'Edited tutor text', tutor_action: 'rejected',
+      raw_character: 'victim', final_character: 'educator', raw_guard_mode: false, final_guard_mode: true,
+      guard_rectified: true, generation_provenance: { model: 'fixture' }, contract_version: 'cyberbullying_v1',
+    }));
+  });
 });

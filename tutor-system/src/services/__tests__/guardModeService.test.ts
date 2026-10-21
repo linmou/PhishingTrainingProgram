@@ -16,6 +16,20 @@ import { supabase } from '../supabase';
 describe('guardModeService', () => {
     beforeEach(() => jest.clearAllMocks());
 
+    it('submits browser-reported original and final character metadata with no proposal identifier', async () => {
+        (supabase.rpc as jest.Mock).mockResolvedValue({ data: { message: { id: 'reply' }, room: { id: 'room' } }, error: null });
+        await sendReviewedTutorResponse({
+            roomId: 'room', tutorId: 'tutor', parentMessageId: 'learner-message',
+            rawDecision: { guard_mode: false, instruction: null, guard_reason: 'Support', suggested_response: 'Original' },
+            finalGuardMode: true, finalResponse: 'Edited', tutorAction: 'modified', responseTimeMs: 10,
+            contextMessages: ['saved context'], rawCharacter: 'victim', finalCharacter: 'educator', generationProvenance: { model: 'fixture' },
+        });
+        const args = (supabase.rpc as jest.Mock).mock.calls[0][1];
+        expect(args).toMatchObject({ p_raw_character: 'victim', p_final_character: 'educator',
+            p_ai_suggestion: 'Original', p_content: 'Edited', p_generation_provenance: { model: 'fixture' } });
+        expect(args).not.toHaveProperty('p_suggestion_id');
+    });
+
     it('uses one RPC for the message, feedback, and room-mode transaction', async () => {
         const response = {
             message: { id: 'message-1', response_mode: 'guard' },

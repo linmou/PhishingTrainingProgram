@@ -223,7 +223,7 @@ async function cleanupCreatedRoom(config, roomId, tutorId) {
     const deleted = await managementQuery(config,
       `delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid returning id`);
     assert.equal(deleted.length, 1, `Failed to delete created room ${roomId}`);
-    for (const table of ['public.messages', 'public.session_checklists', 'public.sessions', 'public.ai_suggestion_feedback', 'public.message_feedback', 'private.cyberbullying_suggestions', 'private.transfer_provider_attempts', 'private.learning_event_inbox']) {
+    for (const table of ['public.messages', 'public.session_checklists', 'public.sessions', 'public.ai_suggestion_feedback', 'public.message_feedback', 'private.transfer_provider_attempts', 'private.learning_event_inbox']) {
       const remaining = await managementQuery(config, `select count(*)::integer as count from ${table} where room_id='${roomId}'::uuid`);
       assert.equal(remaining[0].count, 0, `Cleanup left ${table} in room ${roomId}`);
     }

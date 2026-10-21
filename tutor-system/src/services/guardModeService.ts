@@ -13,8 +13,9 @@ export interface ReviewedTutorResponseInput {
   tutorAction: 'accepted' | 'modified';
   responseTimeMs: number;
   contextMessages: string[];
-  suggestionId?: string;
+  rawCharacter?: CyberbullyingCharacter | null;
   finalCharacter?: CyberbullyingCharacter | null;
+  generationProvenance?: Record<string, unknown> | null;
 }
 
 export interface ReviewedTutorResponseResult {
@@ -42,8 +43,9 @@ export async function sendReviewedTutorResponse(
     p_tutor_action: input.tutorAction,
     p_response_time_ms: input.responseTimeMs,
     p_context_messages: input.contextMessages,
-    p_suggestion_id: input.suggestionId ?? null,
-    p_final_character: input.finalCharacter ?? null
+    p_raw_character: input.rawCharacter ?? null,
+    p_final_character: input.finalCharacter ?? null,
+    p_generation_provenance: input.generationProvenance ?? null
   });
 
   if (error) {

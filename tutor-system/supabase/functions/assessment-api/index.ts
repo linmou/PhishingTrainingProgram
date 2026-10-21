@@ -641,7 +641,7 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
   return async (request: Request): Promise<Response> => {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
     if (request.method !== 'POST') return fail('INVALID_REQUEST');
-    if (request.headers.get('x-practice-contract') !== 'cyberbullying-v1') {
+    if (request.headers.get('x-practice-contract') !== 'cyberbullying-v2') {
       return fail('CLIENT_RELOAD_REQUIRED', 'Reload this page before continuing.');
     }
     let body: Record<string, any>;
@@ -804,7 +804,7 @@ function createDefaultDependencies(): AssessmentApiDependencies {
       resolveAnswer: resolveTransferAnswer,
     };
   }
-  const admin = createClient(url, serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } }, auth: { autoRefreshToken: false, persistSession: false } });
+  const admin = createClient(url, serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v2' } }, auth: { autoRefreshToken: false, persistSession: false } });
   const verifier: AssessmentPrincipalVerifier = {
     verify: async (request) => {
       const userId = request.headers.get('x-application-user-id')?.trim();

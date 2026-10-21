@@ -85,7 +85,7 @@ async function main(argv = process.argv.slice(2)) {
     selected, started_at: new Date().toISOString(), room_ids: [], user_ids: [], results: {}, status: 'running'
   };
   support.writeJson(path.join(evidenceDir, 'report.json'), report);
-  const client = createClient(config.projectUrl, config.serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } }, auth: { persistSession: false } });
+  const client = createClient(config.projectUrl, config.serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v2' } }, auth: { persistSession: false } });
   let browser;
   let fixtureLock;
   let coordination;

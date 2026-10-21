@@ -59,11 +59,29 @@ module.exports = async function cyberbullying(ctx) {
     await tutorPage.locator('button.ai-generate-btn').click();
     const character = tutorPage.getByLabel('Character', { exact: true });
     await character.waitFor({ timeout: TIMEOUT });
+    assert.equal((await query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id)).length, 0);
+    assert.equal((await managementQuery(ctx.config, "select to_regclass('private.cyberbullying_suggestions') as retired"))[0].retired, null);
+    await tutorPage.reload({ waitUntil: 'domcontentloaded' });
+    await tutorPage.locator('button.ai-generate-btn').waitFor({ timeout: TIMEOUT });
+    assert.equal(await character.count(), 0, 'Reload discards an unsent browser draft');
+    assert.equal((await query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id)).length, 0);
+    await tutorPage.locator('button.ai-generate-btn').click();
+    await character.waitFor({ timeout: TIMEOUT });
+    // Replacing a draft logs ignored through the shared review table without publishing.
+    await tutorPage.locator('button.ai-generate-btn').click();
+    await waitForMatch(() => query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id),
+      rows => rows.some(row => row.tutor_action === 'ignored' && row.tutor_message_id === null), 'ignored browser draft review');
+    await waitForMatch(() => character.isEnabled(), enabled => enabled, 'replacement completed');
     assert.equal(await tutorPage.getByText('Quick Adjust', { exact: true }).count(), 0);
     await character.selectOption('victim');
     const regenerated = tutorPage.waitForResponse(response => response.url().includes('/functions/v1/ai-api') && response.request().postDataJSON()?.operation === 'cyberbullying_suggest', { timeout: TIMEOUT });
     await tutorPage.getByRole('button', { name: 'Regenerate', exact: true }).click();
-    assert.equal((await regenerated).status(), 200);
+    const regeneratedResponse = await regenerated;
+    assert.equal(regeneratedResponse.status(), 200);
+    const regeneratedDraft = (await regeneratedResponse.json()).data;
+    assert.equal(regeneratedDraft.id, undefined);
+    assert.equal(regeneratedDraft.status, undefined);
+    assert.equal(regeneratedDraft.raw_character, 'victim');
     await waitForMatch(() => character.isEnabled(), enabled => enabled, 'regeneration completed');
     assert.equal(await character.inputValue(), 'victim');
     await character.selectOption('older_peer');
@@ -78,9 +96,16 @@ module.exports = async function cyberbullying(ctx) {
     assert.equal(approved.persona_name, 'Tom');
     assert.equal(approved.user_id, ctx.tutor.id);
     const reviews = await query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id);
-    assert.equal(reviews.length, 1);
-    assert.equal(reviews[0].raw_character, 'victim');
-    assert.equal(reviews[0].final_character, 'older_peer');
+    assert.equal(reviews.length, 3);
+    const publishedReview = reviews.find(row => row.tutor_message_id === approved.id);
+    assert.equal(publishedReview.raw_character, 'victim');
+    assert.equal(publishedReview.final_character, 'older_peer');
+    assert.equal(publishedReview.ai_suggestion, regeneratedDraft.raw_response);
+    assert.equal(publishedReview.tutor_final_response, edited);
+    assert.equal(publishedReview.suggestion_id, null);
+    assert.equal(publishedReview.tutor_id, ctx.tutor.id);
+    assert.equal(publishedReview.tutor_action, 'modified');
+    assert(reviews.some(row => row.tutor_action === 'modified' && row.tutor_message_id === null));
     await studentPage.reload({ waitUntil: 'domcontentloaded' });
     await studentPage.getByText(edited, { exact: true }).waitFor({ timeout: TIMEOUT });
     assert(await studentPage.locator('.comment-author-name').filter({ hasText: 'Tom' }).count() > 0);
@@ -92,6 +117,8 @@ module.exports = async function cyberbullying(ctx) {
     await character.waitFor({ timeout: TIMEOUT });
     await tutorPage.getByRole('button', { name: 'Reject', exact: true }).click();
     await character.waitFor({ state: 'hidden', timeout: TIMEOUT });
+    await waitForMatch(() => query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id),
+      rows => rows.some(row => row.tutor_action === 'rejected' && row.tutor_message_id === null), 'rejected browser draft review');
     assert.equal((await query(client, 'messages', 'id,user_role', 'room_id', room.id)).filter(message => message.user_role === 'tutor').length, 1);
 
     const progressBeforeGuard = await query(client, 'checklist_items', 'id,status,understanding_level', 'checklist_id', checklist.id);
@@ -144,6 +171,10 @@ module.exports = async function cyberbullying(ctx) {
     assert.equal(exported.learning_progress.target_version, 'cyberbullying_v1');
     assert.equal(exported.learning_progress.student_id, ctx.student.id);
     assert.equal(exported.messages.find(message => message.id === approved.id).character, 'older_peer');
+    const exportedReview = exported.ai_interactions.find(row => row.tutor_message_id === approved.id);
+    assert.equal(exportedReview.raw_character, 'victim');
+    assert.equal(exportedReview.final_character, 'older_peer');
+    assert.equal(exportedReview.tutor_id, ctx.tutor.id);
     const snapshots = await Promise.all([
       screenshot(tutorPage, evidenceDir, 'cyberbullying-tutor'),
       screenshot(studentPage, evidenceDir, 'cyberbullying-learner'),

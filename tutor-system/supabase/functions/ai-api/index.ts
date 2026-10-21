@@ -153,8 +153,8 @@ async function practiceRpc(deps: AiApiDependencies, name: string, args: Record<s
   if (!deps.rpc) throw new Error('APPLICATION_DATA_NOT_CONFIGURED');
   const result = await deps.rpc(name, args);
   if (result.error) {
-    const code = ['FORBIDDEN', 'INVALID_REQUEST', 'INVALID_CHARACTER', 'LEARNER_MESSAGE_REQUIRED', 'PROPOSAL_NOT_FOUND',
-      'PROPOSAL_CONFLICT', 'STALE_PROPOSAL', 'REQUEST_CONFLICT', 'AI_OUTPUT_INVALID']
+    const code = ['FORBIDDEN', 'INVALID_REQUEST', 'INVALID_CHARACTER', 'LEARNER_MESSAGE_REQUIRED', 'AI_DISABLED',
+      'CLIENT_RELOAD_REQUIRED', 'PRACTICE_MAINTENANCE', 'AI_OUTPUT_INVALID']
       .find(value => result.error!.message.includes(value));
     throw new Error(code ?? 'PERSISTENCE_FAILED');
   }
@@ -169,27 +169,19 @@ function uuid(value: unknown): string {
 }
 
 async function cyberbullyingOperation(deps: AiApiDependencies, request: Request, body: Record<string, unknown>) {
-  if (body.operation !== 'cyberbullying_suggest' && body.operation !== 'cyberbullying_review') throw new Error('INVALID_REQUEST');
+  if (body.operation !== 'cyberbullying_suggest') throw new Error('INVALID_REQUEST');
   const actor = request.headers.get('x-application-user-id');
   if (!actor) throw new Error('UNAUTHORIZED');
   const common = { p_room_id: uuid(body.room_id), p_actor_id: uuid(actor) };
-  if (body.operation === 'cyberbullying_review') {
-    if (typeof body.reject !== 'boolean') throw new Error('INVALID_REQUEST');
-    return practiceRpc(deps, 'review_cyberbullying_suggestion_v1', {
-      ...common, p_suggestion_id: uuid(body.suggestion_id), p_reject: body.reject,
-    });
-  }
   providerConfig(deps);
   if (body.character !== undefined && body.character !== null && typeof body.character !== 'string') throw new Error('INVALID_CHARACTER');
-  const suggestion = await practiceRpc(deps, 'begin_cyberbullying_suggestion_v1', {
-    ...common, p_request_id: uuid(body.request_id),
-    p_previous_suggestion_id: body.previous_suggestion_id == null ? null : uuid(body.previous_suggestion_id),
-    p_character: body.character ?? null,
+  const context = await practiceRpc(deps, 'get_cyberbullying_context_v1', {
+    ...common,
+    p_parent_message_id: body.parent_message_id == null ? null : uuid(body.parent_message_id),
   });
-  if (suggestion.status !== 'generating') return suggestion;
-  if (!isRecord(suggestion.input_context)) throw new Error('PERSISTENCE_FAILED');
-  const character = typeof suggestion.requested_character === 'string' ? suggestion.requested_character : null;
-  const messages = cyberbullyingMessages(suggestion.input_context, character);
+  const character = typeof body.character === 'string' ? body.character : null;
+  if (character !== null && !['same_age_peer', 'older_peer', 'victim', 'bully', 'educator'].includes(character)) throw new Error('INVALID_CHARACTER');
+  const messages = cyberbullyingMessages(context, character);
   const attempts: Array<Record<string, unknown>> = [];
   const provenance = () => ({
     model: DEFAULT_AI_MODEL,
@@ -201,10 +193,6 @@ async function cyberbullyingOperation(deps: AiApiDependencies, request: Request,
   try {
     prepared = parseChatRequest({ messages, temperature: 0.7, max_tokens: 2000, response_format: { type: 'json_object' }, enable_thinking: false });
   } catch {
-    await practiceRpc(deps, 'finish_cyberbullying_suggestion_v1', {
-      ...common, p_suggestion_id: suggestion.id, p_result: null,
-      p_provenance: { ...provenance(), error: 'CONTEXT_TOO_LARGE' },
-    });
     throw new Error('CONTEXT_TOO_LARGE');
   }
   let parsed: ReturnType<typeof parseCyberbullyingResponse> | undefined;
@@ -228,19 +216,21 @@ async function cyberbullyingOperation(deps: AiApiDependencies, request: Request,
       if (generationError !== 'AI_OUTPUT_INVALID') break;
     }
   }
-  const saved = await practiceRpc(deps, 'finish_cyberbullying_suggestion_v1', {
-    ...common, p_suggestion_id: suggestion.id, p_result: parsed ?? null,
-    p_provenance: { ...provenance(), ...(parsed ? {} : { error: generationError }) },
-  });
   if (!parsed) throw new Error(generationError);
-  return saved;
+  return {
+    room_id: body.room_id, parent_message_id: context.parent_message_id,
+    raw_character: parsed.character, raw_response: parsed.response, raw_guard_mode: context.guard_mode,
+    reason: parsed.reason,
+    context_messages: Array.isArray(context.dialogue) ? context.dialogue.map(message => JSON.stringify(message)) : [],
+    generation_provenance: provenance(),
+  };
 }
 
 export function createAiApiHandler(deps: AiApiDependencies) {
   return async (request: Request): Promise<Response> => {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
     if (request.method !== 'POST') return fail('INVALID_REQUEST', 400);
-    if (request.headers.get('x-practice-contract') !== 'cyberbullying-v1') return fail('CLIENT_RELOAD_REQUIRED', 409);
+    if (request.headers.get('x-practice-contract') !== 'cyberbullying-v2') return fail('CLIENT_RELOAD_REQUIRED', 409);
 
     let body: unknown;
     try {
@@ -263,8 +253,8 @@ export function createAiApiHandler(deps: AiApiDependencies) {
       if (code === 'AI_OUTPUT_TRUNCATED') return fail(code, 502);
       if (code === 'CONTEXT_TOO_LARGE') return fail(code, 413);
       if (code === 'FORBIDDEN' || code === 'UNAUTHORIZED') return fail(code, 403);
-      if (['PROPOSAL_CONFLICT', 'STALE_PROPOSAL', 'REQUEST_CONFLICT', 'GENERATION_IN_PROGRESS'].includes(code)) return fail(code, 409);
-      if (['INVALID_CHARACTER', 'LEARNER_MESSAGE_REQUIRED', 'PROPOSAL_NOT_FOUND'].includes(code)) return fail(code, 400);
+      if (code === 'CLIENT_RELOAD_REQUIRED' || code === 'PRACTICE_MAINTENANCE') return fail(code, 409);
+      if (['INVALID_CHARACTER', 'LEARNER_MESSAGE_REQUIRED', 'AI_DISABLED'].includes(code)) return fail(code, 400);
       if (code === 'PERSISTENCE_FAILED' || code === 'APPLICATION_DATA_NOT_CONFIGURED') return fail(code, 503);
       return fail('AI_PROVIDER_ERROR', 502);
     }
@@ -281,7 +271,7 @@ function createDefaultDependencies(): AiApiDependencies {
       if (!url || !key) throw new Error('APPLICATION_DATA_NOT_CONFIGURED');
       const result = await fetch(url + '/rest/v1/rpc/' + name, {
         method: 'POST',
-        headers: { 'x-practice-contract': 'cyberbullying-v1', apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+        headers: { 'x-practice-contract': 'cyberbullying-v2', apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
         body: JSON.stringify(args),
       });
       const data = await result.json();
