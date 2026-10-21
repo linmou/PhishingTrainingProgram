@@ -40,4 +40,21 @@ Candidate ai-api bundle-only validation passed without changing staging v6. Sour
 
 ## Release
 
-Pending staging deployment/acceptance, integration and production acceptance.
+Candidate runtime commit: `ee6c0c3`. Staging lease: `output/browser-draft/staging-lease/coordination-lease.json`. Starting deployed assessment-api v74 and production v16 both matched baseline `da87b36` source. Added `scripts/verify-edge-source.js` to retrieve deployed bundles and compare their embedded original sources with a local/committed artifact.
+
+Staging migration and live SQL suite passed through the project-specific Management API. The migration's published message/review preservation assertions passed. Gate reopened with required contract `cyberbullying-v2`. Missing/outdated/version 1 headers fail direct REST writes and both Edge entry points; a no-row version 2 REST write succeeds. Evidence: `output/browser-draft/staging-{gate,migration,sql-tests,reopen}.json` and `client-contract-staging.json`.
+
+Staging ai-api v7 (bundle `3bd3415490bed08a5992b2fff8db135b897bd1f02c45f5fd249de3bb1f4ab519`) and assessment-api v75 (bundle `c2d1c3ef1d0127853c2048dff006101e4a371eab474b9e5a50282f24f5bd6347`) are deployed. All embedded runtime source files match the candidate exactly: three ai-api files and eleven assessment-api files. Deployment input manifest for assessment-api, including type dependencies: `3abb5e5d3c62a4a61cb1f5563f792c7acf69ee35206ecf0ac55eef3920a6369f`.
+
+Staging browser acceptance so far (each fixture cleanup passed):
+
+- `staging-template-20261021215443-d042492f`: complete Cyberbullying journey, including browser reload/discard, ignored replacement, modified regeneration, rejected review, original/final text/character publication, tutor/message linkage, observer/rating/export and Guard deferral/replay.
+- `staging-template-20261021215557-b7a5cd80`: ordinary phishing tutor-response and persisted review.
+- `staging-template-20261021215641-aa0ab92b`: phishing Guard entry/recovery and review.
+- `staging-template-20261021215736-c4f20371`: assessment-answer pass, retry/failure, terminal recovery and the remaining affected lifecycle checks; all four fixture uses cleaned.
+
+Initial multi-workflow CLI invocation was rejected before fixtures; the runner accepts one selected workflow per invocation. Remaining selected journeys run serially under the owned lease.
+
+Quick Adjust persistence/regeneration regression also passes (three tests), bringing focused coverage to 82 distinct tests in 12 suites.
+
+Explicit Render-matching production build inputs (`REACT_APP_ENVIRONMENT=production` and matching production URL/anon key) produce `main.563f0c22.js`, SHA-256 `e915f13760c34c7e64cc62daaafa74106e7a7e10315b11b5bf55785808f2b08f`. The earlier build left that environment variable unset and produced a different bundle; its production/debug selector still chose production, but the explicit build is the promotion artifact. Frozen manifest: `output/browser-draft/release-manifest.json` (candidate `ee6c0c3`, 286 source/build artifacts). Integration and production acceptance remain open.
