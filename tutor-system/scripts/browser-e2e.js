@@ -10,6 +10,7 @@ const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
 const support = require('./browser-e2e/browser-e2e-support');
+const { acquireFixtureLock } = require('./browser-e2e/fixture-lock');
 
 const workflows = {
   'cyberbullying': require('./browser-e2e/workflows/cyberbullying'),
@@ -85,7 +86,11 @@ async function main(argv = process.argv.slice(2)) {
   support.writeJson(path.join(evidenceDir, 'report.json'), report);
   const client = createClient(config.projectUrl, config.serviceKey, { global: { headers: { 'x-practice-contract': 'cyberbullying-v1' } }, auth: { persistSession: false } });
   let browser;
+  let fixtureLock;
   try {
+    fixtureLock = acquireFixtureLock(config.projectRef, { runId });
+    report.fixture_lock = { scope: 'same-host', directory: fixtureLock.directory, owner: fixtureLock.owner };
+    support.writeJson(path.join(evidenceDir, 'report.json'), report);
     await support.managementQuery(config, 'select 1 as ready');
     browser = await chromium.launch({ headless: true });
     const videoOptions = process.env.E2E_RECORD_VIDEO === '1'
@@ -138,7 +143,18 @@ async function main(argv = process.argv.slice(2)) {
     report.status = 'fail';
     report.error = error.stack || String(error);
   } finally {
-    if (browser) await browser.close();
+    try {
+      if (browser) await browser.close();
+    } catch (error) {
+      report.status = 'fail';
+      report.browser_close_error = error.stack || String(error);
+    }
+    try {
+      if (fixtureLock) fixtureLock.release();
+    } catch (error) {
+      report.status = 'fail';
+      report.lock_release_error = error.stack || String(error);
+    }
     report.completed_at = new Date().toISOString();
     support.writeJson(path.join(evidenceDir, 'report.json'), report);
   }

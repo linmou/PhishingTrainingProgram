@@ -12,6 +12,12 @@ on:
         type: boolean
         default: false
 
+# Serialize jobs deploying to the shared staging project in this workflow.
+# Not FIFO, and does not cover local/other-workflow API deployments.
+concurrency:
+  group: supabase-staging-ciubrzggdqesgvfkpolj
+  cancel-in-progress: false
+
 permissions:
   contents: read
 

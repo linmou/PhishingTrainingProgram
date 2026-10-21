@@ -3,7 +3,7 @@
 Intent: record implementation decisions and delivery evidence for the Cyberbullying practise batch.
 Date: 2026-10-21. Baseline commit: 2807c52f3b3ee82f1e708b20740726a7a28e3912.
 Branch: feat/cyberbullying-practise. Release owner: Codex /root.
-Status: staging applied; browser verification in progress. Implementation is uncommitted; integration and production acceptance remain open.
+Status: staging applied; implementation committed as e95a494. Remote verification changes are being integrated; production acceptance remains open.
 
 ## Scope and acceptance
 
@@ -107,3 +107,7 @@ Shared phishing tutor response passed in staging-template-20261021093258-25f712b
 Assessment run staging-template-20261021093431-67b077dc timed out at terminal feedback generation before any provider call; its rerun passed that step for both pass and failure outcomes. The rerun staging-template-20261021094106-4613785b then failed a recovery-fixture SQL statement assigning string 'guard' to the boolean column. The fixture now uses true/false. The tutoring helper waits for the latest learner message to be visible and records browser errors for future diagnosis. A complete rerun is required; the first timeout is retained as an intermittent observation rather than claimed fixed by a passing retry. All failed-run fixtures were cleaned.
 
 The final candidate build passed with existing lint warnings, asset main.4b8671b3.js. Browser harness unit tests passed 20/20. The release still requires integrated source comparison, remaining staging journeys and production acceptance.
+
+The complete assessment-answer rerun staging-template-20261021094231-e7a86eb1 passed answer success, retry/failure, terminal feedback, Guard deferral/recovery, trusted-history cleanup and cancellation; all four fixture uses cleaned successfully. TypeScript comparison reports 468 test-only errors in both candidate and baseline and zero runtime-source errors. Full logs are output/cyberbullying-tsc-candidate.log and cyberbullying-tsc-baseline.log.
+
+Integration includes origin/no_sign_up at 23a41af and its fixture-lock/export-isolation work. The only manual conflict was release-workflow prose; both the merge-before-production gate and the shared staging queue limit are retained. The merged runner and fixture-lock checks passed 24 tests. Export-isolation tests initially encountered the host's unsupported C.UTF-8 locale; rerunning those two tests with LC_ALL=C is the documented environment correction. Assessment delivery now uses the merged fixture lock. No runtime application, Edge or SQL artifact changed during this merge.
