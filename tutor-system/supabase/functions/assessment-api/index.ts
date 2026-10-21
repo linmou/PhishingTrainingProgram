@@ -358,6 +358,9 @@ async function analyzeMessage(
               ...(scope.practice_type === 'cyberbullying' ? { practice_type: scope.practice_type, scenario: scope.scenario } : {}),
               message, items: [item], dialogue_history: history.slice(0, focusIndex + 1),
             }) },
+            ...(scope.practice_type === 'cyberbullying' ? [] : [{ role: 'user', content:
+              'Evaluate ONLY this target: ' + item.area_text +
+              '\nDo not credit another useful or safe action. Identify the concrete action or claim required by this target, then compare it to the current learner message. When that required action or claim is absent, return events: []. When the learner states the full required action, use demonstrated_understanding from pending; initial_signal means an actual incomplete component, not a completed narrow action. For every other current status, follow the state eligibility rules above.' }]),
             ...(ordinal > 1 ? [{ role: 'system', content: 'The previous attempt violated the output contract. Return valid JSON using the supplied item/message IDs and eligible event categories. Each evidence_quote must be one exact contiguous substring of the current learner message; do not combine passages or insert ellipses. Preserve the evidence judgment and omit an event when the current learner supplies no relevant evidence.' }] : []),
           ],
           temperature: 0,
