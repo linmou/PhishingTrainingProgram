@@ -16,6 +16,7 @@ import {
   isHiddenFromStudentRoomList,
   markBehaviorTestDescription
 } from '../behaviorTestRooms';
+import { getDemoRoomTemplateSeeds } from '../../services/demoRoomTemplates';
 
 describe('behaviorTestRooms', () => {
   describe('markBehaviorTestDescription', () => {
@@ -42,6 +43,12 @@ describe('behaviorTestRooms', () => {
   });
 
   describe('isBehaviorTestRoom', () => {
+    it('keeps all unmarked teaching titles visible even when a test template reuses them', () => {
+      getDemoRoomTemplateSeeds().filter(seed => !seed.test_only).forEach(seed => {
+        expect(isBehaviorTestRoom({ title: seed.title_template, description: 'Class session' })).toBe(false);
+        expect(isBehaviorTestRoom({ title: seed.title_template, description: markBehaviorTestDescription('Test session') })).toBe(true);
+      });
+    });
     it('classifies by marker or Demo: title, not by classic titles alone', () => {
       expect(
         isBehaviorTestRoom({ title: 'Any', description: `x ${BEHAVIOR_TEST_ROOM_MARKER}` })

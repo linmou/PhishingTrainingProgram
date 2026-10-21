@@ -89,8 +89,8 @@ describe('Qwen API integration through Supabase', () => {
     expect(result).toMatchObject({ success: true, suggestion: RESPONSE });
     expect(invoke).toHaveBeenCalledWith('ai-api', {
       body: expect.objectContaining({
-        temperature: 0.7,
-        max_tokens: 120,
+        temperature: 0.3,
+        max_tokens: 600,
         enable_thinking: false,
         response_format: { type: 'json_object' },
       }),

@@ -104,7 +104,7 @@ describe('RoomPagePost password prompt', () => {
             expect(screen.getByText('Incorrect password. Please try again.')).toBeInTheDocument();
         });
         expect(screen.getByRole('heading', { name: /Password Required/i })).toBeInTheDocument();
-        expect(input).toHaveValue('wrong-password');
+        expect(input).toHaveValue('');
         expect(joinRoom).toHaveBeenCalledTimes(2);
     });
 

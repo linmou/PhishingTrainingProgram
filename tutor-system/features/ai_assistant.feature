@@ -14,7 +14,7 @@ Feature: AI Assistant for Tutors
     Given the tutor is in the "AI-Enhanced Learning" room
     When the tutor clicks the "AI Settings" button
     And the tutor toggles "Enable AI Assistant" to on
-    And the tutor selects model "Qwen3.5 Flash"
+    And the tutor selects model "Qwen3.8 Flash"
     And the tutor sets temperature to 0.7
     And the tutor saves the settings
     Then the AI assistant should be enabled for the room
@@ -80,7 +80,7 @@ Feature: AI Assistant for Tutors
   Scenario: AI configuration persistence
     Given the tutor has configured AI settings with:
       | Setting      | Value            |
-      | Model        | Qwen3.5 Flash   |
+      | Model        | Qwen3.8 Flash   |
       | Temperature  | 0.5             |
       | Max Tokens   | 300             |
       | Enabled      | true            |

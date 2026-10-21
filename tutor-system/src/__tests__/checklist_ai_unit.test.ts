@@ -10,6 +10,7 @@ import { QwenService } from '../services/aiService';
 import { CoverageDetectionService } from '../services/coverageDetectionService';
 import { ChecklistItem } from '../types/checklist';
 import { ConversationMessage } from '../types';
+import { DEFAULT_AI_MODEL } from '../services/aiModels';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -31,7 +32,7 @@ describe('Single-list LLM extraction', () => {
     const [prompt, history, config] = generateResponse.mock.calls[0];
     expect(prompt).toContain('Source learning content');
     expect(history).toEqual([]);
-    expect(config.model_name).toBe('qwen3.5-flash');
+    expect(config.model_name).toBe(DEFAULT_AI_MODEL);
   });
 
   it('accepts a custom target inventory larger than five', async () => {

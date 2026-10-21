@@ -70,17 +70,17 @@ describe('Clear Chat History Integration Tests', () => {
                 data: mockTutorUser,
                 error: null
             });
-            
+
             // Mock room not found
             const mockRoomSingle = jest.fn().mockResolvedValueOnce({
                 data: null,
                 error: { message: 'Room not found' }
             });
-            
+
             const mockEq = jest.fn()
                 .mockReturnValueOnce({ single: mockUserSingle })  // First call for user
                 .mockReturnValueOnce({ single: mockRoomSingle }); // Second call for room
-            
+
             const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
             mockSupabase.from.mockReturnValue({ select: mockSelect });
 
@@ -93,7 +93,7 @@ describe('Clear Chat History Integration Tests', () => {
                 data: mockTutorUser,
                 error: null
             });
-            
+
             // Mock room owned by different user
             const mockRoomSingle = jest.fn().mockResolvedValueOnce({
                 data: {
@@ -103,11 +103,11 @@ describe('Clear Chat History Integration Tests', () => {
                 },
                 error: null
             });
-            
+
             const mockEq = jest.fn()
                 .mockReturnValueOnce({ single: mockUserSingle })  // First call for user
                 .mockReturnValueOnce({ single: mockRoomSingle }); // Second call for room
-            
+
             const mockSelect = jest.fn().mockReturnValue({ eq: mockEq });
             mockSupabase.from.mockReturnValue({ select: mockSelect });
 
@@ -120,7 +120,7 @@ describe('Clear Chat History Integration Tests', () => {
                 data: mockTutorUser,
                 error: null
             });
-            
+
             // Mock successful room lookup
             const mockRoomSingle = jest.fn().mockResolvedValueOnce({
                 data: {
@@ -130,11 +130,11 @@ describe('Clear Chat History Integration Tests', () => {
                 },
                 error: null
             });
-            
+
             // Mock successful deletions
             const mockDeleteEq = jest.fn().mockResolvedValue({ error: null });
             const mockDelete = jest.fn().mockReturnValue({ eq: mockDeleteEq });
-            
+
             // Mock table operations
             mockSupabase.from.mockImplementation((table: string) => {
                 if (table === 'users') {
@@ -165,7 +165,7 @@ describe('Clear Chat History Integration Tests', () => {
                 title: 'Test Room',
                 prePopulatedMessagesPreserved: true
             });
-            
+
             // The actual database transaction is covered by assessment_result_messages.sql.
             expect(mockSupabase.from).toHaveBeenCalledWith('users');
             expect(mockSupabase.from).toHaveBeenCalledWith('rooms');
@@ -182,7 +182,7 @@ describe('Clear Chat History Integration Tests', () => {
                 data: mockTutorUser,
                 error: null
             });
-            
+
             // Mock successful room lookup
             const mockRoomSingle = jest.fn().mockResolvedValueOnce({
                 data: {
@@ -192,12 +192,12 @@ describe('Clear Chat History Integration Tests', () => {
                 },
                 error: null
             });
-            
+
             // Mock database error for messages deletion
-            const mockDeleteEq = jest.fn().mockResolvedValue({ 
+            const mockDeleteEq = jest.fn().mockResolvedValue({
                 error: { message: 'Database error' }
             });
-            
+
             mockSupabase.from.mockImplementation((table: string) => {
                 if (table === 'users') {
                     return {

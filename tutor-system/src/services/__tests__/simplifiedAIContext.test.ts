@@ -80,7 +80,11 @@ describe('buildAIContextFromExistingData', () => {
           { content: 'Email from bank: verify immediately' },
           { text: 'SMS message: claim your prize' },
           { content: null },
-          { other: 'Invalid post structure' }
+          { other: 'Invalid post structure' },
+          null,
+          { content: '   ' },
+          { content: 123 },
+          { message: 'Later valid post' }
         ]
       }
     });
@@ -92,18 +96,15 @@ describe('buildAIContextFromExistingData', () => {
     mockPage([]);
 
     const context = await buildAIContextFromExistingData('room');
-    expect(context).toHaveLength(8);
+    expect(context).toHaveLength(7);
     expect(context[0]).toMatchObject({ role: 'system' });
     expect(context[0].content).toContain(room.title);
     expect(context[0].content).toContain(room.description);
     expect(context[1].content).toContain('Student shared for analysis');
     expect(context[1].content).toContain('verify immediately');
     expect(context[2].content).toContain('claim your prize');
-    expect(context.slice(3, 5).map(message => message.content)).toEqual([
-      'Student shared for analysis: ',
-      'Student shared for analysis: '
-    ]);
-    expect(context.slice(5).map(({ role, content }) => ({ role, content }))).toEqual([
+    expect(context[3].content).toBe('Student shared for analysis: Later valid post');
+    expect(context.slice(4).map(({ role, content }) => ({ role, content }))).toEqual([
       { role: 'user', content: 'Student: Student question' },
       { role: 'assistant', content: 'Tutor: Tutor explanation' },
       { role: 'user', content: 'Observer: Observer note' }

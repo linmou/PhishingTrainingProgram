@@ -1,6 +1,6 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-21. Baseline commit: 2807c52. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-21. Baseline commit: a6c977b. -->
 
 `detectionTemplates.ts` defines five targets per teaching scenario in one inventory.
 `demoRoomTemplates.ts` packages teaching and demo rooms; `checklistGenerationContext.ts`
@@ -21,3 +21,8 @@ for evaluation limitations and staging/production verification status.
 use the existing ai-api and tutor approval path. Shared Guard state uses a boolean.
 See [Cyberbullying practise](../../docs/cyberbullying-practise.md) for the five
 targets, role identities, progress analysis and operation boundaries.
+
+`simplifiedAIContext.ts` reads the complete saved discussion and trusted assessment
+results. It filters malformed or empty legacy template posts before their five-post
+limit, retaining valid later entries. Jest covers the paginated history, assessment
+readiness, and legacy post normalization at the Supabase boundary.

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** File: src/__tests__/ai_assistant.bdd.test.tsx; Purpose: bind tutor AI assistant feature workflows to RoomPagePost, RoomProvider, persistence, export, and the Qwen boundary. */
 
+import { DEFAULT_AI_MODEL } from '../services/aiModels';
 import React from 'react';
 import { defineFeature, loadFeature } from 'jest-cucumber';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -89,7 +90,7 @@ const buildRoom = (overrides: Partial<Room> = {}): Room => ({
   image_url: null,
   is_active: true,
   ai_assistant_enabled: true,
-  ai_assistant_model: 'qwen3.5-flash',
+  ai_assistant_model: DEFAULT_AI_MODEL,
   ai_assistant_prompt: 'Teach phishing education clearly.',
   guard_mode: false,
   created_at: STARTED_AT,
@@ -320,7 +321,7 @@ defineFeature(feature, (test) => {
           reason: 'The student asked a learning question.',
           decision: { guard_mode: false, instruction: 'explanation' },
           response: responseText,
-        }), model: 'qwen3.5-flash', finish_reason: 'stop' }, error: null };
+        }), model: DEFAULT_AI_MODEL, finish_reason: 'stop' }, error: null };
     });
   });
 
@@ -341,8 +342,8 @@ defineFeature(feature, (test) => {
       await userEvent.click(toggle);
       await waitFor(() => expect(toggle).toBeChecked());
     });
-    and('the tutor selects model "Qwen3.5 Flash"', () => {
-      fireEvent.change(document.querySelector('.ai-setting-select') as HTMLSelectElement, { target: { value: 'qwen3.5-flash' } });
+    and('the tutor selects model "Qwen3.8 Flash"', () => {
+      fireEvent.change(document.querySelector('.ai-setting-select') as HTMLSelectElement, { target: { value: DEFAULT_AI_MODEL } });
     });
     and('the tutor sets temperature to 0.7', () => {
       fireEvent.change(document.querySelectorAll('input[type="range"]')[0], { target: { value: '0.7' } });
@@ -356,7 +357,7 @@ defineFeature(feature, (test) => {
     });
     then('the AI assistant should be enabled for the room', () => {
       expect(roomRecord.ai_assistant_enabled).toBe(true);
-      expect(aiConfig).toMatchObject({ model_name: 'qwen3.5-flash', temperature: 0.7, is_active: true });
+      expect(aiConfig).toMatchObject({ model_name: DEFAULT_AI_MODEL, temperature: 0.7, is_active: true });
     });
     and('AI settings should show the assistant enabled when reopened', async () => {
       await openSettings();
@@ -368,7 +369,7 @@ defineFeature(feature, (test) => {
     bindBackground(given, and);
     given('the AI assistant is enabled in the room', () => {
       roomRecord.ai_assistant_enabled = true;
-      aiConfig = { id: 'ai-bdd-config', room_id: ROOM_ID, model_name: 'qwen3.5-flash', system_prompt: 'Teach phishing.', prompt_config: null, temperature: 0.7, max_tokens: 177, is_active: true, created_at: STARTED_AT, updated_at: STARTED_AT };
+      aiConfig = { id: 'ai-bdd-config', room_id: ROOM_ID, model_name: DEFAULT_AI_MODEL, system_prompt: 'Teach phishing.', prompt_config: null, temperature: 0.7, max_tokens: 177, is_active: true, created_at: STARTED_AT, updated_at: STARTED_AT };
     });
     when('the tutor clicks the "AI Settings" button', async () => { await openSettings(); });
     and('the tutor toggles "Enable AI Assistant" to off', async () => {
@@ -513,7 +514,7 @@ defineFeature(feature, (test) => {
       await renderRoom();
       await openSettings();
       const bySetting = Object.fromEntries(table.map(({ Setting, Value }) => [Setting, Value]));
-      fireEvent.change(document.querySelector('.ai-setting-select') as HTMLSelectElement, { target: { value: 'qwen3.5-flash' } });
+      fireEvent.change(document.querySelector('.ai-setting-select') as HTMLSelectElement, { target: { value: DEFAULT_AI_MODEL } });
       fireEvent.change(document.querySelectorAll('input[type="range"]')[0], { target: { value: bySetting.Temperature } });
       fireEvent.change(document.querySelectorAll('input[type="range"]')[1], { target: { value: bySetting['Max Tokens'] } });
       fireEvent.click(screen.getByRole('button', { name: 'Save Settings' }));
@@ -521,7 +522,7 @@ defineFeature(feature, (test) => {
     });
     when('the tutor leaves the room', () => { view?.unmount(); view = null; });
     and('the tutor rejoins the room', async () => { await renderRoom(); });
-    then('the AI settings should be preserved', () => expect(aiConfig).toMatchObject({ model_name: 'qwen3.5-flash', temperature: 0.5, max_tokens: 300, is_active: true }));
+    then('the AI settings should be preserved', () => expect(aiConfig).toMatchObject({ model_name: DEFAULT_AI_MODEL, temperature: 0.5, max_tokens: 300, is_active: true }));
     and('AI settings should show the assistant enabled after rejoining', async () => {
       await openSettings();
       expect(screen.getByLabelText('Enable AI Assistant')).toBeChecked();
@@ -561,7 +562,7 @@ defineFeature(feature, (test) => {
       roomRecord.ai_assistant_enabled = true;
       roomRecord.ai_assistant_prompt = 'Focus on practical examples';
       nextSuggestion = 'For example, a fake delivery notice may ask you to enter a password on a copied website.';
-      aiConfig = { id: 'ai-bdd-config', room_id: ROOM_ID, model_name: 'qwen3.5-flash', system_prompt: 'Focus on practical examples', prompt_config: null, temperature: 0.7, max_tokens: 150, is_active: true, created_at: STARTED_AT, updated_at: STARTED_AT };
+      aiConfig = { id: 'ai-bdd-config', room_id: ROOM_ID, model_name: DEFAULT_AI_MODEL, system_prompt: 'Focus on practical examples', prompt_config: null, temperature: 0.7, max_tokens: 150, is_active: true, created_at: STARTED_AT, updated_at: STARTED_AT };
     });
     and(/^the student asks "What is social engineering\?"$/, () => { messages = [makeMessage('student-message-1', 'What is social engineering?', 'student', STARTED_AT)]; });
     when('the tutor requests an AI suggestion', async () => { await requestSuggestion(); });

@@ -176,7 +176,7 @@ describe('demoRoomTemplates', () => {
     expect(lock!.conversation_history).toContain('Others (Socail Media Testdrive)');
   });
 
-  it('derives correct-student ecological cases from the matching database scenarios', () => {
+  it('keeps correct-student cases on the matching scenario knowledge inventory', () => {
     const seeds = getDemoRoomTemplateSeeds();
     const clickSource = seeds.find((seed) => seed.case_id === 'webpage_demo_click_impulse');
     const clickCorrect = seeds.find((seed) => seed.case_id === 'webpage_demo_correct_safe_action');
@@ -185,6 +185,8 @@ describe('demoRoomTemplates', () => {
 
     expect(clickCorrect).toBeTruthy();
     expect(lockCorrect).toBeTruthy();
+    expect(clickCorrect!.ai_config_template.prompt_config).toEqual(clickSource!.ai_config_template.prompt_config);
+    expect(lockCorrect!.ai_config_template.prompt_config).toEqual(lockSource!.ai_config_template.prompt_config);
     expect(clickCorrect!.description_template).toBe(clickSource!.description_template);
     expect(clickCorrect!.pre_populated_dialogue.slice(0, -1).map(({ user_name, role }) => ({ user_name, role }))).toEqual(
       clickSource!.pre_populated_dialogue.slice(0, -1).map(({ user_name, role }) => ({ user_name, role }))

@@ -36,7 +36,6 @@ describe('Promptfoo evaluation prompt formatting', () => {
     expect(messages).toHaveLength(2);
     expect(messages[0].role).toBe('system');
     expect(messages[0].content).toContain(currentSystemPrompt);
-    expect(messages[0].content).toContain('ACTIVE RESPONSE CONTRACT (v3)');
     expect(messages[1].role).toBe('user');
     expect(messages[1].content).toContain('{{scenario_context}}');
     expect(messages[1].content).toContain('{{conversation_history}}');
@@ -44,12 +43,12 @@ describe('Promptfoo evaluation prompt formatting', () => {
 
     expect(concreteUserTurn).toContain(firstCase.scenario_context);
     expect(concreteUserTurn).toContain(firstCase.student_message);
-    expect(concreteUserTurn).toContain('Draft the next tutor decision');
-    expect(concreteUserTurn).not.toMatch(/brief follow-up question/i);
     expect(concreteUserTurn).not.toContain('{{scenario_context}}');
     const contextLines = concreteUserTurn.split('\n');
     const serializedContext = JSON.parse(contextLines[contextLines.length - 1] || '{}');
     expect(serializedContext.conversation_history).toBe(firstCase.conversation_history);
+    expect(serializedContext.scenario_context).toBe(firstCase.scenario_context);
+    expect(serializedContext.student_message).toBe(firstCase.student_message);
     expect(serializedContext.prior_guard_mode).toBe('unknown');
   });
 

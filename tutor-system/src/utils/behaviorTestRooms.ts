@@ -29,7 +29,12 @@ export function getTestOnlyTemplateNames(): string[] {
 }
 
 export function getTestOnlyTitleTemplates(): string[] {
-  return getTestOnlyDemoTemplateSeeds().map((s) => s.title_template);
+  const teachingTitles = getDemoRoomTemplateSeeds()
+    .filter((seed) => !seed.test_only)
+    .map((seed) => seed.title_template);
+  return getTestOnlyDemoTemplateSeeds()
+    .map((seed) => seed.title_template)
+    .filter((title) => !teachingTitles.includes(title));
 }
 
 /**

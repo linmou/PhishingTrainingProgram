@@ -71,6 +71,7 @@ describe('Supabase Storage Operations', () => {
     beforeEach(() => {
         // Reset all mocks before each test
         jest.clearAllMocks();
+        mockSupabaseClient.storage.from.mockReturnValue(mockStorageBucket);
         
         // Reset storage mock functions
         if (mockStorageBucket) {
@@ -127,7 +128,7 @@ describe('Supabase Storage Operations', () => {
                 error: mockError
             });
 
-            await expect(uploadImage(mockFile, 'test-path')).rejects.toThrow();
+            await expect(uploadImage(mockFile, 'test-path')).rejects.toEqual(mockError);
         });
 
         it('should throw error when upload fails due to RLS policy', async () => {
@@ -142,7 +143,7 @@ describe('Supabase Storage Operations', () => {
                 error: mockError
             });
 
-            await expect(uploadImage(mockFile, 'test-path')).rejects.toThrow();
+            await expect(uploadImage(mockFile, 'test-path')).rejects.toEqual(mockError);
         });
 
         it('should handle file path with special characters', async () => {
@@ -282,7 +283,7 @@ describe('Supabase Storage Operations', () => {
                 error: mockError
             });
 
-            await expect(uploadImage(invalidFile, 'test-path')).rejects.toThrow();
+            await expect(uploadImage(invalidFile, 'test-path')).rejects.toEqual(mockError);
         });
 
         it('should handle file size limit exceeded', async () => {
@@ -297,7 +298,7 @@ describe('Supabase Storage Operations', () => {
                 error: mockError
             });
 
-            await expect(uploadImage(mockFile, 'test-path')).rejects.toThrow();
+            await expect(uploadImage(mockFile, 'test-path')).rejects.toEqual(mockError);
         });
     });
 
@@ -338,7 +339,7 @@ describe('Supabase Storage Operations', () => {
                 error: mockError
             });
 
-            await expect(uploadImage(mockFile, 'test-path')).rejects.toThrow();
+            await expect(uploadImage(mockFile, 'test-path')).rejects.toEqual(mockError);
         });
     });
 });

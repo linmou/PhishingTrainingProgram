@@ -692,7 +692,7 @@ describe('RoomContext - Room Management Tests', () => {
                 roomWithAI.id,
                 mockUser.id,
                 undefined,
-                { focusStudentMessage: studentMessage.content }
+                { focusStudentMessage: studentMessage.content, focusStudentId: studentMessage.user_id, expectedAssessmentResultIds: [] }
             );
         });
 

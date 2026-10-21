@@ -133,8 +133,14 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
             });
 
             // Pre-populated discussion (array or legacy {posts}) — same as UI
+            const dialogue = room.pre_populated_dialogue;
+            const normalizedDialogue = dialogue && !Array.isArray(dialogue) && Array.isArray(dialogue.posts)
+                ? { posts: dialogue.posts.filter((post: any) =>
+                    typeof (post?.content || post?.text || post?.message) === 'string' &&
+                    (post.content || post.text || post.message).trim().length > 0) }
+                : dialogue;
             const prePop = prePopulatedToContextMessages(
-                room.pre_populated_dialogue as any,
+                normalizedDialogue as any,
                 room.created_at
             );
             context.push(...prePop);

@@ -1,8 +1,7 @@
-name: Verify PR isolation (no hosted state)
+name: Verify PR (no hosted state)
 
 on:
   pull_request:
-    branches: [no_sign_up]
   push:
     branches: [no_sign_up]
   merge_group:
@@ -10,8 +9,6 @@ on:
 permissions:
   contents: read
 
-# Hosted verification remains separate. Frontend jobs use the locally validated
-# Node/npm versions and dummy configuration, with reproducible npm ci installs.
 jobs:
   isolation-harness:
     runs-on: ubuntu-latest
@@ -19,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Verify cross-worktree lock and run-scoped export isolation
         run: |
           node --test tutor-system/scripts/browser-e2e/fixture-lock.test.js
@@ -27,47 +24,37 @@ jobs:
 
   frontend-jest:
     runs-on: ubuntu-latest
+    env:
+      REACT_APP_SUPABASE_URL: http://127.0.0.1:54321
+      REACT_APP_SUPABASE_ANON_KEY: ci-placeholder
     defaults:
       run:
         working-directory: tutor-system
-    env:
-      REACT_APP_SUPABASE_URL: https://test.supabase.co
-      REACT_APP_SUPABASE_ANON_KEY: test-anon-key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '25.9.0'
-      - run: npm install --global npm@11.12.1
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tutor-system/package-lock.json
+      - run: npm install --global npm@10.9.2
       - run: npm ci --no-audit --no-fund
-      - name: Verify practice, Guard and tutor review regressions
-        run: >-
-          npm test -- --watchAll=false --runInBand --runTestsByPath
-          src/contexts/__tests__/RoomContext.cyberbullying.test.tsx
-          src/contexts/__tests__/RoomContext.transferDraftLifecycle.test.tsx
-          src/contexts/__tests__/RoomContext.quickAdjustPersistence.test.tsx
-          src/services/__tests__/cyberbullyingProgress.test.ts
-          src/services/__tests__/aiService.guardMode.test.ts
-          src/services/__tests__/guardModeProgressLock.test.ts
-          src/services/__tests__/guardModeService.test.ts
-          src/components/__tests__/AISuggestionBox.guardMode.test.tsx
-          src/components/__tests__/PostComment.guardMode.test.tsx
-          src/__tests__/guardModeComposerIdentity.integration.test.tsx
+      - name: Deterministic Jest regression
+        run: npm run test:regression -- --runInBand
 
   frontend-build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: tutor-system
-    env:
-      REACT_APP_SUPABASE_URL: https://test.supabase.co
-      REACT_APP_SUPABASE_ANON_KEY: test-anon-key
-      CI: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '25.9.0'
-      - run: npm install --global npm@11.12.1
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tutor-system/package-lock.json
+      - run: npm install --global npm@10.9.2
       - run: npm ci --no-audit --no-fund
-      - run: npm run build
+      - name: Build React application
+        run: CI=false npm run build

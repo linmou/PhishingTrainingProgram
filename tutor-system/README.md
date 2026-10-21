@@ -1,8 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-10-17
-Commit: 0e5c156 (source baseline for the full-conversation context fix)
-Naming review baseline: 518a07d
+Updated: 2026-10-21
+Commit: a6c977b (integrated source baseline)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -40,7 +39,7 @@ Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesg
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js 22 and npm 10.9.2 (the CI toolchain)
 - Supabase account
 - Git
 
@@ -54,7 +53,8 @@ Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesg
 
 2. **Install dependencies**
    ```bash
-   npm install
+   npm install --global npm@10.9.2
+   npm ci
    ```
 
 3. **Set up Supabase**
@@ -212,6 +212,9 @@ npm test -- --watchAll=false --runTestsByPath \
 # Run live Qwen integration suites explicitly
 npm run test:integration:qwen
 
+# Run live storage diagnostics explicitly with staging credentials and CI unset
+RUN_LIVE_STORAGE_TESTS=true npm run test:regression -- --runTestsByPath src/services/__tests__/storage-integration.test.ts
+
 # Run the real browser suite in staging template rooms
 npm run test:e2e:staging
 
@@ -227,8 +230,10 @@ npm test src/contexts/__tests__/AuthContext.test.tsx  # Task 3
 ### Test Tiers
 
 - `npm test` and `npm run test:regression` run deterministic Jest suites, including mocked page integration tests.
+- Pull requests run `npm ci` with npm 10.9.2, the complete deterministic Jest regression, and a React production build on Node 22. The build reports existing ESLint warnings without making them fatal; compilation and type errors still fail. Branch protection on `no_sign_up` requires `isolation-harness`, `frontend-jest`, and `frontend-build` on an up-to-date branch, including administrator merges.
 - `npm run test:integration:qwen` exercises the live provider without a browser.
-- `npm run test:e2e:staging` runs seven Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
+- Live storage diagnostics require `RUN_LIVE_STORAGE_TESTS=true`, configured staging credentials, and `CI` unset. Supabase environment variables alone do not opt a developer or CI run into hosted storage operations.
+- `npm run test:e2e:staging` runs ten Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
 
 ### Test Files Structure
 
@@ -286,4 +291,4 @@ If migrating from Firebase:
 
 ## 📄 License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
