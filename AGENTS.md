@@ -2,7 +2,7 @@
 
 Intent: define the implementation and delivery requirements for work in this repository.
 
-Updated: 2026-10-14. Workflow revision baseline commit: `2bd3143`.
+Updated: 2026-10-21. Workflow revision baseline commit: `72f1087`.
 
 ## Mandatory Server Delivery
 
@@ -15,6 +15,8 @@ After staging passes, a feature may be reported as **staging verified — awaiti
 Before marking a server task `done` or reporting it released, verify the selected production checks and record both environments' deployed source/version, database changes, test results, and cleanup evidence. Local tests, commits, merges, deployments, and staging verification are intermediate states. A failed or deferred release is not completion.
 
 For Supabase changes, execute [supabase-release-workflow.md](tutor-system/docs/supabase-release-workflow.md), including SQL-before-dependent-Edge order, exact-artifact promotion and scoped live checks. Reuse evidence only while the tested source, dependencies, configuration and relevant target preconditions remain valid; changes invalidate the affected checks. A local implementation workflow does not remove the release requirement.
+
+Before any shared Staging SQL, Edge, secret or fixture mutation, acquire the [cross-machine project lease](tutor-system/docs/agent-coordination.md) with `scripts/staging-coordination.js`. Direct Supabase MCP and Management API operations follow the same rule as repository scripts and Actions. The named release owner holds the lease from deployment through the affected Staging acceptance checks; child tools borrow the exact candidate's lease using `PTP_COORDINATION_LEASE`. Missing access or contention blocks writes. Never reclaim a lease by age or delete a different owner's reference. Changes from an operator bypassing this protocol invalidate the affected verification evidence.
 
 If a check fails, fix it and rerun before advancing to the next environment. If an external blocker cannot be resolved within available authorization or access, keep the task incomplete and report the exact failing action, evidence, current deployed state, and next required action. A failed deployment prerequisite is work to resolve, not a completed verification step.
 

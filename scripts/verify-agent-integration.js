@@ -99,6 +99,12 @@ async function main(args = process.argv.slice(2)) {
       report.error = error.stack || String(error);
       throw error;
     } finally {
+      if (!report.functions_after) {
+        try { report.functions_after = await functionVersions(); }
+        catch (error) { report.function_inventory_error = error.message; }
+      }
+      report.backend_stable = Boolean(report.functions_before && report.functions_after &&
+        JSON.stringify(report.functions_before) === JSON.stringify(report.functions_after));
       report.completed_at = new Date().toISOString();
       save();
       console.log(JSON.stringify({ status: report.status, evidence: evidenceDir, browser_evidence: report.browser_evidence }));
