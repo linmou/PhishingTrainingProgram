@@ -2,8 +2,8 @@
 
 Intent: identify the configured source and commands used to create disposable local migration baselines.
 
-Updated: 2026-10-04
-Repository baseline commit: `3c02349`.
+Updated: 2026-10-21
+Repository baseline commit: `c2fe276` (PR #7 review fixes for connection isolation and allocation-time cancellation).
 
 From the repository root:
 
@@ -31,3 +31,32 @@ export SNAPSHOT_DIR
 The wrapper invokes the same configured `pg_dump.sh` / `pg_dump_roles.sh` with `PG_DUMP_DIR` set to a unique private subdirectory of `~/.transfer-assessment-pg17/runs/`. Override the parent with `PG_VALIDATION_RUN_ROOT` when needed. Each successful export has a hash manifest and an `.exported` marker; a failure leaves `.incomplete`. The legacy exporters still overwrite fixed filenames and must be reserved for a single release owner when no other run depends on them.
 
 An exported archive is **not yet a validated migration baseline**: compare source role/extension/ACL/database settings, prove that the archive restores successfully, and run Red/Green assertions as required by the release workflow. Source exports may contain sensitive user data; keep them out of Git and never share across unrelated Agent environments.
+
+## Disposable Scenario Databases
+
+After restoring and verifying a local baseline using the release workflow, run each scenario in its own database:
+
+```sh
+rtk proxy node scripts/database/disposable-database.js --template <verified-local-baseline> -- psql -X -v ON_ERROR_STOP=1 -f <scenario.sql>
+```
+
+The manager reuses the running validation cluster's Unix socket at `~/.transfer-assessment-pg17/migration-validation/socket`, port `55433`, bootstrap user `local_bootstrap`. It creates a random database, clones the selected baseline, reapplies effective database grants (including grant options), database and per-role database settings, and compares owner, locale, encoding, connection limit, grants and settings before starting the command. Roles and extension installations already belong to the shared cluster; the manager never changes global roles or starts a cluster. `PG_VALIDATION_HOST`, `PG_VALIDATION_PORT`, `PG_VALIDATION_USER` and `PG_VALIDATION_PSQL` can select an existing local validation connection. Network hosts are rejected.
+
+The command receives `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, `MIGRATION_TEST_DB` and `PG_VALIDATION_LEASE_FILE`. The manager and command discard inherited `PGHOSTADDR`, `PGSERVICE` and `PGSERVICEFILE` so libpq cannot redirect them away from the selected connection; the host must be one absolute socket directory, without comma-separated fallbacks. Cleanup runs after success, nonzero exit, spawn error, SIGINT or SIGTERM. Termination handling covers allocation: a signal received while synchronous PostgreSQL commands run is handled after allocation returns, before any scenario starts, then the owned database is removed. It checks the cluster identity, database identity and random ownership marker before dropping only the allocated database. Concurrent runs get distinct database names and private lease directories under `PG_VALIDATION_RUN_ROOT` (default `~/.transfer-assessment-pg17/runs`). Lease JSON retains source/clone metadata, command result and cleanup timestamps; failed runs retain errors.
+
+After a hard kill or host crash, stop any surviving scenario command, then use the retained lease:
+
+```sh
+rtk proxy node scripts/database/disposable-database.js --cleanup <run-directory>/lease.json
+```
+
+Recovery refuses cleanup while the original owner PID is alive or ownership has changed. An interruption between database creation and its ownership comment leaves explicit allocation evidence and requires operator inspection; an unmarked database is never automatically removed. Never use a different run's lease. Clone parity proves equivalence to the selected **local** baseline; hosted snapshot/role/ACL/restore parity and migration executor/Red-Green checks remain required.
+
+Offline checks run in PR CI. Run the opt-in integrated checks against the existing local cluster:
+
+```sh
+rtk proxy node --test scripts/database/disposable-database.test.js
+rtk proxy env PG_DISPOSABLE_INTEGRATION=1 node --test scripts/database/disposable-database.integration.test.js
+```
+
+The integrated test creates its own small baseline and verifies simultaneous allocation, baseline data isolation, grant/settings parity, nonzero exits, command startup failure and signal cleanup. It also supplies conflicting libpq service/address settings and sends SIGINT/SIGTERM during allocation, checking the actual command target, unchanged baseline and cleanup before exit. It removes only its own databases and preserves lease evidence.

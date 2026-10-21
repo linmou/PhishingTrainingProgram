@@ -2,7 +2,7 @@
 
 Intent: match verification cost to changed behavior, verify integrated releases on staging, and promote committed batches to production with evidence.
 
-Updated: 2026-10-21. Integrated workflow baselines: `18981cc`, `16c2f95`.
+Updated: 2026-10-21. Integrated workflow baselines: `18981cc`, `16c2f95`, `dec0fd6`.
 
 ## Task Completion
 
@@ -27,7 +27,7 @@ Report `staging verified — awaiting production release` when a feature is wait
 This document remains the **release policy**, not an implementation of a verification skill. For concurrent coding agents, run deterministic tests in parallel but explicitly own or serialize all mutable shared resources. Root `AGENTS.md` prohibits Docker, and the existing PostgreSQL validation cluster should be reused.
 
 - **Worktrees and files:** each Agent owns an isolated worktree/branch and unique temporary/evidence directories. One run must not delete another run's files.
-- **Database validation:** reuse the local validation cluster (port `55433`), allocating disposable databases per concurrent SQL test run rather than a new cluster/container per Agent. Do not bypass baseline, role, ACL, executor or Red/Green parity checks. The allocation/cleanup manager is follow-up work; the existing unique-database procedure remains authoritative.
+- **Database validation:** reuse the local validation cluster (port `55433`), allocating disposable databases per concurrent SQL test run rather than a new cluster/container per Agent. Use [disposable-database.js](../../scripts/database/README.md#disposable-scenario-databases) with an explicitly verified local baseline for automatic allocation, database ACL/settings parity and ownership-checked cleanup. Do not bypass hosted baseline, role, ACL, executor or Red/Green parity checks.
 - **Snapshots:** use the root `scripts/database/export_validation_baseline.sh` wrapper for parallel work to avoid clobbering fixed dump/role-export filenames. Record its private run path and hashes. The legacy exporter is single-owner only, and source dumps can contain real user data.
 - **Browser E2E:** the entrypoint guards shared fixture rooms with a same-host, project-wide lock through cleanup. It does **not** protect across machines. Separate hosted fixture ownership or serialize those runs across machines.
 - **Staging code/schema:** do not allow individual coding Agents to deploy their private candidate branches to the shared staging project while other Agents are verifying. Stage SQL and Edge updates via the named release owner, serially, with deployed source hashes and evidence invalidation. GitHub Actions concurrency alone does not govern direct/manual deployments.
