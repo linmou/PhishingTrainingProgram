@@ -225,7 +225,8 @@ module.exports = {
 };
 
 if (require.main === module) {
-  main().catch((error) => {
+  const { withProjectLock, STAGING } = require('../../scripts/staging-coordination');
+  withProjectLock(STAGING, 'browser-prompt-capture', main).catch((error) => {
     console.error(error);
     process.exit(1);
   });

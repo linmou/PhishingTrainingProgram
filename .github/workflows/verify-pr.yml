@@ -22,6 +22,7 @@ jobs:
           node --test tutor-system/scripts/browser-e2e/fixture-lock.test.js
           node --test scripts/database/export_validation_baseline.test.js
           node --test scripts/database/disposable-database.test.js
+          node --test scripts/staging-coordination.test.js
 
   frontend-jest:
     runs-on: ubuntu-latest

@@ -11,6 +11,7 @@ const { chromium } = require('playwright');
 const { createClient } = require('@supabase/supabase-js');
 const support = require('./browser-e2e/browser-e2e-support');
 const { acquireFixtureLock } = require('./browser-e2e/fixture-lock');
+const { acquireProjectLock } = require('../../scripts/staging-coordination');
 
 const workflows = {
   'tutor-response': require('./browser-e2e/workflows/tutor-response'),
@@ -86,9 +87,13 @@ async function main(argv = process.argv.slice(2)) {
   const client = createClient(config.projectUrl, config.serviceKey, { auth: { persistSession: false } });
   let browser;
   let fixtureLock;
+  let coordination;
   try {
     fixtureLock = acquireFixtureLock(config.projectRef, { runId });
     report.fixture_lock = { scope: 'same-host', directory: fixtureLock.directory, owner: fixtureLock.owner };
+    coordination = acquireProjectLock(config.projectRef, { operation: 'browser-e2e', commit: report.commit, runId, evidenceDir });
+    report.coordination = { ref: coordination.ref, tag_sha: coordination.tag_sha, owner: coordination.owner,
+      borrowed: coordination.borrowed, lease_file: coordination.leaseFile };
     support.writeJson(path.join(evidenceDir, 'report.json'), report);
     await support.managementQuery(config, 'select 1 as ready');
     browser = await chromium.launch({ headless: true });
@@ -153,6 +158,17 @@ async function main(argv = process.argv.slice(2)) {
     } catch (error) {
       report.status = 'fail';
       report.lock_release_error = error.stack || String(error);
+    }
+    if (coordination) {
+      const unsafe = report.browser_close_error || report.lock_release_error ||
+        (report.error && report.room_ids.length > 0) ||
+        Object.values(report.results).some(result => result.cleanup?.some(item => item.status !== 'pass'));
+      if (unsafe) {
+        report.coordination.retained = true;
+      } else {
+        try { coordination.release(); report.coordination.released = !coordination.borrowed; }
+        catch (error) { report.status = 'fail'; report.coordination.release_error = error.stack || String(error); }
+      }
     }
     report.completed_at = new Date().toISOString();
     support.writeJson(path.join(evidenceDir, 'report.json'), report);

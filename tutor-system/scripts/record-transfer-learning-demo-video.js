@@ -324,7 +324,8 @@ async function main() {
 module.exports = { extractLearningTargets, main };
 
 if (require.main === module) {
-  main().catch((error) => {
+  const { withProjectLock } = require('../../scripts/staging-coordination');
+  withProjectLock(support.PROJECT, 'record-transfer-demo', main).catch((error) => {
     console.error(error.stack || error);
     process.exitCode = 1;
   });
