@@ -17,3 +17,17 @@ rtk proxy sh ./scripts/database/pg_dump_roles.sh
 If `PGPASSWORD` is exported, it takes precedence. Otherwise, the helpers load the repository root `.env`, or `PG_DUMP_ENV_FILE` when provided. Source settings can be overridden with `PGHOST`, `PGPORT`, `PGUSER`, `PGDATABASE`, and `PGSSLMODE`; `PGCLIENT_BIN_DIR` and `PG_DUMP_DIR` override the client and output directories. Keep credentials outside Git. The scripts return nonzero on exporter failure and print success only after the tool exits successfully.
 
 Role export can be rejected by hosted database permissions. Such a failure blocks role-parity validation until the necessary metadata is obtained through read-only catalog access. The schema-filtered application dump excludes dependencies in other schemas. Check [the release workflow](../../tutor-system/docs/supabase-release-workflow.md) before treating local migration tests as predictive of online application.
+
+## Concurrent Agent Exports (No Docker)
+
+For concurrent migration work **do not call fixed-path exporters directly**. From the repository root:
+
+```sh
+SNAPSHOT_DIR="$(sh ./scripts/database/export_validation_baseline.sh)"
+export SNAPSHOT_DIR
+(cd "$SNAPSHOT_DIR" && shasum -a 256 -c SHA256SUMS)
+```
+
+The wrapper invokes the same configured `pg_dump.sh` / `pg_dump_roles.sh` with `PG_DUMP_DIR` set to a unique private subdirectory of `~/.transfer-assessment-pg17/runs/`. Override the parent with `PG_VALIDATION_RUN_ROOT` when needed. Each successful export has a hash manifest and an `.exported` marker; a failure leaves `.incomplete`. The legacy exporters still overwrite fixed filenames and must be reserved for a single release owner when no other run depends on them.
+
+An exported archive is **not yet a validated migration baseline**: compare source role/extension/ACL/database settings, prove that the archive restores successfully, and run Red/Green assertions as required by the release workflow. Source exports may contain sensitive user data; keep them out of Git and never share across unrelated Agent environments.

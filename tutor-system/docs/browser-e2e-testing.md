@@ -2,9 +2,17 @@
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-Updated: 2026-10-14. Workflow revision baseline commit: `73f5908`; assessment release browser baseline: `88b3ccd`.
+Updated: 2026-10-21. Workflow revision baseline commit: `16c2f95`; assessment release browser baseline: `88b3ccd`.
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
+
+## Concurrent Agent Runs (Shared Fixtures)
+
+The browser runner obtains an **exclusive same-host lock per Supabase project** before any live fixture work. The lock covers setup, all selected workflows, cleanup and browser close. A second run in another worktree on the same host fails closed rather than resetting the first run's test room. The lock is recorded in the E2E evidence report and located at `~/.cache/phishing-training-program/fixture-locks/<project-ref>.lock/owner.json`. Check the listed process PID/host and confirm that the owning run has stopped before manually clearing a stale lock. Locks are **never** automatically reclaimed by age.
+
+**Important boundary:** local filesystem locking does not coordinate different computers, GitHub-hosted runners, direct Management API writes or Edge Function/SQL deployments. Those must be explicitly serialized by a shared coordinator or use separately provisioned and independently cleanable fixtures. The existing `E2E_ROOM_FIXTURES_JSON` override supports room selection but does not, by itself, isolate global hosted code, provider quotas or cleanup. Do not run live suites from multiple machines against the same fixed room IDs simultaneously.
+
+The no-secret PR CI workflow deliberately omits hosted browser E2E. Only the existing operator-selected staging/production verification can exercise live Supabase. Production E2E must never be triggered by PR CI.
 
 ## Supabase Projects
 
@@ -27,7 +35,7 @@ The app and runner must use the same selected target. `test:e2e:staging` and `te
 | `eval:transfer:release-browser` | Release evidence adapter | Configuration-dependent | Specialized release lanes, not the normal browser suite. |
 | `scripts/record-transfer-learning-demo-video.js` | Two real browser contexts, staging provider, and timestamped chapters | Reuses the assessment template room; all generated rows are cleaned afterward | Explicit recording run. |
 
-The only GitHub Actions workflow is a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
+GitHub Actions includes deterministic PR isolation checks and a manually dispatched assessment API deployment/inspection workflow. Browser E2E is not in CI. The [2026-10-14 release record](doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md) contains successful staging/production answer and full-inventory delivery runs, cleanup, and earlier failure evidence. Status observations now preserve the analysis-context RPC result before assertions and fixture cleanup; on success this is the context after analysis, not a raw provider-response audit.
 
 The [early-message browser record](doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_browser.md) verifies automatic replay after manual goal creation in the merged app against staging, including reload and duplicate prevention.
 
