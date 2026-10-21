@@ -240,6 +240,7 @@ const rateLatestTutorMessageAsStudent = async () => {
     latestTutorMessage.id, users.student.id, mockRoom.id, 'like', 4
   ));
   act(() => notifyFeedbackChange(latestTutorMessage.id));
+  await waitFor(() => expect(within(student.container).queryByTitle('Cancel rating')).not.toBeInTheDocument());
 };
 
 const sendMessageAs = async (actor: keyof typeof users, content: string) => {
@@ -402,6 +403,7 @@ defineFeature(feature, test => {
       fireEvent.click(within(student.container).getByRole('button', { name: 'Submit Rating' }));
       await waitFor(() => expect(featureSubmitFeedback).toHaveBeenCalledWith(feedbackMessage.id, users.student.id, mockRoom.id, 'like', 4));
       act(() => notifyFeedbackChange(feedbackMessage.id));
+      await waitFor(() => expect(within(student.container).queryByTitle('Cancel rating')).not.toBeInTheDocument());
     });
     then('the tutor should see the updated thumbs up count immediately without refreshing', async () => {
       await waitFor(() => expect(within(roomClients.tutor.container).getByText('(4.0★)')).toBeInTheDocument());
@@ -416,6 +418,7 @@ defineFeature(feature, test => {
       fireEvent.click(within(student.container).getByRole('button', { name: 'Submit Rating' }));
       await waitFor(() => expect(featureSubmitFeedback).toHaveBeenLastCalledWith(feedbackMessage.id, users.student.id, mockRoom.id, 'dislike', 2));
       act(() => notifyFeedbackChange(feedbackMessage.id));
+      await waitFor(() => expect(within(student.container).queryByTitle('Cancel rating')).not.toBeInTheDocument());
     });
     then('the tutor should see the updated thumbs down count immediately without refreshing', async () => {
       await waitFor(() => expect(within(roomClients.tutor.container).getByText('(2.0★)')).toBeInTheDocument());
