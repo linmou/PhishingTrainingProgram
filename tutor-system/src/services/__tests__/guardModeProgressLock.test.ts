@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const migrationPath = path.resolve(__dirname, '../../../supabase/migrations/023_guard_mode.sql');
+const migrationPath = path.resolve(__dirname, '../../../supabase/archived_migrations/023_guard_mode.sql');
 
 describe('Guard Mode progress-lock migration contract', () => {
   const migration = fs.readFileSync(migrationPath, 'utf8');

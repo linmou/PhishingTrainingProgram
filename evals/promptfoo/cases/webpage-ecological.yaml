@@ -202,15 +202,15 @@
       Demo: Click Impulse — Correct Safe Action — Scary account alert in the feed with a resolve link — tests click
       impulse and safe redirect habits.
     conversation_history: >-
-      Participant: Others (Socail Media Testdrive): !!ALERT!! Your session will be closed. Click here to resolve:
+      Participant: Others (Socail Media Testdrive): Your account has a problem! Click this link now:
       http://testdrive.info/youraccount
 
-      Participant: Others (Noa): I almost clicked this last night when I was half asleep
+      Participant: Others (Noa): I almost clicked it. It made me worried.
 
-      Tutor/AI: Tutor (Tutor): What would you do if this popped up while you were scrolling?
+      Tutor/AI: Tutor (Tutor): What should you do before you click?
 
-      Participant: Student (Jordan): I would not click it. I would open the real app myself and check for alerts there.
-    student_message: I would not click it. I would open the real app myself and check for alerts there.
+      Participant: Student (Jordan): I will not click it. I will open the real app myself.
+    student_message: I will not click it. I will open the real app myself.
     expected_behavior_focus: >-
       Covered: do not click; use the real app; check official alerts. Eligible untouched set includes urgency, pressure
       wording, suspicious domain, sender/source, vague account details, specific login activity, official support, and

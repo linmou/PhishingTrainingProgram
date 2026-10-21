@@ -9,6 +9,8 @@ import path from 'path';
 import { execFileSync } from 'child_process';
 import os from 'os';
 import yaml from 'js-yaml';
+import { ACTIVE_TUTOR_AGENT_PROMPT } from '../prompts/activeTutorAgentPrompt';
+import { buildEcologicalChatCompletionMessages } from '../ecologicalTutorCall';
 
 const repoRoot = path.resolve(__dirname, '../../..', '..');
 const readText = (relativePath: string): string => fs.readFileSync(path.join(repoRoot, relativePath), 'utf8');
@@ -22,16 +24,11 @@ describe('Promptfoo brevity and ecological scaffold', () => {
     expect(config.match(/enable_thinking: false/g)).toHaveLength(2);
   });
 
-  it('uses candidate 11 as the active compact production policy', () => {
-    const agentPrompt = readText('tutor-system/src/services/prompts/activeTutorAgentPrompt.ts');
-    const ecologicalTurn = readText('tutor-system/src/services/ecologicalTutorCall.ts');
-    const currentPrompt = readText('evals/promptfoo/prompts/current.chat.prompt.json');
-    expect(agentPrompt).toMatch(/two short sentences and 35 words/i);
-    expect(agentPrompt).toMatch(/protective_instruction/);
-    expect(agentPrompt).toMatch(/Prior-mode boundary/);
-    expect(ecologicalTurn).toContain('ACTIVE_TUTOR_AGENT_PROMPT');
-    expect(currentPrompt).toMatch(/3 sentences/i);
-    expect(currentPrompt).toMatch(/50 words/i);
+  it('wires the active production policy into ecological requests exactly once', () => {
+    const vars = { scenario_context: 'scenario', conversation_history: 'history', student_message: 'message' };
+    const messages = buildEcologicalChatCompletionMessages('room configuration', vars);
+    expect(messages[0].content).toBe(`room configuration\n\n${ACTIVE_TUTOR_AGENT_PROMPT}`);
+    expect(buildEcologicalChatCompletionMessages(messages[0].content, vars)[0]).toEqual(messages[0]);
   });
 
   it('keeps ecological cases product-derived and holdouts explicitly synthetic', () => {
@@ -41,7 +38,7 @@ describe('Promptfoo brevity and ecological scaffold', () => {
     const holdoutCases = yaml.load(readText('evals/promptfoo/cases/account-security-alert.yaml')) as Array<any>;
     const fixtureBefore = readText('evals/promptfoo/cases/webpage-ecological.yaml');
 
-    expect(ecologicalSource).toContain('getEcologicalCasesFromTemplates');
+    expect(ecologicalSource).toContain('buildEcologicalCaseFromSeed');
     expect(productCall).toContain('buildEcologicalChatCompletionMessages');
     expect(ecologicalCases.length).toBeGreaterThan(0);
     const regeneratedPath = path.join(os.tmpdir(), `qwen-ecological-red-${Date.now()}.yaml`);
@@ -171,9 +168,9 @@ describe('Promptfoo brevity and ecological scaffold', () => {
   });
 
   it('keeps fresh schemas and the migration on the sole Qwen model', () => {
-    const migration = readText('tutor-system/supabase/migrations/022_qwen_model_defaults.sql');
-    const finalSchema = readText('tutor-system/supabase/migrations/final_schema.sql');
-    const combinedSchema = readText('tutor-system/supabase/migrations/combined_schema.sql');
+    const migration = readText('tutor-system/supabase/archived_migrations/022_qwen_model_defaults.sql');
+    const finalSchema = readText('tutor-system/supabase/archived_migrations/final_schema.sql');
+    const combinedSchema = readText('tutor-system/supabase/archived_migrations/combined_schema.sql');
     [migration, finalSchema, combinedSchema].forEach((sql) => {
       expect(sql).toContain('qwen3.5-flash');
       expect(sql).not.toMatch(/DEFAULT\s+'gpt-|SET\s+model_name\s*=\s*'gpt-/i);

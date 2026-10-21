@@ -277,7 +277,7 @@ defineFeature(feature, test => {
     });
   });
 
-  test('Student cannot join a full room', ({ given, and, when, then }) => {
+  test('Student can observe an occupied room', ({ given, and, when, then }) => {
     given('the system has the following users:', (table: any[]) => expect(table).toHaveLength(4));
     given('I am logged in as "Jane Student" with role "student"', () => selectUser('Jane Student', 'student'));
     and('the tutor "John Tutor" has created a room titled "Chemistry Lab"', () => {
@@ -288,11 +288,11 @@ defineFeature(feature, test => {
     });
     when('I view the student dashboard', () => renderAt('/student'));
     then('I should see the "Chemistry Lab" room card', async () => expect(await screen.findByTestId('room-card-chemistry-1')).toBeInTheDocument());
-    and('the room card should show "Room Full" status', () => {
-      expect(within(screen.getByTestId('room-card-chemistry-1')).getByText(/Room Full/)).toBeInTheDocument();
+    and('the room card should show "Observer Available" status', () => {
+      expect(within(screen.getByTestId('room-card-chemistry-1')).getByText(/Observer Available/)).toBeInTheDocument();
     });
-    and('the "Join Room" button should be disabled', () => {
-      expect(within(screen.getByTestId('room-card-chemistry-1')).getByRole('button', { name: 'Join Room' })).toBeDisabled();
+    and('the "Observe Room" button should be enabled', () => {
+      expect(within(screen.getByTestId('room-card-chemistry-1')).getByRole('button', { name: 'Observe Room' })).toBeEnabled();
     });
   });
 
@@ -394,11 +394,11 @@ defineFeature(feature, test => {
       mockSessions = [session];
       await act(async () => realtimeCallbacks.sessions({ eventType: 'INSERT', new: session }));
     });
-    then('I should see the room status change to "Room Full"', async () => {
-      expect(await screen.findByText(/Room Full/)).toBeInTheDocument();
+    then('I should see the room status change to "Observer Available"', async () => {
+      expect(await screen.findByText(/Observer Available/)).toBeInTheDocument();
     });
-    and('the "Join Room" button should become disabled', () => {
-      expect(screen.getByRole('button', { name: 'Join Room' })).toBeDisabled();
+    and('the "Observe Room" button should become enabled', () => {
+      expect(screen.getByRole('button', { name: 'Observe Room' })).toBeEnabled();
     });
   });
 

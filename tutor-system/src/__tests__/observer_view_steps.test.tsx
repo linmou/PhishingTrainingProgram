@@ -532,7 +532,7 @@ defineFeature(feature, test => {
 
         when('the tutor sends the message "Can you spot the fake link?"', async () => {
             const tutorMessage = { 
-                id: 1, 
+                id: 'message-1',
                 content: 'Can you spot the fake link?', 
                 user_role: 'tutor',
                 user_id: 't-1',
@@ -590,7 +590,7 @@ defineFeature(feature, test => {
 
         when('the student sends the message "I think it\'s the one with the typo."', async () => {
             const studentMessage = { 
-                id: 2, 
+                id: 'message-2',
                 content: 'I think it\'s the one with the typo.', 
                 user_role: 'student',
                 user_id: 's-1',
@@ -698,8 +698,8 @@ defineFeature(feature, test => {
             const mockRoom = { id: 'r-1', title: 'Live Phishing Demo', is_active: true, created_at: new Date().toISOString() };
             mockRoomsData = [mockRoom];
             mockMessagesData = [
-                { id: 1, content: 'Welcome to the training', user_role: 'tutor', created_at: new Date().toISOString() },
-                { id: 2, content: 'Thank you!', user_role: 'student', created_at: new Date().toISOString() }
+                { id: 'message-1', content: 'Welcome to the training', user_role: 'tutor', created_at: new Date().toISOString() },
+                { id: 'message-2', content: 'Thank you!', user_role: 'student', created_at: new Date().toISOString() }
             ];
             
             setupSupabaseForTable('rooms', mockRoomsData);

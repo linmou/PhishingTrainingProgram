@@ -4,6 +4,7 @@ import {
     buildComprehensiveConversationHistory,
     getEnhancedConversationContext 
 } from '../aiContextBuilder';
+import { supabase } from '../supabase';
 
 // Mock Supabase for testing
 jest.mock('../supabase', () => ({
@@ -63,7 +64,10 @@ jest.mock('../supabase', () => ({
     }
 }));
 
+const fromImplementation = (supabase.from as jest.Mock).getMockImplementation();
+
 describe('Enhanced AI Context Integration', () => {
+    beforeEach(() => { (supabase.from as jest.Mock).mockImplementation(fromImplementation!); });
     const testRoomId = 'test-room-id';
 
     describe('Room Posts Context', () => {

@@ -47,7 +47,7 @@ describe('private transfer assessment storage migration', () => {
     expect(sql).toContain('a4d0148e-a9d0-471a-9ea7-87a6fceb39e1');
     expect(sql).toContain('beaad782-777a-45cc-a8cb-a0966215469e');
     expect(sql).toContain('b94387eb-c733-4eb0-bc5a-378a40a8de9f');
-    const preflight = sql.slice(0, guard);
+    const preflight = sql.slice(0, sql.indexOf('$preflight$;', guard));
     expect(preflight).toMatch(/assessment_lifecycle\s*=\s*'delivered'/i);
     expect(preflight).toMatch(/assessment_selection_type\s*=\s*'single'/i);
     expect(preflight).toMatch(/cardinality\(m\.assessment_key\)\s*=\s*1/i);
@@ -60,7 +60,7 @@ describe('private transfer assessment storage migration', () => {
 
   it('disables old RPCs that require the public key column', () => {
     const sql = migration();
-    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.process_assessment_message_v1\(uuid, uuid, uuid\) FROM PUBLIC, anon, authenticated, service_role/i);
-    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.send_reviewed_tutor_response_v3\(jsonb, uuid, uuid, uuid, uuid, uuid, uuid, uuid\) FROM PUBLIC, anon, authenticated, service_role/i);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.process_assessment_message_v1\(uuid, uuid, uuid\)\s+FROM PUBLIC, anon, authenticated, service_role/i);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.send_reviewed_tutor_response_v3\(jsonb, uuid, uuid, uuid, uuid, uuid, uuid, uuid\)\s+FROM PUBLIC, anon, authenticated, service_role/i);
   });
 });

@@ -1,10 +1,10 @@
 # Testing Strategy - Tasks 1-3
 
-This document outlines the comprehensive testing strategy for the completed tasks (1-3) of the Online Tutor System project.
+Intent: document the deterministic merge checks and explicit external verification tiers for the Online Tutor System.
+
+Updated: 2026-10-21. Source baseline commit: `98002f4`.
 
 ## Current Test Tiers
-
-Updated: 2026-09-09 (shared tutor behavior evaluator and hosted seven-room product adapter; commit `20f6e32`)
 
 The repository now uses these validation tiers:
 
@@ -13,11 +13,15 @@ The repository now uses these validation tiers:
    - Purpose: stable per-change guardrail
    - Rule: must not require live vendor credentials or local browser-driver compatibility
    - Includes production request/parser/contract tests; prose-quality heuristics are not used
+   - CI runs the complete suite with Node 22, npm 10.9.2, dummy loopback Supabase configuration, and `--runInBand`. Jest and the React build are separate required checks, alongside the isolation harness, on an up-to-date branch.
+   - CRA resets mocks between tests. Reinstall query/storage mock implementations in `beforeEach`; mocking a service export does not replace references closed over by other exports from that module.
+   - Historical migration assertions read `supabase/archived_migrations`; active migrations remain the deployable queue.
 
 2. External integration (Qwen checklist):
    - Command: `npm run test:integration:qwen`
    - Purpose: validate the real Qwen boundary for checklist extraction/coverage
    - Rule: opt-in only because vendor/network state can fail without a code regression
+   - Storage diagnostics separately require `RUN_LIVE_STORAGE_TESTS=true`, staging Supabase credentials, and `CI` unset; run `npm run test:regression -- --runTestsByPath src/services/__tests__/storage-integration.test.ts`. Configuring Supabase variables alone never enables them.
 
 3. Tutor behavior evaluation:
    - Offline command: run `evals/promptfoo/v1/runner.js` from the repository root for frozen-case candidate comparison
@@ -43,6 +47,7 @@ The repository now uses these validation tiers:
    - Synthetic holdouts are independently authored evaluation cases and must not be presented as database-derived ecological rooms
    - UI: main Tutor dashboard (`/#/tutor`) lists normal rooms only; **Test Rooms** page hosts `Demo:` / `test_only` rooms
    - Student Available Rooms (`/#/student`) uses `filterRoomsForStudentList` (marker / `Demo:` titles / test-only titles + `DemoTutor_*` harness owners); real teaching rooms stay visible
+   - A title shared by a test template and a normal teaching template cannot identify a test room by itself; use the marker or harness owner for those rooms.
    - Classic teaching templates (Account Security, Nintendo, iTunes, Phone Number, etc.) stay on the normal create form
 
 ## Overview
@@ -361,6 +366,9 @@ As development continues on tasks 4-13, additional test files should be created 
 ## Maintenance
 
 - Tests should be updated whenever the corresponding implementation changes
+- Deterministic prompt tests verify selected configuration, serialized context, and provider transport. Live LLM judgments belong in the explicit evaluation tier.
+- Checklist BDD verifies saved evidence fields and returned review metadata; it does not assert generated learner prose or an unimplemented review banner.
+- Malformed or empty legacy dialogue posts are filtered from the frontend context before its five-post limit; valid later posts remain available.
 - New features should include corresponding test coverage
 - Test documentation should be kept current with implementation
 - Regular test reviews should ensure coverage remains comprehensive

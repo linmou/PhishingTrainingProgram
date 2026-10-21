@@ -254,7 +254,11 @@ describe('buildAIContextFromExistingData', () => {
           { content: 'Email from bank: Your account will be closed unless you verify immediately' },
           { text: 'SMS message: Click link to claim your prize' }, // Different field name
           { content: null }, // Null content
-          { other: 'Invalid post structure' } // No content/text field
+          { other: 'Invalid post structure' }, // No content/text field
+          null,
+          { content: '   ' },
+          { content: 123 },
+          { message: 'App notice: review your recent sign-in activity' }
         ]
       },
       created_at: '2024-01-15T13:00:00Z'
@@ -288,13 +292,14 @@ describe('buildAIContextFromExistingData', () => {
 
     const context = await buildAIContextFromExistingData(roomId);
 
-    // Should have system message + 2 valid posts (only first 2 with content)
-    expect(context).toHaveLength(3);
+    // Filter malformed entries before the five-post limit so valid later posts survive.
+    expect(context).toHaveLength(4);
 
     const firstPost = context[1];
     expect(firstPost.content).toContain('Your account will be closed');
 
     const secondPost = context[2];
     expect(secondPost.content).toContain('Click link to claim your prize');
+    expect(context[3].content).toContain('review your recent sign-in activity');
   });
 });

@@ -1,599 +1,151 @@
-/**
- * Unit Tests for Image Upload Functionality
- * 
- * Test Strategy: "Test avatar uploads for users and image uploads for tutors with file validation, storage operations, and RLS policies"
- * 
- * This test suite covers:
- * - Avatar upload/update/delete for users
- * - Tutor image upload/management in rooms
- * - File validation (size, type, dimensions)
- * - Storage bucket operations with proper permissions
- * - Database operations for image metadata
- * - Error handling and edge cases
- * 
- * Red Phase: These tests will fail initially as the implementation doesn't exist yet
- * 
- * Run with: npm test src/services/__tests__/imageUpload.test.ts
- */
-
-import { TutorImage, ImageValidationResult } from '../../types';
-
-// Mock storage operations
-const mockStorageOperations = {
-    upload: jest.fn(),
-    remove: jest.fn(),
-    download: jest.fn(),
-    getPublicUrl: jest.fn(),
-    list: jest.fn()
-};
-
-// Mock Supabase client
-jest.mock('../supabase', () => ({
-    supabase: {
-        from: jest.fn(),
-        storage: {
-            from: jest.fn(() => mockStorageOperations)
-        },
-        auth: {
-            getUser: jest.fn()
-        }
-    }
-}));
-
+/** Tests imageUpload.ts: file validation, real upload/delete flows and permission/storage/database failures at the mocked Supabase boundary. */
 import { supabase } from '../supabase';
 import { uploadAvatarImage, deleteAvatarImage, uploadTutorImage, deleteTutorImage, validateImageFile } from '../imageUpload';
 
-// Get the mocked supabase client
-const mockSupabaseClient = supabase as jest.Mocked<typeof supabase>;
+jest.mock('../supabase', () => ({
+  supabase: { from: jest.fn(), storage: { from: jest.fn() }, auth: { getUser: jest.fn() } }
+}));
 
-// Mock Image constructor for dimension testing
-global.Image = class {
-    width = 1024;
-    height = 768;
-    onload: (() => void) | null = null;
-    onerror: (() => void) | null = null;
-    
-    set src(value: string) {
-        setTimeout(() => {
-            if (this.onload) this.onload();
-        }, 0);
-    }
-} as any;
+const client = supabase as any;
+const user = { id: 'tutor-1', current_role: 'tutor' };
+const publicUrl = 'https://test.supabase.co/storage/v1/object/public/avatars/tutor-1/avatar.jpg';
+const image = { id: 'image-1', tutor_id: user.id, room_id: 'room-1', image_url: publicUrl, is_active: true };
+const storage = { upload: jest.fn(), remove: jest.fn(), getPublicUrl: jest.fn() };
 
-// Mock URL for createObjectURL/revokeObjectURL
-global.URL = {
-    createObjectURL: jest.fn(() => 'blob:mock-url'),
-    revokeObjectURL: jest.fn()
-} as any;
+function table(data: unknown) {
+  return {
+    select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(), insert: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data, error: null })
+  };
+}
 
-describe('Image Upload Functionality Tests', () => {
-    let mockUser: { id: string; current_role: string };
-    let mockTutorImage: TutorImage;
-    let mockImageFile: File;
-    let mockInvalidImageFile: File;
+let tables: Record<string, ReturnType<typeof table>>;
+let file: File;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
+beforeEach(() => {
+  jest.clearAllMocks();
+  file = new File(['image bytes'], 'photo.jpg', { type: 'image/jpeg' });
+  tables = { users: table({ ...user, avatar_url: publicUrl }), rooms: table({ tutor_id: user.id }), tutor_images: table(image) };
+  client.auth.getUser.mockResolvedValue({ data: { user }, error: null });
+  client.from.mockImplementation((name: string) => tables[name]);
+  client.storage.from.mockReturnValue(storage);
+  storage.upload.mockResolvedValue({ data: { path: 'uploaded' }, error: null });
+  storage.remove.mockResolvedValue({ data: null, error: null });
+  storage.getPublicUrl.mockReturnValue({ data: { publicUrl } });
+});
 
-        // Setup test user
-        mockUser = {
-            id: 'test-user-id',
-            current_role: 'tutor'
-        };
+describe('image file validation', () => {
+  it('accepts supported images and reports file metadata', async () => {
+    expect(await validateImageFile(file)).toMatchObject({ isValid: true, errors: [], fileSize: file.size, fileType: file.type });
+  });
 
-        // Setup test tutor image data
-        mockTutorImage = {
-            id: 'test-image-id',
-            tutor_id: 'test-user-id',
-            room_id: 'test-room-id',
-            image_url: 'https://test-bucket.supabase.co/storage/v1/object/public/tutor-images/test-user-id/image.jpg',
-            filename: 'test-image.jpg',
-            file_size: 1024000, // 1MB
-            upload_date: '2024-01-01T00:00:00Z',
-            is_active: true
-        };
+  it.each([
+    ['empty', new File([], 'empty.jpg', { type: 'image/jpeg' })],
+    ['oversized', new File(['x'.repeat(6 * 1024 * 1024)], 'large.jpg', { type: 'image/jpeg' })],
+    ['unsupported type', new File(['text'], 'file.txt', { type: 'text/plain' })],
+    ['unsupported extension', new File(['image'], 'file.bmp', { type: 'image/jpeg' })]
+  ])('rejects %s files', async (_, invalid) => {
+    const result = await validateImageFile(invalid);
+    expect(result.isValid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
 
-        // Create mock image files
-        mockImageFile = new File(['fake image content'], 'test-image.jpg', {
-            type: 'image/jpeg',
-            lastModified: Date.now()
-        });
+  it('checks dimensions and rejects oversized dimensions', async () => {
+    global.URL.createObjectURL = jest.fn(() => 'blob:image');
+    global.URL.revokeObjectURL = jest.fn();
+    const original = global.Image;
+    global.Image = class {
+      width = 1024; height = 768; onload: (() => void) | null = null;
+      set src(_: string) { this.onload?.(); }
+    } as any;
+    try {
+      expect((await validateImageFile(file, { maxWidth: 1920, maxHeight: 1080 })).isValid).toBe(true);
+      expect((await validateImageFile(file, { maxWidth: 800 })).isValid).toBe(false);
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:image');
+    } finally { global.Image = original; }
+  });
+});
 
-        mockInvalidImageFile = new File(['fake large content'.repeat(1000000)], 'large-image.jpg', {
-            type: 'image/jpeg',
-            lastModified: Date.now()
-        });
+describe('avatar operations', () => {
+  it('uploads the file and stores the returned URL for the authenticated user', async () => {
+    expect(await uploadAvatarImage(file)).toMatchObject({ success: true, avatarUrl: publicUrl, previousAvatarRemoved: true });
+    expect(client.storage.from).toHaveBeenCalledWith('avatars');
+    expect(storage.upload).toHaveBeenCalledWith('tutor-1/avatar.jpg', file, { cacheControl: '3600', upsert: true });
+    expect(tables.users.update).toHaveBeenCalledWith({ avatar_url: publicUrl });
+    expect(tables.users.eq).toHaveBeenCalledWith('id', user.id);
+  });
 
-        // Mock user authentication
-        mockSupabaseClient.auth.getUser.mockResolvedValue({
-            data: { user: { id: mockUser.id } },
-            error: null
-        });
+  it('deletes storage and clears the persisted avatar URL', async () => {
+    expect(await deleteAvatarImage()).toMatchObject({ success: true });
+    expect(storage.remove).toHaveBeenCalled();
+    expect(tables.users.update).toHaveBeenCalledWith({ avatar_url: null });
+  });
+
+  it('cleans uploaded storage if persisting the URL fails', async () => {
+    tables.users.single.mockResolvedValue({ data: null, error: { message: 'write failed' } });
+    expect(await uploadAvatarImage(file)).toMatchObject({ success: false, error: expect.stringContaining('write failed') });
+    expect(storage.remove).toHaveBeenLastCalledWith(['tutor-1/avatar.jpg']);
+  });
+});
+
+describe('tutor image operations', () => {
+  it('checks role and room ownership before uploading and persists all image metadata', async () => {
+    expect(await uploadTutorImage(file, 'room-1')).toEqual({ success: true, tutorImage: image });
+    expect(tables.rooms.eq).toHaveBeenCalledWith('tutor_id', user.id);
+    expect(storage.upload).toHaveBeenCalledWith(expect.stringMatching(/^tutor-1\/\d+-photo\.jpg$/), file, { cacheControl: '3600' });
+    expect(tables.tutor_images.insert).toHaveBeenCalledWith({
+      tutor_id: user.id, room_id: 'room-1', image_url: publicUrl, filename: file.name, file_size: file.size, is_active: true
     });
-
-    describe('File Validation', () => {
-        it('should validate correct image file successfully', async () => {
-            const result = await validateImageFile(mockImageFile);
-            
-            expect(result.isValid).toBe(true);
-            expect(result.errors).toHaveLength(0);
-            expect(result.fileSize).toBe(mockImageFile.size);
-            expect(result.fileType).toBe('image/jpeg');
-        });
-
-        it('should reject non-image files', async () => {
-            const textFile = new File(['text content'], 'document.txt', {
-                type: 'text/plain'
-            });
-
-            const result = await validateImageFile(textFile);
-            
-            expect(result.isValid).toBe(false);
-            expect(result.errors).toContain('File must be an image (JPEG, PNG, GIF, or WebP)');
-        });
-
-        it('should reject files that are too large', async () => {
-            // Mock a file larger than 5MB
-            const largeFile = new File(['x'.repeat(6 * 1024 * 1024)], 'large.jpg', {
-                type: 'image/jpeg'
-            });
-
-            const result = await validateImageFile(largeFile);
-            
-            expect(result.isValid).toBe(false);
-            expect(result.errors).toContain('File size must be less than 5MB');
-        });
-
-        it('should reject files with invalid extensions', async () => {
-            const invalidFile = new File(['fake content'], 'image.bmp', {
-                type: 'image/bmp'
-            });
-
-            const result = await validateImageFile(invalidFile);
-            
-            expect(result.isValid).toBe(false);
-            expect(result.errors).toContain('File must be an image (JPEG, PNG, GIF, or WebP)');
-        });
-
-        it('should validate image dimensions when provided', async () => {
-            // This would require reading actual image data in real implementation
-            const result = await validateImageFile(mockImageFile, { maxWidth: 1920, maxHeight: 1080 });
-            
-            expect(result.isValid).toBe(true);
-            expect(result.dimensions).toBeDefined();
-        });
-    });
-
-    describe('Avatar Upload Operations', () => {
-        beforeEach(() => {
-            // Mock successful storage operations
-            mockStorageOperations.upload.mockResolvedValue({
-                data: { path: 'avatars/test-user-id/avatar.jpg' },
-                error: null
-            });
-
-            mockStorageOperations.getPublicUrl.mockReturnValue({
-                data: { publicUrl: 'https://test-bucket.supabase.co/storage/v1/object/public/avatars/test-user-id/avatar.jpg' }
-            });
-
-            // Mock database update for avatar_url
-            const mockChain = {
-                update: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        select: jest.fn().mockResolvedValue({
-                            data: [{ id: mockUser.id, avatar_url: 'https://test-bucket.supabase.co/storage/v1/object/public/avatars/test-user-id/avatar.jpg' }],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-        });
-
-        it('should upload avatar successfully for authenticated user', async () => {
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(true);
-            expect(result.avatarUrl).toContain('avatars/test-user-id');
-            expect(mockSupabaseClient.storage.from).toHaveBeenCalledWith('avatars');
-            expect(mockSupabaseClient.from).toHaveBeenCalledWith('users');
-        });
-
-        it('should replace existing avatar when uploading new one', async () => {
-            // Mock existing avatar removal
-            mockStorageOperations.remove.mockResolvedValue({
-                data: null,
-                error: null
-            });
-
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(true);
-            expect(result.previousAvatarRemoved).toBe(true);
-        });
-
-        it('should fail avatar upload for unauthenticated user', async () => {
-            mockSupabaseClient.auth.getUser.mockResolvedValue({
-                data: { user: null },
-                error: null
-            });
-
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('User not authenticated');
-        });
-
-        it('should handle storage upload errors gracefully', async () => {
-            mockStorageOperations.upload.mockResolvedValue({
-                data: null,
-                error: { message: 'Storage upload failed' }
-            });
-
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Storage upload failed');
-        });
-
-        it('should delete avatar successfully', async () => {
-            mockStorageOperations.remove.mockResolvedValue({
-                data: null,
-                error: null
-            });
-
-            // Mock database update to remove avatar_url
-            const mockChain = {
-                update: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        select: jest.fn().mockResolvedValue({
-                            data: [{ id: mockUser.id, avatar_url: null }],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            const result = await deleteAvatarImage();
-
-            expect(result.success).toBe(true);
-            expect(mockSupabaseClient.storage.from).toHaveBeenCalledWith('avatars');
-        });
-    });
-
-    describe('Tutor Image Upload Operations', () => {
-        beforeEach(() => {
-            // Mock successful storage operations
-            mockStorageOperations.upload.mockResolvedValue({
-                data: { path: 'tutor-images/test-user-id/room-image.jpg' },
-                error: null
-            });
-
-            mockStorageOperations.getPublicUrl.mockReturnValue({
-                data: { publicUrl: 'https://test-bucket.supabase.co/storage/v1/object/public/tutor-images/test-user-id/room-image.jpg' }
-            });
-
-            // Mock database insert for tutor_images table
-            const mockChain = {
-                insert: jest.fn(() => ({
-                    select: jest.fn().mockResolvedValue({
-                        data: [mockTutorImage],
-                        error: null
-                    })
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-        });
-
-        it('should upload tutor image successfully', async () => {
-            const result = await uploadTutorImage(mockImageFile, 'test-room-id');
-
-            expect(result.success).toBe(true);
-            expect(result.tutorImage).toEqual(mockTutorImage);
-            expect(mockSupabaseClient.storage.from).toHaveBeenCalledWith('tutor-images');
-            expect(mockSupabaseClient.from).toHaveBeenCalledWith('tutor_images');
-        });
-
-        it('should fail tutor image upload for non-tutor user', async () => {
-            mockSupabaseClient.auth.getUser.mockResolvedValue({
-                data: { user: { id: 'student-id' } },
-                error: null
-            });
-
-            // Mock user query to return student role
-            const mockChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        single: jest.fn().mockResolvedValue({
-                            data: { current_role: 'student' },
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            const result = await uploadTutorImage(mockImageFile, 'test-room-id');
-
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('Only tutors can upload images');
-        });
-
-        it('should generate unique filename for tutor images', async () => {
-            await uploadTutorImage(mockImageFile, 'test-room-id');
-
-            const uploadCall = mockStorageOperations.upload.mock.calls[0];
-            const filePath = uploadCall[0];
-            
-            expect(filePath).toMatch(/^test-user-id\/\d{13}-test-image\.jpg$/);
-        });
-
-        it('should store image metadata in database', async () => {
-            await uploadTutorImage(mockImageFile, 'test-room-id');
-
-            const insertCall = mockSupabaseClient.from().insert.mock.calls[0];
-            const imageData = insertCall[0];
-
-            expect(imageData).toMatchObject({
-                tutor_id: mockUser.id,
-                room_id: 'test-room-id',
-                filename: 'test-image.jpg',
-                file_size: mockImageFile.size,
-                is_active: true
-            });
-        });
-
-        it('should delete tutor image successfully', async () => {
-            // Mock database operations for deletion
-            const mockSelectChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn().mockResolvedValue({
-                        data: [mockTutorImage],
-                        error: null
-                    })
-                }))
-            };
-
-            const mockUpdateChain = {
-                update: jest.fn(() => ({
-                    eq: jest.fn().mockResolvedValue({
-                        data: [{ ...mockTutorImage, is_active: false }],
-                        error: null
-                    })
-                }))
-            };
-
-            mockSupabaseClient.from
-                .mockReturnValueOnce(mockSelectChain)
-                .mockReturnValueOnce(mockUpdateChain);
-
-            mockStorageOperations.remove.mockResolvedValue({
-                data: null,
-                error: null
-            });
-
-            const result = await deleteTutorImage('test-image-id');
-
-            expect(result.success).toBe(true);
-            expect(mockSupabaseClient.storage.from).toHaveBeenCalledWith('tutor-images');
-        });
-
-        it('should handle tutor image not found during deletion', async () => {
-            const mockChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn().mockResolvedValue({
-                        data: [],
-                        error: null
-                    })
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            const result = await deleteTutorImage('non-existent-id');
-
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('Image not found or access denied');
-        });
-    });
-
-    describe('Storage Bucket Operations', () => {
-        it('should list user avatars with proper path filtering', async () => {
-            mockStorageOperations.list.mockResolvedValue({
-                data: [
-                    { name: 'avatar.jpg', metadata: { size: 1024 } },
-                    { name: 'profile.png', metadata: { size: 2048 } }
-                ],
-                error: null
-            });
-
-            // This would be part of a service function to list user images
-            const mockListAvatars = async (userId: string) => {
-                return mockStorageOperations.list(userId);
-            };
-
-            const result = await mockListAvatars(mockUser.id);
-
-            expect(result.data).toHaveLength(2);
-            expect(mockSupabaseClient.storage.from).toHaveBeenCalledWith('avatars');
-        });
-
-        it('should handle storage bucket permissions correctly', async () => {
-            // Test that storage operations respect RLS policies
-            mockStorageOperations.upload.mockResolvedValue({
-                data: null,
-                error: { message: 'Access denied: insufficient permissions' }
-            });
-
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Access denied');
-        });
-
-        it('should generate correct public URLs for images', async () => {
-            const mockUrl = 'https://test-bucket.supabase.co/storage/v1/object/public/avatars/test-user-id/avatar.jpg';
-            
-            mockStorageOperations.getPublicUrl.mockReturnValue({
-                data: { publicUrl: mockUrl }
-            });
-
-            await uploadAvatarImage(mockImageFile);
-
-            expect(mockStorageOperations.getPublicUrl).toHaveBeenCalledWith(
-                expect.stringContaining('test-user-id/avatar.jpg')
-            );
-        });
-    });
-
-    describe('Database Integration', () => {
-        it('should update user avatar_url field correctly', async () => {
-            const mockChain = {
-                update: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        select: jest.fn().mockResolvedValue({
-                            data: [{ 
-                                id: mockUser.id, 
-                                avatar_url: 'https://test-bucket.supabase.co/storage/v1/object/public/avatars/test-user-id/avatar.jpg' 
-                            }],
-                            error: null
-                        })
-                    }))
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            await uploadAvatarImage(mockImageFile);
-
-            expect(mockChain.update).toHaveBeenCalledWith({
-                avatar_url: expect.stringContaining('avatars/test-user-id')
-            });
-            expect(mockChain.eq).toHaveBeenCalledWith('id', mockUser.id);
-        });
-
-        it('should create tutor_images record with all required fields', async () => {
-            const mockChain = {
-                insert: jest.fn(() => ({
-                    select: jest.fn().mockResolvedValue({
-                        data: [mockTutorImage],
-                        error: null
-                    })
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            await uploadTutorImage(mockImageFile, 'test-room-id');
-
-            expect(mockChain.insert).toHaveBeenCalledWith({
-                tutor_id: mockUser.id,
-                room_id: 'test-room-id',
-                image_url: expect.any(String),
-                filename: 'test-image.jpg',
-                file_size: mockImageFile.size,
-                is_active: true
-            });
-        });
-
-        it('should handle database constraint violations', async () => {
-            const mockChain = {
-                insert: jest.fn(() => ({
-                    select: jest.fn().mockResolvedValue({
-                        data: null,
-                        error: { message: 'Foreign key constraint violation', code: '23503' }
-                    })
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            const result = await uploadTutorImage(mockImageFile, 'invalid-room-id');
-
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Foreign key constraint violation');
-        });
-    });
-
-    describe('Error Handling and Edge Cases', () => {
-        it('should handle network errors gracefully', async () => {
-            mockStorageOperations.upload.mockRejectedValue(
-                new Error('Network error')
-            );
-
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Network error');
-        });
-
-        it('should handle file reading errors', async () => {
-            const corruptedFile = new File([''], 'corrupted.jpg', {
-                type: 'image/jpeg'
-            });
-
-            const result = await validateImageFile(corruptedFile);
-            
-            expect(result.isValid).toBe(false);
-            expect(result.errors).toContain('Unable to read file');
-        });
-
-        it('should cleanup failed uploads', async () => {
-            // Mock upload success but database failure
-            mockStorageOperations.upload.mockResolvedValue({
-                data: { path: 'avatars/test-user-id/avatar.jpg' },
-                error: null
-            });
-
-            const mockChain = {
-                update: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        select: jest.fn().mockResolvedValue({
-                            data: null,
-                            error: { message: 'Database error' }
-                        })
-                    }))
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            // Mock cleanup removal
-            mockStorageOperations.remove.mockResolvedValue({
-                data: null,
-                error: null
-            });
-
-            const result = await uploadAvatarImage(mockImageFile);
-
-            expect(result.success).toBe(false);
-            expect(mockStorageOperations.remove).toHaveBeenCalled();
-        });
-
-        it('should validate room access for tutor images', async () => {
-            // Mock room access check
-            const mockChain = {
-                select: jest.fn(() => ({
-                    eq: jest.fn(() => ({
-                        single: jest.fn().mockResolvedValue({
-                            data: null,
-                            error: { message: 'Room not found or access denied' }
-                        })
-                    }))
-                }))
-            };
-
-            mockSupabaseClient.from.mockReturnValue(mockChain);
-
-            const result = await uploadTutorImage(mockImageFile, 'unauthorized-room-id');
-
-            expect(result.success).toBe(false);
-            expect(result.error).toContain('Room not found or access denied');
-        });
-    });
+  });
+
+  it('rejects a non-tutor before uploading', async () => {
+    tables.users.single.mockResolvedValue({ data: { current_role: 'student' }, error: null });
+    expect((await uploadTutorImage(file, 'room-1')).success).toBe(false);
+    expect(storage.upload).not.toHaveBeenCalled();
+  });
+
+  it('rejects a missing or inaccessible room before uploading', async () => {
+    tables.rooms.single.mockResolvedValue({ data: null, error: null });
+    expect((await uploadTutorImage(file, 'room-1')).success).toBe(false);
+    expect(storage.upload).not.toHaveBeenCalled();
+  });
+
+  it('removes a failed database upload from storage', async () => {
+    tables.tutor_images.single.mockResolvedValue({ data: null, error: { message: 'constraint failure' } });
+    expect((await uploadTutorImage(file, 'room-1')).success).toBe(false);
+    expect(storage.remove).toHaveBeenCalledWith([expect.stringMatching(/^tutor-1\//)]);
+  });
+
+  it('verifies ownership, deletes storage and soft-deletes image metadata', async () => {
+    expect(await deleteTutorImage(image.id)).toEqual({ success: true });
+    expect(tables.tutor_images.eq).toHaveBeenCalledWith('id', image.id);
+    expect(tables.tutor_images.eq).toHaveBeenCalledWith('tutor_id', user.id);
+    expect(tables.tutor_images.update).toHaveBeenCalledWith({ is_active: false });
+  });
+
+  it('rejects missing images and preserves metadata when storage deletion fails', async () => {
+    tables.tutor_images.single.mockResolvedValueOnce({ data: null, error: null });
+    expect((await deleteTutorImage('missing')).success).toBe(false);
+    expect(storage.remove).not.toHaveBeenCalled();
+    storage.remove.mockResolvedValue({ error: { message: 'storage unavailable' } });
+    expect((await deleteTutorImage(image.id)).success).toBe(false);
+    expect(tables.tutor_images.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('upload failures', () => {
+  it.each([uploadAvatarImage, (value: File) => uploadTutorImage(value, 'room-1')])('rejects unauthenticated uploads', async upload => {
+    client.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+    expect((await upload(file)).success).toBe(false);
+    expect(storage.upload).not.toHaveBeenCalled();
+  });
+
+  it('returns storage/network errors without writing database metadata', async () => {
+    storage.upload.mockResolvedValueOnce({ data: null, error: { message: 'access denied' } });
+    expect(await uploadAvatarImage(file)).toMatchObject({ success: false, error: expect.stringContaining('access denied') });
+    storage.upload.mockRejectedValueOnce(new Error('network failed'));
+    expect(await uploadAvatarImage(file)).toMatchObject({ success: false, error: 'network failed' });
+    expect(tables.users.update).not.toHaveBeenCalled();
+  });
 });

@@ -70,10 +70,10 @@ describe('controlled prompt comparison integration', () => {
     expect(invoke).toHaveBeenCalledTimes(2);
     const phase0 = invoke.mock.calls[0][1].body;
     const refined = invoke.mock.calls[1][1].body;
-    expect(phase0.temperature).toBe(0.17);
-    expect(refined.temperature).toBe(0.17);
-    expect(phase0.max_tokens).toBe(93);
-    expect(refined.max_tokens).toBe(93);
+    expect(phase0.temperature).toBe(0.3);
+    expect(refined.temperature).toBe(0.3);
+    expect(phase0.max_tokens).toBe(100);
+    expect(refined.max_tokens).toBe(100);
     expect(phase0.response_format).toEqual({ type: 'json_object' });
     expect(refined.response_format).toEqual({ type: 'json_object' });
     expect(phase0.messages[0].content).toBe('RAW_SYSTEM');

@@ -1,5 +1,9 @@
+// Target: systemPrompts; verify preset modules and scenario data reach the assembled prompt.
 import { generateSystemPrompt, PRESET_CONFIGS } from '../systemPrompts';
 import { SCENARIO_TEMPLATES } from '../detectionTemplates';
+import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
+import { COMMUNICATION_STYLES } from '../prompts/pedagogy/parameters/communicationStyles';
+import { COGNITIVE_PARAMETERS } from '../prompts/pedagogy/parameters/cognitiveParameters';
 
 describe('Prompt Comparison - Real Usage Examples', () => {
     it('should generate significantly different prompts for casual peer vs supportive adult', () => {
@@ -24,15 +28,10 @@ describe('Prompt Comparison - Real Usage Examples', () => {
         // Verify they're actually different
         expect(casualPeerPrompt).not.toBe(supportiveAdultPrompt);
         
-        // Casual peer should have peer-specific language
-        expect(casualPeerPrompt).toContain('Peer Learner');
-        expect(casualPeerPrompt).toContain('knowledgeable peer coach');
-        expect(casualPeerPrompt).toContain('Ask at most one focused question');
-        
-        // Supportive adult should have adult-specific language
-        expect(supportiveAdultPrompt).toContain('Trusted Adult Guide');
-        expect(supportiveAdultPrompt).toContain('formal, clear language');
-        expect(supportiveAdultPrompt).toContain('multiple related concepts');
+        expect(casualPeerPrompt).toContain(ROLE_PARAMETERS.role.low);
+        expect(supportiveAdultPrompt).toContain(ROLE_PARAMETERS.role.high);
+        expect(supportiveAdultPrompt).toContain(COMMUNICATION_STYLES.teen_slang[PRESET_CONFIGS.supportive_adult.communication_style.teen_slang]);
+        expect(supportiveAdultPrompt).toContain(COGNITIVE_PARAMETERS.concept_density[PRESET_CONFIGS.supportive_adult.cognitive_parameters.concept_density]);
     });
 
     it('should show practical example with Nintendo Switch scenario', () => {

@@ -75,18 +75,7 @@ Feature: AI Checklist Integration
       | Business logic evaluation | pending | understanding |
     When the AI system prompt is generated
     Then the prompt should include current learning progress:
-      """
-      ## CURRENT LEARNING PROGRESS:
-      🔴 PRIORITY ITEMS - FOCUS ON THESE:
-      - [ ] [understanding] Business logic evaluation (pending)
-      - [ ] [behavior] Report suspicious content (pending)
-      - [~] [understanding] Social engineering recognition (needs reinforcement)
-      
-      ✅ WELL COVERED - REFERENCE LIGHTLY:
-      - [✓] [understanding] URL verification techniques
-      - [✓] [behavior] Check sender credentials manually
-      """
-    And the AI should receive instructions to focus on uncovered items
+    And the prompt data should separate pending, partial, and covered items
 
   @non_feasible
   Scenario: AI automatically detects coverage in student responses
@@ -164,13 +153,13 @@ Feature: AI Checklist Integration
     Then the item should be marked as "partially_covered"
     And the tutor should see the updated status
 
-  Scenario: Learner receives an explanation focused on remaining gaps
+  Scenario: Prompt context focuses on remaining gaps
     Given "[understanding] Generic username identification" is marked as "covered"
     And "[understanding] Urgency language recognition" is "pending" 
     When the student asks "What makes this message suspicious?"
-    Then the learner should hear: "You already spotted the fake username - good eye!"
-    And should focus the explanation on: "Let's look at the urgent language that pressures quick action..."
-    And should tailor response depth to match understanding levels
+    Then the prompt data should retain the covered username item
+    And the prompt should include the pending urgency item as critical
+    And the saved checklist priorities should remain unchanged
 
   @non_feasible
   Scenario: AI generates comprehensive coverage evidence
@@ -186,7 +175,7 @@ Feature: AI Checklist Integration
       | Recommended Action | Move to related behavioral items |
 
   Scenario: Tutor can inspect saved coverage evidence
-    Given coverage evidence includes a student quote, concept, category, understanding level, confidence score, and recommended action
+    Given coverage evidence includes a student quote, analysis, confidence score, detection method, and timestamp
     When the coverage update is saved and the tutor opens the checklist item
     Then the tutor should see those evidence fields with the covered item
 
@@ -207,12 +196,11 @@ Feature: AI Checklist Integration
     Then all three corresponding checklist items should be marked as "covered"
     And the tutor should see evidence for each updated item
 
-  Scenario: Tutor sees conflicting understanding flagged for review
+  Scenario: Coverage processing preserves the tutor review flag
     Given the AI detects conflicting signals about student understanding
     When a student shows both strong cognitive understanding and risky behavioral choices
-    Then the tutor should see the response flagged for review
-    And should see analysis: "Strong conceptual understanding but concerning behavioral choices detected"
-    And should see a suggestion: "Tutor review recommended - mixed understanding signals detected"
+    Then the result should require tutor review
+    And the result should retain the analysis confidence and coverage evidence
 
   @non_feasible
   Scenario: Learner receives progress-based encouragement

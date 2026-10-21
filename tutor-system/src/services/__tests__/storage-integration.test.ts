@@ -2,15 +2,17 @@
  * Integration Tests for Real Supabase Storage Operations
  * 
  * This test connects to your actual Supabase instance to debug storage issues
- * Run with: npm test src/services/__tests__/storage-integration.test.ts
+ * Opt in with staging credentials and CI unset:
+ * RUN_LIVE_STORAGE_TESTS=true npm run test:regression -- --runTestsByPath src/services/__tests__/storage-integration.test.ts
  */
 
 import { supabase, uploadImage, getImageUrl, createRoom } from '../supabase';
 
 // Skip these tests in CI or if no real Supabase credentials
-const shouldRunIntegrationTests = process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY;
+const shouldRunIntegrationTests = process.env.RUN_LIVE_STORAGE_TESTS === 'true' &&
+    process.env.CI !== 'true' && process.env.REACT_APP_SUPABASE_URL && process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-describe('Storage Integration Tests', () => {
+(shouldRunIntegrationTests ? describe : describe.skip)('Storage Integration Tests', () => {
     let testUserId: string;
     let mockFile: File;
 

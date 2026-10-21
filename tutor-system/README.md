@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
 Updated: 2026-10-21
-Commit: 23a41af4608092ea2733eb8aa3e87e608dcda335
+Commit: 98002f4
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -208,6 +208,9 @@ npm test -- --watchAll=false --runTestsByPath \
 # Run live Qwen integration suites explicitly
 npm run test:integration:qwen
 
+# Run live storage diagnostics explicitly with staging credentials and CI unset
+RUN_LIVE_STORAGE_TESTS=true npm run test:regression -- --runTestsByPath src/services/__tests__/storage-integration.test.ts
+
 # Run the real browser suite in staging template rooms
 npm run test:e2e:staging
 
@@ -225,6 +228,7 @@ npm test src/contexts/__tests__/AuthContext.test.tsx  # Task 3
 - `npm test` and `npm run test:regression` run deterministic Jest suites, including mocked page integration tests.
 - Pull requests run `npm ci` with npm 10.9.2, the complete deterministic Jest regression, and a React production build on Node 22. The build reports existing ESLint warnings without making them fatal; compilation and type errors still fail. Branch protection on `no_sign_up` requires `isolation-harness`, `frontend-jest`, and `frontend-build` on an up-to-date branch, including administrator merges.
 - `npm run test:integration:qwen` exercises the live provider without a browser.
+- Live storage diagnostics require `RUN_LIVE_STORAGE_TESTS=true`, configured staging credentials, and `CI` unset. Supabase environment variables alone do not opt a developer or CI run into hosted storage operations.
 - `npm run test:e2e:staging` runs ten Playwright workflows in migrated template rooms, including transfer assessment. It cleans generated room records after each workflow; select one with `-- --workflow=<name>`.
 
 ### Test Files Structure

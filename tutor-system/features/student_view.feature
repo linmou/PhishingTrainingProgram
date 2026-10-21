@@ -41,8 +41,8 @@ Feature: Student User Interface
     Given the user is logged in as a "Student"
     And the "Phishing 101" room is full
     When the student views the list of available rooms
-    Then the "Join" button for the "Phishing 101" room should be disabled
-    And the student should see a "Room Full" status indicator for that room
+    Then the "Observe Room" button for the "Phishing 101" room should be enabled
+    And the student should see an "Observer Available" status indicator for that room
 
   Scenario: Student fails to join a room due to an error
     Given the user is logged in as a "Student"

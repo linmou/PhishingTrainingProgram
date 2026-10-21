@@ -282,6 +282,8 @@ const defineBackground = (given: any, and: any) => {
 };
 
 beforeEach(() => {
+  // Isolate typing expiry and message polling from previous simulated clients.
+  jest.useFakeTimers();
   jest.clearAllMocks();
   mockRoom = null;
   mockMessages = [];
@@ -310,6 +312,11 @@ beforeEach(() => {
       mockFeedbackRows.push({ message_id: messageId, user_id: userId, feedback_type: feedbackType, rating });
     }
   });
+});
+
+afterEach(() => {
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 defineFeature(feature, test => {
