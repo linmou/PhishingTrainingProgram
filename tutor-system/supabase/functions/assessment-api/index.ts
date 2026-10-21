@@ -342,7 +342,7 @@ async function analyzeMessage(
   }
   const provider = {
     ...providerConfig(deps),
-    model: scope.practice_type === 'cyberbullying' ? PROVIDER_MODEL : DEFAULT_AI_MODEL,
+    model: DEFAULT_AI_MODEL,
   };
   const allowedKinds = new Set(['initial_signal', 'demonstrated_understanding', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
   const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);

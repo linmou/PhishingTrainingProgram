@@ -266,6 +266,7 @@ Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records
   assertEquals(audits[0].p_request_id, audits[1].p_request_id);
   assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
   const repair = JSON.parse(requests[1].messages.at(-1).content);
+  assertEquals(requests.map(providerRequest => providerRequest.model), ['qwen3.8-flash', 'qwen3.8-flash']);
   assertEquals(repair.previous_response, audits[0].p_raw_response);
   assertEquals(repair.evidence_message, message);
 });
