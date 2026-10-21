@@ -232,13 +232,15 @@ Deno.test('Cyberbullying settles all five target analyses before applying progre
 // Covers analyzer format repair: invalid evidence is never applied and both attempts retain their audit identity.
 Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records both attempts', async () => {
   const audits: Record<string, any>[] = [];
+  const requests: Record<string, any>[] = [];
   let providerCalls = 0;
   let applications = 0;
   const content = 'First sentence. Second sentence. Third sentence.';
   const message = { id: 'focus-1', room_id: 'room-1', user_id: 'learner-1', user_role: 'student', content };
   const handler = createAssessmentApiHandler({
     ...dependencies(), env: name => ({ OAI_API_KEY: 'test', OAI_BASE_URL: 'https://provider.invalid/v1' } as Record<string, string>)[name],
-    fetch: async () => {
+    fetch: async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body)));
       providerCalls += 1;
       return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({
         events: [{ item_id: 'item-1', kind: 'initial_signal', evidence_type: 'action', evidence_message_id: 'focus-1',
@@ -263,6 +265,9 @@ Deno.test('Cyberbullying repairs a noncontiguous evidence quote once and records
   assertEquals(audits.map(audit => [audit.p_attempt_ordinal, audit.p_validation_outcome]), [[1, 'invalid'], [2, 'valid']]);
   assertEquals(audits[0].p_request_id, audits[1].p_request_id);
   assertEquals(audits[0].p_error_code, 'AI_OUTPUT_INVALID');
+  const repair = JSON.parse(requests[1].messages.at(-1).content);
+  assertEquals(repair.previous_response, audits[0].p_raw_response);
+  assertEquals(repair.evidence_message, message);
 });
 
 Deno.test('missing saved result refuses duplicate processing before any provider call',async () => {

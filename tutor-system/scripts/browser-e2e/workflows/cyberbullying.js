@@ -153,6 +153,8 @@ module.exports = async function cyberbullying(ctx) {
   } finally {
     writeJson(path.join(evidenceDir, 'cyberbullying-tutor-provider.json'), await stopTutor());
     writeJson(path.join(evidenceDir, 'cyberbullying-learner-provider.json'), await stopStudent());
+    writeJson(path.join(evidenceDir, 'cyberbullying-progress-provider-attempts.json'),
+      await managementQuery(ctx.config, `select * from private.transfer_provider_attempts where room_id='${room.id}'::uuid order by created_at,attempt_ordinal`));
     if (observerContext) await observerContext.close();
     if (observerId) {
       const { error } = await client.from('users').delete().eq('id', observerId);

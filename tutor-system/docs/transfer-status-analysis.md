@@ -49,4 +49,6 @@ Qwen returns JSON in this shape:
 
 The Edge Function rejects malformed IDs, quotes, kinds, evidence types, or explanations. It omits well-formed events whose evidence type does not support the item or whose current status makes the event ineligible, recording them in private `rejected_events`. It combines supported events into one `apply_transfer_message_analysis_v1` call. Historical dialogue informs interpretation but cannot itself create a new status event. Assessment option answers use the separate assessment-processing path.
 
+Cyberbullying permits one format repair for invalid analysis output. That request includes the rejected response and original learner message, so the provider can repair an evidence quote without joining separate passages. Both attempts are audited. A second invalid response prevents the whole message analysis from applying partial progress.
+
 For future changes to this contract, follow `supabase-release-workflow.md`: validate locally, apply and test on staging, then apply to production. Deploy the matching `assessment-api` function only after its SQL is applied in each project.
