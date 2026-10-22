@@ -41,8 +41,8 @@ The user requested the original upper-right placement, as implemented before com
 ## Suggested Review Order
 
 - Fixed offsets and mobile width restore the original placement.
-  [ChecklistPanel.css:20](../../tutor-system/src/components/ChecklistPanel.css#L20)
+  [ChecklistPanel.css:20](../../../../tutor-system/src/components/ChecklistPanel.css#L20)
 - Dedicated desktop space still protects the composer.
-  [RoomPagePost.css:13](../../tutor-system/src/components/RoomPagePost.css#L13)
+  [RoomPagePost.css:13](../../../../tutor-system/src/components/RoomPagePost.css#L13)
 - Followup record captures exact behavior and inherited overlap evidence.
-  [original-position record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_learning_progress_original_position.md)
+  [original-position record](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_learning_progress_original_position.md)

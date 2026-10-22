@@ -67,8 +67,8 @@ Fresh-baseline PostgreSQL assertions plus hosted transactional assertions exerci
 ## Suggested Review Order
 
 - Review the shared creation default used by all templates.
-  [20261014020000_room_assessment_default_on.sql:4](../../tutor-system/supabase/archived_migrations/20261014020000_room_assessment_default_on.sql#L4)
+  [20261014020000_room_assessment_default_on.sql:4](../../../../tutor-system/supabase/archived_migrations/20261014020000_room_assessment_default_on.sql#L4)
 - Inspect actual-role creation, explicit opt-outs and rollback assertions.
-  [room_assessment_default_on.sql:23](../../tutor-system/supabase/tests/room_assessment_default_on.sql#L23)
+  [room_assessment_default_on.sql:23](../../../../tutor-system/supabase/tests/room_assessment_default_on.sql#L23)
 - Review local parity, hosted results, browser checks and cleanup evidence.
-  [documentation_update_record_v2026_10_14_room_assessment_default_on.md:26](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_room_assessment_default_on.md#L26)
+  [documentation_update_record_v2026_10_14_room_assessment_default_on.md:26](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_room_assessment_default_on.md#L26)

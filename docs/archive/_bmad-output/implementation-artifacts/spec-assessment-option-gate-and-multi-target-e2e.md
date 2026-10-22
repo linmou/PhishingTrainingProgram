@@ -76,25 +76,25 @@ Run focused `RoomContext.transferAnswer`, concurrency, page lifecycle/decision a
 
 ## Results
 
-Completed implementation, review, deployment and live verification. Final regression passes 199 frontend tests, 20 browser-harness checks and 39 Edge/domain tests. Full TypeScript checking retains diagnostics in untouched files. Staging assessment-api 54 and production 10 use identical source manifests; the inherited SQL is applied and archived. Playwright against the local app and real hosted backends passes answer/retry/failure plus full-inventory delivery on both environments: seven staging and eight production assessment cycles, including both required tutoring topics, bound answers, gates/reloads, feedback, progress and cleanup. Chrome DevTools confirms the original room is unblocked with no attempt counted. Earlier failures and intermittent invalid analysis-output limitations remain in the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md); the [initial validation record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_assessment_option_gate.md) preserves the pre-release evidence.
+Completed implementation, review, deployment and live verification. Final regression passes 199 frontend tests, 20 browser-harness checks and 39 Edge/domain tests. Full TypeScript checking retains diagnostics in untouched files. Staging assessment-api 54 and production 10 use identical source manifests; the inherited SQL is applied and archived. Playwright against the local app and real hosted backends passes answer/retry/failure plus full-inventory delivery on both environments: seven staging and eight production assessment cycles, including both required tutoring topics, bound answers, gates/reloads, feedback, progress and cleanup. Chrome DevTools confirms the original room is unblocked with no attempt counted. Earlier failures and intermittent invalid analysis-output limitations remain in the [release record](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_final_assessment_release.md); the [initial validation record](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_assessment_option_gate.md) preserves the pre-release evidence.
 
 ## Suggested Review Order
 
 **Learner gate and trusted submission**
 
 - Validate current question identity and selected options before any posting path.
-  [RoomContext.tsx:670](../../tutor-system/src/contexts/RoomContext.tsx#L670)
+  [RoomContext.tsx:670](../../../../tutor-system/src/contexts/RoomContext.tsx#L670)
 - Share learner ownership and terminal lifecycle lookup between context and page.
-  [transferAssessmentUiAdapter.ts:305](../../tutor-system/src/contexts/transferAssessmentUiAdapter.ts#L305)
+  [transferAssessmentUiAdapter.ts:305](../../../../tutor-system/src/contexts/transferAssessmentUiAdapter.ts#L305)
 - Disable ordinary input while keeping dedicated option controls available.
-  [RoomPagePost.tsx:1078](../../tutor-system/src/pages/RoomPagePost.tsx#L1078)
+  [RoomPagePost.tsx:1078](../../../../tutor-system/src/pages/RoomPagePost.tsx#L1078)
 
 **Multi-target cooperation**
 
 - Check hosted policy, then complete both tutoring, assessment and feedback cycles.
-  [assessment-delivery.js:201](../../tutor-system/scripts/browser-e2e/workflows/assessment-delivery.js#L201)
+  [assessment-delivery.js:201](../../../../tutor-system/scripts/browser-e2e/workflows/assessment-delivery.js#L201)
 - Verify persisted identities and alternate-input gates.
-  [assessment-browser-checks.js:8](../../tutor-system/scripts/browser-e2e/workflows/assessment-browser-checks.js#L8)
+  [assessment-browser-checks.js:8](../../../../tutor-system/scripts/browser-e2e/workflows/assessment-browser-checks.js#L8)
 - Reject terminal feedback tied to another topic or invalid timing.
-  [browser-e2e.test.js:330](../../tutor-system/scripts/browser-e2e.test.js#L330)
+  [browser-e2e.test.js:330](../../../../tutor-system/scripts/browser-e2e.test.js#L330)
 

@@ -46,7 +46,7 @@ The proposed audience includes the tutor, target learner, other authorized room 
 
 ## Requirements and Document Impact
 
-Approved 2026-10-17. The frozen block preserves the proposal reviewed at approval. Implementation and environment acceptance are recorded in the [release record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_17_assessment_result_messages.md).
+Approved 2026-10-17. The frozen block preserves the proposal reviewed at approval. Implementation and environment acceptance are recorded in the [release record](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_17_assessment_result_messages.md).
 
 | Source | Required alignment |
 | --- | --- |
@@ -133,33 +133,33 @@ Batch `assessment-results-dialogue-2026-10-17`, release owner Codex `/root`: val
 **Tutor generation**
 
 - Start at tutor generation: assessment facts now arrive through saved dialogue.
-  [aiService.ts:884](../../tutor-system/src/services/aiService.ts#L884)
+  [aiService.ts:884](../../../../tutor-system/src/services/aiService.ts#L884)
 
 **Persistence and readiness**
 
 - Check atomic grading, result identity and failure-only reviewed disclosure.
-  [20261017000000_assessment_result_messages.sql:116](../../tutor-system/supabase/archived_migrations/20261017000000_assessment_result_messages.sql#L116)
+  [20261017000000_assessment_result_messages.sql:116](../../../../tutor-system/supabase/archived_migrations/20261017000000_assessment_result_messages.sql#L116)
 
 - Check learner-scoped readiness, recovery and complete ordinary dialogue.
-  [simplifiedAIContext.ts:75](../../tutor-system/src/services/simplifiedAIContext.ts#L75)
+  [simplifiedAIContext.ts:75](../../../../tutor-system/src/services/simplifiedAIContext.ts#L75)
 
 **Request behavior**
 
 - Review invariant retry, unscored-answer and Guard instructions shared across request paths.
-  [ecologicalTutorCall.ts:26](../../tutor-system/src/services/ecologicalTutorCall.ts#L26)
+  [ecologicalTutorCall.ts:26](../../../../tutor-system/src/services/ecologicalTutorCall.ts#L26)
 
 **Room presentation**
 
 - Follow causal merging and lifecycle restoration across message ingress paths.
-  [transferAssessmentUiAdapter.ts:458](../../tutor-system/src/contexts/transferAssessmentUiAdapter.ts#L458)
+  [transferAssessmentUiAdapter.ts:458](../../../../tutor-system/src/contexts/transferAssessmentUiAdapter.ts#L458)
 
 - Confirm automatic attribution and rating exclusion.
-  [PostComment.tsx:162](../../tutor-system/src/components/PostComment.tsx#L162)
+  [PostComment.tsx:162](../../../../tutor-system/src/components/PostComment.tsx#L162)
 
 **Verification**
 
 - Review deterministic privacy, rollback, permissions, recovery and clearing regressions.
-  [assessment_result_messages.sql:1](../../tutor-system/supabase/tests/assessment_result_messages.sql#L1)
+  [assessment_result_messages.sql:1](../../../../tutor-system/supabase/tests/assessment_result_messages.sql#L1)
 
 - Check exact staging/production artifacts, real-provider evidence and cleanup.
-  [documentation_update_record_v2026_10_17_assessment_result_messages.md:1](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_17_assessment_result_messages.md#L1)
+  [documentation_update_record_v2026_10_17_assessment_result_messages.md:1](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_17_assessment_result_messages.md#L1)

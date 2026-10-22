@@ -52,6 +52,7 @@ This repository is centered on `tutor-system/`, a React + TypeScript phishing-tr
 - `tutor-system/supabase/migrations/`: schema and RLS SQL
 - `tutor-system/functions/`: Firebase Cloud Functions
 - `raw_instrcutions/`, `post_template/`: project content and image assets, not application runtime code
+- `_bmad-output/`: BMAD v7 planning store (PRD, architecture, initiatives, tickets). BMAD is pinned to the commit recorded in `skills-lock.json`. In a new checkout or worktree, install that set with `npx skills add https://github.com/bmad-code-org/BMAD-METHOD/tree/61e01f82644c4bb533750cfa0d6d61ab61d2cc9b -a claude-code -a codex -y --skill bmad --skill bmod-core-tools --skill bmod-method --skill bmad-agent-po --skill bmad-prd --skill bmad-architecture --skill bmad-deep-recon --skill bmad-build --skill bmad-code-review --skill bmad-review`, then ask the `bmad` skill to run `bmad setup`.
 - `docs/archive/`: superseded and recovered planning sources, not current requirements. Do not read it unless the user asks or a document you are working from cites a file there; see [its index](docs/archive/README.md).
 
 ## Build, Test, and Development Commands

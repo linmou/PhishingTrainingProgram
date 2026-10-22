@@ -55,10 +55,10 @@ Result: 15/15 focused tests pass; changed-file TypeScript diagnostics zero (452 
 ## Suggested Review Order
 
 - Read every saved turn without a moving row offset.
-  [simplifiedAIContext.ts:34](../../tutor-system/src/services/simplifiedAIContext.ts#L34)
+  [simplifiedAIContext.ts:34](../../../../tutor-system/src/services/simplifiedAIContext.ts#L34)
 - Reject failed context queries before generating a suggestion.
-  [simplifiedAIContext.ts:109](../../tutor-system/src/services/simplifiedAIContext.ts#L109)
+  [simplifiedAIContext.ts:109](../../../../tutor-system/src/services/simplifiedAIContext.ts#L109)
 - Verify late turns, boundaries and cursor stability.
-  [simplifiedAIContext.test.ts:86](../../tutor-system/src/services/__tests__/simplifiedAIContext.test.ts#L86)
+  [simplifiedAIContext.test.ts:86](../../../../tutor-system/src/services/__tests__/simplifiedAIContext.test.ts#L86)
 - Confirm the real request and full structured response.
-  [documentation_update_record_v2026_10_16_full_tutor_history.md:15](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_16_full_tutor_history.md#L15)
+  [documentation_update_record_v2026_10_16_full_tutor_history.md:15](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_16_full_tutor_history.md#L15)

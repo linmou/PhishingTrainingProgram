@@ -86,19 +86,19 @@ Live MCP inspection confirmed that the existing analysis context exposes `analys
 
 Use mocked transport for deterministic regression tests and existing API tests for completed-message deduplication. Run the TypeScript application compiler and production build on the worktree. Record exact commands, red/green results, and validation boundaries in the dated documentation record.
 
-Final results: 185 Jest tests passed across 12 suites, 33 existing API contract tests passed, application TypeScript had zero diagnostics, and the production build passed with existing warnings. Full repository TypeScript still has 454 baseline diagnostics in 33 files; normalized file/code/message signatures match baseline. The original missing-recheck, in-flight goal creation, concurrent analysis, and repeated-history latency cases have regression evidence. See the [verification record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck.md).
+Final results: 185 Jest tests passed across 12 suites, 33 existing API contract tests passed, application TypeScript had zero diagnostics, and the production build passed with existing warnings. Full repository TypeScript still has 454 baseline diagnostics in 33 files; normalized file/code/message signatures match baseline. The original missing-recheck, in-flight goal creation, concurrent analysis, and repeated-history latency cases have regression evidence. See the [verification record](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck.md).
 
 ## Suggested Review Order
 
-Merged into `no_sign_up` as `7582916`. Post-merge verification passed 185 Jest tests, 34 current API contract tests, application TypeScript, and the production build. See the [merge record](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_merge.md).
+Merged into `no_sign_up` as `7582916`. Post-merge verification passed 185 Jest tests, 34 current API contract tests, application TypeScript, and the production build. See the [merge record](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_early_message_recheck_merge.md).
 
 - Follow goal initialization through historical evidence recovery and refreshed progress.
-  [checklistService.ts:104](../../tutor-system/src/services/checklistService.ts#L104)
+  [checklistService.ts:104](../../../../tutor-system/src/services/checklistService.ts#L104)
 - Inspect the ordered prefix and server-confirmed completion cache.
-  [checklistService.ts:136](../../tutor-system/src/services/checklistService.ts#L136)
+  [checklistService.ts:136](../../../../tutor-system/src/services/checklistService.ts#L136)
 - Check ordinary learner routing and goals appearing during persistence.
-  [RoomContext.tsx:724](../../tutor-system/src/contexts/RoomContext.tsx#L724)
+  [RoomContext.tsx:724](../../../../tutor-system/src/contexts/RoomContext.tsx#L724)
 - Verify tutor requests analyze the same prefix before preparing an assessment.
-  [RoomContext.tsx:1072](../../tutor-system/src/contexts/RoomContext.tsx#L1072)
+  [RoomContext.tsx:1072](../../../../tutor-system/src/contexts/RoomContext.tsx#L1072)
 - Review actual hook/service/facade regressions and concurrent transport cases.
-  [useChecklist.earlyMessages.integration.test.tsx](../../tutor-system/src/hooks/__tests__/useChecklist.earlyMessages.integration.test.tsx)
+  [useChecklist.earlyMessages.integration.test.tsx](../../../../tutor-system/src/hooks/__tests__/useChecklist.earlyMessages.integration.test.tsx)

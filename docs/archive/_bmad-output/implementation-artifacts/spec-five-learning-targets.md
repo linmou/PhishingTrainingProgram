@@ -97,16 +97,16 @@ and evidence are in the dated release record.
 ## Suggested Review Order
 
 - Start with the five-target recognition/action grouping.
-  [detectionTemplates.ts:7](../../tutor-system/src/services/detectionTemplates.ts#L7)
+  [detectionTemplates.ts:7](../../../../tutor-system/src/services/detectionTemplates.ts#L7)
 - Follow privacy source content into the maintained teaching catalog.
-  [demoRoomTemplates.ts:568](../../tutor-system/src/services/demoRoomTemplates.ts#L568)
+  [demoRoomTemplates.ts:568](../../../../tutor-system/src/services/demoRoomTemplates.ts#L568)
 - Check prompt-condition preservation for controlled comparisons.
-  [demoRoomTemplates.ts:518](../../tutor-system/src/services/demoRoomTemplates.ts#L518)
+  [demoRoomTemplates.ts:518](../../../../tutor-system/src/services/demoRoomTemplates.ts#L518)
 - Inspect scoped migration updates and drift checks before release.
-  [20261015000000_five_learning_targets.sql:464](../../tutor-system/supabase/archived_migrations/20261015000000_five_learning_targets.sql#L464)
+  [20261015000000_five_learning_targets.sql:464](../../../../tutor-system/supabase/archived_migrations/20261015000000_five_learning_targets.sql#L464)
 - Check privacy seeding rejects incompatible existing configurations.
-  [seed-behavior-demo-templates.js:95](../../tutor-system/scripts/seed-behavior-demo-templates.js#L95)
+  [seed-behavior-demo-templates.js:95](../../../../tutor-system/scripts/seed-behavior-demo-templates.js#L95)
 - Verify the real seed-to-checklist configuration path.
-  [checklistGenerationContext.test.ts:46](../../tutor-system/src/services/__tests__/checklistGenerationContext.test.ts#L46)
+  [checklistGenerationContext.test.ts:46](../../../../tutor-system/src/services/__tests__/checklistGenerationContext.test.ts#L46)
 - Read remaining release gates and the full evidence index.
-  [documentation_update_record_v2026_10_15_five_learning_targets.md:55](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_15_five_learning_targets.md#L55)
+  [documentation_update_record_v2026_10_15_five_learning_targets.md:55](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_15_five_learning_targets.md#L55)

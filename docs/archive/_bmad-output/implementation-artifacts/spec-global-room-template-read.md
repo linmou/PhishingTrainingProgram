@@ -69,8 +69,8 @@ Keep the existing owner policy and mutation behavior intact. Use the existing te
 ## Suggested Review Order
 
 - Review the shared-template SELECT scope deployed identically to staging and production.
-  [20261014010000_global_room_template_read.sql:4](../../tutor-system/supabase/archived_migrations/20261014010000_global_room_template_read.sql#L4)
+  [20261014010000_global_room_template_read.sql:4](../../../../tutor-system/supabase/archived_migrations/20261014010000_global_room_template_read.sql#L4)
 - Check actual role boundaries and fixture rollback assertions.
-  [global_room_template_read.sql:31](../../tutor-system/supabase/tests/global_room_template_read.sql#L31)
+  [global_room_template_read.sql:31](../../../../tutor-system/supabase/tests/global_room_template_read.sql#L31)
 - Inspect release evidence, browser outcomes, and retained local catalog comparisons.
-  [documentation_update_record_v2026_10_14_global_room_template_read.md:26](../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_global_room_template_read.md#L26)
+  [documentation_update_record_v2026_10_14_global_room_template_read.md:26](../../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_14_global_room_template_read.md#L26)

@@ -1,0 +1,7 @@
+# Team overrides for _bmad/config.toml, committed. Personal settings such as
+# active_initiative go in config.user.toml, which _bmad/custom/.gitignore excludes.
+# project_name is pinned because setup derives it from the worktree folder name.
+
+[core]
+project_name = "PhishingTrainingProgram"
+output_folder = "{project-root}/_bmad-output"
