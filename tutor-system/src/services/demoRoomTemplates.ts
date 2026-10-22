@@ -587,7 +587,7 @@ export function getPrivacyTeachingTemplateSeeds(): DemoRoomTemplateSeed[] {
       template_description: null,
       title_template: 'Phone Number Phishing Training',
       description_template: 'new phone who dis? my new number is 607-252-6771',
-      image_url: '/images/room-presets/phishing_1.png',
+      image_url: '/images/room-presets/privacy_3.png',
       pre_populated_dialogue: [
         {
           role: 'student',
