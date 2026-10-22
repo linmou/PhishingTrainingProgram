@@ -15,7 +15,7 @@ import { resolveMessagePresentation } from '../../utils/messagePresentation';
 import { projectRoomMessage } from '../transferAssessmentUiAdapter';
 
 jest.mock('../../services/supabase', () => ({
-  supabase: { channel: jest.fn(), from: jest.fn() }, validateRoomPassword: jest.fn(),
+  supabase: { channel: jest.fn(), from: jest.fn(), functions: { invoke: jest.fn() } }, validateRoomPassword: jest.fn(),
   getMessageFeedbackStats: jest.fn(), getUserMessageFeedback: jest.fn(), getRoomFeedbackSummary: jest.fn(),
 }));
 jest.mock('../../services/aiService', () => ({
@@ -47,8 +47,12 @@ const response = (proposal = draft) => ({
   cyberbullyingDraft: proposal,
 });
 
+const realAnalyzeStudentMessages = jest.requireActual('../../services/checklistService').ChecklistService.analyzeStudentMessages;
+
 beforeEach(() => {
   jest.clearAllMocks();
+  window.localStorage.clear();
+  window.sessionStorage.clear();
   (useAuth as jest.Mock).mockReturnValue({ user: tutorUser, loading: false });
   (getAIConfig as jest.Mock).mockResolvedValue(null);
   (supabase.channel as jest.Mock).mockReturnValue({ on: jest.fn().mockReturnThis(), subscribe: jest.fn().mockReturnThis(), unsubscribe: jest.fn() });
@@ -56,6 +60,7 @@ beforeEach(() => {
     const result = table === 'rooms' ? cyberRoom : table === 'messages' ? [learnerMessage] : table === 'users' ? [tutorUser, learnerAUser] : [];
     const query: any = {
       select: jest.fn(() => query), eq: jest.fn(() => query), in: jest.fn(() => query), order: jest.fn(() => query),
+      is: jest.fn(() => query), range: jest.fn(() => query),
       single: jest.fn(async () => ({ data: result, error: null })),
       then: (resolve: (value: unknown) => void) => Promise.resolve({ data: result, error: null }).then(resolve),
     };
@@ -75,11 +80,43 @@ async function mount() {
   await waitFor(() => expect(room.currentRoom?.id).toBe(cyberRoom.id));
 }
 
+test.each(['missing', 'another user', 'unreadable'])('generates with the active tutor identity when browser storage is %s', async (storageState) => {
+  await mount();
+  if (storageState === 'another user') window.localStorage.setItem('tutor_system_user', JSON.stringify(learnerAUser));
+  if (storageState === 'unreadable') jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('Storage unavailable'); });
+  (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation(realAnalyzeStudentMessages);
+  (supabase.functions.invoke as jest.Mock).mockImplementation(async (_name, options) =>
+    options.headers?.['x-application-user-id'] === tutorUser.id
+      ? { data: { ok: true, data: { already_processed: true } }, error: null }
+      : { data: { ok: false, error: { code: 'UNAUTHORIZED', message: 'UNAUTHORIZED', retryable: false } }, error: null });
+
+  await act(async () => { await room.generateAIResponse(); });
+
+  expect(supabase.functions.invoke).toHaveBeenCalledWith('assessment-api', expect.objectContaining({
+    body: expect.objectContaining({ operation: 'analyze_message', message_id: learnerMessage.id, room_id: cyberRoom.id }),
+    headers: { 'x-application-user-id': tutorUser.id },
+  }));
+  expect(generateTutorSuggestion).toHaveBeenCalledWith(cyberRoom.id, tutorUser.id, undefined, expect.any(Object));
+  expect(room.cyberbullyingDraft).toEqual(draft);
+});
+
+test('stops generation when the server rejects the active tutor identity', async () => {
+  await mount();
+  (ChecklistService.analyzeStudentMessages as jest.Mock).mockImplementation(realAnalyzeStudentMessages);
+  (supabase.functions.invoke as jest.Mock).mockResolvedValue({
+    data: { ok: false, error: { code: 'UNAUTHORIZED', message: 'UNAUTHORIZED', retryable: false } }, error: null,
+  });
+  await act(async () => { await expect(room.generateAIResponse()).rejects.toMatchObject({ code: 'UNAUTHORIZED' }); });
+  expect(generateTutorSuggestion).not.toHaveBeenCalled();
+  expect(room.cyberbullyingDraft).toBeNull();
+  expect(room.loadingAI).toBe(false);
+});
+
 test('analyzes saved evidence and publishes the edited character through shared tutor approval', async () => {
   const prepare = jest.spyOn(transferAssessmentService, 'prepareAssessment');
   await mount();
   await act(async () => { await room.generateAIResponse(); });
-  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, learnerMessage.id);
+  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, learnerMessage.id, tutorUser.id);
   expect(prepare).not.toHaveBeenCalled();
   expect(room.cyberbullyingDraft).toEqual(draft);
   expect(room.messages).toHaveLength(1);
@@ -127,7 +164,7 @@ test('stores a learner comment before analysis and leaves it available when anal
   await act(async () => { await room.sendMessage('A new comment'); });
   expect(post).toHaveBeenCalledTimes(1);
   expect(room.messages.some(message => message.id === 'new-comment')).toBe(true);
-  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, 'new-comment');
+  expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(cyberRoom.id, learnerAUser.id, 'new-comment', learnerAUser.id);
 });
 
 test('realtime/reload projection keeps stored character identity for every viewer', () => {

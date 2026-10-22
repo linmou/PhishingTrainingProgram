@@ -87,7 +87,7 @@ describe('ordinary learner checklist coverage', () => {
     await mount();
     await act(async () => { await api.sendMessage('I would open the official app.'); });
     expect(ChecklistService.getChecklistForStudent).toHaveBeenCalledTimes(2);
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1');
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(room.id, 'student-1', 'stored-1', 'student-1');
     expect(ChecklistService.processStudentMessage).not.toHaveBeenCalled();
     expect(api.messages.some(message => message.id === 'stored-1')).toBe(true);
   });
