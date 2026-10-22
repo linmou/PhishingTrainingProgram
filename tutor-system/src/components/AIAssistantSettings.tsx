@@ -12,6 +12,11 @@ interface AIAssistantSettingsProps {
     onClose: () => void;
 }
 
+const SCENARIO_GROUPS = [
+    { type: 'scam', label: 'Scam Detection' },
+    { type: 'privacy', label: 'Privacy Protection' }
+] as const;
+
 const getPresetFromPromptConfig = (
     promptConfig: SystemPromptConfig
 ): 'casual_peer' | 'supportive_adult' => {
@@ -464,17 +469,15 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                                             className="ai-setting-select"
                                         >
                                             <option value="">Custom / General</option>
-                                            <optgroup label="Scam Detection">
-                                                <option value="Nintendo Switch Deal ($19.99)">Nintendo Switch Deal ($19.99)</option>
-                                                <option value="iTunes Gift Card Survey ($500)">iTunes Gift Card Survey ($500)</option>
-                                                <option value="Account Security Alert">Account Security Alert</option>
-                                                <option value="General Scam Indicators">General Scam Indicators</option>
-                                            </optgroup>
-                                            <optgroup label="Privacy Protection">
-                                                <option value="Location Sharing Risks">Location Sharing Risks</option>
-                                                <option value="Contact Information Exposure">Contact Information Exposure</option>
-                                                <option value="Personal Details Protection">Personal Details Protection</option>
-                                            </optgroup>
+                                            {SCENARIO_GROUPS.map(({ type, label }) => (
+                                                <optgroup key={type} label={label}>
+                                                    {(Object.keys(SCENARIO_TEMPLATES) as ScenarioTemplate[])
+                                                        .filter((name) => SCENARIO_TEMPLATES[name].type === type)
+                                                        .map((name) => (
+                                                            <option key={name} value={name}>{name}</option>
+                                                        ))}
+                                                </optgroup>
+                                            ))}
                                         </select>
                                     </div>
 
