@@ -295,7 +295,8 @@ import { buildAIContextFromExistingData } from './simplifiedAIContext';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ```
 
-The six teaching scenarios use five learning targets each in `detection_areas`.
+The six teaching scenarios and the generic `General Scam Indicators` fallback use five
+learning targets each in `detection_areas`.
 Checklist initialization reads the saved inventory before considering prompt
 extraction. Each resulting checklist item has the type `detection_area`.
 
@@ -318,7 +319,7 @@ Account-alert demo variants share the account-alert inventory. The Phase 0
 comparison keeps its historical tutor policy and examples, with only its knowledge
 sections refreshed to match the current targets. The frozen source prompt and
 historical evaluation datasets retain their original content. Custom inventories
-are not subject to the teaching catalog's five-target limit.
+are not subject to the catalog's five-target limit.
 
 Saved global templates must receive the matching knowledge configuration and
 prompt update before newly created hosted rooms inherit these targets. Existing

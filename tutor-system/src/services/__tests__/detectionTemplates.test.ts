@@ -11,7 +11,8 @@ describe('Detection Templates', () => {
     'Account Security Alert',
     'Location Sharing Risks',
     'Movie Meetup Social Engineering',
-    'Contact Information Exposure'
+    'Contact Information Exposure',
+    'General Scam Indicators'
   ] as const)('provides five unique nonempty learning targets for %s', (name) => {
     const scenario = SCENARIO_TEMPLATES[name];
     expect(scenario.detection_areas).toHaveLength(5);
@@ -25,16 +26,10 @@ describe('Detection Templates', () => {
       .not.toEqual(SCENARIO_TEMPLATES['Location Sharing Risks'].detection_areas);
   });
 
-  it('retains unrestricted generic inventories in the same list', () => {
-    for (const name of ['General Scam Indicators', 'Personal Details Protection'] as const) {
-      expect(SCENARIO_TEMPLATES[name].detection_areas.length).toBeGreaterThan(5);
-      expect(SCENARIO_TEMPLATES[name].verification_steps).toEqual([]);
-    }
-  });
-
-  it('exposes the complete teaching and custom catalog', () => {
-    expect(Object.keys(SCENARIO_TEMPLATES)).toHaveLength(8);
+  it('exposes the complete catalog: six teaching scenarios plus the generic scam fallback', () => {
+    expect(Object.keys(SCENARIO_TEMPLATES)).toHaveLength(7);
     expect(Object.values(SCENARIO_TEMPLATES).filter((scenario) => scenario.type === 'scam')).toHaveLength(4);
-    expect(Object.values(SCENARIO_TEMPLATES).filter((scenario) => scenario.type === 'privacy')).toHaveLength(4);
+    expect(Object.values(SCENARIO_TEMPLATES).filter((scenario) => scenario.type === 'privacy')).toHaveLength(3);
+    expect(Object.keys(SCENARIO_TEMPLATES)).not.toContain('Personal Details Protection');
   });
 });

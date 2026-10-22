@@ -1,5 +1,5 @@
 /**
- * Learning targets for teaching scenarios. Each named teaching room has five targets.
+ * Learning targets for teaching scenarios. Every scenario has five targets.
  */
 
 export const SCENARIO_TEMPLATES = {
@@ -38,24 +38,11 @@ export const SCENARIO_TEMPLATES = {
   },
   "General Scam Indicators": {
     detection_areas: [
-      "Too good to be true pricing or offers",
-      "Urgent language designed to pressure quick action",
-      "Suspicious or shortened URLs that hide real destinations",
-      "Lack of official branding or verification",
-      "Generic usernames not affiliated with legitimate companies",
-      "Poor grammar, spelling errors, or unprofessional language",
-      "Requests for personal information or passwords",
-      "No way to verify the offer through official channels",
-      "Business logic doesn't make sense (why would they give this away?)",
-      "Social proof manipulation (fake testimonials or limited engagement)",
-      "Check the source: Is this from an official, verified account?",
-      "Verify the URL: Does it match the official website domain?",
-      "Cross-reference: Check the company's official website and social media",
-      "Research the offer: Search for news coverage or official announcements",
-      "Check your account: Log in directly to see if there are real notifications",
-      "Ask yourself: Does this make business sense?",
-      "Get a second opinion: Ask a trusted adult or friend what they think",
-      "Trust your instincts: If something feels wrong, it probably is"
+      "Judge whether an offer is plausible: prices or rewards that are too good to be true, and a business reason that does not add up (why would they give this away?).",
+      "Identify urgent or pressuring language designed to push quick action before the offer can be checked.",
+      "Check the sender and link: generic usernames, missing official branding, and shortened or mismatched URLs do not establish authenticity.",
+      "Recognize requests for personal information or passwords as a warning sign, and withhold them until the request is verified.",
+      "Verify the offer through an official channel reached independently, such as the company's own website or logging in directly, or ask a trusted adult, before acting."
     ],
     verification_steps: [] as string[],
     type: 'scam'
@@ -89,23 +76,6 @@ export const SCENARIO_TEMPLATES = {
       "Recognize suspicious calls or messages that use an exposed number to request personal information or account access.",
       "Share contact details selectively with trusted people through private messages or platform messaging.",
       "Respond safely to suspicious calls or messages without sharing passwords or verification codes."
-    ],
-    verification_steps: [] as string[],
-    type: 'privacy'
-  },
-  "Personal Details Protection": {
-    detection_areas: [
-      "Full name and age: Complete identity information visible",
-      "School or work location: Making yourself findable in real life",
-      "Family information: Details about parents, siblings, or relatives",
-      "Financial information: Bank details, income, or spending habits",
-      "Daily routines: Patterns that make you predictable and targetable",
-      "Review privacy settings: Regularly check who can see your posts",
-      "Think before posting: Ask \"Would I be comfortable if anyone saw this?\"",
-      "Limit personal details: Keep sensitive information off public profiles",
-      "Use privacy-first platforms: Choose apps that prioritize user privacy",
-      "Educate friends: Help friends understand privacy risks too",
-      "Regular audits: Periodically review and delete old posts with personal info"
     ],
     verification_steps: [] as string[],
     type: 'privacy'
