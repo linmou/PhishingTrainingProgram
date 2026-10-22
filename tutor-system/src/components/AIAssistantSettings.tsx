@@ -472,9 +472,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                                             </optgroup>
                                             <optgroup label="Privacy Protection">
                                                 <option value="Location Sharing Risks">Location Sharing Risks</option>
-                                                <option value="Contact Information Exposure">Contact Information Exposure</option>
-                                                <option value="Personal Details Protection">Personal Details Protection</option>
-                                            </optgroup>
+                                                <option value="Contact Information Exposure">Contact Information Exposure</option>                                            </optgroup>
                                         </select>
                                     </div>
 
