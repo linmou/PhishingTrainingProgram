@@ -1,0 +1,153 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 2,
+  "reviewer_id": "audit3",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.95,
+  "criteria": [
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §2, lines 148-157",
+          "text": "The `rooms` row is explicitly the single authoritative Guard projection, and every existing progression mutation must consult that room projection; session-specific progression may remain in its existing owner, but Guard permission is always read from the joined room projection."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work, Phase 0 step 1, lines 220-225",
+          "text": "Phase 0 inventories room/session progression mutations, realtime subscriptions, and active migration state, then settles the room row as the Guard authorization boundary before any contract or type freeze."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work, Phase 1 steps 5-8; Phase 2 steps 9-12; Phase 3 steps 13-17, lines 227-257",
+          "text": "The plan orders red schema/transition/persistence tests before shared contracts and implementation, then places the append-only migration, student-safe read boundary, atomic reviewed-send RPC, and service integration before dependent UI work."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work, Phase 5 steps 22-26 and Phase 6 steps 27-31, lines 266-297",
+          "text": "Tutor review sends only through the atomic reviewed-send operation, while student rendering, progression enforcement, and realtime reconciliation consume persisted final-message and authoritative room-projection state."
+        }
+      ],
+      "reasoning": "The repaired plan now resolves the only authority-sensitive discovery before freezing contracts or types. It has one Guard authority—the room projection—while allowing session-owned progress data to remain where it is without creating a second Guard state. The order is feasible: establish and test the contract, implement persistence/security, then attach AI/UI consumers and finish with cross-layer validation.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/audits/guard-mode-whole-feature_green_audit1_iteration1.json: c3",
+          "text": "audit1 previously identified a real conflict because the earlier draft deferred the authoritative persistence-owner decision until after the Phase 0 contract/type freeze."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §2, lines 150-157; Phase 0 step 1, line 222",
+          "text": "The repaired text no longer leaves that decision conditional or late: it names the room row as the single Guard projection and requires this authorization boundary to be settled before freeze."
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.93,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk, lines 159-169",
+          "text": "The crosswalk names `candidates/plan_2.md`, `candidates/plan_3.md`, and `candidates/plan_4.md`; for each it specifies the imported contribution, exact draft insertion points, and a compatibility decision."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk, line 165",
+          "text": "Candidate 2 supplies baseline capture, versioned behavior contract, ecological/holdout separation, contrast cases, critical gates, and failure classification at Phase 0 steps 2-4, Phase 7 steps 33-36, and Evaluation design; the compatibility decision retains these as release evidence without making stochastic results block deterministic implementation work."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk, line 166",
+          "text": "Candidate 3 supplies the existing suggestion/composer boundary, stable suggestion IDs, lifecycle dispositions, retry draft retention, and regeneration/rejection cases at Phase 5 steps 22-26, Expected files and ownership, and audit persistence design; the final message and room row remain authoritative."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk, lines 167-169",
+          "text": "Candidate 4 contributes only monotonic revision, stale-write rejection, stale-event suppression, reconnect refetch, and cross-room/student privacy tests. The plan expressly rejects event sourcing, replay/rebuild infrastructure, a second event-store authority, and a separate correction fact; `plan_1.md` remains the pure two-state transition backbone."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/approaches/selection.md: Selection and rationale",
+          "text": "The selection record identifies `state-machine-contract`, `evaluation-first-gate`, `minimal-suggestion-overlay`, and `audit-event-sourcing`; it expressly characterizes audit-event-sourcing as a bounded contribution rather than a full replacement architecture."
+        }
+      ],
+      "reasoning": "The repair supplies the previously missing source-to-plan mapping for every bounded imported contribution: source artifact, retained material, insertion point, and compatibility decision. The selected `plan_1.md` backbone is also explicitly identified, with its pure two-state authority reflected in Architecture decisions §1-§2 and the transition work in Phase 1-2. The imports are adapters, evaluation discipline, and concurrency/privacy controls; none can independently determine Guard state or final message authority.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/candidates/plan_4.md: Assigned Approach and Major Decisions",
+          "text": "Candidate 4 proposes an immutable event stream as the source of truth and a rebuildable `room_guard_state` projection, which is incompatible with the draft's chosen room-row authority if imported wholesale."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk, lines 167-169; Architecture decisions §2, lines 148-157",
+          "text": "The draft records that incompatibility rather than hiding it: it imports only revision/realtime/privacy controls, expressly rejects event-sourcing authority and replay infrastructure, and keeps one authoritative room-row projection."
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §3, lines 171-189",
+          "text": "Only student-safe final content, final mode, and optional source suggestion ID belong with final messages. Raw AI mode/reason/response, wording and rectification data, reviewer data, and provider/model/prompt/configuration metadata are stored in a linked tutor-only suggestion audit record and are not placed on a student-readable messages projection."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work, Phase 3 step 15, lines 253-257",
+          "text": "Student message reads must go through a safe view or RPC limited to content, sender-safe identity, timestamps, and final response mode. Direct student access to raw audit columns/tables is revoked, and direct-read tests must attempt access to raw reason, raw response, prompt/configuration, reviewer, and transition-audit data."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work, Phase 3 steps 16-17, lines 256-257",
+          "text": "The atomic reviewed-send RPC and manual override operation use one transition implementation and source of truth, while stale or persistence failures preserve the review draft and produce an actionable error."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work, Phase 6 steps 28-31, lines 294-297",
+          "text": "The plan verifies the database read boundary and student view model exclude every protected raw/audit field from reads, content, and DOM; it also enforces progression at the service/database boundary and validates revision-aware realtime recovery."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls",
+          "text": "The risk register pairs privacy leakage with tutor-only records, a student-safe projection, grants/RLS, direct-read checks, and DOM assertions; it separately addresses UI/backend lock bypass, state divergence, stale review, realtime gaps, invalid model output, and behavioral false positives/exits."
+        }
+      ],
+      "reasoning": "The earlier privacy concern is repaired at the database boundary, not merely in React: protected raw data is physically separated from student-safe message fields, student reads are constrained to an enumerated view/RPC projection, direct base/audit read attempts are required tests, and RLS/grants restrict mode and audit writes. The room-row authority plus mandatory joined projection checks also closes the progression bypass path: UI disabling is explicitly non-authoritative, and every existing progression mutation must be found and guarded at the service/database boundary.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/audits/guard-mode-whole-feature_green_audit3_iteration1.json: c5",
+          "text": "audit3 correctly found that the earlier draft stored raw AI and provider/prompt metadata with sent-message audit data while only naming student write restrictions and DOM/view-model assertions; that did not prove student SELECT denial."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §3, lines 182-188; Phase 3 step 15, line 255",
+          "text": "The repaired plan moves those fields into tutor-only suggestion audit storage, prohibits them on the student-readable message projection, requires a bounded student-safe view/RPC, revokes direct access, and requires direct-read denial tests."
+        }
+      ]
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": [
+    "c3: Accept audit1's iteration-1 identification of the former late authority decision; reject its continuing failure conclusion because the repaired Architecture decisions §2 and Phase 0 step 1 settle the room authority before contract/type freeze. Accept audit2 and audit3's phased-order analysis after applying this repair.",
+    "c4: Accept audit1 and audit2's iteration-1 provenance-gap finding and audit3's event-sourcing incompatibility finding. Reject the prior insufficient-evidence/fail conclusions because the new Imported contribution crosswalk supplies source, bounded retained material, insertion point, and explicit rejection of the incompatible event-sourcing authority.",
+    "c5: Accept audit3's iteration-1 objection that DOM assertions and write restrictions alone could not secure raw audit data. Reject the earlier pass reasoning from audit1 and audit2 only to that limited extent; the repaired tutor-only storage, student-safe view/RPC, revoked direct access, and direct-read denial tests now provide the required enforceable read boundary."
+  ]
+}

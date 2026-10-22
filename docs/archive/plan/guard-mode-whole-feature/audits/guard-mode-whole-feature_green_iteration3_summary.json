@@ -1,0 +1,28 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 3,
+  "reviewer_count": 3,
+  "status": "not_converged",
+  "disputed_criteria": [
+    "c5"
+  ],
+  "criteria": {
+    "c5": {
+      "criterion_text": "Every material risk has an adequate validation or mitigation.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "fail"
+      ],
+      "confidences": [
+        0.98,
+        0.96,
+        0.97
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 1,
+  "reviewer_id": "audit2",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "insufficient_evidence",
+  "overall_confidence": 0.84,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "Every acceptance criterion in `request.md` is covered by an executable plan step and validation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.94,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria — AI contract and behavior",
+          "text": "The request requires the structured decision fields, semantic rather than counter-based activation, false-positive avoidance, correction persistence/exit, concrete safe Guard responses, and preserved tutoring quality."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 1, steps 5–8; Phase 4, steps 18–21",
+          "text": "The plan defines failing schema/state/persistence tests, validates malformed output, encodes the semantic policy, preserves tutoring rubric instructions, and runs deterministic prompt-contract and Promptfoo/live-Qwen evaluation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Evaluation design — Critical behavior matrix",
+          "text": "The matrix explicitly gates deliberate play, equal-count confused mistakes, effort, clarification, inadequate/evasive corrections, paraphrased adequate corrections, safe Guard tone, and ordinary tutoring behavior."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria — Human review and persistence; UI and student progression",
+          "text": "The request requires reviewed/rectified modes, separate wording and raw-suggestion evidence, auditable final mode, manual deactivation, Guard identity, progress locking, correction chat, and intact behavior outside Guard."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 3, steps 13–17; Phase 5, steps 22–26; Phase 6, steps 27–31",
+          "text": "These steps specify append-only audit persistence, atomic reviewed send and manual override, review/composer controls, message-local identity rendering, student privacy, authoritative progression locking, and revision-aware realtime state."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 7, steps 32–41",
+          "text": "The plan requires end-to-end tests, Promptfoo ecological and holdout gates, live production-path Qwen validation, browser E2E, regression/build/type/coverage/migration checks, documentation, and a final evidence bundle."
+        }
+      ],
+      "reasoning": "The four acceptance groups in the request are covered by explicit implementation phases and named validation gates. The plan also restates the release checks in its “Acceptance and release gate,” making the delivery evidence executable rather than aspirational.",
+      "counterevidence": []
+    },
+    {
+      "id": "c2",
+      "text": "Scope, constraints, and assumptions are internally consistent with `request.md`.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "request.md: Constraints",
+          "text": "The request fixes the React/TypeScript/Supabase and current Qwen path, requires structured validation and preserved tutoring gates, prohibits silent configuration changes, and requires tutor-controlled wording/mode review."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Repository fit; Product contract — Modes and authority; AI decision contract",
+          "text": "The plan extends the existing room flow, makes the AI decision a recommendation, makes the reviewed persisted message/room state authoritative, and rejects malformed output without inferring or defaulting a mode."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Out of scope",
+          "text": "The request excludes a review dashboard, teacher availability handling, per-room Guard profiles, hardcoded counters, invalid-output fallbacks, and replacement of tutoring behavior or metrics."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls — Overengineering",
+          "text": "The plan explicitly excludes a review dashboard, teacher-unavailable path, room-specific profiles, an event-sourcing replay system, a second Guard Boolean, and unrelated tutoring refactor."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Unresolved questions; draft_final_plan.md: Product contract — Universal Guard identity",
+          "text": "The request delegates the exact identity to the plan with `Security Supervisor` as the working name; the plan resolves that implementation detail as a universal static identity with prescribed accessible presentation."
+        }
+      ],
+      "reasoning": "The plan preserves the requested architecture and authority model, honors each listed exclusion, and resolves the request’s delegated identity choice without changing the product boundary. Its extra details, such as stale revision handling and privacy checks, implement rather than conflict with the stated persistence and synchronization requirements.",
+      "counterevidence": []
+    },
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 0, steps 1–4",
+          "text": "The plan starts with the required TDD workflow, baseline capture, requirement-to-test mapping, and freezing contracts/thresholds before prompt tuning."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 1 through Phase 3, steps 5–17",
+          "text": "Red contract tests precede shared types and validator work; shared contracts precede the append-only migration, authorization/RLS checks, atomic RPC, and service adapter."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 4 through Phase 7, steps 18–41",
+          "text": "Prompt behavior follows runtime/persistence contracts; tutor UI follows the reviewed-send operation; student rendering/locking follows persisted message and room projections; full cross-layer validation and documentation are last."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 2. Keep a single current room projection",
+          "text": "Before migration work, the plan requires inspection of the existing progression mutation and conditionally places the single projection in the smallest authoritative owner if the room is not that owner."
+        }
+      ],
+      "reasoning": "The ordered phases establish contracts and red tests before implementations that consume them, persistence before UI send integration, and complete validation only after the end-to-end flow exists. The one conditional repository-discovery step is explicitly placed before the related migration decision, so it does not create a sequencing conflict.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "insufficient_evidence",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Repository fit; Expected files and ownership",
+          "text": "The plan identifies existing backbone files and gives insertion areas for shared types, the AI adapter, RoomContext, review UI, rendering, room page, migration, evaluation, and documentation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 2. Keep a single current room projection",
+          "text": "The plan requires compatibility checking against the active migration state and says not to treat historical consolidated schemas as another runtime source of truth."
+        }
+      ],
+      "reasoning": "The draft provides credible insertion points and compatibility constraints for the repository backbone. However, it does not identify any imported contributions individually or provide provenance/source references for them, so the claim’s universal source-traceability portion cannot be verified from the draft, request, and decomposition alone.",
+      "counterevidence": []
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls",
+          "text": "The plan enumerates risks for false positives, superficial exits, fixed-counter leakage, invalid output, message/state divergence, stale review, lock bypass, realtime gaps, privacy leakage, historical identity drift, audit incompleteness, tutoring regression, and overengineering."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 1, steps 5–8; Phase 3, steps 15–17; Phase 6, steps 28–31",
+          "text": "The plan supplies concrete mitigations through fail-closed validation, atomic rollback/RLS/stale-write tests, authoritative progression enforcement, DOM privacy checks, and realtime revision/reconnect handling."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Evaluation design — Critical behavior matrix; Ordered implementation work — Phase 7, steps 33–38",
+          "text": "Behavioral risks are mitigated with critical 100% cases, equal-count contrasts, ecological and independent holdouts, missing-result failure, live production-path evidence, browser E2E, and regression/build checks."
+        }
+      ],
+      "reasoning": "For each material feature risk explicitly identified by the plan and request, the draft couples a mitigation with a named test, gate, persistence control, or release-evidence requirement. The controls are proportional to the risks because they include both client-facing and authoritative database/service enforcement where bypass is possible.",
+      "counterevidence": []
+    },
+    {
+      "id": "c6",
+      "text": "The draft avoids unnecessary complexity.",
+      "blocking": false,
+      "verdict": "pass",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 1. Use one narrow pure state machine; 2. Keep a single current room projection",
+          "text": "The plan limits the domain module to transition/flag/progress derivation and selects one constrained mode plus one monotonic revision, expressly prohibiting an independent `guard_active` Boolean."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 4. Make reviewed send atomic; 6. Keep real-time state monotonic",
+          "text": "The plan uses one reviewed-send transaction/RPC, one transition implementation, and a revision-based reconciliation model rather than parallel or client-authoritative state."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls — Overengineering",
+          "text": "The plan explicitly excludes a review dashboard, teacher-unavailable path, room-specific profiles, event-sourcing replay, a second Guard Boolean, and unrelated refactoring."
+        }
+      ],
+      "reasoning": "The plan adds the minimum cross-layer mechanisms needed for the stated acceptance gates—validated structured output, one authoritative room projection, atomic persistence, and targeted UI/evaluation work—while explicitly declining broader systems outside the request.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [
+    "For c4, what are the individual imported contributions, their source artifacts or authors, and their exact insertion points? The reviewed materials establish repository insertion areas but not contribution-level provenance."
+  ],
+  "disputed_points_if_any": []
+}

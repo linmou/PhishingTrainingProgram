@@ -1,0 +1,81 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 3,
+  "reviewer_id": "audit2",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.96,
+  "criteria": [
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/request.md: Human review and persistence",
+          "text": "The request requires raw AI mode/reason/response and final human mode/response to be auditable, while invalid structured AI output must fail visibly without silently guessing a mode."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/request.md: UI and student progression; Evaluation gates",
+          "text": "The request requires student progress to remain locked during Guard and unlock only after correction, while deterministic schema/transition/persistence/UI tests and production-path validation provide the required release evidence."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/draft_final_plan.md: Phase 3, step 15, line 255",
+          "text": "The plan selects one concrete student-read boundary: create the `student_messages` database view, route every student message read through it, expose only message content, sender-safe identity, timestamps, and final response mode, revoke direct student access to base-table raw audit columns/tables, and grant student read access only to the view."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/draft_final_plan.md: Phase 3, step 15, line 255",
+          "text": "The selected view design requires direct-read tests for raw reason, raw response, prompt/configuration data, reviewer data, and transition audit data; it also requires RLS/grants restricting mode and audit-field changes to an authorized tutor or trusted server operation."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/draft_final_plan.md: Phase 6, steps 28-31, lines 294-297",
+          "text": "The plan verifies that every protected field is excluded from database reads, the student view model, rendered content, and DOM; it separately enforces the Guard progress lock at the service/database boundary and requires revision-aware realtime recovery."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/draft_final_plan.md: Risks and controls, lines 382-394",
+          "text": "The risk register pairs false-positive activation, superficial exit, fixed-counter leakage, invalid output, persistence divergence, stale reviews, lock bypass, realtime gaps, privacy leakage, historical identity drift, audit incompleteness, and tutoring regression with named controls or release gates."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/draft_final_plan.md: Phase 7, steps 32-38, lines 301-307",
+          "text": "The validation plan requires deterministic end-to-end tests, critical 100% semantic behavior gates, ecological and independent holdout evaluation, live production-path Qwen evidence, browser E2E, migration/RLS validation, regression suites, type checks, build, and coverage."
+        }
+      ],
+      "reasoning": "Pass. The disputed privacy mitigation is now concrete and executable: Phase 3 step 15 names one read surface (`student_messages`), defines its allowed fields, requires all student message reads to use it, revokes direct base/audit access, grants student access only to that view, and names denial tests for each protected data class. Phase 6 step 28 adds independent read/view-model/content/DOM verification. This is sufficient for the material confidentiality risk without requiring an unrelated API redesign or a second persistence architecture. The remaining material risks are proportionately covered by the explicit risk register, authoritative atomic/revision/lock controls, and deterministic plus production-path validation gates.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/audits/guard-mode-whole-feature_green_audit1_iteration2.json: c5",
+          "text": "audit1 correctly identified a real prior contradiction: Phase 3 step 15 then allowed \"a safe view or RPC,\" leaving the implementation surface, grant target, and direct-read test target unsettled."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/audits/guard-mode-whole-feature_green_audit3_iteration1.json: c5",
+          "text": "audit3 correctly found that the earlier plan's raw audit storage, student write restriction, and DOM checks did not prove that student SELECT access to protected fields was denied."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/draft_final_plan.md: Phase 3, step 15, line 255",
+          "text": "The current draft resolves both contradictions by selecting the named `student_messages` view, routing every student read through it, restricting its returned fields, revoking direct access, granting student read access only to the view, and requiring direct-read denial tests."
+        }
+      ]
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": [
+    "Accepted audit1 iteration 1 and audit2 iteration 1: their broader c5 conclusion that the plan already named proportionate controls for behavioral false positives/exits, invalid output, persistence, stale review, lock bypass, realtime, audit completeness, and tutoring regression remains supported by Risks and controls and Phase 7 steps 32-38.",
+    "Accepted audit3 iteration 1: its privacy objection was correct for the earlier draft because rendering checks and student write restrictions did not establish a server-enforced student read boundary. The current Phase 3 step 15 implements the remedy audit3 specified: separated tutor-only audit storage, a student-safe read projection, grants/revocations, and direct-read denial testing.",
+    "Accepted audit1 iteration 2's narrow requirement that the student-read mechanism be singular and testable. Rejected its iteration-2 fail conclusion for the current artifact because the repair described in the disagreement packet is present in the draft: Phase 3 step 15 now chooses the `student_messages` view rather than retaining the prior \"safe view or RPC\" alternative.",
+    "Accepted audit2 iteration 2 and audit3 iteration 2 insofar as they found the repaired separation, permissions, and direct-read/DOM checks adequate. Their references to a \"view or RPC\" describe the superseded iteration-2 wording; the current named-view design is stronger and removes that residual ambiguity.",
+    "Accepted both prior iteration summaries as history: iteration 1 marked c5 disputed because audit3 found no enforceable student SELECT boundary, and iteration 2 marked c5 disputed because audit1 found the repaired boundary mechanism still conditional. Neither remains an unresolved c5 conflict after the concrete-view repair documented in the iteration-3 packet and present in Phase 3 step 15."
+  ]
+}

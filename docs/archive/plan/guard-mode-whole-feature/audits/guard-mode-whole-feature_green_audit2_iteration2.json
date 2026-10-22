@@ -1,0 +1,106 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 2,
+  "reviewer_id": "audit2",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "pass",
+  "overall_confidence": 0.95,
+  "criteria": [
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.96,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 2. Keep a single current room projection",
+          "text": "The rooms row is explicitly the single authoritative Guard projection; session-specific progression may retain its existing owner, but Guard permission is always read from the joined room projection."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 0, step 1",
+          "text": "Before any contract or type freeze, the plan inventories room/session progression mutations and active migration state, then settles the room row as the Guard authorization boundary and requires every progression mutation to consult it."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 0, step 4; Phases 1–3, steps 5–17",
+          "text": "Contract freezing occurs after the projection decision; red tests precede shared types and validator work, which precede the migration, student-safe read boundary, atomic RPC, and service adapter."
+        },
+        {
+          "kind": "quote",
+          "location": "plan/guard-mode-whole-feature/audits/disagreement_packet_iteration1.md: Repair applied before this round",
+          "text": "The packet identifies the repair as making the rooms row the single Guard projection and settling it in Phase 0 before contract freeze."
+        }
+      ],
+      "reasoning": "I accept audit1 iteration 1's underlying point that the original conditional owner decision could not safely follow a contract/type freeze. That point is directly repaired: Phase 0 step 1 now resolves the authorization boundary before step 4 freezes contracts, and Architecture decision 2 no longer leaves the Guard projection conditional on a later alternative owner. I accept audit2 and audit3 iteration 1's general phase-order reading, and reject audit1's prior c3 failure as applicable to this repaired draft. The resulting order is feasible without requiring unrelated schema redesign.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk",
+          "text": "The crosswalk names `candidates/plan_2.md`, `candidates/plan_3.md`, and `candidates/plan_4.md`, and gives each imported contribution, its concrete insertion locations, and a keep/reject compatibility decision."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk — plan_2 row",
+          "text": "Baseline/evaluation contributions are inserted in Phase 0 steps 2–4, Phase 7 steps 33–36, and Evaluation design, with the constraint that stochastic results do not block deterministic implementation work."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk — plan_3 row",
+          "text": "Suggestion/composer lifecycle contributions are inserted in Phase 5 steps 22–26, Expected files and ownership, and audit persistence design, while raw evidence remains immutable and the final message/room row remains authoritative."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Imported contribution crosswalk — plan_4 row; immediately following backbone statement",
+          "text": "Only monotonic revision, stale-write/realtime controls, reconnect refetch, and privacy tests are retained; event sourcing, replay/rebuild infrastructure, a second event-store authority, and `correction_evaluated` as a separate fact are expressly rejected. `plan_1.md` is identified as the pure two-state, single-source-of-truth backbone."
+        }
+      ],
+      "reasoning": "I accept audit1 and audit2 iteration 1's provenance objection as correct for the prior draft: repository insertion areas were not a contribution-level source crosswalk. I also accept audit3 iteration 1's identified event-sourcing versus room-projection incompatibility as a real pre-repair conflict. The new crosswalk directly answers both points by naming all bounded imports, mapping each to plan sections/steps, and explicitly rejecting the event-sourcing parts that would compete with the `plan_1.md` room-projection backbone. I reject the earlier c4 insufficient-evidence/fail conclusions for this repaired draft; requiring a broader provenance system for the selected backbone would exceed the stated disputed repair and is unnecessary to establish compatibility of the imported contributions.",
+      "counterevidence": []
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 3. Separate immutable raw suggestion evidence from final outcome",
+          "text": "Student-safe final message fields are separated from raw AI mode/reason/response, review metadata, and provider/model/prompt/configuration metadata, which are retained in a tutor-only suggestion audit record linked to the message."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 3, steps 13 and 15",
+          "text": "The migration creates tutor-only suggestion/transition audit storage, while the student read boundary uses a safe view or RPC exposing only content, safe identity, timestamps, and final response mode; direct access attempts for every protected raw/audit field must be tested."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 6, step 28",
+          "text": "Verification must show that raw reason, raw response, rectification flag, provider metadata, prompt/configuration data, reviewer data, and internal audit fields are excluded from student reads, content, and DOM."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls — Student privacy leak; other listed risks",
+          "text": "The plan requires tutor-only records, a student-safe message projection, grants/RLS, and direct-read plus DOM assertions for every protected field; it separately pairs the other material behavior, persistence, lock, realtime, audit, regression, and scope risks with specified controls and gates."
+        }
+      ],
+      "reasoning": "I accept audit3 iteration 1's privacy finding: in the prior draft, raw audit data associated with student-readable messages plus RLS/DOM language did not establish a server-enforced student read boundary. The repair directly supplies the missing data separation, safe read projection, grants/RLS, and explicit direct-read-denial tests. I accept audit1 and audit2 iteration 1's assessment that the remaining material risks already had proportionate controls, but reject their prior privacy rationale insofar as it treated rendering or write restrictions alone as sufficient. With the repaired Phase 3 and Phase 6 controls, no material risk identified by the plan remains without a named mitigation or validation.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [],
+  "disputed_points_if_any": []
+}

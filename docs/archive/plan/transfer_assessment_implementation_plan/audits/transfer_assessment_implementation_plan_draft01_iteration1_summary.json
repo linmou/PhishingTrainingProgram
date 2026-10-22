@@ -1,0 +1,110 @@
+{
+  "feature_name": "transfer_assessment_implementation_plan",
+  "phase": "draft01",
+  "iteration": 1,
+  "reviewer_count": 3,
+  "status": "not_converged",
+  "disputed_criteria": [
+    "c3",
+    "c4",
+    "c6"
+  ],
+  "criteria": {
+    "c1": {
+      "criterion_text": "Every acceptance criterion in `request.md`, including preservation of the original handoff, index, checkbox ledger, intent audit, evidence-bound milestones, and \u00a719 completion, is covered by an executable plan step and validation.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.87,
+        0.93,
+        0.9
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c2": {
+      "criterion_text": "Scope, constraints, assumptions, legacy/auth boundaries, Docker limitation, migration authority, and feature-flag rule are internally consistent with `request.md` and the original handoff.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.91,
+        0.91,
+        0.87
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c3": {
+      "criterion_text": "Dependencies and sequencing form one feasible execution order: audit before implementation, schema/security before client exposure, evaluation and product verification before activation, with explicit blocked states.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "fail"
+      ],
+      "confidences": [
+        0.93,
+        0.92,
+        0.92
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    },
+    "c4": {
+      "criterion_text": "Every imported contribution from candidates 2-4 has a named source, insertion point, and compatibility rule; no contribution silently changes product intent or creates a competing status authority.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "fail"
+      ],
+      "confidences": [
+        0.82,
+        0.82,
+        0.98
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    },
+    "c5": {
+      "criterion_text": "Every material risk has an adequate mitigation or validation, including intent drift, privacy/auth bypass, migration/schema drift, evaluator errors, legacy evidence confusion, missing credentials, concurrency, and premature activation.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.85,
+        0.87,
+        0.93
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c6": {
+      "criterion_text": "The draft avoids unnecessary complexity for a documentation index and does not create redundant plans, ledgers, or acceptance authorities.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "fail"
+      ],
+      "confidences": [
+        0.79,
+        0.9,
+        0.98
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 Intent: define the implementation and delivery requirements for work in this repository.
 
-Updated: 2026-10-21. Workflow and verification index baseline commit: `62f2b6b`.
+Updated: 2026-10-22. Archive rule baseline commit: `71d5f0e`; workflow and verification index baseline commit: `62f2b6b`.
 
 ## Mandatory Server Delivery
 
@@ -52,6 +52,7 @@ This repository is centered on `tutor-system/`, a React + TypeScript phishing-tr
 - `tutor-system/supabase/migrations/`: schema and RLS SQL
 - `tutor-system/functions/`: Firebase Cloud Functions
 - `raw_instrcutions/`, `post_template/`: project content and image assets, not application runtime code
+- `docs/archive/`: superseded and recovered planning sources, not current requirements. Do not read it unless the user asks or a document you are working from cites a file there; see [its index](docs/archive/README.md).
 
 ## Build, Test, and Development Commands
 Run commands from `tutor-system/` unless noted otherwise.

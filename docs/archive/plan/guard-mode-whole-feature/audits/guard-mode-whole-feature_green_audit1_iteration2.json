@@ -1,0 +1,101 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 2,
+  "reviewer_id": "audit1",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "fail",
+  "overall_confidence": 0.91,
+  "criteria": [
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.94,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 0, step 1",
+          "text": "The plan requires the workflow setup to inventory existing room/session progression mutations, realtime subscriptions, and active migration state, then explicitly says: \"Settle the room row as the Guard authorization boundary before any contract or type freeze; every progression mutation must consult it.\""
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 0, step 4; Phase 1, steps 5–8; Phase 2, steps 9–12; Phase 3, steps 13–17",
+          "text": "The contract freeze follows the settled authorization boundary; red tests precede shared types and runtime validation; shared contracts precede the migration, student-read boundary, atomic RPC, and service adapter."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 4, steps 18–21; Phase 5, steps 22–26; Phase 6, steps 27–31; Phase 7, steps 32–41",
+          "text": "Prompt behavior follows the contract and persistence design; tutor review calls the established atomic operation; student rendering and locks consume persisted projections; release validation follows the completed cross-layer path."
+        }
+      ],
+      "reasoning": "The repair explicitly settles the disputed owner before either the Phase 0 contract/type freeze or the later migration and shared-type work. The ordered phases now have a feasible dependency chain: authorization boundary, contracts/tests, persistence, AI behavior, tutor UI, student behavior, then full validation. I accept audit1 iteration 1's warning that late or conditional ownership would invalidate sequencing, but reject its iteration 1 fail verdict because Phase 0 step 1 now removes that condition. I accept the sequencing observations from audit2 and audit3 iteration 1; their acceptance is now supported by an explicit, rather than conditional, owner decision. The iteration 1 summary correctly identifies c3 as previously disputed, and the cited repair resolves that dispute.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — Imported contribution crosswalk, row for candidates/plan_2.md",
+          "text": "The crosswalk identifies `plan/guard-mode-whole-feature/candidates/plan_2.md`, enumerates its imported baseline/evaluation contributions, places them in Phase 0 steps 2–4, Phase 7 steps 33–36, and Evaluation design, and records the compatibility decision to keep them without blocking deterministic implementation work on stochastic results."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — Imported contribution crosswalk, row for candidates/plan_3.md",
+          "text": "The crosswalk identifies `plan/guard-mode-whole-feature/candidates/plan_3.md`, enumerates the suggestion/composer and lifecycle contributions, places them in Phase 5 steps 22–26, Expected files and ownership, and audit persistence, and states that immutable raw evidence remains separate from authoritative final message and room state."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — Imported contribution crosswalk, row for candidates/plan_4.md and following backbone statement",
+          "text": "The crosswalk identifies `plan/guard-mode-whole-feature/candidates/plan_4.md`, limits its imported contribution to revision, stale-write, realtime, reconnect, and privacy controls, gives exact architecture and phase insertion points, and expressly rejects event sourcing, replay/rebuild infrastructure, a second event-store authority, and a separate correction fact. The following paragraph identifies `plan_1.md` as the selected pure two-state, single-source-of-truth backbone and states that imported items create no competing transition or persistence authority."
+        }
+      ],
+      "reasoning": "Each imported contribution named by the repaired crosswalk has a source artifact, bounded retained content, concrete plan insertion points, and an explicit compatibility decision. I accept audit1 and audit2 iteration 1's provenance objection and audit3 iteration 1's specific event-sourcing incompatibility point as valid defects in the prior draft. I reject their prior c4 verdicts for the repaired artifact: the crosswalk now supplies the missing provenance and insertion mapping, and the plan_4 row explicitly rejects the event-sourcing parts that conflicted with the plan_1 room-projection backbone. The iteration 1 summary correctly records c4 as disputed; no unaddressed contribution-level incompatibility remains in the revised crosswalk.",
+      "counterevidence": []
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 3. Separate immutable raw suggestion evidence from final outcome",
+          "text": "The repaired design moves raw AI mode/reason/response, rectification and reviewer data, and provider/prompt/configuration metadata into a tutor-only suggestion audit record and says not to put those fields on a student-readable messages projection."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 3, step 15",
+          "text": "The plan requires an explicit student-safe read boundary and direct-read tests for raw reason, raw response, prompt/configuration data, reviewer data, and transition audit data, but states that student reads must be routed through \"a safe view or RPC\" rather than selecting one mechanism."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 6, step 28; Risks and controls — Student privacy leak",
+          "text": "The plan requires database-read, student-view-model, content, and DOM checks for all protected fields and lists tutor-only records, a student-safe projection, grants/RLS, and direct-read assertions as the privacy control."
+        }
+      ],
+      "reasoning": "The repair correctly accepts audit3 iteration 1's core privacy objection: raw fields are separated from student-safe messages and direct student-read denial tests are required. I also accept audit1 and audit2 iteration 1's broader point that the other named risks have specific controls. However, I reject their prior c5 pass verdicts under this round's strict rule: Phase 3 step 15 leaves the server-enforced student read mechanism unresolved as \"a safe view or RPC.\" The plan does not select which API surface will become the sole student read path, nor does it contain a preceding decision step that settles that choice. That remaining alternative is material because the requested mitigation depends on it; therefore the repaired risk control is not yet fully settled and executable. The iteration 1 summary identifies c5 as disputed, and this unresolved conditional wording prevents convergence.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 3, step 15",
+          "text": "The requirement to route student reads through \"a safe view or RPC\" presents two alternative authorization surfaces while the same step requires a definitive student read boundary. Without choosing one, the implementation path, grants, test target, and authorized client query contract remain unsettled."
+        }
+      ]
+    }
+  ],
+  "open_questions": [
+    "c5: Which single server-enforced mechanism is the student message read contract—a named safe view with its exact grants/RLS policy, or a named RPC with its exact authorization policy—and which one must the direct-read denial tests target?"
+  ],
+  "disputed_points_if_any": [
+    "c5: The prior audit3 privacy-boundary concern is substantially repaired by tutor-only audit storage and direct-read tests, but Phase 3 step 15 still leaves the required student read mechanism conditional as \"safe view or RPC.\""
+  ]
+}
