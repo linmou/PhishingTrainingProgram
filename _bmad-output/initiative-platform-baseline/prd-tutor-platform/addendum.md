@@ -2,7 +2,7 @@
 
 Intent: keep the material the PRD needs but should not carry in its main text — where each requirement came from, the technical choices currently deployed, and the known differences between the PRD and current behavior.
 
-Updated: 2026-10-22. Source baseline commit: `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
+Updated: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
 
 ## A. Legacy requirement crosswalk
 
@@ -26,8 +26,8 @@ Legacy IDs are cited with their source so colliding numbers stay distinct: `spec
 | FR-14 | feature:real_time_chat; spec-full-tutor-conversation-history |
 | FR-15 | feature:real_time_chat (typing) |
 | FR-16 | README "Required Response Ratings"; feature:real_time_chat (feedback); cb-request R8 |
-| FR-17 | supabase-service.md "Chat History Management"; assessment-result-messages (clear history) |
-| FR-18 | spec-unified-learning-targets (supersedes spec-five-learning-targets); spec-103 refactor contract; QA-TA-01 |
+| FR-17 | Withdrawn 2026-10-22 (formerly supabase-service.md "Chat History Management"; assessment-result-messages, clear history). See G-21. |
+| FR-18 | spec-unified-learning-targets (supersedes spec-five-learning-targets); spec-103 refactor contract; QA-TA-01; owner decision 2026-10-22 (OQ-14: all new learning targets learner-owned) |
 | FR-19 | spec-recheck-messages-after-goals |
 | FR-20 | transfer-status-response-contract; transfer-status-analysis.md; behavior T02 analysis; cb-request R4 |
 | FR-21 | transfer-status-response-contract (event table); spec-101 FR-015, FR-016 |
@@ -61,6 +61,8 @@ Legacy IDs are cited with their source so colliding numbers stay distinct: `spec
 | FR-49 | cb-request R8 |
 | FR-50 | feature:chat_history_download; spec-103 FR-013–FR-015; cb-request R8 |
 | FR-51 | feature:ai_suggestion_tracking; cb-request R7 |
+| FR-52 | Owner decision 2026-10-22 (OQ-8); ownership checks in cb-request R9 and the cyberbullying reviewed send |
+| FR-53 | feature:checklist_management (manual status, notes); assessment-api `edit_learning_progress`; owner decision 2026-10-22 (OQ-14) |
 | NFR-1 | constitution P4; tutor-response-contract |
 | NFR-2 | `.specify/memory/constitution.md` II; spec-101–103 server-authority FRs |
 | NFR-3 | `.specify/memory/constitution.md` II; spec-101 FR-004; spec-102 FR-007, FR-008 |
@@ -80,7 +82,7 @@ These belong to the architecture spine; they are recorded here so the PRD stays 
 
 - **Identity transport:** browser-held application user ID (deterministic hash of normalized name and role) sent as `x-application-user-id`; Edge functions resolve it against `users.current_role`, `status`, room ownership and active sessions.
 - **Data access:** `users`, `rooms`, `sessions`, `messages`, `message_feedback` have row-level policies allowing all operations to `public`. Private assessment data lives in the `private` schema; `anon` and `authenticated` have no usage on it. Assessment RPCs are `SECURITY DEFINER` and not executable by `anon` (verified 2026-10-22 on production and staging).
-- **Server functions:** `ai-api` (tutor suggestions, character replies) and `assessment-api` (join, messages, analysis, assessment preparation, delivery, answers, progress edits, review reads, clear history).
+- **Server functions:** `ai-api` (AI suggestions, character drafts) and `assessment-api` (join, messages, learning-event judging, assessment drafts, delivery, attempts, manual progress edits, review reads, and clear history, which is to be removed per G-21).
 - **Models:** tutoring and message analysis use `qwen3.8-flash` (`DEFAULT_AI_MODEL`); transfer-assessment generation uses `qwen3.5-flash`. Tutoring temperature 0.3 / 600 tokens; analysis temperature 0 / 600 tokens; assessment generation temperature 0.3 / 1200 tokens; character replies temperature 0.7 / 2000 tokens. All use JSON mode and at most one format-repair retry.
 - **Limits:** `ai-api` accepts at most 30 messages and 50,000 characters; history reads page by `(created_at, id)` in pages of 1000 (tutor context) and 500 (analysis catch-up).
 - **Client contract:** every request to both Edge functions must carry `x-practice-contract: cyberbullying-v2`; the database write gate enforces the same contract. A cutover for either practice type forces all clients to reload.
@@ -92,15 +94,15 @@ These belong to the architecture spine; they are recorded here so the PRD stays 
 
 ## C. Known gaps between this PRD and current behavior
 
-Each gap is a candidate backlog bug or a decision listed in PRD §8. IDs are stable.
+Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owner's decisions of 2026-10-22 keep their IDs and say so. IDs are stable.
 
 | ID | Gap | Evidence | Related |
 | --- | --- | --- | --- |
 | G-1 | Custom avatar and room-image upload cannot succeed: it requires a Supabase Auth session the app never creates, storage policies require `auth.uid()`, and room uploads use a placeholder room ID. Unit tests mock the session and pass. | extract-D C13 | FR-2, §7.2 |
-| G-2 | Any client can read and write users, rooms, sessions, messages and ratings directly; role checks for many actions run only in the browser. | extract-D §2 | NFR-4, OQ-1 |
-| G-3 | Room passwords are stored and checked in plain text in the browser and shown on tutor room cards. | extract-D C5; extract-C C-06 | FR-10, OQ-1 |
-| G-4 | No action ever ends a learner's session, so a seat stays taken. | extract-D C4 | FR-12, OQ-4 |
-| G-5 | Two reply-length limits (2/35 in the active prompt, 3/50 in T08 and the response policy) are both sent to the model. | extract-A X3 | FR-26, OQ-5 |
+| G-2 | **Accepted for the pilot (OQ-1).** Any client can read and write users, rooms, sessions, messages and ratings directly; role checks for many actions run only in the browser. Revisit if the platform leaves supervised pilot use. | extract-D §2 | NFR-4 |
+| G-3 | **Accepted for the pilot (OQ-1).** Room passwords are stored and checked in plain text in the browser and shown on tutor room cards. | extract-D C5; extract-C C-06 | FR-10, NFR-4 |
+| G-4 | **Withdrawn (OQ-4).** No action ends a learner's seat; this is intended because rooms are single-use and kept as pilot data. | extract-D C4 | FR-12 |
+| G-5 | Phishing AI suggestions must follow T08 (3 sentences / 50 words), but the active prompt also sends 2 sentences / 35 words. Align the prompt with T08. | extract-A X3 | FR-26 |
 | G-6 | Tutor-set temperature and max-tokens are saved but ignored. | extract-A X5 | FR-24 |
 | G-7 | Quick Adjust regenerate records the replaced suggestion as `modified`, not `ignored`, which skews tracking rates. | extract-A X7 | FR-28, FR-51 |
 | G-8 | Generic AI failures show transfer-assessment wording ("The transfer request could not be completed"). | extract-A X6 | FR-25 |
@@ -108,14 +110,18 @@ Each gap is a candidate backlog bug or a decision listed in PRD §8. IDs are sta
 | G-10 | Retry result text differs between the saved message ("One attempt remaining"), the export ("1 attempt remaining") and the QA guide. | extract-B X9 | FR-39 |
 | G-11 | Cyberbullying request R1 asks for template round trips; tutors cannot save templates and no cyberbullying templates are seeded. | extract-C K-13 | FR-6 |
 | G-12 | Silent fallbacks: offline local-only login when the database is unreachable; direct session insert when the trusted join fails; swallowed errors on the observer room list. | extract-D NFR-6 | NFR-7 |
-| G-13 | Observers' cyberbullying exports include the room learner's progress; observers see test rooms. | extract-D C11, C6 | FR-50, OQ-10 |
-| G-14 | Any tutor-role user gets AI, Guard and progress controls in rooms they do not own. | extract-D §2 | OQ-8 |
-| G-15 | The legacy browser-side progress path has four failing BDD scenarios and stale category expectations. | extract-C C-15, K-10, K-11 | OQ-14 |
-| G-16 | Assessment clarification and help-request handling exist on the server but cannot be reached from the UI. | extract-B X5 | OQ-6 |
+| G-13 | Observers see test rooms in their room list. (Observers receiving cyberbullying learning progress in exports is intended, OQ-10.) | extract-D C6 | FR-8, FR-13 |
+| G-14 | Any tutor-role user gets AI, Guard and learning-progress controls in rooms they do not own; the server checks ownership only for cyberbullying character drafts. | extract-D §2 | FR-52 |
+| G-15 | The legacy room-wide progress path (browser-side judging) has four failing BDD scenarios and stale category expectations. Per OQ-14 it serves only old rooms, which are not revisited; its tests can be retired with it. Manual progress edits must keep working on learner-owned learning targets (FR-53). | extract-C C-15, K-10, K-11 | FR-53, §6 |
+| G-16 | The server still accepts typed assessment answers and runs clarification and help-request handling, which the PRD removes (OQ-6). Remove them so only option selections are accepted. | extract-B X5 | FR-37 |
 | G-17 | `feature:ai_openai_integration` (10 scenarios) is not run by any test and describes a retired client-side provider. | extract-D §6.1 | — |
 | G-18 | The "N observers" scenario passes only with a mocked count that nothing stores. | extract-D §6.7 | FR-13 |
 | G-19 | Prototype feedback #7 (show the AI is working, faster first response) is still open. | extract-A C18 | — |
 | G-20 | The latest recorded tutor quality-gate run (qwen3.5-flash) did not satisfy its rubrics; no run exists for qwen3.8-flash, which is deployed. | extract-A C3, X4 | NFR-10 |
+| G-21 | Clearing chat history still exists for phishing room owners (button, backup download, `assessment-api` operation) but is not a supported feature. Remove it. | extract-D C12; extract-B C16 | FR-17 (withdrawn) |
+| G-22 | The assessment editor offers Discard and Send. Check that Discard works as the PRD's reject: nothing is delivered, the room owner can write their own tutor reply, and the transfer assessment is offered again later. Rename it if it does. | extract-B C5, X6 | FR-35 |
+| G-24 | Learner-owned learning targets and server judging are tied to in-room assessment: a new phishing room with in-room assessment off still uses room-wide learning targets and browser-side judging (`RoomContext.tsx:719`, routing on `transfer_learning_enabled`). Decouple them so every new room uses learner-owned learning targets, and in-room assessment only turns transfer assessments on or off. | extract-C X-04, C-15; code check 2026-10-22 | FR-18, FR-31 |
+| G-23 | The rating gate should fire for character replies in cyberbullying rooms. The code suggests it does (they are saved as tutor replies), but no test covers it. Add one. | extract-C X-11 | FR-16 |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
 

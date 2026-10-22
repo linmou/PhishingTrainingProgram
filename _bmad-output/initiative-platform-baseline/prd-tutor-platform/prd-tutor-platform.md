@@ -10,86 +10,123 @@ updated: 2026-10-22
 
 ## 0. Document Purpose
 
-This PRD states what the deployed tutor platform is and must keep doing. It is a brownfield baseline: every requirement below describes behavior that exists in production on 2026-10-22, written as intent, so that new initiatives can be checked against it before they change shared behavior. It is written for the product owner, for whoever plans the next initiative, and for the BMAD skills that derive the architecture spine and the baseline epics from it.
+This PRD states what the deployed tutor platform is and must keep doing. It is a brownfield baseline: every requirement below describes behavior intended for the platform as deployed on 2026-10-22, so that new initiatives can be checked against it before they change shared behavior. It is written for the product owner, for whoever plans the next initiative, and for the BMAD skills that derive the architecture spine and the baseline epics from it.
 
-Structure: a Glossary that every later section uses verbatim; Features with globally numbered FRs (FR-1…); cross-cutting NFRs; Non-Goals; Scope; Open Questions; and an Assumptions Index. Where the deployed code and older documents disagree, the FR follows the code and carries an `[ASSUMPTION]` tag. Behavior that cannot be intended (broken or unsafe) is not written as a requirement; it is listed in `addendum.md` §C (Known gaps) and, where a decision is needed, in §8.
+Structure: a Glossary that every later section uses verbatim; Features with globally numbered FRs (FR-1…); cross-cutting NFRs; Non-Goals; Scope; Open Questions and Decisions; and an Assumptions Index. Where current behavior differs from a requirement, the difference is listed in `addendum.md` §C (Known gaps), not hidden in the requirement.
 
 This PRD builds on, and does not restate, these companion documents:
 
-- `tutor-system/docs/ai-behaviors/constitution.md` — tutoring principles (P), hard constraints (H) and priority rules (R).
-- `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` — observable tutor requirements T01–T09.6 and G01–G03.
+- `tutor-system/docs/ai-behaviors/constitution.md` — the tutoring constitution (phishing only).
+- `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` — tutor behavior requirements T01–T09.6 and G01–G03.
 - `tutor-system/docs/ai-behaviors/tutor-response-contract.md` and `transfer-status-response-contract.md` — AI output and learning-event contracts.
 - `tutor-system/docs/assessment-result-messages.md` — result-message publication.
-- `tutor-system/docs/cyberbullying-practise.md` — cyberbullying scenarios, targets and characters.
+- `tutor-system/docs/cyberbullying-practise.md` — cyberbullying scenarios, learning targets and characters.
 
 Legacy requirement IDs (spec-101…104 FR-xxx, cyberbullying R1–R13, QA-TA cases, feature scenarios) are mapped to these FRs in `addendum.md` §A. Source extracts with code and test evidence sit beside this file (`extract-A…D`).
 
 ## 1. Vision
 
-Schools use the platform to teach young people to recognize and respond to online risks — phishing and scams, privacy exposure, and cyberbullying — through practice on realistic social-media posts. A human tutor runs each practice room with one learner. An AI assistant drafts what the tutor could say next, and the tutor decides what is actually sent.
+Schools use the platform to teach children to recognize and respond to online risks — phishing and scams, privacy exposure, and cyberbullying — by practicing on realistic social-media posts. A tutor runs each room with one learner. An AI assistant drafts what the tutor could say next, and the tutor decides what is actually sent.
 
-The goal is the learner's own understanding and judgment, not compliance or volume of interaction. The AI is a supervised suggester: it never speaks to learners on its own, and every decision it proposes can be inspected and overridden by the tutor. Learning progress is tracked per learner from what the learner actually says, and in phishing rooms a short final check confirms that the learner can apply an idea in a new situation.
+The goal is the learner's own understanding and judgment, not compliance or volume of interaction. The AI assistant never speaks to learners on its own, and every decision it proposes can be inspected and overridden by the tutor. Learning progress is tracked per learner from what the learner actually says, and in phishing rooms a short transfer assessment confirms that the learner can apply an idea in a new context.
 
-Two practice types share one platform: phishing practice, where the tutor guides the learner through a suspicious post with AI-drafted tutoring; and cyberbullying practice, where the tutor supervises AI role-play characters reacting to the learner's comments. Both share rooms, identity, conversation, learning progress, Guard, ratings and exports, which is why changes to one practice type must be checked against the other.
+Two practice types share one platform. In phishing rooms the tutor guides the learner through a suspicious post with AI suggestions. In cyberbullying rooms the tutor supervises AI role-play characters reacting to the learner's messages. Both share rooms, identity, conversation, learning progress, Guard, ratings and exports, which is why changes to one practice type must be checked against the other.
+
+The platform currently runs as a small-scale pilot: students use it under close adult supervision, and ease of use takes priority over authentication. Rooms are single-use and are kept afterwards as pilot data.
 
 ## 2. Target Users
 
 ### 2.1 Jobs To Be Done
 
-- **Tutor** (school staff or trained facilitator): run a focused practice session with one learner; get a good next reply quickly without giving up control; see what the learner has and has not understood; stop disruptive behavior safely; keep a record of the session.
-- **Learner** (a student, roughly ages 9–14 `[ASSUMPTION: age range taken from the cyberbullying character prompt; phishing materials say "teens"]`): practice spotting risks on realistic posts; get feedback in plain language; prove understanding without repetitive quizzing.
-- **Observer** (another student, staff member or researcher): watch a session live without taking part; download the record.
+- **Tutor** (school staff or trained facilitator): run a focused practice with one learner; get a good next reply quickly without giving up control; see what the learner has and has not understood; stop disruptive behavior safely; keep a record of the room.
+- **Learner** (a student, roughly ages 7–12): practice spotting risks on realistic posts; get feedback in plain language; prove understanding without repetitive quizzing.
+- **Observer** (another student, staff member or researcher): watch a room live without taking part; download its export.
 
 ### 2.2 Non-Users (current)
 
 - Learners using the platform without a tutor present. No AI output reaches a learner without tutor review.
-- Groups of learners sharing one room as active participants. A room has one learner seat; everyone else observes.
+- Groups of learners sharing one room as active participants. A room has one learner; everyone else observes.
 
 ### 2.3 Key User Journeys
 
-- **UJ-1. Ms. Rivera runs a phishing practice session.** Ms. Rivera joins as a tutor, creates a room from the "account alert" teaching template, and keeps in-room assessment on. Jamie joins as the learner, is asked to rate each of her replies, and comments on the post. For each comment Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a target after being Partial, the next AI request returns a transfer assessment draft instead of a suggestion; she reviews it and sends it. Jamie answers wrong once, then right; a result message records each answer. **Edge case:** Jamie writes "I'd just click it to check" — the suggestion she gets leads with protective instruction before any question.
-- **UJ-2. Mr. Okafor supervises a cyberbullying role-play.** He creates a cyberbullying room from one of the pinned scenarios and edits one opening comment. When Lina joins, her five shared targets are set up automatically. Lina comments; Mr. Okafor requests a character reply, switches the character from "bully" to "victim", shortens the text, and sends it. Lina sees the reply under the character's name and rates it before replying again.
-- **UJ-3. Dana observes and exports.** Dana joins as an observer, opens a running room read-only, and watches messages appear live. At the end she downloads the JSON export, which contains the public conversation, ratings and result messages but no private assessment material.
-- **UJ-4. A learner tests limits.** Sam repeatedly posts insults instead of answering. The AI suggestion recommends Guard; Ms. Rivera accepts it, and her reply names the behavior and what needs to change without insulting Sam. Sam's learning progress does not advance while Guard is on. When Sam makes a real attempt, the next suggestion returns to tutoring and Ms. Rivera turns Guard off.
-
-`[ASSUMPTION: journeys are reconstructed from feature files, specs and QA guides; no user research narratives exist in the repository.]`
+- **UJ-1. Ms. Rivera runs a phishing practice room.** Ms. Rivera joins as a tutor, creates a room from the "account alert" template, and keeps in-room assessment on. Jamie joins as the learner, rates each of her tutor replies, and writes about the post. For each of Jamie's messages Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five learning targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a learning target after being Partial, a transfer assessment becomes due and her next request for an AI suggestion returns an assessment draft; she reviews it and sends it. Jamie answers wrong once, then right; a result message records each attempt. **Edge case:** Jamie writes "I'd just click it to check" — the AI suggestion leads with protective instruction before any question.
+- **UJ-2. Mr. Okafor supervises a cyberbullying role-play.** He creates a cyberbullying room from one of the pinned scenarios and edits one line of its pre-populated dialogue. When Lina joins, her five shared learning targets are set up automatically. Lina writes a message; Mr. Okafor requests a character draft, switches the character from "bully" to "victim", shortens the text, and sends it. Lina sees the character reply under the character's persona name and rates it before writing again.
+- **UJ-3. Dana observes and exports.** Dana joins as an observer, opens a running room read-only, and watches messages appear live. At the end she downloads the JSON export, which contains the conversation, ratings and result messages but no private assessment material.
+- **UJ-4. A learner tests limits.** Sam repeatedly posts insults instead of answering. The AI suggestion recommends Guard; Ms. Rivera accepts it, and her tutor reply names the behavior and what needs to change without insulting Sam. Sam's learning progress does not advance while Guard is on. When Sam makes a real attempt, the next AI suggestion recommends turning Guard off and Ms. Rivera does so.
 
 ## 3. Glossary
 
-- **Tutor** — A user with the tutor role. Creates and runs rooms, reviews AI output, sends replies.
-- **Student** — A user with the student role. Becomes the learner of a room by taking its learner seat.
-- **Observer** — A participant who can view a room and download its record but cannot post: a user with the observer role, or a student who entered a room whose learner seat was taken.
-- **Learner** — The one student who holds a room's learner seat. Learning progress, transfer assessments and the rating gate apply to the learner.
-- **Learner seat** — The single active learner slot in a room.
-- **Application identity** — The user record selected by entering a display name and a role. It identifies a user but does not authenticate them (see NFR-4).
-- **Room** — A practice space built on one scenario, owned by one tutor, with one learner seat and any number of observers.
+**People and access**
+
+- **Role** — Tutor, student or observer, chosen when joining. A role belongs to the user, not to a room.
+- **Tutor** — A user with the tutor role.
+- **Room owner** — The tutor who created a room. Only the room owner can use tutor controls in that room.
+- **Student** — A user with the student role.
+- **Learner** — The one student who holds a room's learner seat. A room has at most one learner, who keeps the seat for the room's whole life.
+- **Observer** — A participant who can view a room and download its export but cannot post: a user with the observer role, or a student who entered a room that already has a learner.
+- **Participant** — Anyone in a room: the room owner, the learner or an observer.
+- **Application identity** — The user record selected by entering a display name and a role. It identifies a user but does not authenticate them (NFR-4).
+- **Operator** — The person who manages the deployment and its settings.
+
+**Rooms**
+
+- **Room** — A single-use practice space with one practice type, one scenario, one room owner, at most one learner and any number of observers. Rooms are kept after use as pilot data.
 - **Practice type** — `phishing` or `cyberbullying`. Chosen when a room is created and never changed.
-- **Scenario** — The post, image, author and opening comments a room is built on. Cyberbullying scenarios come from a pinned catalog; the UI calls them "situations".
+- **Scenario** — What a room is built on: a post with its image, its original poster and its pre-populated dialogue. Cyberbullying scenarios come from a pinned catalog; the UI calls them "situations".
+- **Original poster** — The name and avatar the scenario's post is shown under: the room owner's profile or a custom name.
+- **Pre-populated dialogue** — Scripted comments stored with the scenario and shown under the post. They are context only: they are not messages, are never rated, and never count as learner evidence.
 - **Template** — A global, centrally managed preset that pre-fills room creation for one practice type.
-- **Pre-populated dialogue** — Scripted opening comments stored with the room. They are context only: never rated, never analyzed as learner evidence, kept when chat history is cleared.
-- **Message** — A saved entry in a room's conversation (the UI calls messages "comments").
-- **Learning target** — One observable idea or behavior the learner should show (for example "check the sender's address"). Owned per learner.
-- **Learning progress** — The per-learner set of learning targets and their progress states.
-- **Progress state** — One of **Pending**, **Partial**, **Needs review**, **Covered**.
-- **Learning event** — A judged change to one learning target caused by one learner message (for example `demonstrated_understanding`, `contradiction`). Defined in the transfer-status response contract.
-- **AI suggestion** — A private draft reply for the tutor, produced by the AI assistant in a phishing room.
-- **Character reply** — A private draft reply in a cyberbullying room, written in the voice of one of five characters.
-- **Tutor review** — The tutor's handling of an AI suggestion or character reply: copy, edit, reject, regenerate, or send.
-- **Suggestion action** — The recorded outcome of tutor review: `accepted`, `modified`, `rejected`, `ignored`.
-- **AI role** — The voice of the phishing AI assistant: **Peer** (knowledgeable peer coach) or **Trusted adult**.
-- **Character** — The voice of a character reply: `same_age_peer`, `older_peer`, `victim`, `bully`, `educator`, each with a fixed display persona.
-- **Guard** — A room-level on/off state for managing deliberate disruption. While Guard is on, replies address the behavior and learning progress does not advance.
-- **Transfer assessment** — A tutor-reviewed four-option question that checks whether the learner can apply a learning target in a new situation. Phishing only.
-- **Attempt** — One valid answer to an open transfer assessment. At most two.
-- **Result message** — The automatic, fixed-text message saved for every accepted attempt.
-- **Rating** — A learner's helpful/unhelpful judgment plus 1–5 stars on a tutor reply.
+- **Test room** — A room created from the test-room area for behavior demos and testing. Test rooms are hidden from the room lists of tutors, students and observers.
+
+**Conversation**
+
+- **Message** — A saved entry in a room's conversation, written by the tutor, by the learner, or by the server (result messages). The UI calls messages "comments".
+- **Tutor reply** — A message the room owner sends. In cyberbullying rooms every tutor reply is a character reply.
+- **Rating** — The learner's judgment of a tutor reply: helpful or unhelpful, plus 1–5 stars.
 - **Export** — A TXT or JSON download of a room's record.
+
+**AI assistance**
+
+- **AI assistant** — The room feature that produces AI drafts. The room owner turns it on or off.
+- **AI draft** — Any private AI output waiting for tutor review: an AI suggestion, a character draft or an assessment draft. Learners never see AI drafts.
+- **AI suggestion** — An AI draft of a tutor reply in a phishing room.
+- **Character draft** — An AI draft of a tutor reply in a cyberbullying room, written in one character's voice.
+- **Character reply** — A tutor reply in a cyberbullying room, sent from a reviewed character draft and shown under its character's persona name.
+- **Character** — The voice of a character draft: `same_age_peer`, `older_peer`, `victim`, `bully` or `educator`, each shown under a fixed persona name (Jerry, Tom, Dylan, Sarah, Ms. Smith). Cyberbullying only.
+- **AI role** — The voice of AI suggestions: **Peer** (knowledgeable peer coach) or **Trusted adult**, with adjustable style parameters (communication, cognitive and emotional settings). Phishing only.
+- **Quick Adjust** — Regenerating an AI suggestion with changed style parameters.
+- **Tutor review** — The room owner's handling of an AI draft: edit, reject, regenerate or send.
+- **Suggestion action** — The recorded outcome of tutor review of an AI suggestion or character draft: `accepted`, `modified`, `rejected` or `ignored`.
+- **Reason** — The tutor-facing explanation of an AI suggestion, based on what the learner said.
+- **Instruction label** — The tutor-facing name of an AI suggestion's instructional move: protective instruction, correction, scaffolding, explanation or consolidation.
+- **Guard** — A room-level on/off state for managing deliberate disruption. While Guard is on, tutor replies address the behavior and are shown as "Security Supervisor", and learning progress does not advance. While Guard is off, AI suggestions teach toward learning targets.
+- **Tutoring constitution** — The principles (P), hard constraints (H) and priority rules (R) that govern AI suggestions. Phishing only.
+
+**Learning**
+
+- **Learning target** — One observable idea or behavior the learner should show (for example "check the sender's address"). Each learner has their own, whether the learning targets were generated or entered by hand.
+- **Learning progress** — A learner's learning targets with their progress states and evidence, shown in the Learning Progress panel.
+- **Progress state** — The state of one learning target: **Pending**, **Partial**, **Needs review** or **Covered**.
+- **Learning event** — A judged change to one learning target caused by one learner message (for example `demonstrated_understanding`, `contradiction`), as defined in the transfer-status response contract.
+- **Evidence** — The quoted part of a learner message that a learning event is based on, or a note recorded with a room owner's manual change.
+- **Complete** — A learning target that is Covered with no transfer assessment due for it. Where transfer assessments are not available (cyberbullying rooms, and phishing rooms with in-room assessment off), Covered means complete. Not a separate progress state.
+
+**Transfer assessment** (phishing only)
+
+- **Transfer assessment** — A four-option question that checks whether the learner can apply a learning target in a new context: a concrete case meaningfully different from the scenario the learner discussed.
+- **In-room assessment** — The per-room setting that allows transfer assessments.
+- **Due** — A transfer assessment is due for a learning target after the learner moves it from Partial to Covered by demonstrating understanding, until it is delivered, cancelled or completed.
+- **Assessment draft** — An AI draft of a transfer assessment.
+- **Attempt** — One valid answer to an open transfer assessment. At most two.
+- **Learner explanation** — The explanation of the correct answer that is published after a second wrong attempt.
+- **Result message** — The automatic, fixed-text message the server saves for every accepted attempt.
+- **Tutor feedback** — The room owner's own tutor reply to the learner's final attempt, required before that learner can get another transfer assessment.
 
 ## 4. Features
 
 ### 4.1 Identity and Roles
 
-**Description:** Anyone can start by typing a display name and choosing a role; there is no account, email or password. The same name and role return the same user on any device. The identity is kept in the browser and restored on reload. Roles decide which dashboard and controls a user sees.
+**Description:** Anyone can start by typing a display name and choosing a role; there is no account, email or password. The same name and role return the same user on any device. The application identity is kept in the browser and restored on reload. Roles decide which dashboard and controls a user sees.
 
 #### FR-1: Join with name and role
 A visitor can enter a display name and choose tutor, student or observer to get an application identity.
@@ -103,23 +140,23 @@ A visitor can enter a display name and choose tutor, student or observer to get 
 A user can change their display name, role and avatar (from presets).
 
 **Consequences (testable):**
-- Changes are saved to the user record and to the browser identity.
+- Changes are saved to the user record and to the browser.
 - The user identifier does not change when name or role changes.
 
-**Out of Scope:** custom avatar upload (see `addendum.md` §C, gap G-1).
+**Out of Scope:** custom avatar upload (gap G-1).
 
 #### FR-3: Leave
-A user can leave, which removes the identity from this browser only.
+A user can leave, which removes the application identity from this browser only.
 
 **Consequences (testable):**
-- Leaving deletes no user, room, message or progress data.
+- Leaving deletes no user, room, message or learning progress data.
 
 ### 4.2 Rooms, Scenarios and Templates
 
-**Description:** Tutors create rooms for one practice type, usually from a global template (phishing) or a pinned scenario (cyberbullying). Test and behavior-demo rooms are kept apart from teaching. Realizes UJ-1, UJ-2.
+**Description:** Tutors create rooms for one practice type, usually from a template (phishing) or a pinned scenario (cyberbullying). Test rooms are kept apart from teaching. Realizes UJ-1, UJ-2.
 
 #### FR-4: Create a room
-A tutor can create a room with a title, description, preset image, original-poster setting, optional password and pre-populated dialogue, and is taken into it.
+A tutor can create a room with a title, description, preset image, original poster, optional password and pre-populated dialogue, and is taken into it as its room owner.
 
 **Consequences (testable):**
 - An empty title is refused ("Room title is required").
@@ -131,74 +168,73 @@ A tutor chooses the practice type when creating a room; it can never change afte
 
 **Consequences (testable):**
 - Any attempt to change a room's practice type is refused.
-- Every behavior that differs by practice type (generation, analysis, sending, export, available operations) is chosen from the stored practice type, never from client-supplied labels.
+- Every behavior that differs by practice type (AI drafts, learning-event judging, sending, export, available operations) is chosen from the stored practice type, never from client-supplied labels.
 - A cyberbullying room or template without a complete scenario is refused.
 
-#### FR-6: Start from a global template
-A tutor can pre-fill room creation from a global template of the selected practice type.
+#### FR-6: Start from a template
+A tutor can pre-fill room creation from a template of the selected practice type.
 
 **Consequences (testable):**
 - Only templates of the selected practice type are offered.
-- Choosing a template sets scenario, image, original poster, password and dialogue, and clears stale values.
-- Templates are read-only to tutors; there is no "save as template". `[ASSUMPTION: the disabled save-as-template control reflects intent; cyberbullying request R1 asked for template round trips.]`
+- Choosing a template sets scenario, image, original poster, password and pre-populated dialogue, and clears stale values.
+- Templates are read-only to tutors; there is no "save as template".
 
 #### FR-7: Create a cyberbullying room from a pinned scenario
-A tutor can choose a cyberbullying scenario from the pinned catalog, edit its post and opening comments, and create a room. Realizes UJ-2.
+A tutor can choose a cyberbullying scenario from the pinned catalog, edit its post and pre-populated dialogue, and create a room. Realizes UJ-2.
 
 **Consequences (testable):**
 - Creation is refused until a scenario is chosen ("Choose a Cyberbullying situation.").
-- Edited comments keep their original comment and persona identity.
+- Edited pre-populated dialogue keeps each comment's original author.
 - If the catalog cannot be loaded, creation stays blocked.
-- The AI assistant is enabled for every cyberbullying room.
+- The AI assistant is on for every cyberbullying room.
 
 #### FR-8: Keep test rooms apart from teaching
-A tutor can create behavior-demo and test rooms only from the test-room area.
+A tutor can create test rooms only from the test-room area.
 
 **Consequences (testable):**
-- Test and demo rooms do not appear on the tutor's main dashboard or in student discovery.
-- Demo templates are not offered in the normal creation form.
+- Test rooms do not appear on the tutor's main dashboard, in student room lists or in observer room lists.
+- Test-only templates are not offered in the normal creation form.
 
 #### FR-9: Manage own rooms
-A tutor can see their own rooms across sessions and delete one after confirming.
+A tutor can see the rooms they own whenever they return, and delete one after confirming.
 
 #### FR-10: Password-gated entry
-A tutor can set a room password; anyone except the room's owner must enter it before the room opens.
+A room owner can set a room password; anyone except the room owner must enter it before the room opens.
 
 **Consequences (testable):**
 - A wrong password shows "Incorrect password. Please try again." and keeps the prompt open; cancel returns home.
-- The owner is never prompted.
+- The room owner is never prompted.
 
-**Notes:** the check currently runs in the browser against a readable password (gap G-3).
+**Notes:** the password is a convenience gate, not a security control (NFR-4).
 
 ### 4.3 Room Access and Live Conversation
 
-**Description:** Students find active rooms and take the single learner seat; everyone else watches read-only. Messages, ratings and typing appear live. Realizes UJ-1, UJ-3.
+**Description:** Students find rooms and the first becomes the learner; everyone else watches read-only. Messages, ratings and typing appear live. Realizes UJ-1, UJ-3.
 
-#### FR-11: Discover rooms (students)
-A student can see active teaching rooms with title, tutor, description, image and status, search them, and see the list update live.
+#### FR-11: Find rooms (students)
+A student can see active rooms other than test rooms, with title, tutor, description, image and status, search them, and see the list update live.
 
 **Consequences (testable):**
-- Status is Available, Observer Available (seat taken) or Your Session, with Join, Observe or Rejoin actions.
+- Status is Available, Observer Available (the room has a learner) or Your Session, with Join, Observe or Rejoin actions.
 - With no visible rooms the student sees "No rooms available" and a waiting message.
 
-#### FR-12: One learner seat per room
-A student can take a room's learner seat if it is free; any later student enters read-only.
+#### FR-12: One learner per room
+A student can become a room's learner if it has none; any later student enters as an observer.
 
 **Consequences (testable):**
 - At most one learner per room at any time, enforced on the server.
-- A student who finds the seat taken can still observe.
-
-**Notes:** no action releases a seat today (gap G-4; OQ-4).
+- The learner keeps the seat for the room's whole life; rooms are not reused for another learner.
 
 #### FR-13: Observe rooms
-An observer can list active rooms and open any of them read-only. Realizes UJ-3.
+An observer can list active rooms other than test rooms and open any of them read-only. Realizes UJ-3.
 
 **Consequences (testable):**
 - Observers have no message composer and see a read-only notice.
-- Observers cannot post, answer assessments or rate. `[ASSUMPTION]`
+- Observers cannot post, answer transfer assessments or rate.
+- Test rooms are not listed (FR-8).
 
 #### FR-14: Live messaging
-The tutor and the learner can exchange messages, and every participant sees new messages without refreshing.
+The room owner and the learner can exchange messages, and every participant sees new messages without refreshing.
 
 **Consequences (testable):**
 - A sent message appears for every participant within about 2 seconds.
@@ -206,371 +242,364 @@ The tutor and the learner can exchange messages, and every participant sees new 
 - Messages sent while a participant was offline appear when they reconnect.
 
 #### FR-15: Typing indicator
-The tutor and the learner can see when the other is typing; the indicator clears when typing stops or after 3 seconds without input.
+The room owner and the learner can see when the other is typing; the indicator clears when typing stops or after 3 seconds without input.
 
 #### FR-16: Required rating of tutor replies
-The learner must rate the most recent tutor reply (helpful or unhelpful, 1–5 stars) before sending their next message. Realizes UJ-1, UJ-2.
+The learner must rate the most recent tutor reply before sending their next message. Realizes UJ-1, UJ-2.
 
 **Consequences (testable):**
 - The gate applies to the learner only; tutors and observers are never gated.
-- Pre-populated dialogue and result messages are never rating targets.
-- The gate covers every tutor reply, including AI-assisted replies and character replies. `[ASSUMPTION: current behavior; OQ-9.]`
-- A learner has one rating per message; changing it replaces it. The tutor and observers see rating counts update live.
-- If saving the rating fails, the learner is told and their draft reply is kept.
+- The gate covers every tutor reply in both practice types, including character replies and replies written without the AI assistant.
+- Pre-populated dialogue and result messages are never rated.
+- A learner has one rating per message; changing it replaces it. The room owner and observers see rating counts update live.
+- If saving the rating fails, the learner is told and their unsent message is kept.
 
-#### FR-17: Clear chat history (phishing)
-The owning tutor of a phishing room can clear its messages after an automatic backup download.
-
-**Consequences (testable):**
-- Pre-populated dialogue is kept.
-- Assessment records are removed together with the messages, in one step.
-- Not available in cyberbullying rooms (FR-45).
+#### FR-17: (withdrawn 2026-10-22)
+Clearing chat history is not a supported feature (gap G-21).
 
 ### 4.4 Learning Targets and Progress
 
-**Description:** Each learner has their own learning targets. Every learner message is judged against each target from the learner's own words, and progress moves through four states. Guard pauses progress. Realizes UJ-1, UJ-2, UJ-4.
+**Description:** Each learner has their own learning targets. Every learner message is judged against each learning target from the learner's own words, and learning progress moves through four progress states. Guard pauses learning progress. Realizes UJ-1, UJ-2, UJ-4.
 
 #### FR-18: Set up phishing learning targets
-A tutor can set up a phishing room's learning targets by generating them from the room's scenario or entering them by hand, and approve them before they are saved.
+The room owner can set up a phishing room's learning targets by generating them from the room's scenario or entering them by hand, and approve them before they are saved.
 
 **Consequences (testable):**
-- Each maintained teaching template supplies exactly five learning targets. `[ASSUMPTION: the two older catalog entries with 11 and 18 items are not maintained teaching templates; OQ-13.]`
-- Custom targets are saved as written, without truncation.
-- Generation that fails or returns nothing invents no targets and says targets are unavailable.
-- Until targets exist, the tutor sees a setup reminder and the learner sees "Waiting for the tutor to set up learning targets."
+- Generated and hand-entered learning targets are both learner-owned and judged on the server (FR-19, FR-20), whether in-room assessment is on or off.
+- Every phishing template supplies exactly five learning targets.
+- Custom learning targets are saved as written, without truncation.
+- Generation that fails or returns nothing invents no learning targets and says they are unavailable.
+- Until learning targets exist, the room owner sees a setup reminder and the learner sees "Waiting for the tutor to set up learning targets."
 
-#### FR-19: Learner-owned targets and catch-up
-Learning targets belong to one learner. Targets saved before the learner joins apply when they join, and that learner's earlier messages are analyzed oldest first before progress is shown.
+#### FR-19: Learner-owned learning targets and catch-up
+Learning targets belong to one learner. Learning targets saved before the learner joins apply when they join, and that learner's earlier messages are judged oldest first before learning progress is shown.
 
 **Consequences (testable):**
-- A learner never receives another learner's progress.
-- If catch-up fails, the saved targets are kept and the tutor can retry; retrying never double-counts.
+- A learner never receives another learner's learning progress.
+- If catch-up fails, the saved learning targets are kept and the room owner can retry; retrying never double-counts.
 
-#### FR-20: Judge each learner message against each target
+#### FR-20: Judge each learner message against each learning target
 The system judges every learner message against each learning target separately, in message order, using the conversation up to that message.
 
 **Consequences (testable):**
-- Only the learner's own message can earn evidence; tutor, character and pre-populated text are context only.
-- An event must quote the learner message it is based on; an event without a valid quote is discarded.
+- Only the learner's own message can provide evidence; tutor replies, character replies and pre-populated dialogue are context only.
+- A learning event must quote the learner message it is based on; a learning event without valid evidence is discarded.
 - A message is judged only after all of that learner's earlier messages.
-- If judging fails for any target, no progress is applied for that message and it stays retryable.
+- If judging fails for any learning target, no learning progress is applied for that message and it stays retryable.
 
 #### FR-21: Progress states and transitions
 Learning targets move between progress states only through the learning events defined in the transfer-status response contract.
 
 **Consequences (testable):**
 - Pending → Partial on an initial signal; Pending or Partial → Covered on demonstrated understanding; Needs review → Partial on a post-repair signal; any state except Covered → Covered on spontaneous transfer; Partial or Covered → Needs review on contradiction.
-- An event not allowed from the current state is recorded as rejected and changes nothing.
+- A learning event not allowed from the current progress state is recorded as rejected and changes nothing.
 
-#### FR-22: Guard pauses progress
-While Guard is on, no learner progress advances; evidence gathered meanwhile is applied when Guard ends, if it is still valid.
+#### FR-22: Guard pauses learning progress
+While Guard is on, no learning progress advances; learning events gathered meanwhile are applied when Guard ends, if they are still valid.
 
 #### FR-23: Learning Progress panel
-The tutor and the learner can open a Learning Progress panel showing each learning target's state and evidence for that learner.
+The room owner and the learner can open the Learning Progress panel showing each learning target's progress state and evidence for that learner.
 
 **Consequences (testable):**
-- The panel never covers the tutor's AI and send controls on desktop.
+- The panel never covers the room owner's AI and send controls on desktop.
 - On narrow screens the panel uses the full width.
+
+#### FR-53: Manual learning progress edits
+The room owner can manually change a learning target's progress state and add a note.
+
+**Consequences (testable):**
+- The change appears in the Learning Progress panel for the room owner and the learner.
+- The change is recorded as evidence attributed to the room owner.
 
 ### 4.5 Supervised AI Tutoring (phishing)
 
-**Description:** In a phishing room the tutor can ask the AI assistant for a suggestion about a learner message. The suggestion follows the tutoring constitution and behavior specification, carries a reason for the tutor, and is never sent without the tutor. Realizes UJ-1, UJ-4.
+**Description:** In a phishing room the room owner can ask the AI assistant for an AI suggestion about a learner message. AI suggestions follow the tutoring constitution and the tutor behavior specification, carry a reason and instruction label for the room owner, and are never sent without tutor review. Realizes UJ-1, UJ-4.
 
 #### FR-24: Configure the AI assistant
-A tutor can turn the AI assistant on or off for a room and set its AI role and style parameters; settings persist.
+The room owner can turn the AI assistant on or off for a room and set its AI role and style parameters; settings persist.
 
 **Consequences (testable):**
-- Only tutors see AI controls.
-- With the assistant off, no suggestion can be requested.
+- With the AI assistant off, no AI draft can be requested.
 - Reopening settings shows the saved values.
 
 #### FR-25: Request an AI suggestion
-A tutor can request an AI suggestion for a chosen learner message, or the latest one. Realizes UJ-1.
+The room owner can request an AI suggestion for a chosen learner message, or the latest one. Realizes UJ-1.
 
 **Consequences (testable):**
-- The suggestion is visible only to the tutor and is never posted automatically.
-- The AI receives the scenario, the pre-populated dialogue, the complete saved conversation and the learner's learning progress.
-- If any part of the conversation cannot be loaded, no suggestion is generated and the tutor sees an error; the tutor can still type a reply.
-- With no learner message, no suggestion is generated.
+- The AI suggestion is visible only to the room owner and is never sent automatically.
+- The AI assistant receives the scenario, the complete saved conversation and the learner's learning progress.
+- If any part of the conversation cannot be loaded, no AI suggestion is generated and the room owner sees an error; they can still type a tutor reply.
+- With no learner message, no AI suggestion is generated.
 
-#### FR-26: Teaching quality of suggestions
-Every AI suggestion meets tutor behavior requirements T01–T08 and the constitution's hard constraints H1–H4.
+#### FR-26: Teaching quality of AI suggestions
+Every AI suggestion meets tutor behavior requirements T01–T08 and the tutoring constitution's hard constraints H1–H4.
 
 **Consequences (testable):**
 - A stated or hypothetical intention to click a suspicious link gets protective instruction before any question (T01).
-- Correct partial knowledge is never called wrong; a suggestion addresses at most one unmet learning target (T01, T02).
+- Correct partial knowledge is never called wrong; an AI suggestion addresses at most one unmet learning target (T01, T02).
 - No praise-only replies, no invented facts, no fabricated personal experience (T03, T04, T06).
-- Plain words and short sentences; length bounded. `[ASSUMPTION: limit of 2 sentences / 35 words from the active prompt; spec T08 says 3 / 50 — OQ-5.]`
+- Plain words and short sentences, within the phishing length limit of T08. Length limits are set per practice type (cyberbullying: FR-47).
 
-#### FR-27: Reason and instruction for the tutor
-Every AI suggestion carries a reason based on what the learner said and a label for its instructional move (protective instruction, correction, scaffolding, explanation, consolidation), for the tutor only.
+#### FR-27: Reason and instruction label
+Every AI suggestion carries a reason and an instruction label, for the room owner only.
 
 **Consequences (testable):**
-- Reason and label are never shown to learners.
-- Reason and label are kept in the tutor's export.
-- A suggestion whose reason, label and text disagree is not produced; after one repair attempt the tutor gets an error instead.
+- Reasons and instruction labels are never shown to learners.
+- Reasons and instruction labels are kept in the room owner's export.
+- An AI suggestion whose reason, instruction label and text disagree is not shown; after one repair attempt the room owner gets an error instead.
 
-#### FR-28: Review and send
-A tutor can copy, edit, reject or regenerate an AI suggestion, and only the tutor's explicit send publishes a reply.
+#### FR-28: Tutor review and send
+The room owner can copy, edit, reject or regenerate an AI suggestion, and only the room owner's explicit send publishes a tutor reply.
 
 **Consequences (testable):**
 - Sent unchanged records `accepted`; sent after edits records `modified`; rejected records `rejected`; replaced by a new request records `ignored`.
-- An empty reply cannot be sent.
-- If sending fails, the edited draft is kept.
+- An empty tutor reply cannot be sent.
+- If sending fails, the edited text is kept.
 
-#### FR-29: AI role, and learner's choice of AI role
-A tutor can choose Peer or Trusted adult and adjust style parameters, including through Quick Adjust on a suggestion. In a room with one student and the AI on, the learner can choose the AI role instead, which then locks it.
+#### FR-29: AI role, and the learner's choice of AI role
+The room owner can choose the AI role and its style parameters, including through Quick Adjust. In a room with one student and the AI assistant on, the learner can choose the AI role instead, which then locks it.
 
 **Consequences (testable):**
-- The learner's choice is offered only when the AI is on and the room has exactly one student; never to observers.
-- Once the learner chooses, the tutor sees the role as locked and regeneration uses it.
+- The learner's choice is offered only when the AI assistant is on and the room has exactly one student; never to observers.
+- Once the learner chooses, the room owner sees the AI role as locked, and regeneration uses it.
 
 #### FR-30: Guard
-The AI may recommend Guard for clear deliberate disruption; the tutor decides, and the tutor can turn Guard on or off for the room at any time after confirming. Realizes UJ-4.
+The AI assistant may recommend Guard for clear deliberate disruption; the room owner decides, and can turn Guard on or off at any time after confirming. Realizes UJ-4.
 
 **Consequences (testable):**
-- Mistakes, confusion, frustration and personal questions do not trigger Guard (G01).
-- A Guard reply names the behavior, its effect and the needed change, without insults, threats or apology demands (G02, G03).
-- A real attempt by the learner, even a wrong one, leads back to tutoring (G01).
-- While Guard is on, the tutor's replies appear as "Security Supervisor".
+- Mistakes, confusion, frustration and personal questions do not lead to Guard (G01).
+- A Guard tutor reply names the behavior, its effect and the needed change, without insults, threats or apology demands (G02, G03).
+- A real attempt by the learner, even a wrong one, leads the AI assistant to recommend turning Guard off (G01).
 
 ### 4.6 Transfer Assessment (phishing)
 
-**Description:** When a learner has moved from partial to full understanding of a learning target, the next AI request prepares a short four-option question that applies the idea to a new situation. The tutor reviews and sends it; the learner answers with option controls; the server grades it with two attempts and records a result message. Behavior requirements T09.1–T09.6 and `assessment-result-messages.md` are the detailed sources. Realizes UJ-1.
+**Description:** When a learner moves a learning target from Partial to Covered, a transfer assessment becomes due: a short four-option question that applies the idea in a new context. The room owner reviews and sends it, or rejects it; the learner answers with option controls; the server grades it with two attempts and saves a result message. Tutor behavior requirements T09.1–T09.6 and `assessment-result-messages.md` are the detailed sources. Realizes UJ-1.
 
-#### FR-31: Assessment availability
-In-room assessment is on by default for every phishing room; a tutor can turn it off for a room, and an operator can turn it off everywhere.
+#### FR-31: In-room assessment setting
+In-room assessment is on by default for every phishing room. The room owner can turn it off for a room, and the operator can turn transfer assessments off everywhere.
 
 **Consequences (testable):**
-- With assessment off, rooms keep working for tutoring and Guard.
+- In-room assessment controls only transfer assessments. Learning targets, judging and learning progress work the same with it on or off.
+- With in-room assessment off, AI suggestions and Guard keep working.
 
-#### FR-32: When an assessment becomes due
+#### FR-32: When a transfer assessment becomes due
 A transfer assessment becomes due for a learning target only when the learner moves it from Partial to Covered by demonstrating understanding.
 
 **Consequences (testable):**
-- Reaching Covered directly from Pending, or by spontaneous transfer, completes the target without a question.
-- While Guard is on, another assessment is open, or required tutor feedback is outstanding, the due assessment waits without being lost.
-- A later contradiction cancels the due assessment; changing the target's wording cancels an open question without using an attempt.
-- The same cycle never produces two assessments.
+- Reaching Covered directly from Pending, or by spontaneous transfer, makes the learning target complete without a transfer assessment.
+- While Guard is on, another transfer assessment is open, or tutor feedback is outstanding, the due transfer assessment waits without being lost.
+- A later contradiction cancels the due transfer assessment; changing the learning target's wording cancels an open one without using an attempt.
+- One Partial → Covered change never produces two transfer assessments.
 
-#### FR-33: Prepare an assessment instead of a suggestion
-When an assessment is due, the tutor's next AI request returns one assessment draft instead of an AI suggestion.
+#### FR-33: Assessment draft instead of an AI suggestion
+When a transfer assessment is due, the room owner's next request for an AI suggestion returns one assessment draft instead.
 
 **Consequences (testable):**
-- No AI suggestion is generated in that request.
-- Generation problems are shown as errors; no placeholder question and no fallback suggestion are produced.
+- No AI suggestion is generated by that request.
+- Generation problems are shown as errors; no placeholder question and no fallback AI suggestion are produced.
 
-#### FR-34: Valid assessment items
-Every assessment draft — generated or edited — must be a valid item before it can be sent.
+#### FR-34: Valid transfer assessments
+Every assessment draft — generated or edited — must be a valid transfer assessment before it can be sent.
 
 **Consequences (testable):**
 - Exactly four distinct options A–D; one correct option for single-answer, two or three for multiple-answer.
-- Question of at most two sentences and 80 words.
-- A non-empty explanation for the learner is required.
-- The situation differs meaningfully from the one the learner discussed (not just a name or brand swap). `[ASSUMPTION: enforced by the generation prompt and evaluation, not by a code check.]`
+- A question of at most two sentences and 80 words.
+- A non-empty learner explanation is required.
+- The new context differs meaningfully from the scenario the learner discussed, not just by a name or brand.
 
-#### FR-35: Tutor review of an assessment
-A tutor can see the target, the new situation, the question, the options, the correct answer and the explanation; edit any of them; and send or discard the draft.
-
-**Consequences (testable):**
-- An edited draft is checked again before sending; an invalid draft cannot be sent.
-- Learners never see a draft.
-- A discarded draft does not count as delivered, so the next AI request prepares one again. `[ASSUMPTION: current behavior; behavior spec T09.3 allows reject/regenerate — OQ-7.]`
-
-#### FR-36: Deliver to one learner
-A tutor can send a reviewed assessment to the room's learner; the server rechecks it before saving.
+#### FR-35: Tutor review of an assessment draft
+The room owner can see the learning target, the new context, the question, the options, the correct answer and the learner explanation; edit any of them; and send the assessment draft, or reject it and write their own tutor reply instead.
 
 **Consequences (testable):**
-- If the target is no longer due or Guard is on, delivery is refused.
+- An edited assessment draft is checked again before sending; an invalid one cannot be sent.
+- Learners never see an assessment draft.
+- Rejecting an assessment draft delivers nothing; the transfer assessment stays due and is offered again at the room owner's next request for an AI suggestion. `[ASSUMPTION: "wrong timing" means later, not never.]`
+
+#### FR-36: Deliver to the learner
+The room owner can send a reviewed assessment draft to the learner; the server rechecks it before saving.
+
+**Consequences (testable):**
+- If the transfer assessment is no longer due or Guard is on, delivery is refused.
 - Retrying a delivery never creates a second question.
-- The room stays in tutoring or Guard; there is no assessment mode.
+- Delivering a transfer assessment does not change Guard; there is no assessment mode.
 
 #### FR-37: Answer with option controls
-The learner can answer only their own open question, by selecting options and submitting.
+The learner can answer only their own open transfer assessment, by selecting options and submitting.
 
 **Consequences (testable):**
-- Single-answer questions use one-choice controls; multiple-answer questions use select-all controls; submit needs a selection.
-- While the question is open, the learner's ordinary chat is disabled with an explanation; it reopens when the question closes.
+- Single-answer questions use one-choice controls; multiple-answer questions use select-all controls; submitting needs a selection.
+- Any answer that is not an option selection is refused; there is no typed-answer, clarification or help-request path.
+- While the transfer assessment is open, the learner's ordinary messaging is disabled with an explanation; it reopens when the transfer assessment closes.
 - Observers and other students cannot answer.
-- Each question shows the learner's saved answers.
+- Each transfer assessment shows the learner's saved attempts.
 
 #### FR-38: Grading and two attempts
-The server grades each answer by exact match with the correct options and allows at most two attempts.
+The server grades each attempt by exact match with the correct options and allows at most two attempts.
 
 **Consequences (testable):**
-- First wrong answer: one attempt left, progress unchanged.
-- Right answer on either attempt: passed, once.
-- Second wrong answer: failed, once.
-- Repeated, concurrent, late or out-of-scope submissions never create extra attempts or change progress.
+- First wrong attempt: one attempt left, learning progress unchanged.
+- Right attempt on either try: passed, once.
+- Second wrong attempt: failed, once.
+- Repeated, concurrent, late or out-of-scope submissions never create extra attempts or change learning progress.
 
 #### FR-39: Result messages
-Every accepted attempt creates exactly one result message in the room: "Correct.", "Incorrect. One attempt remaining." or, after the second wrong answer, "Incorrect. No attempts remaining. Correct option(s): …" followed by the explanation.
+Every accepted attempt creates exactly one result message: "Correct.", "Incorrect. One attempt remaining." or, after the second wrong attempt, "Incorrect. No attempts remaining. Correct option(s): …" followed by the learner explanation.
 
 **Consequences (testable):**
-- The correct answer and explanation are published only in the second-wrong-answer result message.
-- Result messages are visible to every room participant and included in exports. `[ASSUMPTION: governing doc assessment-result-messages.md; older specs limited this to the learner — OQ-2.]`
+- The correct answer and learner explanation are published only in the second-wrong-attempt result message.
+- Result messages are visible to every room participant and included in exports.
 - Result messages are written by the server, cannot be edited by participants, and survive reload.
 
 #### FR-40: Effect on learning progress
-A passed assessment completes the target; a failed assessment moves it to Needs review and tutoring resumes.
+A passed transfer assessment makes the learning target complete; a failed one moves it to Needs review, and AI suggestions teach toward it again.
 
 **Consequences (testable):**
-- After failure the learner can recover through Partial and Covered again, which makes a new assessment in a different situation due.
-- A completed target is not re-assessed unless a later contradiction reopens it.
+- After failure the learner can recover through Partial and Covered again, which makes a new transfer assessment in another new context due.
+- A complete learning target is not assessed again unless a later contradiction reopens it.
 - Failure alone never turns on Guard.
 
-#### FR-41: Tutor feedback before the next assessment
-After an assessment ends, the tutor must send their own reply to the learner's final answer before that learner can get another assessment.
+#### FR-41: Tutor feedback before the next transfer assessment
+After a transfer assessment ends, the room owner must send tutor feedback before that learner can get another transfer assessment.
 
 **Consequences (testable):**
-- Result messages, accepted AI suggestions and ratings do not count as that reply.
-- When several targets are due, they are offered one at a time.
+- Result messages, accepted AI suggestions and ratings are not tutor feedback.
+- When several transfer assessments are due, they are offered one at a time.
 
 #### FR-42: Same state for everyone, after any reload
-Every participant sees the same question, answers, attempts left and outcome after joining, reloading, reconnecting or using several tabs.
+Every participant sees the same transfer assessment, attempts, attempts left and outcome after joining, reloading, reconnecting or using several tabs.
 
 **Consequences (testable):**
-- A late or duplicate update cannot reopen a finished question.
+- A late or duplicate update cannot reopen a finished transfer assessment.
 
-#### FR-43: AI tutoring after assessments
-The AI assistant learns assessment outcomes only from the saved conversation, and does not generate a suggestion while the focused learner's results are still being recorded.
+#### FR-43: AI suggestions after transfer assessments
+The AI assistant learns transfer-assessment outcomes only from the saved conversation, and generates no AI suggestion while the learner's result messages are still being saved.
 
 ### 4.7 Cyberbullying Practice
 
-**Description:** In a cyberbullying room the learner comments on a pinned scenario, and the tutor replies through AI-drafted character replies. All rooms share five learning targets. Realizes UJ-2.
+**Description:** In a cyberbullying room the learner writes about a pinned scenario, and the room owner replies through character replies. All cyberbullying rooms share five learning targets. Realizes UJ-2.
 
 #### FR-44: Five shared learning targets
 Every cyberbullying learner gets the same five learning targets when they join: recognize cyberbullying and its impact; show empathy and support; stand up constructively; avoid reinforcing bullying; choose a safe next step.
 
 **Consequences (testable):**
-- Targets are set up once per learner and room, even if the learner joins from several tabs.
-- Targets cannot be edited, removed or varied by scenario.
-- Only the learner's own comments earn evidence.
+- Learning targets are set up once per learner and room, even if the learner joins from several tabs.
+- Learning targets cannot be edited, removed or varied by scenario. Manual progress edits (FR-53) remain available.
+- Only the learner's own messages provide evidence.
 
 #### FR-45: Supported operations
-A cyberbullying room supports exactly: save a learner comment, update learning progress, request a character reply, review it, regenerate, reject, send, rate, continue, and override Guard.
+A cyberbullying room supports exactly: save a learner message, judge it against the learning targets, request a character draft, tutor review, regenerate, reject, send, rate, continue, and override Guard.
 
 **Consequences (testable):**
-- Transfer assessments, clearing chat history and Quick Adjust are refused.
-- A cyberbullying learning target reached Covered from Partial is treated as complete. `[ASSUMPTION: assessments are not offered in cyberbullying rooms, so the "assessment due" phase never resolves today — OQ-3.]`
+- Transfer assessments and Quick Adjust are refused.
+- A learning target is complete when it is Covered.
 
-#### FR-46: Learner comments are saved before they are judged
-A learner's comment is saved first, then judged against the five learning targets.
-
-**Consequences (testable):**
-- If judging fails, the comment stays saved.
-
-#### FR-47: Request a character reply
-The room's owning tutor can request one character reply to the learner's latest comment, choosing the character or letting the AI choose.
+#### FR-46: Learner messages are saved before they are judged
+A learner's message is saved first, then judged against the five learning targets.
 
 **Consequences (testable):**
-- If the tutor chose a character, the reply uses that character.
-- Replies are at most three sentences in simple language. `[ASSUMPTION: taken from the role-play prompt.]`
-- A tutor who does not own the room cannot request a character reply.
-- A request is refused when the AI is off or there is no learner comment.
+- If judging fails, the message stays saved.
+
+#### FR-47: Request a character draft
+The room owner can request one character draft for the learner's latest message, choosing the character or letting the AI assistant choose.
+
+**Consequences (testable):**
+- If the room owner chose a character, the character draft uses it.
+- Character drafts are at most three sentences in simple language.
+- A request is refused when the AI assistant is off or there is no learner message.
 
 #### FR-48: Review and send a character reply
-The tutor can change the character and text, regenerate, reject, override Guard, and send; every tutor reply in a cyberbullying room is a reviewed character reply.
+The room owner can change a character draft's character and text, regenerate it, reject it, override Guard, and send it as a character reply.
 
 **Consequences (testable):**
-- The tutor cannot send a reply without first generating and reviewing one.
-- Sending saves the reply, its review record and the Guard state together.
-- Suggestion actions follow FR-28; changing only the character counts as `modified`.
-- The tutor's character choice applies to that reply only.
+- The room owner cannot send a tutor reply without first requesting and reviewing a character draft.
+- Sending saves the character reply, its suggestion action and the Guard state together.
+- Suggestion actions follow FR-28; changing only the character records `modified`.
+- The chosen character applies to that character draft only.
 
 #### FR-49: Consistent character identity
-Every viewer sees a sent character reply under the same character and persona name (Jerry, Tom, Dylan, Sarah, Ms. Smith), live, after reload, in AI context and in exports.
+Every participant sees a character reply under the same character and persona name, live and after reload; the AI assistant and exports carry the same character.
 
 **Consequences (testable):**
-- Sent replies cannot be edited.
+- Sent character replies cannot be edited.
 
 ### 4.8 Exports and Interaction Records
 
-**Description:** Every participant can download the room record; content depends on role. Tutor review of AI output is recorded for later analysis. Realizes UJ-3.
+**Description:** Every participant can download the room's export; its content depends on role. Tutor review of AI drafts is recorded for later analysis. Realizes UJ-3.
 
-#### FR-50: Download the room record
-Any participant can download the room as TXT or JSON.
+#### FR-50: Download the export
+Any participant can download the room's export as TXT or JSON.
 
 **Consequences (testable):**
-- Tutors additionally get AI interaction records and an AI summary.
-- A learner's export includes their own assessment answers; cyberbullying exports include learning progress.
-- No export contains private assessment material beyond what result messages publish.
+- The room owner's export additionally includes the tutor-review records of FR-51 and a summary of suggestion actions.
+- The learner's export includes their own transfer-assessment attempts.
+- Cyberbullying exports include the learner's learning progress for every participant, observers included.
+- No export contains private transfer-assessment material beyond what result messages publish.
 
-#### FR-51: Record tutor review of AI output
-The system records, for every AI suggestion and character reply, the suggestion action, the original and final text, the response time, the context messages, the original and final Guard state, and the instruction label or character.
+#### FR-51: Record tutor review of AI drafts
+The system records, for every AI suggestion and character draft, the suggestion action, the original and final text, the response time, the context messages, the original and final Guard state, and the instruction label or character.
 
 **Consequences (testable):**
 - No IP address or browser information is recorded.
-- The records persist after the session ends.
+- The records are kept with the room after use.
+
+### 4.9 Room Ownership
+
+#### FR-52: Tutor controls belong to the room owner
+Only the room owner can use tutor controls in a room: the AI assistant, tutor review, Guard, learning-target setup, manual learning progress edits, in-room assessment and tutor replies.
+
+**Consequences (testable):**
+- Another tutor who opens the room has none of these controls. `[ASSUMPTION: they take part as an observer.]`
+- The server refuses tutor operations from anyone but the room owner.
 
 ## 5. Cross-Cutting NFRs
 
-- **NFR-1 Human supervision.** No AI-generated text reaches a learner without the tutor's explicit send. The AI never changes room state on its own (constitution P4; tutor-response-contract).
-- **NFR-2 Server authority.** Grading, attempt counting, assessment eligibility, learning progress changes, the learner seat and private assessment data are decided on the server. The browser never grades or changes progress directly.
-- **NFR-3 Privacy of private material.** Correct answers and explanations stay private until a second wrong answer (FR-39). The reasoning behind an assessment, raw AI output and AI provider credentials are never visible to participants or present in the browser. Reasons and instruction labels are visible to tutors only.
-- **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app. Consequences accepted for now: anyone can act as any user by typing the same name and role; any participant can read any room's messages and passwords. `[ASSUMPTION: accepted for school deployment — OQ-1.]`
-- **NFR-5 Reliable repetition.** Repeating any request (send, answer, delivery, analysis) produces no duplicate effect. Concurrent requests resolve to one outcome.
-- **NFR-6 Persistence.** Identity, conversation, learning progress and assessment state survive reloads, reconnects and multiple tabs.
-- **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. Known exceptions are listed as gaps in `addendum.md` §C.
+- **NFR-1 Human supervision.** No AI-generated text reaches a learner without the room owner's explicit send. The AI assistant never changes room state on its own.
+- **NFR-2 Server authority.** Grading, attempt counting, whether a transfer assessment is due, learning progress changes, the learner seat and private transfer-assessment data are decided on the server. The browser never grades or changes learning progress directly.
+- **NFR-3 Privacy of private material.** Correct answers and learner explanations stay private until a second wrong attempt (FR-39). The reasoning behind a transfer assessment, raw AI output and AI provider credentials are never visible to participants or present in the browser. Reasons and instruction labels are visible to the room owner only.
+- **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app. This is accepted for the current small-scale pilot, in which students use the platform under close adult supervision and ease of use takes priority over authentication. Accepted consequences: anyone can act as any user by typing the same name and role, and any participant can read any room's messages and password.
+- **NFR-5 Reliable repetition.** Repeating any request (send, attempt, delivery, judging) produces no duplicate effect. Concurrent requests resolve to one outcome.
+- **NFR-6 Persistence.** The application identity, conversation, learning progress and transfer-assessment state survive reloads, reconnects and multiple tabs. Rooms are kept after use.
+- **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, learning targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. Known exceptions are listed as gaps in `addendum.md` §C.
 - **NFR-8 Live updates.** Messages appear for all participants within about 2 seconds; room lists and ratings update without refresh.
-- **NFR-9 Safe and honest AI content.** All AI output follows the constitution's hard constraints: truthful content, no humiliation, honest self-representation, explainable decisions (H1–H4). This applies to character replies too, where the role requires it. `[ASSUMPTION — OQ-11.]`
-- **NFR-10 Behavior change control.** Changing an AI model, a shared prompt or the analyzer changes behavior for every practice type that uses it, and must be re-evaluated for each. The constitution changes only through an explicit human decision; passing evaluations cannot authorize a change.
-- **NFR-11 Client compatibility.** A client that is out of date with the server is told to reload, rather than writing data under old rules.
+- **NFR-9 Safe and honest AI content.** AI suggestions follow the tutoring constitution's hard constraints: truthful content, no humiliation, honest self-representation and explainable decisions (H1–H4). The tutoring constitution does not govern cyberbullying; character drafts follow the character strategy in `cyberbullying-practise.md`, and NFR-1 applies to them.
+- **NFR-10 Behavior change control.** Changing an AI model, a shared prompt or the learning-event judge changes behavior for every practice type that uses it, and must be re-evaluated for each. The tutoring constitution changes only through an explicit human decision; passing evaluations cannot authorize a change.
+- **NFR-11 Client compatibility.** A browser running an outdated version of the app is told to reload, rather than writing data under old rules.
 - **NFR-12 Platform.** Responsive web app for desktop, tablet and phone, in current mainstream browsers.
 
 ## 6. Non-Goals (Explicit)
 
 - No accounts, passwords or email sign-in. No authentication product.
 - No AI that speaks to learners directly or enforces anything automatically.
-- No room-level "assessment mode", no separate quiz application, and no assessments in cyberbullying rooms.
+- No room-level "assessment mode", no separate quiz application, and no transfer assessments in cyberbullying rooms.
 - No permanent mastery claim; the platform does not measure long-term retention or real-world behavior.
 - No multi-agent or simulated peer characters in phishing rooms (the retired "Riley").
 - No scenario-specific cyberbullying learning targets.
 - No tutor-made templates.
-- No violation counting for Guard and no question quota for the AI.
+- No clearing of chat history; rooms are kept as pilot data.
+- No new room-wide learning targets. Old rooms that already have them are left as they are and are not revisited.
+- No reuse of rooms and no release of the learner seat.
+- No violation counting for Guard and no question quota for AI suggestions.
 
 ## 7. Scope
 
 ### 7.1 In Scope
-- Everything in §4 as currently deployed in production and staging.
+- Everything in §4 for the current small-scale pilot.
 
 ### 7.2 Out of Scope
-- **Success metrics and goals.** Deliberately left out of this baseline by decision of 2026-10-22. Add them when the next initiative sets targets.
-- **Custom image upload** (avatars and room images). It cannot work under the current identity model (gap G-1).
-- **More than one active learner per room.**
+- **Success metrics and goals.** Deliberately left out of this baseline (decision of 2026-10-22). Add them when the next initiative sets targets.
+- **Custom image upload** for avatars and rooms. It cannot work under the current identity model (gap G-1).
+- **More than one learner per room.**
 - **Learning-outcome measurement** (pre/post testing, retention).
+- **Consent and data-retention processes.** Not needed for the current pilot.
+- **A formal accessibility conformance target** (for example a WCAG level).
 
-## 8. Open Questions
+## 8. Open Questions and Decisions
 
-1. **OQ-1 Identity for schools.** Is "identifies but does not authenticate" acceptable for school use, including impersonation by name and readable room passwords? Or is stronger identity the next initiative?
-2. **OQ-2 Who sees the answer after a second wrong answer.** Should the correct answer and explanation go to the whole room (current) or only to the learner (older specs)?
-3. **OQ-3 Cyberbullying completion.** Is a cyberbullying target complete when it reaches Covered from Partial, or does it need its own application check?
-4. **OQ-4 Learner seat release.** When should the seat free up: leaving, signing out, a timeout, or a tutor action?
-5. **OQ-5 Reply length.** 2 sentences / 35 words or 3 sentences / 50 words?
-6. **OQ-6 Free-text answers.** Learners can only answer assessments with option controls, so the clarification ("B or D") and help-request paths cannot be reached. Remove them, or bring back typed answers?
-7. **OQ-7 Discarded assessments.** Should a discarded draft be proposed again on the next request (current), or should the tutor be able to reject or regenerate it?
-8. **OQ-8 Tutor controls in rooms they do not own.** Any tutor can currently use AI, Guard and progress controls in any room. Restrict them to the owner?
-9. **OQ-9 Rating gate scope.** Should every tutor reply require a rating, including character replies and replies written without AI?
-10. **OQ-10 Observer data.** Should observers receive cyberbullying learning progress in their export, and see test rooms in their room list?
-11. **OQ-11 Constitution scope.** Does the tutoring constitution govern cyberbullying characters, including the "bully" character, or do they need their own principles?
-12. **OQ-12 Data handling for schools.** Exports contain full conversations and AI interaction records. Are consent, retention or anonymized exports required?
-13. **OQ-13 Older target lists.** Keep or retire the two catalog scenarios that do not follow the five-target rule?
-14. **OQ-14 Legacy progress path.** Rooms without learner-owned targets still use an older browser-side progress path with manual tutor edits. Is it still in scope?
-15. **OQ-15 Accessibility target.** Should a WCAG level be set for school use?
+Open: none.
+
+Resolved on 2026-10-22: OQ-1 (identity accepted for the pilot, NFR-4); OQ-2 (whole room sees the second-wrong-attempt result, FR-39); OQ-4 (no learner-seat release, FR-12); OQ-5 (length per practice type, FR-26, FR-47); OQ-6 (option selections only, FR-37); OQ-7 (reject an assessment draft and write one's own tutor reply, FR-35); OQ-8 (tutor controls for the room owner only, FR-52); OQ-9 (rating gate covers all tutor replies, FR-16); OQ-10 (observers get cyberbullying learning progress, not test rooms, FR-13, FR-50); OQ-11 (tutoring constitution is phishing only, NFR-9); OQ-12 (no consent process for the pilot, §7.2); OQ-13 (catalog cleaned in commit `c13af72`, FR-18); OQ-15 (no accessibility target, §7.2); OQ-3 (Covered means complete where transfer assessments are not available, glossary "Complete", FR-45); OQ-14 (all new learning targets are learner-owned and judged on the server; no new room-wide learning targets; old rooms left as they are; manual edits stay, FR-18, FR-31, FR-53, §6).
 
 ## 9. Assumptions Index
 
-- §2.1 — Learner age range 9–14.
-- §2.3 — Journeys reconstructed from repository sources, not user research.
-- FR-6 — No save-as-template is intended.
-- FR-13 — Observers cannot rate.
-- FR-16 — Rating gate covers all tutor replies (OQ-9).
-- FR-18 — Five-target rule applies to maintained teaching templates only (OQ-13).
-- FR-26 — Reply length 2 sentences / 35 words (OQ-5).
-- FR-34 — "Meaningfully different situation" enforced by prompt and evaluation, not code.
-- FR-35 — Discarded drafts are re-proposed (OQ-7).
-- FR-39 — Result messages visible to the whole room (OQ-2).
-- FR-45 — Cyberbullying Covered-from-Partial counts as complete (OQ-3).
-- FR-47 — Character replies at most three sentences in simple language.
-- NFR-4 — Identity risk accepted for school use (OQ-1).
-- NFR-9 — Constitution applies to character replies (OQ-11).
+- FR-35 — A rejected assessment draft is offered again at the room owner's next request for an AI suggestion.
+- FR-52 — A tutor who is not the room owner takes part as an observer.
