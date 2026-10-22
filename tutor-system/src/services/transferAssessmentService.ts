@@ -115,7 +115,8 @@ export interface ProcessedMessageDTO {
 
 export interface TransferAssessmentApi {
   invoke: (
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
+    applicationUserId?: string
   ) => Promise<{
     data: AssessmentApiEnvelope<unknown> | null;
     error: { message: string; context?: { json: () => Promise<unknown> } } | null;
@@ -290,8 +291,8 @@ function storedApplicationUserId(): string | null {
 
 function createDefaultApi(): TransferAssessmentApi {
   return {
-    invoke: async (body) => {
-      const userId = storedApplicationUserId();
+    invoke: async (body, applicationUserId) => {
+      const userId = applicationUserId ?? storedApplicationUserId();
       return (supabase as any).functions.invoke('assessment-api', {
         body,
         headers: userId ? { 'x-application-user-id': userId } : {},
@@ -309,8 +310,8 @@ export class TransferAssessmentService {
     this.requestId = options.requestId ?? defaultRequestId;
   }
 
-  private async request<T>(operation: AssessmentApiOperation, payload: Record<string, unknown>): Promise<T> {
-    const { data, error } = await this.api.invoke({ operation, request_id: this.requestId(), ...payload });
+  private async request<T>(operation: AssessmentApiOperation, payload: Record<string, unknown>, applicationUserId?: string): Promise<T> {
+    const { data, error } = await this.api.invoke({ operation, request_id: this.requestId(), ...payload }, applicationUserId);
     if (error?.context && typeof error.context.json === 'function') {
       let body: unknown;
       try {
@@ -417,8 +418,8 @@ export class TransferAssessmentService {
     return projectProcessedMessage(result);
   }
 
-  analyzeMessage(messageId: string, roomId: string): Promise<Record<string, unknown>> {
-    return this.request('analyze_message', { message_id: messageId, room_id: roomId });
+  analyzeMessage(messageId: string, roomId: string, applicationUserId?: string): Promise<Record<string, unknown>> {
+    return this.request('analyze_message', { message_id: messageId, room_id: roomId }, applicationUserId);
   }
 
   static toPublicAssessment(value: unknown): PublicAssessmentDTO {

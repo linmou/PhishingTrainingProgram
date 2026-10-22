@@ -286,7 +286,7 @@ describe('RoomContext learner answer path', () => {
 
     expect(processMessage).not.toHaveBeenCalled();
     expect(analyzeMessage).toHaveBeenCalledWith(DELIVERED_ANSWER_ID, TRANSFER_ROOM_ID);
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, DELIVERED_ANSWER_ID);
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, DELIVERED_ANSWER_ID, LEARNER_A_ID);
   });
 
   // RoomContext.tsx: open assessments block typed answers, help requests, and unrelated replies before persistence.

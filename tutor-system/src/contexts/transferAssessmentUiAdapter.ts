@@ -134,7 +134,7 @@ const FAILURE_MESSAGES: Record<ReviewFailureStatus, string> = {
   superseded: 'This candidate is no longer current. Refresh the room before preparing another.',
   validation: 'The prepared assessment could not be validated.',
   unavailable: 'Transfer assessments are unavailable for this room.',
-  unauthorized: 'You are not authorized to deliver this assessment.',
+  unauthorized: 'Your session is not authorized for this action. Rejoin with the correct name and role.',
   retryable: 'The transfer request could not be completed. Try again.',
 };
 

@@ -218,7 +218,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       focusStudentMessageId: LEARNER_A_MESSAGE_ID,
       checklistId: CHECKLIST_ID,
     });
-    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID);
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID, LEARNER_A_ID, LEARNER_A_MESSAGE_ID, 'tutor-1');
     expect((ChecklistService.analyzeStudentMessages as jest.Mock).mock.invocationCallOrder[0])
       .toBeLessThan(prepareAssessment.mock.invocationCallOrder[0]);
     expect(room!.transferDraft!.decision).toEqual(preparedCandidate);

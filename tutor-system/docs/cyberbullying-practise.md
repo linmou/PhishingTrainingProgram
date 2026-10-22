@@ -1,5 +1,7 @@
 # Cyberbullying practise
 
+<!-- Updated 2026-10-22; identity fix baseline 3acec373. AI generation and learner analysis pass the active room actor to progress transport so an already-open tab does not depend on a second localStorage identity read. Verification: doc_update_record/documentation_update_record_v2026_10_22_cyberbullying_identity.md. -->
+
 Intent: describe the shared learning workflow and the contracts used by Cyberbullying rooms.
 Updated: 2026-10-21. Browser-draft integrated release: `9c7364c`.
 

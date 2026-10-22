@@ -135,7 +135,8 @@ export class ChecklistService {
   static async analyzeStudentMessages(
     roomId: string,
     studentId: string,
-    focusMessageId?: string
+    focusMessageId?: string,
+    applicationUserId?: string
   ): Promise<void> {
     // Every browser writer awaits the same prefix. Server completion markers make concurrent
     // replays safe and prevent a newer live message from overtaking older saved evidence.
@@ -180,10 +181,10 @@ export class ChecklistService {
     try {
       for (const messageId of messageIds.slice(0, focusIndex + 1)) {
         if (completedIds.has(messageId)) continue;
-        let result = await transferAssessmentService.analyzeMessage(messageId, roomId);
+        let result = await transferAssessmentService.analyzeMessage(messageId, roomId, applicationUserId);
         // Initial goal replay primes the cache; live analysis confirms new IDs on the next pass.
         if (focusMessageId === undefined && result.already_processed !== true && result.deferred !== true) {
-          result = await transferAssessmentService.analyzeMessage(messageId, roomId);
+          result = await transferAssessmentService.analyzeMessage(messageId, roomId, applicationUserId);
         }
         if (result.already_processed === true) completedIds.add(messageId);
       }

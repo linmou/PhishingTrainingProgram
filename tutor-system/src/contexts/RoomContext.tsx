@@ -737,7 +737,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (user.current_role === 'student') {
                 const analyzeEvidence = async () => {
                     try {
-                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id);
+                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, storedMessage.id, user.id);
                     } catch (analysisError) {
                         console.warn('Transfer evidence analysis unavailable; message was stored:', analysisError);
                     }
@@ -912,7 +912,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         transferChecklist = await ChecklistService.getChecklistForStudent(currentRoom.id, user.id);
                     }
                     if (currentRoom.transfer_learning_enabled && transferChecklist?.progress_policy_version === 'transfer_v1') {
-                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, persistedMessage.id);
+                        await ChecklistService.analyzeStudentMessages(currentRoom.id, user.id, persistedMessage.id, user.id);
                     } else {
                         await ChecklistService.processStudentMessage(
                             currentRoom.id,
@@ -983,7 +983,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setCurrentSuggestionContext(null);
                 }
             }
-            await ChecklistService.analyzeStudentMessages(roomId, learnerMessage.user_id, learnerMessage.id);
+            await ChecklistService.analyzeStudentMessages(roomId, learnerMessage.user_id, learnerMessage.id, user.id);
             if (epoch !== generationEpoch.current || activeRoomId.current !== roomId) return;
             const result = await generateTutorSuggestion(roomId, user.id, undefined, {
                 parentMessageId: learnerMessage.id,
@@ -1118,7 +1118,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     expectedAssessmentResultIds = readiness.result_message_ids;
                 }
                 if (!isAssessmentAnswer) {
-                    await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId);
+                    await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId, user.id);
                 }
                 const prepared = isAssessmentAnswer ? null : await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,

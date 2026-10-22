@@ -56,17 +56,42 @@ module.exports = async function cyberbullying(ctx) {
     await sendStudentMessage(studentPage, 'Making fun of Dylan can leave him hurt and embarrassed. Dylan, I can listen privately. Please stop these comments without insulting anyone. I will not like or share the meme because that spreads the harm. I can save screenshots, report the posts and ask a trusted teacher to help.');
     await waitForMatch(() => query(client, 'checklist_items', '*', 'checklist_id', checklist.id),
       rows => rows.some(item => item.status !== 'pending'), 'learner progress analysis');
-    await tutorPage.locator('button.ai-generate-btn').click();
     const character = tutorPage.getByLabel('Character', { exact: true });
-    await character.waitFor({ timeout: TIMEOUT });
+    const identityChecks = [];
+    const generateWithChangedStorage = async storedUser => {
+      const original = await tutorPage.evaluate(({ roomId, studentId, replacement }) => {
+        const original = localStorage.getItem('tutor_system_user');
+        if (replacement === null) localStorage.removeItem('tutor_system_user');
+        else localStorage.setItem('tutor_system_user', JSON.stringify(replacement));
+        sessionStorage.removeItem(`confirmed-learning-evidence:${roomId}:${studentId}`);
+        return original;
+      }, { roomId: room.id, studentId: ctx.student.id, replacement: storedUser });
+      try {
+        const analyzed = tutorPage.waitForResponse(response => response.url().includes('/functions/v1/assessment-api')
+          && response.request().postDataJSON()?.operation === 'analyze_message', { timeout: TIMEOUT });
+        await tutorPage.locator('button.ai-generate-btn').click();
+        const analysis = await analyzed;
+        const actor = analysis.request().headers()['x-application-user-id'];
+        assert.equal(actor, ctx.tutor.id);
+        assert.equal(analysis.status(), 200);
+        await character.waitFor({ timeout: TIMEOUT });
+        identityChecks.push({ storage: storedUser === null ? 'missing' : 'another user', actor, analysis_status: analysis.status(), draft_visible: true });
+      } finally {
+        await tutorPage.evaluate(original => {
+          if (original === null) localStorage.removeItem('tutor_system_user');
+          else localStorage.setItem('tutor_system_user', original);
+        }, original);
+        writeJson(path.join(evidenceDir, 'cyberbullying-identity-checks.json'), identityChecks);
+      }
+    };
+    await generateWithChangedStorage(null);
     assert.equal((await query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id)).length, 0);
     assert.equal((await managementQuery(ctx.config, "select to_regclass('private.cyberbullying_suggestions') as retired"))[0].retired, null);
     await tutorPage.reload({ waitUntil: 'domcontentloaded' });
     await tutorPage.locator('button.ai-generate-btn').waitFor({ timeout: TIMEOUT });
     assert.equal(await character.count(), 0, 'Reload discards an unsent browser draft');
     assert.equal((await query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id)).length, 0);
-    await tutorPage.locator('button.ai-generate-btn').click();
-    await character.waitFor({ timeout: TIMEOUT });
+    await generateWithChangedStorage(ctx.student);
     // Replacing a draft logs ignored through the shared review table without publishing.
     await tutorPage.locator('button.ai-generate-btn').click();
     await waitForMatch(() => query(client, 'ai_suggestion_feedback', '*', 'room_id', room.id),
