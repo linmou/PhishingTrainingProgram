@@ -4,7 +4,7 @@ Intent: record the authorization failure, regression coverage and release verifi
 
 Updated: 2026-10-22. Starting commit: `3acec373`. Release owner: Codex /root. Batch: `cyberbullying-generation-identity`.
 
-Status: local verification in progress. Staging and production acceptance remain open.
+Status: staging verified; integration and production acceptance remain open.
 
 ## Failure and change
 
@@ -28,4 +28,19 @@ Dependencies owned by this release owner: unchanged hosted assessment-api/ai-api
 
 Local acceptance passed: 137 distinct tests across ten focused suites (nine passing suites in `output/browser-draft/identity-focused-final.json`, plus the corrected 16-test draft-lifecycle suite in `identity-draft-lifecycle-final.json`). The fixture's mocked active tutor is `tutor-1`, independent of the stored room fixture owner; the assertion now uses that active actor. Browser harness: all 20 tests passed. Production frontend build passed with the previously recorded lint warnings. TypeScript reports the same 442 inherited test diagnostics, zero runtime diagnostics and zero diagnostics in the changed Cyberbullying regression.
 
-Pending exact candidate/artifact hashes, project leases, live reports, integration and production frontend verification.
+The first full PR CI run `39711143417` passed the build and isolation checks, with 1445 tests passing and two older facade assertions failing because the transport now receives an optional second actor argument. Those two expectations now include the absent actor explicitly. All six facade tests pass; focused local coverage totals 143 distinct tests. Runtime files are unchanged by this test correction.
+
+## Staging acceptance
+
+Runtime candidate: `37b8162667b994696870929f4b3bd366b97c6a49`. Manifest: `output/cyberbullying-identity/candidate-manifest.json`. Lease: `output/cyberbullying-identity/staging-lease/coordination-lease.json`, held through all four journeys and cleanup, then released.
+
+Each report under repository `tmp/browser_demo_runs/` passed with every fixture cleanup passing:
+
+- `staging-template-20261022022359-d6b3dfba`: full Cyberbullying journey. Its `cyberbullying-identity-checks.json` confirms both missing and another-user storage cases used active tutor `6c251a12-6787-462e-a5e4-59acd30e6c25`, assessment-api HTTP 200 and a visible character draft. Shared review, Guard, ratings/export and reload behavior passed.
+- `staging-template-20261022022511-662e563e`: ordinary phishing tutor response and persisted review.
+- `staging-template-20261022022545-9136fa12`: phishing Guard entry/recovery.
+- `staging-template-20261022022651-ef64df66`: assessment-answer lifecycle, including all four fixture uses and cleanup.
+
+Retrieved deployed source matches the candidate for all three ai-api files and eleven assessment-api files in both staging and production. Production MCP reports unchanged ai-api v5 and assessment-api v17. This release needs only the frontend. Production baseline Render deployment `dep-dbcjpf49v7es73bkfnq0` is live at `3acec373`; the fix is not yet deployed there.
+
+Pending corrected-candidate CI, integration/source comparison, production frontend release and all four corresponding production browser journeys.

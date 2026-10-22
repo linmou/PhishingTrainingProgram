@@ -50,7 +50,7 @@ describe('transfer assessment browser facade', () => {
     expect(invoke).toHaveBeenCalledWith({
       operation: 'post_message', request_id: 'request-1', room_id: 'room-1', content: 'B',
       parent_message_id: 'question-1', assessment_id: 'assessment-1', selected_option_ids: ['B'],
-    });
+    }, undefined);
     expect(JSON.stringify(invoke.mock.calls[0][0])).not.toContain('attempt_number');
   });
 
@@ -63,7 +63,7 @@ describe('transfer assessment browser facade', () => {
       operation: 'process_message', request_id: 'request-2',
       message_id, assessment_id,
       room_id: 'room-1',
-    });
+    }, undefined);
     expect(result.attempts_remaining).toBe(1);
   });
 });
