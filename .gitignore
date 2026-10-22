@@ -55,6 +55,9 @@ evals/promptfoo/evalLastWritten
 .claude/skills/bmad
 .claude/skills/bmad-*
 .claude/skills/bmod-*
+# Committed local patch: upstream SKILL.md frontmatter does not parse at the pinned commit.
+!.agents/skills/bmad-retrospective/
+!.claude/skills/bmad-retrospective
 !/_bmad/
 /_bmad/*
 !/_bmad/custom/
