@@ -7,6 +7,7 @@ sources:
   - _bmad-output/initiative-platform-baseline/constitution-product/constitution-product.md
 companions:
   - _bmad-output/initiative-platform-baseline/architecture-tutor-platform/architecture-tutor-platform.md
+  - _bmad-output/initiative-platform-baseline/architecture-tutor-platform/architecture-seed-tutor-platform.md
 risk: medium
 ---
 

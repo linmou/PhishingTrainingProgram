@@ -43,8 +43,8 @@ Test paths are from the repository root.
 - No AI-generated text reaches a learner unless the room owner sends it (constitution C1).
 - Grades, attempts and progress changes are decided on the server from recorded evidence; the browser never decides them (constitution C3).
 - Private assessment material reaches participants only at its publication point, so a transfer assessment stays a valid check (constitution C5; AD-12).
-- Item progress changes only through `apply_learning_event_v1` or `edit_room_checklist_v1`; assessment state changes only through `send_reviewed_tutor_response_v4` (create), `process_assessment_message_v2` (grade and close) and the cancel functions. No new writer is added: not in the client, not in another RPC, not in an Edge Function. History tables are append-only (AD-1).
-- `process_assessment_message_v2` commits the grade, the progress event, the attempt row and the result message in one transaction; the terminal event key is `assessment:<id>`; the learner's answer message is saved in an earlier transaction (AD-4).
+- Item progress changes only through the learning-event writer (model and assessment events) or the manual progress-edit writer (the owner's edit); assessment state changes only through the reviewed-send function (create), the assessment grading function (grade and close) and the cancellation functions. No new writer is added: not in the client, not in another database function, not in an Edge Function. History tables are append-only (AD-1). Today these are `apply_learning_event_v1`, `edit_room_checklist_v1`, `send_reviewed_tutor_response_v4` and `process_assessment_message_v2`.
+- The assessment grading function commits the grade, the progress event, the attempt row and the result message in one transaction. Each assessment has one terminal event key. The learner's answer message is saved in an earlier transaction (AD-4).
 
 ## Done when
 
@@ -64,6 +64,7 @@ Test paths are from the repository root.
 
 - parent — `_bmad-output/initiative-platform-baseline/initiative-platform-baseline.md`, Requirements R9
 - architecture — `_bmad-output/initiative-platform-baseline/architecture-tutor-platform/architecture-tutor-platform.md`, AD-1, AD-3, AD-4, AD-5, AD-6, AD-7, AD-12
+- architecture seed — `_bmad-output/initiative-platform-baseline/architecture-tutor-platform/architecture-seed-tutor-platform.md`, roles and their names today
 - prd — `_bmad-output/initiative-platform-baseline/prd-tutor-platform/prd-tutor-platform.md`, section 5.3
 
 ## Notes
