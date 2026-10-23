@@ -64,6 +64,21 @@ The principles are not a universal numeric ranking. Use the rule whose condition
 
 Unresolved material conflicts go to the responsible human. Benchmark scores, repetition counts, or an agent's preference do not establish a new constitutional priority.
 
+## Parent links
+
+Intent: tie each principle, constraint and rule here to the product constitution (`_bmad-output/initiative-platform-baseline/constitution-product/constitution-product.md`), which sits one layer above. A child may narrow its parent; it may not contradict it.
+
+| Item here | Parent |
+| --- | --- |
+| P1 | P1 |
+| P2 | P1 |
+| P3.1 (and H2) | P3 |
+| P3.2 (and H3) | P3 |
+| P3.3 | P3, P2 |
+| P4 (and H4) | P2 |
+| H1 | P4 |
+| R2 | R6 |
+
 ## Human decision record and revision authority
 
 The approving human is the requesting project user in this conversation; no personal name was supplied. This record preserves the reviewed propositions and decisions without implying review of generated wording that did not yet exist.
@@ -73,6 +88,7 @@ The approving human is the requesting project user in this conversation; no pers
 | Structure | Four top-level principles; learner agency is not separate; assessment and adaptive progression belong within P2. | The user requested removal of P6 and allocation of Guard to P3; the subsequent discussion consolidated P5 into P2. |
 | P3 decomposition | P3.1 emotional support, P3.2 authentic relationship, P3.3 participation management, with the responsibilities defined in P3 subprinciples. | The user replied “agree” immediately after the three-part decomposition proposal. |
 | Objective and priorities | P2 as primary objective; the four constraints H1–H4; the five conditional rules R1–R5, as proposed in the immediately preceding priority discussion. | On 2026-09-07 the user replied “agree , do you have the template for constitution , write constitution”. |
+| Parent links | Added the Parent links section tying this constitution to the product constitution. No principle, constraint or rule text changed. | On 2026-10-22 the user replied “1. add Parent links” to the proposal in the product constitution. |
 
 Version 1.0 transcribes those approved principles and priorities. Its initial SHA-256 is `9643b6723ba09efb9bd55201c9547e4351967c3e278a9565efa29b91d5b06ad5`. Implementation alignment is not part of that approval.
 
