@@ -154,6 +154,7 @@ Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owne
 | G-53 | No test shows the server refusing another assessment while tutor feedback is outstanding, and no test fixture has two due targets. | transfer-assessment epic guard map | FR-41 |
 | G-54 | No test shows that turning in-room assessment off leaves an open assessment answerable. | transfer-assessment epic guard map | FR-31 |
 | G-55 | A cancelled assessment's closure message count and "no attempt used" are not asserted by any test. | transfer-assessment epic guard map | FR-32 |
+| G-56 | No guard test has been mapped for FR-43 (the AI assistant gets assessment outcomes only from the saved conversation, and waits while result messages are saved). | transfer-assessment epic audit | FR-43 |
 | G-48 | Dependency-direction breaks in the client: a context imports a component, a hook imports a context, types and utils import services. | architecture sweep 2 | — |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
