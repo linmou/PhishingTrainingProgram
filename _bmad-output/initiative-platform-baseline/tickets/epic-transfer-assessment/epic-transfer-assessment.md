@@ -53,6 +53,8 @@ Test paths are from the repository root.
 
 ## Boundaries
 
+- Touch point: server authority, repeatable requests and the version handshake — owner: epic-platform-guarantees
+- Touch point: result messages in the shared conversation, which are never rated — owner: epic-conversation
 - Touch point: learning progress states and events — owner: epic-learning-progress
 - Touch point: Guard and owner-only controls — owner: epic-supervision-and-guard
 - Touch point: the review and send flow that an assessment draft replaces — owner: epic-ai-suggestions
