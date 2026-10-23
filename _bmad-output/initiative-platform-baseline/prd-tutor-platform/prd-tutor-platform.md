@@ -119,7 +119,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 
 - **Transfer assessment** — A four-option question that checks whether the learner can apply a learning target in a new context: a concrete case meaningfully different from the scenario the learner discussed.
 - **In-room assessment** — The per-room setting that allows transfer assessments.
-- **Due** — A transfer assessment is due for a learning target after the learner moves it from Partial to Covered by demonstrating understanding, until it is delivered, cancelled or completed.
+- **Due** — A transfer assessment is due for a learning target after the learner moves it from Partial to Covered by demonstrating understanding, until it is delivered, cancelled or completed. Rejecting an assessment draft does not change this.
 - **Assessment draft** — An AI draft of a transfer assessment.
 - **Attempt** — One valid answer to an open transfer assessment. A learner gets at most two.
 - **Learner explanation** — The explanation of the correct answer that is published after a second wrong attempt.
@@ -236,6 +236,7 @@ A student can become a room's learner if it has none; any later student enters a
 
 **Consequences (testable):**
 - At most one learner per room at any time, enforced on the server.
+- The room owner is never the learner of their own room, and never answers an assessment, whatever role their profile shows.
 - The learner keeps the seat for the room's whole life; rooms are not reused for another learner.
 
 #### FR-13: Observe rooms
@@ -340,6 +341,7 @@ The room owner can turn Guard on or off for the room at any time after confirmin
 
 **Consequences (testable):**
 - Guard changes only by the room owner's action; an AI recommendation alone never changes it.
+- Sending a reply records the Guard state; it never changes it.
 - While Guard is on, the room owner's tutor replies are shown as "Security Supervisor" and learning progress pauses (FR-22).
 - When the AI recommends Guard, and how a Guard tutor reply is worded, is governed by G01–G03 (§7).
 
@@ -358,7 +360,7 @@ Any participant can download the room's export as TXT or JSON.
 - No export contains private transfer-assessment material beyond what result messages publish.
 
 #### FR-51: Record tutor review of AI drafts
-The system records, for every AI suggestion and character draft, the suggestion action, the original and final text, the response time, the context messages, the original and final Guard state, and the instruction label or character.
+The system records, for every AI suggestion, assessment draft and character draft, the suggestion action, the original and final text, the response time, the context messages, the original and final Guard state, and the instruction label or character.
 **Grounding:** P8.
 
 **Consequences (testable):**
@@ -450,6 +452,7 @@ In-room assessment is on by default for every phishing room. The room owner can 
 **Consequences (testable):**
 - In-room assessment controls only transfer assessments. Learning targets, judging and learning progress work the same with it on or off.
 - With in-room assessment off, AI suggestions and Guard keep working.
+- Turning in-room assessment off does not close a transfer assessment that is already open: the learner can still answer it and it is graded. 
 
 #### FR-32: When a transfer assessment becomes due
 A transfer assessment becomes due for a learning target only when the learner moves it from Partial to Covered by demonstrating understanding.
@@ -489,7 +492,7 @@ The room owner can see the learning target, the new context, the question, the o
 **Consequences (testable):**
 - An edited assessment draft is checked again before sending; an invalid one cannot be sent.
 - Learners never see an assessment draft.
-- Rejecting an assessment draft delivers nothing to the learner.
+- Rejecting an assessment draft delivers nothing to the learner. The transfer assessment stays due and is offered again at the room owner's next request for an AI suggestion.
 - When the room owner rejects an assessment draft, the platform shows a message naming the learning target it was meant to check. The message says the target's recorded progress may be wrong, and asks the room owner to check it and correct it by hand if needed (FR-53).
 
 #### FR-36: Deliver to the learner
@@ -517,6 +520,7 @@ The server grades each attempt by exact match with the correct options and allow
 **Grounding:** P4, C3.
 
 **Consequences (testable):**
+- While Guard is on, a learner's answer to an open transfer assessment is held: it is not graded and uses no attempt. It is graded after Guard ends.
 - First wrong attempt: one attempt left, learning progress unchanged.
 - Right attempt on either try: passed, once.
 - Second wrong attempt: failed, once.
@@ -647,7 +651,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 - **NFR-1 Human supervision.** No AI-generated text reaches a learner without the room owner's explicit send. The AI assistant never changes room state on its own. **Grounding:** P2, C1.
 - **NFR-2 Server authority.** Grading, attempt counting, whether a transfer assessment is due, learning progress changes, the learner seat and private transfer-assessment data are decided on the server. The browser never grades or changes learning progress directly. **Grounding:** P4, C3.
 - **NFR-3 Private material.** Correct answers and learner explanations stay private until a second wrong attempt (FR-39). The reasoning behind a transfer assessment and raw AI output are never visible to participants. Reasons and instruction labels are visible to the room owner only. AI provider credentials never reach the browser. **Grounding:** C5, P2, C6.
-- **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app. This is accepted for the current small-scale pilot, in which students use the platform under close adult supervision and ease of use takes priority over authentication. Accepted consequences: anyone can act as any user by typing the same name and role, and any participant can read any room's messages and password. **Grounding:** P5, P6, R1.
+- **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app, except the private material in NFR-3. This is accepted for the current small-scale pilot, in which students use the platform under close adult supervision and ease of use takes priority over authentication. Accepted consequences: anyone can act as any user by typing the same name and role, and any participant can read any room's messages and password. **Grounding:** P5, P6, R1.
 - **NFR-5 Reliable repetition.** Repeating any request (send, attempt, delivery, judging) produces no duplicate effect. Concurrent requests resolve to one outcome. **Grounding:** P4.
 - **NFR-6 Persistence.** The application identity, conversation, learning progress and transfer-assessment state survive reloads, reconnects and multiple tabs. Rooms are kept after use. **Grounding:** P4, P8, C4.
 - **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, learning targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. **Grounding:** P7.
