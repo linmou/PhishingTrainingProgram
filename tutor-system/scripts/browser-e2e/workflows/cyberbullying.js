@@ -13,7 +13,7 @@ module.exports = async function cyberbullying(ctx) {
   await tutorPage.goto(`${appUrl}/#/tutor`, { waitUntil: 'domcontentloaded' });
   await tutorPage.getByRole('button', { name: /Create a new Room/i }).click();
   await tutorPage.getByLabel('Practice', { exact: true }).selectOption('cyberbullying');
-  await tutorPage.getByLabel('Situation', { exact: true }).selectOption('copilot-1');
+  await tutorPage.getByLabel('Use Template', { exact: true }).selectOption({ label: 'Cyberbullying: Dylan smells that he did not shower for a week.' });
   await tutorPage.getByLabel('Room Title').fill(title);
   const description = await tutorPage.getByLabel('Description').inputValue();
   await tutorPage.getByLabel('Description').fill('[browser-e2e-created] ' + description);

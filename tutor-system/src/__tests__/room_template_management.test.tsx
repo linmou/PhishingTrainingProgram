@@ -11,13 +11,23 @@ import TutorView from '../pages/TutorView';
 import TestRoomsView from '../pages/TestRoomsView';
 import * as supabaseService from '../services/supabase';
 import * as aiService from '../services/aiService';
-import { loadCyberbullyingScenarios, mapCopilotScenarios, scenarioDialogue } from '../services/cyberbullyingScenarios';
 
-jest.mock('../services/cyberbullyingScenarios', () => ({
-    ...jest.requireActual('../services/cyberbullyingScenarios'),
-    loadCyberbullyingScenarios: jest.fn(),
+const author = (id: string, name: string) => ({ id, name, profile_picture: `/images/${id}.png`, role: 'simulated_user' });
+const cyberScenarios = ['1', '2'].map(n => ({
+    id: 'copilot-' + n, source_commit: 'abc',
+    post: { text: `Post ${n}`, image: `/images/post_${n}.jpg`, timestamp: '2025-02-18T12:00:00Z', author: author('op_' + n, 'Poster ' + n) },
+    initial_comments: [{ id: n + '_1', text: `Comment ${n}`, timestamp: '2025-02-18T12:04:00Z', author: author('user_' + n, 'Commenter ' + n) }],
 }));
-const cyberScenarios = mapCopilotScenarios(require('../../public/cyberbullying/scenarios.json'));
+const scenarioDialogue = (scenario: typeof cyberScenarios[number]) => scenario.initial_comments.map(comment => ({
+    source_comment_id: comment.id, user_name: comment.author.name, message: comment.text, role: 'others',
+    timestamp: comment.timestamp, persona_id: comment.author.id, avatar_url: comment.author.profile_picture,
+}));
+const cyberTemplate = (scenario: typeof cyberScenarios[number]) => ({
+    id: 'tpl-' + scenario.id, template_name: 'Cyberbullying: ' + scenario.post.text, practice_type: 'cyberbullying',
+    scenario_config: scenario, title_template: 'Cyberbullying practise — ' + scenario.id, description_template: scenario.post.text,
+    image_url: scenario.post.image, pre_populated_dialogue: scenarioDialogue(scenario),
+    op_config_template: { use_custom_op: true, custom_op_name: scenario.post.author.name },
+});
 
 // Mock the supabase service
 jest.mock('../services/supabase', () => ({
@@ -99,18 +109,22 @@ describe('Room Template Management', () => {
         jest.clearAllMocks();
         (supabaseService.getRoomsByTutor as jest.Mock).mockResolvedValue([]);
         (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([]);
-        (loadCyberbullyingScenarios as jest.Mock).mockResolvedValue(cyberScenarios);
     });
 
-    // Covers TutorView's Cyberbullying creation boundary: complete scenario attribution and template reuse.
-    describe('Cyberbullying scenarios', () => {
-        test.each(cyberScenarios)('creates $id with its full scenario and edited post', async (scenario) => {
+    // Covers TutorView's Cyberbullying creation boundary: complete scenario attribution via room templates.
+    describe('Cyberbullying templates', () => {
+        beforeEach(() => {
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue(cyberScenarios.map(cyberTemplate));
+        });
+
+        test.each(cyberScenarios)('creates $id from its template with its full scenario and edited post', async (scenario) => {
             (supabaseService.createRoom as jest.Mock).mockResolvedValue({ id: 'cyber-room' });
             render(<TestWrapper><TutorView /></TestWrapper>);
             fireEvent.click(screen.getByText('➕ Create a new Room'));
             fireEvent.change(screen.getByLabelText('Practice'), { target: { value: 'cyberbullying' } });
-            await waitFor(() => expect(screen.getByRole('option', { name: scenario.post.text })).toBeInTheDocument());
-            fireEvent.change(screen.getByLabelText('Situation'), { target: { value: scenario.id } });
+            await screen.findByRole('option', { name: 'Cyberbullying: ' + scenario.post.text });
+            expect(screen.queryByLabelText('Situation')).not.toBeInTheDocument();
+            fireEvent.change(screen.getByLabelText(/use template/i), { target: { value: 'tpl-' + scenario.id } });
             fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Tutor edited post' } });
             fireEvent.click(screen.getByText('🚀 Create Room'));
             await waitFor(() => expect(supabaseService.createRoom).toHaveBeenCalledWith(expect.objectContaining({
@@ -122,35 +136,26 @@ describe('Room Template Management', () => {
             })));
         });
 
-        test('reuses the complete stored Cyberbullying template', async () => {
-            const scenario = cyberScenarios[0];
-            (supabaseService.createRoom as jest.Mock).mockResolvedValue({ id: 'cyber-template-room' });
-            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([{
-                id: 'cyber-template', template_name: 'Cyberbullying situation', practice_type: 'cyberbullying',
-                scenario_config: scenario, title_template: 'Stored situation', description_template: scenario.post.text,
-                image_url: scenario.post.image, pre_populated_dialogue: scenarioDialogue(scenario),
-                op_config_template: { use_custom_op: true, custom_op_name: scenario.post.author.name },
-            }]);
+        test('lists only Cyberbullying templates for Cyberbullying practice', async () => {
+            (supabaseService.getRoomTemplatesByTutor as jest.Mock).mockResolvedValue([
+                ...cyberScenarios.map(cyberTemplate),
+                { id: 'phish', template_name: 'Phish template', title_template: 'T', practice_type: 'phishing' },
+            ]);
             render(<TestWrapper><TutorView /></TestWrapper>);
             fireEvent.click(screen.getByText('➕ Create a new Room'));
             fireEvent.change(screen.getByLabelText('Practice'), { target: { value: 'cyberbullying' } });
-            await screen.findByRole('option', { name: 'Cyberbullying situation' });
-            fireEvent.change(screen.getByLabelText(/use template/i), { target: { value: 'cyber-template' } });
-            fireEvent.click(screen.getByText('🚀 Create Room'));
-            await waitFor(() => expect(supabaseService.createRoom).toHaveBeenCalledWith(expect.objectContaining({
-                practice_type: 'cyberbullying', scenario_config: scenario,
-                title: 'Stored situation', pre_populated_dialogue: scenarioDialogue(scenario),
-            })));
+            await screen.findByRole('option', { name: 'Cyberbullying: Post 1' });
+            expect(screen.queryByRole('option', { name: 'Phish template' })).not.toBeInTheDocument();
         });
 
-        test('keeps creation blocked when the scenario catalog fails to load', async () => {
-            (loadCyberbullyingScenarios as jest.Mock).mockRejectedValue(new Error('Scenario catalog unavailable'));
+        test('keeps creation blocked until a Cyberbullying template is chosen', async () => {
             render(<TestWrapper><TutorView /></TestWrapper>);
             fireEvent.click(screen.getByText('➕ Create a new Room'));
             fireEvent.change(screen.getByLabelText('Practice'), { target: { value: 'cyberbullying' } });
-            await waitFor(() => expect(screen.getAllByText('Scenario catalog unavailable').length).toBeGreaterThan(0));
-            fireEvent.change(screen.getByLabelText(/room title/i), { target: { value: 'Pending situation' } });
+            await screen.findByRole('option', { name: 'Cyberbullying: Post 1' });
+            fireEvent.change(screen.getByLabelText(/room title/i), { target: { value: 'Pending' } });
             fireEvent.click(screen.getByText('🚀 Create Room'));
+            expect((await screen.findAllByText('Choose a Cyberbullying template.')).length).toBeGreaterThan(0);
             expect(supabaseService.createRoom).not.toHaveBeenCalled();
         });
     });
