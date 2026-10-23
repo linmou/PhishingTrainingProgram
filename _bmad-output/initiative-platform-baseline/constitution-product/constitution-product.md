@@ -49,7 +49,7 @@ Layering rules:
 | C1 | P2 | No AI-generated text reaches a learner unless the room owner sends it. |
 | C2 | P1, P4 | Learning progress changes only from the learner's own contributions or the room owner's recorded manual edit. |
 | C3 | P4 | Grades, attempts and progress changes are decided on the server from recorded evidence; the browser never decides them. |
-| C4 | P4, P8 | No in-app action deletes pilot data. |
+| C4 | P4, P8 | Pilot data is deleted only by a tutor's explicit, confirmed deletion of a room they own, which removes their own and their students' data from it. No other action removes data: not clearing history, reusing a room or releasing the learner seat. |
 | C5 | P1, P4 | Private assessment material reaches participants only at its publication point, so a transfer assessment stays a valid check. |
 | C6 | P6 | AI provider credentials never reach the browser. A leak would cause immediate, uncontrolled cost and abuse, which no pilot shortcut may risk. |
 
@@ -58,7 +58,7 @@ Layering rules:
 | ID | Conflict | Rule | Decided |
 | --- | --- | --- | --- |
 | R1 | P5 ease of use and P6 quick implementation vs P4 trustworthy attribution | Ease and speed win while learners use the platform under close adult supervision: no authentication is built, and the application identity identifies but does not authenticate. Attribution relies on that supervision. Revisit when use is no longer supervised. | 2026-10-22, OQ-1 |
-| R2 | P4 and P8 keeping the record vs P5 tidy, reusable rooms | Keeping the record wins: no clearing of chat history, no reuse of rooms, no release of the learner seat. | 2026-10-22, OQ-4 and FR-17 withdrawal |
+| R2 | P4 and P8 keeping the record vs P5 tidy, reusable rooms | Keeping the record wins: no clearing of chat history, no reuse of rooms, no release of the learner seat. The one exception is C4: a tutor may delete a room they own, because tutors have the right to remove their own and their students' data. | 2026-10-22, OQ-4 and FR-17 withdrawal |
 | R3 | P1 a valid check vs P1 learning from a mistake | Before a transfer assessment ends, the answer stays private (C5). After the second wrong attempt, learning wins: the correct answer and explanation are published to the whole room. | 2026-10-22, OQ-2 |
 | R4 | P2 supervision vs P5 speed | Supervision wins: every AI draft is reviewed by the room owner, who may reject it and write their own reply, even when that is slower. | 2026-10-22, OQ-7 |
 | R5 | P2 accountable supervision vs P5 shared tutoring | One accountable supervisor wins: only the room owner uses tutor controls in a room. | 2026-10-22, OQ-8 |
@@ -108,4 +108,5 @@ Only an explicit decision by the product owner adds, removes or reorders a princ
 | 2026-10-22 | Tutor controls belong to the room owner only (OQ-8). | R5 |
 | 2026-10-22 | The AI tutoring constitution governs phishing only (OQ-11). | Children table |
 | 2026-10-22 | All new learning targets are learner-owned and judged on the server; manual edits stay (OQ-14). | R7, C2 |
+| 2026-10-22 | C4 weakened: tutors keep the right to delete a room they own, and with it their own and their students' data (digital autonomy). Previously "no in-app action deletes pilot data". Open for the owner: whether data autonomy is a principle of its own rather than part of P4. | C4, R2, FR-9 |
 | 2026-10-22 | Constraint IDs renamed H1–H6 → C1–C6 (the "H" came from "hard" in the AI tutoring constitution; "C" is for constraint). The tutoring constitution's own H1–H4 are unchanged. | C1–C6 |

@@ -1,6 +1,6 @@
 ---
 title: Online Safety Tutor Platform
-status: draft
+status: final
 created: 2026-10-22
 updated: 2026-10-22
 ---
@@ -14,7 +14,7 @@ This PRD states the system contracts of the deployed tutor platform: what the sy
 
 **Layering.** The root is the product constitution (`../constitution-product/constitution-product.md`): principles P1–P8, constraints C1–C6 and priority rules R1–R8. Every FR and NFR below carries a **Grounding** line citing them. AI behavior — how good an AI job's output is — is not specified here: it belongs to AI behavior constitutions and specifications, verified by evaluations. This PRD states only each AI job's boundary (inputs, output shape, audience, gates, failure handling) and points to its specification (§7).
 
-**Structure.** Glossary; Part A, the shared platform (§4); Part B, phishing practice (§5); Part C, cyberbullying practice (§6); AI behavior boundaries (§7); cross-cutting NFRs (§8); Non-Goals (§9); Scope (§10); Open Questions and Decisions (§11); Assumptions Index (§12). FRs are numbered globally and keep their numbers when moved between parts. Where current behavior differs from a requirement, the difference is listed in `addendum.md` §C (Known gaps).
+**Structure.** Glossary; Part A, the shared platform (§4); Part B, phishing practice (§5); Part C, cyberbullying practice (§6); AI behavior boundaries (§7); cross-cutting NFRs (§8); Non-Goals (§9); Scope (§10); Open Questions and Decisions (§11); Assumptions Index (§12). FRs are numbered globally and keep their numbers when moved between parts. Terms are defined in §3.
 
 Companion documents cited, not restated:
 
@@ -51,7 +51,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 
 ### 2.3 Key User Journeys
 
-- **UJ-1. Ms. Rivera runs a phishing practice room.** Ms. Rivera joins as a tutor, creates a room from the "account alert" template, and keeps in-room assessment on. Jamie joins as the learner, rates each of her tutor replies, and writes about the post. For each of Jamie's messages Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five learning targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a learning target after being Partial, a transfer assessment becomes due and her next request for an AI suggestion returns an assessment draft; she reviews it and sends it. Jamie answers wrong once, then right; a result message records each attempt. **Edge case:** Jamie writes "I'd just click it to check" — the AI suggestion leads with protective instruction before any question.
+- **UJ-1. Ms. Rivera runs a phishing practice room.** Ms. Rivera joins as a tutor, creates a room from the "account alert" template, and keeps in-room assessment on. Jamie joins as the learner, rates each of Ms. Rivera's replies, and writes about the post. For each of Jamie's messages Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five learning targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a learning target after being Partial, a transfer assessment becomes due and Ms. Rivera's next request for an AI suggestion returns an assessment draft; Ms. Rivera reviews it and sends it. Jamie answers wrong once, then right; a result message records each attempt. **Edge case:** Jamie writes "I'd just click it to check" — the AI suggestion leads with protective instruction before any question.
 - **UJ-2. Mr. Okafor supervises a cyberbullying role-play.** He creates a cyberbullying room from one of the pinned scenarios and edits one line of its pre-populated dialogue. When Lina joins, her five shared learning targets are set up automatically. Lina writes a message; Mr. Okafor requests a character draft, switches the character from "bully" to "victim", shortens the text, and sends it. Lina sees the character reply under the character's persona name and rates it before writing again.
 - **UJ-3. Dana observes and exports.** Dana joins as an observer, opens a running room read-only, and watches messages appear live. At the end she downloads the JSON export, which contains the conversation, ratings and result messages but no private assessment material.
 - **UJ-4. A learner tests limits.** Sam repeatedly posts insults instead of answering. The AI suggestion recommends Guard; Ms. Rivera accepts it, and her tutor reply names the behavior and what needs to change without insulting Sam. Sam's learning progress does not advance while Guard is on. When Sam makes a real attempt, the next AI suggestion recommends turning Guard off and Ms. Rivera does so.
@@ -121,7 +121,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 - **In-room assessment** — The per-room setting that allows transfer assessments.
 - **Due** — A transfer assessment is due for a learning target after the learner moves it from Partial to Covered by demonstrating understanding, until it is delivered, cancelled or completed.
 - **Assessment draft** — An AI draft of a transfer assessment.
-- **Attempt** — One valid answer to an open transfer assessment. At most two.
+- **Attempt** — One valid answer to an open transfer assessment. A learner gets at most two.
 - **Learner explanation** — The explanation of the correct answer that is published after a second wrong attempt.
 - **Result message** — The automatic, fixed-text message the server saves for every accepted attempt.
 - **Tutor feedback** — The room owner's own tutor reply to the learner's final attempt, required before that learner can get another transfer assessment.
@@ -151,7 +151,7 @@ A user can change their display name, role and avatar (from presets).
 - Changes are saved to the user record and to the browser.
 - The user identifier does not change when name or role changes.
 
-**Out of Scope:** custom avatar upload (gap G-1).
+**Out of Scope:** custom avatar upload.
 
 #### FR-3: Leave
 A user can leave, which removes the application identity from this browser only.
@@ -201,7 +201,12 @@ A tutor can create test rooms only from the test-room area.
 
 #### FR-9: Manage own rooms
 A tutor can see the rooms they own whenever they return, and delete one after confirming.
-**Grounding:** P5.
+**Grounding:** P5, C4.
+
+**Consequences (testable):**
+- Deleting a room removes the room and everything it holds, including its students' messages, learning progress and private assessment records.
+- Only the room owner can delete a room; the server refuses anyone else.
+- Deletion needs an explicit confirmation and cannot be undone.
 
 #### FR-10: Password-gated entry
 A room owner can set a room password; anyone except the room owner must enter it before the room opens.
@@ -267,7 +272,7 @@ The learner must rate the most recent tutor reply before sending their next mess
 - If saving the rating fails, the learner is told and their unsent message is kept.
 
 #### FR-17: (withdrawn 2026-10-22)
-Clearing chat history is not a supported feature (gap G-21).
+Clearing chat history is not a supported feature.
 
 ### 4.4 Learning Progress
 
@@ -292,7 +297,7 @@ The system has every learner message judged against each learning target separat
 - Whether a judgment is correct is governed by the learning-event judging specification (§7), not by this FR.
 
 #### FR-21: Progress states and transitions
-Learning targets move between progress states only through the learning events defined in the transfer-status response contract.
+Learning targets move between progress states only in three ways: learning events as defined in the transfer-status response contract, a transfer assessment result (FR-40), and a manual edit (FR-53).
 **Grounding:** P4, P7, C3.
 
 **Consequences (testable):**
@@ -300,7 +305,7 @@ Learning targets move between progress states only through the learning events d
 - A learning event not allowed from the current progress state is recorded as rejected and changes nothing.
 
 #### FR-22: Guard pauses learning progress
-While Guard is on, no learning progress advances; learning events gathered meanwhile are applied when Guard ends, if they are still valid.
+While Guard is on, no learning progress advances; learning events gathered meanwhile are applied when Guard ends, unless the learning target's progress state no longer allows them (FR-21).
 **Grounding:** P3, P4.
 
 #### FR-23: Learning Progress panel
@@ -551,7 +556,7 @@ Every participant sees the same transfer assessment, attempts, attempts left and
 - A late or duplicate update cannot reopen a finished transfer assessment.
 
 #### FR-43: AI suggestions after transfer assessments
-The AI assistant learns transfer-assessment outcomes only from the saved conversation, and generates no AI suggestion while the learner's result messages are still being saved.
+The AI assistant gets transfer-assessment outcomes only from the saved conversation, and generates no AI suggestion while the learner's result messages are still being saved.
 **Grounding:** P4, P1.
 
 # Part C — Cyberbullying Practice
@@ -604,7 +609,7 @@ The room owner can request one character draft for the learner's latest message,
 - Audience: the room owner only.
 - If the room owner chose a character, the character draft uses it.
 - A request is refused when the AI assistant is off or there is no learner message.
-- The quality of character drafts has no AI behavior specification yet; the role-play prompt currently asks for at most three sentences in simple language (§7).
+- The quality of character drafts has no AI behavior specification yet (§7).
 
 #### FR-48: Review and send a character reply
 The room owner can change a character draft's character and text, regenerate it, reject it, override Guard, and send it as a character reply.
@@ -623,17 +628,19 @@ Every participant sees a character reply under the same character and persona na
 **Consequences (testable):**
 - Sent character replies cannot be edited.
 
+# Part D — AI Boundaries and Cross-Cutting Sections
+
 ## 7. AI Behavior Boundaries
 
 Each AI job's boundary FR states what the system guarantees around it. The quality of its output is governed by the listed AI behavior specification and constitution and verified by evaluation, not by code tests.
 
-| AI job | Boundary FRs | AI behavior specification | Evaluation | AI behavior constitution | Status |
-| --- | --- | --- | --- | --- | --- |
-| AI suggestions, including Guard recommendations | FR-25, FR-26, FR-27, FR-30 | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` T01–T08, G01–G03 | `evals/promptfoo/` tutor suite | `tutor-system/docs/ai-behaviors/constitution.md` | In place |
-| Assessment drafts | FR-33, FR-34 | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` T09.1–T09.6 | `evals/transfer-assessment/` (plan in `specs/104-transfer-evaluation/`) | `tutor-system/docs/ai-behaviors/constitution.md` | In place; evaluation gate incomplete (addendum G-20) |
-| Learning-event judging | FR-20 | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` T02 analysis responsibilities; `tutor-system/docs/ai-behaviors/transfer-status-response-contract.md` | `evals/promptfoo/learning-progress-analyzer/` | `tutor-system/docs/ai-behaviors/constitution.md` (phishing only) | Phishing in place; cyberbullying judging has no constitution (gap G-27) |
-| Character drafts | FR-47, FR-48 | none | none | none | Gap G-25 |
-| Learning-target generation | FR-18 | none | none | none | Gap G-26 |
+| AI job | Boundary FRs | AI behavior specification | Evaluation | AI behavior constitution |
+| --- | --- | --- | --- | --- |
+| AI suggestions, including Guard recommendations | FR-25, FR-26, FR-27, FR-30 | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` T01–T08, G01–G03 | `evals/promptfoo/` tutor suite | `tutor-system/docs/ai-behaviors/constitution.md` |
+| Assessment drafts | FR-33, FR-34 | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` T09.1–T09.6 | `evals/transfer-assessment/` | `tutor-system/docs/ai-behaviors/constitution.md` |
+| Learning-event judging | FR-20 | `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` T02 analysis responsibilities; `tutor-system/docs/ai-behaviors/transfer-status-response-contract.md` | `evals/promptfoo/learning-progress-analyzer/` | `tutor-system/docs/ai-behaviors/constitution.md` (phishing only) |
+| Character drafts | FR-47, FR-48 | none | none | none |
+| Learning-target generation | FR-18 | none | none | none |
 
 ## 8. Cross-Cutting NFRs
 
@@ -643,7 +650,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 - **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app. This is accepted for the current small-scale pilot, in which students use the platform under close adult supervision and ease of use takes priority over authentication. Accepted consequences: anyone can act as any user by typing the same name and role, and any participant can read any room's messages and password. **Grounding:** P5, P6, R1.
 - **NFR-5 Reliable repetition.** Repeating any request (send, attempt, delivery, judging) produces no duplicate effect. Concurrent requests resolve to one outcome. **Grounding:** P4.
 - **NFR-6 Persistence.** The application identity, conversation, learning progress and transfer-assessment state survive reloads, reconnects and multiple tabs. Rooms are kept after use. **Grounding:** P4, P8, C4.
-- **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, learning targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. Known exceptions are listed as gaps in `addendum.md` §C. **Grounding:** P7.
+- **NFR-7 Fail visibly.** When something needed is missing or fails (conversation history, learning targets, AI output, configuration), the user gets a clear error. No placeholder content and no hidden fallback. **Grounding:** P7.
 - **NFR-8 Live updates.** Messages appear for all participants within about 2 seconds; room lists and ratings update without refresh. **Grounding:** P5.
 - **NFR-9 AI behavior governance.** The quality of every AI job's output is governed by an AI behavior constitution and specification (§7), each child principle naming its parent in the product constitution. The tutoring constitution governs phishing only; AI jobs without a constitution fall directly under the product constitution until one exists. **Grounding:** P1, P3.
 - **NFR-10 Behavior change control.** Changing an AI model, a shared prompt or the learning-event judge changes behavior for every practice type that uses it, and must be re-evaluated for each. Constitutions change only through an explicit human decision; passing evaluations cannot authorize a change. **Grounding:** P7.
@@ -671,7 +678,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 
 ### 10.2 Out of Scope
 - **Success metrics and goals.** Deliberately left out of this baseline (decision of 2026-10-22). Add them when the next initiative sets targets.
-- **Custom image upload** for avatars and rooms. It cannot work under the current identity model (gap G-1).
+- **Custom image upload** for avatars and rooms.
 - **More than one learner per room.**
 - **Learning-outcome measurement** (pre/post testing, retention).
 - **Consent and data-retention processes.** Not needed for the current pilot.
@@ -681,7 +688,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 
 Open: none.
 
-Resolved on 2026-10-22: OQ-1 (identity accepted for the pilot, NFR-4); OQ-2 (whole room sees the second-wrong-attempt result, FR-39); OQ-3 (Covered means complete where transfer assessments are not available, glossary "Complete", FR-45); OQ-4 (no learner-seat release, FR-12); OQ-5 (length per practice type, governed by the AI behavior specifications, §7); OQ-6 (option selections only, FR-37); OQ-7 (reject an assessment draft and write one's own tutor reply, FR-35); OQ-8 (tutor controls for the room owner only, FR-52); OQ-9 (rating gate covers all tutor replies, FR-16); OQ-10 (observers get cyberbullying learning progress, not test rooms, FR-13, FR-50); OQ-11 (tutoring constitution is phishing only, NFR-9); OQ-12 (no consent process for the pilot, §10.2); OQ-13 (catalog cleaned in commit `c13af72`, FR-18); OQ-14 (all new learning targets are learner-owned and judged on the server; no new room-wide learning targets; old rooms left as they are; manual edits stay, FR-18, FR-31, FR-53, §9); OQ-15 (no accessibility target, §10.2).
+Questions OQ-1 to OQ-15 were all resolved on 2026-10-22. Each decision is built into the requirements; the list is in `addendum.md` §E.
 
 ## 12. Assumptions Index
 

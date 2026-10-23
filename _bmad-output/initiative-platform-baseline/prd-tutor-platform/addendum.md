@@ -91,6 +91,8 @@ These belong to the architecture spine; they are recorded here so the PRD stays 
 - **Result-message templates:** written by `private.write_assessment_result_message`, identical in production and staging (function hashes compared 2026-10-22).
 - **Grading** is implemented both in the TypeScript resolver and in SQL; SQL is the final authority.
 - **Realtime:** message inserts via Supabase Realtime plus a 2-second poll; typing via broadcast.
+- **Character draft prompt:** the role-play prompt currently asks for at most three sentences in simple language (see G-25).
+- **Transfer-assessment evaluation plan:** `specs/104-transfer-evaluation/` (the suite is `evals/transfer-assessment/`).
 
 ## C. Known gaps between this PRD and current behavior
 
@@ -99,19 +101,19 @@ Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owne
 | ID | Gap | Evidence | Related |
 | --- | --- | --- | --- |
 | G-1 | Custom avatar and room-image upload cannot succeed: it requires a Supabase Auth session the app never creates, storage policies require `auth.uid()`, and room uploads use a placeholder room ID. Unit tests mock the session and pass. | extract-D C13 | FR-2, PRD §10.2 |
-| G-2 | **Accepted for the pilot (OQ-1).** Any client can read and write users, rooms, sessions, messages and ratings directly; role checks for many actions run only in the browser. Revisit if the platform leaves supervised pilot use. | extract-D §2 | NFR-4 |
+| G-2 | **Accepted for the pilot (OQ-1).** Any client can read and write users, rooms, sessions, messages and ratings directly; role checks for many actions run only in the browser. Revisit if the platform leaves supervised pilot use. The server-side guarantees in FR-12, FR-39, FR-49 and FR-52 do not hold against a direct database write. | extract-D §2 | NFR-4, FR-12, FR-39, FR-49, FR-52 |
 | G-3 | **Accepted for the pilot (OQ-1).** Room passwords are stored and checked in plain text in the browser and shown on tutor room cards. | extract-D C5; extract-C C-06 | FR-10, NFR-4 |
 | G-4 | **Withdrawn (OQ-4).** No action ends a learner's seat; this is intended because rooms are single-use and kept as pilot data. | extract-D C4 | FR-12 |
-| G-5 | Phishing AI suggestions must follow T08 (3 sentences / 50 words), but the active prompt also sends 2 sentences / 35 words. Align the prompt with T08. | extract-A X3 | FR-26 |
+| G-5 | Phishing AI suggestions must follow T08 (3 sentences / 50 words), but the active prompt also states a limit of 2 sentences / 35 words. Align the prompt with T08. | extract-A X3 | FR-26 |
 | G-6 | Tutor-set temperature and max-tokens are saved but ignored. | extract-A X5 | FR-24 |
-| G-7 | Quick Adjust regenerate records the replaced suggestion as `modified`, not `ignored`, which skews tracking rates. | extract-A X7 | FR-28, FR-51 |
+| G-7 | Regenerate (Quick Adjust in phishing, and in cyberbullying character drafts) records the replaced suggestion as `modified`, not `ignored`, which skews tracking rates. | extract-A X7; reconcile-CD CD-03 | FR-28, FR-48, FR-51 |
 | G-8 | Generic AI failures show transfer-assessment wording ("The transfer request could not be completed"). | extract-A X6 | FR-25 |
 | G-9 | Editing an assessment question overwrites the recorded new situation with the question text. | extract-B X13 | FR-34, FR-35 |
 | G-10 | Retry result text differs between the saved message ("One attempt remaining"), the export ("1 attempt remaining") and the QA guide. | extract-B X9 | FR-39 |
 | G-11 | Cyberbullying request R1 asks for template round trips; tutors cannot save templates and no cyberbullying templates are seeded. | extract-C K-13 | FR-6 |
 | G-12 | Silent fallbacks: offline local-only login when the database is unreachable; direct session insert when the trusted join fails; swallowed errors on the observer room list. | extract-D NFR-6 | NFR-7 |
 | G-13 | Observers see test rooms in their room list. (Observers receiving cyberbullying learning progress in exports is intended, OQ-10.) | extract-D C6 | FR-8, FR-13 |
-| G-14 | Any tutor-role user gets AI, Guard and learning-progress controls in rooms they do not own; the server checks ownership only for cyberbullying character drafts. | extract-D §2 | FR-52 |
+| G-14 | Any tutor-role user gets AI, Guard and learning-progress controls in rooms they do not own; the server checks ownership only for cyberbullying character drafts. The server also does not refuse a non-owner who sends tutor replies or deletes a room. It must refuse all of them. | extract-D §2; reconcile-CD CD-04 | FR-52 |
 | G-15 | The legacy room-wide progress path (browser-side judging) has four failing BDD scenarios and stale category expectations. Per OQ-14 it serves only old rooms, which are not revisited; its tests can be retired with it. Manual progress edits must keep working on learner-owned learning targets (FR-53). | extract-C C-15, K-10, K-11 | FR-53, PRD §9 |
 | G-16 | The server still accepts typed assessment answers and runs clarification and help-request handling, which the PRD removes (OQ-6). Remove them so only option selections are accepted. | extract-B X5 | FR-37 |
 | G-17 | `feature:ai_openai_integration` (10 scenarios) is not run by any test and describes a retired client-side provider. | extract-D §6.1 | — |
@@ -120,12 +122,19 @@ Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owne
 | G-20 | The latest recorded tutor quality-gate run (qwen3.5-flash) did not satisfy its rubrics; no run exists for qwen3.8-flash, which is deployed. | extract-A C3, X4 | NFR-10 |
 | G-21 | Clearing chat history still exists for phishing room owners (button, backup download, `assessment-api` operation) but is not a supported feature. Remove it. | extract-D C12; extract-B C16 | FR-17 (withdrawn) |
 | G-22 | The assessment editor offers Discard and Send. Check that Discard works as the PRD's reject: nothing is delivered, and the room owner can write their own tutor reply. Rename it if it does. | extract-B C5, X6 | FR-35 |
+| G-23 | The rating gate should fire for character replies in cyberbullying rooms. The code suggests it does (they are saved as tutor replies), but no test covers it. Add one. | extract-C X-11 | FR-16 |
 | G-24 | Learner-owned learning targets and server judging are tied to in-room assessment: a new phishing room with in-room assessment off still uses room-wide learning targets and browser-side judging (`RoomContext.tsx:719`, routing on `transfer_learning_enabled`). Decouple them so every new room uses learner-owned learning targets, and in-room assessment only turns transfer assessments on or off. | extract-C X-04, C-15; code check 2026-10-22 | FR-18, FR-31 |
 | G-25 | Character drafts have no AI behavior constitution, specification or evaluation; their quality rests only on the role-play prompt and the pinned upstream strategy. | PRD §7 | FR-47, NFR-9 |
 | G-26 | Learning-target generation has no AI behavior specification or evaluation. | PRD §7 | FR-18, NFR-9 |
 | G-27 | Learning-event judging in cyberbullying rooms runs on the phishing judging prompt with an added paragraph, but the tutoring constitution covers phishing only; no constitution or evaluation covers cyberbullying judging. | PRD §7; extract-C X-10 | FR-20, NFR-9 |
 | G-28 | Rejecting an assessment draft shows no warning. The target's progress may be wrong at that point, because the learner's Covered status was never confirmed by a check, and the next AI suggestion may bring back the same assessment. After a reject, show a message naming the learning target, saying its progress may be wrong, and asking the room owner to check and correct it by hand. Check the current behavior in the code first. | Owner, 2026-10-22 | FR-35, FR-53 |
-| G-23 | The rating gate should fire for character replies in cyberbullying rooms. The code suggests it does (they are saved as tutor replies), but no test covers it. Add one. | extract-C X-11 | FR-16 |
+| G-29 | Room deletion (FR-9) is not checked in the code. Check that only the room owner can delete a room, that the server refuses anyone else, and that deletion removes everything the room holds, including private assessment records and the students' data. | Owner, 2026-10-22; reconcile-CD CD-11 (not code-checked) | FR-9, FR-52 |
+| G-30 | When judging a cyberbullying learner message fails, the failure is logged but not thrown, so the tutor is not told. | reconcile-CD CD-02 (not code-checked) | FR-46, NFR-7 |
+| G-31 | In a cyberbullying room, context over 50,000 characters, or a draft with truncated or invalid output, returns an error. The owner cannot send a reply without a draft, so a long room becomes a dead end; FR-47 states none of these failures. | reconcile-CD CD-01 (not code-checked) | FR-47, FR-48 |
+| G-32 | Export content depends on the user's global role, so a non-owner tutor can get owner-only data; TXT exports never include learning progress. | reconcile-CD CD-05 (not code-checked) | FR-50, FR-51, FR-52 |
+| G-33 | Joining again under a changed name or role creates a new identity, so the user loses room ownership and a learner loses the seat. | reconcile-CD CD-06 (not code-checked) | FR-1, FR-12 |
+| G-34 | A reload drops a student's observer mode, and phishing read-only is enforced only in the interface. | reconcile-CD CD-07 (not code-checked) | FR-13 |
+| G-35 | FR-22 says learning events gathered during Guard are applied afterwards. The extracts support deferral only for assessment grades. Check the code and correct whichever is wrong. | reconcile-AB R-9 (not code-checked) | FR-22 |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
 
@@ -133,3 +142,23 @@ Stale documents found during extraction (to be consolidated in the documentation
 
 - 2026-10-22, production and staging, read-only: `public.messages` has no answer-key column; correct options and explanations exist only in `private.transfer_assessments`; staging has 5 second-failure results (all with the reveal template), 9 retries and 12 passes (neither reveals the answer); no other message mentions correct options. Production has no failed results yet.
 - `TRANSFER_ASSESSMENT_ENABLED` is set in both projects; the owner confirmed it is on.
+
+## E. Resolved open questions
+
+All resolved on 2026-10-22. Each decision is built into the PRD requirement named in brackets.
+
+- OQ-1: identity accepted for the pilot (NFR-4).
+- OQ-2: the whole room sees the second-wrong-attempt result (FR-39).
+- OQ-3: Covered means complete where transfer assessments are not available (glossary "Complete", FR-45).
+- OQ-4: no learner-seat release (FR-12).
+- OQ-5: reply length depends on the practice type and is governed by the AI behavior specifications (PRD §7).
+- OQ-6: only option selections are accepted as answers (FR-37).
+- OQ-7: the room owner can reject an assessment draft and write their own tutor reply (FR-35).
+- OQ-8: tutor controls for the room owner only (FR-52).
+- OQ-9: the rating gate covers all tutor replies (FR-16).
+- OQ-10: observers get cyberbullying learning progress but not test rooms (FR-13, FR-50).
+- OQ-11: the tutoring constitution covers phishing only (NFR-9).
+- OQ-12: no consent process for the pilot (PRD §10.2).
+- OQ-13: the template catalog was cleaned in commit `c13af72` (FR-18).
+- OQ-14: all new learning targets are learner-owned and judged on the server; no new room-wide learning targets; old rooms are left as they are; manual edits stay (FR-18, FR-31, FR-53, PRD §9).
+- OQ-15: no accessibility target (PRD §10.2).
