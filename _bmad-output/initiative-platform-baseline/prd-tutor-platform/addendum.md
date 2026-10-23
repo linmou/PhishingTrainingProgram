@@ -148,6 +148,12 @@ Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owne
 | G-46 | The client creates a new request id on every call, so a retry or a second tab can create a second answer message, and each is graded as its own attempt. | architecture sweep 1 | FR-38, NFR-5 |
 | G-47 | Manual progress edits are refused in cyberbullying rooms by the database function, but FR-44 and FR-53 say they stay available. The owner decided on 2026-10-22 that the PRD is right: change the database function and the client so manual edits work in cyberbullying rooms. | architecture reconcile with the PRD | FR-44, FR-53 |
 | G-49 | Tutor review of assessment drafts (edit, reject, send) is not recorded: discard is client-local and writes nothing. FR-51 now requires it. | owner decision 2026-10-22; architecture sweep 1 | FR-51, FR-35 |
+| G-50 | No test shows that a discarded assessment draft leaves the assessment due and offered again. | transfer-assessment epic guard map | FR-35 |
+| G-51 | No test shows the server refusing delivery while Guard is on; the Guard checks in the room tests mock the server. | transfer-assessment epic guard map | FR-36 |
+| G-52 | No test shows that failure never turns on Guard after the second wrong attempt; only the first wrong answer is checked. | transfer-assessment epic guard map | FR-40 |
+| G-53 | No test shows the server refusing another assessment while tutor feedback is outstanding, and no test fixture has two due targets. | transfer-assessment epic guard map | FR-41 |
+| G-54 | No test shows that turning in-room assessment off leaves an open assessment answerable. | transfer-assessment epic guard map | FR-31 |
+| G-55 | A cancelled assessment's closure message count and "no attempt used" are not asserted by any test. | transfer-assessment epic guard map | FR-32 |
 | G-48 | Dependency-direction breaks in the client: a context imports a component, a hook imports a context, types and utils import services. | architecture sweep 2 | — |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
