@@ -64,6 +64,8 @@ jobs:
           cache-dependency-path: tutor-system/package-lock.json
       - run: npm install --global npm@10.9.2
       - run: npm ci --no-audit --no-fund
+      - name: Assessment audit logic and archive preservation (no hosted access)
+        run: npm run test:assessment:audit
       - name: Deterministic Jest regression
         run: npm run test:regression -- --runInBand
 

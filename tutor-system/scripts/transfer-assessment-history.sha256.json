@@ -1,0 +1,13 @@
+{
+  "evals/transfer-assessment/release/transfer-release-20260912T113611Z/report.json": "6e19f5837478d1dae6e2084229d350659e4dc998ff671540d75c792c4bcae536",
+  "evals/transfer-assessment/release/transfer-release-20260912T113611Z/run-record.json": "8653b95dad67c6dee310a62340f6f858b6931b55bef934dffab281554b5fe823",
+  "evals/transfer-assessment/release/transfer-release-20260912T113611Z/snapshot.json": "b11eaf0d78a067f675632784cd9812d759b279ba4d25b2792e70c43e5c68d578",
+  "evals/transfer-assessment/release/transfer-release-20260912T113611Z/verdict.json": "93c494bfc231eae4e272b286a98cb5526b71ee99453d76ac5ff4120ca5ba3bfe",
+  "evals/transfer-assessment/release/transfer-release-20260924-wave105-local/report.json": "53273bd175883a3ba46fad9db407f0b172ca1feb615fadb0bfeaf18cf5d50ed0",
+  "evals/transfer-assessment/release/transfer-release-20260924-wave105-local/run-record.json": "56cadbbfd4a5fbe47989ba5ca1d780f8713675f7a0b99324f8bdbf070372bb18",
+  "evals/transfer-assessment/release/transfer-release-20260924-wave105-local/snapshot.json": "df0b273590d47707f9fc72ea635850ebda63519f680b31961fe1c86e3f0d5b99",
+  "evals/transfer-assessment/release/transfer-release-20260924-wave105-local/verdict.json": "907a80d58f727f5062d7cc4c64e26b1a1224958e56062e768c6d5bcdf648e96b",
+  "tutor-system/scripts/transfer-assessment-release-attack-matrix.json": "5b4e5a0ce80dad030e10c28f7c1b132e4a58bec794f65e2aadd76b7dfcc45e71",
+  "tutor-system/scripts/transfer-assessment-release.config.json": "bd8ac4670e8fe4a05b8e246fb958a969ef2fb911e717b8a369d7a401def24e23",
+  "tutor-system/scripts/transfer-assessment-release.config.example.json": "5e1ff9bc1ad415a53d61b98ec9bddd03bb0d05ce9a3a21eb38e9b7be2917f7d0"
+}
