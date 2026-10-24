@@ -5,7 +5,7 @@
 
 ## Verification
 - **Local verification:** <!-- Commands and observed outcomes, or N/A with reason -->
-- **GitHub CI:** The [Verify PR (no hosted state)](../../.github/workflows/verify-pr.yml) workflow automatically reports `isolation-harness`, `frontend-jest`, and `frontend-build` in the PR **Checks** tab. Check the live statuses; do not self-certify a pass here.
+- **GitHub CI:** The [Verify PR (no hosted state)](https://github.com/linmou/PhishingTrainingProgram/blob/no_sign_up/.github/workflows/verify-pr.yml) workflow automatically reports `isolation-harness`, `frontend-jest`, and `frontend-build` in the PR **Checks** tab. Check the live statuses; do not self-certify a pass here.
 - **Code review:** <!-- Pending / reviewer or tool / findings and disposition. CI above does not perform AI code review. -->
 - **Staging acceptance:** <!-- Not applicable / Pending / Verified; include tested commit, project, evidence link when applicable -->
 - **Unverified behavior or blockers:** <!-- None or specifics -->
