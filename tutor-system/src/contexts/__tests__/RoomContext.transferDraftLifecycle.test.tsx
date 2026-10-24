@@ -291,6 +291,8 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       TRANSFER_ROOM_ID, 'tutor-1', undefined, {
         focusStudentMessage: answer,
         focusStudentId:deliveredAnswerRow.user_id,
+        focusStudentMessageId: deliveredAnswerRow.id,
+        assessmentPreparation: 'assessment_answer',
         expectedAssessmentResultIds:['saved-result'],
       }
     );

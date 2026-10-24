@@ -22,6 +22,7 @@ import {
 import { AI_MODELS, DEFAULT_AI_MODEL, type AIModelName } from './aiModels';
 import { parseTutorDecision } from './tutorDecisionContract';
 import { ChecklistService } from './checklistService';
+import { formatTutorLearningProgress, type TutorAssessmentPreparation } from './tutorLearningProgress';
 import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
 
 export { AI_MODELS, DEFAULT_AI_MODEL };
@@ -650,6 +651,7 @@ export class TutorSuggestionService {
             focusStudentMessage?: string;
             scenarioContext?: string;
             priorMode?: boolean | 'unknown';
+            learningProgressContext?: string;
         }
     ): Promise<{ suggestion: string; decision?: TutorActionDecision; success: boolean; error?: string }> {
         try {
@@ -694,7 +696,9 @@ export class TutorSuggestionService {
                     interaction_mode: interactionMode
                 });
 
-            let requestMessages = messages;
+            let requestMessages = options?.learningProgressContext
+                ? appendTutorDecisionRepairInstruction(messages, options.learningProgressContext)
+                : messages;
             let lastError: unknown;
 
             for (let attempt = 0; attempt < MAX_TUTOR_DECISION_ATTEMPTS; attempt += 1) {
@@ -864,6 +868,8 @@ export const generateTutorSuggestion = async (
     options?: {
         focusStudentMessage?: string;
         focusStudentId?: string;
+        focusStudentMessageId?: string;
+        assessmentPreparation?: TutorAssessmentPreparation;
         expectedAssessmentResultIds?: ReadonlyArray<string>;
         parentMessageId?: string;
         character?: CyberbullyingCharacter | null;
@@ -902,18 +908,24 @@ export const generateTutorSuggestion = async (
         // 3. Apply parameter overrides if provided
         aiConfig = SystemPromptProcessor.processOverrides(aiConfig, parameterOverrides);
 
-        try {
-            const checklist = await ChecklistService.getChecklistByRoom(roomId);
-            if (checklist) {
-                const items = [...checklist.detection_areas, ...checklist.verification_steps];
-                const progress = items.map(item => `- ${item.area_text}: ${item.status}`).join('\n');
-                aiConfig = {
-                    ...aiConfig,
-                    system_prompt: `${aiConfig.system_prompt}\n\nCURRENT LEARNING PROGRESS\n${progress}`
-                };
-            }
-        } catch (error) {
-            console.warn('Checklist progress unavailable for tutor suggestion:', error);
+        const transferEnabled = roomData.transfer_learning_enabled === true;
+        if (transferEnabled && (!options?.focusStudentId || !options?.focusStudentMessageId || !options?.assessmentPreparation)) {
+            throw new Error('Transfer tutor generation requires a selected learner message and assessment preparation');
+        }
+        const checklist = transferEnabled
+            ? await ChecklistService.getChecklistForStudent(roomId, options!.focusStudentId!)
+            : await ChecklistService.getChecklistByRoom(roomId);
+        if (transferEnabled && !checklist) {
+            throw new Error('Authoritative learner progress is unavailable; refresh and retry');
+        }
+        const learningProgressContext = checklist ? formatTutorLearningProgress(
+            checklist, options?.focusStudentId, options?.focusStudentMessageId, options?.assessmentPreparation
+        ) : undefined;
+        if (learningProgressContext) {
+            aiConfig = {
+                ...aiConfig,
+                system_prompt: `${aiConfig.system_prompt}\n\n${learningProgressContext}`
+            };
         }
         
         // 4. Log final configuration being used
@@ -941,6 +953,7 @@ export const generateTutorSuggestion = async (
             {
                 focusStudentMessage: options?.focusStudentMessage,
                 scenarioContext,
+                learningProgressContext,
                 priorMode: resolveTutorPriorMode(roomData)
             }
         );
@@ -984,7 +997,7 @@ export const generateTutorSuggestion = async (
 async function validateRoom(roomId: string) {
     const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('ai_assistant_enabled, ai_assistant_model, guard_mode, guard_mode_changed_at, practice_type')
+        .select('ai_assistant_enabled, ai_assistant_model, guard_mode, guard_mode_changed_at, practice_type, transfer_learning_enabled')
         .eq('id', roomId)
         .single();
 
@@ -1005,6 +1018,7 @@ async function generateSuggestionWithService(
         focusStudentMessage?: string;
         scenarioContext?: string;
         priorMode?: boolean | 'unknown';
+        learningProgressContext?: string;
     }
 ): Promise<{
     suggestion: string;

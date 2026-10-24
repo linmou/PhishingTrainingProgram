@@ -1019,6 +1019,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             let expectedAssessmentResultIds: string[] = [];
+            let assessmentPreparation: 'no_candidate' | 'assessment_answer' | undefined;
             let transferChecklist: Awaited<ReturnType<typeof ChecklistService.getActiveTransferChecklistForRoom>> | null = null;
             try {
                 const checklistService = ChecklistService as typeof ChecklistService & {
@@ -1106,6 +1107,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setCurrentSuggestionContext(null);
                     return;
                 }
+                assessmentPreparation = isAssessmentAnswer ? 'assessment_answer' : 'no_candidate';
             }
 
             const result = await generateTutorSuggestion(
@@ -1116,6 +1118,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     // Same student line the tutor is responding to in the UI
                     focusStudentMessage: parentMessageContent || prompt,
                     focusStudentId:parentStudentId,
+                    focusStudentMessageId: parentMessageId,
+                    assessmentPreparation,
                     expectedAssessmentResultIds,
                 }
             );
@@ -1190,6 +1194,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 {
                     focusStudentMessage: currentSuggestionContext.parentMessageContent,
                     focusStudentId:messages.find(message=>message.id===currentSuggestionContext.parentMessageId)?.user_id,
+                    focusStudentMessageId: currentSuggestionContext.parentMessageId,
                 }
             );
 

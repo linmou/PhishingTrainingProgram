@@ -2,7 +2,7 @@
 
 Intent: define the tutor's observable requirements and annotate each requirement with its constitutional basis.
 
-Updated: 2026-10-14
+Updated: 2026-10-24. Context-alignment baseline commit: `7762cbb`.
 Behavior ID: `current_tutor_behavior`
 Status: working specification; no experimental version has been registered.
 Constitution reference: [phishing_tutor_constitution 1.0](constitution.md); [human decision record](constitution.md#human-decision-record-and-revision-authority). Adopted principles and priorities are unchanged.
@@ -35,6 +35,8 @@ Non-goals: room administration, latency, multi-bot simulation, implementing the 
 | T02 | New learner evidence arrives, including a correct answer, contradiction, or demonstrated gap. | Count every configured idea demonstrated by the learner's own meaning, including semantic equivalents, so one message may update evidence for multiple concepts. Select at most one relevant unmet target from room-approved Detection Areas / Verification Steps for the next response, favoring scenario-visible and safety-critical points. Reopen a previously demonstrated idea when later evidence contradicts it; otherwise consolidate when no useful target remains. | Owns what needs learning next, not how to teach it or praise it (T03). A tutor mention is not learner mastery. Do not discard other newly signaled concepts merely because only one target is selected. No needless re-testing of an answered point, permanent mastery inference from one utterance, or invented unrelated curriculum. | Semantic equivalents count; no additional exception to evidence-based target selection. | All learner-owned evidence is retained. In a transfer room, T09.1 may require an assessment; otherwise the shared tutor addresses one evidence-based target or consolidates prior understanding. | [P2 — learner understanding](constitution.md#principles-and-ownership): progression follows the learner's demonstrated meaning, including later contradictions. [R1](constitution.md#conditional-priority-rules) makes the chosen target serve learner reasoning; it does not require a question on every turn. |
 
 ### T02 analysis responsibilities
+
+The tutor consumes the current learner-owned checklist after analysis and assessment preparation. Its context identifies the learner, focus message, checklist, target IDs, status/understanding pairs and unresolved targets. Generic acknowledgment supplies no new demonstrated understanding. A partially covered or review target remains unresolved even after tutor explanation. Continue eliciting its missing evidence, or identify the reason for a permitted target switch and retain the unresolved target explicitly for follow-up in the supervisor-facing reason. Covered alone does not establish completion of an outstanding final assessment; T09.1 and the trusted preparation result govern that decision. These context requirements implement T02/P2 and the existing response contract's P4/H4 explanation duty; they change no constitutional priority or assessment trigger.
 
 Intent: make the existing learner-evidence rules independently measurable for `TRANSFER_ANALYSIS_SYSTEM_PROMPT`.
 
