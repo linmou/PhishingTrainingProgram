@@ -102,6 +102,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
+              limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
               order: jest.fn().mockResolvedValue({ data: messages, error: null }),
             }),
           }),
@@ -124,6 +125,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
+              limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
               order: jest.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),

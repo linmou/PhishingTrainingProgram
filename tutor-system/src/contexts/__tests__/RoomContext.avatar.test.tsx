@@ -130,6 +130,7 @@ describe('RoomContext - Avatar Display', () => {
                 return {
                     select: jest.fn().mockReturnThis(),
                     eq: jest.fn().mockReturnThis(),
+                    limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                     order: jest.fn().mockResolvedValue({
                         data: mockMessages,
                         error: null

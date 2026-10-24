@@ -39,6 +39,7 @@ import type { AnswerLifecycleView, RoomMessageView } from './transferAssessmentU
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
 import { useMessageFeedback } from '../hooks/useMessageFeedback';
+import { readRoomMessagePages, startRoomMessageSync } from './roomMessageSync';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -77,6 +78,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [finalCharacter, setFinalCharacter] = useState<CyberbullyingCharacter | null>(null);
     const generationEpoch = useRef(0);
     const activeRoomId = useRef<string | null>(null);
+    const joinEpoch = useRef(0);
+    const joinController = useRef<AbortController | null>(null);
+    const joinRealtimeIds = useRef(new Set<string>());
+    useEffect(() => () => { joinEpoch.current += 1; joinController.current?.abort(); }, []);
     activeRoomId.current = currentRoom?.id ?? null;
     const [transferDraft, setTransferDraft] = useState<{
         decision: TransferAssessmentDraft;
@@ -153,13 +158,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, [user?.id, user?.display_name, user?.avatar_url]);
 
+    // Mutable presentation/feedback callbacks must not recreate the room subscription.
+    const syncCallbacks = useRef({ addDisplayNameToMessage, participants, handleFeedbackRealtime, refreshMessageFeedbackStats });
+    syncCallbacks.current = { addDisplayNameToMessage, participants, handleFeedbackRealtime, refreshMessageFeedbackStats };
+    const currentRoomId = currentRoom?.id;
+
     // Real-time subscription for messages and typing indicators
     useEffect(() => {
-        if (!currentRoom) return;
+        if (!currentRoomId) return;
+        const roomId = currentRoomId;
+        let cancelled = false;
+        const sync = startRoomMessageSync(roomId, rows => {
+            if (cancelled || activeRoomId.current !== roomId) return;
+            const callbacks = syncCallbacks.current;
+            const incoming = rows.map(row => callbacks.addDisplayNameToMessage(projectRoomMessage(row), callbacks.participants));
+            setMessages(prev => mergeRoomMessages(prev.filter(message => message.room_id === roomId), incoming));
+        });
 
-        console.log('🔴 Setting up real-time subscription for room:', currentRoom.id);
+        console.log('🔴 Setting up real-time subscription for room:', roomId);
 
-        const channel = supabase.channel(`room_${currentRoom.id}`);
+        const channel = supabase.channel(`room_${roomId}`);
         
         channel
             .on(
@@ -168,21 +186,24 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     event: 'INSERT',
                     schema: 'public',
                     table: 'messages',
-                    filter: `room_id=eq.${currentRoom.id}`
+                    filter: `room_id=eq.${roomId}`
                 },
                 (payload) => {
                     console.log('🟢 Real-time message received:', payload);
                     const newMessage = payload.new as any;
+                    if (!cancelled) joinRealtimeIds.current.add(String(newMessage.id));
                     // Project before the row enters React state: a stored row can carry the
                     // private assessment key, and only allowlisted fields may be retained.
-                    const messageWithDisplayName = addDisplayNameToMessage(projectRoomMessage(newMessage), participants);
-                    setMessages(prev => mergeRoomMessages(prev, [messageWithDisplayName]));
+                    sync.realtime(newMessage);
                 }
             )
             .on(
                 'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${currentRoom.id}` },
-                payload => setMessages(prev => mergeRoomMessages(prev,[addDisplayNameToMessage(projectRoomMessage(payload.new as any),participants)]))
+                { event: 'UPDATE', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` },
+                payload => {
+                    if (!cancelled) joinRealtimeIds.current.add(String((payload.new as any).id));
+                    sync.realtime(payload.new as any);
+                }
             )
             .on(
                 'postgres_changes',
@@ -190,9 +211,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     event: 'UPDATE',
                     schema: 'public',
                     table: 'rooms',
-                    filter: `id=eq.${currentRoom.id}`
+                    filter: `id=eq.${roomId}`
                 },
                 (payload) => {
+                    if (cancelled || activeRoomId.current !== roomId) return;
                     const incoming = payload.new as Room;
                     const mode = participationModeFromRoom(incoming);
                     // Room participation stays binary: an unrecognized value is never adopted as
@@ -209,9 +231,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     event: 'INSERT',
                     schema: 'public',
                     table: 'message_feedback',
-                    filter: `room_id=eq.${currentRoom.id}`
+                    filter: `room_id=eq.${roomId}`
                 },
-                handleFeedbackRealtime
+                payload => { if (!cancelled) void syncCallbacks.current.handleFeedbackRealtime(payload); }
             )
             .on(
                 'postgres_changes',
@@ -219,17 +241,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     event: 'UPDATE',
                     schema: 'public',
                     table: 'message_feedback',
-                    filter: `room_id=eq.${currentRoom.id}`
+                    filter: `room_id=eq.${roomId}`
                 },
-                handleFeedbackRealtime
+                payload => { if (!cancelled) void syncCallbacks.current.handleFeedbackRealtime(payload); }
             )
             .on('broadcast', { event: 'message_feedback_changed' }, (payload) => {
                 const feedbackMessageId = payload?.payload?.messageId;
                 if (!feedbackMessageId) return;
 
-                void refreshMessageFeedbackStats(feedbackMessageId);
+                if (!cancelled) void syncCallbacks.current.refreshMessageFeedbackStats(feedbackMessageId);
             })
             .on('broadcast', { event: 'typing_start' }, (payload) => {
+                if (cancelled) return;
                 const { userId, displayName } = payload.payload;
                 if (userId !== user?.id) {
                     setTypingUsers(prev => {
@@ -239,74 +262,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             })
             .on('broadcast', { event: 'typing_stop' }, (payload) => {
+                if (cancelled) return;
                 const { userId } = payload.payload;
                 setTypingUsers(prev => prev.filter(t => t.userId !== userId));
             })
             .subscribe((status) => {
                 console.log('📡 Subscription status:', status);
+                sync.status(status);
             });
 
         // Store channel reference
         channelRef.current = channel;
 
         return () => {
+            cancelled = true;
+            sync.stop();
             console.log('🔴 Unsubscribing from real-time channel');
             channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoom, user?.id, addDisplayNameToMessage, normalizeRoom, participants, handleFeedbackRealtime, refreshMessageFeedbackStats]);
-
-    // Stable polling function to prevent infinite loops
-    const pollMessages = useCallback(async () => {
-        if (!currentRoom) return;
-        
-        try {
-            const { data: messagesData, error } = await supabase
-                .from('messages')
-                .select('*')
-                .eq('room_id', currentRoom.id)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                console.error('Failed to poll messages:', error);
-                return;
-            }
-
-            if (messagesData) {
-                // Add display_name and avatar_url to messages using stable function. The
-                // projection runs first so the private assessment key never reaches state.
-                const messagesWithDisplayName = messagesData.map(msg =>
-                    addDisplayNameToMessage(projectRoomMessage(msg), participants));
-
-                // One merge path: pre-populated dialogue stays first, persisted records are
-                // keyed by id, and a message this client already holds is never dropped.
-                setMessages(prevMessages => mergeRoomMessages(
-                    prevMessages.filter(message => message.room_id === currentRoom.id),
-                    messagesWithDisplayName
-                ));
-            }
-        } catch (error) {
-            console.error('Error polling messages:', error);
-        }
-    }, [currentRoom, addDisplayNameToMessage, participants]);
-
-    // Polling mechanism for messages (temporary until real-time replication is available)
-    useEffect(() => {
-        if (!currentRoom) return;
-
-        console.log('🔄 Starting message polling for room:', currentRoom.id);
-
-        // Poll immediately
-        pollMessages();
-
-        // Set up interval to poll every 2 seconds
-        const interval = setInterval(pollMessages, 2000);
-
-        return () => {
-            console.log('🔄 Stopping message polling');
-            clearInterval(interval);
-        };
-    }, [currentRoom, pollMessages]);
+    }, [currentRoomId, user?.id, normalizeRoom]);
 
     // Clean up stale typing indicators
     useEffect(() => {
@@ -439,6 +414,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const joinRoom = useCallback(async (roomId: string, password?: string): Promise<void> => {
+        const epoch = ++joinEpoch.current;
+        joinRealtimeIds.current = new Set();
+        joinController.current?.abort();
+        const controller = new AbortController();
+        joinController.current = controller;
         setLoading(true);
         try {
             // Get room details
@@ -469,13 +449,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // Get existing messages
-            const { data: messagesData, error: messagesError } = await supabase
-                .from('messages')
-                .select('*')
-                .eq('room_id', roomId)
-                .order('created_at', { ascending: true });
-
-            if (messagesError) throw messagesError;
+            const messagesData: Record<string, any>[] = [];
+            await readRoomMessagePages(roomId, controller.signal, rows => messagesData.push(...rows));
+            if (controller.signal.aborted) return;
 
             // Process pre-populated dialogue if it exists
             let prePopulatedMessages: Message[] = [];
@@ -534,7 +510,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 addDisplayNameToMessage(projectRoomMessage(msg), participantsData || []));
 
             // Combine pre-populated messages with existing messages.
-            const allMessages = [...prePopulatedMessages, ...messagesWithDisplayName];
+            const allMessages = mergeRoomMessages([], [...prePopulatedMessages, ...messagesWithDisplayName]);
 
             // Re-read the server's idempotent result for this learner's persisted assessment
             // answers so lifecycle feedback is available after reload or reconnect.
@@ -623,21 +599,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
 
+            if (epoch !== joinEpoch.current) return;
             setCurrentRoom(normalizeRoom(roomData));
             // Merge rather than replace: a realtime insert that arrived before this fetch
             // completed must survive it.
+            const realtimeIds = joinRealtimeIds.current;
             setMessages(prev => mergeRoomMessages(
-                prev.filter(message => message.room_id === roomId),
-                allMessages
+                mergeRoomMessages(prev.filter(message => message.room_id === roomId), allMessages),
+                prev.filter(message => message.room_id === roomId && realtimeIds.has(message.id))
             ));
             setParticipants(participantsData || []);
             setAIInteractions(restoredAIInteractions);
         } finally {
-            setLoading(false);
+            if (epoch === joinEpoch.current) setLoading(false);
         }
     }, [addDisplayNameToMessage, normalizeRoom, user?.id, user?.current_role]);
 
     const leaveRoom = useCallback(async (): Promise<void> => {
+        joinEpoch.current += 1;
+        joinController.current?.abort();
+        activeRoomId.current = null;
         setCurrentRoom(null);
         setMessages([]);
         setParticipants([]);

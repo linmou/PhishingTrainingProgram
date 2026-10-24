@@ -2,7 +2,8 @@
 Document the current tutor-system architecture and development workflows, including database migrations, SPA routing, learning progress export, and room data export behavior.
 
 ## Metadata
-- Updated: 2026-10-17
+- Updated: 2026-10-24
+- Recovery-aware message synchronization baseline commit: `7762cbb`.
 - Learning Progress original-position restoration commit: `ecabba2`; integration base commit: `860b81a`; final assessment release baseline: `88b3ccd`.
 - Implementation commit IDs: `2988dd0`, `31cc05c`; release-decision base commit: `97ebe9f`; release-workflow rename base commit: `3c02349`; learning-status update base commit: `953e273`
 - Transfer-analysis evaluation base commit: `6c5e7c0`.
@@ -22,7 +23,7 @@ This directory contains comprehensive architectural and implementation documenta
 - **[Selected AI candidates release](./doc_update_record/documentation_update_record_v2026_10_15_selected_ai_candidates.md)** - Tutor candidate07 and transfer candidate02 with non-thinking settings, source identities, explicit known-error acceptance and staging/production verification.
 - **[Candidate11 and Qwen3.8 release](./doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md)** - Exact full tutor candidate11 at600tokens with thinking disabled, benchmark findings, explicit release selection and current environment verification.
 - **[AuthContext.md](./AuthContext.md)** - Simplified authentication system with deterministic user IDs
-- **[RoomContext.md](./RoomContext.md)** - Real-time messaging with WebSocket + polling hybrid approach  
+- **[RoomContext.md](./RoomContext.md)** - Realtime messaging with bounded reconciliation and cancellation
 - **[supabase-service.md](./supabase-service.md)** - Database service layer with type-safe operations
 - **[database-schema.md](./database-schema.md)** - Complete schema with 15+ tables for educational features
 - **[aiService.md](./aiService.md)** - AI assistant with modular prompt system and parameter overrides
@@ -256,7 +257,7 @@ npm test src/services/__tests__/database.test.ts
 ## 📈 **Performance Characteristics**
 
 ### Optimizations
-- **Message polling**: 2-second intervals for real-time fallback
+- **Message reconciliation**: 100-row pages, immediate reconnect recovery, five-second disconnected retries and sixty-second healthy audits
 - **Context limiting**: AI uses last 10 messages for token efficiency
 - **Optimistic updates**: Zero perceived latency for user actions
 - **Connection pooling**: Supabase handles database connection management
