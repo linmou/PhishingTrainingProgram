@@ -2,7 +2,7 @@
 
 Intent: match verification cost to changed behavior, verify integrated releases on staging, and promote committed batches to production with evidence.
 
-Updated: 2026-10-21. Workflow and verification index baseline commit: `62f2b6b`.
+Updated: 2026-10-24. Workflow and verification index baseline commit: `62f2b6b`.
 
 ## Task Completion
 
@@ -64,7 +64,11 @@ The release record's production evidence closes acceptance for each included fea
 
 ## Merge Before Production
 
-Worktree candidates may deploy to staging after local checks. Production promotion follows this sequence:
+Worktree candidates may deploy to staging after local checks. **Merging is a separately authorized Git operation**: follow the [root PR review and human merge process](../../AGENTS.md#git-branch-and-pr-merge-process). The release owner's Staging approval or standing permission to deploy does not authorize an agent to merge into `no_sign_up`.
+
+**Pre-merge production readiness:** Render is configured to auto-deploy the production frontend from `no_sign_up` ([current cutover runbook](cyberbullying-cutover.md#preconditions)). Every merge can initiate a Render deploy, even when GitHub CI and the Supabase deployment workflow do not deploy anything. Before explicitly authorizing merge, review the current PR head, required checks, combined Staging behavior, production frontend/SQL/Edge compatibility and recovery plan. Where dependencies require ordered rollout, coordinate or pause Render's auto-deploy through its provider control with appropriate authorization; otherwise leave the PR unmerged. Do not assume post-merge source comparison can undo an already-triggered frontend deployment.
+
+After the owner has authorized that **specific PR head**, production promotion follows this sequence:
 
 1. **Integrate.** Commit deployable changes and required dependencies, merge them into `no_sign_up`, and record the integrated release commit in the batch record. Confirm it includes currently released changes to the affected components. If integration remains pending or blocked, retain `staging verified — awaiting production release` with the exact remaining integration action.
 2. **Compare and verify.** Freeze a manifest of SQL, function source including imported dependencies, required frontend artifacts, and relevant runtime configuration. Every deployed source file must match the recorded release commit; record frontend build inputs and artifact hashes. Compare the integrated manifest with the staging-tested artifacts. A fast-forward or merge with identical relevant artifacts may reuse staging evidence while dependencies, configuration and target preconditions remain valid. Conflict resolutions or other integration changes require affected local checks and staging deployment/verification; changed SQL or baseline also requires the applicable migration validation.

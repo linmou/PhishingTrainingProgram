@@ -2,13 +2,13 @@
 
 Intent: define application development conventions and connect them to the repository's delivery requirements.
 
-Updated: 2026-10-15. Workflow revision baseline commit: `18981cc`.
+Updated: 2026-10-24. Workflow revision baseline commit: `18981cc`.
 
 ## Server Delivery
 
 Follow [Mandatory Server Delivery](../AGENTS.md#mandatory-server-delivery) for server behavior changes, including inherited backend dependencies. Select tests by changed behavior using [the Supabase release workflow](docs/supabase-release-workflow.md#verification-scope). Worktree candidates may deploy to staging.
 
-Before production mutations, merge deployable changes and dependencies into `no_sign_up`, record the release commit, and pass the [merge-before-production gate](docs/supabase-release-workflow.md#merge-before-production). Reuse staging evidence when the integrated artifacts, dependencies, configuration and relevant preconditions still match; otherwise revalidate affected checks. One named release owner coordinates shared deployments.
+Before production mutations, first obtain authorization under the [root Git merge process](../AGENTS.md#git-branch-and-pr-merge-process). Then merge the authorized PR and dependencies into `no_sign_up`, record the release commit, and pass the [merge-before-production gate](docs/supabase-release-workflow.md#merge-before-production). Green CI or Staging acceptance never authorizes an agent to merge. Reuse staging evidence when the integrated artifacts, dependencies, configuration and relevant preconditions still match; otherwise revalidate affected checks. One named release owner coordinates shared deployments.
 
 Ordinary features may wait in a recorded production batch after staging deployment and verification; report `staging verified — awaiting production release`, record pending integration, and keep production acceptance open. Complete delivery only after the exact integrated batch is released and its selected production checks pass.
 
@@ -38,7 +38,7 @@ Ordinary features may wait in a recorded production batch after staging deployme
 
 ## Commit & Pull Request Guidelines
 - Commits: imperative, present tense, concise (e.g., `fix auth flow redirect`, `feat: room template presets`). Optional scope in prefix.
-- PRs must include: summary, rationale, linked issue, screenshots/GIFs for UI changes (e.g., TutorView/RoomPage), and test notes.
+- PRs must include: summary, rationale, linked issue, screenshots/GIFs for UI changes (e.g., TutorView/RoomPage), and test notes. Use [REVIEW.md](../REVIEW.md) and the [PR template](../.github/PULL_REQUEST_TEMPLATE.md). Stop at review-ready; only an explicit owner decision authorizes merging the current PR head.
 - Requirements: all tests pass, coverage meets thresholds, migrations updated under `supabase/migrations/` if schema changes, docs updated (`README.md`, `docs/` when relevant).
 
 ## Security & Configuration Tips
