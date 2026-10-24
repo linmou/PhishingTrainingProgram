@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, MessageFeedbackStats, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
+import { RoomContextType, Room, Message, UserRole, AIAssistantConfig, AIAssistantConfigSnapshot, TypingIndicator, User, AIInteraction, StudentAIChoice, TutorActionDecision, TutorResponseMode, TransferAssessmentDraft } from '../types';
 import type { AssessmentOptionId } from '../types/assessment';
 import type { CyberbullyingCharacter, CyberbullyingSuggestion } from '../types';
 import type { LearningTargetInput } from '../types/checklist';
@@ -16,8 +16,6 @@ import { setStudentAITone as persistStudentAITone } from '../services/studentAIT
 import { 
     validateRoomPassword,
     submitMessageFeedback,
-    getMessageFeedbackStats,
-    getUserMessageFeedback,
     getRoomFeedbackSummary,
     clearChatHistory as clearChatHistoryService
 } from '../services/supabase';
@@ -40,6 +38,7 @@ import {
 import type { AnswerLifecycleView, RoomMessageView } from './transferAssessmentUiAdapter';
 import { ParameterOverrides } from '../components/AISuggestionBox';
 import { buildRoomExportData, buildRoomTextExport } from './roomExportBuilder';
+import { useMessageFeedback } from '../hooks/useMessageFeedback';
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
@@ -101,12 +100,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         contextMessages: string[];
         aiConfigSnapshot?: AIAssistantConfigSnapshot;
     } | null>(null);
-    const [messageFeedbackStats, setMessageFeedbackStats] = useState<Record<string, MessageFeedbackStats>>({});
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const channelRef = useRef<any>(null);
     // True while a reviewed delivery is in flight, so one tab cannot deliver twice.
     const deliveryInFlightRef = useRef(false);
     const { user } = useAuth();
+    const { messageFeedbackStats, getMessageFeedbackStats: handleGetMessageFeedbackStats,
+        refreshMessageFeedbackStats, resetFeedback } = useMessageFeedback(currentRoom?.id, user?.id, messages);
 
     const normalizeRoom = useCallback((room: Room): Room => {
         if (!room.guard_mode) {
@@ -119,33 +119,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             guard_mode_change_source: room.guard_mode_change_source || null
         };
     }, []);
-
-    const refreshMessageFeedbackStats = useCallback(async (messageId: string) => {
-        if (!user) return null;
-
-        try {
-            const stats = await getMessageFeedbackStats(messageId);
-            const userFeedback = await getUserMessageFeedback(messageId, user.id);
-
-            const fullStats: MessageFeedbackStats = {
-                ...stats,
-                user_feedback: userFeedback ? {
-                    feedback_type: userFeedback.feedback_type,
-                    rating: userFeedback.rating
-                } : null
-            };
-
-            setMessageFeedbackStats(prev => ({
-                ...prev,
-                [messageId]: fullStats
-            }));
-
-            return fullStats;
-        } catch (error) {
-            console.error('Failed to get message feedback stats:', error);
-            return null;
-        }
-    }, [user]);
 
     const handleFeedbackRealtime = useCallback(async (payload: any) => {
         const feedbackMessageId = payload?.new?.message_id;
@@ -281,7 +254,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoom, user?.id, addDisplayNameToMessage, normalizeRoom, participants, handleFeedbackRealtime]);
+    }, [currentRoom, user?.id, addDisplayNameToMessage, normalizeRoom, participants, handleFeedbackRealtime, refreshMessageFeedbackStats]);
 
     // Stable polling function to prevent infinite loops
     const pollMessages = useCallback(async () => {
@@ -1560,7 +1533,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setMessages(prePopulatedMessages);
             
             // Clear message feedback stats
-            setMessageFeedbackStats({});
+            resetFeedback();
             
             // Clear AI interactions
             setAIInteractions([]);
@@ -1711,9 +1684,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             // Submit feedback to database
             await submitMessageFeedback(messageId, user.id, currentRoom.id, feedbackType, rating);
+            if (activeRoomId.current !== currentRoom.id) return;
             
             // Refresh feedback stats for this message
             await refreshMessageFeedbackStats(messageId);
+            if (activeRoomId.current !== currentRoom.id) return;
 
             try {
                 channelRef.current?.send({
@@ -1732,24 +1707,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw error;
         }
     };
-
-    const handleGetMessageFeedbackStats = async (messageId: string): Promise<MessageFeedbackStats | null> => {
-        return refreshMessageFeedbackStats(messageId);
-    };
-
-    // Load feedback stats for all messages when messages change
-    useEffect(() => {
-        if (messages.length > 0 && user) {
-            // Load feedback stats for each message
-            messages.forEach(message => {
-                // Only load if we don't already have stats for this message
-                if (!messageFeedbackStats[message.id]) {
-                    handleGetMessageFeedbackStats(message.id);
-                }
-            });
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [messages.length, user]);
 
     const value: RoomContextType = {
         cyberbullyingDraft,
