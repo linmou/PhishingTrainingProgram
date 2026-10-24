@@ -31,6 +31,10 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
 
+## Scalability Engineering (Proposed)
+
+For the phased, **not-yet-implemented** high-concurrency roadmap—isolated synthetic load tests, authentication prerequisites, Realtime/read-path optimization, LLM backpressure, and measurable performance gates—see [Scalability Engineering Roadmap](docs/scalability-engineering-roadmap.md). The roadmap explicitly prohibits load-testing the school's production or shared Staging environment.
+
 ## Browser Testing Environments
 
 Production is Supabase project `zgbufaxooqxeabewktzd`; staging is `ciubrzggdqesgvfkpolj`. The browser workflow suite uses staging copies of production template rooms and cleans generated records after each workflow. See [Browser E2E testing](docs/browser-e2e-testing.md) for setup, commands, and evidence handling.
