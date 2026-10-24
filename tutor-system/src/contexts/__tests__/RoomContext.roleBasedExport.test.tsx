@@ -6,6 +6,7 @@ import { RoomProvider, useRoom } from '../RoomContext';
 import { User, UserRole } from '../../types';
 import { generateTutorSuggestion, recordAISuggestionFeedback } from '../../services/aiService';
 import {
+    getMessagesFeedbackStats,
     getMessageFeedbackStats,
     getRoomFeedbackSummary,
     getUserMessageFeedback,
@@ -29,6 +30,7 @@ jest.mock('../../services/supabase', () => ({
     },
     validateRoomPassword: jest.fn(),
     submitMessageFeedback: jest.fn(),
+    getMessagesFeedbackStats: jest.fn(),
     getMessageFeedbackStats: jest.fn().mockResolvedValue({
         like_count: 0,
         dislike_count: 0,
@@ -192,6 +194,12 @@ describe('RoomContext - Role-based Export Filtering', () => {
             total_feedback_count: 0,
         });
         (getUserMessageFeedback as jest.Mock).mockResolvedValue(null);
+        (getMessagesFeedbackStats as jest.Mock).mockImplementation(async (_roomId, userId, ids: string[]) =>
+            Object.fromEntries(await Promise.all(ids.map(async id => [id, {
+                ...await getMessageFeedbackStats(id),
+                message_id: id,
+                user_feedback: await getUserMessageFeedback(id, userId)
+            }]))));
         (getRoomFeedbackSummary as jest.Mock).mockResolvedValue(null);
         // Reset Blob mock to capture content
         global.Blob = jest.fn((content, options) => ({
