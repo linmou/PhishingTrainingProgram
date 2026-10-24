@@ -1,60 +1,69 @@
-# Evaluation organization: proposed taxonomy and review decisions
+# Evaluation folder reorganization — Option A
 
-Status: **proposal for human discussion**, not an adopted glossary or authority to migrate files.
+**Decision:** Use a simple, capability-first physical folder structure. No faceted classification, generated catalog, alternate browse hierarchy, or duplicate evidence store.
 
-## Conceptual hierarchy (for navigation; not a physical migration)
+**Current scope:** Review the actual repository layout and propose a safe physical migration. This document is not evidence that migration has occurred. The existing AI behavior skill and future general meta-skill remain separate, later stages.
+
+## Folder rules
+
+1. **Same dimension per level:** The `suites/` level contains evaluated capabilities only. Each capability contains `resources/` and `experiments/`; each experiment contains its definition and complete run snapshots.
+2. **Human-readable names:** Use project-recognized names such as `tutor-behavior`, `learning-progress-analyzer`, and `transfer-assessment`. Reuse existing human-approved terminology where available; discuss ambiguous candidates before renaming.
+3. **Atomic snapshots:** A run directory is an indivisible piece of historical evidence, including unsuccessful or interrupted runs. Preserve its original bytes, recorded identity and full internal structure. If its references depend on the path, keep that historical directory in place rather than breaking it.
+4. **Separate responsibilities:** Release verification belongs under `release-verification/`, and reviewer applications and test harnesses under `tooling/`, not beside evaluated capabilities.
+
+## Target folder tree for future work
 
 ```text
-Evaluated capability
-  -> experiment / evaluation plan
-    -> recorded execution (run)
-      -> frozen evidence bundle (atomic)
+evals/
+├── suites/
+│   ├── tutor-behavior/
+│   │   ├── resources/
+│   │   │   ├── cases/
+│   │   │   ├── rubrics/
+│   │   │   └── prompts/
+│   │   └── experiments/
+│   │       └── <experiment-name>/
+│   │           ├── definition/
+│   │           └── runs/
+│   │               └── <run-id>/
+│   ├── learning-progress-analyzer/
+│   │   ├── resources/
+│   │   └── experiments/
+│   └── transfer-assessment/
+│       ├── resources/
+│       └── experiments/
+├── release-verification/
+│   └── transfer-assessment/
+│       └── runs/
+└── tooling/
+    ├── harnesses/
+    └── review-apps/
 ```
 
-Cross-cutting materials (rubrics, evaluators, cases, prompts, reviewer tooling) are referenced from the relevant capabilities/experiments; they are not artificially classified as experiments. A directory need not encode every facet: model, date, candidate, judge version and execution state belong in metadata where possible.
+No empty directories are created just to mirror this tree. No directory aliases or copied run data are required.
 
-## Terms and human review
+## Concrete existing paths and decisions
 
-| Term | Meaning | Status |
+| Current folder | Intended responsibility | What must happen before a physical move |
 | --- | --- | --- |
-| Behavior specification, evaluation plan, run record | Defined responsibilities in the existing AI behavior skill | Existing convention |
-| Rubric, case, holdout, candidate, baseline | Used in evaluation documentation and executable contracts | Existing convention |
-| Run, run ID, snapshot, manifest, fingerprint | Used by existing run-producing code and frozen evidence | Existing convention |
-| Release evidence, release verdict | Used by transfer-assessment release runner | Existing convention |
-| Evaluated capability | Logical navigation entry keyed to the product behavior/component being measured | **Proposed umbrella label** |
-| Experiment | Controlled question / comparison with declared inputs and versions | **Proposed navigation label** |
-| Evidence bundle | Atomic set of records associated with one run | **Proposed umbrella label** |
+| `evals/promptfoo/v1/` | Tutor evaluation runner plus several shared checks | Classify code, cases, and experiment records separately; find imports and source hashes |
+| `evals/promptfoo/refinement-20261014/` | Tutor shortcut-removal experiment | Identify which historical files are frozen or referenced by hashes; do not split evidence |
+| `evals/promptfoo/learning-progress-analyzer/` | Learning-progress analyzer suite | Reconcile imported historic identifiers, hardcoded imports and references to `output/transfer-analysis-*` |
+| `evals/promptfoo/rubrics/`, `cases/`, `prompts/` | Evaluation resources | Establish which capability owns each resource before moving |
+| `evals/promptfoo/results/` and repository-root `output/` | Historical raw runs (Git-ignored) | Inspect local filesystem, run paths, provenance, replay identity before any move |
+| `evals/transfer-assessment/release/` | Transfer release verification | Preserve full historical `<run-id>/` bundles and SHA-256-checked external references |
+| `evals/web/` | Review application (tooling) | Search scripts, imports, tests and user-facing paths before moving |
 
-Do not rename runtime identifiers or recorded version labels based only on this glossary. Propose ambiguous terms, list alternatives and rationale, and obtain explicit human approval before using them in new canonical paths.
+### Why physical migration is not yet complete
 
-## Observed physical-layout mismatches
+Snapshots can include the original source path, worktree state, fingerprints, absolute paths or relative references. In particular, the tutor runner checks a fingerprint on resume; the release verifier checks evidence hashes. GitHub also cannot inventory the Git-ignored local runs. Moving every folder immediately would conflict with the user's snapshot-preservation requirement.
 
-1. `evals/promptfoo/` is named after a tool but also includes a learning-progress analyzer, a dated refinement experiment, rubrics, and harness implementations.
-2. Its peers `v1/`, `rubrics/`, `learning-progress-analyzer/`, and `refinement-20261014/` mix version, resource type, measured component, and experiment identity.
-3. `evals/transfer-assessment/` is a product capability but currently contains release verification, while transfer model-evaluation code lives under `promptfoo/v1/transfer/`.
-4. `evals/web/` is an application for human evaluation review rather than a model-evaluation suite.
-5. `evals/promptfoo/results/` and repository-root `output/` are Git-ignored, so the tracked tree does not enumerate actual local experiments.
+The safe strategy is to classify and migrate **non-snapshot** files only after their references are verified. Apply Option A to **new** experiment directories. Keep frozen historical directories at their original locations whenever relocation cannot be proven safe. Do not present a partly migrated tree as finished.
 
-## Proposed non-destructive action
+## Discussion remaining
 
-- Provide human navigation through `evals/README.md`.
-- Keep existing executable paths and historic material byte-for-byte unchanged.
-- Review glossary and physical hierarchy separately; do not assume that renaming a component or rearranging old run folders is safe.
-- Later, update *new* output conventions in the existing `.agents/skills/ai-behavior-design-eval/` skill. Only then evaluate whether the approach can be generalized.
+Option A itself is decided. The only open questions are concrete: whether a particular old directory can move without breaking its uses, and whether a suggested folder name matches the project's established vocabulary.
 
-## Decisions requiring user review
+Before a physical move, present the old/new path mapping and verify that its executable references remain valid. A full migration test requires local access to ignored run directories; do not infer that they are absent from GitHub.
 
-1. Should future paths group by **evaluated capability** (e.g. tutor behavior, learning-progress analyzer, transfer assessment) rather than framework/tool (Promptfoo)?
-2. Should future experiment results live in one common `runs/` root, or remain adjacent to their capability with a cross-capability catalog? Either can work with an external index.
-3. Which proposed names should become approved glossary terms? Are there project-standard alternatives?
-4. Should existing source directories (not frozen runs) ever be physically renamed, after checking import paths, snapshot source references, scripts and test fixtures?
-
-## Migration / integrity gates (not yet executed)
-
-- Inventory *local* Git-ignored run roots, including partial and blocked experiments; GitHub inspection is not sufficient.
-- Identify atomic bundle boundaries from manifests, run IDs, hashes, stored relative/absolute references, and replay identities.
-- Before any move: show exact old -> new mapping, test every dependent executable/reference, and preserve evidence byte hashes and run identity.
-- If relocation cannot be demonstrated safe, keep the historical path and add metadata/navigation instead.
-- Verify unmodified examples such as the transfer release bundle with the existing verification command; do not use fresh LLM results to justify organization changes.
-
-**Stage boundary:** Do not change AI behavior skill instructions or build a general meta-skill until the user reviews this concrete proposal.
+Do not modify `.agents/skills/ai-behavior-design-eval/` or create the generalized meta-skill until this repository-specific change is evaluated.
