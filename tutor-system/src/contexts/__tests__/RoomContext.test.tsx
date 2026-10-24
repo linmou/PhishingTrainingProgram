@@ -279,6 +279,9 @@ describe('RoomContext - Room Management Tests', () => {
         const messagesQuery: any = {};
         messagesQuery.select = jest.fn(() => messagesQuery);
         messagesQuery.eq = jest.fn(() => messagesQuery);
+        messagesQuery.limit = jest.fn(() => messagesQuery);
+        messagesQuery.abortSignal = jest.fn(() => messagesQuery);
+        messagesQuery.gt = jest.fn(() => messagesQuery);
         messagesQuery.order = jest.fn().mockResolvedValue({ data: messagesData, error: null });
         messagesQuery.insert = insertMessage;
 
@@ -386,6 +389,7 @@ describe('RoomContext - Room Management Tests', () => {
                 })),
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
+                        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                         order: jest.fn().mockResolvedValue({ data: [], error: null })
                     }))
                 }))
@@ -843,6 +847,7 @@ describe('RoomContext - Room Management Tests', () => {
             const mockMessagesQuery = {
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
+                        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                         order: jest.fn().mockResolvedValue({
                             data: messagesData,
                             error: null
@@ -1178,6 +1183,7 @@ describe('RoomContext - Room Management Tests', () => {
             const mockMessagesQuery = {
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
+                        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                         order: jest.fn().mockResolvedValue({
                             data: messagesData,
                             error: null

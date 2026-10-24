@@ -165,7 +165,9 @@ describe('RoomContext - Role-based Export Filtering', () => {
                 error: null,
             });
             query.in = jest.fn().mockResolvedValue({ data: mockParticipantsResponse, error: null });
-            query.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+            query.limit = jest.fn().mockImplementation(() => table === 'messages' ? query : Promise.resolve({ data: [], error: null }));
+            query.abortSignal = jest.fn().mockReturnValue(query);
+            query.gt = jest.fn().mockReturnValue(query);
             query.insert = jest.fn().mockReturnValue(query);
             query.update = jest.fn().mockReturnValue(query);
             return query;
