@@ -1,34 +1,60 @@
 # Evaluation workspace
 
-This is a human-facing navigation entrypoint for evaluation-related work. The existing paths below remain the executable and historical paths; this document does not rename, move, modify, or revalidate evidence.
+## Approved direction: capability-first folders (Option A)
 
-## Find the relevant work
+Use a straightforward physical folder hierarchy for **new** evaluation work:
 
-| Evaluated capability / task | Entry point | What it contains |
-| --- | --- | --- |
-| Tutor response and decision behavior | [Promptfoo tutor evaluation](promptfoo/README.md), [specification-derived runner](promptfoo/v1/README.md) | Legacy Promptfoo checks, v1 runner, candidate policies, generation and evaluator checks |
-| Learning-progress analyzer | [Analyzer evaluation](promptfoo/learning-progress-analyzer/README.md) | Event classification and state/consumer checks; not a tutor-response score |
-| Transfer assessment behavior | [Transfer checks](promptfoo/v1/transfer/) | Assessment decisions, quality, validity and lifecycle checks |
-| Transfer assessment release readiness | [Release evidence](transfer-assessment/release/README.md) | Release gates and separately frozen release-verification runs, not interchangeable with semantic model acceptance |
-| Human prompt/eval review | [Review workspace](web/README.md) | Standalone reviewer UI; static imported results are not new model evaluations |
+```text
+evals/
+├── suites/
+│   ├── tutor-behavior/
+│   │   ├── resources/             # shared cases, rubrics, prompts
+│   │   └── experiments/
+│   │       ├── shortcut-removal-20261014/
+│   │       │   ├── definition/
+│   │       │   └── runs/
+│   │       │       └── <run-id>/   # atomic snapshot
+│   │       ├── contextual-reply/
+│   │       └── simulated-conversations/
+│   ├── learning-progress-analyzer/
+│   │   ├── resources/
+│   │   └── experiments/
+│   └── transfer-assessment/
+│       ├── resources/
+│       └── experiments/
+├── release-verification/
+│   └── transfer-assessment/
+│       └── runs/
+└── tooling/
+    ├── harnesses/
+    │   └── promptfoo/
+    └── review-apps/
+        └── web/
+```
 
-## Find experiment definitions, results and evidence
+The `suites/` siblings are all evaluated capabilities; the `experiments/` siblings are all experiments, and the `runs/` siblings are complete recorded executions. Review tools and release verification have separate responsibilities.
 
-| Need | Existing location | Notes |
-| --- | --- | --- |
-| Tutor prompt refinement experiment | [Shortcut-removal experiment](promptfoo/refinement-20261014/README.md) | Candidate definitions, audits, run records and pointers to frozen raw runs |
-| Current tutor scoring code and cases | [v1/](promptfoo/v1/README.md) | Runner and source materials; `v1` is a harness/contract-era label rather than a model name |
-| Rubrics and their versions | [rubrics/](promptfoo/rubrics/README.md) | Judge definitions; versioned rubrics are not experiment runs |
-| Historical / active Promptfoo run output | `evals/promptfoo/results/<model>/<run-id>/` | Git-ignored; local runs are not enumerable from the GitHub checkout |
-| Analyzer raw run output | `output/learning-progress-analyzer/` and historical `output/transfer-analysis-*` | Git-ignored; names from frozen runs remain unchanged |
-| Transfer release evidence bundles | [release/](transfer-assessment/release/README.md) | Recorded run IDs contain full bundles; never split a run |
+**Status:** This is the agreed layout principle, not a claim that existing files have moved. Existing runner paths and historical snapshot references have not been changed. Do not create a separate faceted catalog or duplicate raw evidence.
 
-For conceptual terms, see [terminology and human review](ORGANIZATION_REVIEW.md).
+## Current entry points (paths unchanged)
 
-## Invariants
+| Capability or responsibility | Current location |
+| --- | --- |
+| Tutor behavior | [Promptfoo tutor evaluation](promptfoo/README.md); [v1 runner](promptfoo/v1/README.md) |
+| Tutor shortcut-removal experiment | [Refinement experiment](promptfoo/refinement-20261014/README.md) |
+| Learning-progress analyzer | [Analyzer evaluation](promptfoo/learning-progress-analyzer/README.md) |
+| Transfer assessment behavior | [Transfer evaluation checks](promptfoo/v1/transfer/) |
+| Transfer assessment release verification | [Release evidence](transfer-assessment/release/README.md) |
+| Prompt/evaluation review application | [Web workspace](web/README.md) |
 
-- Do not split, merge, rename, or edit historical run/snapshot bundles merely to improve human readability.
-- Do not change run IDs, recorded paths, source hashes, manifests, references, or replay fingerprints without a separate impact assessment.
-- An index is a navigation aid, never an alternative source of experimental evidence.
-- Missing, interrupted, failed and blocked runs remain discoverable and must not be represented as completed or passing.
-- New names are proposals until the human terminology review is resolved. Do not silently promote a suggested label to a canonical project term.
+Existing local raw results are normally written to the Git-ignored `evals/promptfoo/results/` or repository-root `output/`; their contents are not visible in a GitHub-only inspection.
+
+## Preservation rules
+
+- Treat every historical run snapshot as an indivisible unit. Never split its files across the new hierarchy.
+- Do not rename old run IDs, rewrite hashes, or silently change stored absolute/relative paths and replay fingerprints.
+- Move ordinary source and configuration files only after checking executable references, import paths, frozen-source references, and tests.
+- Use descriptive, existing project terminology. If a proposed folder name is ambiguous, flag it for human discussion before adoption.
+- Do not claim a historical result has been revalidated merely because a directory or README was renamed.
+
+For the path-level reorganization and unresolved safety issues, see [organization review](ORGANIZATION_REVIEW.md).
