@@ -48,13 +48,28 @@ export function orderAssessmentMessages<T extends {
     return prepop || (Date.parse(left.created_at)||0)-(Date.parse(right.created_at)||0) || left.id.localeCompare(right.id);
   });
   const byId = new Map(sorted.map(message => [message.id,message]));
+  const resultsByAssessment = new Map<string, { all: string[]; earlier: string[][] }>();
+  for (const message of sorted) {
+    const event = message.assessment_event;
+    if (event?.kind !== 'result') continue;
+    let results = resultsByAssessment.get(event.assessment_id);
+    if (!results) {
+      results = { all: [], earlier: [[], [], []] };
+      resultsByAssessment.set(event.assessment_id, results);
+    }
+    results.all.push(message.id);
+    // Attempts are bounded to 0/1/2. Appending during the sorted pass preserves
+    // the original dependency order even when result timestamps are inverted.
+    results.earlier.forEach((earlier, attemptsUsed) => {
+      if (event.attempts_used < attemptsUsed) earlier.push(message.id);
+    });
+  }
   const priorResults = new Map<string,string[]>();
   for (const message of sorted) {
     const event = message.assessment_event;
     if (!event) continue;
-    const earlier = sorted.filter(candidate => candidate.assessment_event?.kind==='result' &&
-      candidate.assessment_event.assessment_id===event.assessment_id &&
-      (event.kind==='closure' || candidate.assessment_event.attempts_used<event.attempts_used)).map(candidate => candidate.id);
+    const results = resultsByAssessment.get(event.assessment_id);
+    const earlier = (event.kind === 'closure' ? results?.all : results?.earlier[event.attempts_used]) ?? [];
     priorResults.set(message.id,earlier);
     if (event.answer_message_id && event.kind==='result') priorResults.set(event.answer_message_id,earlier);
   }

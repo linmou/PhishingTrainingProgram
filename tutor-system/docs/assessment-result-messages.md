@@ -1,6 +1,6 @@
 # Assessment result messages
 
-<!-- Intent: define the approved public result-message contract and its consumers. Updated: 2026-10-17. Runtime release commit: 518a07d; baseline: c6d5129. -->
+<!-- Intent: define the approved public result-message contract and its consumers. Updated: 2026-10-24. Ordering optimization baseline: 7762cbb; runtime release commit: 518a07d. -->
 
 ## Grading and publication
 
@@ -21,6 +21,8 @@ Participant and legacy writes cannot forge or modify trusted event metadata/cont
 ## Room and AI consumers
 
 Saved result messages own verdict/retry/explanation display. The question retains option controls and answer-selection navigation. Initial reads, processing responses, realtime, polling and reconnect converge on the same read-only lifecycle; stale or out-of-order events cannot reopen a terminal question. Both UI and AI history use stable causal question → answer → result ordering.
+
+Ordering indexes result IDs by assessment and the bounded attempts-used values (0/1/2), preserving their chronological scan order. Closures depend on all results for that assessment; later attempts and their answers depend on earlier attempts' results. Sorting costs O(N log N), index construction O(N), and dependency traversal O(N + E), where E is the number of dependency references visited. Valid two-attempt histories have bounded dependencies per assessment event. Repeated/conflicting result rows can still increase E, but no event filters the full room history. Merge hydration and terminal precedence use the existing single ingress path. Reproduce the measured few/many-event cases using the command and evidence in the [optimization record](doc_update_record/documentation_update_record_v2026_10_24_assessment_ordering.md).
 
 Tutor dialogue includes public question stem/options/selection type, learner answers and attributed result messages. The dynamic `VERIFIED ASSESSMENT STATE` section is removed. Common request instructions still require following recorded grades, preserving retries/disclosure and accurate cancellation handling, required tutor feedback and safety/Guard priority. Initial generation, selected historical-answer focus and regeneration require complete trusted result history before calling the provider. A pending grade, missing result or failed history read yields an explicit processing/unavailable state.
 
