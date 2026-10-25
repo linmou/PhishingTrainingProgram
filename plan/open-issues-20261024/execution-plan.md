@@ -2,7 +2,7 @@
 
 Intent: resolve the five open issues with isolated ownership, measured acceptance evidence, and one verified integrated result.
 
-Updated: 2026-10-24. Starting local commit: `2caa4ae`; upstream includes `8a92391`.
+Updated: 2026-10-25. Starting local commit: `2caa4ae`; upstream includes `8a92391`. Release workflow changes pulled into `no_sign_up` are included in the integration ancestry.
 
 ## Scope and Ownership
 
@@ -38,6 +38,7 @@ Staging acceptance: actual configured progress/tutor calls remain consistent wit
 - #19, #20 and #2 touch RoomContext: agents own separate sections and integration resolves conflicts; #22 runs after the optimization changes.
 - UPDATE recovery cannot rely solely on created_at. Implement an evidence-backed recovery strategy that finds old-row updates and handles tied timestamps.
 - Read batching preserves existing permissions and explicitly represents empty results; frontend projection is not a substitute for server authorization.
+- Live inspection found the existing three-table Realtime channel had no publication members in either project. Root owns the SQL prerequisite enabling messages, message_feedback and rooms, including fresh-baseline parity, Red/Green/permission/atomicity checks and both environments' transport acceptance. The client degrades immediately on Realtime extension errors.
 - The existing upstream/local template changes are inherited dependencies, not new implementation scope. Verify compatibility where touched and avoid redeploying unrelated artifacts.
 - LLM behavior is evaluated by structured policy/state and stored evidence rather than exact response wording. Provider/configuration failures are retained and cannot be replaced with heuristic results.
 - Live credentials, fixture availability and shared project contention may block acceptance. Record exact failures and continue independent implementation/testing.
@@ -47,6 +48,8 @@ Staging acceptance: actual configured progress/tutor calls remain consistent wit
 - Repository/issue inventory: complete; five open issues (#2, #19, #20, #21, #22).
 - Combined baseline: local and upstream histories merged in the integration worktree.
 - Initial implementation agents: complete; #19/#20/#21/#2 integrated, then #22 integrated at `5f11a1c`.
-- Combined PR: [#30](https://github.com/linmou/PhishingTrainingProgram/pull/30); required CI running.
+- Combined PR: [#30](https://github.com/linmou/PhishingTrainingProgram/pull/30); all three required CI checks passed on `973d123`, including the SQL prerequisite.
 - Frozen combined deterministic verification at `5f11a1c`: 149 suites / 1,487 tests / 1 snapshot passed; 5 suites / 93 tests skipped; production build passes with inherited warnings.
+- Realtime SQL prerequisite: integrated at `973d123`, exact SHA-256 `c909b92da2c9b7d96c2a4f0d4e23a8f06d0cc85bb8885d01d2aa911dc4cf5e78`; author and independent reviewer each passed final 4/4 disposable-baseline scenarios. Hosted application remains pending final browser acceptance harness/current-head checks and lease.
+- Scoped semantic comparison: resumed with preserved failed transport runs, calibrated judge and an evaluation-only production-schema adapter. Eight cases, three repetitions per condition; the run is in progress and supplies no verdict yet.
 - Integrated verification, target-branch merge, release and issue completion: pending.
