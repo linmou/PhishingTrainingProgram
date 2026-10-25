@@ -16,7 +16,6 @@ import {
 } from '../utils/behaviorTestRooms';
 import '../components/TutorView.css';
 import type { PracticeType, CyberbullyingScenario } from '../types';
-import { loadCyberbullyingScenarios, scenarioDialogue } from '../services/cyberbullyingScenarios';
 
 type Room = Database['public']['Tables']['rooms']['Row'];
 
@@ -32,7 +31,6 @@ const TutorView: React.FC = () => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [practiceType, setPracticeType] = useState<PracticeType>('phishing');
-    const [cyberbullyingScenarios, setCyberbullyingScenarios] = useState<CyberbullyingScenario[]>([]);
     const [selectedScenario, setSelectedScenario] = useState<CyberbullyingScenario | null>(null);
     const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
     const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
@@ -106,26 +104,6 @@ const TutorView: React.FC = () => {
     }, [user, loadRooms, loadTemplates]);
 
 
-    useEffect(() => {
-        if (practiceType !== 'cyberbullying' || cyberbullyingScenarios.length) return;
-        let active = true;
-        loadCyberbullyingScenarios().then(scenarios => {
-            if (active) setCyberbullyingScenarios(scenarios);
-        }).catch(error => { if (active) setError(error.message); });
-        return () => { active = false; };
-    }, [practiceType, cyberbullyingScenarios.length]);
-
-    const selectScenario = (scenario: CyberbullyingScenario) => {
-        setSelectedScenario(scenario);
-        setTitle('Cyberbullying practise — ' + scenario.id);
-        setDescription(scenario.post.text);
-        setCustomImageUrl(scenario.post.image);
-        setSelectedImageId(null);
-        setPrePopulatedDialogue(scenarioDialogue(scenario));
-        setUseCustomOp(true);
-        setCustomOpName(scenario.post.author.name);
-    };
-
     const handleImageSelect = (imageId: string) => {
         setSelectedImageId(imageId);
         setCustomImageUrl(null); // Clear custom image when preset is selected
@@ -194,7 +172,7 @@ const TutorView: React.FC = () => {
             return;
         }
         if (practiceType === 'cyberbullying' && !selectedScenario) {
-            setError('Choose a Cyberbullying situation.');
+            setError('Choose a Cyberbullying template.');
             return;
         }
 
@@ -453,17 +431,6 @@ const TutorView: React.FC = () => {
                                     <option value="cyberbullying">Cyberbullying practise</option>
                                 </select>
                             </div>
-                            {practiceType === 'cyberbullying' && <div className="form-group">
-                                <label htmlFor="cyberbullying-situation" className="enhanced-label">Situation</label>
-                                <select id="cyberbullying-situation" value={selectedScenario?.id || ''} disabled={isCreating}
-                                    onChange={event => {
-                                        const scenario = cyberbullyingScenarios.find(value => value.id === event.target.value);
-                                        if (scenario) selectScenario(scenario);
-                                    }}>
-                                    <option value="">Choose a situation</option>
-                                    {cyberbullyingScenarios.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.post.text}</option>)}
-                                </select>
-                            </div>}
                             {/* Template Selection */}
                             {templates.length > 0 && (
                                 <div className="form-group template-selection-section">
@@ -475,7 +442,7 @@ const TutorView: React.FC = () => {
                                         onChange={(e) => handleTemplateSelect(e.target.value)}
                                         disabled={isCreating}
                                     >
-                                        <option value="">Create from scratch</option>
+                                        <option value="">{practiceType === 'cyberbullying' ? 'Choose a template' : 'Create from scratch'}</option>
                                         {templates
                                             .filter((t) => !isBehaviorDemoTemplateName(t.template_name))
                                             .filter(t => (t.practice_type ?? 'phishing') === practiceType)
