@@ -36,6 +36,8 @@ export function useRoomRealtime({
         if (!currentRoomId) return;
         const roomId = currentRoomId;
         let cancelled = false;
+        let postgresChangesFailed = false;
+        let subscriptionStatus: string | undefined;
         const sync = startRoomMessageSync(roomId, rows => {
             if (cancelled || activeRoomId.current !== roomId) return;
             const callbacks = syncCallbacks.current;
@@ -48,6 +50,14 @@ export function useRoomRealtime({
         const channel = supabase.channel(`room_${roomId}`);
         
         channel
+            .on('system', {}, payload => {
+                if (cancelled || activeRoomId.current !== roomId) return;
+                if (payload.extension === 'postgres_changes' && payload.status === 'error') {
+                    // A channel can join successfully while its database stream is unavailable.
+                    postgresChangesFailed = true;
+                    sync.status('CHANNEL_ERROR');
+                }
+            })
             .on(
                 'postgres_changes',
                 {
@@ -135,8 +145,13 @@ export function useRoomRealtime({
                 setTypingUsers(prev => prev.filter(t => t.userId !== userId));
             })
             .subscribe((status) => {
+                if (cancelled || activeRoomId.current !== roomId) return;
                 console.log('📡 Subscription status:', status);
-                sync.status(status);
+                if (status === 'SUBSCRIBED' && subscriptionStatus && subscriptionStatus !== 'SUBSCRIBED') {
+                    postgresChangesFailed = false;
+                }
+                subscriptionStatus = status;
+                sync.status(status === 'SUBSCRIBED' && postgresChangesFailed ? 'CHANNEL_ERROR' : status);
             });
 
         // Store channel reference

@@ -22,6 +22,8 @@ The hooks keep existing React state setters and functional merges. No second sto
 
 Membership cancellation prevents an older join or an unmounted history read from publishing state. Realtime cleanup stops reconciliation and unsubscribes before adopting a new room. Late old-channel callbacks are ignored. Participant/avatar and feedback callback changes update presentation without channel churn. Database rows still pass through `projectRoomMessage` before entering message state, including assessment restoration and reviewed delivery.
 
+A successful channel join does not guarantee its Postgres Changes extension is active. A `system` event with `extension: postgres_changes` and `status: error` downgrades message synchronization to immediate reconciliation and five-second recovery scans. That failure remains latched through duplicate `SUBSCRIBED` notifications from the same join. A transport disconnect followed by `SUBSCRIBED` starts a new subscription attempt and restores sixty-second healthy audits unless that attempt also reports a system error. Unrelated system events and late callbacks after cleanup have no effect. The existing single channel retains its message, room and feedback listeners; all three tables must have the intended live publication configuration for healthy delivery.
+
 `useRoom()` signatures, consumer state shape, tutor/student/observer guards, password validation, assessment operation scopes, delivery lock and export allowlists retain their existing behavior. These hooks own client state; trusted assessment services and database policies remain authoritative.
 
 ## Cost Evidence
