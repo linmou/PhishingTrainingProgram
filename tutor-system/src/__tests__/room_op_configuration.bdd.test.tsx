@@ -89,7 +89,8 @@ beforeEach(() => {
     eq: jest.fn().mockReturnThis(),
     in: jest.fn().mockResolvedValue({ data: [], error: null }),
     order: jest.fn().mockResolvedValue({ data: [], error: null }),
-    limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+    limit: jest.fn().mockReturnThis(),
+    abortSignal: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue({ data: null, error: null })
   }));
   tutorChannel.on.mockReturnThis();

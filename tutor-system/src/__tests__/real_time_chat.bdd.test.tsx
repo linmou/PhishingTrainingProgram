@@ -8,9 +8,11 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import RoomPagePost from '../pages/RoomPagePost';
 import { RoomProvider } from '../contexts/RoomContext';
+import { MESSAGE_RECOVERY_INTERVAL_MS } from '../contexts/roomMessageSync';
 import { useAuth } from '../contexts/AuthContext';
 import {
   getMessageFeedbackStats,
+  getMessagesFeedbackStats,
   getRoomFeedbackSummary,
   getUserMessageFeedback,
   submitMessageFeedback,
@@ -28,6 +30,7 @@ jest.mock('../services/supabase', () => ({
   validateRoomPassword: jest.fn(),
   submitMessageFeedback: jest.fn(),
   getMessageFeedbackStats: jest.fn(),
+  getMessagesFeedbackStats: jest.fn(),
   getUserMessageFeedback: jest.fn(),
   getRoomFeedbackSummary: jest.fn(),
   clearChatHistory: jest.fn()
@@ -46,6 +49,13 @@ jest.mock('../services/aiService', () => ({
   initializeAIAssistant: jest.fn(),
   generateAndSaveAIResponse: jest.fn(),
   DEFAULT_AI_MODEL: 'test-model'
+}));
+
+jest.mock('../services/transferAssessmentService', () => ({
+  ...jest.requireActual('../services/transferAssessmentService'),
+  transferAssessmentService: {
+    joinRoom: jest.fn().mockResolvedValue({ room_role: 'student' })
+  }
 }));
 
 const feature = loadFeature('./features/real_time_chat.feature');
@@ -136,7 +146,8 @@ const makeQuery = (table: string) => {
     }),
     single: jest.fn(async () => ({ data: table === 'rooms' ? mockRoom : null, error: null })),
     maybeSingle: jest.fn(async () => ({ data: null, error: null })),
-    limit: jest.fn(async () => ({ data: [], error: null })),
+    limit: jest.fn(() => query),
+    abortSignal: jest.fn(() => query),
     insert: jest.fn((data: Record<string, any>) => {
       if (table !== 'messages') return query;
       const savedMessage = makeMessage(`message-${mockMessages.length + 1}`, data.content, {
@@ -177,6 +188,7 @@ const registerRealtimeChannel = () => {
       return 'ok';
     }),
     subscribe: jest.fn((callback?: (status: string) => void) => {
+      channel.subscriptionStatus = callback;
       callback?.('SUBSCRIBED');
       return channel;
     }),
@@ -302,6 +314,11 @@ beforeEach(() => {
   featureValidateRoomPassword.mockResolvedValue(true);
   featureRoomFeedbackSummary.mockResolvedValue(null);
   featureFeedbackStats.mockImplementation(async (messageId: string) => feedbackStatsFor(messageId));
+  (getMessagesFeedbackStats as jest.Mock).mockImplementation(async (_roomId: string, userId: string, ids: string[]) =>
+    Object.fromEntries(ids.map(id => [id, {
+      ...feedbackStatsFor(id),
+      user_feedback: mockFeedbackRows.find(row => row.message_id === id && row.user_id === userId) || null
+    }])));
   featureUserFeedback.mockImplementation(async (messageId: string, userId: string) =>
     mockFeedbackRows.find(row => row.message_id === messageId && row.user_id === userId) || null);
   featureSubmitFeedback.mockImplementation(async (messageId: string, userId: string, _roomId: string, feedbackType: 'like' | 'dislike', rating: number) => {
@@ -504,13 +521,21 @@ defineFeature(feature, test => {
       await ensureClient('tutor');
       await ensureClient('student');
       mockNetworkConnected = false;
-      await waitFor(() => expect(mockOfflinePollObserved).toBe(true), { timeout: 3000 });
+      const channel = realtimeListeners.find(listener => listener.actor === 'student')?.channel;
+      await act(async () => { channel.subscriptionStatus('CHANNEL_ERROR'); });
+      expect(mockOfflinePollObserved).toBe(true);
+      mockOfflinePollObserved = false;
+      await act(async () => { jest.advanceTimersByTime(MESSAGE_RECOVERY_INTERVAL_MS); });
+      expect(mockOfflinePollObserved).toBe(true);
     });
     when('the tutor sends the message "Can you see this message?"', async () => {
       await sendMessageAs('tutor', 'Can you see this message?');
     });
-    and('the student reconnects to the network', () => {
+    and('the student reconnects to the network', async () => {
+      expect(within(roomClients.student.container).queryByText('Can you see this message?')).not.toBeInTheDocument();
       mockNetworkConnected = true;
+      const channel = realtimeListeners.find(listener => listener.actor === 'student')?.channel;
+      await act(async () => { channel.subscriptionStatus('SUBSCRIBED'); });
     });
     then('the student should see the message "Can you see this message?" from the tutor', async () => {
       await waitFor(() => expect(within(roomClients.student.container).getByText('Can you see this message?')).toBeInTheDocument(), { timeout: 5000 });
