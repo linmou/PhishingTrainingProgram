@@ -17,6 +17,19 @@ import type {
   TerminalFailureFeedbackDTO,
 } from '../services/transferAssessmentService';
 
+export function preferredQuestionLifecycle(
+    question: RoomMessageView,
+    incoming: AnswerLifecycleView
+): AnswerLifecycleView {
+    const current = readAnswerLifecycle(question);
+    const currentIsAcceptedTerminal = current?.terminal === true &&
+        (current.answerOutcome === 'passed' || current.answerOutcome === 'failed');
+    const incomingHasNoAcceptedAttempt = incoming.answerOutcome === null ||
+        incoming.attemptNumber === null || !incoming.terminal;
+
+    return currentIsAcceptedTerminal && incomingHasNoAcceptedAttempt ? current : incoming;
+}
+
 /** UI-local review status. View state only; never a progress state and never a server record. */
 export type ReviewStatus =
   | 'idle'
