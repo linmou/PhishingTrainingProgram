@@ -152,7 +152,8 @@ const makeSupabaseQuery = (table: string) => {
       error: null
     })),
     maybeSingle: jest.fn(async () => ({ data: null, error: null })),
-    limit: jest.fn(async () => ({ data: [], error: null })),
+    limit: jest.fn(() => query),
+    abortSignal: jest.fn(() => query),
     insert: jest.fn(() => query),
     update: jest.fn(() => query),
     upsert: jest.fn(async () => ({ data: null, error: null })),
