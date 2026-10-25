@@ -4,13 +4,36 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor } = require('./measure-room-performance.cjs');
+const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
   E2E_SUPABASE_URL: 'https://ciubrzggdqesgvfkpolj.supabase.co', E2E_SUPABASE_ANON_KEY: 'anonymous-test-key',
   SUPABASE_SERVICE_ROLE_KEY: 'service-test-key', SUPABASE_ACCESS_TOKEN: 'management-test-token'
 };
+
+test('identity reset clears persisted login before unloading the mounted application', async () => {
+  const actions = [];
+  const page = {
+    evaluate: async callback => {
+      assert.match(callback.toString(), /localStorage.clear\(\)/);
+      actions.push('clear');
+    },
+    goto: async url => { actions.push(url); }
+  };
+  await resetIdentity(page);
+  assert.deepEqual(actions, ['clear', 'about:blank']);
+  await assert.rejects(resetIdentity({ ...page, evaluate: async () => { throw new Error('page closed'); } }), /page closed/);
+});
+
+test('cleanup diagnostics preserve PostgREST fields and native Error stacks', () => {
+  const failure = { message: 'Foreign key violation', code: '23503', details: 'users referenced by sessions', hint: null };
+  assert.deepEqual(errorDetails(failure), failure);
+  const native = errorDetails(new Error('cleanup failed'));
+  assert.equal(native.message, 'cleanup failed');
+  assert.match(native.stack, /cleanup failed/);
+  assert.deepEqual(errorDetails('offline'), { message: 'offline' });
+});
 
 test('preflight accepts explicit staging and rejects production, missing target, mismatched URL and invalid duration', () => {
   assert.equal(settings(env).windowMs, 60000);
