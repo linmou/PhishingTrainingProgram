@@ -198,6 +198,17 @@ async function insertRows(client, table, rows) {
   }
 }
 
+async function resetIdentity(page) {
+  await page.evaluate(() => localStorage.clear());
+  await page.goto('about:blank');
+}
+
+function errorDetails(error) {
+  if (!error || typeof error !== 'object') return { message: String(error) };
+  return { ...error, message: error.message || String(error),
+    ...(error.stack ? { stack: error.stack } : {}) };
+}
+
 async function visibility(page, text, mutate) {
   const started = Date.now();
   await mutate();
@@ -266,7 +277,8 @@ async function main(argv = process.argv.slice(2)) {
       const user = (await support.query(client, 'users', 'id,display_name', 'display_name', name))[0];
       assert(user?.id, `Missing ${role} identity`);
       report.users.push({ ...user, role });
-      await page.evaluate(() => localStorage.clear());
+      save();
+      await resetIdentity(page);
     }
     const [tutor, student] = report.users;
     await support.joinAs(page, config.appUrl, student.display_name, 'student');
@@ -406,7 +418,12 @@ async function main(argv = process.argv.slice(2)) {
           if (error) throw error;
           assert.equal((await support.query(client, 'users', 'id', 'id', user.id)).length, 0);
           user.cleanup = 'pass';
-        } catch (error) { user.cleanup = 'fail'; report.errors.push(String(error)); report.status = 'fail'; }
+        } catch (error) {
+          user.cleanup = 'fail';
+          user.cleanup_error = errorDetails(error);
+          report.errors.push(`User cleanup ${user.id}: ${JSON.stringify(user.cleanup_error)}`);
+          report.status = 'fail';
+        }
       }
     }
     try { if (fixtureLock) fixtureLock.release(); }
@@ -426,5 +443,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, main };
+module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
