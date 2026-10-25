@@ -97,3 +97,69 @@ it('keeps one channel across presentation and feedback callback changes, and cle
     expect(jest.getTimerCount()).toBe(0);
     jest.useRealTimers();
 });
+
+it('recovers every five seconds after a database stream system error until a genuine reconnect', async () => {
+    jest.useFakeTimers();
+    const actualSync = jest.requireActual('../roomMessageSync') as typeof import('../roomMessageSync');
+    (startRoomMessageSync as jest.Mock).mockImplementation(actualSync.startRoomMessageSync);
+    const channel = { on: jest.fn().mockReturnThis(), subscribe: jest.fn().mockReturnThis(), unsubscribe: jest.fn() };
+    (supabase.channel as jest.Mock).mockReturnValue(channel);
+    const query = { select: jest.fn().mockReturnThis(), eq: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(),
+        order: jest.fn(async () => ({ data: [], error: null })) };
+    (supabase.from as jest.Mock).mockReturnValue(query);
+    const options = {
+        currentRoom: room, user, participants: [user], activeRoomId: { current: room.id },
+        joinRealtimeIds: { current: new Set<string>() }, setMessages: jest.fn(), setCurrentRoom: jest.fn(),
+        addDisplayNameToMessage: jest.fn(message => message), handleFeedbackRealtime: jest.fn(async () => {}),
+        refreshMessageFeedbackStats: jest.fn(async () => {}),
+    };
+    const { unmount } = renderHook(() => useRoomRealtime(options));
+    const system = channel.on.mock.calls.find(([event]) => event === 'system')![2];
+    const status = channel.subscribe.mock.calls[0][0];
+    const flush = async () => { for (let index = 0; index < 20; index++) await Promise.resolve(); };
+    const advance = async (milliseconds: number) => {
+        await act(async () => { jest.advanceTimersByTime(milliseconds); await flush(); });
+    };
+    try {
+        await act(async () => { await flush(); status('SUBSCRIBED'); await flush(); });
+        const healthyReads = query.order.mock.calls.length;
+        await advance(5000);
+        expect(query.order).toHaveBeenCalledTimes(healthyReads);
+        await act(async () => {
+            system({ extension: 'broadcast', status: 'error' });
+            system({ extension: 'postgres_changes', status: 'ok' });
+            await flush();
+        });
+        expect(query.order).toHaveBeenCalledTimes(healthyReads);
+        await act(async () => {
+            system({ extension: 'postgres_changes', status: 'error' });
+            await flush();
+        });
+        const degradedReads = query.order.mock.calls.length;
+        expect(degradedReads).toBe(healthyReads + 1);
+        await advance(4999);
+        expect(query.order).toHaveBeenCalledTimes(degradedReads);
+        await advance(1);
+        expect(query.order).toHaveBeenCalledTimes(degradedReads + 1);
+        await act(async () => { status('SUBSCRIBED'); await flush(); });
+        await advance(5000);
+        expect(query.order).toHaveBeenCalledTimes(degradedReads + 2);
+        await act(async () => { status('CLOSED'); status('SUBSCRIBED'); await flush(); });
+        const reconnectedReads = query.order.mock.calls.length;
+        await advance(59999);
+        expect(query.order).toHaveBeenCalledTimes(reconnectedReads);
+        await advance(1);
+        expect(query.order).toHaveBeenCalledTimes(reconnectedReads + 1);
+        expect(supabase.channel).toHaveBeenCalledTimes(1);
+        unmount();
+        const stoppedReads = query.order.mock.calls.length;
+        system({ extension: 'postgres_changes', status: 'error' });
+        status('SUBSCRIBED');
+        await advance(60000);
+        expect(query.order).toHaveBeenCalledTimes(stoppedReads);
+    } finally {
+        unmount();
+        jest.useRealTimers();
+    }
+});
