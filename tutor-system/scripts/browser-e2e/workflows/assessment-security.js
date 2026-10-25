@@ -14,14 +14,49 @@ function assertDenied(response, codes) {
   assert(response.status >= 400 && response.status < 500, `Expected denial, received HTTP ${response.status}`);
   assert(codes.includes(response.body?.error?.code ?? response.body?.code), 'Unexpected denial reason; infrastructure/validation errors are not authorization evidence');
 }
+// Harness logic only; injected snapshots in unit tests are not hosted security evidence.
+async function runProbe(row, snapshot, execute, persist, httpStatus) {
+  row.status = 'fail';
+  delete row.reason;
+  let oracleFailed = false;
+  try {
+    row.state_before = await snapshot();
+    await execute();
+    row.status = 'pass';
+  } catch (error) { row.status = 'fail'; row.error = error.message; }
+  finally {
+    row.http_status = httpStatus();
+    if (row.state_before) {
+      try {
+        row.state_after = await snapshot();
+        if (row.state_before !== row.state_after) {
+          row.status = 'fail'; row.error = 'Attack mutated persisted state';
+        }
+      } catch {
+        row.status = 'fail'; row.state_verification_error = 'Persisted-state oracle failed after attack';
+        oracleFailed = true;
+      }
+    } else {
+      row.status = 'fail'; row.state_verification_error = 'Persisted-state oracle failed before attack';
+      oracleFailed = true;
+    }
+    persist();
+  }
+  // Do not launch another attack after losing the state oracle. Unrun rows stay explicitly blocked.
+  if (oracleFailed) throw new Error(row.state_verification_error);
+}
+const ATTACK_IDS = Object.freeze(['forged_identity', 'cross_learner', 'cross_room', 'direct_write', 'legacy_rpc', 'stale_question']);
 module.exports = async function assessmentSecurity(ctx) {
   assertStaging(ctx.config); // Before fixture mutation, even when invoked directly.
   const fixture = await assessmentRoom({ ...ctx, kind: 'assessment-answer-pass' });
   const delivered = await deliverFixedAssessment(ctx, fixture);
   const otherRoom = await ctx.existingRoom('assessment-answer-failure');
   const outsiderId = crypto.randomUUID();
-  const cases = [];
+  const cases = ATTACK_IDS.map(id => ({ id, status: 'blocked', reason: 'not_run', boundary: 'live anon HTTP + persisted-state oracle' }));
   const file = path.join(ctx.evidenceDir, 'assessment-security.json');
+  const evidence = { cases, untested_surfaces: ['realtime', 'exports', 'error value leakage'], outsider_cleanup: 'not_created' };
+  const persist = () => writeJson(file, evidence);
+  persist();
   let lastHttpStatus;
   async function request(endpoint, body, actorId, method = 'POST') {
     const response = await fetch(`${ctx.config.projectUrl}${endpoint}`, {
@@ -51,27 +86,16 @@ module.exports = async function assessmentSecurity(ctx) {
     return crypto.createHash('sha256').update(JSON.stringify({ data, messages, progress, authority })).digest('hex');
   }
   async function probe(id, execute) {
-    const before = await snapshot();
     lastHttpStatus = undefined;
-    let observed;
-    const row = { id, status: 'fail', boundary: 'live anon HTTP + persisted-state oracle' };
-    try {
-      observed = await execute();
-      row.status = 'pass';
-    } catch (error) { row.error = error.message; }
-    finally {
-      // No response bodies: a successful impersonation may return the teacher's private review.
-      row.http_status = observed?.status ?? lastHttpStatus;
-      row.state_before = before;
-      row.state_after = await snapshot();
-      if (row.state_before !== row.state_after) { row.status = 'fail'; row.error = 'Attack mutated persisted state'; }
-      cases.push(row);
-      writeJson(file, { cases, untested_surfaces: ['realtime', 'exports', 'error value leakage'] });
-    }
+    const row = cases.find(item => item.id === id);
+    assert(row, 'Unknown attack ID');
+    await runProbe(row, snapshot, execute, persist, () => lastHttpStatus);
   }
   const outsider = await ctx.client.from('users').insert({ id: outsiderId, email: `${outsiderId}@example.invalid`,
     display_name: `Security probe ${ctx.runId}`, current_role: 'student', status: 'active' });
   if (outsider.error) throw new Error(`Security outsider fixture failed: ${outsider.error.code}`);
+  evidence.outsider_cleanup = 'pending';
+  persist();
   try {
     await probe('forged_identity', async () => {
       // Anonymous attacker copies the known tutor ID. No signed tutor credential is supplied.
@@ -128,11 +152,15 @@ module.exports = async function assessmentSecurity(ctx) {
     });
   } finally {
     const cleanup = await ctx.client.from('users').delete().eq('id', outsiderId);
-    assert(!cleanup.error, `Security outsider cleanup failed: ${cleanup.error?.code}`);
+    const remaining = await ctx.client.from('users').select('id').eq('id', outsiderId);
+    evidence.outsider_cleanup = cleanup.error || remaining.error || remaining.data?.length !== 0 ? 'fail' : 'pass';
+    persist();
+    assert.equal(evidence.outsider_cleanup, 'pass', 'Security outsider cleanup failed');
   }
   assert.equal(cases.length, 6, 'Not every Wave 105 attack ran');
   assert(cases.every(row => row.status === 'pass'), `Security failures: ${cases.filter(row => row.status !== 'pass').map(row => row.id).join(', ')}; see assessment-security.json`);
   return { cases, untested_surfaces: ['realtime', 'exports', 'error value leakage'] };
 };
+module.exports.runProbe = runProbe;
 module.exports.assertStaging = assertStaging;
 module.exports.assertDenied = assertDenied;

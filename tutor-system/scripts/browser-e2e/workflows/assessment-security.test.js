@@ -18,3 +18,60 @@ test('successful impersonation, server errors and irrelevant validation failures
   }
   security.assertDenied({ status: 403, body: { error: { code: 'FORBIDDEN' } } }, ['FORBIDDEN']);
 });
+
+test('state oracle failure before an attack is persisted and prevents the attack', async () => {
+  const row = { id: 'forged_identity', status: 'blocked', reason: 'not_run' };
+  let attacked = false;
+  let saved;
+  await assert.rejects(security.runProbe(row, async () => { throw new Error('unavailable'); },
+    async () => { attacked = true; }, () => { saved = structuredClone(row); }, () => undefined), /oracle failed before/);
+  assert.equal(attacked, false);
+  assert.equal(saved.status, 'fail');
+  assert.match(saved.state_verification_error, /before attack/);
+});
+
+test('losing the state oracle after a rejected attack preserves both failures', async () => {
+  const row = { id: 'forged_identity' };
+  let reads = 0;
+  let saved;
+  await assert.rejects(security.runProbe(row, async () => {
+    if (++reads === 1) return 'before-hash';
+    throw new Error('unavailable');
+  }, async () => { throw new Error('Expected denial, received HTTP 200'); },
+  () => { saved = structuredClone(row); }, () => 200), /oracle failed after/);
+  assert.equal(saved.status, 'fail');
+  assert.match(saved.error, /HTTP 200/);
+  assert.match(saved.state_verification_error, /after attack/);
+  assert.equal(saved.http_status, 200);
+});
+
+test('RLS-filtered HTTP success still fails if persisted state changed', async () => {
+  const row = { id: 'direct_write' };
+  let reads = 0;
+  let saved;
+  await security.runProbe(row, async () => ++reads === 1 ? 'before' : 'changed', async () => {},
+    () => { saved = structuredClone(row); }, () => 200);
+  assert.equal(saved.status, 'fail');
+  assert.equal(saved.error, 'Attack mutated persisted state');
+});
+
+test('unchanged persisted state cannot turn accepted impersonation into a passing probe', async () => {
+  const row = { id: 'forged_identity' };
+  let saved;
+  await security.runProbe(row, async () => 'same', async () => {
+    security.assertDenied({ status: 200, body: { ok: true, data: { private_payload: 'do not persist' } } }, ['FORBIDDEN']);
+  }, () => { saved = structuredClone(row); }, () => 200);
+  assert.equal(saved.status, 'fail');
+  assert(!JSON.stringify(saved).includes('do not persist'));
+});
+
+test('a matching authorization denial and unchanged state records a passing probe result', async () => {
+  const row = { id: 'cross_room', status: 'blocked', reason: 'not_run' };
+  let saved;
+  await security.runProbe(row, async () => 'same', async () => {
+    security.assertDenied({ status: 403, body: { error: { code: 'FORBIDDEN' } } }, ['FORBIDDEN']);
+  }, () => { saved = structuredClone(row); }, () => 403);
+  assert.equal(saved.status, 'pass');
+  assert.equal(saved.reason, undefined);
+  assert.equal(saved.state_after, saved.state_before);
+});

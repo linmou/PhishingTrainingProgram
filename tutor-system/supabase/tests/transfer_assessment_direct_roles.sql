@@ -1,13 +1,32 @@
 --!/usr/bin/env psql
 -- Purpose: prove API roles cannot mutate transfer authority or invoke legacy grading RPCs.
+-- Requires the existing tagged transfer_v1 target below on a disposable migrated clone.
+-- Do not assume the legacy race fixture can be provisioned against the current assessment policy.
+\set ON_ERROR_STOP on
 
 BEGIN;
+-- A zero-row RLS result is evidence only when the privileged oracle proved the target exists.
+DO $precondition$
+BEGIN
+  PERFORM 1 FROM public.checklist_items i
+  JOIN public.session_checklists c ON c.id = i.checklist_id
+  WHERE i.id = 'f1020000-0000-4000-8000-000000000113'
+    AND c.progress_policy_version = 'transfer_v1'
+  FOR UPDATE OF i;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'DIRECT_ROLE_FIXTURE_MISSING: existing transfer target required; no authorization result established';
+  END IF;
+END;
+$precondition$;
+-- The preflight row lock keeps the target alive and stable through both role probes.
 CREATE TEMP TABLE transfer_direct_before ON COMMIT DROP AS
 SELECT
   (SELECT count(*) FROM private.transfer_assessment_attempts) AS attempts,
   (SELECT count(*) FROM private.learning_event_inbox) AS events,
   (SELECT count(*) FROM public.coverage_evidence) AS evidence,
-  (SELECT count(*) FROM public.checklist_updates) AS updates;
+  (SELECT count(*) FROM public.checklist_updates) AS updates,
+  (SELECT to_jsonb(i) FROM public.checklist_items i
+   WHERE i.id = 'f1020000-0000-4000-8000-000000000113') AS target;
 CREATE TEMP TABLE transfer_direct_results(role_name TEXT, path TEXT, sqlstate TEXT) ON COMMIT DROP;
 
 SET LOCAL ROLE anon;
@@ -122,6 +141,8 @@ BEGIN
           OR b.events <> (SELECT count(*) FROM private.learning_event_inbox)
           OR b.evidence <> (SELECT count(*) FROM public.coverage_evidence)
           OR b.updates <> (SELECT count(*) FROM public.checklist_updates)
+          OR b.target IS DISTINCT FROM (SELECT to_jsonb(i) FROM public.checklist_items i
+             WHERE i.id = 'f1020000-0000-4000-8000-000000000113')
      ) THEN
     RAISE EXCEPTION 'direct-role denial or zero-mutation check failed';
   END IF;

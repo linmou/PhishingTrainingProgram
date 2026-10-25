@@ -1,6 +1,6 @@
 # Wave 105 retirement verification — 2026-10-24
 
-Issue: #28. Source baseline: `4ff3f86f9e2ad06d9db33897893aafa2b18d026a` (`no_sign_up`). Candidate: branch `fix/28-retire-wave105-gate`, PR head; this record ships with the tested candidate. Scope: docs, tests, test tooling and deterministic PR CI only. No application/server behavior, SQL, Edge source or hosted configuration changed. Deployment is not applicable.
+Issue: #28. Source baseline: `4ff3f86f9e2ad06d9db33897893aafa2b18d026a` (`no_sign_up`). Candidate: branch `fix/28-retire-wave105-gate`, PR head; this record ships with the tested candidate. Scope: docs, tests, test tooling and deterministic PR CI only. No application/server behavior, SQL migrations, Edge source or hosted configuration changed. Deployment is not applicable.
 
 ## Result
 
@@ -33,3 +33,25 @@ The new offline audit command is included in the existing `frontend-jest` PR job
 - Full local browser-runner acceptance remains blocked on Chromium installation. No production verification is authorized by this issue.
 
 Issue #28 must remain open for these acceptance gaps. Draft PR is reviewable retirement/test work, not a claim that the whole issue or security acceptance is complete.
+
+## Follow-up on the same PR — 2026-10-24
+
+Two verifier weaknesses found during continued review are addressed:
+
+- The old direct-role SQL test could report a zero-row update against a missing fixed target as authorization evidence. It now proves the tagged `transfer_v1` target exists, acquires its row lock before switching roles, fails immediately when absent (`DIRECT_ROLE_FIXTURE_MISSING`), and compares the complete target row after both role probes. `ON_ERROR_STOP` is explicit. This still requires provisioning that tagged target on an isolated migrated clone; do not assume the legacy race setup satisfies the current eligibility policy. **SQL execution is unverified** because no migrated validation database or staging access is configured here.
+- The attack runner previously lost the case artifact when its persisted-state oracle failed. All six cases now begin as `blocked/not_run`; an oracle failure persists the failed case and stops later attacks. A failed post-attack oracle preserves the original attack failure as well. The outsider profile deletion is independently read back and its cleanup status saved. Five new offline tests exercise these failure paths and successful-denial bookkeeping; they are harness tests, not live authorization evidence.
+
+Observed follow-up checks:
+
+| Check | Result |
+| --- | --- |
+| `npm run test:assessment:audit` | **12/12 passed**, including unchanged historical bytes. |
+| Complete `scripts/browser-e2e.test.js` using scratch-only launch-option preload and alternate Chromium | **20/20 passed**, including both real-browser local HTML tests, no exclusions. |
+| Alternate browser | `@sparticuz/chromium@153.0.0` retrieved from npm (outside the repository), binary reports `Chromium 153.0.8010.0`. No browser package or lockfile changes were added to the app. A scratch preload changes only executable path, launch flags and font/library locations; assertions, DOM fixtures and application helpers are unchanged. This is an alternate-browser local run, not a claim that the unavailable pinned Playwright browser ran locally. |
+| Earlier alternate-browser failures | Preserved: initial rendering failed due to font configuration; with fonts fixed, single-process Chromium closed when a context was replaced (19/20 passed). Correct font paths and normal multi-process launch produced the complete 20/20 pass. No test assertion was relaxed. |
+| CI change | Existing `frontend-jest` job now installs the project's pinned Playwright Chromium with system dependencies and runs the complete local HTML runner suite. It does not run `scripts/browser-e2e.js` or use hosted credentials. Check the current PR head's actual CI results; the prior head's passing CI cannot certify this follow-up. |
+| Syntax and whitespace | `node --check` on the changed attack workflow and `git diff --check` passed. |
+
+Local reproduction of the alternate run used `node --require /tmp/ptp-chromium/preload.cjs --test scripts/browser-e2e.test.js`. The ephemeral preload points Playwright's launch to `/tmp/ptp-chromium/browser/chromium`, adds `--no-sandbox --disable-dev-shm-usage --no-zygote --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --in-process-gpu`, and sets that browser's font/shared-library locations. The supported CI command remains `npm run test:e2e:unit` after normal Playwright installation.
+
+No connected Supabase tools or staging credentials are available. Hosted security/privacy acceptance, current SQL acceptance and rollback evidence remain open, as does the source-observed identity-header weakness. These changes strengthen verification tooling and do not deploy an authentication fix or authorize merge.
