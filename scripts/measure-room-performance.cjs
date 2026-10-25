@@ -56,18 +56,56 @@ function assertHealthy(summary, count) {
   return { pages_per_scan: pagesPerScan, maximum_scans: maximumScans, maximum_message_requests: maximumRequests };
 }
 
-function messageFrame(payload) {
+function realtimeFrame(payload) {
   let frame;
   try { frame = JSON.parse(Buffer.isBuffer(payload) ? payload.toString('utf8') : payload); }
   catch { return null; }
   const event = Array.isArray(frame) ? frame[3] : frame.event;
-  const data = (Array.isArray(frame) ? frame[4] : frame.payload)?.data;
-  if (event !== 'postgres_changes' || data?.table !== 'messages') return null;
-  return { message_id: data.record?.id, event: data.type, record: data.record };
+  const topic = Array.isArray(frame) ? frame[2] : frame.topic;
+  const body = Array.isArray(frame) ? frame[4] : frame.payload;
+  if (event === 'phx_reply' && Array.isArray(body?.response?.postgres_changes)) {
+    return { topic, kind: 'bindings', status: body.status, bindings: body.response.postgres_changes };
+  }
+  if (event === 'system') return { topic, kind: 'system', payload: body };
+  const data = body?.data;
+  if (event !== 'postgres_changes' || !data?.table) return null;
+  return { topic, kind: 'change', schema: data.schema, table: data.table,
+    message_id: data.record?.id, event: data.type, record: data.record, old_record: data.old_record };
 }
 
-function assertRealtime(events, messageId, event, timing) {
+function messageFrame(payload) {
+  const frame = realtimeFrame(payload);
+  return frame?.table === 'messages' ? frame : null;
+}
+
+function assertPublicPayload(value) {
+  if (!value || typeof value !== 'object') return;
+  for (const [key, child] of Object.entries(value)) {
+    assert(!['correct_option_ids', 'answer_key', 'reviewed_private_payload'].includes(key.toLowerCase()),
+      `Private assessment key in realtime payload: ${key}`);
+    if (key === 'schema') assert.notEqual(child, 'private', 'Private schema in realtime payload');
+    assertPublicPayload(child);
+  }
+}
+
+function assertBindings(events, roomId, started, ended) {
+  const topic = `realtime:room_${roomId}`;
+  const roomEvents = events.filter(row => row.topic === topic && row.received_ms >= started && row.received_ms <= ended);
+  const expected = [['messages', 'INSERT'], ['messages', 'UPDATE'], ['message_feedback', 'INSERT'], ['message_feedback', 'UPDATE'], ['rooms', 'UPDATE']];
+  const acknowledgement = roomEvents.find(row => row.kind === 'bindings' && row.status === 'ok' &&
+    expected.every(([table, event]) => row.bindings.some(binding =>
+      binding.schema === 'public' && binding.table === table && binding.event === event &&
+      binding.filter === `${table === 'rooms' ? 'id' : 'room_id'}=eq.${roomId}`)));
+  assert(acknowledgement, 'Room channel did not acknowledge all three public table bindings');
+  const errors = roomEvents.filter(row => row.kind === 'system' && row.payload?.status === 'error');
+  assert.deepEqual(errors, [], 'Room channel reported a system error');
+  for (const row of roomEvents.filter(row => row.kind === 'change')) assertPublicPayload(row);
+  return { acknowledgement, system_errors: errors, inspected_change_payloads: roomEvents.filter(row => row.kind === 'change').length };
+}
+
+function assertRealtime(events, messageId, event, timing, table = 'messages') {
   const received = events.find(row => row.message_id === messageId && row.event === event &&
+    (!row.table || row.table === table) &&
     row.received_ms >= timing.mutation_started_ms && row.received_ms <= timing.visible_ms);
   assert(received, `Missing incoming ${event} websocket event for ${messageId}`);
   assert(timing.after_write_ms <= 5000, `${event} visibility exceeded 5000ms after write`);
@@ -102,7 +140,7 @@ function monitor(page, records, events) {
   page.on('websocket', socket => {
     if (!socket.url().includes('/realtime/')) return;
     socket.on('framereceived', ({ payload }) => {
-      const frame = messageFrame(payload);
+      const frame = realtimeFrame(payload);
       if (frame) events.push({ ...frame, received_ms: Date.now() });
     });
   });
@@ -265,6 +303,7 @@ async function main(argv = process.argv.slice(2)) {
         assert.match(await button.innerText(), new RegExp(`1\\s*\\(${feedback[index].rating}\\.0`));
       }
       result.checks.seeded_counts_averages_and_own_ratings = count;
+      result.bindings = assertBindings(report.websocket_messages, room.id, joinStart, Date.now());
       await settleFeedback(page, report.requests);
       const windowStart = Date.now();
       await page.waitForTimeout(config.windowMs);
@@ -280,6 +319,27 @@ async function main(argv = process.argv.slice(2)) {
         const { error } = await client.from('messages').update({ content: update }).eq('id', insert.id);
         if (error) throw error;
       }));
+      const roomTitle = `Performance updated ${runId} ${count}`;
+      result.room_update = assertRealtime(report.websocket_messages, room.id, 'UPDATE',
+        await visibility(page, roomTitle, async () => {
+          const { error } = await client.from('rooms').update({ title: roomTitle }).eq('id', room.id);
+          if (error) throw error;
+        }), 'rooms');
+      assert.equal(result.room_update.websocket_event.record.title, roomTitle);
+      const feedbackTarget = comments.filter({ has: page.getByText(messages[1].content, { exact: true }) });
+      const feedbackStarted = Date.now();
+      const { error: feedbackError } = await client.from('message_feedback').update({ rating: 4 }).eq('id', feedback[1].id);
+      if (feedbackError) throw feedbackError;
+      const feedbackPersisted = Date.now();
+      await feedbackTarget.getByTitle('You rated this 4/5 stars', { exact: true }).waitFor({ timeout: 5000 });
+      result.feedback_update = assertRealtime(report.websocket_messages, feedback[1].id, 'UPDATE', {
+        mutation_started_ms: feedbackStarted, mutation_completed_ms: feedbackPersisted,
+        visible_ms: Date.now(), end_to_end_ms: Date.now() - feedbackStarted, after_write_ms: Date.now() - feedbackPersisted,
+      }, 'message_feedback');
+      assert.equal(result.feedback_update.websocket_event.record.rating, 4);
+      assert.equal(result.feedback_update.websocket_event.record.message_id, messages[1].id);
+      assert.equal(result.feedback_update.websocket_event.record.feedback_type, 'dislike');
+      assert.match(await feedbackTarget.getByTitle('You rated this 4/5 stars', { exact: true }).innerText(), /1\s*\(4\.0/);
       result.disconnected_sockets = await page.evaluate(() => window.__perfDisconnectRealtime());
       assert(result.disconnected_sockets > 0, 'No realtime socket was disconnected');
       const missed = { ...insert, id: crypto.randomUUID(), content: `Missed INSERT ${runId} ${count}` };
@@ -312,6 +372,7 @@ async function main(argv = process.argv.slice(2)) {
       result.rating = { message_id: messages[0].id, refresh_requests: refreshes.length, maximum_refresh_requests: 3, settled_ms: ratingEnd, http: ratingHttp, stored: saved,
         visible: await target.innerText(), elapsed_ms: Date.now() - ratingStart };
       await support.screenshot(page, evidenceDir, `history-${count}`);
+      result.bindings = assertBindings(report.websocket_messages, room.id, joinStart, Date.now());
       support.assertProjectTraffic(traffic);
       save();
       await page.goto('about:blank');
@@ -365,5 +426,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, messageFrame, assertRealtime, assertTargetedRefreshes, monitor, main };
+module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
