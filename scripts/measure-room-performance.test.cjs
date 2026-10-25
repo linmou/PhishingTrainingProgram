@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, messageFrame, assertRealtime, assertTargetedRefreshes, monitor } = require('./measure-room-performance.cjs');
+const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
@@ -83,6 +83,35 @@ test('rating refresh permits bounded dirty follow-ups only for the rated ID', ()
   assert.throws(() => assertTargetedRefreshes([], 'one'), /1..3/);
   assert.throws(() => assertTargetedRefreshes(Array(4).fill(targeted), 'one'), /1..3/);
   assert.throws(() => assertTargetedRefreshes([{ url: targeted.url.replace('(one)', '(one,two)') }], 'one'), /only the rated/);
+});
+
+test('room binding proof requires all five event filters across three tables and rejects later system errors', () => {
+  const bindings = [['messages', 'INSERT'], ['messages', 'UPDATE'], ['message_feedback', 'INSERT'], ['message_feedback', 'UPDATE'], ['rooms', 'UPDATE']]
+    .map(([table, event]) => ({ table, event, schema: 'public', filter: `${table === 'rooms' ? 'id' : 'room_id'}=eq.room-one` }));
+  const raw = { topic: 'realtime:room_room-one', event: 'phx_reply', payload: { status: 'ok', response: { postgres_changes: bindings } } };
+  const acknowledgement = { ...realtimeFrame(JSON.stringify(raw)), received_ms: 100 };
+  assert.equal(assertBindings([acknowledgement], 'room-one', 0, 200).acknowledgement.bindings.length, 5);
+  assert.throws(() => assertBindings([{ ...acknowledgement, bindings: bindings.slice(1) }], 'room-one', 0, 200), /acknowledge/);
+  assert.throws(() => assertBindings([{ ...acknowledgement, topic: 'realtime:room_other' }], 'room-one', 0, 200), /acknowledge/);
+  assert.throws(() => assertBindings([acknowledgement, { topic: raw.topic, kind: 'system', received_ms: 150, payload: { status: 'error' } }], 'room-one', 0, 200), /system error/);
+  const success = realtimeFrame(JSON.stringify({ topic: raw.topic, event: 'system', payload: { status: 'ok' } }));
+  assert.equal(success.kind, 'system');
+});
+
+test('controlled feedback and room payloads retain values and reject nested private assessment keys', () => {
+  const feedback = realtimeFrame(JSON.stringify({ topic: 'realtime:room_one', event: 'postgres_changes', payload: {
+    data: { schema: 'public', table: 'message_feedback', type: 'UPDATE', record: { id: 'rating', rating: 4, message_id: 'message' } }
+  } }));
+  assert.equal(feedback.record.rating, 4);
+  assert.equal(feedback.table, 'message_feedback');
+  assert.equal(messageFrame(JSON.stringify({ event: 'postgres_changes', payload: { data: { table: 'rooms', record: { id: 'one' } } } })), null);
+  assertPublicPayload(feedback);
+  for (const key of ['correct_option_ids', 'answer_key', 'reviewed_private_payload']) {
+    assert.throws(() => assertPublicPayload({ record: { nested: [{ [key]: ['secret'] }] } }), /Private assessment key/);
+  }
+  assert.throws(() => assertPublicPayload({ schema: 'private', record: { id: 'secret' } }), /Private schema/);
+  assert.throws(() => assertRealtime([{ ...feedback, received_ms: 100 }], 'rating', 'UPDATE',
+    { mutation_started_ms: 0, visible_ms: 200, after_write_ms: 100 }, 'rooms'), /Missing/);
 });
 
 test('monitor flush waits for requests started before the boundary even before response arrives', async () => {
