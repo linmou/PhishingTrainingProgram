@@ -75,3 +75,18 @@ test('a matching authorization denial and unchanged state records a passing prob
   assert.equal(saved.reason, undefined);
   assert.equal(saved.state_after, saved.state_before);
 });
+
+test('a nested subcheck losing its state oracle stops the enclosing attack sequence', async () => {
+  const parent = { id: 'direct_write' }; const child = { id: 'authenticated_result' };
+  let childReads = 0; let laterRan = false; let saved;
+  await assert.rejects(security.runProbe(parent, async () => 'parent-state', async () => {
+    await security.runProbe(child, async () => {
+      if (++childReads === 1) return 'child-state';
+      throw new Error('oracle unavailable');
+    }, async () => {}, () => {}, () => 403);
+    laterRan = true;
+  }, () => { saved = structuredClone(parent); }, () => 403), /subcheck/i);
+  assert.equal(laterRan, false);
+  assert.equal(saved.status, 'fail');
+  assert.equal(child.status, 'fail');
+});

@@ -384,3 +384,48 @@ test('a workflow-owned fixture cleanup failure retains the project lease after r
     assert.equal(shouldRetainLease(saved), false);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('privacy collector inspects actual local HTTP and WebSocket bytes without retaining private values', async () => {
+  // Instrumentation acceptance only; this local server is not application/staging security evidence.
+  const http = require('node:http');
+  const { WebSocketServer } = require('ws');
+  const { captureLearnerData } = require('./browser-e2e/workflows/assessment-privacy-checks');
+  const server = http.createServer((request, response) => {
+    if (request.url === '/') { response.end('<!doctype html><title>Privacy capture fixture</title>'); return; }
+    response.setHeader('Content-Type', 'application/json');
+    response.statusCode = request.url.startsWith('/functions/') ? 403 : 200;
+    response.end(JSON.stringify(response.statusCode === 403 ? { error: { code: 'FORBIDDEN' } } : { renamed: 'local-private-canary' }));
+  });
+  const sockets = new WebSocketServer({ server, path: '/realtime/v1/websocket' });
+  sockets.on('connection', socket => socket.send(JSON.stringify([null, null, 'topic', 'postgres_changes', {
+    data: { table: 'messages', type: 'INSERT', record: { id: 'local-row', renamed: 'local-private-canary' } }
+  }])));
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  let browser; let capture;
+  try {
+    browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage(); capture = captureLearnerData(page, origin);
+    await page.goto(origin);
+    await page.evaluate(async () => {
+      await fetch('/rest/v1/messages').then(response => response.json());
+      await fetch('/functions/v1/assessment-api', { method: 'POST', body: JSON.stringify({ renamed: 'local-private-canary' }) }).then(response => response.json());
+      await new Promise((resolve, reject) => {
+        const socket = new WebSocket(location.origin.replace(/^http/, 'ws') + '/realtime/v1/websocket');
+        socket.onmessage = () => resolve(); socket.onerror = reject;
+      });
+    });
+    assert.equal(capture.hasRealtimeRow('local-row'), true);
+    const records = await capture.checkpoint({ privateValues: [{ label: 'fixture', value: 'local-private-canary' }] });
+    for (const surface of ['network_request', 'network', 'realtime']) {
+      assert(records.some(row => row.surface === surface && row.violations.some(finding => finding.kind === 'private_value')));
+    }
+    assert(records.some(row => row.surface === 'error' && row.status === 403));
+    assert(!JSON.stringify(records).includes('local-private-canary'));
+  } finally {
+    capture?.stop(); await browser?.close();
+    for (const socket of sockets.clients) socket.terminate();
+    await new Promise(resolve => sockets.close(resolve));
+    await new Promise(resolve => server.close(resolve));
+  }
+});

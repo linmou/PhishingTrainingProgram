@@ -78,7 +78,7 @@ async function assessmentRoom(ctx) {
   return { room, focus, session, ...await seedTransferChecklist(ctx.client, room.id, ctx.student.id, ctx.tutor.id, focus.id) };
 }
 
-async function deliverFixedAssessment(ctx, fixture) {
+async function deliverFixedAssessment(ctx, fixture, privateMarker) {
   const item = fixture.items[0];
   const assessment = {
     selection_type: 'single', stem: 'A warning says there is a problem with your account and tells you to click a link. What should you do?',
@@ -89,8 +89,11 @@ async function deliverFixedAssessment(ctx, fixture) {
       { id: 'D', text: 'Send the link to a friend' }
     ],
     correct_option_ids: ['B'],
-    learner_safe_explanation: 'Open the official app yourself instead of using the link.',
-    transfer_basis: { source_evidence_message_ids: [fixture.focus.id] }
+    learner_safe_explanation: 'Open the official app yourself instead of using the link.' + (privateMarker ? ` Independent verification ${privateMarker}.` : ''),
+    transfer_basis: { source_evidence_message_ids: [fixture.focus.id], ...(privateMarker ? {
+      concept_rule: `private-concept-${privateMarker}`, source_context: `private-source-${privateMarker}`,
+      changed_context: `private-changed-${privateMarker}`
+    } : {}) }
   };
   const { data, error } = await ctx.client.rpc('send_reviewed_tutor_response_v4', {
     p_reviewed_payload: {
