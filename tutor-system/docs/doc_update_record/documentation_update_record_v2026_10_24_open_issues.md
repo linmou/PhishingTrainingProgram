@@ -31,8 +31,8 @@ Exit 0: 143 suites passed, 4 skipped; 1,449 tests passed, 92 skipped; 50.525 sec
 | #20 | integrated locally | `5e91f54`; 10/100/1,000-message reads fall from 20/200/2,000 to 1/1/10 in controlled service measurements; browser checks pending |
 | #21 | integrated locally | `e0102ca`; 5,000-message assessment-heavy median 82.437 to 17.498 ms; exact output parity and 129 focused tests pass |
 | #2 | integrated locally | `79496b6`; actual provider replay confirms acknowledgment stays partial and tutor retains URL follow-up; independent review records remaining evidence gaps |
-| #22 | implementing after P1 integration | Membership and realtime ownership extraction with unchanged measured counts |
-| Combined deterministic/build verification | pending | Run after integration and conflict resolution |
+| #22 | integrated locally | `5f11a1c`; membership/realtime ownership extraction; 23 suites/247 focused tests and exact before/after cost snapshot pass |
+| Combined deterministic/build verification | pass | Frozen `5f11a1c`: 149 suites/1,487 tests/1 snapshot pass; 5 suites/93 tests skipped; production build pass |
 | Staging acceptance | pending | Exact committed candidate, artifact hashes, selected full affected browser journeys and owned project lease required |
 | Merge into no_sign_up | pending | Merge tested integrated candidate preserving unrelated working-tree edits |
 | Production acceptance if server changes | pending scope decision | Root owns any required exact-artifact release; no production mutation performed |
@@ -45,5 +45,7 @@ The initial integrated candidate `79496b6` builds successfully with existing unr
 The four CI isolation-harness test files pass: 13 tests. The first local attempt failed in the host Perl locale with `C.UTF-8`; explicit `LC_ALL=C LC_CTYPE=C LANG=C` resolves that execution prerequisite. No application code changed for it. The independent [integrated review](documentation_update_record_v2026_10_24_open_issues_review.md) found no concrete implementation defect; its AI acceptance verdict remains incomplete pending broader semantic and live persisted-lifecycle evidence.
 
 The latest `no_sign_up` workflow and PR-template changes are included. GitHub PR checks are `isolation-harness`, `frontend-jest`, and `frontend-build`; their live results must be inspected before staging acceptance. Root will open the combined PR after local validation, then retain current-head CI, review, staging and compatibility evidence for the owner's final merge decision under the updated release workflow. Frontend production deployment follows Render's `no_sign_up` integration.
+
+Combined [PR #30](https://github.com/linmou/PhishingTrainingProgram/pull/30) is open. Frozen implementation `5f11a1c` passed the full command above with `--silent`: 149 suites, 1,487 tests and one cost snapshot pass, 5 suites/93 tests skipped, 39.876 seconds. Build passes with the same inherited warnings. Independently reviewed performance harness requires stronger realtime provenance, complete response-byte capture and valid bounded feedback follow-up checks before live execution. These are verification-tool corrections; the application implementation remains unchanged.
 
 Select the combined browser scope from the execution plan and release workflow: shared orchestration requires affected lifecycle, Guard, feedback, learner-status and role workflows. Staging/production project refs are `ciubrzggdqesgvfkpolj` / `zgbufaxooqxeabewktzd`. Provider replay evidence must retain full input/output pairs and explicit model/prompt settings outside Git. Any missing live evidence remains open.

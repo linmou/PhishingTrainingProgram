@@ -24,7 +24,7 @@ Root agent owns integration, shared-environment leases, release coordination and
 4. Assign #22 on the updated integration baseline after #19/#20. Extract only coherent responsibilities that reduce coupling. Preserve state/side-effect ownership and consumer contracts. Validate the combined behavior again.
 5. Run combined TypeScript/build checks, affected RoomContext/service/assessment/feedback/role/export tests, and relevant browser journeys. Python changes, if any, require mypy. Keep resource usage bounded and preserve complete command results outside Git under `output/`; keep a concise tracked acceptance record.
 6. For server changes: root is release owner. Inspect target live schema with Supabase MCP, select checks under the release workflow, obtain the cross-machine staging lease, perform required local migration validation where applicable, deploy staging SQL before dependent Edge artifacts, and run affected staging acceptance. Include inherited backend dependencies and exact artifact hashes in the release record.
-7. Merge all validated commits into `no_sign_up` without disturbing unrelated working-tree changes. Verify integrated artifacts match staging evidence; rerun invalidated checks. Publish the merged branch as authorized by the user's merge request.
+7. Open the combined PR against `no_sign_up` after local validation, inspect actual required CI and independent review results, then perform applicable coordinated staging checks. Present the current head, CI/review disposition, staging evidence and production compatibility for the owner's final merge decision under the updated release workflow. Merge the authorized candidate without disturbing unrelated working-tree changes; verify artifact parity and rerun invalidated checks.
 8. For server changes: promote the exact integrated committed artifacts to production, run matching production acceptance and cleanup, and record both environments' actual versions/results. Close an issue only after its acceptance criteria have evidence; incomplete live checks remain open with a precise blocker.
 
 ## Verification Scope
@@ -46,5 +46,7 @@ Staging acceptance: actual configured progress/tutor calls remain consistent wit
 
 - Repository/issue inventory: complete; five open issues (#2, #19, #20, #21, #22).
 - Combined baseline: local and upstream histories merged in the integration worktree.
-- Initial implementation agents: pending launch.
+- Initial implementation agents: complete; #19/#20/#21/#2 integrated, then #22 integrated at `5f11a1c`.
+- Combined PR: [#30](https://github.com/linmou/PhishingTrainingProgram/pull/30); required CI running.
+- Frozen combined deterministic verification at `5f11a1c`: 149 suites / 1,487 tests / 1 snapshot passed; 5 suites / 93 tests skipped; production build passes with inherited warnings.
 - Integrated verification, target-branch merge, release and issue completion: pending.
