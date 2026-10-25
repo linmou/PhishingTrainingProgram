@@ -55,3 +55,7 @@ Observed follow-up checks:
 Local reproduction of the alternate run used `node --require /tmp/ptp-chromium/preload.cjs --test scripts/browser-e2e.test.js`. The ephemeral preload points Playwright's launch to `/tmp/ptp-chromium/browser/chromium`, adds `--no-sandbox --disable-dev-shm-usage --no-zygote --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --in-process-gpu`, and sets that browser's font/shared-library locations. The supported CI command remains `npm run test:e2e:unit` after normal Playwright installation.
 
 No connected Supabase tools or staging credentials are available. Hosted security/privacy acceptance, current SQL acceptance and rollback evidence remain open, as does the source-observed identity-header weakness. These changes strengthen verification tooling and do not deploy an authentication fix or authorize merge.
+
+### Cleanup lease follow-through
+
+The temporary outsider profile is a fixture outside the runner's room cleanup list. Its cleanup failure now carries an explicit marker into the runner report and shared-lease retention decision; successful room cleanup cannot mask an orphaned profile. A local harness case verifies persistence of that failure and the actual lease-retention predicate, while ordinary failed assertions with fully successful cleanup remain safe to release. The complete local HTML runner suite passed **21/21** with the same alternate Chromium/toolchain; the audit suite remains **12/12**. No hosted cleanup or lease operation was performed.

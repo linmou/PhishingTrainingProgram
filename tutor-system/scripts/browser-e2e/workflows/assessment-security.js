@@ -155,7 +155,11 @@ module.exports = async function assessmentSecurity(ctx) {
     const remaining = await ctx.client.from('users').select('id').eq('id', outsiderId);
     evidence.outsider_cleanup = cleanup.error || remaining.error || remaining.data?.length !== 0 ? 'fail' : 'pass';
     persist();
-    assert.equal(evidence.outsider_cleanup, 'pass', 'Security outsider cleanup failed');
+    if (evidence.outsider_cleanup !== 'pass') {
+      const error = new Error('Security outsider cleanup failed');
+      error.cleanupFailed = true;
+      throw error;
+    }
   }
   assert.equal(cases.length, 6, 'Not every Wave 105 attack ran');
   assert(cases.every(row => row.status === 'pass'), `Security failures: ${cases.filter(row => row.status !== 'pass').map(row => row.id).join(', ')}; see assessment-security.json`);

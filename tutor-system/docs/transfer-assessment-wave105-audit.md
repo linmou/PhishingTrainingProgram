@@ -26,7 +26,7 @@ Paths below are relative to `tutor-system/` unless prefixed `../`. “Current & 
 
 ## All six attacks
 
-Every new probe uses actual staging HTTP with the public anon credential, an existing assessment question, and a privileged persisted-state oracle. The service credential is used only for fixtures/inspection/cleanup. No injected rejection or UI hiding can pass these probes. Errors with unrelated codes, server errors and disabled-feature responses fail rather than count as denials. The output never saves the private review body returned by a successful impersonation. All six cases start explicitly blocked; state-oracle failures are saved before aborting further attacks, and the outsider fixture deletion is read back and recorded.
+Every new probe uses actual staging HTTP with the public anon credential, an existing assessment question, and a privileged persisted-state oracle. The service credential is used only for fixtures/inspection/cleanup. No injected rejection or UI hiding can pass these probes. Errors with unrelated codes, server errors and disabled-feature responses fail rather than count as denials. The output never saves the private review body returned by a successful impersonation. All six cases start explicitly blocked; state-oracle failures are saved before aborting further attacks, and the outsider fixture deletion is read back and recorded. A failed outsider cleanup propagates to the main runner and retains the staging project lease even if room cleanup succeeds.
 
 | Attack ID | Outcome | Executable check / boundary | Outstanding acceptance |
 | --- | --- | --- | --- |

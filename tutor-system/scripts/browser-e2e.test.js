@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('playwright');
-const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
+const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows, shouldRetainLease } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
 const { assertAssessmentGate, assertBoundAnswers } = require('./browser-e2e/workflows/assessment-browser-checks');
@@ -355,4 +355,32 @@ test('assessment delivery requires feedback on the terminal answer after closure
     assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, created_at }, assessment),
       /after the assessment closes/);
   }
+});
+
+
+test('a workflow-owned fixture cleanup failure retains the project lease after room cleanup succeeds', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-e2e-outsider-cleanup-'));
+  try {
+    const report = { room_ids: [], results: {} };
+    const context = {
+      tutorPage: { screenshot: async () => {} }, studentPage: { screenshot: async () => {} },
+      detachRooms: async () => {}, cleanupRoom: async () => {}
+    };
+    const passed = await runWorkflows(['security'], context, report, dir, {
+      security: async () => {
+        report.room_ids.push('test-room');
+        const error = new Error('Security outsider cleanup failed');
+        error.cleanupFailed = true;
+        throw error;
+      }
+    });
+    assert.equal(passed, false);
+    assert.equal(report.results.security.cleanup[0].status, 'pass');
+    assert.equal(report.results.security.fixture_cleanup_failed, true);
+    const saved = JSON.parse(fs.readFileSync(path.join(dir, 'report.json'), 'utf8'));
+    assert.equal(shouldRetainLease(saved), true);
+    // A failed assertion after successful cleanup remains safe to release, as before.
+    saved.results.security.fixture_cleanup_failed = false;
+    assert.equal(shouldRetainLease(saved), false);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

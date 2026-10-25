@@ -46,6 +46,7 @@ async function runWorkflows(selected, context, report, evidenceDir, registry = w
     } catch (error) {
       report.results[name] = {
         status: 'fail', error: error.stack || String(error),
+        fixture_cleanup_failed: error.cleanupFailed === true,
         screenshots: [
           await support.screenshot(context.tutorPage, evidenceDir, `${name}-tutor-failure`).catch(() => null),
           await support.screenshot(context.studentPage, evidenceDir, `${name}-learner-failure`).catch(() => null)
@@ -67,6 +68,13 @@ async function runWorkflows(selected, context, report, evidenceDir, registry = w
     support.writeJson(path.join(evidenceDir, 'report.json'), report);
   }
   return selected.every((name) => report.results[name]?.status === 'pass');
+}
+
+function shouldRetainLease(report) {
+  return Boolean(report.browser_close_error || report.lock_release_error ||
+    (report.error && report.room_ids.length > 0) ||
+    Object.values(report.results).some(result => result.fixture_cleanup_failed ||
+      result.cleanup?.some(item => item.status !== 'pass')));
 }
 
 async function main(argv = process.argv.slice(2)) {
@@ -163,9 +171,7 @@ async function main(argv = process.argv.slice(2)) {
       report.lock_release_error = error.stack || String(error);
     }
     if (coordination) {
-      const unsafe = report.browser_close_error || report.lock_release_error ||
-        (report.error && report.room_ids.length > 0) ||
-        Object.values(report.results).some(result => result.cleanup?.some(item => item.status !== 'pass'));
+      const unsafe = shouldRetainLease(report);
       if (unsafe) {
         report.coordination.retained = true;
       } else {
@@ -180,5 +186,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { selectWorkflows, runWorkflows, main, ...support };
+module.exports = { selectWorkflows, runWorkflows, shouldRetainLease, main, ...support };
 if (require.main === module) main().catch((error) => { console.error(error); process.exitCode = 1; });
