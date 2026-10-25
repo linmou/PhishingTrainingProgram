@@ -304,6 +304,51 @@ describe('RoomContext - Room Management Tests', () => {
         return { roomQuery, messagesQuery, participantsQuery, insertMessage };
     };
 
+    // RoomContext.tsx: compare membership/realtime extraction costs across identical consumer flows.
+    it('preserves request, subscription and render counts through message, role and room changes', async () => {
+        let api: ReturnType<typeof useRoom>;
+        const renderCount = { value: 0 };
+        const Consumer = () => { api = useRoom(); renderCount.value += 1; return null; };
+        mockJoinedRoomQueries([mockMessage]);
+        const view = render(<RoomProvider><Consumer /></RoomProvider>);
+        await act(async () => { await api!.joinRoom(mockRoom.id); });
+        const joinedRenders = renderCount.value;
+        const insert = mockSubscription.on.mock.calls.find(([event, config]: any[]) =>
+            event === 'postgres_changes' && config.table === 'messages' && config.event === 'INSERT')[2];
+        await act(async () => { insert({ new: { ...mockMessage, id: 'live-message' } }); });
+        const liveRenders = renderCount.value - joinedRenders;
+        const beforeRole = renderCount.value;
+        mockUser = { ...mockUser, current_role: 'observer' };
+        (useAuth as jest.Mock).mockReturnValue({ user: mockUser, loading: false });
+        view.rerender(<RoomProvider><Consumer /></RoomProvider>);
+        await expect(api!.sendMessage('blocked')).rejects.toThrow('Observers cannot send messages');
+        const roleRenders = renderCount.value - beforeRole;
+        const firstRequests = (supabase.from as jest.Mock).mock.calls.map(([table]) => table);
+        const beforeSwitch = renderCount.value;
+        mockJoinedRoomQueries([{ ...mockMessage, id: 'other-message', room_id: 'other-room' }], { ...mockRoom, id: 'other-room' });
+        await act(async () => { await api!.joinRoom('other-room'); });
+        expect(api!.messages.map(message => message.id)).toEqual(['other-message']);
+        const switchedRenders = renderCount.value - beforeSwitch;
+        const beforeStale = renderCount.value;
+        await act(async () => { insert({ new: { ...mockMessage, id: 'stale-message' } }); });
+        expect(renderCount.value).toBe(beforeStale);
+        const evidence = {
+            firstRequests,
+            switchedRequests: (supabase.from as jest.Mock).mock.calls.map(([table]) => table),
+            channels: (supabase.channel as jest.Mock).mock.calls.length,
+            subscriptions: mockSubscription.subscribe.mock.calls.length,
+            joinedRenders, liveRenders, roleRenders, switchedRenders,
+            feedbackBatches: (getMessagesFeedbackStats as jest.Mock).mock.calls.length,
+        };
+        console.info('ROOM_OWNERSHIP_COUNTS', JSON.stringify(evidence));
+        expect(evidence).toMatchSnapshot();
+        await act(async () => { await api!.leaveRoom(); });
+        expect(api!.currentRoom).toBeNull();
+        expect(api!.messages).toEqual([]);
+        expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(2);
+        view.unmount();
+    });
+
     // RoomContext.tsx: exercise the real feedback hook with room transitions and overlapping channel notifications.
     it('batches room history, drops old in-flight feedback and targets overlapping refresh events', async () => {
         let api: ReturnType<typeof useRoom>;
