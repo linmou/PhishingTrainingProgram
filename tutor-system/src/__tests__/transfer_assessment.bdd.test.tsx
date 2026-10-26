@@ -217,6 +217,8 @@ function configureRoomBackend(messages: Array<Record<string, unknown>>, checklis
       return {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
+            limit: jest.fn().mockReturnThis(),
+            abortSignal: jest.fn().mockReturnThis(),
             order: jest.fn().mockResolvedValue({ data: messages, error: null }),
           }),
         }),

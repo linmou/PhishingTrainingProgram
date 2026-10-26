@@ -2,7 +2,14 @@
 
 Intent: Document current test fixtures for legacy UI suites and the contracts they verify.
 
-Updated: 2026-09-27
+Updated: 2026-10-24. Integration baseline commit: `79496b6`.
+
+## Integrated Message Synchronization Fixtures
+
+- Message queries retain the builder through `limit(...).abortSignal(...)` before returning ordered rows.
+- Offline chat checks drive `CHANNEL_ERROR`, verify a failed read and the five-second recovery retry, then drive `SUBSCRIBED` to recover a missed message.
+- Two-client chat fixtures mock student membership joins and return batched feedback statistics, including the current user's rating.
+- Focused verification with inert local Supabase values: ten chat, AI, room, password, transfer, and export suites passed (118 tests). See the dated integration regression record for the exact command.
 
 ## ImageUpload Fixture
 

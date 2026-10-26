@@ -50,7 +50,7 @@ describe('ordinary learner checklist coverage', () => {
       if (table === 'rooms') return { select: () => ({ eq: () => ({ eq: () => ({
         single: async () => ({ data: roomRecord, error: null }) }) }) }) };
       if (table === 'messages') return {
-        select: () => ({ eq: () => ({ order: async () => ({ data: [], error: null }) }) }),
+        select: () => ({ eq: () => ({ limit() { return this; }, abortSignal() { return this; }, order: async () => ({ data: [], error: null }) }) }),
         insert: () => ({ select: () => ({ single: async () => insertResult }) }),
       };
       if (table === 'users') return { select: () => ({ in: async () => ({ data: [], error: null }) }) };

@@ -125,6 +125,7 @@ describe('RoomContext learner answer path', () => {
         return {
           select: jest.fn().mockReturnValue({
               eq: jest.fn().mockReturnValue({
+                limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                 order: jest.fn().mockResolvedValue({
                 data: initialMessages,
                 error: null,
