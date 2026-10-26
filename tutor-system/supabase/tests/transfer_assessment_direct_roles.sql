@@ -4,6 +4,7 @@
 \set ON_ERROR_STOP on
 
 BEGIN;
+SET LOCAL request.headers = '{"x-practice-contract":"cyberbullying-v2"}';
 DO $fixture$
 DECLARE
   tutor uuid := gen_random_uuid(); learner uuid := gen_random_uuid();
@@ -11,7 +12,7 @@ DECLARE
   focus uuid := gen_random_uuid(); question uuid := gen_random_uuid(); assessment uuid := gen_random_uuid();
   posted jsonb;
 BEGIN
-  INSERT INTO public.users(id,email,display_name,current_role,status) VALUES
+  INSERT INTO public.users(id,email,display_name,"current_role",status) VALUES
     (tutor,tutor||'@example.invalid','Direct role tutor','tutor','active'),
     (learner,learner||'@example.invalid','Direct role learner','student','active');
   INSERT INTO public.rooms(id,tutor_id,title,transfer_learning_enabled)
