@@ -38,7 +38,7 @@ export function useRoomMembership(
     const addDisplayNameToMessage = useCallback((message: any, participantsList?: User[]): Message => {
         // Find the user from participants list
         const messageUser = participantsList?.find(p => p.id === message.user_id);
-        
+
         // For prepopulated messages, preserve the existing display_name
         if (message.user_id === 'system' && message.display_name) {
             return {
@@ -48,12 +48,12 @@ export function useRoomMembership(
                 avatar_url: message.avatar_url || null
             };
         }
-        
+
         const isGuardMessage = message.response_mode === 'guard';
         return {
             ...message,
             display_name: message.persona_name || (isGuardMessage ? 'Security Supervisor' : message.user_id === user?.id ? (user?.display_name || 'User') :
-                         messageUser?.display_name || 
+                         messageUser?.display_name ||
                          (message.user_role === 'tutor' ? 'Tutor' :
                           message.user_role === 'student' ? 'Student' : 'Observer')),
             avatar_url: message.persona_avatar || (isGuardMessage ? null : message.user_id === user?.id ? user?.avatar_url : messageUser?.avatar_url)
@@ -66,15 +66,15 @@ export function useRoomMembership(
 
         // Update the current user in participants list
         setParticipants(prev => {
-            const updatedParticipants = prev.map(p => 
+            const updatedParticipants = prev.map(p =>
                 p.id === user.id ? { ...p, ...user } : p
             );
-            
+
             // If user is not in participants, add them
             if (!updatedParticipants.some(p => p.id === user.id)) {
                 updatedParticipants.push(user);
             }
-            
+
             return updatedParticipants;
         });
     }, [user, currentRoom]);
@@ -84,7 +84,7 @@ export function useRoomMembership(
         if (!currentRoom || !participants.length) return;
 
         // Re-enrich all existing messages with updated participant info
-        setMessages(prevMessages => 
+        setMessages(prevMessages =>
             prevMessages.map(msg => addDisplayNameToMessage(msg, participants))
         );
     }, [participants, currentRoom, addDisplayNameToMessage]);
@@ -163,7 +163,7 @@ export function useRoomMembership(
                     if (!password) {
                         throw new Error('This room is password protected. Please enter the password.');
                     }
-                    
+
                     const validation = await validateRoomPassword(roomId, password);
                     if (!validation.success) {
                         throw new Error(validation.message);
@@ -180,12 +180,12 @@ export function useRoomMembership(
             let prePopulatedMessages: Message[] = [];
             if (roomData.pre_populated_dialogue && Array.isArray(roomData.pre_populated_dialogue)) {
                 console.log('🔄 Processing pre-populated dialogue:', roomData.pre_populated_dialogue);
-                
+
                 prePopulatedMessages = roomData.pre_populated_dialogue.map((item: any, index: number) => {
                     // Create a timestamp that's earlier than any real messages
                     const baseTimestamp = new Date(roomData.created_at);
                     baseTimestamp.setSeconds(baseTimestamp.getSeconds() + index);
-                    
+
                     return {
                         id: `prepop-${roomId}-${index}`,
                         room_id: roomId,
@@ -203,7 +203,7 @@ export function useRoomMembership(
                         avatar_url: item.avatar_url || null
                     } as Message;
                 });
-                
+
                 console.log('✅ Created pre-populated messages:', prePopulatedMessages);
             }
 
@@ -213,7 +213,7 @@ export function useRoomMembership(
             if (messagesData) {
                 messagesData.forEach(msg => userIds.add(msg.user_id));
             }
-            
+
             // Always include current user if they're not already in the list
             if (user?.id) {
                 userIds.add(user.id);

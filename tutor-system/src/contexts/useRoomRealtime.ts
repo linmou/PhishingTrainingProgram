@@ -76,7 +76,7 @@ export function useRoomRealtime({
         console.log('🔴 Setting up real-time subscription for room:', roomId);
 
         const channel = supabase.channel(`room_${roomId}`);
-        
+
         channel
             .on('system', {}, payload => {
                 if (cancelled || activeRoomId.current !== roomId) return;
