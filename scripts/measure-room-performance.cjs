@@ -137,6 +137,18 @@ function monitor(page, records, events) {
   const requests = new Map();
   const completions = new Map();
   const captures = new Map();
+  let closed;
+  const pageClosed = new Promise(resolve => { closed = resolve; });
+  page.on('close', () => {
+    for (const [request, row] of requests) {
+      if (!row.finished_ms && !row.failure) {
+        row.failure = { errorText: 'Page closed before request completion' };
+        row.cancelled_at_close_ms = Date.now();
+        completions.get(request).resolve();
+      }
+    }
+    closed();
+  });
   page.on('websocket', socket => {
     if (!socket.url().includes('/realtime/')) return;
     socket.on('framereceived', ({ payload }) => {
@@ -183,7 +195,7 @@ function monitor(page, records, events) {
       await Promise.race([
         (async () => {
           await Promise.all(included.map(request => completions.get(request).promise));
-          await Promise.all(included.map(request => captures.get(request)));
+          await Promise.race([Promise.all(included.map(request => captures.get(request))), pageClosed]);
         })(),
         new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('HTTP measurement did not settle within 30000ms')), 30000); })
       ]);
@@ -207,6 +219,13 @@ function errorDetails(error) {
   if (!error || typeof error !== 'object') return { message: String(error) };
   return { ...error, message: error.message || String(error),
     ...(error.stack ? { stack: error.stack } : {}) };
+}
+
+function createFixtureClient(config, factory = createClient) {
+  return factory(config.projectUrl, config.serviceKey, {
+    global: { headers: { 'x-practice-contract': 'cyberbullying-v2' } },
+    auth: { persistSession: false }
+  });
 }
 
 async function visibility(page, text, mutate) {
@@ -236,7 +255,7 @@ async function main(argv = process.argv.slice(2)) {
       histories: [10, 100, 1000], window_ms: config.windowMs, byte_metric: 'decoded HTTP response body bytes (excludes headers and websocket frames)' },
     users: [], rooms: [], histories: [], cleanup: [], requests: [], websocket_messages: [], errors: [] };
   const save = () => support.writeJson(path.join(evidenceDir, 'report.json'), report);
-  const client = createClient(config.projectUrl, config.serviceKey, { auth: { persistSession: false } });
+  const client = createFixtureClient(config);
   let browser, fixtureLock, lease, flush;
   try {
     fixtureLock = acquireFixtureLock(config.projectRef, { runId });
@@ -443,5 +462,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, main };
+module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
