@@ -60,6 +60,7 @@ beforeEach(() => {
     const result = table === 'rooms' ? cyberRoom : table === 'messages' ? [learnerMessage] : table === 'users' ? [tutorUser, learnerAUser] : [];
     const query: any = {
       select: jest.fn(() => query), eq: jest.fn(() => query), in: jest.fn(() => query), order: jest.fn(() => query),
+      limit: jest.fn(() => query), abortSignal: jest.fn(() => query), gt: jest.fn(() => query),
       is: jest.fn(() => query), range: jest.fn(() => query),
       single: jest.fn(async () => ({ data: result, error: null })),
       then: (resolve: (value: unknown) => void) => Promise.resolve({ data: result, error: null }).then(resolve),

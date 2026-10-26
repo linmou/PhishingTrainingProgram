@@ -22,6 +22,8 @@ jest.mock('../services/supabase', () => {
   };
 
   const mockSupabaseClient = {
+    realtime: { isConnected: jest.fn() },
+    removeChannel: jest.fn(),
     from: jest.fn().mockImplementation((table) => {
       console.log(`🔧 Mock supabase.from('${table}') called`);
       
@@ -169,6 +171,7 @@ import { RoomProvider, useRoom } from '../contexts/RoomContext';
 import * as RoomContextModule from '../contexts/RoomContext';
 import { supabase } from '../services/supabase';
 import { User, UserRole, Room, Message } from '../types';
+import { MESSAGE_RECOVERY_INTERVAL_MS } from '../contexts/roomMessageSync';
 
 interface TestUser {
   id: string;
@@ -260,6 +263,8 @@ describe('Real-time Chat System BDD Tests', () => {
     };
 
     const mockSupabase = supabase as any;
+    mockSupabase.realtime.isConnected.mockImplementation(() => mockNetworkConnected);
+    mockSupabase.removeChannel.mockImplementation(async (channel: any) => { channel.unsubscribe(); return 'ok'; });
     mockSupabase.from.mockImplementation((table: string) => {
       const query: any = {
         select: jest.fn(() => query),
@@ -281,7 +286,9 @@ describe('Real-time Chat System BDD Tests', () => {
           error: null
         })),
         maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-        limit: jest.fn().mockResolvedValue({ data: [], error: null }),
+        limit: jest.fn(() => query),
+        abortSignal: jest.fn(() => query),
+        gt: jest.fn(() => query),
         insert: jest.fn((data: Record<string, any>) => {
           const insertedMessage = {
             id: `msg-saved-${mockMessages.length + 1}`,
@@ -589,26 +596,41 @@ describe('Real-time Chat System BDD Tests', () => {
   describe('Scenario 5: Offline message synchronization', () => {
     // src/__tests__/real_time_chat.test.tsx: verify missed messages arrive after database access returns.
     test('should synchronize a tutor message after the student reconnects', async () => {
+      jest.useFakeTimers();
       const view = renderWithProviders(mockStudent, 'room-1');
       await screen.findByText(mockRoom.title);
 
       mockNetworkConnected = false;
-      await waitFor(() => expect(mockOfflinePollObserved).toBe(true), { timeout: 3000 });
+      const subscriptionStatus = mockChannel.subscribe.mock.calls[0][0];
+      try {
+        await act(async () => { subscriptionStatus('CHANNEL_ERROR'); });
+        expect(mockOfflinePollObserved).toBe(true);
+        mockOfflinePollObserved = false;
+        await act(async () => { jest.advanceTimersByTime(MESSAGE_RECOVERY_INTERVAL_MS); });
+        expect(mockOfflinePollObserved).toBe(true);
+        expect(supabase.realtime.isConnected).toHaveBeenCalled();
+        expect(supabase.removeChannel).not.toHaveBeenCalled();
 
-      mockMessages.push({
-        id: 'msg-offline-1',
-        room_id: mockRoom.id,
-        user_id: mockTutor.id,
-        content: 'Can you see this message?',
-        user_role: 'tutor',
-        created_at: new Date().toISOString(),
-        display_name: mockTutor.display_name
-      });
-      mockNetworkConnected = true;
+        mockMessages.push({
+          id: 'msg-offline-1',
+          room_id: mockRoom.id,
+          user_id: mockTutor.id,
+          content: 'Can you see this message?',
+          user_role: 'tutor',
+          created_at: new Date().toISOString(),
+          display_name: mockTutor.display_name
+        });
+        expect(view.container.querySelector('.comments-list')?.textContent).not.toContain('Can you see this message?');
+        mockNetworkConnected = true;
+        await act(async () => { subscriptionStatus('SUBSCRIBED'); });
 
-      await waitFor(() => {
         expect(view.container.querySelector('.comments-list')?.textContent).toContain('Can you see this message?');
-      }, { timeout: 3000 });
+        await act(async () => { jest.advanceTimersByTime(1000); });
+        expect(supabase.removeChannel).not.toHaveBeenCalled();
+      } finally {
+        view.unmount();
+        jest.useRealTimers();
+      }
     });
   });
 

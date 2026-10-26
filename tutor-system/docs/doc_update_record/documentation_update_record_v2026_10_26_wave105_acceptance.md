@@ -38,4 +38,19 @@ Full command output, SQL SHA-256 hashes and exit codes: `output/pr29-resume-2026
 
 Intended target: `ciubrzggdqesgvfkpolj`. Selected checks: opt-in `assessment-security` and `assessment-privacy`, under the shared staging lease, with fixture cleanup and deployed Edge version observations. Read-only Management API key-access preflight returned HTTP 200. The available Supabase MCP connection targets production (`zgbufaxooqxeabewktzd`); it is not a staging connection.
 
-Execution results are pending. Operational flag observation and a configuration rollback drill remain open. Issue #28 remains open; no merge or release verdict is implied by local SQL success.
+Candidate `b549a8c69506e02253c98a7919e4ed08a3e62e4a` was exercised against `assessment-api` v77 and `ai-api` v7. Reports below are under `tmp/browser_demo_runs/` in the `pr-29-resume` worktree.
+
+| Run | Observed result |
+| --- | --- |
+| `staging-template-20261026200035-f6be7a1e` | Security preflight failed on Management API SQL HTTP 502 before browser/fixture work; lease released. |
+| `staging-template-20261026200039-3b1159f5` | Privacy failed before its first checkpoint. Initial cleanup hit HTTP 502 and retained the lease. Recovery under that exact lease verified all fixture tables empty and Guard fields restored, then released the lease; `output/pr29-resume-20261026/cleanup-recovery.json`. |
+| `staging-template-20261026200146-0b3ec1c7` | Real security workflow completed: cross-learner, cross-room and legacy RPC passed; forged identity, direct writes and stale question failed. Both room cleanups, outsider profile cleanup and real Auth account/profile cleanup passed; lease released. |
+| `staging-template-20261026200317-be441f93` | Privacy again failed before its first checkpoint; room cleanup passed and lease released. The original privacy catch hid the failing prerequisite, so the continuation adds a safe stage identifier without copying private exception bodies. |
+
+The forged tutor `read_review` request returned HTTP 200 to an anonymous caller. Anon REST PATCHes changed persisted question result, lifecycle, selected options and public options; before/after state hashes differ. Authenticated-role variants also returned HTTP 200, while the trusted-event field checks were denied. Because successive probes target the same question, later no-change hashes do not independently establish protection for fields already changed by the anon probe. Both legacy RPC roles were denied. The stale-question response was not an accepted denial reason and remains a failing check. Full per-case/subcheck evidence is `assessment-security.json`, containing status codes and hashes rather than private review bodies. These are observed weaknesses, not acceptance passes or runtime fixes.
+
+Operational flag-value observation and a configuration rollback drill remain open. Secret-name observation encountered HTTP 502; no value or operational state is inferred from it. Issue #28 remains open; no merge or release verdict is implied by local SQL success.
+
+## Base integration
+
+The PR base advanced to `ed572109f39af61f1d674df768eaa07de2f90416`. Resolve the sole merge conflict in `browser-e2e.test.js` by retaining both PR #29's cleanup/privacy cases and the base's room-setup cases. Revalidate the integrated harness and staging candidate; earlier-head CI is not current-head evidence.

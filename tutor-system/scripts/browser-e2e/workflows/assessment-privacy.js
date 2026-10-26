@@ -13,7 +13,7 @@ const { openRoom, query, waitForMatch, managementQuery, writeJson, requestId, TI
 async function privacyJourney(ctx, outcome) {
   const marker = crypto.randomUUID();
   const capture = captureLearnerData(ctx.studentPage, ctx.config.projectUrl);
-  const evidence = { outcome, phases: [], status: 'running' };
+  const evidence = { outcome, phases: [], status: 'running', stage: 'room_fixture' };
   const file = path.join(ctx.evidenceDir, `assessment-privacy-${outcome}.json`);
   const approvedResults = [];
   const requiredResults = [];
@@ -26,6 +26,7 @@ async function privacyJourney(ctx, outcome) {
     { label: 'rationale', value: `private-rationale-${marker}` }
   ];
   async function checkpoint(label) {
+    evidence.stage = `checkpoint_${label}`;
     capture.record('dom', await ctx.studentPage.locator('.room-post').innerText());
     for (const [format, button] of [['json', 'Complete Data (JSON)'], ['txt', 'Chat History (TXT)']]) {
       await ctx.studentPage.getByTitle('Download Chat History', { exact: true }).click();
@@ -55,17 +56,20 @@ async function privacyJourney(ctx, outcome) {
   }
   try {
     const fixture = await assessmentRoom({ ...ctx, kind: outcome === 'passed' ? 'assessment-answer-pass' : 'assessment-answer-failure' });
+    evidence.stage = 'assessment_delivery';
     const delivered = await deliverFixedAssessment(ctx, fixture, marker);
     evidence.room_id = fixture.room.id; evidence.assessment_id = delivered.assessment_id;
     evidence.question_message_id = delivered.question_message_id; publicStem = delivered.assessment.stem;
     privateValues.push({ label: 'safe_explanation', value: delivered.assessment.learner_safe_explanation });
     // Seed private-only material to detect value leaks even if a consumer renames the fields.
+    evidence.stage = 'private_canary';
     const seeded = await managementQuery(ctx.config, `update private.transfer_assessments
       set reviewed_private_payload = reviewed_private_payload || jsonb_build_object(
         'raw_model_output','private-provider-${marker}', 'rationale','private-rationale-${marker}')
       where id='${delivered.assessment_id}'::uuid
       returning reviewed_private_payload->>'raw_model_output' as marker`);
     assert.equal(seeded[0]?.marker, `private-provider-${marker}`, 'Private canary was not actually persisted');
+    evidence.stage = 'provider_canary';
     const providerFixture = await ctx.client.rpc('record_transfer_provider_attempt_v1', {
       p_request_id: requestId(), p_room_id: fixture.room.id, p_student_id: ctx.student.id,
       p_checklist_id: fixture.checklist.id, p_focus_student_message_id: fixture.focus.id,
@@ -77,15 +81,19 @@ async function privacyJourney(ctx, outcome) {
       p_finish_reason: 'fixture_only', p_validation_outcome: 'privacy_fixture_only', p_error_code: 'SYNTHETIC_PRIVACY_FIXTURE'
     });
     assert(!providerFixture.error && providerFixture.data, 'Private provider canary fixture was not stored');
+    evidence.stage = 'provider_canary_readback';
     const storedProvider = await managementQuery(ctx.config,
       `select raw_response->>'raw_model_output' as marker from private.transfer_provider_attempts where id='${providerFixture.data}'::uuid`);
     assert.equal(storedProvider[0]?.marker, `private-provider-${marker}`, 'Provider audit canary is missing');
     evidence.provider_audit_fixture_only = true; // A leak-detection fixture, never a real-provider acceptance result.
+    evidence.stage = 'question_realtime';
     await waitForMatch(async () => capture.hasRealtimeRow(delivered.question_message_id), Boolean, 'actual delivered-question realtime event');
+    evidence.stage = 'question_dom';
     await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
     const question = ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`);
     await question.waitFor({ timeout: TIMEOUT });
     // Exercise the real error boundary with the learner's own identity, not a fake error response.
+    evidence.stage = 'learner_review_denial';
     const denied = await ctx.studentPage.evaluate(async ({ url, key, actor, room, assessment, request }) => {
       const response = await fetch(url + '/functions/v1/assessment-api', {
         method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json',
@@ -102,6 +110,7 @@ async function privacyJourney(ctx, outcome) {
     assert(evidence.phases[0].observations.some(row => row.surface === 'realtime'), 'No real realtime data captured');
     assert(evidence.phases[0].observations.some(row => row.surface === 'error'), 'No actual learner error response captured');
     for (const [index, selected] of (outcome === 'passed' ? ['B'] : ['A', 'A']).entries()) {
+      evidence.stage = `answer_${index + 1}`;
       await question.locator(`input[value="${selected}"]`).check();
       await question.getByRole('button', { name: 'Submit answer' }).click();
       const messages = await waitForMatch(() => query(ctx.client, 'messages', '*', 'room_id', fixture.room.id),
@@ -121,6 +130,7 @@ async function privacyJourney(ctx, outcome) {
         assert.equal(authority[0].answer_message_id, result.assessment_event.answer_message_id);
         approvedResults.push(result); // Both private grading authority and the exact saved message establish disclosure.
       }
+      evidence.stage = `result_${index + 1}_dom_realtime`;
       await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
       await waitForMatch(async () => capture.hasRealtimeRow(result.id), Boolean, 'actual saved-result realtime event');
       await checkpoint(expected);
@@ -128,7 +138,7 @@ async function privacyJourney(ctx, outcome) {
       await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
       await checkpoint(`${expected}-reload`);
     }
-    evidence.status = 'pass'; writeJson(file, evidence);
+    evidence.stage = 'complete'; evidence.status = 'pass'; writeJson(file, evidence);
     return evidence;
   } catch (error) {
     evidence.status = 'fail'; evidence.error = 'Privacy capture, assertion or fixture prerequisite failed'; writeJson(file, evidence);

@@ -16,6 +16,7 @@ import { supabase } from '../../services/supabase';
 import { getAIConfig } from '../../services/aiService';
 import { ChecklistService } from '../../services/checklistService';
 import { transferAssessmentService } from '../../services/transferAssessmentService';
+import { MESSAGE_AUDIT_INTERVAL_MS, MESSAGE_RECOVERY_INTERVAL_MS } from '../roomMessageSync';
 import {
   DELIVERED_ANSWER_ID,
   DELIVERED_QUESTION_ID,
@@ -78,6 +79,8 @@ describe('RoomContext transfer ingress', () => {
   let resolveMessageInsert: ((value: { data: unknown; error: null }) => void) | null;
   let realtimeHandlers: Record<string, RealtimeHandler>;
   let roomsUpdateHandler: RealtimeHandler;
+  let subscriptionStatus: (status: string) => void;
+  let fetchedPageSizes: number[];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -90,6 +93,7 @@ describe('RoomContext transfer ingress', () => {
     deferredMessageFetch = null;
     resolveMessageInsert = null;
     realtimeHandlers = {};
+    fetchedPageSizes = [];
 
     (useAuth as jest.Mock).mockReturnValue({
       user: {
@@ -117,7 +121,7 @@ describe('RoomContext transfer ingress', () => {
           realtimeHandlers[key] = handler;
           return channel;
         }),
-        subscribe: jest.fn().mockReturnThis(),
+        subscribe: jest.fn((callback) => { subscriptionStatus = callback; return channel; }),
         unsubscribe: jest.fn(),
         send: jest.fn(),
       };
@@ -140,13 +144,20 @@ describe('RoomContext transfer ingress', () => {
         messageReadCount += 1;
         const deferredFetch = deferredMessageFetch;
         deferredMessageFetch = null;
+        const pageQuery = {
+          limit: jest.fn((size: number) => { fetchedPageSizes.push(size); return pageQuery; }),
+          gt: jest.fn((_column: string, cursor: string) => { pageCursor = cursor; return pageQuery; }),
+          abortSignal: jest.fn().mockReturnThis(),
+          order: jest.fn(async () => {
+            if (deferredFetch) return deferredFetch();
+            return { data: [...fetchedMessages].sort((a: any, b: any) => a.id.localeCompare(b.id))
+              .filter((row: any) => !pageCursor || row.id > pageCursor).slice(0, 100), error: null };
+          }),
+        };
+        let pageCursor: string | null = null;
         return {
           select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-          order: jest.fn().mockImplementation(() => deferredFetch
-                ? deferredFetch()
-                : Promise.resolve({ data: fetchedMessages, error: null })),
-            }),
+            eq: jest.fn().mockReturnValue(pageQuery),
           }),
           insert: jest.fn().mockReturnValue({
             select: jest.fn().mockReturnValue({
@@ -308,8 +319,8 @@ describe('RoomContext transfer ingress', () => {
 
     await act(async () => {
       send = room!.sendMessage('Reviewed response');
-      await waitFor(() => expect(resolveMessageInsert).not.toBeNull());
     });
+    await waitFor(() => expect(resolveMessageInsert).not.toBeNull());
     expect(room!.messages.filter((message) => message.content === 'Reviewed response')).toHaveLength(1);
     expect(room!.messages.find((message) => message.content === 'Reviewed response')!.id).toMatch(/^temp-/);
 
@@ -410,5 +421,92 @@ describe('RoomContext transfer ingress', () => {
     });
 
     expect(room!.currentRoom!.guard_mode).toBe(true);
+  });
+
+  it('keeps a healthy subscription stable across room metadata changes without two-second reads', async () => {
+    jest.useFakeTimers();
+    try {
+      await mountRoom();
+      await act(async () => { subscriptionStatus('SUBSCRIBED'); });
+      await act(async () => { await jest.advanceTimersByTime(0); });
+      const reads = messageReadCount;
+      const subscriptions = (supabase.channel as jest.Mock).mock.calls.length;
+      await act(async () => {
+        roomsUpdateHandler({ new: { ...transferRoom, title: 'Changed' } });
+        jest.advanceTimersByTime(59_000);
+      });
+      expect(messageReadCount).toBe(reads);
+      expect(supabase.channel).toHaveBeenCalledTimes(subscriptions);
+      expect(fetchedPageSizes.every(size => size === 100)).toBe(true);
+    } finally { jest.useRealTimers(); }
+  });
+
+  it('recovers missed INSERT and old-row UPDATE with tied timestamps in bounded pages', async () => {
+    jest.useFakeTimers();
+    try {
+      fetchedMessages = Array.from({ length: 205 }, (_, index) => ({
+        ...learnerBMessageRow, id: `message-${String(index).padStart(4, '0')}`,
+      }));
+      await mountRoom();
+      await act(async () => { subscriptionStatus('SUBSCRIBED'); });
+      await act(async () => { await jest.advanceTimersByTime(0); });
+      fetchedMessages[0] = { ...(fetchedMessages[0] as object), content: 'Old edited row' };
+      fetchedMessages.push({ ...learnerBMessageRow, id: 'message-9999', content: 'Missed insert' });
+      await act(async () => { jest.advanceTimersByTime(MESSAGE_AUDIT_INTERVAL_MS); });
+      expect(room!.messages).toHaveLength(206);
+      expect(room!.messages.find(row => row.id === 'message-0000')?.content).toBe('Old edited row');
+      expect(room!.messages.find(row => row.id === 'message-9999')?.content).toBe('Missed insert');
+      expect(fetchedPageSizes.every(size => size === 100)).toBe(true);
+    } finally { jest.useRealTimers(); }
+  });
+
+  it('retries disconnected reconciliation and stops old-room responses after leaving', async () => {
+    jest.useFakeTimers();
+    try {
+      await mountRoom();
+      const reads = messageReadCount;
+      await act(async () => { jest.advanceTimersByTime(MESSAGE_RECOVERY_INTERVAL_MS); });
+      expect(messageReadCount).toBeGreaterThan(reads);
+      let resolveFetch!: (result: { data: unknown[]; error: null }) => void;
+      deferredMessageFetch = () => new Promise(resolve => { resolveFetch = resolve; });
+      await act(async () => { subscriptionStatus('SUBSCRIBED'); });
+      await act(async () => { await room!.leaveRoom(); });
+      await act(async () => { resolveFetch({ data: [learnerAMessageRow], error: null }); });
+      expect(room!.currentRoom).toBeNull();
+      expect(room!.messages).toEqual([]);
+      const stoppedReads = messageReadCount;
+      await act(async () => { jest.advanceTimersByTime(120_000); });
+      expect(messageReadCount).toBe(stoppedReads);
+    } finally { jest.useRealTimers(); }
+  });
+
+  it('keeps a newer realtime UPDATE when an older reconciliation response arrives', async () => {
+    await mountRoom();
+    let resolveFetch!: (result: { data: unknown[]; error: null }) => void;
+    deferredMessageFetch = () => new Promise(resolve => { resolveFetch = resolve; });
+    await act(async () => { subscriptionStatus('SUBSCRIBED'); });
+    await act(async () => {
+      realtimeHandlers['messages:UPDATE']({ new: { ...learnerBMessageRow, content: 'New realtime edit' } });
+      resolveFetch({ data: [learnerBMessageRow], error: null });
+    });
+    expect(room!.messages.find(row => row.id === LEARNER_B_MESSAGE_ID)?.content).toBe('New realtime edit');
+  });
+
+  it('ignores a pending join after leaving and ignores old subscription events after room switch', async () => {
+    await mountRoom();
+    const oldHandler = realtimeHandlers['messages:INSERT'];
+    let resolveFetch!: (result: { data: unknown[]; error: null }) => void;
+    deferredMessageFetch = () => new Promise(resolve => { resolveFetch = resolve; });
+    let join!: Promise<void>;
+    await act(async () => { join = room!.joinRoom(TRANSFER_ROOM_ID); });
+    await act(async () => { await room!.leaveRoom(); });
+    await act(async () => { resolveFetch({ data: [learnerAMessageRow], error: null }); await join; });
+    expect(room!.currentRoom).toBeNull();
+    roomRecord = { ...transferRoom, id: 'second-room' };
+    fetchedMessages = [];
+    await act(async () => { await room!.joinRoom('second-room'); });
+    await act(async () => { oldHandler({ new: learnerAMessageRow }); });
+    expect(room!.currentRoom?.id).toBe('second-room');
+    expect(room!.messages).toEqual([]);
   });
 });

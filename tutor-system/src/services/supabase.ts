@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
-import type { PracticeType, CyberbullyingScenario } from '../types'
+import type { PracticeType, CyberbullyingScenario, MessageFeedbackStats } from '../types'
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY!
@@ -608,6 +608,71 @@ export const getTutorImages = async (roomId?: string) => {
 }
 
 // Message Feedback Functions
+export const isPersistedFeedbackMessage = (messageId: string) =>
+    !messageId.startsWith('prepop-') && !messageId.startsWith('temp-');
+
+export const FEEDBACK_BATCH_SIZE = 100;
+export const FEEDBACK_CONCURRENCY = 3;
+
+export const getMessagesFeedbackStats = async (
+    roomId: string,
+    userId: string,
+    messageIds: readonly string[]
+): Promise<Record<string, MessageFeedbackStats>> => {
+    const ids = Array.from(new Set(messageIds.filter(isPersistedFeedbackMessage)));
+    const result: Record<string, MessageFeedbackStats> = {};
+    let next = 0;
+    const worker = async () => {
+        while (next < ids.length) {
+            const batch = ids.slice(next, next + FEEDBACK_BATCH_SIZE);
+            next += FEEDBACK_BATCH_SIZE;
+            const sums: Record<string, { like: number; dislike: number }> = {};
+            batch.forEach(id => {
+                result[id] = {
+                    message_id: id, total_feedback_count: 0, like_count: 0, dislike_count: 0,
+                    average_like_rating: null, average_dislike_rating: null,
+                    overall_average_rating: null, user_feedback: null
+                };
+                sums[id] = { like: 0, dislike: 0 };
+            });
+            // Supabase caps result rows; page even a single message with many ratings.
+            for (let offset = 0; ; offset += 1000) {
+                const { data, error } = await supabase.from('message_feedback')
+                    .select('message_id, user_id, feedback_type, rating')
+                    .eq('room_id', roomId).in('message_id', batch)
+                    .order('id', { ascending: true }).range(offset, offset + 999);
+                if (error) throw error;
+                for (const row of data || []) {
+                    const stats = result[row.message_id];
+                    if (!stats) continue;
+                    stats.total_feedback_count++;
+                    if (row.feedback_type === 'like') {
+                        stats.like_count++;
+                        sums[row.message_id].like += row.rating;
+                    } else {
+                        stats.dislike_count++;
+                        sums[row.message_id].dislike += row.rating;
+                    }
+                    if (row.user_id === userId) {
+                        stats.user_feedback = { feedback_type: row.feedback_type, rating: row.rating };
+                    }
+                }
+                if (!data || data.length < 1000) break;
+            }
+            batch.forEach(id => {
+                const stats = result[id];
+                const sum = sums[id];
+                stats.average_like_rating = stats.like_count ? sum.like / stats.like_count : null;
+                stats.average_dislike_rating = stats.dislike_count ? sum.dislike / stats.dislike_count : null;
+                stats.overall_average_rating = stats.total_feedback_count
+                    ? (sum.like + sum.dislike) / stats.total_feedback_count : null;
+            });
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(FEEDBACK_CONCURRENCY, Math.ceil(ids.length / FEEDBACK_BATCH_SIZE)) }, worker));
+    return result;
+};
+
 export const submitMessageFeedback = async (
     messageId: string,
     userId: string,

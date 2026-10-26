@@ -2,8 +2,8 @@
 
 Intent: identify the configured source and commands used to create disposable local migration baselines.
 
-Updated: 2026-10-21
-Repository baseline commit: `c2fe276` (PR #7 review fixes for connection isolation and allocation-time cancellation).
+Updated: 2026-10-24
+Repository baseline commit: `6d6fefa` (integrated open-issues candidate and publication validation).
 
 From the repository root:
 
@@ -60,3 +60,15 @@ rtk proxy env PG_DISPOSABLE_INTEGRATION=1 node --test scripts/database/disposabl
 ```
 
 The integrated test creates its own small baseline and verifies simultaneous allocation, baseline data isolation, grant/settings parity, nonzero exits, command startup failure and signal cleanup. It also supplies conflicting libpq service/address settings and sends SIGINT/SIGTERM during allocation, checking the actual command target, unchanged baseline and cleanup before exit. It removes only its own databases and preserves lease evidence.
+
+## Realtime Publication Validation
+
+The schema-filtered archive does not include publication membership. Capture the live `pg_publication` and `pg_publication_tables` catalogs separately and reproduce their exact owner, options and membership on the restored baseline before comparing it with the source.
+
+After the hosted baseline, source-equivalent executor/application roles, dependencies and database ACL/settings have passed comparison, run:
+
+```sh
+rtk proxy env PG_REALTIME_VERIFIED_BASELINE=<verified-local-baseline> PG_VALIDATION_PSQL=/opt/homebrew/opt/postgresql@17/bin/psql node --test scripts/database/message-realtime-publication.integration.test.js
+```
+
+This opt-in test allocates three owned clones through the disposable database helper. It requires the expected Red membership failure, Green publication membership and existing client/private permissions, unchanged rows/policies/ACLs, and atomic failure when one required table is absent. Each lease directory retains SQL command inputs, outputs and exit codes alongside helper parity and cleanup evidence. The database tests do not establish Supabase websocket delivery; the release owner verifies the integrated channel on staging and production.

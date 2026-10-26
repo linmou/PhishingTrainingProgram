@@ -115,6 +115,7 @@ describe('RoomContext transfer turn modes', () => {
         return {
           select: jest.fn().mockReturnValue({
             eq: jest.fn().mockReturnValue({
+              limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
               order: jest.fn().mockResolvedValue({ data: [learnerAMessageRow], error: null }),
             }),
           }),

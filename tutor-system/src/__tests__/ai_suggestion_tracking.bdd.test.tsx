@@ -100,6 +100,7 @@ defineFeature(feature, (test) => {
       query.eq = jest.fn((key: string, value: unknown) => { filters[key] = value; return query; });
       query.order = jest.fn((_column: string, options?: { ascending?: boolean }) => { descending = options?.ascending === false; return query; });
       query.limit = jest.fn((value: number) => { limit = value; return query; });
+      query.abortSignal = jest.fn(() => query);
       query.in = jest.fn(async () => ({ data: [...participants], error: null }));
       query.single = jest.fn(async () => result());
       query.insert = jest.fn((value: any) => { insertValue = value; return query; });
