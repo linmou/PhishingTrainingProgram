@@ -24,6 +24,7 @@ export function useRoomRealtime({
     setCurrentRoom, addDisplayNameToMessage, handleFeedbackRealtime, refreshMessageFeedbackStats,
 }: RoomRealtimeOptions) {
     const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
+    const [subscriptionGeneration, setSubscriptionGeneration] = useState(0);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const channelRef = useRef<any>(null);
     // Mutable presentation/feedback callbacks must not recreate the room subscription.
@@ -38,6 +39,33 @@ export function useRoomRealtime({
         let cancelled = false;
         let postgresChangesFailed = false;
         let subscriptionStatus: string | undefined;
+        let recoveryTimer: ReturnType<typeof setTimeout> | undefined;
+        let replacingChannel = false;
+        const scheduleRecovery = () => {
+            if (cancelled || recoveryTimer || replacingChannel) return;
+            recoveryTimer = setTimeout(async () => {
+                recoveryTimer = undefined;
+                if (cancelled || activeRoomId.current !== roomId) return;
+                if (!supabase.realtime.isConnected()) {
+                    scheduleRecovery();
+                    return;
+                }
+                // The installed SDK reconnects its socket but tears down the channel's rejoin timer.
+                // Remove the old topic completely before creating its replacement.
+                replacingChannel = true;
+                try {
+                    await supabase.removeChannel(channel);
+                    if (!cancelled && activeRoomId.current === roomId) {
+                        setSubscriptionGeneration(generation => generation + 1);
+                    }
+                } catch (error) {
+                    replacingChannel = false;
+                    console.warn('Could not replace disconnected room channel:', error);
+                    if (cancelled) channel.unsubscribe();
+                    else scheduleRecovery();
+                }
+            }, 1000);
+        };
         const sync = startRoomMessageSync(roomId, rows => {
             if (cancelled || activeRoomId.current !== roomId) return;
             const callbacks = syncCallbacks.current;
@@ -147,6 +175,11 @@ export function useRoomRealtime({
             .subscribe((status) => {
                 if (cancelled || activeRoomId.current !== roomId) return;
                 console.log('📡 Subscription status:', status);
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') scheduleRecovery();
+                if (status === 'SUBSCRIBED' && recoveryTimer) {
+                    clearTimeout(recoveryTimer);
+                    recoveryTimer = undefined;
+                }
                 if (status === 'SUBSCRIBED' && subscriptionStatus && subscriptionStatus !== 'SUBSCRIBED') {
                     postgresChangesFailed = false;
                 }
@@ -159,12 +192,13 @@ export function useRoomRealtime({
 
         return () => {
             cancelled = true;
+            if (recoveryTimer) clearTimeout(recoveryTimer);
             sync.stop();
             console.log('🔴 Unsubscribing from real-time channel');
-            channel.unsubscribe();
+            if (!replacingChannel) channel.unsubscribe();
             channelRef.current = null;
         };
-    }, [currentRoomId, user?.id, activeRoomId, joinRealtimeIds, setCurrentRoom, setMessages]);
+    }, [currentRoomId, user?.id, activeRoomId, joinRealtimeIds, setCurrentRoom, setMessages, subscriptionGeneration]);
 
     // Clean up stale typing indicators
     useEffect(() => {
