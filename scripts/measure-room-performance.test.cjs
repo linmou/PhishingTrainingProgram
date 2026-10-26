@@ -4,13 +4,24 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, frameMetadata, assertPublicPayload, assertBindings, waitForBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest } = require('./measure-room-performance.cjs');
+const { settings, measurementMode, summarize, assertHealthy, realtimeFrame, messageFrame, frameMetadata, assertPublicPayload, assertBindings, waitForBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
   E2E_SUPABASE_URL: 'https://ciubrzggdqesgvfkpolj.supabase.co', E2E_SUPABASE_ANON_KEY: 'anonymous-test-key',
   SUPABASE_SERVICE_ROLE_KEY: 'service-test-key', SUPABASE_ACCESS_TOKEN: 'management-test-token'
 };
+
+test('baseline requires explicit selection and a full source SHA while default retains candidate histories', () => {
+  const sha = '7762cbb8eaeccf8c92360dc8eb335219651cd4b1';
+  assert.deepEqual(measurementMode([], { PERF_BASELINE_APP_COMMIT: sha }), { mode: 'candidate', histories: [10, 100, 1000], app_commit: null });
+  assert.deepEqual(measurementMode(['--baseline'], { PERF_BASELINE_APP_COMMIT: sha }), { mode: 'baseline', histories: [100, 1000], app_commit: sha });
+  for (const commit of ['', '7762cbb', 'not-a-source-sha', 'g'.repeat(40)]) {
+    assert.throws(() => measurementMode(['--baseline'], { PERF_BASELINE_APP_COMMIT: commit }), /full commit SHA/);
+  }
+  assert.throws(() => measurementMode(['--unknown']), /Only/);
+  assert.throws(() => measurementMode(['--baseline', '--baseline'], { PERF_BASELINE_APP_COMMIT: sha }), /Only/);
+});
 
 test('identity reset clears persisted login before unloading the mounted application', async () => {
   const actions = [];

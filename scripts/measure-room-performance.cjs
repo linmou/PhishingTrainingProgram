@@ -24,6 +24,13 @@ function settings(env = process.env) {
   return { ...config, windowMs };
 }
 
+function measurementMode(argv, env = process.env) {
+  if (argv.length === 0) return { mode: 'candidate', histories: [10, 100, 1000], app_commit: null };
+  assert.deepEqual(argv, ['--baseline'], 'Only --help or --baseline is accepted');
+  assert.match(env.PERF_BASELINE_APP_COMMIT || '', /^[0-9a-f]{40}$/i, 'PERF_BASELINE_APP_COMMIT must be a full commit SHA');
+  return { mode: 'baseline', histories: [100, 1000], app_commit: env.PERF_BASELINE_APP_COMMIT };
+}
+
 function summarize(records, started, ended) {
   const rows = records.filter(row => row.started_ms >= started && row.started_ms < ended);
   for (const row of rows) {
@@ -277,21 +284,21 @@ function routeEdgeRequest(route, errors) {
   return route.abort('blockedbyclient');
 }
 
-async function visibility(page, text, mutate) {
+async function visibility(page, text, mutate, timeoutMs = 5000) {
   const started = Date.now();
   await mutate();
   const persisted = Date.now();
-  await page.getByText(text, { exact: true }).waitFor({ timeout: 5000 });
+  await page.getByText(text, { exact: true }).waitFor({ timeout: timeoutMs });
   return { text, mutation_started_ms: started, mutation_completed_ms: persisted,
     visible_ms: Date.now(), end_to_end_ms: Date.now() - started, after_write_ms: Date.now() - persisted };
 }
 
 async function main(argv = process.argv.slice(2)) {
   if (argv.length === 1 && argv[0] === '--help') {
-    console.log('Usage: E2E_TARGET=staging node scripts/measure-room-performance.cjs\nRequired: E2E_APP_URL, E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ACCESS_TOKEN.\nOptional: PTP_COORDINATION_LEASE (exact candidate lease), PERF_WINDOW_MS (default 60000).\nRuns histories 10/100/1000; creates tagged staging fixtures, blocks provider calls, cleans all fixtures, records output/playwright/room-performance-*/report.json.');
+    console.log('Usage: E2E_TARGET=staging node scripts/measure-room-performance.cjs [--baseline]\nRequired: E2E_APP_URL, E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ACCESS_TOKEN.\nOptional: PTP_COORDINATION_LEASE (exact harness commit lease), PERF_WINDOW_MS (default 60000).\n--baseline requires PERF_BASELINE_APP_COMMIT (full SHA), measures histories100/1000 without candidate request budgets/recovery/rating assertions. Default candidate runs10/100/1000 with all acceptance gates. Both create tagged staging fixtures, block provider calls, clean all fixtures, record output/playwright/room-performance-*/report.json.');
     return;
   }
-  assert.equal(argv.length, 0, 'Only --help is accepted');
+  const mode = measurementMode(argv);
   const config = settings();
   const root = path.resolve(__dirname, '..');
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
@@ -301,7 +308,7 @@ async function main(argv = process.argv.slice(2)) {
   const report = { run_id: runId, commit, started_at: new Date().toISOString(), status: 'running',
     script_sha256: crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
     config: { target: 'staging', project_ref: config.projectRef, app_url: config.appUrl,
-      histories: [10, 100, 1000], window_ms: config.windowMs, byte_metric: 'decoded HTTP response body bytes (excludes headers and websocket frames)' },
+      ...mode, window_ms: config.windowMs, byte_metric: 'decoded HTTP response body bytes (excludes headers and websocket frames)' },
     users: [], rooms: [], histories: [], cleanup: [], requests: [], websocket_messages: [], websocket_frames: [], errors: [] };
   const save = () => support.writeJson(path.join(evidenceDir, 'report.json'), report);
   const client = createFixtureClient(config);
@@ -347,7 +354,7 @@ async function main(argv = process.argv.slice(2)) {
     }
     const [tutor, student] = report.users;
     await support.joinAs(page, config.appUrl, student.display_name, 'student');
-    for (const count of [10, 100, 1000]) {
+    for (const count of mode.histories) {
       const room = await support.insert(client, 'rooms', { title: `Performance ${runId} ${count}`,
         description: `[browser-e2e-created] performance ${runId}`, tutor_id: tutor.id,
         is_active: true, ai_assistant_enabled: false, transfer_learning_enabled: false });
@@ -366,7 +373,8 @@ async function main(argv = process.argv.slice(2)) {
       await page.goto(`${config.appUrl}/#/room/${room.id}`, { waitUntil: 'domcontentloaded' });
       await page.locator('.room-post').waitFor({ timeout: 90000 });
       await page.getByText(messages[count - 1].content, { exact: true }).waitFor({ timeout: 90000 });
-      await support.waitForMatch(() => page.locator('.post-comment button[title^="You rated this"]').count(), value => value === count, 'all own ratings');
+      await page.waitForFunction(expected => document.querySelectorAll('.post-comment button[title^="You rated this"]').length === expected,
+        count, { timeout: mode.mode === 'baseline' ? 180000 : 20000 });
       const joinEnd = Date.now();
       await flush(joinEnd);
       result.join = summarize(report.requests, joinStart, joinEnd);
@@ -387,6 +395,27 @@ async function main(argv = process.argv.slice(2)) {
       const windowEnd = Date.now();
       await flush(windowEnd);
       result.steady_state = summarize(report.requests, windowStart, windowEnd);
+      if (mode.mode === 'baseline') {
+        const inserted = { ...messages[0], id: crypto.randomUUID(), content: `Baseline INSERT ${runId} ${count}`, created_at: new Date().toISOString() };
+        result.realtime_insert = await visibility(page, inserted.content, () => insertRows(client, 'messages', [inserted]), 90000);
+        result.realtime_insert.websocket_event = report.websocket_messages.find(row => row.table === 'messages' && row.message_id === inserted.id &&
+          row.event === 'INSERT' && row.received_ms >= result.realtime_insert.mutation_started_ms && row.received_ms <= result.realtime_insert.visible_ms);
+        assert(result.realtime_insert.websocket_event, 'Baseline INSERT did not receive its websocket event');
+        const updatedText = `Baseline UPDATE ${runId} ${count}`;
+        result.realtime_update = await visibility(page, updatedText, async () => {
+          const { error } = await client.from('messages').update({ content: updatedText }).eq('id', inserted.id);
+          if (error) throw error;
+        }, 90000);
+        result.realtime_update.websocket_event = report.websocket_messages.find(row => row.table === 'messages' && row.message_id === inserted.id &&
+          row.event === 'UPDATE' && row.received_ms >= result.realtime_update.mutation_started_ms && row.received_ms <= result.realtime_update.visible_ms);
+        assert(result.realtime_update.websocket_event, 'Baseline UPDATE did not receive its websocket event');
+        result.bindings = { ...result.bindings, ...assertBindings(report.websocket_messages, room.id, joinStart, Date.now()) };
+        await support.screenshot(page, evidenceDir, `baseline-history-${count}`);
+        support.assertProjectTraffic(traffic);
+        save();
+        await page.goto('about:blank');
+        continue;
+      }
       result.steady_state.bounds = assertHealthy(result.steady_state, count);
       const insert = { ...messages[0], id: crypto.randomUUID(), content: `Realtime INSERT ${runId} ${count}`, created_at: new Date().toISOString() };
       result.realtime_insert = assertRealtime(report.websocket_messages, insert.id, 'INSERT',
@@ -511,5 +540,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, frameMetadata, assertPublicPayload, assertBindings, waitForBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest, main };
+module.exports = { settings, measurementMode, summarize, assertHealthy, realtimeFrame, messageFrame, frameMetadata, assertPublicPayload, assertBindings, waitForBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
