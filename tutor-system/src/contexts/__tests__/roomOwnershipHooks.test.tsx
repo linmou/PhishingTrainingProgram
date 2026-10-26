@@ -5,9 +5,10 @@ import { supabase, validateRoomPassword } from '../../services/supabase';
 import { readRoomMessagePages, startRoomMessageSync } from '../roomMessageSync';
 import { useRoomMembership } from '../useRoomMembership';
 import { useRoomRealtime } from '../useRoomRealtime';
+import { RealtimeClient } from '@supabase/realtime-js';
 
 jest.mock('../../services/supabase', () => ({
-    supabase: { from: jest.fn(), channel: jest.fn() }, validateRoomPassword: jest.fn(),
+    supabase: { from: jest.fn(), channel: jest.fn(), removeChannel: jest.fn(), realtime: { isConnected: jest.fn() } }, validateRoomPassword: jest.fn(),
 }));
 jest.mock('../../services/transferAssessmentService', () => ({ transferAssessmentService: {} }));
 jest.mock('../roomMessageSync', () => ({ readRoomMessagePages: jest.fn(), startRoomMessageSync: jest.fn() }));
@@ -16,6 +17,84 @@ const user = { id: 'student', current_role: 'student', display_name: 'Learner' }
 const room = { id: 'room', tutor_id: 'tutor', created_at: '2026-10-24T12:00:00Z' } as Room;
 
 beforeEach(() => { jest.clearAllMocks(); });
+
+// useRoomRealtime.ts: exercise the installed SDK transport reconnect and fresh room binding without hosted services.
+it('restores a room subscription after the SDK reconnects its socket but loses the channel retry', async () => {
+    jest.useFakeTimers();
+    const sockets: LocalTransport[] = [];
+    const sent: any[] = [];
+    class LocalTransport {
+        readyState = 0;
+        onopen?: () => void;
+        onclose?: (event: any) => void;
+        onmessage?: (event: any) => void;
+        constructor() {
+            sockets.push(this);
+            setTimeout(() => { this.readyState = 1; this.onopen?.(); }, 1);
+        }
+        send(value: string) {
+            const message = JSON.parse(value);
+            sent.push(message);
+            if (message.event === 'phx_join' || message.event === 'phx_leave') {
+                setTimeout(() => this.onmessage?.({ data: JSON.stringify({
+                    topic: message.topic, event: 'phx_reply', ref: message.ref,
+                    payload: { status: 'ok', response: message.event === 'phx_join' ? {
+                        postgres_changes: message.payload.config.postgres_changes.map((binding: any, id: number) => ({ ...binding, id: id + 1 })),
+                    } : {} },
+                }) }), 1);
+            }
+        }
+        close() { this.readyState = 3; this.onclose?.({ code: 1006, reason: 'Network lost' }); }
+    }
+    const client = new RealtimeClient('wss://local.invalid/socket', {
+        transport: LocalTransport as any, reconnectAfterMs: () => 1000, heartbeatIntervalMs: 100000,
+    });
+    (supabase.channel as jest.Mock).mockImplementation(topic => client.channel(topic));
+    (supabase.removeChannel as jest.Mock).mockImplementation(channel => client.removeChannel(channel));
+    (supabase.realtime.isConnected as jest.Mock).mockImplementation(() => client.isConnected());
+    const syncs: any[] = [];
+    (startRoomMessageSync as jest.Mock).mockImplementation(() => {
+        const sync = { realtime: jest.fn(), status: jest.fn(), stop: jest.fn() };
+        syncs.push(sync);
+        return sync;
+    });
+    const options = {
+        currentRoom: room, user, participants: [user], activeRoomId: { current: room.id },
+        joinRealtimeIds: { current: new Set<string>() }, setMessages: jest.fn(), setCurrentRoom: jest.fn(),
+        addDisplayNameToMessage: jest.fn(message => message), handleFeedbackRealtime: jest.fn(async () => {}),
+        refreshMessageFeedbackStats: jest.fn(async () => {}),
+    };
+    const { unmount } = renderHook(() => useRoomRealtime(options));
+    const advance = async (milliseconds: number) => {
+        await act(async () => { jest.advanceTimersByTime(milliseconds); await Promise.resolve(); });
+    };
+    try {
+        await advance(10);
+        expect(syncs[0].status).toHaveBeenCalledWith('SUBSCRIBED');
+        act(() => { sockets[0].close(); });
+        await advance(1010);
+        expect(client.isConnected()).toBe(true);
+        expect(sent.filter(message => message.event === 'phx_join')).toHaveLength(1);
+        await advance(1000);
+        await advance(10);
+        expect(supabase.removeChannel).toHaveBeenCalledTimes(1);
+        expect(sent.filter(message => message.event === 'phx_join')).toHaveLength(2);
+        expect(syncs[0].stop).toHaveBeenCalledTimes(1);
+        expect(syncs[1].status).toHaveBeenCalledWith('SUBSCRIBED');
+        await advance(100);
+        expect(client.getChannels()).toHaveLength(1);
+        expect(sent.filter(message => message.event === 'phx_leave')).toHaveLength(1);
+        const channel = client.getChannels()[0];
+        channel._trigger('postgres_changes', { ids: [1], data: { schema: 'public', table: 'messages', type: 'INSERT',
+            columns: [], record: { id: 'new-message', room_id: room.id }, old_record: {} } });
+        expect(syncs[1].realtime).toHaveBeenCalledWith(expect.objectContaining({ id: 'new-message' }));
+    } finally {
+        unmount();
+        client.disconnect();
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    }
+});
 
 it('cancels an older history load when another room joins and when membership unmounts', async () => {
     const signals: AbortSignal[] = [];
@@ -42,6 +121,56 @@ it('cancels an older history load when another room joins and when membership un
     expect(setInteractions).toHaveBeenCalledTimes(1);
     unmount();
     expect(signals[1].aborted).toBe(true);
+});
+
+// useRoomRealtime.ts: recovery must have one owner and stop when its subscription or room is no longer active.
+it('cancels successful retries and prevents a late channel removal from restarting a switched or unmounted room', async () => {
+    jest.useFakeTimers();
+    const channels: any[] = [];
+    (supabase.channel as jest.Mock).mockImplementation(() => {
+        const channel = { on: jest.fn().mockReturnThis(), subscribe: jest.fn().mockReturnThis(), unsubscribe: jest.fn() };
+        channels.push(channel);
+        return channel;
+    });
+    (supabase.realtime.isConnected as jest.Mock).mockReturnValue(false);
+    let completeRemoval!: () => void;
+    (supabase.removeChannel as jest.Mock).mockImplementation(() => new Promise<void>(resolve => { completeRemoval = resolve; }));
+    (startRoomMessageSync as jest.Mock).mockImplementation(() => ({ realtime: jest.fn(), status: jest.fn(), stop: jest.fn() }));
+    const options = {
+        currentRoom: room, user, participants: [user], activeRoomId: { current: room.id },
+        joinRealtimeIds: { current: new Set<string>() }, setMessages: jest.fn(), setCurrentRoom: jest.fn(),
+        addDisplayNameToMessage: jest.fn(message => message), handleFeedbackRealtime: jest.fn(async () => {}),
+        refreshMessageFeedbackStats: jest.fn(async () => {}),
+    };
+    const { rerender, unmount } = renderHook(props => useRoomRealtime(props), { initialProps: options });
+    const status = channels[0].subscribe.mock.calls[0][0];
+    try {
+        act(() => { status('CHANNEL_ERROR'); status('CHANNEL_ERROR'); status('TIMED_OUT'); });
+        expect(jest.getTimerCount()).toBe(2); // One recovery timeout plus the typing cleanup interval.
+        act(() => { status('SUBSCRIBED'); jest.advanceTimersByTime(2000); });
+        expect(supabase.removeChannel).not.toHaveBeenCalled();
+        act(() => { status('TIMED_OUT'); jest.advanceTimersByTime(1000); });
+        expect(supabase.removeChannel).not.toHaveBeenCalled();
+        (supabase.realtime.isConnected as jest.Mock).mockReturnValue(true);
+        await act(async () => { jest.advanceTimersByTime(1000); });
+        expect(supabase.removeChannel).toHaveBeenCalledTimes(1);
+        act(() => { status('CHANNEL_ERROR'); jest.advanceTimersByTime(2000); });
+        expect(supabase.removeChannel).toHaveBeenCalledTimes(1);
+        options.activeRoomId.current = 'next';
+        rerender({ ...options, currentRoom: { ...room, id: 'next' } });
+        await act(async () => { completeRemoval(); await Promise.resolve(); });
+        expect(supabase.channel).toHaveBeenCalledTimes(2);
+        act(() => { channels[1].subscribe.mock.calls[0][0]('CHANNEL_ERROR'); });
+        unmount();
+        await act(async () => { jest.advanceTimersByTime(10000); await Promise.resolve(); });
+        expect(supabase.channel).toHaveBeenCalledTimes(2);
+        expect(supabase.removeChannel).toHaveBeenCalledTimes(1);
+        expect(jest.getTimerCount()).toBe(0);
+    } finally {
+        unmount();
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    }
 });
 
 it('rejects unauthorized membership commands before reading history', async () => {
