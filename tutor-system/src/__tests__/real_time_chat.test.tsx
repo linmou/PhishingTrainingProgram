@@ -22,6 +22,8 @@ jest.mock('../services/supabase', () => {
   };
 
   const mockSupabaseClient = {
+    realtime: { isConnected: jest.fn() },
+    removeChannel: jest.fn(),
     from: jest.fn().mockImplementation((table) => {
       console.log(`🔧 Mock supabase.from('${table}') called`);
       
@@ -261,6 +263,8 @@ describe('Real-time Chat System BDD Tests', () => {
     };
 
     const mockSupabase = supabase as any;
+    mockSupabase.realtime.isConnected.mockImplementation(() => mockNetworkConnected);
+    mockSupabase.removeChannel.mockImplementation(async (channel: any) => { channel.unsubscribe(); return 'ok'; });
     mockSupabase.from.mockImplementation((table: string) => {
       const query: any = {
         select: jest.fn(() => query),
@@ -604,6 +608,8 @@ describe('Real-time Chat System BDD Tests', () => {
         mockOfflinePollObserved = false;
         await act(async () => { jest.advanceTimersByTime(MESSAGE_RECOVERY_INTERVAL_MS); });
         expect(mockOfflinePollObserved).toBe(true);
+        expect(supabase.realtime.isConnected).toHaveBeenCalled();
+        expect(supabase.removeChannel).not.toHaveBeenCalled();
 
         mockMessages.push({
           id: 'msg-offline-1',
@@ -619,6 +625,8 @@ describe('Real-time Chat System BDD Tests', () => {
         await act(async () => { subscriptionStatus('SUBSCRIBED'); });
 
         expect(view.container.querySelector('.comments-list')?.textContent).toContain('Can you see this message?');
+        await act(async () => { jest.advanceTimersByTime(1000); });
+        expect(supabase.removeChannel).not.toHaveBeenCalled();
       } finally {
         view.unmount();
         jest.useRealTimers();
