@@ -54,3 +54,7 @@ Operational flag-value observation and a configuration rollback drill remain ope
 ## Base integration
 
 The PR base advanced to `ed572109f39af61f1d674df768eaa07de2f90416`. Resolve the sole merge conflict in `browser-e2e.test.js` by retaining both PR #29's cleanup/privacy cases and the base's room-setup cases. Revalidate the integrated harness and staging candidate; earlier-head CI is not current-head evidence.
+
+Integrated candidate `50f0aa5` passes all 29 combined browser-runner checks and all 20 audit checks. SQL artifact hashes still match the passing clone runs. Staging security run `staging-template-20261026200442-7a94e1b2` reproduces the same three passing/three failing cases; identities and both rooms clean up and the lease releases. Privacy run `staging-template-20261026200628-d0935153` stops at `private_canary`, before any learner privacy checkpoint; room cleanup passes and the lease releases. A follow-up records only HTTP status and a bounded failure category to diagnose the prerequisite without preserving private exception bodies.
+
+Read-only secret-name observation subsequently succeeds: `TRANSFER_ASSESSMENT_ENABLED` exists, but its value is unavailable through that API. Successful assessment operations establish effective enabled behavior during the runs, not the secret's exact value. Evidence: `output/pr29-resume-20261026/staging-flag-observation.json`.

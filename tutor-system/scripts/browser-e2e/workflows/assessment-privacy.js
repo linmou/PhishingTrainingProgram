@@ -68,6 +68,7 @@ async function privacyJourney(ctx, outcome) {
         'raw_model_output','private-provider-${marker}', 'rationale','private-rationale-${marker}')
       where id='${delivered.assessment_id}'::uuid
       returning reviewed_private_payload->>'raw_model_output' as marker`);
+    evidence.stage = 'private_canary_readback';
     assert.equal(seeded[0]?.marker, `private-provider-${marker}`, 'Private canary was not actually persisted');
     evidence.stage = 'provider_canary';
     const providerFixture = await ctx.client.rpc('record_transfer_provider_attempt_v1', {
@@ -141,6 +142,9 @@ async function privacyJourney(ctx, outcome) {
     evidence.stage = 'complete'; evidence.status = 'pass'; writeJson(file, evidence);
     return evidence;
   } catch (error) {
+    evidence.failure_type = error.code === 'ERR_ASSERTION' ? 'assertion' : error.name === 'TimeoutError' ? 'timeout' : 'operation';
+    const httpStatus = /^Staging SQL failed: HTTP (\d{3})\b/.exec(error.message);
+    if (httpStatus) evidence.http_status = Number(httpStatus[1]);
     evidence.status = 'fail'; evidence.error = 'Privacy capture, assertion or fixture prerequisite failed'; writeJson(file, evidence);
     throw new Error(`Assessment privacy acceptance failed; see ${path.basename(file)}`);
   } finally { capture.stop(); }
