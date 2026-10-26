@@ -68,3 +68,11 @@ After the release owner finishes and releases the lease, rerun `assessment-priva
 All room and temporary Auth/profile fixtures from completed runs are cleaned, including recovery of the initial HTTP 502 cleanup failure. The local candidate app is stopped. Operational rollback/readiness remains unverified; exact prior configuration must be observable before a reversible drill. Independent code/security review at `bfaa926` had no findings; the resumed changes require review on the new head. Required CI passed at `50f0aa5` ([run 40392423636](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40392423636)); final-head checks must be read from the PR.
 
 PR #29 remains open for owner review. Issue #28 remains open for privacy acceptance and operational evidence. This continuation implements no authentication or permission fix and makes no production release claim.
+
+## Privacy prerequisite diagnosis
+
+After the competing owner released the lease, candidate `0514234` ran `staging-template-20261026201416-c4047320`. Privacy failed at `private_canary` with HTTP 400; cleanup passed and the lease released. A separately leased diagnostic zero-row UPDATE returned HTTP 201 with `[]`, ruling out statement parsing; it changed no rows. The verified local baseline's `transfer_private_fields_immutable` trigger rejects changes to `reviewed_private_payload` with `IMMUTABLE_ASSESSMENT_PRIVATE_FIELDS`. The original fixture attempted that forbidden post-delivery change.
+
+Correct the fixture by including private raw-output/rationale canaries in the original reviewed assessment passed to `send_reviewed_tutor_response_v4`, then verify both persisted values with a read-only query. No immutable-field protection is bypassed. This changes fixture construction only, not disclosure rules, the tested application or grading.
+
+The final-head CI run for `0514234` passed all three required checks ([40393040426](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40393040426)); later fixture changes require their own current-head checks.

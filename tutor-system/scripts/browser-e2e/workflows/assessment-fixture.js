@@ -89,6 +89,7 @@ async function deliverFixedAssessment(ctx, fixture, privateMarker) {
       { id: 'D', text: 'Send the link to a friend' }
     ],
     correct_option_ids: ['B'],
+    ...(privateMarker ? { raw_model_output: `private-provider-${privateMarker}`, rationale: `private-rationale-${privateMarker}` } : {}),
     learner_safe_explanation: 'Open the official app yourself instead of using the link.' + (privateMarker ? ` Independent verification ${privateMarker}.` : ''),
     transfer_basis: { source_evidence_message_ids: [fixture.focus.id], ...(privateMarker ? {
       concept_rule: `private-concept-${privateMarker}`, source_context: `private-source-${privateMarker}`,

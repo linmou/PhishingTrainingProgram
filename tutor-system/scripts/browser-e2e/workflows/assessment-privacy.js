@@ -61,15 +61,16 @@ async function privacyJourney(ctx, outcome) {
     evidence.room_id = fixture.room.id; evidence.assessment_id = delivered.assessment_id;
     evidence.question_message_id = delivered.question_message_id; publicStem = delivered.assessment.stem;
     privateValues.push({ label: 'safe_explanation', value: delivered.assessment.learner_safe_explanation });
-    // Seed private-only material to detect value leaks even if a consumer renames the fields.
+    // Delivery persists private canaries before the reviewed payload becomes immutable.
     evidence.stage = 'private_canary';
-    const seeded = await managementQuery(ctx.config, `update private.transfer_assessments
-      set reviewed_private_payload = reviewed_private_payload || jsonb_build_object(
-        'raw_model_output','private-provider-${marker}', 'rationale','private-rationale-${marker}')
+    const seeded = await managementQuery(ctx.config, `select reviewed_private_payload->>'raw_model_output' as marker,
+        reviewed_private_payload->>'rationale' as rationale
+      from private.transfer_assessments
       where id='${delivered.assessment_id}'::uuid
-      returning reviewed_private_payload->>'raw_model_output' as marker`);
+      `);
     evidence.stage = 'private_canary_readback';
     assert.equal(seeded[0]?.marker, `private-provider-${marker}`, 'Private canary was not actually persisted');
+    assert.equal(seeded[0]?.rationale, `private-rationale-${marker}`, 'Private rationale canary was not actually persisted');
     evidence.stage = 'provider_canary';
     const providerFixture = await ctx.client.rpc('record_transfer_provider_attempt_v1', {
       p_request_id: requestId(), p_room_id: fixture.room.id, p_student_id: ctx.student.id,
