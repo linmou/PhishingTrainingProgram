@@ -2,7 +2,7 @@
 
 Intent: record why the scenario catalog now follows the five-target rule everywhere and what was retired.
 
-Date: 2026-10-22. Baseline commit: `9b90c84`.
+Updated: 2026-10-26. Original baseline: `9b90c84`. Recovery commits: `41eb8a1`, `319e472`. Issues: #34, #35. Release owner: root Codex agent.
 
 ## Changes
 
@@ -19,4 +19,6 @@ Existing rooms keep their saved targets. A room saved with the old 18-target or 
 
 ## Release state
 
-Not deployed. The catalog is frontend code; the room image change also needs the global templates re-seeded. Both are awaiting a named staging batch.
+Batch: `template-recovery-20261026`. Local focused catalog, settings and checklist tests precede PR review and staging checks. Staging acceptance checks the phone template image, creates a tagged room through the UI, verifies five generic fallback targets and preserves saved custom targets. The image refresh changes only the matching global template's `image_url`; existing rooms and AI configuration stay unchanged. The general seed script skips privacy-template images and must not be used for this refresh.
+
+After authorized merge, compare integrated artifacts, apply the exact image update to production, verify the same affected browser flow and cleanup. The separate dropdown PR #33 is verified on the integrated catalog afterward. Staging/production acceptance is pending; no deployment is claimed by the recovered historical record.
