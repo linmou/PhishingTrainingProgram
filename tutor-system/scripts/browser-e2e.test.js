@@ -8,12 +8,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { EventEmitter } = require('node:events');
 const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
 const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
+const { runRoomSetupAnalysis } = require('./browser-e2e/workflows/room-assessment-setup');
 
 const env = (target = 'staging') => ({
   E2E_APP_URL: 'http://localhost:3001',
@@ -388,4 +390,78 @@ test('assessment delivery requires feedback on the terminal answer after closure
     assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, created_at }, assessment),
       /after the assessment closes/);
   }
+});
+
+// Responsibility: room-assessment-setup.js must await its own bounded analysis response and retain raw evidence on every exit.
+test('room setup prearms a room-bound analysis wait before sending and then verifies persisted progress', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'room-setup-analysis-'));
+  const page = new EventEmitter();
+  let predicate, resolveResponse;
+  page.waitForResponse = (matches, options) => {
+    predicate = matches;
+    assert.equal(options.timeout, 90000);
+    return new Promise(resolve => { resolveResponse = resolve; });
+  };
+  const response = (operation, roomId, method = 'POST') => ({
+    url: () => 'https://example.supabase.co/functions/v1/assessment-api', status: () => 200,
+    request: () => ({ method: () => method, postDataJSON: () => ({ operation, room_id: roomId }) }),
+    json: async () => ({ ok: true, data: { applied: ['event'] } }),
+  });
+  const steps = [];
+  const evidencePath = path.join(dir, 'analysis.json');
+  try {
+    const calls = await runRoomSetupAnalysis({ page, roomId: 'room', itemId: 'item', evidencePath,
+      send: async () => {
+        assert.equal(typeof predicate, 'function');
+        for (const other of [response('analyze_message', 'other'), response('prepare_turn', 'room'), response('analyze_message', 'room', 'GET')]) {
+          assert.equal(predicate(other), false);
+        }
+        steps.push('sent');
+        const matching = response('analyze_message', 'room');
+        assert.equal(predicate(matching), true);
+        page.emit('response', matching);
+        resolveResponse(matching);
+      },
+      verifyProgress: async () => { steps.push('persisted'); },
+    });
+    assert.deepEqual(steps, ['sent', 'persisted']);
+    assert.equal(calls[0].request.room_id, 'room');
+    const saved = JSON.parse(fs.readFileSync(evidencePath));
+    assert.equal(saved.status, 'pass');
+    assert.equal(saved.stage, 'complete');
+    assert.deepEqual(saved.calls, calls);
+    assert(saved.started_at && saved.completed_at);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// Responsibility: room-assessment-setup.js must keep failed provider envelopes and progress failures reviewable.
+test('room setup always persists captures and failure stage for send, timeout, HTTP, envelope and progress failures', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'room-setup-analysis-errors-'));
+  try {
+    for (const kind of ['send', 'timeout', 'http', 'envelope', 'progress']) {
+      const page = new EventEmitter();
+      const payload = { ok: kind !== 'envelope', data: { raw_marker: kind } };
+      const response = { url: () => 'https://example.supabase.co/functions/v1/assessment-api',
+        status: () => kind === 'http' ? 503 : 200,
+        request: () => ({ method: () => 'POST', postDataJSON: () => ({ operation: 'analyze_message', room_id: 'room' }) }),
+        json: async () => payload };
+      page.waitForResponse = (_matches, options) => {
+        assert.equal(options.timeout, 90000);
+        return kind === 'timeout' ? Promise.reject(new Error('response timed out')) : Promise.resolve(response);
+      };
+      let progressRead = false;
+      const evidencePath = path.join(dir, `${kind}.json`);
+      await assert.rejects(runRoomSetupAnalysis({ page, roomId: 'room', itemId: 'item', evidencePath,
+        send: async () => { page.emit('response', response); if (kind === 'send') throw new Error('send failed'); },
+        verifyProgress: async () => { progressRead = true; throw new Error('progress unchanged'); },
+      }));
+      assert.equal(progressRead, kind === 'progress');
+      const saved = JSON.parse(fs.readFileSync(evidencePath));
+      assert.equal(saved.status, 'fail');
+      assert.equal(saved.stage, kind === 'send' ? 'sending' : kind === 'progress' ? 'persisted_progress' : 'analysis_response');
+      assert.deepEqual(saved.calls[0].response, payload);
+      assert(saved.error.message && saved.error.stack && saved.completed_at);
+      assert.equal(page.listenerCount('response'), 0);
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

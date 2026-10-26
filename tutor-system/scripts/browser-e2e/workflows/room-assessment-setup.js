@@ -8,6 +8,40 @@ const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStuden
 const { deliverFixedAssessment } = require('./assessment-fixture');
 const { assertFirstPassResult } = require('./assessment-browser-checks');
 
+async function runRoomSetupAnalysis({ page, roomId, itemId, evidencePath, send, verifyProgress }) {
+  const evidence = { room_id: roomId, item_id: itemId, response_timeout_ms: TIMEOUT,
+    started_at: new Date().toISOString(), stage: 'sending', status: 'running', calls: [] };
+  const stop = await captureResponses(page, response => response.url().includes('/functions/v1/assessment-api'));
+  const responseWait = page.waitForResponse(response => {
+    if (!response.url().includes('/functions/v1/assessment-api') || response.request().method() !== 'POST') return false;
+    let body;
+    try { body = response.request().postDataJSON(); } catch { return false; }
+    return body?.operation === 'analyze_message' && body.room_id === roomId;
+  }, { timeout: TIMEOUT }).then(response => ({ response }), error => ({ error }));
+  try {
+    await send();
+    evidence.stage = 'analysis_response';
+    const result = await responseWait;
+    if (result.error) throw result.error;
+    assert.equal(result.response.status(), 200, 'Learner analysis returned a non-success HTTP status');
+    const body = await result.response.json();
+    assert.equal(body?.ok, true, 'Learner analysis returned an error envelope');
+    evidence.stage = 'persisted_progress';
+    await verifyProgress();
+    evidence.stage = 'complete';
+    evidence.status = 'pass';
+  } catch (error) {
+    evidence.status = 'fail';
+    evidence.error = { name: error.name, message: error.message, stack: error.stack };
+    throw error;
+  } finally {
+    evidence.calls = await stop();
+    evidence.completed_at = new Date().toISOString();
+    writeJson(evidencePath, evidence);
+  }
+  return evidence.calls;
+}
+
 module.exports = async function roomAssessmentSetup(ctx) {
   const { tutorPage, studentPage, appUrl, client, evidenceDir, runId } = ctx;
   const title = `Browser assessment setup ${runId}`;
@@ -148,19 +182,16 @@ module.exports = async function roomAssessmentSetup(ctx) {
   if (understandingError) throw new Error(`Assessment fixture understanding: ${understandingError.message}`);
 
   const focusContent = 'I will ignore the message link and open the real app myself. I will check its security alerts and recent login activity, contact support through the app if needed, and enable two-factor authentication in its settings.';
-  const stopAnalysis = await captureResponses(studentPage,
-    response => response.url().includes('/functions/v1/assessment-api'));
-  let analysisCalls;
-  try {
-    await sendStudentMessage(studentPage, focusContent);
-    await waitForMatch(
+  const analysisCalls = await runRoomSetupAnalysis({
+    page: studentPage, roomId: room.id, itemId: item.id,
+    evidencePath: path.join(evidenceDir, 'room-assessment-setup-analysis.json'),
+    send: () => sendStudentMessage(studentPage, focusContent),
+    verifyProgress: () => waitForMatch(
       () => query(client, 'checklist_items', 'status,understanding_level', 'id', item.id),
       rows => rows[0]?.status === 'covered' && ['good', 'excellent'].includes(rows[0]?.understanding_level),
       'real analysis of the unified safe-action target'
-    );
-  } finally {
-    analysisCalls = await stopAnalysis();
-  }
+    ),
+  });
   assert(analysisCalls.some(call => call.request?.operation === 'analyze_message' &&
     call.status === 200 && call.response?.ok === true), 'Learner action did not complete real target analysis');
   const focus = (await query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id))
@@ -225,3 +256,5 @@ module.exports = async function roomAssessmentSetup(ctx) {
   assert(evidence.learner_message_count > 0, 'Learner evidence should be persisted before assessment delivery');
   return evidence;
 };
+
+module.exports.runRoomSetupAnalysis = runRoomSetupAnalysis;
