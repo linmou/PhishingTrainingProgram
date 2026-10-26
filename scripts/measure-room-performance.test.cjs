@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest } = require('./measure-room-performance.cjs');
+const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
@@ -58,6 +58,26 @@ test('Edge routing allows the actual provider-free room join and blocks generati
   assert.equal(allowMembershipRequest(url, 'GET', join), false);
   assert.equal(allowMembershipRequest(url, 'POST', '{invalid'), false);
   assert.equal(allowMembershipRequest(url, 'POST', JSON.stringify({ operation: 'join_room' })), false);
+});
+
+test('allowed Edge membership falls through the existing project guard while forbidden calls abort', async () => {
+  const actions = [];
+  const errors = [];
+  let operation = 'join_room';
+  const route = {
+    request: () => ({ url: () => 'https://other.supabase.co/functions/v1/assessment-api', method: () => 'POST',
+      postData: () => JSON.stringify({ operation, room_id: 'fixture-room' }) }),
+    fallback: async () => { actions.push('project-guard'); },
+    continue: () => { throw new Error('Must not bypass the project guard'); },
+    abort: async reason => { actions.push(reason); }
+  };
+  await routeEdgeRequest(route, errors);
+  assert.deepEqual(actions, ['project-guard']);
+  assert.deepEqual(errors, []);
+  operation = 'analyze_message';
+  await routeEdgeRequest(route, errors);
+  assert.deepEqual(actions, ['project-guard', 'blockedbyclient']);
+  assert.equal(errors.length, 1);
 });
 
 test('preflight accepts explicit staging and rejects production, missing target, mismatched URL and invalid duration', () => {
