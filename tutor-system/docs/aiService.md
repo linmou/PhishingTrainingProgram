@@ -6,7 +6,7 @@
 
 Tutor requests use saved assessment question/options, learner answers and backend result messages in dialogue history. Remove the dynamic VERIFIED ASSESSMENT STATE section and prompt-only assessmentFeedback input. Trusted readiness still blocks provider calls for pending/missing results; common request instructions preserve recorded grading, retries, cancellation, required feedback and Guard. See [Assessment result messages](assessment-result-messages.md) for the governing publication and consumer rules. Implementation/release status is recorded there; older dated evidence below is retained.
 
-<!-- Intent: explain AI request configuration, scenario learning targets and trusted tutor feedback inputs. Updated: 2026-10-15. Baseline commit: 2f63749. -->
+<!-- Intent: explain AI request configuration, scenario learning targets and trusted tutor feedback inputs. Updated: 2026-10-26. Catalog recovery baseline commit: 319e472. -->
 
 ## Purpose
 Comprehensive AI integration service providing intelligent tutoring suggestions, configurable AI behavior, and educational scenario management. The selected model is Qwen3.8 Flash through DashScope's OpenAI-compatible API; the debug-only dummy service is retained for local development without a key. Current environment verification is recorded in the [candidate11 release record](doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md).
@@ -295,7 +295,8 @@ import { buildAIContextFromExistingData } from './simplifiedAIContext';
 import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
 ```
 
-The six teaching scenarios use five learning targets each in `detection_areas`.
+The six teaching scenarios and the generic `General Scam Indicators` fallback use five
+learning targets each in `detection_areas`.
 Checklist initialization reads the saved inventory before considering prompt
 extraction. Each resulting checklist item has the type `detection_area`.
 
@@ -318,7 +319,7 @@ Account-alert demo variants share the account-alert inventory. The Phase 0
 comparison keeps its historical tutor policy and examples, with only its knowledge
 sections refreshed to match the current targets. The frozen source prompt and
 historical evaluation datasets retain their original content. Custom inventories
-are not subject to the teaching catalog's five-target limit.
+are not subject to the catalog's five-target limit.
 
 Saved global templates must receive the matching knowledge configuration and
 prompt update before newly created hosted rooms inherit these targets. Existing
