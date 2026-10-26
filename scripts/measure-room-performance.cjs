@@ -430,6 +430,9 @@ async function main(argv = process.argv.slice(2)) {
       await page.getByText(oldUpdate, { exact: true }).waitFor({ timeout: 90000 });
       result.recovery = { disconnected_ms: recoveryStart, visible_ms: Date.now(), elapsed_ms: Date.now() - recoveryStart,
         inserted_message: missed, updated_message_id: messages[0].id, updated_content: oldUpdate };
+      save();
+      result.recovery.reconnected_bindings = await waitForBindings(page, report.websocket_messages, room.id, recoveryStart);
+      save();
       const target = comments.filter({ has: page.getByText(oldUpdate, { exact: true }) });
       await settleFeedback(page, report.requests);
       const ratingStart = Date.now();
