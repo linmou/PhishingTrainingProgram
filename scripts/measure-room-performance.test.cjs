@@ -195,6 +195,7 @@ test('binding wait accepts a delayed acknowledgement but fails on timeout and su
   assert.equal(polls, 1);
   assert.equal(result.timeout_ms, 30000);
   assert(result.wait_ms >= 0);
+  await assert.rejects(waitForBindings(page, events, 'one', Date.now() + 1, 0), /did not acknowledge/);
   await assert.rejects(waitForBindings(page, [], 'one', 0, 0), /did not acknowledge/);
   events.push({ topic: 'realtime:room_one', kind: 'system', payload: { status: 'error' }, received_ms: Date.now() });
   await assert.rejects(waitForBindings(page, events, 'one', 0), /system error/);
