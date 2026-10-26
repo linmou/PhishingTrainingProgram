@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, captureResponses, requestId, TIMEOUT } = require('../browser-e2e-support');
 const { deliverFixedAssessment } = require('./assessment-fixture');
+const { assertFirstPassResult } = require('./assessment-browser-checks');
 
 module.exports = async function roomAssessmentSetup(ctx) {
   const { tutorPage, studentPage, appUrl, client, evidenceDir, runId } = ctx;
@@ -192,23 +193,28 @@ module.exports = async function roomAssessmentSetup(ctx) {
   const delivered = await deliverFixedAssessment(ctx, {
     room, checklist, items: [item], focus,
   });
+  const priorMessageIds = (await query(client, 'messages', 'id', 'room_id', room.id)).map(row => row.id);
   await studentPage.reload({ waitUntil: 'domcontentloaded' });
   const question = studentPage.locator(`[data-testid="public-assessment-${delivered.assessment_id}"]`);
   await question.waitFor({ timeout: TIMEOUT });
   await question.locator('input[value="B"]').check();
   await question.getByRole('button', { name: 'Submit answer' }).click();
-  await question.getByRole('status').filter({ hasText: 'Correct.' }).waitFor({ timeout: TIMEOUT });
-  await waitForMatch(
-    () => query(client, 'messages', 'assessment_id,assessment_result', 'room_id', room.id),
-    rows => rows.some(row => row.assessment_id === delivered.assessment_id && row.assessment_result === 'pass'),
+  const saved = await waitForMatch(
+    () => query(client, 'messages', '*', 'room_id', room.id),
+    rows => rows.some(row => row.assessment_event?.assessment_id === delivered.assessment_id &&
+      row.assessment_event.kind === 'result'),
     'persisted assessment result'
   );
+  const { answer, result } = await assertFirstPassResult(studentPage, saved, ctx.student.id,
+    delivered, priorMessageIds);
   const evidence = {
     room_id: room.id, tutor_id: ctx.tutor.id, learner_id: ctx.student.id,
     checklist_id: checklist.id, item_id: item.id, persisted_status: 'covered',
     learner_message_count: (await query(client, 'messages', 'id', 'room_id', room.id)).length,
     assessment_id: delivered.assessment_id,
     assessment_result_persisted: true,
+    saved_answer: answer,
+    saved_result: result,
     observer_read_only: true,
     inherited_targets: inheritedItems,
     preparation_calls: prepareCalls,
