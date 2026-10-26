@@ -77,10 +77,9 @@ Feature: Checklist Management System
     And uses the default "General Scam Indicators" template
     Then the checklist should be populated with template items:
       """
-      Too good to be true pricing or offers
-      Urgent language designed to pressure quick action
-      Suspicious or shortened URLs that hide real destinations
-      Check the source: Is this from an official, verified account?
-      Verify the URL: Does it match the official website domain?
-      Cross-reference: Check the company's official website and social media
+      Judge whether an offer is plausible: prices or rewards that are too good to be true, and a business reason that does not add up (why would they give this away?).
+      Identify urgent or pressuring language designed to push quick action before the offer can be checked.
+      Check the sender and link: generic usernames, missing official branding, and shortened or mismatched URLs do not establish authenticity.
+      Recognize requests for personal information or passwords as a warning sign, and withhold them until the request is verified.
+      Verify the offer through an official channel reached independently, such as the company's own website or logging in directly, or ask a trusted adult, before acting.
       """

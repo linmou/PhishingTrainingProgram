@@ -47,6 +47,17 @@ describe('demoRoomTemplates', () => {
     }
   });
 
+  it('gives every teaching template its own existing image, matching its subject', () => {
+    const seeds = getNormalTeachingTemplateSeeds();
+    const urls = seeds.map((seed) => seed.image_url);
+    expect(new Set(urls).size).toBe(seeds.length);
+    for (const url of urls) {
+      expect(fs.existsSync(path.join(__dirname, '../../../public', url))).toBe(true);
+    }
+    const phone = seeds.find((seed) => seed.template_name === 'Phone Number Phishing Training');
+    expect(phone?.image_url).toBe('/images/room-presets/privacy_3.png');
+  });
+
   it('retains the production privacy identities and original dialogue metadata in insert rows', () => {
     const seeds = getPrivacyTeachingTemplateSeeds();
     expect(seeds.map((seed) => seed.template_name)).toEqual([
@@ -63,7 +74,7 @@ describe('demoRoomTemplates', () => {
       [['Vanessa Kemp', "KK I'll txt you"], ['Zoe Goodall', 'finally about time you got a new phone']]
     ]);
     expect(seeds.map((seed) => seed.image_url)).toEqual([
-      '/images/room-presets/privacy_2.png', '/images/room-presets/privacy_1.png', '/images/room-presets/phishing_1.png'
+      '/images/room-presets/privacy_2.png', '/images/room-presets/privacy_1.png', '/images/room-presets/privacy_3.png'
     ]);
     seeds.forEach((seed, index) => {
       const row = toRoomTemplateInsertRow(seed);

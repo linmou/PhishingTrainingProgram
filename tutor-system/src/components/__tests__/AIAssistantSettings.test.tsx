@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import AIAssistantSettings from '../AIAssistantSettings';
 import { useRoom } from '../../contexts/RoomContext';
@@ -188,6 +188,26 @@ describe('AIAssistantSettings', () => {
         await waitFor(() => {
             expect(screen.getByDisplayValue('General Scam Indicators')).toBeInTheDocument();
         });
+    });
+
+    it('offers every catalog scenario in the Scenario Template dropdown, grouped by type', () => {
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
+        (useRoom as jest.Mock).mockReturnValue({
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true },
+            aiConfig: null,
+            toggleAIAssistant: jest.fn(),
+            loadingAI: false
+        });
+
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+
+        fireEvent.click(screen.getByLabelText('Use Phishing Training Templates'));
+        const select = screen.getByDisplayValue('Custom / General');
+        const values = within(select).getAllByRole('option').map((option) => option.getAttribute('value'));
+        expect(values.filter(Boolean).sort()).toEqual(Object.keys(SCENARIO_TEMPLATES).sort());
+        expect(within(select).getByRole('group', { name: 'Privacy Protection' })).toContainElement(
+            within(select).getByRole('option', { name: 'Movie Meetup Social Engineering' })
+        );
     });
 
     it('persists the selected scenario template when saving without custom textarea overrides', async () => {

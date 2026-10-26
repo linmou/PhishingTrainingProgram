@@ -1,8 +1,9 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-21. Baseline commit: a6c977b. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-26. Baseline commit: 319e472. -->
 
-`detectionTemplates.ts` defines five targets per teaching scenario in one inventory.
+`detectionTemplates.ts` defines five targets per scenario in one inventory: the six
+teaching scenarios plus `General Scam Indicators`, the checklist's template fallback.
 `demoRoomTemplates.ts` packages teaching and demo rooms; `checklistGenerationContext.ts`
 reads saved inventories; `llmExtractionService.ts` extracts the same single-list contract.
 
