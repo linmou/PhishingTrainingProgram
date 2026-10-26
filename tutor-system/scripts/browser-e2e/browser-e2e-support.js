@@ -183,6 +183,7 @@ async function cleanupRoom(config, roomId) {
   const rows = await managementQuery(config, `select description from public.rooms where id='${roomId}'::uuid`);
   assert(rows[0]?.description?.includes('[browser-e2e-template]'), `Refusing to clean non-template room ${roomId}`);
   await managementQuery(config, `do $$ begin
+    perform set_config('app.transfer_operation', 'on', true);
     update public.rooms set guard_mode=false,guard_mode_changed_at=null,guard_mode_change_source=null
       where id='${roomId}'::uuid;
     delete from private.transfer_assessment_attempts where assessment_id in
@@ -220,9 +221,13 @@ async function cleanupCreatedRoom(config, roomId, tutorId) {
   assert(rows[0].description?.includes('[browser-e2e-created]'),
     `Refusing to delete room ${roomId} without the browser test marker`);
   if (rows[0].practice_type === 'cyberbullying') {
-    const deleted = await managementQuery(config,
-      `delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid returning id`);
-    assert.equal(deleted.length, 1, `Failed to delete created room ${roomId}`);
+    await managementQuery(config, `do $$ begin
+      perform set_config('app.transfer_operation', 'on', true);
+      delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid;
+      if not found then raise exception 'Created fixture room was not deleted'; end if;
+    end $$;`);
+    const rooms = await managementQuery(config, `select count(*)::integer as count from public.rooms where id='${roomId}'::uuid`);
+    assert.equal(rooms[0].count, 0, `Cleanup left created room ${roomId}`);
     for (const table of ['public.messages', 'public.session_checklists', 'public.sessions', 'public.ai_suggestion_feedback', 'public.message_feedback', 'private.transfer_provider_attempts', 'private.learning_event_inbox']) {
       const remaining = await managementQuery(config, `select count(*)::integer as count from ${table} where room_id='${roomId}'::uuid`);
       assert.equal(remaining[0].count, 0, `Cleanup left ${table} in room ${roomId}`);
@@ -230,6 +235,7 @@ async function cleanupCreatedRoom(config, roomId, tutorId) {
     return;
   }
   await managementQuery(config, `do $$ begin
+    perform set_config('app.transfer_operation', 'on', true);
     delete from private.transfer_assessment_attempts where assessment_id in
       (select id from private.transfer_assessments where room_id='${roomId}'::uuid);
     delete from private.transfer_provider_attempts where room_id='${roomId}'::uuid;

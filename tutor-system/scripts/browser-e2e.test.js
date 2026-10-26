@@ -15,6 +15,7 @@ const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-f
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
 const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
+require('./browser-e2e/cleanup.test');
 const { runRoomSetupAnalysis } = require('./browser-e2e/workflows/room-assessment-setup');
 
 const env = (target = 'staging') => ({
