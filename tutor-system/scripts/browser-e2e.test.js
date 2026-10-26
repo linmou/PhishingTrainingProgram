@@ -16,7 +16,7 @@ const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-sta
 const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
 require('./browser-e2e/cleanup.test');
-const { runRoomSetupAnalysis } = require('./browser-e2e/workflows/room-assessment-setup');
+const { runRoomSetupAnalysis, waitForTemplateSettings } = require('./browser-e2e/workflows/room-assessment-setup');
 
 const env = (target = 'staging') => ({
   E2E_APP_URL: 'http://localhost:3001',
@@ -25,6 +25,41 @@ const env = (target = 'staging') => ({
   E2E_SUPABASE_ANON_KEY: `${target}-anon-key`,
   SUPABASE_SERVICE_ROLE_KEY: `${target}-service-key`,
   SUPABASE_ACCESS_TOKEN: 'management-token'
+});
+
+// Responsibility: room-assessment-setup.js must wait for loaded target fields before saving template settings.
+test('template settings readiness rejects unloaded, wrong, partial and disabled fields before matching all targets', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    const expected = { detection_areas: ['One', 'Two', 'Three', 'Four', 'Five'], verification_steps: [] };
+    let predicate;
+    await waitForTemplateSettings({ waitForFunction: async (check, config, options) => {
+      predicate = check;
+      assert.deepEqual(config, expected);
+      assert.equal(options.timeout, 90000);
+    } }, expected);
+    const ready = () => page.evaluate(predicate, expected);
+    await page.setContent('<input type="checkbox" checked aria-label="Enable AI Assistant">');
+    assert.equal(await ready(), null);
+    await page.setContent('<textarea placeholder="Red flags to watch for (optional - will use template if empty)"></textarea><textarea placeholder="Steps students should take to verify content (optional)"></textarea>');
+    assert.equal(await ready(), false);
+    const areas = page.getByPlaceholder('Red flags to watch for (optional - will use template if empty)', { exact: true });
+    await areas.fill(['One', 'Two', 'Three', 'Four', 'Wrong'].join('\n'));
+    assert.equal(await ready(), false);
+    await areas.fill(expected.detection_areas.slice(0, 4).join('\n'));
+    assert.equal(await ready(), false);
+    await areas.fill(expected.detection_areas.join('\n'));
+    const steps = page.getByPlaceholder('Steps students should take to verify content (optional)', { exact: true });
+    await steps.fill('Unexpected');
+    assert.equal(await ready(), false);
+    await steps.fill('');
+    await areas.evaluate(element => { element.disabled = true; });
+    assert.equal(await ready(), false);
+    await areas.evaluate(element => { element.disabled = false; });
+    assert.equal(await ready(), true);
+    await waitForTemplateSettings(page, expected);
+  } finally { await browser.close(); }
 });
 
 test('accepts either named target and local app origin', () => {

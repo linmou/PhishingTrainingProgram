@@ -8,6 +8,16 @@ const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStuden
 const { deliverFixedAssessment } = require('./assessment-fixture');
 const { assertFirstPassResult } = require('./assessment-browser-checks');
 
+async function waitForTemplateSettings(page, promptConfig) {
+  await page.waitForFunction(expected => {
+    const detection = document.querySelector('textarea[placeholder="Red flags to watch for (optional - will use template if empty)"]');
+    const verification = document.querySelector('textarea[placeholder="Steps students should take to verify content (optional)"]');
+    return detection && verification && !detection.disabled && !verification.disabled &&
+      detection.value === expected.detection_areas.join('\n') &&
+      verification.value === expected.verification_steps.join('\n');
+  }, promptConfig, { timeout: TIMEOUT });
+}
+
 async function runRoomSetupAnalysis({ page, roomId, itemId, evidencePath, send, verifyProgress }) {
   const evidence = { room_id: roomId, item_id: itemId, response_timeout_ms: TIMEOUT,
     started_at: new Date().toISOString(), stage: 'sending', status: 'running', calls: [] };
@@ -88,10 +98,8 @@ module.exports = async function roomAssessmentSetup(ctx) {
   );
   await openRoom(tutorPage, appUrl, room.id);
   await tutorPage.locator('button[title="AI Assistant Settings"]').click();
-  await waitForMatch(
-    () => tutorPage.getByLabel('Enable AI Assistant').isChecked(),
-    checked => checked, 'loaded template AI settings'
-  );
+  await waitForTemplateSettings(tutorPage, createdConfig.prompt_config);
+  assert.equal(await tutorPage.getByLabel('Enable AI Assistant').isChecked(), true);
   await tutorPage.getByLabel('Enable In-Room Assessment').uncheck();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
@@ -124,10 +132,8 @@ module.exports = async function roomAssessmentSetup(ctx) {
   );
 
   await tutorPage.locator('button[title="AI Assistant Settings"]').click();
-  await waitForMatch(
-    () => tutorPage.getByLabel('Enable AI Assistant').isChecked(),
-    checked => checked, 'loaded existing AI settings'
-  );
+  await waitForTemplateSettings(tutorPage, createdConfig.prompt_config);
+  assert.equal(await tutorPage.getByLabel('Enable AI Assistant').isChecked(), true);
   await tutorPage.getByLabel('Enable In-Room Assessment').check();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
@@ -258,3 +264,4 @@ module.exports = async function roomAssessmentSetup(ctx) {
 };
 
 module.exports.runRoomSetupAnalysis = runRoomSetupAnalysis;
+module.exports.waitForTemplateSettings = waitForTemplateSettings;
