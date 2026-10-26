@@ -100,4 +100,10 @@ The run directory preserves per-observation hashes, surfaces, status codes, byte
 
 All required CI passed at `a5c1682` in [run 40394324030](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40394324030), including pinned Chromium and the full Jest regression. The subsequent evidence-only commit leaves tested source hashes unchanged; its final-head CI remains independently observable on the PR.
 
-Issue #28 remains open for operational rollback/readiness evidence. The exact prior `TRANSFER_ASSESSMENT_ENABLED` value is not readable through available access, so an exact-restoration drill cannot proceed. Observed identity-spoofing and direct-write weaknesses remain recorded failures requiring a separate runtime/security decision. No merge, flag change, runtime deployment or production verification occurred.
+Issue #28 remains open for operational rollback/readiness evidence. The flag-value blocker reported at this handoff was resolved by the read-only observation below. Observed identity-spoofing and direct-write weaknesses remain recorded failures requiring a separate runtime/security decision. No merge, flag change, runtime deployment or production verification occurred.
+
+## Boolean configuration observation correction
+
+On 2026-10-26, a read-only GET of `/v1/projects/ciubrzggdqesgvfkpolj/secrets` returned the `TRANSFER_ASSESSMENT_ENABLED` entry. Its `value` matched the locally computed SHA-256 digest of the exact literal `true`, compared against both `true` and `false`. This establishes the stored value as `true` at observation time, rather than merely inferring enablement from successful requests. No credentials or other secret digests were printed.
+
+This flag is non-sensitive configuration. Supabase's Edge environment-variable store is named Secrets, but confidentiality of this boolean is not required. The Management API does not return plaintext; comparison against the two valid boolean literals provides a readable observation without moving the setting or changing runtime code. The earlier claim that available access could not determine the value was incorrect. Reobserve the value under the staging lease immediately before a future drill, restore that observed configuration afterward, and verify restoration. The drill itself remains unperformed.

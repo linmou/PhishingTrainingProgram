@@ -79,7 +79,7 @@ interface RpcResult {
 }
 
 export interface AssessmentApiDependencies {
-  featureEnabled: boolean;
+  featureEnabled: () => Promise<boolean>;
   verifier?: AssessmentPrincipalVerifier;
   rpc: (name: string, args: Record<string, unknown>) => Promise<RpcResult>;
   env: (name: string) => string | undefined;
@@ -117,6 +117,7 @@ const ERROR_STATUS: Record<string, { status: number; retryable: boolean }> = {
   INVALID_ASSESSMENT_EVENT: { status: 500, retryable: false },
   AUTHORIZATION_NOT_CONFIGURED: { status: 503, retryable: false },
   ASSESSMENT_FEATURE_DISABLED: { status: 503, retryable: false },
+  ASSESSMENT_CONFIGURATION_UNAVAILABLE: { status: 503, retryable: true },
   AI_PROVIDER_NOT_CONFIGURED: { status: 503, retryable: true },
   AI_PROVIDER_ERROR: { status: 502, retryable: true },
   AI_OUTPUT_TRUNCATED: { status: 502, retryable: true },
@@ -661,7 +662,13 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
       return fail(String(error).includes('AUTHORIZATION_NOT_CONFIGURED')
         ? 'AUTHORIZATION_NOT_CONFIGURED' : 'UNAUTHORIZED');
     }
-    if (!deps.featureEnabled && body.operation!=='clear_chat_history') return fail('ASSESSMENT_FEATURE_DISABLED');
+    if (body.operation !== 'clear_chat_history') {
+      try {
+        if (!await deps.featureEnabled()) return fail('ASSESSMENT_FEATURE_DISABLED');
+      } catch {
+        return fail('ASSESSMENT_CONFIGURATION_UNAVAILABLE');
+      }
+    }
 
     try {
       let data: unknown;
@@ -790,13 +797,13 @@ export function createAssessmentApiHandler(deps: AssessmentApiDependencies) {
   };
 }
 
-function createDefaultDependencies(): AssessmentApiDependencies {
+export function createDefaultDependencies(): AssessmentApiDependencies {
   const env = (name: string) => Deno.env.get(name);
   const url = env('SUPABASE_URL');
   const serviceKey = env('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !serviceKey) {
     return {
-      featureEnabled: false,
+      featureEnabled: async () => false,
       verifier: undefined,
       rpc: async () => ({ data: null, error: { message: 'AUTHORIZATION_NOT_CONFIGURED' } }),
       env,
@@ -829,7 +836,14 @@ function createDefaultDependencies(): AssessmentApiDependencies {
     },
   };
   return {
-    featureEnabled: (env('TRANSFER_ASSESSMENT_ENABLED') ?? 'true') === 'true',
+    featureEnabled: async () => {
+      const { data, error } = await admin.from('feature_flags').select('enabled')
+        .eq('name', 'TRANSFER_ASSESSMENT_ENABLED').single();
+      if (error || typeof data?.enabled !== 'boolean') {
+        throw new Error('ASSESSMENT_CONFIGURATION_UNAVAILABLE');
+      }
+      return data.enabled;
+    },
     verifier,
     rpc: async (name, args) => {
       const result = await admin.rpc(name, args);

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S deno test --allow-env --allow-net
 // Test responsibility: verify the trusted handler's authorization, projection, provider, and CAS boundaries.
 
-import { createAssessmentApiHandler, type AssessmentApiDependencies } from './index.ts';
+import { createAssessmentApiHandler, createDefaultDependencies, type AssessmentApiDependencies } from './index.ts';
 import { resolveTransferAnswer } from '../../../src/services/transferAssessmentOrchestrator.ts';
 
 function assert(condition: unknown, message = 'assertion failed'): asserts condition {
@@ -25,7 +25,7 @@ function request(operation: string, body: Record<string, unknown> = {}): Request
 function dependencies(overrides: Partial<AssessmentApiDependencies> = {}): AssessmentApiDependencies {
   const suppliedRpc = overrides.rpc ?? (async () => ({ data: {}, error: null }));
   return {
-    featureEnabled: true,
+    featureEnabled: async () => true,
     verifier: { verify: async () => ({
       principal_id: 'principal-1', application_user_id: 'teacher-1',
       allowed_room_ids: ['room-1'], can_review_assessment: true,
@@ -870,10 +870,11 @@ Deno.test('fails closed before data access when no principal verifier is wired',
   assertEquals(calls, 0);
 });
 
-Deno.test('disabled feature makes no storage call', async () => {
+// Covers index.ts: disabled configuration must prevent assessment side effects.
+Deno.test('disabled feature makes no assessment storage call', async () => {
   let calls = 0;
   const handler = createAssessmentApiHandler(dependencies({
-    featureEnabled: false,
+    featureEnabled: async () => false,
     rpc: async () => { calls += 1; return { data: {}, error: null }; },
   }));
   const response = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
@@ -885,12 +886,100 @@ Deno.test('disabled feature makes no storage call', async () => {
 
 Deno.test('owner clear remains available with assessment feature disabled and passes only verified identity',async ()=>{
   const calls:unknown[]=[];
-  const handler=createAssessmentApiHandler(dependencies({featureEnabled:false,rpc:async(name,args)=>{
+  const handler=createAssessmentApiHandler(dependencies({featureEnabled:async()=>false,rpc:async(name,args)=>{
     calls.push({name,args});return {data:{success:true,title:'Room',prePopulatedMessagesPreserved:true},error:null};
   }}));
   const response=await handler(request('clear_chat_history',{room_id:'room-1',actor_id:'forged'}));
   assertEquals(response.status,200);
   assertEquals(calls,[{name:'clear_room_chat_history_v1',args:{p_room_id:'room-1',p_actor_id:'teacher-1'}}]);
+});
+
+// Covers index.ts: the same warm handler must observe administrator flag changes.
+Deno.test('reads current feature configuration for every assessment request', async () => {
+  let enabled = true;
+  let reads = 0;
+  let writes = 0;
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => { reads += 1; return enabled; },
+    rpc: async (name) => {
+      if (name === 'post_assessment_message_v2') writes += 1;
+      return { data: {}, error: null };
+    },
+  }));
+  const post = () => request('post_message', { room_id: 'room-1', content: 'Hello' });
+  assertEquals((await handler(post())).status, 200);
+  enabled = false;
+  const disabled = await handler(post());
+  assertEquals((await disabled.json()).error.code, 'ASSESSMENT_FEATURE_DISABLED');
+  assertEquals(writes, 1);
+  enabled = true;
+  assertEquals((await handler(post())).status, 200);
+  assertEquals(reads, 3);
+  assertEquals(writes, 2);
+});
+
+// Covers index.ts: unavailable configuration must fail closed without exposing private errors.
+Deno.test('configuration read failure returns retryable error without assessment side effects', async () => {
+  let writes = 0;
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => { throw new Error('private database diagnostic'); },
+    rpc: async () => { writes += 1; return { data: {}, error: null }; },
+  }));
+  const result = await handler(request('post_message', { room_id: 'room-1', content: 'Hello' }));
+  assertEquals(result.status, 503);
+  const payload = await result.json();
+  assertEquals(payload.error.code, 'ASSESSMENT_CONFIGURATION_UNAVAILABLE');
+  assertEquals(payload.error.retryable, true);
+  assertEquals(JSON.stringify(payload).includes('private database diagnostic'), false);
+  assertEquals(writes, 0);
+});
+
+// Covers index.ts: owner clear must remain available during a configuration outage.
+Deno.test('owner clear does not read feature configuration', async () => {
+  const handler = createAssessmentApiHandler(dependencies({
+    featureEnabled: async () => { throw new Error('configuration unavailable'); },
+    rpc: async () => ({ data: { success: true }, error: null }),
+  }));
+  assertEquals((await handler(request('clear_chat_history', { room_id: 'room-1' }))).status, 200);
+});
+
+// Covers index.ts: the production adapter reads the public table and rejects absent or malformed values.
+Deno.test('default feature reader uses public configuration instead of the environment secret', async () => {
+  const originalFetch = globalThis.fetch;
+  const names = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'TRANSFER_ASSESSMENT_ENABLED'];
+  const originalEnv = names.map(name => Deno.env.get(name));
+  try {
+    Deno.env.set('SUPABASE_URL', 'https://configuration-test.supabase.co');
+    Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'test-service-key');
+    Deno.env.set('TRANSFER_ASSESSMENT_ENABLED', 'false');
+    for (const enabled of [true, false, null, 'true', undefined]) {
+      globalThis.fetch = async (input) => {
+        const url = new URL(String(input));
+        assertEquals(url.pathname, '/rest/v1/feature_flags');
+        assertEquals(url.searchParams.get('name'), 'eq.TRANSFER_ASSESSMENT_ENABLED');
+        assertEquals(url.searchParams.get('select'), 'enabled');
+        return new Response(JSON.stringify(enabled === undefined ? {} : { enabled }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      };
+      let result: boolean | string;
+      try { result = await createDefaultDependencies().featureEnabled(); }
+      catch (error) { result = (error as Error).message; }
+      assertEquals(result, typeof enabled === 'boolean' ? enabled : 'ASSESSMENT_CONFIGURATION_UNAVAILABLE');
+    }
+    globalThis.fetch = async () => new Response(JSON.stringify({ message: 'unavailable' }), {
+      status: 503, headers: { 'content-type': 'application/json' },
+    });
+    let failed = false;
+    try { await createDefaultDependencies().featureEnabled(); } catch { failed = true; }
+    assertEquals(failed, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+    names.forEach((name, index) => {
+      if (originalEnv[index] === undefined) Deno.env.delete(name);
+      else Deno.env.set(name, originalEnv[index]!);
+    });
+  }
 });
 
 Deno.test('projects the approved checklist UUID into the browser initialization contract', async () => {
