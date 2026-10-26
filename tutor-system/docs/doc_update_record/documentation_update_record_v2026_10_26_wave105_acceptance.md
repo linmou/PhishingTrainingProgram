@@ -4,6 +4,8 @@ Intent: preserve reproducible SQL and staging acceptance evidence for PR #29 and
 
 Updated: 2026-10-26. Source baseline: `bfaa92661c29b6606be16ec25dc21b08d7e1fd22`.
 
+Current outcome: SQL integration and live staging privacy acceptance pass. Live security testing records identity-spoofing/direct-write failures. Operational rollback/readiness and review of the resumed changes remain open. The final section supersedes intermediate privacy and lease blockers below.
+
 ## SQL fixture corrections
 
 Actual execution exposed an unquoted reserved `current_role` identifier in the direct-role fixture, removed `active_response_mode`/`mode_change_source` columns in the lifecycle/result fixtures, and the current client-contract gate intercepting authenticated event-forgery checks. Quote the identifier, use `guard_mode`/`guard_mode_change_source`, and provide the explicit `cyberbullying-v2` request contract. Runtime code and migrations are unchanged.
@@ -78,3 +80,24 @@ Correct the fixture by including private raw-output/rationale canaries in the or
 The final-head CI run for `0514234` passed all three required checks ([40393040426](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40393040426)); later fixture changes require their own current-head checks.
 
 Canary fix candidate `6a74c46` passes 20/20 audit and 29/29 browser-runner checks. Its live run `staging-template-20261026201633-d15d11ea` was blocked before fixture work by a new staging release lease: candidate `be8a695316bd3d22ae2ab2c2de149aa0f74864a1`, run `54ef77a6-ee7d-46ef-a850-823b97278f6f`, claimed `2026-10-26T20:15:40.950Z`. The corrected fixture therefore still needs live privacy acceptance. Neither failed lease claim owns the current reference. All previously allocated fixtures remain cleaned, and the zero-row diagnostic lease was released.
+
+## Successful live privacy acceptance
+
+After lease release, candidate `a5c1682fde2f9576873ea50e7ec7042b2c72f9fc` passed `assessment-privacy` in run `staging-template-20261026201907-6a8dc555`. Both actual browser journeys completed: `open → passed → passed-reload`, and `open → retry → retry-reload → failed → failed-reload`. All eight checkpoints passed: 237 observations, zero violations, covering learner HTTP request/response data, actual message realtime records, DOM, JSON/TXT downloads and a denied private-review error. Each journey verified actual private/provider canary persistence; the second-failure exception was bound to private grading authority and the exact saved result.
+
+Both configured rooms were read back clean, including private assessment/provider stores and restored Guard fields. The run exited 0 and released its lease. The candidate app stopped. The latest observed Edge artifacts remain `assessment-api` v77 and `ai-api` v7; `output/pr29-resume-20261026/staging-functions-retry.json` records the observation. Intervening releases still require relevant schema/configuration preconditions to be checked before reusing these results in a future release.
+
+Artifact hashes:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `assessment-privacy.js` | `cdda03ee226db58fc132aae92e89ac4b4b5f6af832ec9d1ecb07ad07395f7247` |
+| `assessment-fixture.js` | `598a7ae51a258d608ebcca8dea2ff0f9ac54748add018aecc976dce202514bf5` |
+| `assessment-privacy-passed.json` | `57363b06146a53d1583ef48d9b34e9d74298a7bc516cc915215ac0672769b09a` |
+| `assessment-privacy-failed.json` | `404e70714995460b8a577e777e78000a7f6cffa8a6801c62c593c03f743bd48a` |
+
+The run directory preserves per-observation hashes, surfaces, status codes, byte counts and violation findings without private response bodies. `report.json` records candidate, workflow hashes, room IDs, command outcome and cleanup. The private local `output/pr29-resume-20261026/` directory retains diagnostic SQL/results, command logs, SQL clone evidence references, deployed-version observations and a report manifest. Historical failed attempts remain alongside the successful run.
+
+All required CI passed at `a5c1682` in [run 40394324030](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40394324030), including pinned Chromium and the full Jest regression. The subsequent evidence-only commit leaves tested source hashes unchanged; its final-head CI remains independently observable on the PR.
+
+Issue #28 remains open for operational rollback/readiness evidence. The exact prior `TRANSFER_ASSESSMENT_ENABLED` value is not readable through available access, so an exact-restoration drill cannot proceed. Observed identity-spoofing and direct-write weaknesses remain recorded failures requiring a separate runtime/security decision. No merge, flag change, runtime deployment or production verification occurred.
