@@ -9,6 +9,7 @@ import '@testing-library/jest-dom';
 import ChecklistPanel from '../components/ChecklistPanel';
 import { ChecklistBddDatabase, ChecklistBddSeedItem } from './test-data/checklistBddDatabase';
 import { supabase } from '../services/supabase';
+import { SCENARIO_TEMPLATES } from '../services/detectionTemplates';
 import { generateSystemPromptWithChecklist } from '../services/prompts/checklistPromptGenerator';
 import type { SystemPromptConfig } from '../services/prompts/types';
 
@@ -392,12 +393,9 @@ defineFeature(feature, test => {
       });
     });
     then('the checklist should be populated with template items:', () => {
-      expect(screen.getByText('Too good to be true pricing or offers')).toBeInTheDocument();
-      expect(screen.getByText('Urgent language designed to pressure quick action')).toBeInTheDocument();
-      expect(screen.getByText('Suspicious or shortened URLs that hide real destinations')).toBeInTheDocument();
-      expect(screen.getByText('Check the source: Is this from an official, verified account?')).toBeInTheDocument();
-      expect(screen.getByText('Verify the URL: Does it match the official website domain?')).toBeInTheDocument();
-      expect(screen.getByText("Cross-reference: Check the company's official website and social media")).toBeInTheDocument();
+      for (const target of SCENARIO_TEMPLATES['General Scam Indicators'].detection_areas) {
+        expect(screen.getByText(target)).toBeInTheDocument();
+      }
     });
   });
 });
