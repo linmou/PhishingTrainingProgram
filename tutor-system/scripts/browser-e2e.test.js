@@ -12,7 +12,7 @@ const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
-const { assertAssessmentGate, assertBoundAnswers } = require('./browser-e2e/workflows/assessment-browser-checks');
+const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
 
 const env = (target = 'staging') => ({
@@ -302,6 +302,39 @@ test('assessment binding rejects missing IDs, duplicate rows, wrong selections a
   assert.deepEqual(verify([answer, { id: 'foreign', user_id: 'another-student', content: 'A' }]), [answer]);
   const multi = { ...answer, assessment_selected_option_ids: ['D', 'A'] };
   assert.deepEqual(assertBoundAnswers([multi], 'student', 'assessment', 'question', [['A', 'D']], []), [multi]);
+});
+
+// Responsibility: assessment-browser-checks.js must bind separate result messages to the submitted learner answer.
+test('first pass follows the saved sibling result and rejects identity or grade mismatches', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    const delivered = { assessment_id: 'assessment', question_message_id: 'question' };
+    const answer = { id: 'answer', user_id: 'student', assessment_id: 'assessment', parent_message_id: 'question',
+      assessment_selected_option_ids: ['B'] };
+    const question = { id: 'question', assessment_id: 'assessment', assessment_result: 'pass',
+      assessment_lifecycle: 'passed', assessment_answer_message_id: 'answer' };
+    const result = { id: 'result', parent_message_id: 'answer', content: 'Correct.', assessment_event: {
+      kind: 'result', assessment_id: 'assessment', question_message_id: 'question', student_id: 'student',
+      answer_message_id: 'answer', attempt_number: 1, outcome: 'passed' } };
+    await page.setContent('<section data-testid="public-assessment-assessment"></section><article data-testid="assessment-result-result">Correct.</article>');
+    const verify = (rows, savedQuestion = question) => assertFirstPassResult(page, [savedQuestion, ...rows], 'student', delivered, []);
+    assert.deepEqual(await verify([answer, result]), { answer, result });
+    for (const [field, value] of Object.entries({ assessment_id: 'other', question_message_id: 'other',
+      student_id: 'other', answer_message_id: 'other', attempt_number: 2, outcome: 'retry' })) {
+      await assert.rejects(verify([answer, { ...result, assessment_event: { ...result.assessment_event, [field]: value } }]));
+    }
+    await assert.rejects(verify([answer, result, { ...result, id: 'duplicate' }]), /duplicate/);
+    await assert.rejects(verify([answer]), /Missing/);
+    for (const [field, value] of Object.entries({ assessment_id: 'other', assessment_result: 'fail',
+      assessment_lifecycle: 'open', assessment_answer_message_id: 'other' })) {
+      await assert.rejects(verify([answer, result], { ...question, [field]: value }));
+    }
+    await assert.rejects(verify([answer, { ...result, parent_message_id: 'other' }]), /attached/);
+    await page.setContent('<article data-testid="assessment-result-other">Correct.</article>');
+    page.setDefaultTimeout(50);
+    await assert.rejects(verify([answer, result]), /assessment-result-result/);
+  } finally { await browser.close(); }
 });
 
 test('assessment gate checks every generic Reply and restores terminal composer access', async () => {
