@@ -60,6 +60,7 @@ function realtimeFrame(payload) {
   let frame;
   try { frame = JSON.parse(Buffer.isBuffer(payload) ? payload.toString('utf8') : payload); }
   catch { return null; }
+  if (!frame || typeof frame !== 'object') return null;
   const event = Array.isArray(frame) ? frame[3] : frame.event;
   const topic = Array.isArray(frame) ? frame[2] : frame.topic;
   const body = Array.isArray(frame) ? frame[4] : frame.payload;
@@ -76,6 +77,23 @@ function realtimeFrame(payload) {
 function messageFrame(payload) {
   const frame = realtimeFrame(payload);
   return frame?.table === 'messages' ? frame : null;
+}
+
+function frameMetadata(payload) {
+  const bytes = Buffer.isBuffer(payload) ? payload : Buffer.from(String(payload));
+  const metadata = { bytes: bytes.length, encoding: Buffer.isBuffer(payload) ? 'binary' : 'text',
+    sha256: crypto.createHash('sha256').update(bytes).digest('hex') };
+  try {
+    const frame = JSON.parse(bytes.toString('utf8'));
+    const event = Array.isArray(frame) ? frame[3] : frame?.event;
+    const topic = Array.isArray(frame) ? frame[2] : frame?.topic;
+    const body = Array.isArray(frame) ? frame[4] : frame?.payload;
+    return { ...metadata, shape: Array.isArray(frame) ? 'array' : typeof frame,
+      event: typeof event === 'string' && /^[a-z_]+$/.test(event) ? event : null,
+      topic: typeof topic === 'string' && /^realtime:room_[0-9a-f-]+$/i.test(topic) ? topic : null,
+      payload_keys: body && typeof body === 'object' ? Object.keys(body) : [],
+      response_keys: body?.response && typeof body.response === 'object' ? Object.keys(body.response) : [] };
+  } catch { return { ...metadata, shape: 'unparsed' }; }
 }
 
 function assertPublicPayload(value) {
@@ -101,6 +119,21 @@ function assertBindings(events, roomId, started, ended) {
   assert.deepEqual(errors, [], 'Room channel reported a system error');
   for (const row of roomEvents.filter(row => row.kind === 'change')) assertPublicPayload(row);
   return { acknowledgement, system_errors: errors, inspected_change_payloads: roomEvents.filter(row => row.kind === 'change').length };
+}
+
+async function waitForBindings(page, events, roomId, started, timeoutMs = 30000) {
+  const waiting = Date.now();
+  while (true) {
+    const errors = events.filter(row => row.topic === `realtime:room_${roomId}` && row.received_ms >= started &&
+      row.kind === 'system' && row.payload?.status === 'error');
+    assert.deepEqual(errors, [], 'Room channel reported a system error while awaiting bindings');
+    try {
+      return { ...assertBindings(events, roomId, started, Date.now()), wait_ms: Date.now() - waiting, timeout_ms: timeoutMs };
+    } catch (error) {
+      if (!error.message.includes('did not acknowledge') || Date.now() - waiting >= timeoutMs) throw error;
+    }
+    await page.waitForTimeout(Math.min(100, timeoutMs));
+  }
 }
 
 function assertRealtime(events, messageId, event, timing, table = 'messages') {
@@ -133,7 +166,7 @@ async function settleFeedback(page, records) {
   throw new Error('Feedback requests did not settle within 10000ms');
 }
 
-function monitor(page, records, events) {
+function monitor(page, records, events, frames = []) {
   const requests = new Map();
   const completions = new Map();
   const captures = new Map();
@@ -151,8 +184,10 @@ function monitor(page, records, events) {
   });
   page.on('websocket', socket => {
     if (!socket.url().includes('/realtime/')) return;
+    frames.push({ kind: 'socket_open', received_ms: Date.now(), origin: new URL(socket.url()).origin });
     socket.on('framereceived', ({ payload }) => {
       const frame = realtimeFrame(payload);
+      frames.push({ kind: 'frame', received_ms: Date.now(), decoded: Boolean(frame), ...frameMetadata(payload) });
       if (frame) events.push({ ...frame, received_ms: Date.now() });
     });
   });
@@ -267,7 +302,7 @@ async function main(argv = process.argv.slice(2)) {
     script_sha256: crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),
     config: { target: 'staging', project_ref: config.projectRef, app_url: config.appUrl,
       histories: [10, 100, 1000], window_ms: config.windowMs, byte_metric: 'decoded HTTP response body bytes (excludes headers and websocket frames)' },
-    users: [], rooms: [], histories: [], cleanup: [], requests: [], websocket_messages: [], errors: [] };
+    users: [], rooms: [], histories: [], cleanup: [], requests: [], websocket_messages: [], websocket_frames: [], errors: [] };
   const save = () => support.writeJson(path.join(evidenceDir, 'report.json'), report);
   const client = createFixtureClient(config);
   let browser, fixtureLock, lease, flush;
@@ -300,7 +335,7 @@ async function main(argv = process.argv.slice(2)) {
       };
     });
     const page = await context.newPage();
-    flush = monitor(page, report.requests, report.websocket_messages);
+    flush = monitor(page, report.requests, report.websocket_messages, report.websocket_frames);
     for (const role of ['tutor', 'student']) {
       const name = `Performance ${role} ${runId}`;
       await support.joinAs(page, config.appUrl, name, role);
@@ -345,7 +380,7 @@ async function main(argv = process.argv.slice(2)) {
         assert.match(await button.innerText(), new RegExp(`1\\s*\\(${feedback[index].rating}\\.0`));
       }
       result.checks.seeded_counts_averages_and_own_ratings = count;
-      result.bindings = assertBindings(report.websocket_messages, room.id, joinStart, Date.now());
+      result.bindings = await waitForBindings(page, report.websocket_messages, room.id, joinStart);
       await settleFeedback(page, report.requests);
       const windowStart = Date.now();
       await page.waitForTimeout(config.windowMs);
@@ -414,7 +449,7 @@ async function main(argv = process.argv.slice(2)) {
       result.rating = { message_id: messages[0].id, refresh_requests: refreshes.length, maximum_refresh_requests: 3, settled_ms: ratingEnd, http: ratingHttp, stored: saved,
         visible: await target.innerText(), elapsed_ms: Date.now() - ratingStart };
       await support.screenshot(page, evidenceDir, `history-${count}`);
-      result.bindings = assertBindings(report.websocket_messages, room.id, joinStart, Date.now());
+      result.bindings = { ...result.bindings, ...assertBindings(report.websocket_messages, room.id, joinStart, Date.now()) };
       support.assertProjectTraffic(traffic);
       save();
       await page.goto('about:blank');
@@ -473,5 +508,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest, main };
+module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, frameMetadata, assertPublicPayload, assertBindings, waitForBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });

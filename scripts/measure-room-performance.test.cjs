@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest } = require('./measure-room-performance.cjs');
+const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, frameMetadata, assertPublicPayload, assertBindings, waitForBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
@@ -180,6 +180,43 @@ test('controlled feedback and room payloads retain values and reject nested priv
   assert.throws(() => assertPublicPayload({ schema: 'private', record: { id: 'secret' } }), /Private schema/);
   assert.throws(() => assertRealtime([{ ...feedback, received_ms: 100 }], 'rating', 'UPDATE',
     { mutation_started_ms: 0, visible_ms: 200, after_write_ms: 100 }, 'rooms'), /Missing/);
+});
+
+test('binding wait accepts a delayed acknowledgement but fails on timeout and subsequent system error', async () => {
+  const bindings = [['messages', 'INSERT'], ['messages', 'UPDATE'], ['message_feedback', 'INSERT'], ['message_feedback', 'UPDATE'], ['rooms', 'UPDATE']]
+    .map(([table, event]) => ({ table, event, schema: 'public', filter: `${table === 'rooms' ? 'id' : 'room_id'}=eq.one` }));
+  const events = [];
+  let polls = 0;
+  const page = { waitForTimeout: async () => {
+    polls++;
+    events.push({ topic: 'realtime:room_one', kind: 'bindings', status: 'ok', bindings, received_ms: Date.now() });
+  } };
+  const result = await waitForBindings(page, events, 'one', 0);
+  assert.equal(polls, 1);
+  assert.equal(result.timeout_ms, 30000);
+  assert(result.wait_ms >= 0);
+  await assert.rejects(waitForBindings(page, [], 'one', 0, 0), /did not acknowledge/);
+  events.push({ topic: 'realtime:room_one', kind: 'system', payload: { status: 'error' }, received_ms: Date.now() });
+  await assert.rejects(waitForBindings(page, events, 'one', 0), /system error/);
+});
+
+test('unsupported incoming frames retain only sanitized structural metadata and binary frames decode', () => {
+  const payload = Buffer.from(JSON.stringify({ topic: 'secret-token', event: 'custom_event',
+    payload: { access_token: 'must-not-record', response: { unsupported: 'private-value' } } }));
+  const metadata = frameMetadata(payload);
+  assert.equal(metadata.encoding, 'binary');
+  assert.equal(metadata.topic, null);
+  assert.deepEqual(metadata.payload_keys, ['access_token', 'response']);
+  assert.deepEqual(metadata.response_keys, ['unsupported']);
+  assert(!JSON.stringify(metadata).includes('must-not-record'));
+  assert(!JSON.stringify(metadata).includes('private-value'));
+  assert.equal(frameMetadata(Buffer.from([0, 255])).shape, 'unparsed');
+  assert.equal(realtimeFrame('null'), null);
+  assert.equal(realtimeFrame('42'), null);
+  const frame = realtimeFrame(Buffer.from(JSON.stringify({ event: 'postgres_changes', payload: {
+    data: { table: 'messages', type: 'INSERT', record: { id: 'binary-message' } }
+  } })));
+  assert.equal(frame.message_id, 'binary-message');
 });
 
 test('monitor flush waits for requests started before the boundary even before response arrives', async () => {
