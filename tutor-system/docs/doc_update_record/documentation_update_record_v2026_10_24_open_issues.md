@@ -2,7 +2,7 @@
 
 Intent: preserve the acceptance evidence and delivery state for GitHub issues #2 and #19-22.
 
-Updated: 2026-10-24. Plan baseline commit: `7762cbb`; initial integrated implementation: `79496b6`. Release/integration owner: root Codex agent.
+Updated: 2026-10-26. Plan baseline commit: `7762cbb`; initial integrated implementation: `79496b6`; reconnect repair: `f5f38a5`. Release/integration owner: root Codex agent.
 
 ## Candidate and Scope
 
@@ -10,7 +10,7 @@ Batch: `open-issues-20261024`. Integration branch: `integration/open-issues-2026
 
 The baseline merges local `2caa4ae` with upstream `8a92391` (integration merge `7667ba5`). Unrelated changes remain in the primary checkout. Four isolated agents use `gpt-6.1-sol`, medium reasoning; #22 follows the P1 changes. The [execution plan](../../../plan/open-issues-20261024/execution-plan.md) assigns ownership and acceptance.
 
-Changed contracts under investigation: message synchronization/recovery, feedback loading/cache, assessment display ordering performance, authoritative learner progress supplied to tutor generation, and RoomContext responsibility ownership. Schema and hosted function changes are not yet proposed. Existing backend authorization, learner progress transitions and assessment readiness remain dependencies.
+Changed contracts: message synchronization/recovery, feedback loading/cache, assessment display ordering performance, authoritative learner progress supplied to tutor generation, and RoomContext responsibility ownership. Delivery includes the three-table Realtime publication prerequisite and exact assessment-api dependency promotion recorded below. Existing backend authorization, learner progress transitions and assessment readiness remain dependencies.
 
 ## Baseline Evidence
 
@@ -33,9 +33,9 @@ Exit 0: 143 suites passed, 4 skipped; 1,449 tests passed, 92 skipped; 50.525 sec
 | #2 | integrated locally | `79496b6`; actual provider replay confirms acknowledgment stays partial and tutor retains URL follow-up; independent review records remaining evidence gaps |
 | #22 | integrated locally | `5f11a1c`; membership/realtime ownership extraction; 23 suites/247 focused tests and exact before/after cost snapshot pass |
 | Combined deterministic/build verification | pass | Frozen `5f11a1c`: 149 suites/1,487 tests/1 snapshot pass; 5 suites/93 tests skipped; production build pass |
-| Staging acceptance | pending | Exact committed candidate, artifact hashes, selected full affected browser journeys and owned project lease required |
+| Staging acceptance | in progress | SQL applied and assessment-api76 deployed; all eleven selected browser workflows passed on matching runtime artifacts; reconnect repair and complete performance acceptance remain open |
 | Merge into no_sign_up | pending | Merge tested integrated candidate preserving unrelated working-tree edits |
-| Production acceptance if server changes | pending scope decision | Root owns any required exact-artifact release; no production mutation performed |
+| Production acceptance | pending | Root owns SQL and exact assessment-api promotion after current-candidate authorization and merge; production remains unchanged |
 | GitHub issue completion | pending | Close only with the issue's acceptance evidence |
 
 ## Combined Verification Progress
@@ -61,6 +61,16 @@ The intended single-channel subscription requires all three public tables. A min
 The configured Dashscope endpoint initially timed out from both evaluator and independent root HTTPS probe. Failed attempts are retained in the independent review package. A later root probe returned HTTP/2 404 in 0.72 seconds, so the reviewer resumed fresh calibration with identical scoped cases/settings. Semantic acceptance remains open until actual results are recorded; transport recovery alone is not a model-quality result.
 
 Select the combined browser scope from the execution plan and release workflow: shared orchestration requires affected lifecycle, Guard, feedback, learner-status and role workflows. Staging/production project refs are `ciubrzggdqesgvfkpolj` / `zgbufaxooqxeabewktzd`. Provider replay evidence must retain full input/output pairs and explicit model/prompt settings outside Git. Any missing live evidence remains open.
+
+## 2026-10-26 Acceptance Checkpoint
+
+Required GitHub checks passed at `ee5da9e`, run `40251428142`. Subsequent repair `f5f38a5` requires current-head CI and coordinated live verification. The candidate app is served at `http://127.0.0.1:3116`, with source tree `5b9593826fe4c27c2be5f7cef9713b73020f8b9b` and explicit staging configuration. No production mutation has occurred.
+
+The full selected browser run on matching pre-repair runtime artifacts passed ten workflows; the corrected room-assessment-setup workflow then passed at `c8222a9`. Its evidence is `tmp/browser_demo_runs/staging-template-20261026004303-8a4aae47/report.json`, including persisted answer/result identity and cleanup. Together these cover all eleven selected workflows; affected evidence will be revalidated for the reconnect repair. The scoped semantic comparison and its native-condition failures remain disclosed in the independent review record; no full historical AI benchmark is claimed.
+
+The actual baseline run `output/playwright/room-performance-1792976244929-727fe825/report.json` passed against app `7762cbb8eaeccf8c92360dc8eb335219651cd4b1` on port3115, using harness `ee5da9e`. In 60-second healthy windows it observed 30 message reads / 2,531,640 response-body bytes at100 messages and 30 reads / 25,376,640 bytes at1,000 messages. Initial feedback reads were200 and2,159 respectively, with join durations1,962ms and16,531ms. The larger count includes actual duplicate legacy requests. Both rooms, dependent rows and both named users were removed and verified absent. This is a measured baseline; candidate comparisons remain pending.
+
+Candidate run `output/playwright/room-performance-1792976102901-12d608cf/report.json` confirmed all five subscription bindings, one message audit /8,418 bytes and zero feedback reloads over60seconds for ten messages, plus matching WebSocket and visible INSERT/UPDATE/room/feedback events. Missed INSERT and old UPDATE recovered through HTTP in5,680ms, but the replacement socket did not rejoin its room channel within30seconds. The run correctly failed; all fixture cleanup passed and its lease was released. A deterministic installed-SDK reproduction identified reconnect teardown cancelling the channel rejoin timer. The [recovery record](documentation_update_record_v2026_10_26_realtime_channel_recovery.md) documents the focused repair,39 passing checks and independent review. Complete live performance acceptance is still open.
 
 ## Imported Edge Dependencies
 
