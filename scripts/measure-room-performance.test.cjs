@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient } = require('./measure-room-performance.cjs');
+const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
@@ -45,6 +45,19 @@ test('fixture service client sends the existing practice write contract on every
     return client;
   });
   assert.equal(result, client);
+});
+
+test('Edge routing allows the actual provider-free room join and blocks generation, analysis and preparation', () => {
+  const url = 'https://staging.supabase.co/functions/v1/assessment-api';
+  const join = JSON.stringify({ operation: 'join_room', room_id: 'fixture-room' });
+  assert.equal(allowMembershipRequest(url, 'POST', join), true);
+  for (const operation of ['analyze_message', 'prepare_assessment', 'prepare', 'post_message', 'cyberbullying_suggest', 'suggest_response', 'initialize_checklist']) {
+    assert.equal(allowMembershipRequest(url, 'POST', JSON.stringify({ operation, room_id: 'fixture-room' })), false);
+  }
+  assert.equal(allowMembershipRequest(url.replace('assessment-api', 'ai-api'), 'POST', join), false);
+  assert.equal(allowMembershipRequest(url, 'GET', join), false);
+  assert.equal(allowMembershipRequest(url, 'POST', '{invalid'), false);
+  assert.equal(allowMembershipRequest(url, 'POST', JSON.stringify({ operation: 'join_room' })), false);
 });
 
 test('preflight accepts explicit staging and rejects production, missing target, mismatched URL and invalid duration', () => {

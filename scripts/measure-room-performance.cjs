@@ -228,6 +228,13 @@ function createFixtureClient(config, factory = createClient) {
   });
 }
 
+function allowMembershipRequest(url, method, body) {
+  if (new URL(url).pathname !== '/functions/v1/assessment-api' || method !== 'POST') return false;
+  let payload;
+  try { payload = JSON.parse(body); } catch { return false; }
+  return payload?.operation === 'join_room' && typeof payload.room_id === 'string' && payload.room_id.length > 0;
+}
+
 async function visibility(page, text, mutate) {
   const started = Date.now();
   await mutate();
@@ -266,7 +273,9 @@ async function main(argv = process.argv.slice(2)) {
     const context = await browser.newContext();
     const traffic = await support.guardProject(context);
     await context.route('**/functions/v1/**', route => {
-      report.errors.push(`Unexpected provider/Edge request: ${new URL(route.request().url()).pathname}`);
+      const request = route.request();
+      if (allowMembershipRequest(request.url(), request.method(), request.postData())) return route.continue();
+      report.errors.push(`Unexpected provider/Edge request: ${new URL(request.url()).pathname}`);
       return route.abort('blockedbyclient');
     });
     await context.addInitScript(() => {
@@ -462,5 +471,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, main };
+module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
