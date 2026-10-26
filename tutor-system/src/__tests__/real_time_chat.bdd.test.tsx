@@ -24,6 +24,8 @@ jest.mock('../services/supabase', () => ({
   supabase: {
     from: jest.fn(),
     channel: jest.fn(),
+    realtime: { isConnected: jest.fn() },
+    removeChannel: jest.fn(),
     auth: { getUser: jest.fn(), signOut: jest.fn() },
     storage: { from: jest.fn() }
   },
@@ -311,6 +313,8 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = jest.fn();
   mockSupabase.from.mockImplementation((table: string) => makeQuery(table));
   mockSupabase.channel.mockImplementation(registerRealtimeChannel);
+  mockSupabase.realtime.isConnected.mockImplementation(() => mockNetworkConnected);
+  mockSupabase.removeChannel.mockImplementation(async (channel: any) => { channel.unsubscribe(); return 'ok'; });
   featureValidateRoomPassword.mockResolvedValue(true);
   featureRoomFeedbackSummary.mockResolvedValue(null);
   featureFeedbackStats.mockImplementation(async (messageId: string) => feedbackStatsFor(messageId));
@@ -527,6 +531,8 @@ defineFeature(feature, test => {
       mockOfflinePollObserved = false;
       await act(async () => { jest.advanceTimersByTime(MESSAGE_RECOVERY_INTERVAL_MS); });
       expect(mockOfflinePollObserved).toBe(true);
+      expect(mockSupabase.realtime.isConnected).toHaveBeenCalled();
+      expect(mockSupabase.removeChannel).not.toHaveBeenCalled();
     });
     when('the tutor sends the message "Can you see this message?"', async () => {
       await sendMessageAs('tutor', 'Can you see this message?');
@@ -536,6 +542,8 @@ defineFeature(feature, test => {
       mockNetworkConnected = true;
       const channel = realtimeListeners.find(listener => listener.actor === 'student')?.channel;
       await act(async () => { channel.subscriptionStatus('SUBSCRIBED'); });
+      await act(async () => { jest.advanceTimersByTime(1000); });
+      expect(mockSupabase.removeChannel).not.toHaveBeenCalled();
     });
     then('the student should see the message "Can you see this message?" from the tutor', async () => {
       await waitFor(() => expect(within(roomClients.student.container).getByText('Can you see this message?')).toBeInTheDocument(), { timeout: 5000 });
