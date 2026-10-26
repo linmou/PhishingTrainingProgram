@@ -12,7 +12,7 @@ Extend assessment-answer and tutor-response checks with saved result identities,
 
 Intent: identify test boundaries, reuse template rooms for live browser tests, and retain evidence.
 
-Updated: 2026-10-21. Workflow revision baseline commit: `72f1087`; assessment release browser baseline: `88b3ccd`.
+Updated: 2026-10-25. Workflow revision baseline commit: `72f1087`; assessment release browser baseline: `88b3ccd`; room setup assertion fix based on `45867b4`.
 
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
@@ -125,7 +125,7 @@ The recorder reuses the `assessment-delivery` staging copy of the production `Tr
 | --- | --- |
 | `tutor-response` | Learner message, real tutor suggestion, reviewed send, and audit row. |
 | `checklist-generation` | Smart Generate from an unstructured prompt, real LLM extraction, and stored targets. |
-| `room-assessment-setup` | Create a room through the tutor UI, enable in-room assessment, have a learner join without posting, and verify Generate Learning Targets is enabled. |
+| `room-assessment-setup` | Create a room through the tutor UI, enable in-room assessment, preserve existing checklist progress, verify observer access and tutor preparation, then bind the passing learner answer to its separately rendered saved result message. |
 | `checklist-management` | Manual creation, status/priority/text edits, and persistence after reload. |
 | `checklist-coverage` | Learner message, real coverage call, stored progress, and the next tutor request. Ordinary learner sends invoke analysis after persistence; tutor requests read current progress without replacing the authored prompt. |
 | `assessment-delivery` | One full-template room journey across URL-domain and Official Support targets: real tutoring while Partial, full-understanding evidence, provider preparation, tutor review/send, option gating, bound answers and terminal feedback. Drains all scheduler-selected ready targets, including other targets becoming due during a new topic; the partial target must remain partial and ineligible throughout that queue. Asserts both named targets complete and every delivered assessment closes. Checks hosted policy before fixture mutations. |

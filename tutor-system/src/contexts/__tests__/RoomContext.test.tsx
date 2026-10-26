@@ -21,6 +21,7 @@ import { RoomProvider, useRoom } from '../RoomContext';
 import { AuthProvider, useAuth } from '../AuthContext';
 import {
     supabase,
+    getMessagesFeedbackStats,
     getMessageFeedbackStats,
     getUserMessageFeedback,
     submitMessageFeedback,
@@ -40,6 +41,7 @@ jest.mock('../../services/supabase', () => ({
     validateRoomPassword: jest.fn(),
     submitMessageFeedback: jest.fn(),
     getMessageFeedbackStats: jest.fn(),
+    getMessagesFeedbackStats: jest.fn(),
     getUserMessageFeedback: jest.fn(),
     getRoomFeedbackSummary: jest.fn(),
     clearChatHistory: jest.fn()
@@ -231,6 +233,13 @@ describe('RoomContext - Room Management Tests', () => {
         });
 
         (getUserMessageFeedback as jest.Mock).mockResolvedValue(null);
+        // Reuse the per-message fixtures while exercising the real batched hook integration.
+        (getMessagesFeedbackStats as jest.Mock).mockImplementation(async (_roomId, userId, ids: string[]) =>
+            Object.fromEntries(await Promise.all(ids.map(async id => [id, {
+                ...await getMessageFeedbackStats(id),
+                message_id: id,
+                user_feedback: await getUserMessageFeedback(id, userId)
+            }]))));
         (getRoomFeedbackSummary as jest.Mock).mockResolvedValue({
             total_messages_with_feedback: 0,
             total_feedback_entries: 0,
@@ -270,6 +279,9 @@ describe('RoomContext - Room Management Tests', () => {
         const messagesQuery: any = {};
         messagesQuery.select = jest.fn(() => messagesQuery);
         messagesQuery.eq = jest.fn(() => messagesQuery);
+        messagesQuery.limit = jest.fn(() => messagesQuery);
+        messagesQuery.abortSignal = jest.fn(() => messagesQuery);
+        messagesQuery.gt = jest.fn(() => messagesQuery);
         messagesQuery.order = jest.fn().mockResolvedValue({ data: messagesData, error: null });
         messagesQuery.insert = insertMessage;
 
@@ -291,6 +303,97 @@ describe('RoomContext - Room Management Tests', () => {
 
         return { roomQuery, messagesQuery, participantsQuery, insertMessage };
     };
+
+    // RoomContext.tsx: compare membership/realtime extraction costs across identical consumer flows.
+    it('preserves request, subscription and render counts through message, role and room changes', async () => {
+        let api: ReturnType<typeof useRoom>;
+        const renderCount = { value: 0 };
+        const Consumer = () => { api = useRoom(); renderCount.value += 1; return null; };
+        mockJoinedRoomQueries([mockMessage]);
+        const view = render(<RoomProvider><Consumer /></RoomProvider>);
+        await act(async () => { await api!.joinRoom(mockRoom.id); });
+        const joinedRenders = renderCount.value;
+        const insert = mockSubscription.on.mock.calls.find(([event, config]: any[]) =>
+            event === 'postgres_changes' && config.table === 'messages' && config.event === 'INSERT')[2];
+        await act(async () => { insert({ new: { ...mockMessage, id: 'live-message' } }); });
+        const liveRenders = renderCount.value - joinedRenders;
+        const beforeRole = renderCount.value;
+        mockUser = { ...mockUser, current_role: 'observer' };
+        (useAuth as jest.Mock).mockReturnValue({ user: mockUser, loading: false });
+        view.rerender(<RoomProvider><Consumer /></RoomProvider>);
+        await expect(api!.sendMessage('blocked')).rejects.toThrow('Observers cannot send messages');
+        const roleRenders = renderCount.value - beforeRole;
+        const firstRequests = (supabase.from as jest.Mock).mock.calls.map(([table]) => table);
+        const beforeSwitch = renderCount.value;
+        mockJoinedRoomQueries([{ ...mockMessage, id: 'other-message', room_id: 'other-room' }], { ...mockRoom, id: 'other-room' });
+        await act(async () => { await api!.joinRoom('other-room'); });
+        expect(api!.messages.map(message => message.id)).toEqual(['other-message']);
+        const switchedRenders = renderCount.value - beforeSwitch;
+        const beforeStale = renderCount.value;
+        await act(async () => { insert({ new: { ...mockMessage, id: 'stale-message' } }); });
+        expect(renderCount.value).toBe(beforeStale);
+        const evidence = {
+            firstRequests,
+            switchedRequests: (supabase.from as jest.Mock).mock.calls.map(([table]) => table),
+            channels: (supabase.channel as jest.Mock).mock.calls.length,
+            subscriptions: mockSubscription.subscribe.mock.calls.length,
+            joinedRenders, liveRenders, roleRenders, switchedRenders,
+            feedbackBatches: (getMessagesFeedbackStats as jest.Mock).mock.calls.length,
+        };
+        console.info('ROOM_OWNERSHIP_COUNTS', JSON.stringify(evidence));
+        expect(evidence).toMatchSnapshot();
+        await act(async () => { await api!.leaveRoom(); });
+        expect(api!.currentRoom).toBeNull();
+        expect(api!.messages).toEqual([]);
+        expect(mockSubscription.unsubscribe).toHaveBeenCalledTimes(2);
+        view.unmount();
+    });
+
+    // RoomContext.tsx: exercise the real feedback hook with room transitions and overlapping channel notifications.
+    it('batches room history, drops old in-flight feedback and targets overlapping refresh events', async () => {
+        let api: ReturnType<typeof useRoom>;
+        let resolveOld!: (value: any) => void;
+        const oldRead = new Promise(done => { resolveOld = done; });
+        const makeStats = (id: string, count: number) => ({
+            message_id: id, total_feedback_count: count, like_count: count, dislike_count: 0,
+            average_like_rating: count ? 4 : null, average_dislike_rating: null,
+            overall_average_rating: count ? 4 : null, user_feedback: null
+        });
+        const rows = Array.from({ length: 50 }, (_, index) => ({ ...mockMessage, id: `persisted-${index}` }));
+        mockJoinedRoomQueries(rows);
+        (getMessagesFeedbackStats as jest.Mock).mockImplementationOnce(() => oldRead)
+            .mockImplementation(async (_room, _user, ids: string[]) =>
+                Object.fromEntries(ids.map(id => [id, makeStats(id, 0)])));
+        render(<RoomProvider><TestRoomHelper onRoomFunctions={value => { api = value; }} /></RoomProvider>);
+        await act(async () => { await api!.joinRoom(mockRoom.id); });
+        await waitFor(() => expect(getMessagesFeedbackStats).toHaveBeenCalledTimes(1));
+        expect(getMessagesFeedbackStats).toHaveBeenCalledWith(mockRoom.id, mockUser.id, expect.arrayContaining(rows.map(row => row.id)));
+        expect((getMessagesFeedbackStats as jest.Mock).mock.calls[0][2]).toHaveLength(50);
+        const oldHandler = mockSubscription.on.mock.calls.find(([event, config]: any[]) =>
+            event === 'postgres_changes' && config.table === 'message_feedback' && config.event === 'INSERT')[2];
+        const nextRoom = { ...mockRoom, id: 'next-room' };
+        const nextMessage = { ...mockMessage, id: 'next-message', room_id: nextRoom.id };
+        mockJoinedRoomQueries([nextMessage], nextRoom);
+        await act(async () => { await api!.joinRoom(nextRoom.id); });
+        await waitFor(() => expect(api!.messageFeedbackStats['next-message']).toBeDefined());
+        await act(async () => {
+            resolveOld(Object.fromEntries(rows.map(row => [row.id, makeStats(row.id, 99)])));
+            await oldHandler({ new: { message_id: rows[0].id, room_id: mockRoom.id } });
+        });
+        expect(Object.keys(api!.messageFeedbackStats)).toEqual(['next-message']);
+        expect(getMessagesFeedbackStats).toHaveBeenCalledTimes(2);
+        const currentInsert = mockSubscription.on.mock.calls.filter(([event, config]: any[]) =>
+            event === 'postgres_changes' && config.table === 'message_feedback' && config.event === 'INSERT').slice(-1)[0][2];
+        const broadcast = mockSubscription.on.mock.calls.filter(([event, config]: any[]) =>
+            event === 'broadcast' && config.event === 'message_feedback_changed').slice(-1)[0][2];
+        await act(async () => {
+            const refresh = currentInsert({ new: { message_id: nextMessage.id, room_id: nextRoom.id } });
+            broadcast({ payload: { messageId: nextMessage.id } });
+            await refresh;
+        });
+        expect(getMessagesFeedbackStats).toHaveBeenCalledTimes(3);
+        expect(getMessagesFeedbackStats).toHaveBeenLastCalledWith(nextRoom.id, mockUser.id, [nextMessage.id]);
+    });
 
     describe('RoomProvider Initialization', () => {
         it('should initialize with default state', () => {
@@ -331,6 +434,7 @@ describe('RoomContext - Room Management Tests', () => {
                 })),
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
+                        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                         order: jest.fn().mockResolvedValue({ data: [], error: null })
                     }))
                 }))
@@ -788,6 +892,7 @@ describe('RoomContext - Room Management Tests', () => {
             const mockMessagesQuery = {
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
+                        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                         order: jest.fn().mockResolvedValue({
                             data: messagesData,
                             error: null
@@ -1123,6 +1228,7 @@ describe('RoomContext - Room Management Tests', () => {
             const mockMessagesQuery = {
                 select: jest.fn(() => ({
                     eq: jest.fn(() => ({
+                        limit: jest.fn().mockReturnThis(), abortSignal: jest.fn().mockReturnThis(), gt: jest.fn().mockReturnThis(),
                         order: jest.fn().mockResolvedValue({
                             data: messagesData,
                             error: null

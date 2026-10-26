@@ -38,7 +38,8 @@ const createSupabaseQuery = (data: any = null) => {
     query.eq = jest.fn().mockReturnValue(query);
     query.in = jest.fn().mockResolvedValue({ data: [], error: null });
     query.order = jest.fn().mockResolvedValue({ data: [], error: null });
-    query.limit = jest.fn().mockResolvedValue({ data: [], error: null });
+    query.limit = jest.fn().mockReturnValue(query);
+    query.abortSignal = jest.fn().mockReturnValue(query);
     query.single = jest.fn().mockResolvedValue({ data, error: null });
     return query;
 };

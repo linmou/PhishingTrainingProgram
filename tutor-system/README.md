@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-10-21
-Commit: a6c977b (integrated source baseline)
+Updated: 2026-10-24
+Commit: 79496b6 (integrated source baseline)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -16,6 +16,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Authentication**: Application-managed name-and-role sessions via `AuthContext`, persisted in `localStorage` and synchronized with the Supabase `users` table when available
 - **Storage**: Supabase Storage (images)
 - **Real-time**: Supabase Realtime subscriptions
+- **Room State**: Membership/history and realtime/typing lifecycles have separate hook owners behind the unchanged `useRoom()` API. See [RoomContext ownership](docs/room-context-ownership.md).
 - **Hosting**: Vercel/Netlify (recommended)
 
 ## 📋 Features
@@ -28,6 +29,7 @@ A Supabase-based React application for 1v1 tutor-student training with real-time
 - **Guard Mode**: Tutor-reviewed semantic response mode with corrective messaging and locked learning progression
 - **Transfer Assessments**: Room-approved learner targets drive semantic evidence analysis and teacher-reviewed questions; private keys, two-attempt grading, and terminal-only failure feedback stay behind the trusted assessment API
 - **Required Response Ratings**: Students must rate the latest persisted AI/Tutor response before sending their next reply; pre-populated transcript lines have no stored row, so they are never claimed by the rating prompt
+- **Feedback Loading**: Room/user-scoped feedback caches use bounded message batches, coalesced refreshes and paginated rating reads. See [feedback loading](docs/message-feedback-loading.md) for limits and verification evidence.
 - **File Downloads**: Chat history and room information export
 - **Responsive Design**: Mobile and desktop support
 
