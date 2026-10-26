@@ -53,8 +53,18 @@ Operational flag-value observation and a configuration rollback drill remain ope
 
 ## Base integration
 
-The PR base advanced to `ed572109f39af61f1d674df768eaa07de2f90416`. Resolve the sole merge conflict in `browser-e2e.test.js` by retaining both PR #29's cleanup/privacy cases and the base's room-setup cases. Revalidate the integrated harness and staging candidate; earlier-head CI is not current-head evidence.
+The PR base advanced to `ed572109f39af61f1d674df768eaa07de2f90416`. The sole merge conflict in `browser-e2e.test.js` was resolved by retaining both PR #29's cleanup/privacy cases and the base's room-setup cases. Earlier-head CI is not current-head evidence.
 
 Integrated candidate `50f0aa5` passes all 29 combined browser-runner checks and all 20 audit checks. SQL artifact hashes still match the passing clone runs. Staging security run `staging-template-20261026200442-7a94e1b2` reproduces the same three passing/three failing cases; identities and both rooms clean up and the lease releases. Privacy run `staging-template-20261026200628-d0935153` stops at `private_canary`, before any learner privacy checkpoint; room cleanup passes and the lease releases. A follow-up records only HTTP status and a bounded failure category to diagnose the prerequisite without preserving private exception bodies.
 
 Read-only secret-name observation subsequently succeeds: `TRANSFER_ASSESSMENT_ENABLED` exists, but its value is unavailable through that API. Successful assessment operations establish effective enabled behavior during the runs, not the secret's exact value. Evidence: `output/pr29-resume-20261026/staging-flag-observation.json`.
+
+## Remaining acceptance and handoff
+
+Diagnostic candidate `c005be5` attempted privacy run `staging-template-20261026200731-36ccf5ba`. It failed before browser identity or fixture work because another release owner had acquired staging: operation `staging-release`, candidate `7493add5a879a2db80505b87a98c5d6427f919d4`, run `9a0a93cb-a5a6-4f23-9c1c-0cd6cc166b7f`, claim time `2026-10-26T20:07:21.573Z`. No ownership transfer or reclaim was attempted. The failed claim does not own that reference.
+
+After the release owner finishes and releases the lease, rerun `assessment-privacy` on the current PR head, using the stage/category/HTTP-status diagnostic. Require both pass and retry/terminal-failure journeys, every surface checkpoint, and cleanup. Reobserve deployed versions and target preconditions because the intervening release can invalidate previous evidence for current staging. The earlier security findings remain valid observations of v77 at their recorded times, not certification of subsequent versions. If a privacy fixture defect is identified, correct it and rerun; an infrastructure or prerequisite failure cannot establish privacy acceptance.
+
+All room and temporary Auth/profile fixtures from completed runs are cleaned, including recovery of the initial HTTP 502 cleanup failure. The local candidate app is stopped. Operational rollback/readiness remains unverified; exact prior configuration must be observable before a reversible drill. Independent code/security review at `bfaa926` had no findings; the resumed changes require review on the new head. Required CI passed at `50f0aa5` ([run 40392423636](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40392423636)); final-head checks must be read from the PR.
+
+PR #29 remains open for owner review. Issue #28 remains open for privacy acceptance and operational evidence. This continuation implements no authentication or permission fix and makes no production release claim.
