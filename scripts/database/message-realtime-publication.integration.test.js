@@ -9,7 +9,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '../..');
-const migration = path.join(root, 'tutor-system/supabase/migrations/20261025034000_enable_message_realtime.sql');
+const migration = path.join(root, 'tutor-system/supabase/archived_migrations/20261025034000_enable_message_realtime.sql');
 const assertions = path.join(root, 'tutor-system/supabase/tests/message_realtime_publication.sql');
 const psql = process.env.PG_VALIDATION_PSQL || '/opt/homebrew/opt/postgresql@17/bin/psql';
 const operations = [];

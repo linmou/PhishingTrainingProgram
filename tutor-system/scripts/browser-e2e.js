@@ -25,12 +25,13 @@ const workflows = {
   'assessment-answer': require('./browser-e2e/workflows/assessment-answer'),
   'assessment-security': require('./browser-e2e/workflows/assessment-security'),
   'assessment-privacy': require('./browser-e2e/workflows/assessment-privacy'),
+  'assessment-configuration': require('./browser-e2e/workflows/assessment-configuration'),
   'transfer-status-events': require('./browser-e2e/workflows/transfer-status-events'),
   'early-message-recheck': require('./browser-e2e/workflows/early-message-recheck')
 };
 
 function selectWorkflows(argv) {
-  if (argv.length === 0) return Object.keys(workflows).filter(name => !['assessment-security', 'assessment-privacy'].includes(name));
+  if (argv.length === 0) return Object.keys(workflows).filter(name => !['assessment-security', 'assessment-privacy', 'assessment-configuration'].includes(name));
   if (argv.length !== 1 || !argv[0].startsWith('--workflow=')) {
     throw new Error(`Use --workflow=<name>; available: ${Object.keys(workflows).join(', ')}`);
   }
@@ -81,7 +82,7 @@ function shouldRetainLease(report) {
 async function main(argv = process.argv.slice(2)) {
   const selected = selectWorkflows(argv);
   const config = support.configFromEnv();
-  if (selected.some(name => ['assessment-security', 'assessment-privacy'].includes(name))) workflows['assessment-security'].assertStaging(config);
+  if (selected.some(name => ['assessment-security', 'assessment-privacy', 'assessment-configuration'].includes(name))) workflows['assessment-security'].assertStaging(config);
   const runId = `${new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14)}-${crypto.randomUUID().slice(0, 8)}`;
   const repoRoot = path.resolve(support.tutorRoot, '..');
   const evidenceDir = path.join(repoRoot, 'tmp/browser_demo_runs', `${support.TARGET}-template-${runId}`);

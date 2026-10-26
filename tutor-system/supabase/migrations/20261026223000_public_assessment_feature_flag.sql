@@ -1,5 +1,5 @@
 -- Intent: move non-sensitive assessment enablement into publicly readable configuration.
--- Queued migration candidate: promote to supabase/migrations only after the current pending migration is released.
+-- Apply before deploying the table-backed assessment-api.
 BEGIN;
 
 CREATE TABLE public.feature_flags (

@@ -2,7 +2,7 @@
 
 Intent: replace the assessment enablement secret with readable, administrator-controlled configuration.
 
-Updated: 2026-10-26. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: local tests passed; migration queued; no hosted changes.
+Updated: 2026-10-26. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`; current integration base: `dec7c274435bce082a7069c29c39302eecf960d3`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: local tests passed; predecessor production verified and archived; flag staging deployment pending.
 
 ## Changed Contract
 
@@ -34,11 +34,13 @@ The browser-runner, historical evidence and assessment privacy/security/result h
 
 The first `shasum` invocation failed on the host's unsupported `C.UTF-8` locale; rerunning with `LC_ALL=C LANG=C` produced these hashes. Deno updated unrelated workspace dependency metadata during testing; that generated metadata change was removed before commit.
 
-## Migration Dependency
+## Migration Dependency Resolution
 
-The one pending migration is `supabase/migrations/20261025034000_enable_message_realtime.sql`; its [release record](documentation_update_record_v2026_10_24_realtime_publication.md) assigns the existing root open-issues release owner and leaves hosted acceptance open. The October 26 production MCP query still reports no messages publication membership. Do not overwrite, combine, archive prematurely or independently release that owner's candidate.
+The predecessor `20261025034000_enable_message_realtime.sql` has now passed staging and production acceptance as an independently bounded SQL release from integrated `dec7c27`. Its [release record](documentation_update_record_v2026_10_24_realtime_publication.md#independent-prerequisite-release-on-october-26) preserves fresh baseline parity, actual channel/recovery checks, exact SQL application, data/permission readbacks and both lease releases. The archived bytes retain the original hash. No unrelated PR #30 application or prompt changes were promoted.
 
-The new SQL is queued at `specs/102-transfer-backend/public-feature-flag.sql`, outside the pending migration directory. Promote it to a dated migration only after the existing migration completes both environments and is archived. Do not merge/deploy the changed Edge handler without the configuration table. A single pending migration is a repository delivery requirement, not a Supabase limitation.
+The sole pending migration is now `supabase/migrations/20261026223000_public_assessment_feature_flag.sql`, promoted from the queued candidate. Its only source change is replacing the queued-artifact comment; SHA-256 is `5640033e764919d351ed6d9c01b4ae5e324dfc7e86e11f8d931c8ec86e3ea880`. A fresh hosted restore and catalog/role/data parity cycle passes; the promoted artifact passes its permission/disable/restore tests in `scenario-WlB24B`, with owned database cleanup. Both hosted legacy flags were read-only observed as exact `true` at 22:20 UTC, matching the seed. Do not deploy the changed Edge handler before the table.
+
+The opt-in staging-only `assessment-configuration` workflow now tests public reads and denied writes using both anonymous and real authenticated-role credentials. It saves and grades a fixed assessment, disables all nine assessment operations, verifies readable history and identical message/attempt/authority/progress hashes, restores the exact original boolean in a `finally` block and verifies normal private-review behavior afterward. Focused tests cover restoration on failure, both original booleans, unreadable configuration, restoration failure requiring lease retention, and rejection of production before fixture access.
 
 ## Hosted Acceptance
 
@@ -50,4 +52,4 @@ Only after the table-backed function passes acceptance, delete the single legacy
 
 After staging passes, request the human owner's authorization for the exact reviewed commit to merge into `no_sign_up`. Verify the integrated artifacts on staging, then apply the same SQL and Edge artifacts to production in that order. Production acceptance requires public read/write-boundary checks, the affected assessment lifecycle, persisted result/history, configuration state, legacy-secret absence and fixture cleanup. Record each environment's versions, hashes, commands and results before marking this task complete.
 
-Current blocker: the predecessor migration's hosted release is incomplete. No staging lease, new SQL application, Edge deployment, secret deletion, merge or production verification has occurred for this candidate. The remaining release trigger is predecessor completion followed by this candidate's CI/review, migration validation, staging acceptance and explicit merge authorization.
+The predecessor blocker is resolved. Current remaining gates are this candidate's CI/review, staging table and Edge deployment, live configuration/privacy acceptance and legacy-secret removal, followed by explicit authorization to merge the exact candidate and promote its integrated artifacts. No flag-table SQL application, changed Edge deployment or flag-secret deletion has occurred yet; production flag behavior remains on the old implementation.

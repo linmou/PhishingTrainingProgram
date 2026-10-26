@@ -14,6 +14,8 @@ Intent: identify test boundaries, reuse template rooms for live browser tests, a
 
 Updated: 2026-10-25. Workflow revision baseline commit: `72f1087`; assessment release browser baseline: `88b3ccd`; room setup assertion fix based on `45867b4`.
 
+Update 2026-10-26, configuration-drill baseline `6c0d822`: opt-in staging `--workflow=assessment-configuration` verifies public flag read/write permissions and reversible disable/history-preservation/restore behavior under the runner's project lease. It restores the original boolean and retains the lease if restoration cannot be verified. It requires the public flag migration and matching Edge handler and never runs on production or in the default suite.
+
 For the staging-to-production Edge Function release sequence, see [supabase-release-workflow.md](supabase-release-workflow.md#edge-function-release). This page contains the browser setup and commands.
 
 ## Concurrent Agent Runs (Shared Fixtures)
