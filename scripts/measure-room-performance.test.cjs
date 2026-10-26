@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { EventEmitter } = require('node:events');
-const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails } = require('./measure-room-performance.cjs');
+const { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient } = require('./measure-room-performance.cjs');
 
 const env = {
   E2E_TARGET: 'staging', E2E_PROJECT_REF: 'ciubrzggdqesgvfkpolj', E2E_APP_URL: 'http://localhost:3100',
@@ -33,6 +33,18 @@ test('cleanup diagnostics preserve PostgREST fields and native Error stacks', ()
   assert.equal(native.message, 'cleanup failed');
   assert.match(native.stack, /cleanup failed/);
   assert.deepEqual(errorDetails('offline'), { message: 'offline' });
+});
+
+test('fixture service client sends the existing practice write contract on every request', () => {
+  const client = {};
+  const result = createFixtureClient({ projectUrl: 'https://staging.supabase.co', serviceKey: 'test-service-key' }, (url, key, options) => {
+    assert.equal(url, 'https://staging.supabase.co');
+    assert.equal(key, 'test-service-key');
+    assert.equal(options.global.headers['x-practice-contract'], 'cyberbullying-v2');
+    assert.equal(options.auth.persistSession, false);
+    return client;
+  });
+  assert.equal(result, client);
 });
 
 test('preflight accepts explicit staging and rejects production, missing target, mismatched URL and invalid duration', () => {
@@ -152,4 +164,19 @@ test('monitor flush waits for requests started before the boundary even before r
   await completion;
   assert.equal(records[0].response_body_bytes, 15);
   assert.equal(summarize(records, 0, Date.now() + 1).messages.response_body_bytes, 15);
+});
+
+test('page closure settles orphaned HTTP requests while preserving cancellation failure evidence', async () => {
+  const page = new EventEmitter();
+  const records = [];
+  const flush = monitor(page, records, []);
+  const request = { url: () => 'https://staging.supabase.co/rest/v1/rooms', method: () => 'GET', postData: () => null };
+  page.emit('request', request);
+  const completion = flush(Date.now() + 1);
+  page.emit('response', { request: () => request, status: () => 200, body: () => new Promise(() => {}) });
+  page.emit('close');
+  await completion;
+  assert.match(records[0].failure.errorText, /Page closed/);
+  assert(Number.isInteger(records[0].cancelled_at_close_ms));
+  assert.throws(() => summarize(records, 0, Date.now() + 1), /Request failed/);
 });
