@@ -235,6 +235,13 @@ function allowMembershipRequest(url, method, body) {
   return payload?.operation === 'join_room' && typeof payload.room_id === 'string' && payload.room_id.length > 0;
 }
 
+function routeEdgeRequest(route, errors) {
+  const request = route.request();
+  if (allowMembershipRequest(request.url(), request.method(), request.postData())) return route.fallback();
+  errors.push(`Unexpected provider/Edge request: ${new URL(request.url()).pathname}`);
+  return route.abort('blockedbyclient');
+}
+
 async function visibility(page, text, mutate) {
   const started = Date.now();
   await mutate();
@@ -272,12 +279,7 @@ async function main(argv = process.argv.slice(2)) {
     browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
     const traffic = await support.guardProject(context);
-    await context.route('**/functions/v1/**', route => {
-      const request = route.request();
-      if (allowMembershipRequest(request.url(), request.method(), request.postData())) return route.continue();
-      report.errors.push(`Unexpected provider/Edge request: ${new URL(request.url()).pathname}`);
-      return route.abort('blockedbyclient');
-    });
+    await context.route('**/functions/v1/**', route => routeEdgeRequest(route, report.errors));
     await context.addInitScript(() => {
       const NativeSocket = window.WebSocket;
       const sockets = new Set();
@@ -471,5 +473,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, main };
+module.exports = { settings, summarize, assertHealthy, realtimeFrame, messageFrame, assertPublicPayload, assertBindings, assertRealtime, assertTargetedRefreshes, monitor, resetIdentity, errorDetails, createFixtureClient, allowMembershipRequest, routeEdgeRequest, main };
 if (require.main === module) main().catch(error => { console.error(error); process.exitCode = 1; });
