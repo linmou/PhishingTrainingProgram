@@ -31,7 +31,8 @@ function assessment(comments) {
       typeof a.blocking_findings !== 'boolean' || !Array.isArray(a.reasons) ||
       a.reasons.some(r => !r || !CODES.has(r.code) || typeof r.detail !== 'string' || !r.detail.trim()) ||
       (a.decision === 'human') !== (a.reasons.length > 0)) throw new Error('Invalid Codex assessment contract.');
-  if (['review-comment', 'review'].includes(comment.assessment_source) && comment.commit_id !== a.head_sha) {
+  const reviewedCommit = comment.assessment_source === 'review-comment' ? comment.original_commit_id : comment.commit_id;
+  if (['review-comment', 'review'].includes(comment.assessment_source) && reviewedCommit !== a.head_sha) {
     throw new Error('Assessment does not match its actual reviewed commit.');
   }
   return { ...a, comment };

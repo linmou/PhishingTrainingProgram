@@ -138,7 +138,7 @@ test('non-PR comments and closed PRs do not publish checks', async () => {
 });
 test('reads native inline assessments with review footers and uses time across comment namespaces', () => {
   const f = fixture('human');
-  f.comments[0] = { ...f.comments[0], id: 1, commit_id: HEAD, assessment_source: 'review-comment', performed_via_github_app: null,
+  f.comments[0] = { ...f.comments[0], id: 1, commit_id: BASE, original_commit_id: HEAD, assessment_source: 'review-comment', performed_via_github_app: null,
     body: 'Actual review finding\n\n' + f.comments[0].body + '\n\nUseful? React on GitHub.' };
   assert.match(evaluate(f).message, /Human PR approval required/);
   approve(f); assert.equal(evaluate(f).allowed, true);
@@ -157,7 +157,7 @@ test('GitHub integration consumes assessment output from the native inline-revie
   const fs = require('node:fs');
   const f = fixture('human');
   changeAssessment(f, { policy_sha256: fingerprint(fs.readFileSync(require('node:path').join(__dirname, '../pr-approval-policy.md'), 'utf8')) });
-  approve(f); f.reviewComments = [{ ...f.comments.shift(), commit_id: HEAD, performed_via_github_app: null }];
+  approve(f); f.reviewComments = [{ ...f.comments.shift(), commit_id: BASE, original_commit_id: HEAD, performed_via_github_app: null }];
   const env = api(f); await run(env);
   assert.equal(env.log.find(x => x[0] === 'finish')[1].conclusion, 'success');
 });
