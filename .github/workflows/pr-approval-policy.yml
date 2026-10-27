@@ -8,6 +8,10 @@ on:
     types: [created, edited, deleted]
   pull_request_review:
     types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+  push:
+    branches: [no_sign_up]
   workflow_dispatch:
     inputs:
       pr:
@@ -42,5 +46,9 @@ jobs:
       - uses: actions/github-script@v7
         with:
           script: |
+            if (!require('fs').existsSync('./.github/scripts/pr-approval-policy.cjs')) {
+              core.notice('Bootstrap: trusted base policy is not installed. No approval check is granted.');
+              return;
+            }
             const { run } = require('./.github/scripts/pr-approval-policy.cjs');
             await run({ github, context, core });

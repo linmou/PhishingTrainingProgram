@@ -93,12 +93,13 @@ test('supports current collaborator reviews, blocks outstanding changes, and rej
 function api(f, options = {}) {
   const log = [];
   const github = { rest: {
-    pulls: { get: async () => ({ data: options.drift && log.length ? { ...f.pr, head: { sha: BASE } } : f.pr }), listReviews: 'reviews', listFiles: 'files' },
+    pulls: { get: async () => ({ data: options.drift && log.length ? { ...f.pr, head: { sha: BASE } } : f.pr }),
+      list: 'prs', listReviews: 'reviews', listReviewComments: 'reviewComments', listFiles: 'files' },
     issues: { listComments: 'comments', createComment: async args => { log.push(['comment', args]); } },
     repos: { getCollaboratorPermissionLevel: async ({ username }) => ({ data: { permission: f.permissions[username] || 'read' } }) },
     checks: { create: async args => { log.push(['start', args]); return { data: { id: 99 } }; },
       update: async args => { log.push(['finish', args]); } }
-  }, paginate: async resource => { if (options.error) throw new Error('API unavailable'); return f[resource]; } };
+  }, paginate: async resource => { if (options.error) throw new Error('API unavailable'); return f[resource] || []; } };
   const context = { repo: { owner: 'test', repo: 'repo' }, payload: { pull_request: { number: 42 } } };
   const summary = { addHeading() { return this; }, addRaw() { return this; }, async write() {} };
   return { github, context, core: { summary }, log };
@@ -134,4 +135,35 @@ test('GitHub integration fails closed on API errors and candidate drift', async 
 test('non-PR comments and closed PRs do not publish checks', async () => {
   const env = api(fixture()); env.context.payload = { issue: { number: 42 } }; await run(env); assert.equal(env.log.length, 0);
   const f = fixture(); f.pr.state = 'closed'; const closed = api(f); await run(closed); assert.equal(closed.log.length, 0);
+});
+test('reads native inline assessments with review footers and uses time across comment namespaces', () => {
+  const f = fixture('human');
+  f.comments[0] = { ...f.comments[0], id: 1, commit_id: HEAD, assessment_source: 'review-comment', performed_via_github_app: null,
+    body: 'Actual review finding\n\n' + f.comments[0].body + '\n\nUseful? React on GitHub.' };
+  assert.match(evaluate(f).message, /Human PR approval required/);
+  approve(f); assert.equal(evaluate(f).allowed, true);
+  const stale = { ...f.comments[0], id: 999999999, updated_at: '2026-10-26T01:00:00Z' };
+  stale.body = stale.body.replace(HEAD, BASE); f.comments.push(stale);
+  assert.equal(evaluate(f).allowed, true);
+  f.comments[0].user = human; assert.equal(evaluate(f).allowed, false);
+});
+test('a base-branch push reevaluates every open PR against the current base', async () => {
+  const f = fixture(); f.prs = [{ number: 42 }, { number: 43 }];
+  const env = api(f); env.context.eventName = 'push'; env.context.payload = {};
+  await run(env); assert.equal(env.log.filter(x => x[0] === 'start').length, 2);
+  assert.equal(env.log.filter(x => x[0] === 'finish').length, 2);
+});
+test('GitHub integration consumes assessment output from the native inline-review endpoint', async () => {
+  const fs = require('node:fs');
+  const f = fixture('human');
+  changeAssessment(f, { policy_sha256: fingerprint(fs.readFileSync(require('node:path').join(__dirname, '../pr-approval-policy.md'), 'utf8')) });
+  approve(f); f.reviewComments = [{ ...f.comments.shift(), commit_id: HEAD, performed_via_github_app: null }];
+  const env = api(f); await run(env);
+  assert.equal(env.log.find(x => x[0] === 'finish')[1].conclusion, 'success');
+});
+test('accepts a clean risk assessment in a native review body but rejects mismatched actual commit', () => {
+  const f = fixture();
+  f.reviews.push({ ...f.comments.shift(), performed_via_github_app: null, state: 'COMMENTED', commit_id: HEAD });
+  assert.equal(evaluate(f).allowed, true);
+  f.reviews[0].commit_id = BASE; assert.equal(evaluate(f).allowed, false);
 });
