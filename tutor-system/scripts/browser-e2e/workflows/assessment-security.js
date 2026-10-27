@@ -231,7 +231,9 @@ module.exports = async function assessmentSecurity(ctx) {
     await probe('stale_question', async () => {
       const response = await api(ctx.student.id, { operation: 'post_message', room_id: fixture.room.id,
         assessment_id: delivered.assessment_id, parent_message_id: delivered.question_message_id, content: 'B', selected_option_ids: ['B'] });
-      assertDenied(response, ['ASSESSMENT_TERMINAL', 'INVALID_SCOPE', 'ITEM_VALIDATION_FAILED']);
+      // post_assessment_message_v2 also uses WRONG_LEARNER for lifecycle <> 'open'.
+      // The same learner's successful control answer and the cancelled question above establish this scope.
+      assertDenied(response, ['ASSESSMENT_TERMINAL', 'WRONG_LEARNER', 'INVALID_SCOPE', 'ITEM_VALIDATION_FAILED']);
       return response;
     });
     // Run corrupting public-field attacks last so stale-question checks use legitimate lifecycle state.
