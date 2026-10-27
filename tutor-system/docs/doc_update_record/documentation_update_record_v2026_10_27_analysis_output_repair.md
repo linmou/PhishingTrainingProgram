@@ -2,7 +2,7 @@
 
 Intent: restore the existing analyzer response contract without accepting incorrect assessment credit.
 
-Updated: 2026-10-27. Record baseline: `7ae933d`; original implementation base: `18b3109`. Owner: root Codex release agent. Issue: [#40](https://github.com/linmou/PhishingTrainingProgram/issues/40). Candidate: [PR #41](https://github.com/linmou/PhishingTrainingProgram/pull/41). Status: staging verified — awaiting native GitHub Codex review, merge and production release. Native review is blocked by account usage limits.
+Updated: 2026-10-27. Release commit: `ac1282ab037d0320bd5ff1c7a2c38604f8c517a9`; original implementation base: `18b3109`. Owner: root Codex release agent. Issue: [#40](https://github.com/linmou/PhishingTrainingProgram/issues/40). Merged: [PR #41](https://github.com/linmou/PhishingTrainingProgram/pull/41). Status: production verified; final acceptance below supersedes the historical checkpoints. Native GitHub Codex review remained usage-blocked; the maintainer manually merged the PR.
 
 ## Failure and Candidate
 
@@ -25,9 +25,9 @@ The full-scope response credits `initial_signal` for Login Activity although the
 
 The existing handler suite passes 49/49 with Deno type checking: `deno test --sloppy-imports --allow-env --allow-net --allow-run --allow-read tutor-system/supabase/functions/assessment-api/index.test.ts`. The existing repair assertion now selects the last user message because the reminder is a final system message. These deterministic tests verify repair/rejection and mutation boundaries, not provider semantic correctness. Earlier invocations failed on inherited extensionless imports, missing subprocess permission and the old last-message assumption; those failures remain recorded in the session.
 
-## Release Gates
+## Historical Release Gates
 
-Staging: `ciubrzggdqesgvfkpolj`. Production: `zgbufaxooqxeabewktzd`. Production assessment-api v19 bundle: `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427`. No production repair deployment has occurred; staging delivery is recorded below.
+Staging: `ciubrzggdqesgvfkpolj`. Production: `zgbufaxooqxeabewktzd`. At this checkpoint, production assessment-api was v19, bundle `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427`; no production repair deployment had occurred. Staging delivery and final production acceptance are recorded below.
 
 Before release, resolve incorrect credit without weakening the agreed evidence criteria, obtain independent Codex review and pass CI. Under the project lease, deploy exact candidate source to staging, compare downloaded runtime files and run affected delivery/status/answer journeys plus cyberbullying analysis because repair is shared. Require correct persisted transitions, no unrelated credit and full cleanup. Then merge, verify integrated artifact parity and promote the same source to production; rerun affected journeys, inspect persisted state, record versions/hashes and cleanup, and release leases. #19/#22 stay open until their combined acceptance passes.
 
@@ -68,4 +68,30 @@ All six selected browser journeys exit 0 against this exact source; every fixtur
 
 In the delivery run's final `transfer-status-events.json` observation, the previously failing learner contribution leaves Official Support **covered/good** while Login Activity and No Alternative Contact Method remain **pending/none**. Saved function calls, progress and assessment/result artifacts establish successful downstream consumption, not merely valid JSON. Launcher evidence: `pr-29-resume/output/public-assessment-flag-20261026/staging-1793133452567/execution.json`. The app stopped with exit 0, local fixture locks were removed, source parity was rechecked and the owned remote lease was released.
 
-Batch/release owner remains root; target branch remains at `18b3109`. The final evidence-only documentation commit preserves runtime artifacts and may reuse this staging evidence while target preconditions remain valid. Release trigger: successful current-head native GitHub Codex review plus required CI and risk-gate authorization, followed by merge into no_sign_up, integrated artifact comparison, exact promotion and affected production journeys/cleanup. Production was not changed by this repair. #40 and #19/#22 production acceptance remain open.
+At the staging checkpoint, batch/release owner remained root and the target branch remained at `18b3109`. The final evidence-only documentation commit preserved runtime artifacts. Native review, merge and production acceptance were still open; the maintainer's subsequent merge and production verification are recorded below.
+
+## Final Production Acceptance
+
+The maintainer merged PR #41 at `2026-10-27T20:55:24Z` as `ac1282ab037d0320bd5ff1c7a2c38604f8c517a9`. Native GitHub Codex review remained quota/credit-blocked; it is not reported as completed. Final-head CI passed all three checks in run `40581449921`, and the independent local audit above remains the scoped source-review evidence.
+
+Before promotion, merged application, Edge and script source matched the staging-tested `7ae933d`; selected #19–22 frontend modules also matched the accepted performance candidate `9ce6ee7`. Under owned project leases, the exact merged assessment-api source advanced production from v19 to **v20**, bundle `4eebe11322379efb80f4489f01574d18f0ee33ec74515318b9e504ea91f0fb10`. Staging remained **v80**, bundle `9674a1dab615706f67de4236217e9fa9e46aff6e17bd011935115b1b99befda9`. The submitted 15-file manifest remains `c2b778d8aa40629082097ee5bd62012d6ba1683c1e587b0242ba226cdbea3736`; all 11 downloaded runtime files match the committed source in both environments after verification. Public assessment flags are true. No SQL, secrets or ai-api changes were required.
+
+All eleven production journeys exit 0 with passing reports and fixture cleanup, using frozen release commit `ac1282a`. Report directories under `analysis-repair-release-20261027/tmp/browser_demo_runs/`:
+
+| Journey | Passing run |
+| --- | --- |
+| Assessment delivery | `production-template-20261027210353-dd303be5` |
+| Status transitions | `production-template-20261027210653-0709d017` |
+| Answer lifecycle | `production-template-20261027210755-caa841ab` |
+| Cyberbullying identities/roles/export | `production-template-20261027211001-3f8b7661` |
+| Room assessment setup | `production-template-20261027211102-8022989b` |
+| Early-message recheck | `production-template-20261027211132-8d24715a` |
+| Tutor response | `production-template-20261027211205-21209c2d` |
+| Checklist generation | `production-template-20261027211219-afb070ce` |
+| Checklist management | `production-template-20261027211238-fb523bd9` |
+| Checklist coverage | `production-template-20261027211252-0be368a8` |
+| Guard Mode | `production-template-20261027211318-9ecd76bb` |
+
+At the formerly failing official-support contribution, persisted Official Support is **covered/good**, while Login Activity and No Alternative Contact Method stay **pending/none**. The full delivery queue and terminal feedback pass. The app stopped, the local fixture lock was removed, both deployed sources were rechecked and both owned remote leases were released. Finalizer exited 0 with `status: production-verified` and `leases_released: true`.
+
+Final metadata, source downloads, artifact hashes, target IDs and cleanup results: sibling `pr-29-resume/output/issues-19-22-closeout-20261027/production-repair-1793134966910/release.json`. Launcher command/results: `pr-29-resume/output/public-assessment-flag-20261026/production-1793135024121/execution.json`. These results satisfy #40 and the remaining combined production gates for #19/#22; earlier failures remain preserved.
