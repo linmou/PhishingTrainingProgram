@@ -19,6 +19,17 @@ test('successful impersonation, server errors and irrelevant validation failures
   security.assertDenied({ status: 403, body: { error: { code: 'FORBIDDEN' } } }, ['FORBIDDEN']);
 });
 
+// assessment-security.js: denial diagnostics retain bounded codes without copying private response bodies.
+test('unexpected denial diagnostics expose only a bounded error code', () => {
+  assert.throws(() => security.assertDenied({ status: 409, body: {
+    error: { code: 'ASSESSMENT_NOT_OPEN', message: 'private review body' }
+  } }, ['FORBIDDEN']), /Unexpected denial code ASSESSMENT_NOT_OPEN/);
+  for (const code of ['private review body', 'A'.repeat(65), { private_payload: 'private review body' }]) {
+    assert.throws(() => security.assertDenied({ status: 409, body: { error: { code } } }, ['FORBIDDEN']),
+      error => error.message.includes('UNRECOGNIZED') && !error.message.includes('private review body'));
+  }
+});
+
 test('state oracle failure before an attack is persisted and prevents the attack', async () => {
   const row = { id: 'forged_identity', status: 'blocked', reason: 'not_run' };
   let attacked = false;
