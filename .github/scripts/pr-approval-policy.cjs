@@ -62,7 +62,8 @@ function evaluate({ pr, comments, reviews, permissions, files, policyHash }) {
     if (collaborator(r.user) && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(r.state)) latest.set(r.user.login, r);
   }
   if ([...latest.values()].some(r => r.state === 'CHANGES_REQUESTED')) return fail('A collaborator has outstanding change requests.');
-  const control = name => CONTROLS.has(name) || name?.startsWith('.github/workflows/') || name?.startsWith('.github/scripts/');
+  const control = name => CONTROLS.has(name) || name?.endsWith('/AGENTS.md') ||
+    name?.startsWith('.github/workflows/') || name?.startsWith('.github/scripts/');
   const controlsChanged = files.some(f => control(f.filename) || control(f.previous_filename));
   if (a.decision === 'automatic' && !controlsChanged) return { allowed: true, message: 'Codex automatic path; other CI and release gates still apply.' };
   // Bind approval to this complete assessment version as well as the candidate.
@@ -82,7 +83,12 @@ async function run({ github, context, core }) {
   const repo = context.repo;
   if (context.eventName === 'push') {
     const prs = await github.paginate(github.rest.pulls.list, { ...repo, base: 'no_sign_up', state: 'open', per_page: 100 });
-    for (const pr of prs) await run({ github, core, context: { ...context, eventName: 'base-refresh', payload: { pull_request: { number: pr.number } } } });
+    const failures = [];
+    for (const pr of prs) {
+      try { await run({ github, core, context: { ...context, eventName: 'base-refresh', payload: { pull_request: { number: pr.number } } } }); }
+      catch (error) { failures.push(error); }
+    }
+    if (failures.length) throw new AggregateError(failures, 'Some PR policy refreshes failed; other PRs were still evaluated.');
     return;
   }
   const number = context.payload.pull_request?.number || context.payload.issue?.number || Number(context.payload.inputs?.pr);

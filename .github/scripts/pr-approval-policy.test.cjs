@@ -75,6 +75,7 @@ test('rejects edited/stale approval, reassessment reuse and honors revocation', 
 });
 test('enforces policy-control changes even when Codex says automatic, including renamed controls', () => {
   for (const file of [{ filename: 'AGENTS.md' }, { filename: '.github/workflows/new.yml' },
+    { filename: 'tutor-system/AGENTS.md' }, { filename: 'elsewhere.md', previous_filename: 'src/AGENTS.md' },
     { filename: 'elsewhere.cjs', previous_filename: '.github/scripts/pr-approval-policy.cjs' }]) {
     const f = fixture(); f.files = [file]; assert.equal(evaluate(f).allowed, false); approve(f); assert.equal(evaluate(f).allowed, true);
   }
@@ -93,7 +94,10 @@ test('supports current collaborator reviews, blocks outstanding changes, and rej
 function api(f, options = {}) {
   const log = [];
   const github = { rest: {
-    pulls: { get: async () => ({ data: options.drift && log.length ? { ...f.pr, head: { sha: BASE } } : f.pr }),
+    pulls: { get: async ({ pull_number }) => {
+      if (pull_number === options.failNumber) throw new Error('PR unavailable');
+      return { data: options.drift && log.length ? { ...f.pr, head: { sha: BASE } } : f.pr };
+    },
       list: 'prs', listReviews: 'reviews', listReviewComments: 'reviewComments', listFiles: 'files' },
     issues: { listComments: 'comments', createComment: async args => { log.push(['comment', args]); } },
     repos: { getCollaboratorPermissionLevel: async ({ username }) => ({ data: { permission: f.permissions[username] || 'read' } }) },
@@ -153,6 +157,13 @@ test('a base-branch push reevaluates every open PR against the current base', as
   const env = api(f); env.context.eventName = 'push'; env.context.payload = {};
   await run(env); assert.equal(env.log.filter(x => x[0] === 'start').length, 2);
   assert.equal(env.log.filter(x => x[0] === 'finish').length, 2);
+});
+test('a failed PR refresh cannot prevent subsequent open PRs from being reevaluated', async () => {
+  const f = fixture(); f.prs = [{ number: 42 }, { number: 43 }];
+  const env = api(f, { failNumber: 42 }); env.context.eventName = 'push'; env.context.payload = {};
+  await assert.rejects(run(env), AggregateError);
+  assert.equal(env.log.filter(x => x[0] === 'start').length, 1);
+  assert.equal(env.log.filter(x => x[0] === 'finish').length, 1);
 });
 test('GitHub integration consumes assessment output from the native inline-review endpoint', async () => {
   const fs = require('node:fs');
