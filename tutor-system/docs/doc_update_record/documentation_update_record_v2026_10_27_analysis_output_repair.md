@@ -2,7 +2,7 @@
 
 Intent: restore the existing analyzer response contract without accepting incorrect assessment credit.
 
-Updated: 2026-10-27. Baseline commit: `18b3109`. Owner: root Codex release agent. Issue: [#40](https://github.com/linmou/PhishingTrainingProgram/issues/40). Candidate: [PR #41](https://github.com/linmou/PhishingTrainingProgram/pull/41). Status: revised local replay passes; independent audit and hosted acceptance pending. Native GitHub Codex review is blocked by account usage limits.
+Updated: 2026-10-27. Record baseline: `7ae933d`; original implementation base: `18b3109`. Owner: root Codex release agent. Issue: [#40](https://github.com/linmou/PhishingTrainingProgram/issues/40). Candidate: [PR #41](https://github.com/linmou/PhishingTrainingProgram/pull/41). Status: staging verified — awaiting native GitHub Codex review, merge and production release. Native review is blocked by account usage limits.
 
 ## Failure and Candidate
 
@@ -46,3 +46,26 @@ The first independent refinement audit, retained at `/tmp/ptp41-independent-hold
 The audit also flags the stored target “No Alternative Contact Method: Legitimate alerts provide multiple ways to verify” as underspecified and potentially overgeneralized curriculum content. No target wording or expected labels were silently changed. Its future authorship review is separate from restoring the existing attribution and output contracts.
 
 Final candidate handler SHA-256: `fd891964861cc5fedb88fefd41f01a9a5f60dc0d25ae6f883582841f21976876`. The final reminder now derives eligible event kinds from the existing `applyLearningEvent` result instead of advertising every global category. This avoids a duplicated state table and aligns the provider's contract with the unchanged server authority. Type-checked handler tests pass 49/49. Full-context replays `1793133150495`, `1793133155795`, `1793133161867` pass 3/3, each HTTP 200 with exactly the correct Official Support event and no unrelated credit. Previous `37fc14c7` replacement holdouts pass 23/24 raw decisions (baseline 22/24), with one inherited ineligible contradiction safely rejected; that failed validity result is retained and motivates the category reminder correction. A fresh exact-hash independent audit and staging gates remain pending for this final candidate.
+
+## Final Independent Audit and Staging Acceptance
+
+Independent auditor `/root/analysis_repair_audit_resume` clears the final handler hash for the inspected refinement and scoped correctness. New independent cases pass 24/24 decisions versus baseline 21/24; the exposed regression set passes 24/24 versus a fresh baseline 22/24. There are no pass-to-fail results or rejected events hiding wrong raw decisions. Narrow action targets stored as detection_area, partial action completion, covered repetition and genuine covered contradiction pass. All three full-context replays were independently checked. Raw inputs/outputs, frozen source/spec/dependency snapshots, settings, confusion metrics, pairs and earlier failed audits are retained under `pr-29-resume/output/issues-19-22-closeout-20261027/audit-v3-final/`, `audit-v2-final/`, `audit-v2-failed/` and `audit-v1-failed/`. Final audit SHA-256: `236b36907d89d30b725c8c93e32e2518b9ec219d92761a27fb542b001f82af89`.
+
+These are scoped regression/generalization results. The new-case auditor had seen older prompts, so this evidence does not establish strict prompt-blind holdout eligibility or acceptance of the entire historical classifier benchmark. The local audit also does not replace native GitHub Codex review. No target, gold label, threshold or constitutional priority was changed.
+
+Exact runtime commit `7ae933ddf5c587a20f49d9c6d7532569c6cd7201` passed all three GitHub checks in run `40579105460`. Under its project lease, staging advanced from assessment-api v79 to **v80**, bundle `9674a1dab615706f67de4236217e9fa9e46aff6e17bd011935115b1b99befda9`. Submitted 15-file source manifest SHA-256: `c2b778d8aa40629082097ee5bd62012d6ba1683c1e587b0242ba226cdbea3736`. All 11 downloaded runtime files match the committed candidate before and after browser checks; public assessment flag is true. No SQL, secret or ai-api change was needed. Deployment/source evidence: `pr-29-resume/output/issues-19-22-closeout-20261027/staging-repair-1793133412610/release.json`.
+
+All six selected browser journeys exit 0 against this exact source; every fixture cleanup passes. Reports are under this worktree's `tmp/browser_demo_runs/`:
+
+| Journey | Passing run |
+| --- | --- |
+| Full assessment delivery | `staging-template-20261027203742-17be4a9a` |
+| Status transitions | `staging-template-20261027204130-31dcdd2c` |
+| Pass/retry/failure/cancellation answer lifecycle | `staging-template-20261027204250-46c156f1` |
+| Cyberbullying | `staging-template-20261027204509-b5517a57` |
+| Room assessment setup | `staging-template-20261027204615-7e9eead2` |
+| Early-message recheck | `staging-template-20261027204646-319fa206` |
+
+In the delivery run's final `transfer-status-events.json` observation, the previously failing learner contribution leaves Official Support **covered/good** while Login Activity and No Alternative Contact Method remain **pending/none**. Saved function calls, progress and assessment/result artifacts establish successful downstream consumption, not merely valid JSON. Launcher evidence: `pr-29-resume/output/public-assessment-flag-20261026/staging-1793133452567/execution.json`. The app stopped with exit 0, local fixture locks were removed, source parity was rechecked and the owned remote lease was released.
+
+Batch/release owner remains root; target branch remains at `18b3109`. The final evidence-only documentation commit preserves runtime artifacts and may reuse this staging evidence while target preconditions remain valid. Release trigger: successful current-head native GitHub Codex review plus required CI and risk-gate authorization, followed by merge into no_sign_up, integrated artifact comparison, exact promotion and affected production journeys/cleanup. Production was not changed by this repair. #40 and #19/#22 production acceptance remain open.
