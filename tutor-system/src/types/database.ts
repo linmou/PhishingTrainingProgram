@@ -11,6 +11,20 @@ export type Json =
 export interface Database {
     public: {
         Tables: {
+            feature_flags: {
+                Row: {
+                    name: 'TRANSFER_ASSESSMENT_ENABLED'
+                    enabled: boolean
+                }
+                Insert: {
+                    name: 'TRANSFER_ASSESSMENT_ENABLED'
+                    enabled: boolean
+                }
+                Update: {
+                    name?: 'TRANSFER_ASSESSMENT_ENABLED'
+                    enabled?: boolean
+                }
+            }
             users: {
                 Row: {
                     id: string
