@@ -2,9 +2,9 @@
 
 Intent: preserve reproducible SQL and staging acceptance evidence for PR #29 and issue #28.
 
-Updated: 2026-10-26. Source baseline: `bfaa92661c29b6606be16ec25dc21b08d7e1fd22`.
+Updated: 2026-10-27. Original source baseline: `bfaa92661c29b6606be16ec25dc21b08d7e1fd22`; status reconciliation baseline: `18b3109`.
 
-Current outcome: SQL integration and live staging privacy acceptance pass. Live security testing records identity-spoofing/direct-write failures. Operational rollback/readiness and review of the resumed changes remain open. The final section supersedes intermediate privacy and lease blockers below.
+Current outcome: SQL integration and live staging privacy acceptance pass. The [public-configuration release](documentation_update_record_v2026_10_26_public_feature_flag.md) subsequently completed operational disable/history-preservation/restore acceptance and merged PR #29 through PR #37. Identity-spoofing/direct-write failures remain unresolved. The [October 27 continuation](documentation_update_record_v2026_10_27_wave105_completion.md) records current security results and remaining coverage. Dated checkpoint statements below preserve their original status and are superseded by these linked records.
 
 ## SQL fixture corrections
 

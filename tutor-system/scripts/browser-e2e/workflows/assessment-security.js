@@ -12,7 +12,9 @@ function assertStaging(config) {
 }
 function assertDenied(response, codes) {
   assert(response.status >= 400 && response.status < 500, `Expected denial, received HTTP ${response.status}`);
-  assert(codes.includes(response.body?.error?.code ?? response.body?.code), 'Unexpected denial reason; infrastructure/validation errors are not authorization evidence');
+  const code = response.body?.error?.code ?? response.body?.code;
+  const diagnostic = typeof code === 'string' && /^[A-Z][A-Z0-9_]{0,63}$/.test(code) ? code : 'UNRECOGNIZED';
+  assert(codes.includes(code), `Unexpected denial code ${diagnostic}; infrastructure/validation errors are not authorization evidence`);
 }
 // Harness logic only; injected snapshots in unit tests are not hosted security evidence.
 async function runProbe(row, snapshot, execute, persist, httpStatus) {
@@ -173,16 +175,17 @@ module.exports = async function assessmentSecurity(ctx) {
       } }
     ]);
     const roles = [{ name: 'anon', token: ctx.config.anonKey }, { name: 'authenticated', token: authToken }];
-    const writes = [
-      ['result', { assessment_result: 'pass' }], ['lifecycle', { assessment_lifecycle: 'passed' }],
-      ['selected_options', { assessment_selected_option_ids: ['B'] }],
+    const writes = role => [
+      ['result', { assessment_result: role.name === 'anon' ? 'pass' : 'fail' }],
+      ['lifecycle', { assessment_lifecycle: role.name === 'anon' ? 'passed' : 'failed' }],
+      ['selected_options', { assessment_selected_option_ids: [role.name === 'anon' ? 'A' : 'B'] }],
       ['trusted_event', { assessment_event: { event_key: `assessment-closure:${delivered.question_message_id}`,
         kind: 'closure', assessment_id: delivered.assessment_id, question_message_id: delivered.question_message_id,
         student_id: ctx.student.id, answer_message_id: null, attempts_used: 1, attempts_remaining: 0,
         terminal: true, lifecycle: 'cancelled', progress_deferred: false, closure_reason: 'assisted' } }],
-      ['question_options', { assessment_options: delivered.assessment.options.map(option => ({ ...option, text: `Forged ${option.text}` })) }]
+      ['question_options', { assessment_options: delivered.assessment.options.map(option => ({ ...option, text: `Forged ${role.name} ${option.text}` })) }]
     ];
-    const writeChecks = roles.flatMap(role => writes.map(([field, patch]) => ({
+    const writeChecks = roles.flatMap(role => writes(role).map(([field, patch]) => ({
       id: `${role.name}_${field}`, blocked: role.token ? null : 'Real authenticated-role JWT could not be provisioned',
       execute: async () => {
         const response = await request(`/rest/v1/messages?id=eq.${delivered.question_message_id}`, patch, ctx.student.id, 'PATCH', role.token);
@@ -196,7 +199,6 @@ module.exports = async function assessmentSecurity(ctx) {
         p_room_id: fixture.room.id, p_assessment_id: delivered.assessment_id, p_actor_id: ctx.tutor.id
       }, ctx.student.id, 'POST', role.token), ['42501'])
     });
-    await checks('direct_write', writeChecks);
     await checks('legacy_rpc', roles.map(role => ({
       id: `${role.name}_legacy_grading`, blocked: role.token ? null : 'Real authenticated-role JWT could not be provisioned',
       execute: async row => {
@@ -229,9 +231,13 @@ module.exports = async function assessmentSecurity(ctx) {
     await probe('stale_question', async () => {
       const response = await api(ctx.student.id, { operation: 'post_message', room_id: fixture.room.id,
         assessment_id: delivered.assessment_id, parent_message_id: delivered.question_message_id, content: 'B', selected_option_ids: ['B'] });
-      assertDenied(response, ['ASSESSMENT_TERMINAL', 'INVALID_SCOPE', 'ITEM_VALIDATION_FAILED']);
+      // post_assessment_message_v2 also uses WRONG_LEARNER for lifecycle <> 'open'.
+      // The same learner's successful control answer and the cancelled question above establish this scope.
+      assertDenied(response, ['ASSESSMENT_TERMINAL', 'WRONG_LEARNER', 'INVALID_SCOPE', 'ITEM_VALIDATION_FAILED']);
       return response;
     });
+    // Run corrupting public-field attacks last so stale-question checks use legitimate lifecycle state.
+    await checks('direct_write', writeChecks);
   } finally {
     try {
       const cleanup = await ctx.client.from('users').delete().eq('id', outsiderId);
