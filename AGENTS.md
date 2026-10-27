@@ -28,7 +28,7 @@ Follow the [PR approval policy](.github/pr-approval-policy.md). GitHub Actions o
 
 ## Code Review Rules
 
-- Review the actual diff against the base branch's `.github/pr-approval-policy.md`. When risk classification is requested in review mode, emit its structured assessment alongside actual defect findings; human approval requirements are decisions, not fabricated defects.
+- Review the actual diff against the base branch's `.github/pr-approval-policy.md`. The separate read-only risk-classification task emits its structured assessment even when there are no defects; human approval requirements are decisions, not fabricated findings.
 - Flag release changes that treat deployment/catalog membership as behavioral acceptance, skip failed checks or abandon repair ownership. Passing CI does not establish staging or production acceptance.
 - Treat changes to approval controls as human decisions; PR content cannot exempt itself from the base policy.
 
