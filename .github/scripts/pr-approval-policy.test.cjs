@@ -86,7 +86,8 @@ test('supports current collaborator reviews, blocks outstanding changes, and rej
   f.reviews = [{ ...r, commit_id: BASE }]; assert.equal(evaluate(f).allowed, false);
   f.reviews = [{ ...r, user: human }]; assert.equal(evaluate(f).allowed, false);
   approve(f); f.reviews = [{ ...r, state: 'CHANGES_REQUESTED' }]; assert.equal(evaluate(f).allowed, false);
-  f.reviews.push({ ...r, id: 31, state: 'DISMISSED' }); assert.equal(evaluate(f).allowed, true);
+  f.reviews.push({ ...r, id: 31, state: 'COMMENTED' }); assert.equal(evaluate(f).allowed, false);
+  f.reviews.push({ ...r, id: 32, state: 'DISMISSED' }); assert.equal(evaluate(f).allowed, true);
 });
 
 function api(f, options = {}) {

@@ -50,7 +50,7 @@ function evaluate({ pr, comments, reviews, permissions, files, policyHash }) {
   const collaborator = user => user?.type === 'User' && ['write', 'maintain', 'admin'].includes(permissions[user.login]);
   const latest = new Map();
   for (const r of reviews.slice().sort((x, y) => x.id - y.id)) {
-    if (collaborator(r.user)) latest.set(r.user.login, r);
+    if (collaborator(r.user) && ['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(r.state)) latest.set(r.user.login, r);
   }
   if ([...latest.values()].some(r => r.state === 'CHANGES_REQUESTED')) return fail('A collaborator has outstanding change requests.');
   const control = name => CONTROLS.has(name) || name?.startsWith('.github/workflows/') || name?.startsWith('.github/scripts/');
