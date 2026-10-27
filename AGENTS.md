@@ -2,7 +2,7 @@
 
 Intent: define the implementation and delivery requirements for work in this repository.
 
-Updated: 2026-10-27. Release repair and PR approval policy baseline: `dec7c27`.
+Updated: 2026-10-27. Release repair baseline commit: `dec7c27`.
 
 ## Mandatory Server Delivery
 
@@ -20,17 +20,7 @@ For Supabase changes, execute [supabase-release-workflow.md](tutor-system/docs/s
 
 Before any shared Staging SQL, Edge, secret or fixture mutation, acquire the [cross-machine project lease](tutor-system/docs/agent-coordination.md) with `scripts/staging-coordination.js`. Direct Supabase MCP and Management API operations follow the same rule as repository scripts and Actions. The named release owner holds the lease from deployment through the affected Staging acceptance checks; child tools borrow the exact candidate's lease using `PTP_COORDINATION_LEASE`. Missing access or contention blocks writes. Never reclaim a lease by age or delete a different owner's reference. Changes from an operator bypassing this protocol invalidate the affected verification evidence.
 
-If a check fails, retain ownership and continue diagnosis, repair and affected re-verification within the authorized scope. CI/staging failures return to the current PR; production defects use a linked corrective PR and the same local → staging → merge → production gates. Do not end the task at a failure report or weaken acceptance to get a pass. Record the failure, exact deployed state, evidence, current owner and next action immediately in the existing release record and PR. Stop only for an explicit user pause or a concrete access, external-service, coordination or human-decision blocker; preserve a named resumption handoff. After production acceptance and cleanup pass, complete SQL archival, PR/release records and issue closure as part of the same task.
-
-## PR Review and Approval
-
-Follow the [PR approval policy](.github/pr-approval-policy.md). GitHub Actions owns deterministic checks; Codex on GitHub owns code review and risk classification; the coding/release agent owns fixes and live verification. The required `pr-approval-policy` check binds the Codex assessment to the current head, base and policy. Routine authorized work may merge automatically after required checks/reviews and applicable staging acceptance pass. Material behavior, security, data-loss, cost, policy, scope-exception or uncertain decisions require human approval on the PR. Agents do not cast human approvals. A push or changed assessment invalidates the affected approval/evidence; never infer production acceptance from a merge or successful SQL execution.
-
-## Code Review Rules
-
-- Review the actual diff against the base branch's `.github/pr-approval-policy.md`. The separate read-only risk-classification task emits its structured assessment even when there are no defects; human approval requirements are decisions, not fabricated findings.
-- Flag release changes that treat deployment/catalog membership as behavioral acceptance, skip failed checks or abandon repair ownership. Passing CI does not establish staging or production acceptance.
-- Treat changes to approval controls as human decisions; PR content cannot exempt itself from the base policy.
+If a check fails, retain ownership and continue diagnosis, repair and affected re-verification within recorded authorization using the [failure repair loop](tutor-system/docs/supabase-release-workflow.md#failure-repair-loop). Keep the release incomplete and record the exact failure, deployed state, evidence, owner and next action in the existing release record and PR. A failure report does not complete delivery. A concrete blocker requires a named resumption handoff.
 
 ## Verification Entry Points
 
