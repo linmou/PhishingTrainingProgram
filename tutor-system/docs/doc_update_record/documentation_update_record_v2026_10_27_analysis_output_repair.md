@@ -27,7 +27,7 @@ The existing handler suite passes 49/49 with Deno type checking: `deno test --sl
 
 ## Release Gates
 
-Staging: `ciubrzggdqesgvfkpolj`. Production: `zgbufaxooqxeabewktzd`. Current production assessment-api v19 bundle: `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427`. No repair deployment has occurred.
+Staging: `ciubrzggdqesgvfkpolj`. Production: `zgbufaxooqxeabewktzd`. Production assessment-api v19 bundle: `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427`. No production repair deployment has occurred; staging delivery is recorded below.
 
 Before release, resolve incorrect credit without weakening the agreed evidence criteria, obtain independent Codex review and pass CI. Under the project lease, deploy exact candidate source to staging, compare downloaded runtime files and run affected delivery/status/answer journeys plus cyberbullying analysis because repair is shared. Require correct persisted transitions, no unrelated credit and full cleanup. Then merge, verify integrated artifact parity and promote the same source to production; rerun affected journeys, inspect persisted state, record versions/hashes and cleanup, and release leases. #19/#22 stay open until their combined acceptance passes.
 
@@ -45,7 +45,7 @@ The first independent refinement audit, retained at `/tmp/ptp41-independent-hold
 
 The audit also flags the stored target “No Alternative Contact Method: Legitimate alerts provide multiple ways to verify” as underspecified and potentially overgeneralized curriculum content. No target wording or expected labels were silently changed. Its future authorship review is separate from restoring the existing attribution and output contracts.
 
-Final candidate handler SHA-256: `fd891964861cc5fedb88fefd41f01a9a5f60dc0d25ae6f883582841f21976876`. The final reminder now derives eligible event kinds from the existing `applyLearningEvent` result instead of advertising every global category. This avoids a duplicated state table and aligns the provider's contract with the unchanged server authority. Type-checked handler tests pass 49/49. Full-context replays `1793133150495`, `1793133155795`, `1793133161867` pass 3/3, each HTTP 200 with exactly the correct Official Support event and no unrelated credit. Previous `37fc14c7` replacement holdouts pass 23/24 raw decisions (baseline 22/24), with one inherited ineligible contradiction safely rejected; that failed validity result is retained and motivates the category reminder correction. A fresh exact-hash independent audit and staging gates remain pending for this final candidate.
+Final candidate handler SHA-256: `fd891964861cc5fedb88fefd41f01a9a5f60dc0d25ae6f883582841f21976876`. The final reminder now derives eligible event kinds from the existing `applyLearningEvent` result instead of advertising every global category. This avoids a duplicated state table and aligns the provider's contract with the unchanged server authority. Type-checked handler tests pass 49/49. Full-context replays `1793133150495`, `1793133155795`, `1793133161867` pass 3/3, each HTTP 200 with exactly the correct Official Support event and no unrelated credit. Previous `37fc14c7` replacement holdouts pass 23/24 raw decisions (baseline 22/24), with one inherited ineligible contradiction safely rejected; that failed validity result is retained and motivates the category reminder correction. Final independent audit and staging results follow.
 
 ## Final Independent Audit and Staging Acceptance
 
