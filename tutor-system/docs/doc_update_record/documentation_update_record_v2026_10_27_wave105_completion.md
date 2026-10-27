@@ -22,4 +22,8 @@ The stale-question probe returned HTTP 409 `WRONG_LEARNER` and preserved its sta
 
 Read-only staging MCP function observation: assessment-api v79, bundle `50474c5705db85f002f70ab3f59cabe02b3710cd970d4d01ce17ab0551dd607c`; ai-api v8, bundle `3bd3415490bed08a5992b2fff8db135b897bd1f02c45f5fd249de3bb1f4ab519`. No function was deployed.
 
-Corrected-candidate live rerun pending. Historical bundles and frozen matrix/configuration inputs remain unchanged. Interrupted reconnect and simultaneous grading acceptance remain explicitly open in the audit matrix.
+Corrected-candidate live security rerun pending. Historical bundles and frozen matrix/configuration inputs remain unchanged.
+
+## Replay and reconnect coverage
+
+The opt-in staging-only `assessment-replay` workflow closes the remaining US1-S6 implementation gap: repeats the exact answer request, grades that answer with two simultaneous HTTP requests, checks one persisted attempt/result, disconnects the learner's actual realtime socket while offline, then requires the missed result to appear on reconnect without reload. A subsequent replay/reload must preserve assessment/attempt/result identities. No fixture result or transport response is injected. The runner restores browser network access before cleanup and retains its lease if restoration fails. Hosted execution is pending; implementation alone does not establish acceptance.
