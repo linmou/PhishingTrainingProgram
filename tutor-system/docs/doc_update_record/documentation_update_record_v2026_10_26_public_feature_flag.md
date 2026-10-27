@@ -2,7 +2,7 @@
 
 Intent: replace the assessment enablement secret with readable, administrator-controlled configuration.
 
-Updated: 2026-10-26. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`; current integration base: `dec7c274435bce082a7069c29c39302eecf960d3`; staging candidate: `7d8789dfa2d764ab879d843dca9ad34f3b4b9788`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: staging behavior verified; obsolete-secret removal blocked by credential permissions; merge and production acceptance pending.
+Updated: 2026-10-27. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`; current integration base: `dec7c274435bce082a7069c29c39302eecf960d3`; deployed source candidate: `7d8789dfa2d764ab879d843dca9ad34f3b4b9788`; post-removal staging verification: `35d4b8cf34eda69521e463210a25cbfed6952870`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: staging verified including obsolete-secret absence; awaiting review, merge authorization and production release.
 
 ## Changed Contract
 
@@ -10,7 +10,7 @@ Updated: 2026-10-26. Implementation baseline: `60025062117e2731840a5afcf74694090
 
 The Edge handler reads the table per request so warm instances observe changes. There is no environment fallback or implicit enabled default. Missing/malformed configuration and query failures return retryable HTTP 503 `ASSESSMENT_CONFIGURATION_UNAVAILABLE`; explicit false returns `ASSESSMENT_FEATURE_DISABLED`. Owner clear retains its existing exception. Provider credentials remain unchanged. No prompts, models, grading or evaluation rules change.
 
-The deployment workflow no longer creates the flag as a secret, and `.env.example` no longer declares it as an environment variable. Existing hosted secrets have not yet been removed.
+The deployment workflow no longer creates the flag as a secret, and `.env.example` no longer declares it as an environment variable. The staging legacy secret is removed and the production legacy secret remains until its release.
 
 ## Local Evidence
 
@@ -74,4 +74,14 @@ Deleting only `TRANSFER_ASSESSMENT_ENABLED` through `DELETE /v1/projects/ciubrzg
 
 The final readback at 23:04 UTC confirmed the public boolean is true, v78 and all deployed source hashes are unchanged, and the obsolete secret remains present. All three live runs had passed cleanup and their fixture processes had stopped. The exact owned staging lease was released. Detailed deployment, failing deletion and safe checkpoint evidence is retained under `output/public-assessment-flag-20261026/staging-flag-release-1793055525309/`; the permission response is `output/public-assessment-flag-20261026/secret-delete-diagnostic.json`. These generated outputs are local evidence, not committed artifacts.
 
-Next action: provide a configured management credential with `edge_functions_secrets_write`, acquire a fresh exact-candidate staging lease, recheck deployed source/configuration and existing evidence validity, delete the single obsolete secret, rerun the configuration drill and verify cleanup. Then complete human review and request authorization to merge the current head. Any later changes require affected-scope revalidation. Production still uses the old flag implementation; production SQL, dependent Edge deployment, secret removal and all selected production acceptance checks remain open.
+At this October 26 checkpoint, the next action was to resolve secret deletion access and repeat affected staging checks. The October 27 results below supersede that blocker for staging.
+
+## October 27: Verification After Manual Secret Removal
+
+The user removed only the staging flag secret through the dashboard. Under a fresh exact-candidate lease, read-only Management API checks before and after acceptance confirm `TRANSFER_ASSESSMENT_ENABLED` is absent. Public configuration is true. Supabase reports assessment-api v79 with the same function ID, bundle hash and byte-identical runtime source files as the accepted v78 artifact; no source deployment was performed during this verification. The initial version assertion expected v78 and stopped before fixture writes; its evidence is retained under `output/public-assessment-flag-20261026/secret-absence-1793123535902/`. After inspecting every source file and the unchanged bundle hash, the check resumed using the same owned lease and the observed v79.
+
+The configuration workflow passed at `tmp/browser_demo_runs/staging-template-20261027175240-f8532bcd/report.json`: both public-role reads returned 200, anonymous/authenticated writes were denied with SQLSTATE 42501, and all nine operations returned the expected disabled response. Saved messages, attempts, assessment authority and progress retained SHA-256 `b3eb6bc63c03f3c588bc5623d898c1326a08a861bbdc9d9787d261f4b5702f3f` before, during and after disablement. History remained readable, the original true value was restored, and private review returned 200 afterward. Temporary Auth/profile and room cleanup passed.
+
+The privacy workflow passed at `tmp/browser_demo_runs/staging-template-20261027175300-ff6890b1/report.json`, covering both assessment outcomes, eight checkpoints and 236 observations with zero violations. Both fixture rooms were cleaned. Final readbacks at 17:53 UTC confirmed the secret is still absent, the public flag is true and v79/source/bundle are unchanged. Fixture processes and the app stopped, and the exact owned lease was released. Full input/output evidence and metadata are retained in `output/public-assessment-flag-20261026/secret-absence-1793123554663/verification.json` and `output/public-assessment-flag-20261026/staging-1793123557122/`.
+
+The tested head `35d4b8c` passed all three required CI checks in [run 40417243102](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40417243102). This follow-up changes only the release record; runtime and migration hashes remain frozen. Next action: complete human review and obtain explicit authorization for the current PR head to merge into `no_sign_up`, then verify integrated artifacts on staging and release production in SQL-before-Edge order. Production still uses the old flag implementation. Its legacy-secret removal requires an authorized credential or the same dashboard operation after production behavior acceptance; the existing API credential's permission limitation remains. Production acceptance and migration archival remain open.
