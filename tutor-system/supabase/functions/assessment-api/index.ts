@@ -348,6 +348,8 @@ async function analyzeMessage(
   const allowedKinds = new Set(['initial_signal', 'demonstrated_understanding', 'post_repair_signal', 'spontaneous_transfer', 'contradiction']);
   const allowedEvidenceTypes = new Set(['action', 'recognition', 'explanation']);
   const outcomes = await Promise.allSettled(items.map(async (item: any) => {
+    const eligibleKinds = [...allowedKinds].filter(kind =>
+      applyLearningEvent(item, kind as LearningEventKind).disposition === 'apply');
     const auditRequestId = crypto.randomUUID();
     const attemptLimit = 2;
     let previousAttemptResponse: unknown = null;
@@ -379,7 +381,8 @@ async function analyzeMessage(
               'Output only a JSON object with exactly this outer shape: {"explanation": "reason", "events": []}. ' +
               'The events array contains zero or one event. Each event requires item_id, kind, evidence_type, evidence_message_id, evidence_quote and explanation. ' +
               'Copy item_id ' + item.id + ' and evidence_message_id ' + messageId + ' exactly. ' +
-              'kind must be ' + [...allowedKinds].join(', ') + '; evidence_type must be ' + [...allowedEvidenceTypes].join(', ') + '. ' +
+              (eligibleKinds.length ? 'Eligible kind values for this current state are ' + eligibleKinds.join(', ') + '. ' : 'No event is eligible for this current state; events must be empty. ') +
+              'evidence_type must be ' + [...allowedEvidenceTypes].join(', ') + '. ' +
               'Keep the supplied evidence judgment rules. Do not put event fields at the top level. ' +
               'Judge only this target: ' + item.area_text + '. Its current status is ' + item.status + '. ' +
               'An event requires a claim in the current learner message that supplies this target or an actual component of it; another safe action earns no event. ' +
