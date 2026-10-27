@@ -1,15 +1,15 @@
 ---
 title: Product constitution
-status: draft
+status: final
 created: 2026-10-22
-updated: 2026-10-22
+updated: 2026-10-27
 ---
 
 # Product constitution
 
 Intent: define the principles, non-negotiable constraints and priority rules that every requirement of the Online Safety Tutor Platform must trace to, so that system contracts (the PRD) and AI behavior (AI behavior constitutions and specifications) answer to one root and conflicts between values are decided in one place.
 
-Updated: 2026-10-22. Repository baseline commit: `b671519`. Status: draft — principles and priorities await the owner's approval; constraints and rules marked with a decision are already the owner's decisions of 2026-10-22.
+Updated: 2026-10-27. Repository baseline commit: `b671519`. Status: final — the owner approved principles, constraints and priority rules as a set on 2026-10-23, and added R9 on 2026-10-27.
 
 ## Scope and layering
 
@@ -65,6 +65,7 @@ Layering rules:
 | R6 | P3 safety vs P1 teaching flow | When a learner is about to take an unsafe action, protection comes before exploration; teaching resumes afterwards. | 2026-10-22; inherited from the tutoring constitution R2, confirmed as a root rule |
 | R7 | P7 one mechanism vs per-room or per-practice variation | One shared mechanism wins unless a practice type needs a different behavior for learning reasons: all new learning targets are learner-owned and judged the same way; transfer assessments accept option selections only. | 2026-10-22, OQ-6 and OQ-14 |
 | R8 | P8 collecting feedback vs P5 minimal burden on the learner | Collecting feedback wins: the learner rates every tutor reply before writing again. The rating stays one quick step (helpful or unhelpful plus stars). | 2026-10-22, OQ-9; confirmed as a root rule 2026-10-22 |
+| R9 | P6 quick implementation vs P2 and P4 enforced restrictions | Speed wins while use is closely supervised: a behavior restriction may be enforced by the screen alone, by hiding or disabling a control. The server still enforces it when a failure would cause immediate harm or break C1–C6: owner-only publication, server-decided grades and progress, private assessment material, keeping records and owner-only room deletion, and credentials. Revisit when use is no longer supervised. | 2026-10-24, OQ-16 to OQ-22 |
 
 ## Children of this constitution
 
@@ -110,3 +111,5 @@ Only an explicit decision by the product owner adds, removes or reorders a princ
 | 2026-10-22 | All new learning targets are learner-owned and judged on the server; manual edits stay (OQ-14). | R7, C2 |
 | 2026-10-22 | C4 weakened: tutors keep the right to delete a room they own, and with it their own and their students' data (digital autonomy). Previously "no in-app action deletes pilot data". Open for the owner: whether data autonomy is a principle of its own rather than part of P4. | C4, R2, FR-9 |
 | 2026-10-22 | Constraint IDs renamed H1–H6 → C1–C6 (the "H" came from "hard" in the AI tutoring constitution; "C" is for constraint). The tutoring constitution's own H1–H4 are unchanged. | C1–C6 |
+| 2026-10-23 | The owner approved the constitution as a set: P1–P8, C1–C6 and R1–R8. | all |
+| 2026-10-27 | New priority rule: at the pilot stage the screen may enforce behavior restrictions, except where failure causes immediate harm or breaks C1–C6. | R9, FR-30, FR-52 |

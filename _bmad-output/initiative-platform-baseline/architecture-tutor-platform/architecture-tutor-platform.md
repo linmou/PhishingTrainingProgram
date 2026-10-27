@@ -7,7 +7,7 @@ paradigm: 'Server-authoritative state behind a trusted gateway (Edge Function, t
 scope: 'The tutor platform: phishing and cyberbullying practice, shared state, progress and assessment state machine, identity, routing, module contracts'
 status: final
 created: '2026-10-22'
-updated: '2026-10-23'
+updated: '2026-10-27'
 binds: ['prd-tutor-platform FR-1..FR-53', 'NFR-1..NFR-12', 'constitution-product C1..C6']
 sources: ['prd-tutor-platform/prd-tutor-platform.md', 'constitution-product/constitution-product.md', 'code-sweep-1-state-machine.md', 'code-sweep-2-client.md', 'code-sweep-3-server-data.md']
 companions: ['architecture-seed-tutor-platform.md']
@@ -78,8 +78,8 @@ Dependency direction: pages → components → contexts and hooks → services �
 ### AD-8 — Roles and ownership come from the room, and are checked in SQL [TARGET]
 
 - **Binds:** FR-2, FR-9, FR-12, FR-30, FR-52, NFR-1, NFR-4, C1
-- **Prevents:** a tutor-only action protected by a browser check; a user changing a profile role and thereby taking another role in the same room.
-- **Rule:** identity is client-asserted, accepted for the pilot. Within a room, owner, learner and observer are derived from the room's own records (its owner record and its learner session), never from the user's profile role. The owner of a room never holds its learner seat and never answers an assessment. Every tutor-only operation, including Guard, AI configuration, learning-target setup, tutor replies and room deletion, is a database function that checks the actor is the room's owner. A tutor-only control is never a direct table write from the browser. The browser and Edge Function checks are convenience, never the control.
+- **Prevents:** a publication, grade, progress change or room deletion protected only by a browser check; a user changing a profile role and thereby taking another role in the same room.
+- **Rule:** identity is client-asserted, accepted for the pilot. Within a room, owner, learner and observer are derived from the room's own records (its owner record and its learner session), never from the user's profile role. The owner of a room never holds its learner seat and never answers an assessment. Publishing a tutor reply or reviewed AI text, editing learning progress, delivering or grading an assessment, and deleting a room are database functions that check the actor's room role; for these, browser and Edge Function checks are convenience, never the control. Other tutor-only controls, such as Guard, AI configuration and learning-target setup, may be gated by the screen alone at the pilot stage (FR-52).
 
 ### AD-9 — Practice type is a fixed branch key [ADOPTED]
 
@@ -91,7 +91,7 @@ Dependency direction: pages → components → contexts and hooks → services �
 
 - **Binds:** FR-21, FR-34, NFR-10
 - **Prevents:** the client, an Edge Function and SQL applying different progress transitions, validation or models.
-- **Rule:** progress transitions, assessment validation and AI model identifiers live once in the client source and are imported by the Edge Functions; no Edge Function hardcodes a model identifier. The SQL mirror of the transitions changes in the same release as the TypeScript. A change to an imported file means redeploying the functions that import it. [ASSUMPTION: which model the assessment gateway uses is an owner decision still open; moving it to the newer model needs an evaluation run first (NFR-10).]
+- **Rule:** progress transitions, assessment validation and AI model identifiers live once in the client source and are imported by the Edge Functions; no Edge Function hardcodes a model identifier. Every AI job in a room, including transfer-assessment generation, uses the model chosen for that room, and a room with no choice uses the shared default. The SQL mirror of the transitions changes in the same release as the TypeScript. A change to an imported file means redeploying the functions that import it. Owner decision 2026-10-23: the assessment gateway follows the room's model rather than a fixed one.
 
 ### AD-11 — One AI gateway and a version handshake [TARGET]
 

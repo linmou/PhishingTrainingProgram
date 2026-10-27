@@ -2,7 +2,7 @@
 
 Intent: keep the material the PRD needs but should not carry in its main text — where each requirement came from, the technical choices currently deployed, and the known differences between the PRD and current behavior.
 
-Updated: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
+Updated: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
 
 ## A. Legacy requirement crosswalk
 
@@ -96,7 +96,7 @@ These belong to the architecture spine; they are recorded here so the PRD stays 
 
 ## C. Known gaps between this PRD and current behavior
 
-Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owner's decisions of 2026-10-22 keep their IDs and say so. IDs are stable.
+Each open gap is a candidate backlog bug where current behavior differs from the PRD. Gaps accepted or withdrawn by the owner's decisions of 2026-10-22 keep their IDs and say so. IDs are stable and never reused. Missing or weak tests for behavior that already matches the PRD are not listed here; IDs G-50 to G-56, G-58 to G-63, G-65, G-67, G-70, G-71, G-73 to G-75 and G-77 were such test gaps and are retired from this list.
 
 | ID | Gap | Evidence | Related |
 | --- | --- | --- | --- |
@@ -144,38 +144,17 @@ Each open gap is a candidate backlog bug. Gaps accepted or withdrawn by the owne
 | G-42 | Older RPCs are still callable by anonymous clients: `update_checklist_progress` and `soft_delete_checklist_item` change progress, and a legacy `send_reviewed_tutor_response` sends tutor text, all without an owner check. | architecture rubric review (bodies not read) | FR-52, FR-53, NFR-1 |
 | G-43 | Raw AI output is stored in the public `ai_suggestion_feedback` table, which any client with the anon key can read, against the rule that raw AI output is never visible to participants. | architecture rubric review | FR-51, NFR-3 |
 | G-44 | The generic `ai-api` chat has no identity or ownership check and JWT verification is off, so anyone holding the anon key can spend the AI provider key. | architecture sweep 3 | FR-25, NFR-4 |
-| G-45 | `assessment-api` hardcodes the model `qwen3.5-flash` while `ai-api` imports `qwen3.8-flash` from shared config. | architecture sweep 3 | NFR-10 |
+| G-45 | `assessment-api` hardcodes the model `qwen3.5-flash` while `ai-api` imports `qwen3.8-flash` from shared config. Owner decision 2026-10-23: assessment generation must use the room's chosen model (AD-10). | architecture sweep 3 | NFR-10 |
 | G-46 | The client creates a new request id on every call, so a retry or a second tab can create a second answer message, and each is graded as its own attempt. | architecture sweep 1 | FR-38, NFR-5 |
 | G-47 | Manual progress edits are refused in cyberbullying rooms by the database function, but FR-44 and FR-53 say they stay available. The owner decided on 2026-10-22 that the PRD is right: change the database function and the client so manual edits work in cyberbullying rooms. | architecture reconcile with the PRD | FR-44, FR-53 |
 | G-49 | Tutor review of assessment drafts (edit, reject, send) is not recorded: discard is client-local and writes nothing. FR-51 now requires it. | owner decision 2026-10-22; architecture sweep 1 | FR-51, FR-35 |
-| G-50 | No test shows that a discarded assessment draft leaves the assessment due and offered again. | transfer-assessment epic guard map | FR-35 |
-| G-51 | No test shows the server refusing delivery while Guard is on; the Guard checks in the room tests mock the server. | transfer-assessment epic guard map | FR-36 |
-| G-52 | No test shows that failure never turns on Guard after the second wrong attempt; only the first wrong answer is checked. | transfer-assessment epic guard map | FR-40 |
-| G-53 | No test shows the server refusing another assessment while tutor feedback is outstanding, and no test fixture has two due targets. | transfer-assessment epic guard map | FR-41 |
-| G-54 | No test shows that turning in-room assessment off leaves an open assessment answerable. | transfer-assessment epic guard map | FR-31 |
-| G-55 | A cancelled assessment's closure message count and "no attempt used" are not asserted by any test. | transfer-assessment epic guard map | FR-32 |
-| G-56 | No guard test has been mapped for FR-43 (the AI assistant gets assessment outcomes only from the saved conversation, and waits while result messages are saved). | transfer-assessment epic audit | FR-43 |
 | G-57 | The server rejects an outdated client with a reload code, but no client code handles it and nothing calls a reload, so the browser is not told to reload. Code search, 2026-10-23. | epic guard maps; code search | NFR-11 |
-| G-58 | Whether a transfer assessment is due is checked by tests for one rule only (final assessment after understanding); no test shows the browser cannot force a due state. | platform epic guard map | NFR-2 |
-| G-59 | No test repeats a plain message send or the reviewed tutor reply, and no real multi-tab test covers persistence; "rooms are kept" is tested only against a mocked list. | platform epic guard map | NFR-5, NFR-6 |
-| G-60 | Responsive behavior is tested only as a CSS class on the observer page at two widths; no tablet, tutor, student or room-page case. | platform epic guard map | NFR-12 |
-| G-61 | No test for a whitespace-only name, for the same normalized name and role selecting the same user, for a display-name change keeping the user id, or for leaving deleting no data. | identity epic guard map | FR-1, FR-2, FR-3 |
-| G-62 | No test for room search, the "Your Session" status, the room owner never being the learner, or observers being unable to rate on the server. | identity epic guard map | FR-11, FR-12, FR-13 |
-| G-63 | No test for "password mode requires a password", the server refusing an incomplete cyberbullying scenario, offering only templates of the selected type, or test rooms missing from the tutor dashboard and observer list; room deletion's cascade into private records and the "cannot be undone" text are only partly checked. | rooms epic guard map | FR-4, FR-5, FR-6, FR-8, FR-9 |
 | G-64 | The typing indicator's 3-second clear has no test, and the receiver drops stale indicators after 5 seconds, not 3. | conversation epic guard map | FR-15 |
-| G-65 | No test that a failed rating keeps the unsent message, that result messages are never rated, or that one rating per message holds in the database; the gate for character replies is covered only by the cyberbullying browser test. | conversation epic guard map | FR-16 |
 | G-66 | A test asserts that a failed target extraction silently falls back to the template's targets, against the rule that a failed generation invents none; no test shows the "unavailable" message, and no test covers a long custom target. | learning-progress epic guard map | FR-18 |
-| G-67 | Phishing catch-up replay is tested only with a mocked set of processed messages, and no test shows a tutor or pre-populated line failing as evidence in a phishing room. | learning-progress epic guard map | FR-19, FR-20 |
 | G-68 | No test for the progress panel's desktop controls or narrow-screen width or the learner's rendered panel; a manual edit is attributed to the role "tutor", not the owner, and no test covers the learner seeing it or a non-owner edit. | learning-progress epic guard map | FR-23, FR-53 |
 | G-69 | Tests and the sending path apply the tutor's final Guard state to the room when a reply is sent, against the rule that sending never changes Guard; a non-owner Guard change is also untested. (Related to G-36.) | supervision epic guard map | FR-30 |
-| G-70 | No test that a phishing suggestion inserts no message or that the AI never changes other room state; no test renders the room as a second tutor. | supervision epic guard map | NFR-1, FR-52 |
-| G-71 | No test that, with the AI assistant off, a draft cannot be requested (client throw, hidden button, server refusal); never-auto-sent and a non-owner request are untested for phishing. | AI epic guard map | FR-24, FR-25 |
 | G-72 | Nothing enforces that a prompt or model change is released only after its evaluation suite runs: the pull-request workflow never runs the suite. Per-practice-type re-evaluation and human-only constitution changes are untested. | AI epic guard map | FR-26, NFR-9, NFR-10 |
-| G-73 | No test that reasons and labels are absent from learner-visible payloads, that a phishing repair failure ends in an error, that an empty reply is refused, or that a failed send keeps the text in the interface. | AI epic guard map | FR-27, FR-28 |
-| G-74 | No test for the "Choose a Cyberbullying situation." refusal, edited dialogue keeping each comment's author, several tabs joining at once, the five target names, a tutor message giving no evidence, or Quick Adjust being refused by the server. | cyberbullying epic guard map | FR-7, FR-44, FR-45 |
-| G-75 | No test that a character draft is refused with the AI off or with no learner message, that the chosen character and Guard state reach the provider, that a reply cannot be sent without a reviewed draft, or that sent character replies cannot be edited. | cyberbullying epic guard map | FR-47, FR-48, FR-49 |
 | G-76 | The room owner's JSON export has no summary of suggestion actions (a test asserts it is undefined), and cyberbullying exports carry one learner's progress, not every participant's. | exports epic guard map | FR-50 |
-| G-77 | "No IP or browser information" is checked on the client payload only, not on database columns; "records are kept with the room" is tested only with mocks. | exports epic guard map | FR-51 |
 | G-48 | Dependency-direction breaks in the client: a context imports a component, a hook imports a context, types and utils import services. | architecture sweep 2 | — |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
@@ -204,3 +183,19 @@ All resolved on 2026-10-22. Each decision is built into the PRD requirement name
 - OQ-13: the template catalog was cleaned in commit `c13af72` (FR-18).
 - OQ-14: all new learning targets are learner-owned and judged on the server; no new room-wide learning targets; old rooms are left as they are; manual edits stay (FR-18, FR-31, FR-53, PRD §9).
 - OQ-15: no accessibility target (PRD §10.2).
+
+## F. Pilot limitations under P6
+
+Opened 2026-10-24 from a review that sorted each failing test by the product constitution's P6 (quick implementation, without immediate harm); decided by the owner on 2026-10-24. Each question asked whether a PRD requirement may be met more loosely during the supervised pilot. "Deferred" means the limitation is accepted for the pilot and its tests wait for the formal product; "Required" means the requirement and its tests stay as written. Rules whose failure would cause immediate harm or break C1–C6 (owner-only publication, server grading and progress, private assessment material, retention and owner-only deletion, credentials) were not asked about and stay required.
+
+| ID | Question | Decision | Related |
+| --- | --- | --- | --- |
+| OQ-16 | May tutor controls whose effect can be undone (AI settings and role, Quick Adjust, the AI-off switch, in-room assessment on or off, requesting a draft) be limited to the room owner on screen only during the pilot, instead of the server refusing everyone else? Publication, progress edits and room deletion keep the server check. | Deferred | FR-24, FR-25, FR-29, FR-31, FR-45, FR-47, FR-52 |
+| OQ-17 | May sending a reply apply the Guard state the room owner chose in the composer, instead of Guard changing only through its own confirmed operation? | Deferred | FR-30 |
+| OQ-18 | May setup checks (room form, practice type, template choice, test-room hiding, the five cyberbullying targets, failed target generation) rely on the room owner inspecting the room before teaching? | Deferred | FR-4, FR-5, FR-6, FR-7, FR-8, FR-18, FR-44 |
+| OQ-19 | May live updates, the typing indicator, room lists, the progress panel layout, waiting explanations, result display and responsive layout be best effort during the pilot, with the supervising adult working around gaps? | Deferred | FR-11, FR-14, FR-15, FR-23, FR-37, FR-39, NFR-7, NFR-8, NFR-12 |
+| OQ-20 | May research records be incomplete during the pilot: ratings and the rating gate, review actions (accepted, modified, rejected, ignored), response timing, the owner's suggestion summary and character labels in exports? | Required: the records serve P8 and cannot be recollected after the pilot; fix their guards. | FR-16, FR-28, FR-48, FR-49, FR-50, FR-51 |
+| OQ-21 | May AI output checks and evaluation gating be manual during the pilot (the format repair retry, draft shape and word limits, running the evaluation suite before a prompt or model release), relying on the owner's review of every draft? | Deferred | FR-26, FR-27, FR-33, FR-34, NFR-9, NFR-10 |
+| OQ-22 | May the tutor's feedback before the next assessment, re-offering a rejected assessment and keeping an open assessment answerable after in-room assessment is turned off be handled by the room owner by hand? | Deferred | FR-31, FR-35, FR-41 |
+
+Identity and room passwords (FR-1, FR-2, FR-3, FR-10, NFR-4) are not asked again: OQ-1 already accepts them.

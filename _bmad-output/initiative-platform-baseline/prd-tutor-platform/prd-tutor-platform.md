@@ -2,7 +2,7 @@
 title: Online Safety Tutor Platform
 status: final
 created: 2026-10-22
-updated: 2026-10-22
+updated: 2026-10-27
 ---
 
 # PRD: Online Safety Tutor Platform
@@ -329,19 +329,20 @@ The room owner can manually change a learning target's progress state and add a 
 
 #### FR-52: Tutor controls belong to the room owner
 Only the room owner can use tutor controls in a room: the AI assistant, tutor review, Guard, learning-target setup, manual learning progress edits, in-room assessment and tutor replies.
-**Grounding:** P2, R5.
+**Grounding:** P2, R5, R9.
 
 **Consequences (testable):**
 - Another tutor who opens the room has none of these controls. They take part as an observer.
-- The server refuses tutor operations from anyone but the room owner.
+- The screen shows tutor controls only to the room owner.
+- The server refuses these operations from anyone but the room owner: publishing a tutor reply or reviewed AI text, editing learning progress, and delivering or grading an assessment.
 
 #### FR-30: Guard
 The room owner can turn Guard on or off for the room at any time after confirming; in phishing rooms an AI suggestion may recommend it, and the room owner decides. Realizes UJ-4.
-**Grounding:** P3, P2.
+**Grounding:** P3, P2, R9.
 
 **Consequences (testable):**
 - Guard changes only by the room owner's action; an AI recommendation alone never changes it.
-- Sending a reply records the Guard state; it never changes it.
+- Sending a reply records the Guard state. It may also apply the Guard state the room owner chose in the composer.
 - While Guard is on, the room owner's tutor replies are shown as "Security Supervisor" and learning progress pauses (FR-22).
 - When the AI recommends Guard, and how a Guard tutor reply is worded, is governed by G01–G03 (§7).
 
