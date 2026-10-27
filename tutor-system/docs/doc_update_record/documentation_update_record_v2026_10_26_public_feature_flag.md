@@ -2,7 +2,7 @@
 
 Intent: replace the assessment enablement secret with readable, administrator-controlled configuration.
 
-Updated: 2026-10-27. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`; integrated release: `dc83330d1ba5c6512fce3b0a29e03ac94f572595`; approved PR head: `3c0b78d64ac96333d7eaaf714ad9eeb7e9990ffb`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: production behavior verified; awaiting obsolete production secret removal and final check. Earlier checkpoints below retain their historical status.
+Updated: 2026-10-27. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`; integrated release: `dc83330d1ba5c6512fce3b0a29e03ac94f572595`; approved PR head: `3c0b78d64ac96333d7eaaf714ad9eeb7e9990ffb`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: production verified, obsolete secrets absent in both projects, fixtures and leases cleaned, applied SQL archived. Earlier checkpoints below retain their historical status.
 
 ## Changed Contract
 
@@ -10,7 +10,7 @@ Updated: 2026-10-27. Implementation baseline: `60025062117e2731840a5afcf74694090
 
 The Edge handler reads the table per request so warm instances observe changes. There is no environment fallback or implicit enabled default. Missing/malformed configuration and query failures return retryable HTTP 503 `ASSESSMENT_CONFIGURATION_UNAVAILABLE`; explicit false returns `ASSESSMENT_FEATURE_DISABLED`. Owner clear retains its existing exception. Provider credentials remain unchanged. No prompts, models, grading or evaluation rules change.
 
-The deployment workflow no longer creates the flag as a secret, and `.env.example` no longer declares it as an environment variable. Staging has no legacy flag secret. Production runs the table-backed implementation; its unused legacy secret awaits cleanup.
+The deployment workflow no longer creates the flag as a secret, and `.env.example` no longer declares it as an environment variable. Both environments run the table-backed implementation with the legacy flag secret absent.
 
 ## Local Evidence
 
@@ -105,3 +105,22 @@ The complete production `assessment-answer` workflow passed from 18:16:59 to 18:
 Production legacy-secret DELETE returned HTTP 403 for missing `edge_functions_secrets_write`; the entry is present but unused by v18. Both exact owned project leases were released after fixture cleanup and app shutdown. Release metadata, SQL inputs/results, full downloaded source, hashes, permissions, failure evidence and cleanup are retained under `output/public-assessment-flag-20261026/production-flag-release-1793124890227/`; browser command logs are under `production-1793125014199/`. The user has been asked to remove only that production entry through the dashboard. Final secret-absence verification, post-removal affected requests and migration archival remain open.
 
 At 18:29 UTC, after the user reported dashboard cleanup, fresh Management API reads still showed the production entry present and the staging entry absent. Final verification stopped before fixture writes and its exact owned production lease was released. Evidence: `output/public-assessment-flag-20261026/production-final-1793125755782/verification.json` and its adjacent lease record. Production remains on the already-accepted table-backed implementation. The user was asked to check the exact production project and deletion confirmation; final acceptance and archival are still pending. The README and Supabase service documentation now accurately describe the deployed public-table configuration.
+
+## Final Production Verification And Archival
+
+After the user's second production cleanup confirmation, fresh Management API reads at 18:58 UTC confirmed the flag secret absent from both projects. Production reports assessment-api v19 with the same function ID, runtime source files and bundle hash as the accepted v18 release; no source deployment occurred for this final verification. Both public table reads returned 200 with `enabled=true`, and all downloaded runtime files still match integrated release `dc83330`.
+
+Under a fresh exact-release production lease, the full `assessment-answer` workflow passed again without the secret: first-attempt pass, terminal failure, retry then pass, Guard deferral/recovery, owner clear and cancellation, with saved result/history and real-provider terminal tutoring checks. All three fixture room cleanups passed. Final readbacks at 19:00:27 UTC confirmed the secret remains absent, the public boolean remains true, and function source/version/bundle are unchanged. The app stopped and the exact owned project lease was released. No production acceptance checks remain open for this batch. PR #29 was also marked merged when its commits entered `no_sign_up` through PR #37.
+
+| Final environment state | Staging | Production |
+| --- | --- | --- |
+| Project | `ciubrzggdqesgvfkpolj` | `zgbufaxooqxeabewktzd` |
+| assessment-api version | `79` | `19` |
+| Public flag | `true` | `true` |
+| Legacy flag secret | absent | absent |
+| Runtime source | matches `dc83330` | matches `dc83330` |
+| Bundle SHA-256 | `50474c5705db85f002f70ab3f59cabe02b3710cd970d4d01ce17ab0551dd607c` | `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427` |
+
+Final verification metadata and before/after source downloads: `output/public-assessment-flag-20261026/production-final-1793127482722/verification.json`. Browser report: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/public-flag-release-20261027/tmp/browser_demo_runs/production-template-20261027185813-14707d98/report.json`. Full command logs and app shutdown evidence: `output/public-assessment-flag-20261026/production-1793127489244/`. The release metadata now records `production-verified`; earlier permission errors and the failed premature cleanup readback are retained as history.
+
+After both environments passed, the exact applied SQL was moved to `supabase/archived_migrations/20261026223000_public_assessment_feature_flag.sql`, preserving SHA-256 `5640033e764919d351ed6d9c01b4ae5e324dfc7e86e11f8d931c8ec86e3ea880`. The evidence/archival follow-up PR #39 records this repository housekeeping; it does not change the verified deployed source or require redeployment.
