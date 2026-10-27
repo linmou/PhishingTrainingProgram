@@ -61,7 +61,7 @@ Dependency direction: pages → components → contexts and hooks → services �
 
 - **Binds:** FR-22, FR-30, C2
 - **Prevents:** progress advancing while the owner has paused it, events silently lost, and Guard switched by something other than the owner.
-- **Rule:** while Guard is on, an assessment answer is held: it is not graded, consumes no attempt and gets no result message; direct progress writes are blocked by triggers; learning events are stored as held. When Guard turns off, held events replay in creation order and are re-validated against the current item; an event whose target wording changed or whose item was deleted is rejected, and an assessment whose item changed is cancelled. Un-graded answers are processed afterwards by client catch-up or the owner's review read. The room's Guard flag is changed only by one owner-checked operation; sending a reply reads it and never changes it.
+- **Rule:** while Guard is on, an assessment answer is held: it is not graded, consumes no attempt and gets no result message; direct progress writes are blocked by triggers; learning events are stored as held. When Guard turns off, held events replay in creation order and are re-validated against the current item; an event whose target wording changed or whose item was deleted is rejected, and an assessment whose item changed is cancelled. Un-graded answers are processed afterwards by client catch-up or the owner's review read. The room's Guard flag is changed only by the room owner: through its confirmed operation, or by a reply send that applies the Guard state chosen in the composer (FR-30).
 
 ### AD-6 — A sent assessment ends only by its own rules [ADOPTED] (owner decision 2026-10-22)
 
