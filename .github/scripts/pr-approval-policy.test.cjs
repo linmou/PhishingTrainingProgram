@@ -109,7 +109,7 @@ test('GitHub integration publishes a head-bound check, requests assessment and d
   assert.equal(env.log[0][1].head_sha, HEAD);
   assert.equal(env.log.find(x => x[0] === 'finish')[1].conclusion, 'failure'); // fixture policy hash is deliberately not the base policy hash
   const request = env.log.find(x => x[0] === 'comment')[1].body;
-  assert(request.includes('@codex')); assert(request.includes(HEAD)); assert(request.includes(BASE));
+  assert(request.startsWith('@codex review ')); assert(request.includes(HEAD)); assert(request.includes(BASE));
   for (const [index, entry] of env.log.filter(x => x[0] === 'comment').entries()) {
     f.comments.push({ id: 25 + index, user: { login: 'github-actions[bot]' }, body: entry[1].body });
   }
