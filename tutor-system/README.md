@@ -1,7 +1,7 @@
 <!--
 Intent: Document how to run and validate the tutor system, including which test commands are safe for deterministic regression and which ones intentionally hit external systems.
-Updated: 2026-10-26
-Commit: 6002506 (public feature configuration implementation baseline)
+Updated: 2026-10-27
+Commit: dc83330 (integrated public feature configuration release)
 -->
 
 # Tutor System - 1v1 Online Training Platform
@@ -169,7 +169,7 @@ OAI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OAI_MODEL=qwen3.8-flash
 ```
 
-`OAI_API_KEY` and `OAI_BASE_URL` are read only by Supabase Edge Functions. The React bundle sends chat payloads to those functions and never receives the provider credentials. Tutoring and `ai-api` use Qwen3.8 from `src/services/aiModels.ts`; the learning-progress analyzer and assessment generation retain Qwen3.5 in `assessment-api`. `OAI_MODEL` selects the model only for offline evaluations. The candidate `assessment-api` reads `TRANSFER_ASSESSMENT_ENABLED` from the publicly readable `public.feature_flags` table on every request; only service-role administrators can update it. Missing configuration returns a retryable error. This replacement is locally verified and awaiting its [migration and release gates](docs/doc_update_record/documentation_update_record_v2026_10_26_public_feature_flag.md); deployed functions still use the Edge secret until that rollout completes.
+`OAI_API_KEY` and `OAI_BASE_URL` are read only by Supabase Edge Functions. The React bundle sends chat payloads to those functions and never receives the provider credentials. Tutoring and `ai-api` use Qwen3.8 from `src/services/aiModels.ts`; the learning-progress analyzer and assessment generation retain Qwen3.5 in `assessment-api`. `OAI_MODEL` selects the model only for offline evaluations. Both staging and production `assessment-api` read `TRANSFER_ASSESSMENT_ENABLED` from the publicly readable `public.feature_flags` table on every request; only service-role administrators can update it. Missing configuration returns a retryable error. The [release record](docs/doc_update_record/documentation_update_record_v2026_10_26_public_feature_flag.md) preserves deployment, verification and legacy-secret cleanup evidence.
 
 ### Assessment API Deployment
 
