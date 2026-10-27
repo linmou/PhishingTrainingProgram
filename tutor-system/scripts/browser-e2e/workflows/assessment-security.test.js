@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const security = require('./assessment-security');
+const replay = require('./assessment-replay');
 const { selectWorkflows } = require('../../browser-e2e');
 test('security workflow is opt-in and rejects production before touching any fixtures', async () => {
   assert(!selectWorkflows([]).includes('assessment-security'));
@@ -11,12 +12,29 @@ test('security workflow is opt-in and rejects production before touching any fix
     existingRoom: () => { throw new Error('must not touch fixture'); } }), /staging-only/);
   assert.throws(() => security.assertStaging({ projectRef: 'ciubrzggdqesgvfkpolj', projectUrl: 'https://other.supabase.co' }), /staging-only/);
 });
+// assessment-replay.js: its browser/network/fixture mutations must remain opt-in and staging-only.
+test('replay workflow rejects production before accessing the browser or fixtures', async () => {
+  assert(!selectWorkflows([]).includes('assessment-replay'));
+  assert.deepEqual(selectWorkflows(['--workflow=assessment-replay']), ['assessment-replay']);
+  await assert.rejects(replay({ config: { projectRef: 'zgbufaxooqxeabewktzd' } }), /staging-only/);
+});
 test('successful impersonation, server errors and irrelevant validation failures cannot pass a denial probe', () => {
   for (const response of [ { status: 200, body: { ok: true } }, { status: 500, body: { error: { code: 'FORBIDDEN' } } },
     { status: 400, body: { error: { code: 'INVALID_REQUEST' } } }, { status: 503, body: { error: { code: 'ASSESSMENT_FEATURE_DISABLED' } } } ]) {
     assert.throws(() => security.assertDenied(response, ['FORBIDDEN', 'UNAUTHORIZED']));
   }
   security.assertDenied({ status: 403, body: { error: { code: 'FORBIDDEN' } } }, ['FORBIDDEN']);
+});
+
+// assessment-security.js: denial diagnostics retain bounded codes without copying private response bodies.
+test('unexpected denial diagnostics expose only a bounded error code', () => {
+  assert.throws(() => security.assertDenied({ status: 409, body: {
+    error: { code: 'ASSESSMENT_NOT_OPEN', message: 'private review body' }
+  } }, ['FORBIDDEN']), /Unexpected denial code ASSESSMENT_NOT_OPEN/);
+  for (const code of ['private review body', 'A'.repeat(65), { private_payload: 'private review body' }]) {
+    assert.throws(() => security.assertDenied({ status: 409, body: { error: { code } } }, ['FORBIDDEN']),
+      error => error.message.includes('UNRECOGNIZED') && !error.message.includes('private review body'));
+  }
 });
 
 test('state oracle failure before an attack is persisted and prevents the attack', async () => {
