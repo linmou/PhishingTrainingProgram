@@ -9,3 +9,5 @@ The PR template contains the risk criteria and merge authorization rules. Codex 
 The release workflow retains repair ownership through staging, merge, production acceptance, cleanup and SQL archival. AGENTS.md links that procedure. This change affects documentation only; it changes no deployed Supabase behavior.
 
 Refactored PR #38 after scope review: withdrew the proposed enforcement workflow, validator, tests, JSON contract, approval commands and separate policy document. The previously passing 17 validator tests concern that withdrawn implementation. Final validation consists of link/reference and whitespace checks, actual GitHub CI and Codex review recorded on the PR. No Cloud task environment or branch-protection activation is required for the template gate.
+
+Security review 4392658028 identified self-authorization through PR-controlled risk fields. The template now requires protected-target-branch rules and independently recorded trusted maintainer authorization. Contributions without it, and all gate/approval-instruction changes, require independent trusted human approval for the current head. Proposed rule changes cannot authorize their own merge.
