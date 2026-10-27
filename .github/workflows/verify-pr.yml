@@ -19,6 +19,7 @@ jobs:
           node-version: '22'
       - name: Verify cross-worktree lock and run-scoped export isolation
         run: |
+          node --test .github/scripts/pr-approval-policy.test.cjs
           node --test tutor-system/scripts/browser-e2e/fixture-lock.test.js
           node --test scripts/database/export_validation_baseline.test.js
           node --test scripts/database/disposable-database.test.js
