@@ -36,6 +36,7 @@
         "test:e2e": "E2E_TARGET=staging node scripts/browser-e2e.js",
         "test:e2e:staging": "E2E_TARGET=staging node scripts/browser-e2e.js",
         "test:e2e:production": "E2E_TARGET=production node scripts/browser-e2e.js",
+        "test:assessment:audit": "node --test scripts/transfer-assessment-release.test.js scripts/browser-e2e/workflows/assessment-result-checks.test.js scripts/browser-e2e/workflows/assessment-security.test.js scripts/browser-e2e/workflows/assessment-privacy-checks.test.js",
         "test:e2e:unit": "node --test scripts/browser-e2e.test.js",
         "test:e2e:staging:migrate-templates": "node scripts/migrate-browser-e2e-templates.js",
         "test:smart-generate": "react-scripts test --testPathPattern=\"smart_generate_integration.test.ts\" --watchAll=false",
@@ -50,8 +51,6 @@
         "eval:prompts:ci": "npm run eval:prompts",
         "seed:behavior-templates": "node scripts/seed-behavior-demo-templates.js",
         "eval:behavior:web": "node scripts/browser-demo-tutor-behavior.js",
-        "eval:transfer:release-browser": "node scripts/transfer-assessment-browser-e2e.js",
-        "eval:transfer:release": "node scripts/transfer-assessment-release.js",
         "eject": "react-scripts eject",
         "deploy": "npm run build"
     },
@@ -106,6 +105,7 @@
         "@types/jspdf": "^1.3.3",
         "jest-cucumber": "^4.5.0",
         "playwright": "^1.60.0",
-        "promptfoo": "^0.121.15"
+        "promptfoo": "^0.121.15",
+        "ws": "8.21.0"
     }
 }

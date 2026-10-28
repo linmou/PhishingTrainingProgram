@@ -9,6 +9,7 @@ const { openRoom, insert, query, requestId, waitForMatch, captureResponses, mana
 const { assessmentRoom, deliverFixedAssessment } = require('./assessment-fixture');
 const { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers } = require('./assessment-browser-checks');
 const { tutoringStep } = require('./assessment-delivery');
+const { assertSavedResult } = require('./assessment-result-checks');
 
 async function draftRetryFeedback(ctx, roomId, label) {
   await openRoom(ctx.tutorPage, ctx.appUrl, roomId);
@@ -47,7 +48,7 @@ async function draftRetryFeedback(ctx, roomId, label) {
 }
 
 async function answer(ctx, label, selections, expectedStatus) {
-  const fixture = await assessmentRoom({ ...ctx, kind: `assessment-answer-${label}` });
+  const fixture = await assessmentRoom({ ...ctx, kind: `assessment-answer-${label === 'retry-pass' ? 'pass' : label}` });
   const delivered = await deliverFixedAssessment(ctx, fixture);
   const priorMessageIds = (await query(ctx.client, 'messages', 'id', 'room_id', fixture.room.id)).map(row => row.id);
   await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
@@ -77,12 +78,11 @@ async function answer(ctx, label, selections, expectedStatus) {
         row.assessment_event.kind === 'result' && row.assessment_event.attempt_number === index + 1);
       resultIds.push(result.id);
       await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
-      assert.equal(result.assessment_event.outcome, selected === 'B' ? 'passed' : index === 0 ? 'retry' : 'failed');
-      assert.equal(result.parent_message_id, result.assessment_event.answer_message_id);
-      if (result.assessment_event.outcome !== 'failed') {
-        assert.equal(result.content, result.assessment_event.outcome === 'passed' ? 'Correct.' : 'Incorrect. One attempt remaining.',
-          'Retry/pass published more than its deterministic result');
-      }
+      const outcome = selected === 'B' ? 'passed' : index === 0 ? 'retry' : 'failed';
+      assertSavedResult(result, outcome, index + 1, delivered.assessment);
+      const progress = (await query(ctx.client, 'checklist_items', 'status,understanding_level', 'id', fixture.items[0].id))[0];
+      assert.equal(progress?.status, outcome === 'failed' ? 'needs_review' : 'covered');
+      assert.equal(progress?.understanding_level, outcome === 'failed' ? 'basic' : 'good');
       if (index < selections.length - 1) {
         retryDrafts.push(await draftRetryFeedback(ctx, fixture.room.id, label));
         inputGates.push(await assertBlockedOrdinaryReply(ctx, fixture.room.id));
@@ -282,12 +282,16 @@ async function cancellation(ctx, reusableRoomId) {
 
 module.exports = async function assessmentAnswer(ctx) {
   const selectedCase = process.env.E2E_ASSESSMENT_CASE;
+  if (selectedCase === 'retry-pass') return { retry_passed: await answer(ctx, 'retry-pass', ['A', 'B'], 'passed') };
   if (selectedCase === 'recovery') return { recovery: await recovery(ctx) };
   if (selectedCase === 'cancellation') return { cancelled: await cancellation(ctx, ROOMS['assessment-answer-pass'].id) };
   if (selectedCase) throw new Error(`Unknown E2E_ASSESSMENT_CASE: ${selectedCase}`);
   const passed = await answer(ctx, 'pass', ['B'], 'passed');
   const failed = await answer(ctx, 'failure', ['A', 'A'], 'failed');
+  await ctx.detachRooms();
+  await ctx.cleanupRoom(passed.room_id);
+  const retryPassed = await answer(ctx, 'retry-pass', ['A', 'B'], 'passed');
   const recovered = await recovery(ctx);
   const cancelled = await cancellation(ctx, passed.room_id);
-  return { passed, failed, recovery: recovered, cancelled };
+  return { passed, failed, retry_passed: retryPassed, recovery: recovered, cancelled };
 };
