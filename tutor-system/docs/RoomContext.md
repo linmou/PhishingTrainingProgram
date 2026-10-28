@@ -1,16 +1,16 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-14. Baseline commit: 88b3ccd. -->
+<!-- Updated: 2026-10-24. Recovery synchronization baseline commit: 7762cbb. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
 
 ## Architecture Overview
 
-### Hybrid Real-time Strategy
+### Recovery-aware Real-time Strategy
 - **WebSocket subscriptions**: Primary real-time mechanism via Supabase channels
-- **Polling fallback**: 2-second interval polling as backup for unreliable replication
+- **Reconciliation**: 100-row ID-keyset pages on join/reconnect, five-second disconnected retries, and a sixty-second healthy audit
 - **Optimistic updates**: Immediate UI updates with rollback on errors
 - **Message enrichment**: Automatic display name and avatar resolution
 
@@ -67,14 +67,14 @@ channel.on('postgres_changes', { event: 'INSERT', table: 'messages' })
 - **Typing indicators**: Start/stop typing broadcasts
 - **Participant updates**: User join/leave events
 
-### Polling Mechanism (Lines 134-183)
-**Fallback Strategy**: 2-second interval polling for message synchronization
-**Message Preservation**:
-- Maintains pre-populated messages (IDs starting with `prepop-`)
-- Merges fresh database messages with existing state
-- Prevents message duplication and state corruption
+### Message Reconciliation
+`roomMessageSync.ts` reads at most 100 rows per request using the unique message ID as a keyset cursor. It scans the entire persisted history because there is no trusted mutation cursor for finding old-row updates. Creation timestamps are not used as a recovery cursor, so tied timestamps and old edits remain discoverable. The initial join uses these same pages before restoring assessment answer lifecycle state.
 
-**Critical Design**: Ensures reliability when WebSocket replication is unavailable
+Realtime INSERT and UPDATE are the primary path. Reconnection immediately requests a reconciliation; disconnected sessions and failed requests retry five seconds after completion. Healthy sessions audit sixty seconds after the preceding scan completes. A silently missed event can therefore remain absent for sixty seconds plus scan time. Each session permits one active scan and coalesces recovery requests.
+
+Realtime and reconciliation use `projectRoomMessage` and the shared `mergeRoomMessages` path, retaining pre-populated dialogue and assessment lifecycle projections. A realtime event received during a scan supersedes the scan's potentially stale copy. The channel depends on room/user identity rather than participant or room metadata objects. Room switch/unmount aborts requests, clears timers and suppresses late responses; overlapping joins have their own cancellation generation.
+
+Reads retain the existing `messages.select('*')` contract and server authorization. UI projection is only the display boundary, not authorization for private assessment data. No schema, RLS, RPC or Realtime publication change is introduced here.
 
 ## AI Integration System
 
@@ -117,7 +117,7 @@ retains its own processing result. On student reload or reconnect, the context r
 answers whose assessment ID matches the targeted question through the idempotent `processMessage`
 facade. Previously stored ordinary replies remain discussion messages and are not graded. A failed
 re-read leaves the room visible without inventing feedback. Message merges
-retain the projected question and server lifecycle when polling replaces a local view with a fresh
+retain the projected question and server lifecycle when reconciliation replaces a local view with a fresh
 database row. Student messages without an assessment identity use evidence analysis directly. The
 browser does not grade answers or write progress. Active-assessment selection checks run before both trusted and legacy posting paths, so a missing checklist projection cannot turn a displayed question's text reply into ordinary chat.
 
@@ -125,7 +125,7 @@ The learner's assessment submissions appear in answer history within the questio
 pending submissions and their later server feedback. Other room participants retain the normal
 discussion view.
 
-Message ingress uses one stable-ID merge for the initial room fetch, realtime inserts, polling,
+Message ingress uses one stable-ID merge for the initial room fetch, realtime inserts, reconciliation,
 reviewed sends, optimistic replacement, and catch-up. The page refreshes persisted room state after a
 stale transfer conflict; if that refresh fails, it keeps a retry action available. The active
 transfer checklist remains owner-scoped, so refresh uses the same selected learner and prepared
@@ -260,8 +260,8 @@ const {
 ## Error Handling Strategy
 
 ### Connection Resilience
-- **WebSocket failure**: Automatic fallback to polling
-- **Reconnect recovery**: Two-second polling retrieves messages persisted while the client could not reach the database
+- **WebSocket failure**: Paginated reconciliation retries five seconds after each completed scan
+- **Reconnect recovery**: A successful subscription immediately reconciles missed inserts and old-row edits
 - **Database errors**: Rollback optimistic updates
 - **AI service errors**: Graceful failure without blocking chat
 - **Reviewed-send errors**: The RPC is atomic; no message, feedback row, or room-mode update is adopted locally when it fails
@@ -276,7 +276,7 @@ const {
 ### Memory Management
 - **Message pagination**: Consider implementing for large conversation history
 - **Subscription cleanup**: Proper channel unsubscription on unmount
-- **Polling optimization**: Only poll when room is active
+- **Recovery reads**: One bounded-page scan at a time while the room is active; healthy audits run every sixty seconds
 
 ### Optimization Opportunities
 - **Message deduplication**: Prevent duplicate messages from race conditions

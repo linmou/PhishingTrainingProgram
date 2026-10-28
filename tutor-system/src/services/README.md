@@ -1,6 +1,6 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-21. Baseline commit: a6c977b. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-26. Baseline commit: 319e472. -->
 
 `detectionTemplates.ts` defines five targets per scenario in one inventory: the six
 teaching scenarios plus `General Scam Indicators`, the checklist's template fallback.
@@ -17,7 +17,6 @@ Qwen3.8 Flash for React and ai-api; assessment-api retains Qwen3.5. See the
 [candidate11 release record](../../docs/doc_update_record/documentation_update_record_v2026_10_15_candidate11_qwen38_conditional_release.md)
 for evaluation limitations and staging/production verification status.
 
-`cyberbullyingScenarios.ts` maps the pinned situations into room/template data.
 `aiService.ts` dispatches from the stored practice type; Cyberbullying proposals
 use the existing ai-api and tutor approval path. Shared Guard state uses a boolean.
 See [Cyberbullying practise](../../docs/cyberbullying-practise.md) for the five

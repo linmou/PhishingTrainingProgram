@@ -8,12 +8,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { EventEmitter } = require('node:events');
 const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
-const { assertAssessmentGate, assertBoundAnswers } = require('./browser-e2e/workflows/assessment-browser-checks');
+const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
+require('./browser-e2e/cleanup.test');
+const { runRoomSetupAnalysis, waitForTemplateSettings } = require('./browser-e2e/workflows/room-assessment-setup');
 
 const env = (target = 'staging') => ({
   E2E_APP_URL: 'http://localhost:3001',
@@ -22,6 +25,41 @@ const env = (target = 'staging') => ({
   E2E_SUPABASE_ANON_KEY: `${target}-anon-key`,
   SUPABASE_SERVICE_ROLE_KEY: `${target}-service-key`,
   SUPABASE_ACCESS_TOKEN: 'management-token'
+});
+
+// Responsibility: room-assessment-setup.js must wait for loaded target fields before saving template settings.
+test('template settings readiness rejects unloaded, wrong, partial and disabled fields before matching all targets', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    const expected = { detection_areas: ['One', 'Two', 'Three', 'Four', 'Five'], verification_steps: [] };
+    let predicate;
+    await waitForTemplateSettings({ waitForFunction: async (check, config, options) => {
+      predicate = check;
+      assert.deepEqual(config, expected);
+      assert.equal(options.timeout, 90000);
+    } }, expected);
+    const ready = () => page.evaluate(predicate, expected);
+    await page.setContent('<input type="checkbox" checked aria-label="Enable AI Assistant">');
+    assert.equal(await ready(), null);
+    await page.setContent('<textarea placeholder="Red flags to watch for (optional - will use template if empty)"></textarea><textarea placeholder="Steps students should take to verify content (optional)"></textarea>');
+    assert.equal(await ready(), false);
+    const areas = page.getByPlaceholder('Red flags to watch for (optional - will use template if empty)', { exact: true });
+    await areas.fill(['One', 'Two', 'Three', 'Four', 'Wrong'].join('\n'));
+    assert.equal(await ready(), false);
+    await areas.fill(expected.detection_areas.slice(0, 4).join('\n'));
+    assert.equal(await ready(), false);
+    await areas.fill(expected.detection_areas.join('\n'));
+    const steps = page.getByPlaceholder('Steps students should take to verify content (optional)', { exact: true });
+    await steps.fill('Unexpected');
+    assert.equal(await ready(), false);
+    await steps.fill('');
+    await areas.evaluate(element => { element.disabled = true; });
+    assert.equal(await ready(), false);
+    await areas.evaluate(element => { element.disabled = false; });
+    assert.equal(await ready(), true);
+    await waitForTemplateSettings(page, expected);
+  } finally { await browser.close(); }
 });
 
 test('accepts either named target and local app origin', () => {
@@ -304,6 +342,39 @@ test('assessment binding rejects missing IDs, duplicate rows, wrong selections a
   assert.deepEqual(assertBoundAnswers([multi], 'student', 'assessment', 'question', [['A', 'D']], []), [multi]);
 });
 
+// Responsibility: assessment-browser-checks.js must bind separate result messages to the submitted learner answer.
+test('first pass follows the saved sibling result and rejects identity or grade mismatches', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    const delivered = { assessment_id: 'assessment', question_message_id: 'question' };
+    const answer = { id: 'answer', user_id: 'student', assessment_id: 'assessment', parent_message_id: 'question',
+      assessment_selected_option_ids: ['B'] };
+    const question = { id: 'question', assessment_id: 'assessment', assessment_result: 'pass',
+      assessment_lifecycle: 'passed', assessment_answer_message_id: 'answer' };
+    const result = { id: 'result', parent_message_id: 'answer', content: 'Correct.', assessment_event: {
+      kind: 'result', assessment_id: 'assessment', question_message_id: 'question', student_id: 'student',
+      answer_message_id: 'answer', attempt_number: 1, outcome: 'passed' } };
+    await page.setContent('<section data-testid="public-assessment-assessment"></section><article data-testid="assessment-result-result">Correct.</article>');
+    const verify = (rows, savedQuestion = question) => assertFirstPassResult(page, [savedQuestion, ...rows], 'student', delivered, []);
+    assert.deepEqual(await verify([answer, result]), { answer, result });
+    for (const [field, value] of Object.entries({ assessment_id: 'other', question_message_id: 'other',
+      student_id: 'other', answer_message_id: 'other', attempt_number: 2, outcome: 'retry' })) {
+      await assert.rejects(verify([answer, { ...result, assessment_event: { ...result.assessment_event, [field]: value } }]));
+    }
+    await assert.rejects(verify([answer, result, { ...result, id: 'duplicate' }]), /duplicate/);
+    await assert.rejects(verify([answer]), /Missing/);
+    for (const [field, value] of Object.entries({ assessment_id: 'other', assessment_result: 'fail',
+      assessment_lifecycle: 'open', assessment_answer_message_id: 'other' })) {
+      await assert.rejects(verify([answer, result], { ...question, [field]: value }));
+    }
+    await assert.rejects(verify([answer, { ...result, parent_message_id: 'other' }]), /attached/);
+    await page.setContent('<article data-testid="assessment-result-other">Correct.</article>');
+    page.setDefaultTimeout(50);
+    await assert.rejects(verify([answer, result]), /assessment-result-result/);
+  } finally { await browser.close(); }
+});
+
 test('assessment gate checks every generic Reply and restores terminal composer access', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
@@ -355,4 +426,78 @@ test('assessment delivery requires feedback on the terminal answer after closure
     assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, created_at }, assessment),
       /after the assessment closes/);
   }
+});
+
+// Responsibility: room-assessment-setup.js must await its own bounded analysis response and retain raw evidence on every exit.
+test('room setup prearms a room-bound analysis wait before sending and then verifies persisted progress', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'room-setup-analysis-'));
+  const page = new EventEmitter();
+  let predicate, resolveResponse;
+  page.waitForResponse = (matches, options) => {
+    predicate = matches;
+    assert.equal(options.timeout, 90000);
+    return new Promise(resolve => { resolveResponse = resolve; });
+  };
+  const response = (operation, roomId, method = 'POST') => ({
+    url: () => 'https://example.supabase.co/functions/v1/assessment-api', status: () => 200,
+    request: () => ({ method: () => method, postDataJSON: () => ({ operation, room_id: roomId }) }),
+    json: async () => ({ ok: true, data: { applied: ['event'] } }),
+  });
+  const steps = [];
+  const evidencePath = path.join(dir, 'analysis.json');
+  try {
+    const calls = await runRoomSetupAnalysis({ page, roomId: 'room', itemId: 'item', evidencePath,
+      send: async () => {
+        assert.equal(typeof predicate, 'function');
+        for (const other of [response('analyze_message', 'other'), response('prepare_turn', 'room'), response('analyze_message', 'room', 'GET')]) {
+          assert.equal(predicate(other), false);
+        }
+        steps.push('sent');
+        const matching = response('analyze_message', 'room');
+        assert.equal(predicate(matching), true);
+        page.emit('response', matching);
+        resolveResponse(matching);
+      },
+      verifyProgress: async () => { steps.push('persisted'); },
+    });
+    assert.deepEqual(steps, ['sent', 'persisted']);
+    assert.equal(calls[0].request.room_id, 'room');
+    const saved = JSON.parse(fs.readFileSync(evidencePath));
+    assert.equal(saved.status, 'pass');
+    assert.equal(saved.stage, 'complete');
+    assert.deepEqual(saved.calls, calls);
+    assert(saved.started_at && saved.completed_at);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// Responsibility: room-assessment-setup.js must keep failed provider envelopes and progress failures reviewable.
+test('room setup always persists captures and failure stage for send, timeout, HTTP, envelope and progress failures', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'room-setup-analysis-errors-'));
+  try {
+    for (const kind of ['send', 'timeout', 'http', 'envelope', 'progress']) {
+      const page = new EventEmitter();
+      const payload = { ok: kind !== 'envelope', data: { raw_marker: kind } };
+      const response = { url: () => 'https://example.supabase.co/functions/v1/assessment-api',
+        status: () => kind === 'http' ? 503 : 200,
+        request: () => ({ method: () => 'POST', postDataJSON: () => ({ operation: 'analyze_message', room_id: 'room' }) }),
+        json: async () => payload };
+      page.waitForResponse = (_matches, options) => {
+        assert.equal(options.timeout, 90000);
+        return kind === 'timeout' ? Promise.reject(new Error('response timed out')) : Promise.resolve(response);
+      };
+      let progressRead = false;
+      const evidencePath = path.join(dir, `${kind}.json`);
+      await assert.rejects(runRoomSetupAnalysis({ page, roomId: 'room', itemId: 'item', evidencePath,
+        send: async () => { page.emit('response', response); if (kind === 'send') throw new Error('send failed'); },
+        verifyProgress: async () => { progressRead = true; throw new Error('progress unchanged'); },
+      }));
+      assert.equal(progressRead, kind === 'progress');
+      const saved = JSON.parse(fs.readFileSync(evidencePath));
+      assert.equal(saved.status, 'fail');
+      assert.equal(saved.stage, kind === 'send' ? 'sending' : kind === 'progress' ? 'persisted_progress' : 'analysis_response');
+      assert.deepEqual(saved.calls[0].response, payload);
+      assert(saved.error.message && saved.error.stack && saved.completed_at);
+      assert.equal(page.listenerCount('response'), 0);
+    }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

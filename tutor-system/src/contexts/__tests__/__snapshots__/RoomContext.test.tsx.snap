@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RoomContext - Room Management Tests preserves request, subscription and render counts through message, role and room changes 1`] = `
+Object {
+  "channels": 2,
+  "feedbackBatches": 3,
+  "firstRequests": Array [
+    "rooms",
+    "messages",
+    "users",
+    "ai_suggestion_feedback",
+    "messages",
+  ],
+  "joinedRenders": 5,
+  "liveRenders": 2,
+  "roleRenders": 3,
+  "subscriptions": 2,
+  "switchedRenders": 4,
+  "switchedRequests": Array [
+    "rooms",
+    "messages",
+    "users",
+    "messages",
+  ],
+}
+`;

@@ -55,4 +55,31 @@ function assertBoundAnswers(messages, studentId, assessmentId, questionId, expec
   return answers;
 }
 
-module.exports = { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers };
+async function assertFirstPassResult(page, messages, studentId, delivered, priorMessageIds) {
+  const [answer] = assertBoundAnswers(messages, studentId, delivered.assessment_id,
+    delivered.question_message_id, [['B']], priorMessageIds);
+  const question = messages.find(row => row.id === delivered.question_message_id);
+  assert.equal(question?.assessment_id, delivered.assessment_id, 'Question has the wrong assessment');
+  assert.equal(question.assessment_result, 'pass', 'Question did not record a passing grade');
+  assert.equal(question.assessment_lifecycle, 'passed', 'Question did not close as passed');
+  assert.equal(question.assessment_answer_message_id, answer.id, 'Question closed on the wrong answer');
+  const results = messages.filter(row => row.assessment_event?.kind === 'result' &&
+    (row.assessment_event.assessment_id === delivered.assessment_id ||
+      row.assessment_event.question_message_id === delivered.question_message_id ||
+      row.assessment_event.answer_message_id === answer.id));
+  assert.equal(results.length, 1, 'Missing or duplicate saved assessment result');
+  const [result] = results;
+  const event = result.assessment_event;
+  assert.equal(event.assessment_id, delivered.assessment_id, 'Result has the wrong assessment');
+  assert.equal(event.question_message_id, delivered.question_message_id, 'Result has the wrong question');
+  assert.equal(event.student_id, studentId, 'Result has the wrong learner');
+  assert.equal(event.answer_message_id, answer.id, 'Result has the wrong answer');
+  assert.equal(result.parent_message_id, answer.id, 'Result is not attached to its answer');
+  assert.equal(event.attempt_number, 1, 'Result has the wrong attempt');
+  assert.equal(event.outcome, 'passed', 'Saved result is not a pass');
+  assert.equal(result.content, 'Correct.', 'Saved pass result violated the deterministic contract');
+  await page.getByTestId(`assessment-result-${result.id}`).waitFor();
+  return { answer, result };
+}
+
+module.exports = { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers, assertFirstPassResult };

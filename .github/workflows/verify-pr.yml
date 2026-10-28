@@ -24,6 +24,29 @@ jobs:
           node --test scripts/database/disposable-database.test.js
           node --test scripts/staging-coordination.test.js
 
+      # Prevent the human-facing PR handoff from drifting away from CI check IDs.
+      # Structural check only: PR results and review decisions are external gates.
+      - name: Check PR template against CI job IDs
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+
+          const template = fs.readFileSync('.github/PULL_REQUEST_TEMPLATE.md', 'utf8');
+          const workflow = fs.readFileSync('.github/workflows/verify-pr.yml', 'utf8');
+          const split = workflow.split(/^jobs:\s*$/m);
+          assert.equal(split.length, 2, 'Expected one GitHub Actions jobs section');
+          const jobs = [...split[1].matchAll(/^  ([a-z][a-z0-9-]*):\s*$/gm)].map(match => match[1]);
+          assert.ok(jobs.length > 0, 'No CI jobs found');
+
+          for (const job of jobs) {
+            assert.ok(template.includes('`' + job + '`'), 'PR template missing CI job: ' + job);
+          }
+          for (const heading of ['## Summary', '## Verification', '## Release handoff']) {
+            assert.ok(template.includes(heading), 'PR template missing section: ' + heading);
+          }
+          NODE
+
   frontend-jest:
     runs-on: ubuntu-latest
     env:

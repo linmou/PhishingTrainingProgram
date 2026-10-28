@@ -179,6 +179,7 @@ defineFeature(feature, (test) => {
         return query;
       });
       query.limit = jest.fn((limit: number) => { resultLimit = limit; return query; });
+      query.abortSignal = jest.fn(() => query);
       query.in = jest.fn(async () => ({ data: [...participants], error: null }));
       query.single = jest.fn(async () => result());
       query.insert = jest.fn((value: any) => { insertValue = value; return query; });

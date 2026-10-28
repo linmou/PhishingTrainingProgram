@@ -84,7 +84,7 @@ For real-browser tests, read `tutor-system/docs/browser-e2e-testing.md` before s
 ## Commit & Pull Request Guidelines
 Recent history uses short imperative commits, often with prefixes like `feat(ui): ...` or `fix(ai): ...`. Keep commits focused and readable.
 
-PRs should include a short problem statement, the approach taken, test evidence, and screenshots for UI changes. If you touch schema or security behavior, update `supabase/migrations/` and the nearest relevant docs such as `tutor-system/README.md` or `tutor-system/docs/`.
+PRs should include a short problem statement, the approach taken, test evidence, and screenshots for UI changes. Use [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for the PR description and evidence handoff. If you touch schema or security behavior, update `supabase/migrations/` and the nearest relevant docs such as `tutor-system/README.md` or `tutor-system/docs/`.
 
 ## Security & Configuration Tips
 Do not commit secrets. Frontend env vars should use `REACT_APP_*`. When changing Supabase-related code, make sure `src/services/supabase.ts` and the SQL migrations stay aligned, especially for RLS and storage policies.

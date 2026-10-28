@@ -6,6 +6,51 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, captureResponses, requestId, TIMEOUT } = require('../browser-e2e-support');
 const { deliverFixedAssessment } = require('./assessment-fixture');
+const { assertFirstPassResult } = require('./assessment-browser-checks');
+
+async function waitForTemplateSettings(page, promptConfig) {
+  await page.waitForFunction(expected => {
+    const detection = document.querySelector('textarea[placeholder="Red flags to watch for (optional - will use template if empty)"]');
+    const verification = document.querySelector('textarea[placeholder="Steps students should take to verify content (optional)"]');
+    return detection && verification && !detection.disabled && !verification.disabled &&
+      detection.value === expected.detection_areas.join('\n') &&
+      verification.value === expected.verification_steps.join('\n');
+  }, promptConfig, { timeout: TIMEOUT });
+}
+
+async function runRoomSetupAnalysis({ page, roomId, itemId, evidencePath, send, verifyProgress }) {
+  const evidence = { room_id: roomId, item_id: itemId, response_timeout_ms: TIMEOUT,
+    started_at: new Date().toISOString(), stage: 'sending', status: 'running', calls: [] };
+  const stop = await captureResponses(page, response => response.url().includes('/functions/v1/assessment-api'));
+  const responseWait = page.waitForResponse(response => {
+    if (!response.url().includes('/functions/v1/assessment-api') || response.request().method() !== 'POST') return false;
+    let body;
+    try { body = response.request().postDataJSON(); } catch { return false; }
+    return body?.operation === 'analyze_message' && body.room_id === roomId;
+  }, { timeout: TIMEOUT }).then(response => ({ response }), error => ({ error }));
+  try {
+    await send();
+    evidence.stage = 'analysis_response';
+    const result = await responseWait;
+    if (result.error) throw result.error;
+    assert.equal(result.response.status(), 200, 'Learner analysis returned a non-success HTTP status');
+    const body = await result.response.json();
+    assert.equal(body?.ok, true, 'Learner analysis returned an error envelope');
+    evidence.stage = 'persisted_progress';
+    await verifyProgress();
+    evidence.stage = 'complete';
+    evidence.status = 'pass';
+  } catch (error) {
+    evidence.status = 'fail';
+    evidence.error = { name: error.name, message: error.message, stack: error.stack };
+    throw error;
+  } finally {
+    evidence.calls = await stop();
+    evidence.completed_at = new Date().toISOString();
+    writeJson(evidencePath, evidence);
+  }
+  return evidence.calls;
+}
 
 module.exports = async function roomAssessmentSetup(ctx) {
   const { tutorPage, studentPage, appUrl, client, evidenceDir, runId } = ctx;
@@ -53,10 +98,8 @@ module.exports = async function roomAssessmentSetup(ctx) {
   );
   await openRoom(tutorPage, appUrl, room.id);
   await tutorPage.locator('button[title="AI Assistant Settings"]').click();
-  await waitForMatch(
-    () => tutorPage.getByLabel('Enable AI Assistant').isChecked(),
-    checked => checked, 'loaded template AI settings'
-  );
+  await waitForTemplateSettings(tutorPage, createdConfig.prompt_config);
+  assert.equal(await tutorPage.getByLabel('Enable AI Assistant').isChecked(), true);
   await tutorPage.getByLabel('Enable In-Room Assessment').uncheck();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
@@ -89,10 +132,8 @@ module.exports = async function roomAssessmentSetup(ctx) {
   );
 
   await tutorPage.locator('button[title="AI Assistant Settings"]').click();
-  await waitForMatch(
-    () => tutorPage.getByLabel('Enable AI Assistant').isChecked(),
-    checked => checked, 'loaded existing AI settings'
-  );
+  await waitForTemplateSettings(tutorPage, createdConfig.prompt_config);
+  assert.equal(await tutorPage.getByLabel('Enable AI Assistant').isChecked(), true);
   await tutorPage.getByLabel('Enable In-Room Assessment').check();
   await tutorPage.getByRole('button', { name: 'Save Settings' }).click();
   await waitForMatch(
@@ -147,19 +188,16 @@ module.exports = async function roomAssessmentSetup(ctx) {
   if (understandingError) throw new Error(`Assessment fixture understanding: ${understandingError.message}`);
 
   const focusContent = 'I will ignore the message link and open the real app myself. I will check its security alerts and recent login activity, contact support through the app if needed, and enable two-factor authentication in its settings.';
-  const stopAnalysis = await captureResponses(studentPage,
-    response => response.url().includes('/functions/v1/assessment-api'));
-  let analysisCalls;
-  try {
-    await sendStudentMessage(studentPage, focusContent);
-    await waitForMatch(
+  const analysisCalls = await runRoomSetupAnalysis({
+    page: studentPage, roomId: room.id, itemId: item.id,
+    evidencePath: path.join(evidenceDir, 'room-assessment-setup-analysis.json'),
+    send: () => sendStudentMessage(studentPage, focusContent),
+    verifyProgress: () => waitForMatch(
       () => query(client, 'checklist_items', 'status,understanding_level', 'id', item.id),
       rows => rows[0]?.status === 'covered' && ['good', 'excellent'].includes(rows[0]?.understanding_level),
       'real analysis of the unified safe-action target'
-    );
-  } finally {
-    analysisCalls = await stopAnalysis();
-  }
+    ),
+  });
   assert(analysisCalls.some(call => call.request?.operation === 'analyze_message' &&
     call.status === 200 && call.response?.ok === true), 'Learner action did not complete real target analysis');
   const focus = (await query(client, 'messages', 'id,content,user_id,created_at', 'room_id', room.id))
@@ -192,23 +230,28 @@ module.exports = async function roomAssessmentSetup(ctx) {
   const delivered = await deliverFixedAssessment(ctx, {
     room, checklist, items: [item], focus,
   });
+  const priorMessageIds = (await query(client, 'messages', 'id', 'room_id', room.id)).map(row => row.id);
   await studentPage.reload({ waitUntil: 'domcontentloaded' });
   const question = studentPage.locator(`[data-testid="public-assessment-${delivered.assessment_id}"]`);
   await question.waitFor({ timeout: TIMEOUT });
   await question.locator('input[value="B"]').check();
   await question.getByRole('button', { name: 'Submit answer' }).click();
-  await question.getByRole('status').filter({ hasText: 'Correct.' }).waitFor({ timeout: TIMEOUT });
-  await waitForMatch(
-    () => query(client, 'messages', 'assessment_id,assessment_result', 'room_id', room.id),
-    rows => rows.some(row => row.assessment_id === delivered.assessment_id && row.assessment_result === 'pass'),
+  const saved = await waitForMatch(
+    () => query(client, 'messages', '*', 'room_id', room.id),
+    rows => rows.some(row => row.assessment_event?.assessment_id === delivered.assessment_id &&
+      row.assessment_event.kind === 'result'),
     'persisted assessment result'
   );
+  const { answer, result } = await assertFirstPassResult(studentPage, saved, ctx.student.id,
+    delivered, priorMessageIds);
   const evidence = {
     room_id: room.id, tutor_id: ctx.tutor.id, learner_id: ctx.student.id,
     checklist_id: checklist.id, item_id: item.id, persisted_status: 'covered',
     learner_message_count: (await query(client, 'messages', 'id', 'room_id', room.id)).length,
     assessment_id: delivered.assessment_id,
     assessment_result_persisted: true,
+    saved_answer: answer,
+    saved_result: result,
     observer_read_only: true,
     inherited_targets: inheritedItems,
     preparation_calls: prepareCalls,
@@ -219,3 +262,6 @@ module.exports = async function roomAssessmentSetup(ctx) {
   assert(evidence.learner_message_count > 0, 'Learner evidence should be persisted before assessment delivery');
   return evidence;
 };
+
+module.exports.runRoomSetupAnalysis = runRoomSetupAnalysis;
+module.exports.waitForTemplateSettings = waitForTemplateSettings;
