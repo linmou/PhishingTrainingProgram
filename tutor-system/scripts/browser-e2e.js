@@ -23,12 +23,16 @@ const workflows = {
   'guard-mode': require('./browser-e2e/workflows/guard-mode'),
   'assessment-delivery': require('./browser-e2e/workflows/assessment-delivery'),
   'assessment-answer': require('./browser-e2e/workflows/assessment-answer'),
+  'assessment-security': require('./browser-e2e/workflows/assessment-security'),
+  'assessment-privacy': require('./browser-e2e/workflows/assessment-privacy'),
+  'assessment-configuration': require('./browser-e2e/workflows/assessment-configuration'),
+  'assessment-replay': require('./browser-e2e/workflows/assessment-replay'),
   'transfer-status-events': require('./browser-e2e/workflows/transfer-status-events'),
   'early-message-recheck': require('./browser-e2e/workflows/early-message-recheck')
 };
 
 function selectWorkflows(argv) {
-  if (argv.length === 0) return Object.keys(workflows);
+  if (argv.length === 0) return Object.keys(workflows).filter(name => !['assessment-security', 'assessment-privacy', 'assessment-configuration', 'assessment-replay'].includes(name));
   if (argv.length !== 1 || !argv[0].startsWith('--workflow=')) {
     throw new Error(`Use --workflow=<name>; available: ${Object.keys(workflows).join(', ')}`);
   }
@@ -45,6 +49,7 @@ async function runWorkflows(selected, context, report, evidenceDir, registry = w
     } catch (error) {
       report.results[name] = {
         status: 'fail', error: error.stack || String(error),
+        fixture_cleanup_failed: error.cleanupFailed === true,
         screenshots: [
           await support.screenshot(context.tutorPage, evidenceDir, `${name}-tutor-failure`).catch(() => null),
           await support.screenshot(context.studentPage, evidenceDir, `${name}-learner-failure`).catch(() => null)
@@ -68,9 +73,17 @@ async function runWorkflows(selected, context, report, evidenceDir, registry = w
   return selected.every((name) => report.results[name]?.status === 'pass');
 }
 
+function shouldRetainLease(report) {
+  return Boolean(report.browser_close_error || report.lock_release_error ||
+    (report.error && report.room_ids.length > 0) ||
+    Object.values(report.results).some(result => result.fixture_cleanup_failed ||
+      result.cleanup?.some(item => item.status !== 'pass')));
+}
+
 async function main(argv = process.argv.slice(2)) {
   const selected = selectWorkflows(argv);
   const config = support.configFromEnv();
+  if (selected.some(name => ['assessment-security', 'assessment-privacy', 'assessment-configuration', 'assessment-replay'].includes(name))) workflows['assessment-security'].assertStaging(config);
   const runId = `${new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14)}-${crypto.randomUUID().slice(0, 8)}`;
   const repoRoot = path.resolve(support.tutorRoot, '..');
   const evidenceDir = path.join(repoRoot, 'tmp/browser_demo_runs', `${support.TARGET}-template-${runId}`);
@@ -161,9 +174,7 @@ async function main(argv = process.argv.slice(2)) {
       report.lock_release_error = error.stack || String(error);
     }
     if (coordination) {
-      const unsafe = report.browser_close_error || report.lock_release_error ||
-        (report.error && report.room_ids.length > 0) ||
-        Object.values(report.results).some(result => result.cleanup?.some(item => item.status !== 'pass'));
+      const unsafe = shouldRetainLease(report);
       if (unsafe) {
         report.coordination.retained = true;
       } else {
@@ -178,5 +189,5 @@ async function main(argv = process.argv.slice(2)) {
   if (report.status !== 'pass') process.exitCode = 1;
 }
 
-module.exports = { selectWorkflows, runWorkflows, main, ...support };
+module.exports = { selectWorkflows, runWorkflows, shouldRetainLease, main, ...support };
 if (require.main === module) main().catch((error) => { console.error(error); process.exitCode = 1; });

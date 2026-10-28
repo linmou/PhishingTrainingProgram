@@ -2,7 +2,7 @@
 
 Intent: define the implementation and delivery requirements for work in this repository.
 
-Updated: 2026-10-22. Archive rule baseline commit: `71d5f0e`; workflow and verification index baseline commit: `62f2b6b`.
+Updated: 2026-10-27. Release repair baseline commit: `dec7c27`.
 
 ## Mandatory Server Delivery
 
@@ -20,7 +20,7 @@ For Supabase changes, execute [supabase-release-workflow.md](tutor-system/docs/s
 
 Before any shared Staging SQL, Edge, secret or fixture mutation, acquire the [cross-machine project lease](tutor-system/docs/agent-coordination.md) with `scripts/staging-coordination.js`. Direct Supabase MCP and Management API operations follow the same rule as repository scripts and Actions. The named release owner holds the lease from deployment through the affected Staging acceptance checks; child tools borrow the exact candidate's lease using `PTP_COORDINATION_LEASE`. Missing access or contention blocks writes. Never reclaim a lease by age or delete a different owner's reference. Changes from an operator bypassing this protocol invalidate the affected verification evidence.
 
-If a check fails, fix it and rerun before advancing to the next environment. If an external blocker cannot be resolved within available authorization or access, keep the task incomplete and report the exact failing action, evidence, current deployed state, and next required action. A failed deployment prerequisite is work to resolve, not a completed verification step.
+If a check fails, retain ownership and continue diagnosis, repair and affected re-verification within recorded authorization using the [failure repair loop](tutor-system/docs/supabase-release-workflow.md#failure-repair-loop). Keep the release incomplete and record the exact failure, deployed state, evidence, owner and next action in the existing release record and PR. A failure report does not complete delivery. A concrete blocker requires a named resumption handoff.
 
 ## Verification Entry Points
 

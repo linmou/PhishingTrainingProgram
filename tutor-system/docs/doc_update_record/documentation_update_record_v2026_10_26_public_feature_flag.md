@@ -1,0 +1,126 @@
+# Public Assessment Feature Configuration
+
+Intent: replace the assessment enablement secret with readable, administrator-controlled configuration.
+
+Updated: 2026-10-27. Implementation baseline: `60025062117e2731840a5afcf7469409081f5180`; integrated release: `dc83330d1ba5c6512fce3b0a29e03ac94f572595`; approved PR head: `3c0b78d64ac96333d7eaaf714ad9eeb7e9990ffb`. Release owner: Codex root agent. Batch: `public-assessment-flag-20261026`. Status: production verified, obsolete secrets absent in both projects, fixtures and leases cleaned, applied SQL archived. Earlier checkpoints below retain their historical status.
+
+## Changed Contract
+
+`public.feature_flags` contains the `TRANSFER_ASSESSMENT_ENABLED` name and a non-null boolean `enabled`. Public clients can read it through REST. Only service-role administrators can update it; public INSERT, UPDATE, DELETE and TRUNCATE are denied. The name constraint prevents this table from being used for provider credentials. No application history is changed by the migration or flag updates.
+
+The Edge handler reads the table per request so warm instances observe changes. There is no environment fallback or implicit enabled default. Missing/malformed configuration and query failures return retryable HTTP 503 `ASSESSMENT_CONFIGURATION_UNAVAILABLE`; explicit false returns `ASSESSMENT_FEATURE_DISABLED`. Owner clear retains its existing exception. Provider credentials remain unchanged. No prompts, models, grading or evaluation rules change.
+
+The deployment workflow no longer creates the flag as a secret, and `.env.example` no longer declares it as an environment variable. Both environments run the table-backed implementation with the legacy flag secret absent.
+
+## Local Evidence
+
+The checked Deno assessment suite passes 49/49 tests, including a production-adapter HTTP test of public-table reads, opposite legacy environment values, missing/null/string values, query failures, repeated enable/disable/restore on one warm handler, rejected operations without side effects, and the owner-clear exception. Deno checks the modified TypeScript and the default adapter. An initial new test counted both join and post RPCs as writes; it was corrected to count the actual message-write RPC before the passing run.
+
+`supabase/tests/public_feature_flags.sql` ran on disposable clones of `realtime_publication_baseline_20261025_0335` as source-equivalent `postgres`. Red failed because the table does not exist; Green applied the queued SQL and passed public reads, both public-role write denials, service-role disable/restore, invalid-name/null rejection and administrative delete denial. Test mutations rolled back and both databases were cleaned. Clone leases retain command status, baseline comparison and cleanup:
+
+- Red: `/Users/admin/.transfer-assessment-pg17/runs/scenario-hR39px/lease.json`, exit 3, missing relation.
+- Green: `/Users/admin/.transfer-assessment-pg17/runs/scenario-prWs6i/lease.json`, exit 0.
+
+This proves behavior on the verified October 25 local baseline, not fresh hosted migration parity. Production MCP inspection on October 26 found no `public.feature_flags` or `public.app_config` table. Earlier read-only staging secret inspection matched the exact boolean `true`; reobserve both target values before seeding either environment.
+
+The browser-runner, historical evidence and assessment privacy/security/result/configuration harness regressions pass 53/53 Node tests. Deployment manifest dry-run succeeds and requires only the two provider secret names. `git diff --check` passes. Historical queued-artifact SHA-256 values (the promoted SQL hash is recorded below):
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Queued SQL | `3e47714f6b49abd35820900b7c180fafba32c28032a06b7b2c2b7fdf81b73ed3` |
+| assessment-api/index.ts | `758bb3d76646dc367114dd647cd33b4fa49b9f8c245532575087def37d23caad` |
+| public_feature_flags.sql test | `6763855452ff1006a0df5c37739af1e37cadb9da7385f5fbd0b6f70bfb4a540d` |
+| Edge dependency manifest | `a6f3433da869371beebab4b21bf007f6b5e9e09f5a18125933d3aca8318c9523` |
+
+The first `shasum` invocation failed on the host's unsupported `C.UTF-8` locale; rerunning with `LC_ALL=C LANG=C` produced these hashes. Deno updated unrelated workspace dependency metadata during testing; that generated metadata change was removed before commit.
+
+## Migration Dependency Resolution
+
+The predecessor `20261025034000_enable_message_realtime.sql` has now passed staging and production acceptance as an independently bounded SQL release from integrated `dec7c27`. Its [release record](documentation_update_record_v2026_10_24_realtime_publication.md#independent-prerequisite-release-on-october-26) preserves fresh baseline parity, actual channel/recovery checks, exact SQL application, data/permission readbacks and both lease releases. The archived bytes retain the original hash. No unrelated PR #30 application or prompt changes were promoted.
+
+The sole pending migration is now `supabase/migrations/20261026223000_public_assessment_feature_flag.sql`, promoted from the queued candidate. Its only source change is replacing the queued-artifact comment; SHA-256 is `5640033e764919d351ed6d9c01b4ae5e324dfc7e86e11f8d931c8ec86e3ea880`. A fresh hosted restore and catalog/role/data parity cycle passes; the promoted artifact passes its permission/disable/restore tests in `scenario-WlB24B`, with owned database cleanup. Both hosted legacy flags were read-only observed as exact `true` at 22:20 UTC, matching the seed. Do not deploy the changed Edge handler before the table.
+
+The opt-in staging-only `assessment-configuration` workflow now tests public reads and denied writes using both anonymous and real authenticated-role credentials. It saves and grades a fixed assessment, disables all nine assessment operations, verifies readable history and identical message/attempt/authority/progress hashes, restores the exact original boolean in a `finally` block and verifies normal private-review behavior afterward. Focused tests cover restoration on failure, both original booleans, unreadable configuration, restoration failure requiring lease retention, and rejection of production before fixture access.
+
+## Hosted Acceptance
+
+Before staging mutation, freeze the candidate commit and SQL/Edge hashes, refresh the hosted baseline and role/catalog parity, then acquire the exact candidate's project lease. Reobserve the legacy flag and verify the seed matches; the current candidate seeds true. Apply SQL before Edge code. Verify public REST reads using anon and real authenticated credentials, denied public writes with unchanged state, and authorized updates.
+
+Run a full affected assessment journey and a staging disable/history-preservation/restore drill under the same lease. Capture persisted question, attempts, grade and saved-history identities/hashes before and after. Verify disabled requests cause no assessment effects, public history stays readable, and re-enabled operations work on the same deployed function. Preserve existing owner-clear behavior without using clear/reset as the drill. Always restore the observed value and verify cleanup. Recheck provider/function dependencies and record deployed IDs/versions/source hashes.
+
+Only after the table-backed function passes acceptance, delete the single legacy `TRANSFER_ASSESSMENT_ENABLED` secret with the Management API, verify its absence, recheck the public flag and run affected requests again. If the function must roll back to old code after removal, restore the known non-sensitive legacy value before that old code is deployed; never restore any unrelated secret from an evidence log.
+
+After staging passes, request the human owner's authorization for the exact reviewed commit to merge into `no_sign_up`. Verify the integrated artifacts on staging, then apply the same SQL and Edge artifacts to production in that order. Production acceptance requires public read/write-boundary checks, the affected assessment lifecycle, persisted result/history, configuration state, legacy-secret absence and fixture cleanup. Record each environment's versions, hashes, commands and results before marking this task complete.
+
+## Staging Results And Access Blocker
+
+Candidate `7d8789dfa2d764ab879d843dca9ad34f3b4b9788` passed all three required [GitHub CI checks](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40411860284): isolation-harness, frontend-jest and frontend-build. PR #37 contains the public-configuration change and the PR #29 candidate; both remain unmerged. Human review and exact-head merge authorization remain pending.
+
+Under the candidate's shared project lease, the exact promoted SQL was applied to staging `ciubrzggdqesgvfkpolj` before deploying assessment-api. The hosted SQL permission suite passed. The observed legacy value was true, matching the seed. assessment-api advanced from v77 to v78; all downloaded runtime file hashes match the candidate, including unchanged imported dependencies. No ai-api deployment occurred.
+
+| Deployed artifact | Value |
+| --- | --- |
+| Function ID | `1a47f58e-5451-422c-b9d3-26cba3b20faa` |
+| Version | `78` |
+| Bundle SHA-256 | `50474c5705db85f002f70ab3f59cabe02b3710cd970d4d01ce17ab0551dd607c` |
+| SQL SHA-256 | `5640033e764919d351ed6d9c01b4ae5e324dfc7e86e11f8d931c8ec86e3ea880` |
+| Edge source manifest SHA-256 | `a6f3433da869371beebab4b21bf007f6b5e9e09f5a18125933d3aca8318c9523` |
+
+The configuration drill passed at `tmp/browser_demo_runs/staging-template-20261026225919-5342f25e/report.json`. Anonymous and real authenticated reads returned HTTP 200; writes returned 401 and 403 respectively, both SQLSTATE 42501. All nine assessment operations returned HTTP 503 `ASSESSMENT_FEATURE_DISABLED` while false. Existing history stayed readable. Messages, attempts, assessment authority and progress retained SHA-256 `5c10354e0046416b9a5f48f6c0f95f288319587d319fdb1ef40445955add1990` before, during and after the drill, with one saved attempt and its passing grade preserved. Restoration to true and normal private review (HTTP 200) passed. The temporary Auth account/profile and room fixtures were cleaned.
+
+The privacy browser workflow passed both assessment outcomes in `tmp/browser_demo_runs/staging-template-20261026225940-cad9a3a3/report.json`: 231 network, Realtime, DOM, actual JSON/TXT download and error observations across eight checkpoints, with zero violations. Both room cleanups passed. A repeated configuration run at `tmp/browser_demo_runs/staging-template-20261026230052-88303ed3/report.json` also passed; it ran with the legacy secret still present and is not evidence of operation after removal.
+
+Deleting only `TRANSFER_ASSESSMENT_ENABLED` through `DELETE /v1/projects/ciubrzggdqesgvfkpolj/secrets` returned HTTP 403: `Missing required permission(s): edge_functions_secrets_write`. The configured credential can deploy the SQL and Edge source but cannot perform this deletion. The available Browser runtime has no browser session. This is a credential-access blocker; the table-backed function already ignores the old secret.
+
+The final readback at 23:04 UTC confirmed the public boolean is true, v78 and all deployed source hashes are unchanged, and the obsolete secret remains present. All three live runs had passed cleanup and their fixture processes had stopped. The exact owned staging lease was released. Detailed deployment, failing deletion and safe checkpoint evidence is retained under `output/public-assessment-flag-20261026/staging-flag-release-1793055525309/`; the permission response is `output/public-assessment-flag-20261026/secret-delete-diagnostic.json`. These generated outputs are local evidence, not committed artifacts.
+
+At this October 26 checkpoint, the next action was to resolve secret deletion access and repeat affected staging checks. The October 27 results below supersede that blocker for staging.
+
+## October 27: Verification After Manual Secret Removal
+
+The user removed only the staging flag secret through the dashboard. Under a fresh exact-candidate lease, read-only Management API checks before and after acceptance confirm `TRANSFER_ASSESSMENT_ENABLED` is absent. Public configuration is true. Supabase reports assessment-api v79 with the same function ID, bundle hash and byte-identical runtime source files as the accepted v78 artifact; no source deployment was performed during this verification. The initial version assertion expected v78 and stopped before fixture writes; its evidence is retained under `output/public-assessment-flag-20261026/secret-absence-1793123535902/`. After inspecting every source file and the unchanged bundle hash, the check resumed using the same owned lease and the observed v79.
+
+The configuration workflow passed at `tmp/browser_demo_runs/staging-template-20261027175240-f8532bcd/report.json`: both public-role reads returned 200, anonymous/authenticated writes were denied with SQLSTATE 42501, and all nine operations returned the expected disabled response. Saved messages, attempts, assessment authority and progress retained SHA-256 `b3eb6bc63c03f3c588bc5623d898c1326a08a861bbdc9d9787d261f4b5702f3f` before, during and after disablement. History remained readable, the original true value was restored, and private review returned 200 afterward. Temporary Auth/profile and room cleanup passed.
+
+The privacy workflow passed at `tmp/browser_demo_runs/staging-template-20261027175300-ff6890b1/report.json`, covering both assessment outcomes, eight checkpoints and 236 observations with zero violations. Both fixture rooms were cleaned. Final readbacks at 17:53 UTC confirmed the secret is still absent, the public flag is true and v79/source/bundle are unchanged. Fixture processes and the app stopped, and the exact owned lease was released. Full input/output evidence and metadata are retained in `output/public-assessment-flag-20261026/secret-absence-1793123554663/verification.json` and `output/public-assessment-flag-20261026/staging-1793123557122/`.
+
+The tested head `35d4b8c` passed all three required CI checks in [run 40417243102](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40417243102). This follow-up changes only the release record; runtime and migration hashes remain frozen. Next action: complete human review and obtain explicit authorization for the current PR head to merge into `no_sign_up`, then verify integrated artifacts on staging and release production in SQL-before-Edge order. Production still uses the old flag implementation. Its legacy-secret removal requires an authorized credential or the same dashboard operation after production behavior acceptance; the existing API credential's permission limitation remains. Production acceptance and migration archival remain open.
+
+## October 27: Approved Integration And Production Acceptance
+
+The human release owner explicitly approved merging PR #37 head `3c0b78d` after CI and continuing production delivery. All three required checks passed in [run 40554945548, attempt 2](https://github.com/linmou/PhishingTrainingProgram/actions/runs/40554945548/attempts/2). Attempt 1 was canceled after slow Ubuntu dependency downloads; its log is retained as `output/public-assessment-flag-20261026/ci-attempt-1-cancelled.log`. No source change was needed for the passing retry. No GitHub review object was submitted; the review/merge authorization is the user's chat approval.
+
+PR #37 merged into `no_sign_up` at 18:14 UTC as `dc83330d1ba5c6512fce3b0a29e03ac94f572595`. Its tree is identical to the approved head. Relative to the previous integration base, frontend application changes are confined to a database type declaration, so Render's automatic frontend deployment remains compatible with the old and new backend contracts. An isolated release checkout freezes the integrated source independently of the original workspace.
+
+Under new exact-release leases, the frozen SQL and Edge manifest hashes matched staging evidence. Both configuration and privacy workflows passed again on integrated source before production mutation. Reports are in the release checkout's `tmp/browser_demo_runs/`; command wrapper evidence is `output/public-assessment-flag-20261026/staging-1793124892847/`. Staging assessment-api remains v79 and every runtime file matches the integrated commit. The flag is true and the legacy secret is absent.
+
+Production preflight observed no flag table and the exact legacy true value. All deployed dependencies matched the release except the expected flag-reader change and `assessmentRendering.ts`: the latter matched the predecessor of integrated `88fc7b3` (PR #21's history-ordering optimization). Codex root owns this inherited dependency's promotion; combined staging privacy and production result/history/lifecycle checks cover it. No provider prompts, models or grading dependencies changed.
+
+The exact migration was applied to `zgbufaxooqxeabewktzd` before Edge deployment. The hosted SQL permission suite passed. Production assessment-api advanced from v17 to v18, ID `3d19c906-4e3b-4b1f-a639-7551b50b839e`, bundle SHA-256 `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427`. Every downloaded runtime file matches the integrated commit and the same Edge manifest `a6f3433da869371beebab4b21bf007f6b5e9e09f5a18125933d3aca8318c9523` accepted on staging. Per-project bundle hashes differ; source-file equality establishes exact-source promotion. Full pre/post-deployment hashes of rooms, messages, checklist items, private assessments and attempts were identical.
+
+Anonymous and real authenticated REST reads returned 200; PATCH requests returned 401 and 403 respectively, both SQLSTATE 42501. The first helper cleanup assertion omitted the required `x-practice-contract` header; correcting the helper resolved it without changing application code. Auth audit records identified both fixture IDs, and direct SQL readbacks confirm zero remaining Auth users or public profiles (`production-auth-cleanup-readback-result.json`). The failed assertion remains in the local release record.
+
+The complete production `assessment-answer` workflow passed from 18:16:59 to 18:19:16 UTC on integrated `dc83330`. It covers first-attempt pass, terminal failure, retry then pass, saved results and history, Guard deferral/recovery, owner clear and cancellation, including real provider terminal tutoring. All three fixture rooms passed cleanup. Report: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/public-flag-release-20261027/tmp/browser_demo_runs/production-template-20261027181659-8a761ce0/report.json`. Source/version stayed unchanged through acceptance, and the public flag remained true.
+
+Production legacy-secret DELETE returned HTTP 403 for missing `edge_functions_secrets_write`; the entry is present but unused by v18. Both exact owned project leases were released after fixture cleanup and app shutdown. Release metadata, SQL inputs/results, full downloaded source, hashes, permissions, failure evidence and cleanup are retained under `output/public-assessment-flag-20261026/production-flag-release-1793124890227/`; browser command logs are under `production-1793125014199/`. The user has been asked to remove only that production entry through the dashboard. Final secret-absence verification, post-removal affected requests and migration archival remain open.
+
+At 18:29 UTC, after the user reported dashboard cleanup, fresh Management API reads still showed the production entry present and the staging entry absent. Final verification stopped before fixture writes and its exact owned production lease was released. Evidence: `output/public-assessment-flag-20261026/production-final-1793125755782/verification.json` and its adjacent lease record. Production remains on the already-accepted table-backed implementation. The user was asked to check the exact production project and deletion confirmation; final acceptance and archival are still pending. The README and Supabase service documentation now accurately describe the deployed public-table configuration.
+
+## Final Production Verification And Archival
+
+After the user's second production cleanup confirmation, fresh Management API reads at 18:58 UTC confirmed the flag secret absent from both projects. Production reports assessment-api v19 with the same function ID, runtime source files and bundle hash as the accepted v18 release; no source deployment occurred for this final verification. Both public table reads returned 200 with `enabled=true`, and all downloaded runtime files still match integrated release `dc83330`.
+
+Under a fresh exact-release production lease, the full `assessment-answer` workflow passed again without the secret: first-attempt pass, terminal failure, retry then pass, Guard deferral/recovery, owner clear and cancellation, with saved result/history and real-provider terminal tutoring checks. All three fixture room cleanups passed. Final readbacks at 19:00:27 UTC confirmed the secret remains absent, the public boolean remains true, and function source/version/bundle are unchanged. The app stopped and the exact owned project lease was released. No production acceptance checks remain open for this batch. PR #29 was also marked merged when its commits entered `no_sign_up` through PR #37.
+
+| Final environment state | Staging | Production |
+| --- | --- | --- |
+| Project | `ciubrzggdqesgvfkpolj` | `zgbufaxooqxeabewktzd` |
+| assessment-api version | `79` | `19` |
+| Public flag | `true` | `true` |
+| Legacy flag secret | absent | absent |
+| Runtime source | matches `dc83330` | matches `dc83330` |
+| Bundle SHA-256 | `50474c5705db85f002f70ab3f59cabe02b3710cd970d4d01ce17ab0551dd607c` | `ae491e78fd87f3428c66fc75c38a4e5e9f28b516192d6420be834f21cb8cb427` |
+
+Final verification metadata and before/after source downloads: `output/public-assessment-flag-20261026/production-final-1793127482722/verification.json`. Browser report: `/Users/admin/Documents/GitHub.nosynchr/PhishingTrainingProgram-worktrees/public-flag-release-20261027/tmp/browser_demo_runs/production-template-20261027185813-14707d98/report.json`. Full command logs and app shutdown evidence: `output/public-assessment-flag-20261026/production-1793127489244/`. The release metadata now records `production-verified`; earlier permission errors and the failed premature cleanup readback are retained as history.
+
+After both environments passed, the exact applied SQL was moved to `supabase/archived_migrations/20261026223000_public_assessment_feature_flag.sql`, preserving SHA-256 `5640033e764919d351ed6d9c01b4ae5e324dfc7e86e11f8d931c8ec86e3ea880`. The evidence/archival follow-up PR #39 records this repository housekeeping; it does not change the verified deployed source or require redeployment.

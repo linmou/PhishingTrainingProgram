@@ -129,7 +129,7 @@ BEGIN
     END IF;
 
     IF scenario IN ('guard', 'guard_changed_target') THEN
-      UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = room;
+      UPDATE public.rooms SET guard_mode = true WHERE id = room;
       focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'Guard defers understanding and assessment');
       IF NOT EXISTS (SELECT 1 FROM public.checklist_items WHERE id = item AND status = 'partially_covered') THEN
@@ -138,7 +138,7 @@ BEGIN
       IF scenario = 'guard_changed_target' THEN
         -- Target text is editable independently of the Guard-locked progress fields.
         UPDATE public.checklist_items SET area_text = 'Explain a different learning target' WHERE id = item;
-        UPDATE public.rooms SET active_response_mode = 'tutoring' WHERE id = room;
+        UPDATE public.rooms SET guard_mode = false WHERE id = room;
         IF NOT EXISTS (SELECT 1 FROM private.learning_event_inbox
           WHERE item_id = item AND event_kind = 'demonstrated_understanding'
             AND processing_state = 'rejected' AND error_code = 'INVALID_TRANSITION' AND applied_at IS NULL
@@ -151,7 +151,7 @@ BEGIN
         RAISE NOTICE 'PASS: guard_changed_target';
         CONTINUE;
       END IF;
-      UPDATE public.rooms SET active_response_mode = 'tutoring' WHERE id = room;
+      UPDATE public.rooms SET guard_mode = false WHERE id = room;
       focus := pg_temp.analyze_final_target(room, student, tutor, item, NULL);
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'Guard replay preserves final assessment requirement');
       IF (SELECT count(*) FROM public.checklist_updates u JOIN private.learning_event_inbox e ON e.event_id = u.event_id
@@ -262,7 +262,7 @@ BEGIN
     END IF;
 
     IF scenario IN ('guard_terminal', 'guard_stale_terminal') THEN
-      UPDATE public.rooms SET active_response_mode = 'guard' WHERE id = room;
+      UPDATE public.rooms SET guard_mode = true WHERE id = room;
       IF scenario = 'guard_stale_terminal' THEN
         focus := pg_temp.analyze_final_target(room, student, tutor, item, 'contradiction');
       END IF;
@@ -273,7 +273,7 @@ BEGIN
       IF result->>'processing_state' IS DISTINCT FROM 'deferred' THEN
         RAISE EXCEPTION 'Guard terminal result did not defer';
       END IF;
-      UPDATE public.rooms SET active_response_mode = 'tutoring' WHERE id = room;
+      UPDATE public.rooms SET guard_mode = false WHERE id = room;
       IF scenario = 'guard_stale_terminal' THEN
         IF NOT EXISTS (SELECT 1 FROM private.transfer_assessment_attempts
           WHERE assessment_id = assessment AND processing_state = 'rejected'

@@ -2,6 +2,7 @@
 -- Test responsibility: assessment_result_messages migration; actual grading, atomic events, backfill, readiness, permissions, feedback gates and Guard replay.
 \set ON_ERROR_STOP on
 BEGIN;
+SET LOCAL request.headers = '{"x-practice-contract":"cyberbullying-v2"}';
 
 CREATE TEMP TABLE assessment_result_test_evidence(case_id text PRIMARY KEY, detail jsonb NOT NULL) ON COMMIT DROP;
 CREATE FUNCTION pg_temp.fail_assessment_result_write() RETURNS trigger LANGUAGE plpgsql AS $function$
@@ -50,7 +51,7 @@ BEGIN
       '{"concept_rule":"independent verification","source_context":"email","changed_context":"text","source_evidence_message_ids":[]}',
       '{"target_item_id":"test"}','open',gen_random_uuid(),private.transfer_item_hash(item));
     IF scenario IN ('nonconsuming','guard_raw','terminal_unaccepted') THEN
-      IF scenario='guard_raw' THEN UPDATE public.rooms SET active_response_mode='guard' WHERE id=room; END IF;
+      IF scenario='guard_raw' THEN UPDATE public.rooms SET guard_mode=true WHERE id=room; END IF;
       result:=public.post_assessment_message_v2(room,CASE WHEN scenario='nonconsuming' THEN 'A or B' ELSE 'B' END,
         question,assessment,CASE WHEN scenario='nonconsuming' THEN NULL ELSE ARRAY['B'] END,learner,gen_random_uuid());
       answer:=(result->'message'->>'id')::uuid;
@@ -73,7 +74,7 @@ BEGIN
           OR EXISTS(SELECT 1 FROM private.transfer_assessment_attempts WHERE assessment_id=assessment) THEN
           RAISE EXCEPTION 'Handled non-consuming answer remained pending or consumed attempt: %',review; END IF;
         IF scenario='guard_raw' THEN
-          UPDATE public.rooms SET active_response_mode='tutoring',mode_change_source='manual_override' WHERE id=room;
+          UPDATE public.rooms SET guard_mode=false,guard_mode_change_source='manual_override' WHERE id=room;
           review:=public.get_transfer_assessment_review_v1(room,assessment,tutor);
           IF review->'history_readiness'->>'ready'<>'false' THEN RAISE EXCEPTION 'Guard clearance did not request recovery'; END IF;
           review:=public.get_transfer_assessment_processing_context_v1(assessment,answer,learner);
@@ -160,7 +161,7 @@ BEGIN
       CONTINUE;
     END IF;
     outcome := CASE WHEN selected=ARRAY['B'] THEN 'passed' ELSE 'retry' END;
-    IF scenario IN ('guard','guard_invalidated') THEN UPDATE public.rooms SET active_response_mode='guard' WHERE id=room; END IF;
+    IF scenario IN ('guard','guard_invalidated') THEN UPDATE public.rooms SET guard_mode=true WHERE id=room; END IF;
     IF scenario='rollback' THEN
       PERFORM set_config('qa.fail_result_write','on',true);
       denied := false;
@@ -246,7 +247,7 @@ BEGIN
       IF scenario='guard_invalidated' THEN
         UPDATE public.checklist_items SET area_text='Changed during Guard' WHERE id=item;
       END IF;
-      UPDATE public.rooms SET active_response_mode='tutoring',mode_change_source='manual_override' WHERE id=room;
+      UPDATE public.rooms SET guard_mode=false,guard_mode_change_source='manual_override' WHERE id=room;
       IF scenario='guard_invalidated' THEN
         IF NOT EXISTS(SELECT 1 FROM public.messages WHERE assessment_event->>'assessment_id'=assessment::text
           AND assessment_event->>'kind'='closure' AND assessment_event->>'closure_reason'='progress_invalidated')
