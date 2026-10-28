@@ -2,7 +2,7 @@
 
 Intent: keep the material the PRD needs but should not carry in its main text — where each requirement came from, the technical choices currently deployed, and the known differences between the PRD and current behavior.
 
-Updated: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
+Updated: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`; the operator switch and §D staging attack results follow the next `no_sign_up` merge). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
 
 ## A. Legacy requirement crosswalk
 
@@ -86,7 +86,7 @@ These belong to the architecture spine; they are recorded here so the PRD stays 
 - **Models:** tutoring and message analysis use `qwen3.8-flash` (`DEFAULT_AI_MODEL`); transfer-assessment generation uses `qwen3.5-flash`. Tutoring temperature 0.3 / 600 tokens; analysis temperature 0 / 600 tokens; assessment generation temperature 0.3 / 1200 tokens; character replies temperature 0.7 / 2000 tokens. All use JSON mode and at most one format-repair retry.
 - **Limits:** `ai-api` accepts at most 30 messages and 50,000 characters; history reads page by `(created_at, id)` in pages of 1000 (tutor context) and 500 (analysis catch-up).
 - **Client contract:** every request to both Edge functions must carry `x-practice-contract: cyberbullying-v2`; the database write gate enforces the same contract. A cutover for either practice type forces all clients to reload.
-- **Feature flags:** `TRANSFER_ASSESSMENT_ENABLED` (operator, default true, on in both environments); `rooms.transfer_learning_enabled` (per room, default true; forced false for cyberbullying rooms).
+- **Feature flags:** the operator switch is the `TRANSFER_ASSESSMENT_ENABLED` row of `public.feature_flags` (anyone can read it; only the service role can change it; on in both environments). `assessment-api` reads it on every request with no default: a missing or unreadable row refuses assessment operations with retryable `ASSESSMENT_CONFIGURATION_UNAVAILABLE`, and `false` refuses them with `ASSESSMENT_FEATURE_DISABLED`; the owner's clear-history call is exempt. `rooms.transfer_learning_enabled` is the per-room switch (default true; forced false for cyberbullying rooms).
 - **Routing rule:** every routing point must check `practice_type` before `transfer_learning_enabled`; cyberbullying rooms use learner-owned progress while their transfer flag is false.
 - **Result-message templates:** written by `private.write_assessment_result_message`, identical in production and staging (function hashes compared 2026-10-22).
 - **Grading** is implemented both in the TypeScript resolver and in SQL; SQL is the final authority.
@@ -163,7 +163,8 @@ Stale documents found during extraction (to be consolidated in the documentation
 ## D. Verification notes
 
 - 2026-10-22, production and staging, read-only: `public.messages` has no answer-key column; correct options and explanations exist only in `private.transfer_assessments`; staging has 5 second-failure results (all with the reveal template), 9 retries and 12 passes (neither reveals the answer); no other message mentions correct options. Production has no failed results yet.
-- `TRANSFER_ASSESSMENT_ENABLED` is set in both projects; the owner confirmed it is on.
+- `TRANSFER_ASSESSMENT_ENABLED` is on in both projects; since 2026-10-27 it is a `public.feature_flags` row, and the old Edge secret is removed from both.
+- 2026-10-27, staging attack run `staging-template-20261027202110-e1af075b` (`tutor-system/docs/transfer-assessment-wave105-audit.md`): cross-learner, cross-room, stale-question and legacy-RPC attacks were refused. Two failed: an anonymous caller using a copied tutor id read the private assessment review (forged identity), and anonymous or signed-in REST writes changed an existing assessment question's result, lifecycle, selected options and options in `messages` (direct write). Both are instances of G-2.
 
 ## E. Resolved open questions
 

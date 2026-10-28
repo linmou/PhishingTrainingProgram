@@ -29,7 +29,7 @@ Intent: record the structure of the code as it is today, so a reader can find th
 | Room Guard flag | `rooms.guard_mode`; replay trigger `transfer_replay_guard` |
 | Practice type | `rooms.practice_type` |
 | Assessment source state | `private.transfer_assessments.lifecycle`; public projection `messages.assessment_lifecycle` |
-| In-room switch, operator switch | `rooms.transfer_learning_enabled`, `TRANSFER_ASSESSMENT_ENABLED` |
+| In-room switch, operator switch | `rooms.transfer_learning_enabled`, the `TRANSFER_ASSESSMENT_ENABLED` row of `public.feature_flags` |
 | AI provider secrets | `OAI_API_KEY`, `OAI_BASE_URL` |
 | Version handshake | header `x-practice-contract` (value `cyberbullying-v2`), SQL check `private.assert_practice_contract` |
 | Identity header | `x-application-user-id` |
