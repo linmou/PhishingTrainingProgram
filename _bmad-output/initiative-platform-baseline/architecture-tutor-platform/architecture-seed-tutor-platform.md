@@ -5,7 +5,7 @@ purpose: reference
 parent: architecture-tutor-platform.md
 status: draft
 created: '2026-10-23'
-updated: '2026-10-23'
+updated: '2026-10-27'
 ---
 
 # Architecture Seed — Tutor platform
@@ -69,8 +69,8 @@ evals/            # AI behavior evaluations
 | Area | Lives in |
 | --- | --- |
 | Identity, join, roles | `AuthContext`, `join_room_v1` |
-| Rooms and templates | `rooms`, `RoomContext` |
-| Conversation and rating | `messages`, `message_feedback`, `RoomContext` |
+| Rooms and templates | `rooms`, `room_templates` (cyberbullying templates are seeded global rows), `RoomContext`, `useRoomMembership` |
+| Conversation and rating | `messages`, `message_feedback`, `useRoomRealtime` (channel, recovery, typing), `roomMessageSync`, `useMessageFeedback`; `RoomContext` keeps AI and assessment coordination |
 | Learning progress | `checklist_items`, the learning-event and manual-edit writers |
 | Guard | the room Guard flag, replay trigger |
 | Supervision and AI drafts | `ai-api`, `aiService`, the reviewed-send function |

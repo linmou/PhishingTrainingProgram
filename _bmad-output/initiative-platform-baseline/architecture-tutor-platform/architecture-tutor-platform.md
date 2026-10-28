@@ -124,7 +124,7 @@ Dependency direction: pages → components → contexts and hooks → services �
 | Naming | Components and pages PascalCase; services, hooks and utilities camelCase; tests `*.test.ts(x)` in `__tests__/`; database and API fields snake_case; a replaced database function gets a new version suffix. |
 | Gateway envelope | Request `{operation, request_id, ...}`; response `{ok: true, data}` or `{ok: false, error: {code, message, retryable}}`; error codes upper snake case. A new operation uses this envelope. |
 | Identity and contract headers | `x-application-user-id` and `x-practice-contract` on every call to an Edge Function that identifies a user. |
-| State and mutation | Server tables are the source of truth. Messages arrive by realtime insert plus a 2-second poll and merge by message id. |
+| State and mutation | Server tables are the source of truth. Messages arrive by realtime first; join and recovery reconcile with bounded history reads ordered by message id; every path merges by message id. |
 | Errors | Fail visibly (NFR-7). A thrown error carries a code; best-effort side effects log and never hide the failure. |
 | Configuration and secrets | Client variables are `REACT_APP_*`; server secrets are set per project and never committed. |
 | Release | Staging before production; SQL before a dependent Edge Function; one pending migration; merge into the integration branch before any production change (see `AGENTS.md`). |

@@ -11,7 +11,7 @@ risk: medium
 
 ## Description
 
-A tutor creates a room of one practice type, fixed at creation, from a template or a pinned scenario. Test rooms stay out of teaching lists. The owner sees the rooms they own and can delete one after confirming.
+A tutor creates a room of one practice type, fixed at creation, from a template of that practice type. Test rooms stay out of teaching lists. The owner sees the rooms they own and can delete one after confirming.
 
 ## Outcome
 

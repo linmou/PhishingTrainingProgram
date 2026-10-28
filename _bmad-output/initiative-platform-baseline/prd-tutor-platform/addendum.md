@@ -2,7 +2,7 @@
 
 Intent: keep the material the PRD needs but should not carry in its main text — where each requirement came from, the technical choices currently deployed, and the known differences between the PRD and current behavior.
 
-Updated: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
+Updated: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
 
 ## A. Legacy requirement crosswalk
 
@@ -90,7 +90,8 @@ These belong to the architecture spine; they are recorded here so the PRD stays 
 - **Routing rule:** every routing point must check `practice_type` before `transfer_learning_enabled`; cyberbullying rooms use learner-owned progress while their transfer flag is false.
 - **Result-message templates:** written by `private.write_assessment_result_message`, identical in production and staging (function hashes compared 2026-10-22).
 - **Grading** is implemented both in the TypeScript resolver and in SQL; SQL is the final authority.
-- **Realtime:** message inserts via Supabase Realtime plus a 2-second poll; typing via broadcast.
+- **Realtime:** messages, ratings and room changes arrive over one Supabase Realtime room channel (the `messages`, `message_feedback` and `rooms` tables are in the `supabase_realtime` publication); typing via broadcast. There is no fixed poll: on join and after a channel error or transport loss the client re-reads history in pages of at most 100 rows ordered by message id and recreates the channel, and a healthy room is audited every 60 seconds. Ratings are read in batches of 100 message ids.
+- **Cyberbullying scenarios:** four global room templates (`copilot-1`, `copilot-2`, `screenshot-1`, `screenshot-2`) seeded by migration `20261023000000_seed_cyberbullying_templates.sql`; the first two are pinned to SocialMediaCopilot commit `89e7fda`.
 - **Character draft prompt:** the role-play prompt currently asks for at most three sentences in simple language (see G-25).
 - **Transfer-assessment evaluation plan:** `specs/104-transfer-evaluation/` (the suite is `evals/transfer-assessment/`).
 

@@ -52,7 +52,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 ### 2.3 Key User Journeys
 
 - **UJ-1. Ms. Rivera runs a phishing practice room.** Ms. Rivera joins as a tutor, creates a room from the "account alert" template, and keeps in-room assessment on. Jamie joins as the learner, rates each of Ms. Rivera's replies, and writes about the post. For each of Jamie's messages Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five learning targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a learning target after being Partial, a transfer assessment becomes due and Ms. Rivera's next request for an AI suggestion returns an assessment draft; Ms. Rivera reviews it and sends it. Jamie answers wrong once, then right; a result message records each attempt. **Edge case:** Jamie writes "I'd just click it to check" — the AI suggestion leads with protective instruction before any question.
-- **UJ-2. Mr. Okafor supervises a cyberbullying role-play.** He creates a cyberbullying room from one of the pinned scenarios and edits one line of its pre-populated dialogue. When Lina joins, her five shared learning targets are set up automatically. Lina writes a message; Mr. Okafor requests a character draft, switches the character from "bully" to "victim", shortens the text, and sends it. Lina sees the character reply under the character's persona name and rates it before writing again.
+- **UJ-2. Mr. Okafor supervises a cyberbullying role-play.** He creates a cyberbullying room from one of the cyberbullying templates and edits one line of its pre-populated dialogue. When Lina joins, her five shared learning targets are set up automatically. Lina writes a message; Mr. Okafor requests a character draft, switches the character from "bully" to "victim", shortens the text, and sends it. Lina sees the character reply under the character's persona name and rates it before writing again.
 - **UJ-3. Dana observes and exports.** Dana joins as an observer, opens a running room read-only, and watches messages appear live. At the end she downloads the JSON export, which contains the conversation, ratings and result messages but no private assessment material.
 - **UJ-4. A learner tests limits.** Sam repeatedly posts insults instead of answering. The AI suggestion recommends Guard; Ms. Rivera accepts it, and her tutor reply names the behavior and what needs to change without insulting Sam. Sam's learning progress does not advance while Guard is on. When Sam makes a real attempt, the next AI suggestion recommends turning Guard off and Ms. Rivera does so.
 
@@ -74,7 +74,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 
 - **Room** — A single-use practice space with one practice type, one scenario, one room owner, at most one learner and any number of observers. Rooms are kept after use as pilot data.
 - **Practice type** — `phishing` or `cyberbullying`. Chosen when a room is created and never changed.
-- **Scenario** — What a room is built on: a post with its image, its original poster and its pre-populated dialogue. Cyberbullying scenarios come from a pinned catalog; the UI calls them "situations".
+- **Scenario** — What a room is built on: a post with its image, its original poster and its pre-populated dialogue. Cyberbullying scenarios are shared room templates of the cyberbullying practice type.
 - **Original poster** — The name and avatar the scenario's post is shown under: the room owner's profile or a custom name.
 - **Pre-populated dialogue** — Scripted comments stored with the scenario and shown under the post. They are context only: they are not messages, are never rated, and never count as learner evidence.
 - **Template** — A global, centrally managed preset that pre-fills room creation for one practice type.
@@ -568,16 +568,16 @@ The AI assistant gets transfer-assessment outcomes only from the saved conversat
 
 ## 6. Cyberbullying Practice Features
 
-**Description:** In a cyberbullying room the learner writes about a pinned scenario, and the room owner replies through character replies. All cyberbullying rooms share five learning targets. Realizes UJ-2.
+**Description:** In a cyberbullying room the learner writes about a scenario from a cyberbullying template, and the room owner replies through character replies. All cyberbullying rooms share five learning targets. Realizes UJ-2.
 
-#### FR-7: Create a cyberbullying room from a pinned scenario
-A tutor can choose a cyberbullying scenario from the pinned catalog, edit its post and pre-populated dialogue, and create a room.
+#### FR-7: Create a cyberbullying room from a cyberbullying template
+A tutor can choose a cyberbullying template, edit its post and pre-populated dialogue, and create a room.
 **Grounding:** P1, P5.
 
 **Consequences (testable):**
-- Creation is refused until a scenario is chosen ("Choose a Cyberbullying situation.").
+- For a cyberbullying room, only cyberbullying templates are offered.
+- Creation is refused until a template is chosen ("Choose a Cyberbullying template.").
 - Edited pre-populated dialogue keeps each comment's original author.
-- If the catalog cannot be loaded, creation stays blocked.
 - The AI assistant is on for every cyberbullying room.
 
 #### FR-44: Five shared learning targets

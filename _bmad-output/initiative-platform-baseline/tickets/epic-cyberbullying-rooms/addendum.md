@@ -2,7 +2,7 @@
 
 Intent: hold the volatile facts about how well this epic's rules are guarded by tests, so the epic itself stays stable. Each row links up to a rule in `_bmad-output/initiative-platform-baseline/tickets/epic-cyberbullying-rooms/epic-cyberbullying-rooms.md`.
 
-Updated: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_cyberbullying_rooms_*`, `guardp6_cyberbullying_rooms_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
+Updated: 2026-10-27, R1 and G-74 follow the cyberbullying-template change in merge `617fe7c`. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_cyberbullying_rooms_*`, `guardp6_cyberbullying_rooms_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
 
 ## A. Test debt needed for the pilot
 
@@ -22,7 +22,7 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 
 | Rule | Guard | Why the guard fails | Accepted limitation | Open question |
 | --- | --- | --- | --- | --- |
-| R1 | `tutor-system/scripts/browser-e2e/workflows/cyberbullying.js`; `tutor-system/src/__tests__/room_template_management.test.tsx` (creates $id with its full scenario and edited post) | room_template_management.test.tsx never edits dialogue to check authors; neither it nor cyberbullying.js checks refusal without a chosen scenario. | Scenario setup and dialogue authors are checked by the tutor before teaching. | OQ-18 |
+| R1 | `tutor-system/scripts/browser-e2e/workflows/cyberbullying.js`; `tutor-system/src/__tests__/room_template_management.test.tsx` (creates $id from its template with its full scenario and edited post) | room_template_management.test.tsx never edits dialogue to check authors. The refusal without a chosen template is now covered (merge `617fe7c`) but not yet re-audited. | Scenario setup and dialogue authors are checked by the tutor before teaching. | OQ-18 |
 | R2 | `tutor-system/supabase/tests/cyberbullying_practise.sql` (custom target rejected with SHARED_TARGETS_REQUIRED; exactly five targets initialized) | Counts five targets without checking their required meanings, removal refusal, or manual progress edits. | The owner checks the five targets before practice; learner-only evidence stays required. | OQ-18 |
 | R3 | `tutor-system/src/contexts/__tests__/RoomContext.multiAgentDraft.test.tsx` (regenerates with character workflow parameters) | Injects Quick Adjust's disabled state instead of exercising the practice-type restriction; never checks completion when targets are Covered (disputed). | Extra controls such as Quick Adjust are a supervised scope limitation. | OQ-16 |
 | R5 | `tutor-system/supabase/functions/ai-api/index.test.ts` (cyberbullying reads full context and returns a browser draft for each role without persistence writes; cyberbullying rejects missing identity and ownership before contacting the provider) | Stubs the ownership refusal and never checks AI-off or empty-conversation refusal. | Draft context, character choice and request ownership affect only a private draft the owner reviews. | OQ-16 |
@@ -31,5 +31,5 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 
 | Former ID | Rule | Missing guard |
 | --- | --- | --- |
-| G-74 | R1, R2, R3 | No test for the "Choose a Cyberbullying situation." refusal, edited dialogue keeping each comment's author, several tabs joining at once, the five target names, a tutor message giving no evidence, or Quick Adjust being refused by the server (FR-7, FR-44, FR-45). |
+| G-74 | R1, R2, R3 | No test for edited dialogue keeping each comment's author, several tabs joining at once, the five target names, a tutor message giving no evidence, or Quick Adjust being refused by the server (FR-7, FR-44, FR-45). |
 | G-75 | R5, R6, R7 | No test that a character draft is refused with the AI off or with no learner message, that the chosen character and Guard state reach the provider, that a reply cannot be sent without a reviewed draft, or that sent character replies cannot be edited (FR-47, FR-48, FR-49). |
