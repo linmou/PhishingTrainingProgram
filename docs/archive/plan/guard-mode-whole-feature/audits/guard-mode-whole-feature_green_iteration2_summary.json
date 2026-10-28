@@ -1,0 +1,60 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 2,
+  "reviewer_count": 3,
+  "status": "not_converged",
+  "disputed_criteria": [
+    "c5"
+  ],
+  "criteria": {
+    "c3": {
+      "criterion_text": "Dependencies and sequencing form one feasible execution order.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.94,
+        0.96,
+        0.96
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c4": {
+      "criterion_text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.92,
+        0.95,
+        0.93
+      ],
+      "final_verdict": "pass",
+      "converged": true
+    },
+    "c5": {
+      "criterion_text": "Every material risk has an adequate validation or mitigation.",
+      "reviewer_count": 3,
+      "verdicts": [
+        "fail",
+        "pass",
+        "pass"
+      ],
+      "confidences": [
+        0.88,
+        0.95,
+        0.95
+      ],
+      "final_verdict": "disputed",
+      "converged": false
+    }
+  }
+}

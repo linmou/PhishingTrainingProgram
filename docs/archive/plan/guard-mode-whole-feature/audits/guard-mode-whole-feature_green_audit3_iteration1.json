@@ -1,0 +1,235 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 1,
+  "reviewer_id": "audit3",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "fail",
+  "overall_confidence": 0.9,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "Every acceptance criterion in `request.md` is covered by an executable plan step and validation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria",
+          "text": "The request requires structured decisions, human review and auditability, Guard identity and progression behavior, deterministic tests, Promptfoo gates, live-Qwen validation, browser validation, and metadata preservation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 1 — red tests for contracts, steps 5-8",
+          "text": "The plan adds schema, transition, malformed-output, rectification, stale-revision, persistence/RLS, authorization, legacy-message, and real-time-ordering tests before implementation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 5 — tutor review and composer, steps 22-26",
+          "text": "The plan specifies validated raw decisions, separate final review drafts, mode rectification, wording edits, rejection/regeneration lifecycle handling, atomic send, Guard preview, and audited manual activation/deactivation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 6 — student rendering and lock, steps 27-31",
+          "text": "The plan covers persisted-mode rendering, universal identity, student-DOM privacy checks, tutor-only status text, authoritative progress enforcement, and revision-aware realtime reconciliation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 7 — full validation and documentation, steps 32-41",
+          "text": "The plan requires deterministic end-to-end tests, ecological and synthetic holdouts, explicit critical thresholds, production-path live Qwen tests, browser E2E, regression/build/type/coverage/migration checks, documentation, and an evidence bundle."
+        }
+      ],
+      "reasoning": "The executable phases and release gate cover each request acceptance group: structured AI behavior, authoritative human review and persistence, UI/progression behavior, and required deterministic, Promptfoo, production-path, and browser validation.",
+      "counterevidence": []
+    },
+    {
+      "id": "c2",
+      "text": "Scope, constraints, and assumptions are internally consistent with `request.md`.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "request.md: Constraints and Assumptions",
+          "text": "The request requires structured validation without guessed-mode fallback, human authority over final mode, semantic rather than counter-based behavior, the current Qwen path, no student-facing Guard label, and a universal static identity."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Modes and authority",
+          "text": "The plan makes the raw AI decision a recommendation, the tutor review draft editable with selectable final mode, and the persisted final message and room state authoritative."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: AI decision contract",
+          "text": "The runtime boundary rejects malformed output and must never infer a mode from response text or silently default to tutoring or Guard."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Guard behavior and Universal Guard identity",
+          "text": "The plan rejects a fixed violation counter, preserves communication while locking only progression, uses a static Security Supervisor identity, and prohibits a student-facing Guard Mode label or badge."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 4 — AI decision and prompt behavior, steps 18-21",
+          "text": "The plan preserves the configured production prompt/provider behavior for evaluation and forbids silent changes to provider, model, prompt inputs, temperature, fixtures, or thresholds."
+        }
+      ],
+      "reasoning": "The proposed authority model, identity, safety boundaries, no-fallback rule, semantic policy, and retained tutoring path align with the stated in-scope, out-of-scope, constraint, and assumption boundaries.",
+      "counterevidence": []
+    },
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.84,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 0 — baseline and executable specification, steps 1-4",
+          "text": "The plan begins with the required TDD workflow, an unchanged tutoring baseline, requirement-to-test mapping, and frozen contracts, transition rules, privacy boundaries, and thresholds."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 1 through Phase 3, steps 5-17",
+          "text": "Red tests precede shared contracts; then the validator and transition module precede the append-only migration, RLS, atomic RPC/manual override, and TypeScript adapter."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 4 through Phase 6, steps 18-31",
+          "text": "Prompt behavior follows the shared contract and persistence design; the tutor review flow then uses the atomic send operation; student rendering, authoritative locks, and realtime reconciliation follow persisted room/message projections."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 7 — full validation and documentation, steps 32-41",
+          "text": "Full integration, Promptfoo, live-Qwen, browser, regression, type/build, migration/RLS, and documentation validation are sequenced after all runtime layers."
+        }
+      ],
+      "reasoning": "The sequence establishes behavior and tests before dependent adapters, then persistence before tutor/student consumers, and performs end-to-end release validation last. The explicit pre-migration inspection in Architecture decision 2 keeps the room-versus-session authorization boundary conditional on repository evidence rather than an irreversible early assumption.",
+      "counterevidence": []
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.94,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "approaches/selection.md: Selection",
+          "text": "The selected cards are `state-machine-contract`, `evaluation-first-gate`, `minimal-suggestion-overlay`, and `audit-event-sourcing`."
+        },
+        {
+          "kind": "quote",
+          "location": "approaches/selection.md: audit-event-sourcing",
+          "text": "Its core strategy is to treat every mode event as immutable and derive current Guard state from the event history."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 2. Keep a single current room projection",
+          "text": "The plan instead prefers extending the existing rooms row with `active_response_mode` and `guard_state_revision` as the current authoritative projection."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls",
+          "text": "The plan excludes an \"event-sourcing replay system\" as overengineering."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Expected files and ownership",
+          "text": "This section lists likely destination files and responsibilities, but it contains no mapping from any imported approach/card to its insertion point, retained constraint, modification, or compatibility decision."
+        }
+      ],
+      "reasoning": "The draft contains no provenance/crosswalk for the selected contributions. More importantly, the selected audit-event-sourcing contribution describes event-history-derived state, while the draft makes a mutable room-row projection authoritative and rejects an event-sourcing replay system. A bounded adaptation could be valid, but the draft neither identifies that source contribution nor documents the incompatibility, retained subset, or insertion point needed to establish compatibility.",
+      "counterevidence": [
+        {
+          "location": "approaches/selection.md: audit-event-sourcing",
+          "text": "The selected contribution calls for deriving current Guard state from immutable event history."
+        },
+        {
+          "location": "draft_final_plan.md: Architecture decisions — 2. Keep a single current room projection; Risks and controls",
+          "text": "The draft instead persists active state on the rooms row and explicitly rules out event-sourcing replay, without a source-to-plan reconciliation."
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 3. Separate immutable raw suggestion evidence from final outcome",
+          "text": "For sent tutor messages, the plan persists raw AI mode, reason, suggested response, reviewer information, and provider/model/prompt/configuration metadata."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 3 — database and persistence, step 15",
+          "text": "Students can read final room/message state but cannot write Guard state or raw AI data."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Phase 6 — student rendering and lock, step 28",
+          "text": "The proposed verification checks that raw reason, raw response, rectification flag, provider metadata, prompt/configuration data, and internal audit fields are absent from student content and DOM."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls",
+          "text": "The stated privacy control is \"separate tutor/student view models plus RLS and DOM assertions.\""
+        }
+      ],
+      "reasoning": "The draft identifies student privacy as a risk but does not specify an enforceable read boundary for raw audit fields. It stores those fields on sent messages, permits students to read final message state, and only prohibits student writes. DOM assertions and a client-side view model do not establish that student Supabase reads cannot select raw reason, raw response, reviewer, or prompt/configuration fields. The plan needs a concrete data separation or read projection boundary—such as a tutor-only audit table plus a student-safe message projection/RPC/view with corresponding grants—and an authorization test that attempts direct student reads of every protected field.",
+      "counterevidence": [
+        {
+          "location": "draft_final_plan.md: Architecture decisions — 3. Separate immutable raw suggestion evidence from final outcome",
+          "text": "Raw AI and provider/prompt metadata are explicitly persisted with sent tutor-message audit data."
+        },
+        {
+          "location": "draft_final_plan.md: Phase 3, step 15; Phase 6, step 28",
+          "text": "The draft restricts student writes and checks rendered DOM, but provides no explicit student SELECT projection, separate non-readable raw-data store, column grant policy, or direct-read denial test."
+        }
+      ]
+    },
+    {
+      "id": "c6",
+      "text": "The draft avoids unnecessary complexity.",
+      "blocking": false,
+      "verdict": "pass",
+      "confidence": 0.79,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 1. Use one narrow pure state machine",
+          "text": "The state-machine module is limited to transition calculation, rectification/edit flags, and progress-permission derivation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions — 2. Keep a single current room projection",
+          "text": "The plan uses one constrained mode and monotonic revision and explicitly prohibits a second independent `guard_active` Boolean."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Repository fit and Phase 5, steps 22-26",
+          "text": "The design extends the existing RoomContext, suggestion box, composer, and send path rather than introducing a parallel tutor/chat workflow."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls",
+          "text": "The plan explicitly excludes a review dashboard, teacher-unavailable path, room-specific profiles, event-sourcing replay, a second Guard Boolean, and unrelated tutoring refactoring."
+        }
+      ],
+      "reasoning": "The added state, persistence, authorization, and evaluation mechanisms correspond directly to the requested auditability, real-time, locking, and blocking-evaluation requirements. The draft explicitly limits the domain model and rules out the major unnecessary expansions.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [
+    "c4: Add a source-to-plan crosswalk for all selected/imported contributions. It must name each source, its concrete insertion points, which constraints are retained, and why any changed or rejected portions remain compatible with the state-machine/room-projection backbone.",
+    "c5: Define and test a server-enforced student read boundary for raw AI reason/response, rectification/audit fields, and provider/prompt/configuration metadata. A rendering-only or write-only restriction is insufficient evidence of data confidentiality."
+  ],
+  "disputed_points_if_any": []
+}

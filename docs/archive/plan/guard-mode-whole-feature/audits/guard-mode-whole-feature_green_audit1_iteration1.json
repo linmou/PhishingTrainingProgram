@@ -1,0 +1,198 @@
+{
+  "feature_name": "guard-mode-whole-feature",
+  "phase": "green",
+  "iteration": 1,
+  "reviewer_id": "audit1",
+  "claim": "draft_final_plan.md satisfies request.md as one coherent, executable plan, and every imported contribution is compatible and traceable to its source.",
+  "overall_verdict": "fail",
+  "overall_confidence": 0.91,
+  "criteria": [
+    {
+      "id": "c1",
+      "text": "Every acceptance criterion in `request.md` is covered by an executable plan step and validation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.91,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria — AI contract and behavior; draft_final_plan.md: Phase 1 steps 5-8 and Phase 4 steps 18-21",
+          "text": "The request requires validated `mode`, `mode_reason`, and `suggested_response`, semantic per-turn selection, Guard persistence/exit, safe correction-specific wording, and preservation of tutoring quality. The draft assigns malformed-output schema tests in step 5, transition and edge-case tests in steps 6-8, semantic prompt policy in steps 18-20, and an initial Promptfoo/live-Qwen gate in step 21."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria — Human review and persistence; draft_final_plan.md: Architecture decisions §3-§4 and Phase 3 steps 13-17",
+          "text": "The request's final/raw response, rectification, auditability, manual deactivation, and invalid-output requirements are addressed by immutable raw suggestion evidence, persisted final message fields, atomic reviewed send, manual override operations, RLS, stale-write checks, and persistence/RLS integration tests."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria — UI and student progression; draft_final_plan.md: Phase 5 steps 22-26 and Phase 6 steps 27-31",
+          "text": "The draft specifies the tutor review surface, editable final wording, final-mode control, exact `Guard Mode Activated` status, universal Guard preview and identity, student-facing label absence, authoritative progress locking, continued correction chat, and realtime/reconnect handling."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Acceptance and validation criteria — Evaluation gates; draft_final_plan.md: Phase 7 steps 32-41 and Evaluation design",
+          "text": "The draft requires deterministic end-to-end tests, ecological and independent synthetic holdouts, 100% critical behavior gates, retained existing tutoring gates, production-path live Qwen runs with metadata, browser E2E, build/type/coverage/migration validation, and a final evidence bundle."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Acceptance and release gate",
+          "text": "The release gate consolidates valid structured suggestions, invalid-output blocking, semantic activation and correction behavior, human rectification and overrides, identity/privacy, atomic persistence/RLS, authoritative lock behavior, evaluation gates, live/browser metadata, regression checks, and documentation."
+        }
+      ],
+      "reasoning": "The executable phases and release gate collectively cover the request's acceptance groups with both implementation work and named validation. The traceability table is aggregate rather than one row per request bullet, but the underlying ordered steps and validation matrix provide coverage for the listed acceptance behavior.",
+      "counterevidence": []
+    },
+    {
+      "id": "c2",
+      "text": "Scope, constraints, and assumptions are internally consistent with `request.md`.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "request.md: In scope, Out of scope, and Constraints; draft_final_plan.md: Repository fit and Product contract §Modes and authority",
+          "text": "The draft retains the existing React/TypeScript/Supabase and Qwen path, makes AI output structured and validated, makes human final-mode rectification authoritative, and explicitly excludes a parallel chat system, a pending-review dashboard, teacher-unavailable behavior, room-specific Guard profiles, and a hardcoded violation counter."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Assumptions; draft_final_plan.md: AI decision contract, Architecture decisions §2-§4",
+          "text": "The request assumptions that `mode_reason` is tutor/audit-only, final human mode is authoritative, correction is semantic, Guard identity is application-owned, and migrations are append-only are reflected in the draft's privacy boundary, authority chain, correction policy, static identity, and append-only migration plan."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Constraints — no automatic fallback; draft_final_plan.md: AI decision contract and Phase 4 step 21",
+          "text": "The draft requires rejection of malformed JSON, wrappers, unknown modes, missing/null/non-string/empty fields, prohibits inference/defaulting, and states that failures must not silently change model, provider, prompt inputs, temperature, fixtures, or thresholds."
+        },
+        {
+          "kind": "quote",
+          "location": "request.md: Universal Guard identity unresolved question; draft_final_plan.md: Universal Guard identity",
+          "text": "The request delegates the exact identity to the implementation/design plan and gives `Security Supervisor` as the working name. The draft resolves that delegated decision as one static, application-owned `Security Supervisor` identity with an asset, appearance, accessibility, and test-selector requirements."
+        }
+      ],
+      "reasoning": "The plan does not expand into excluded product scope and explicitly implements the request's stated authority, privacy, evaluation, architecture, and no-fallback constraints. Selecting the stated working name is within the request's explicit delegation of the identity decision to the plan.",
+      "counterevidence": []
+    },
+    {
+      "id": "c3",
+      "text": "Dependencies and sequencing form one feasible execution order.",
+      "blocking": true,
+      "verdict": "fail",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 0 step 4",
+          "text": "Step 4 requires freezing the structured-output contract, mode transition table, identity contract, audit fields, privacy boundary, and evaluation thresholds before prompt tuning."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §2 — Keep a single current room projection",
+          "text": "The draft says to prefer the `rooms` row, but defers confirmation until before the migration: inspect every existing progression mutation and, if progression is session-owned, move the projection to the smallest authoritative owner instead."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Ordered implementation work — Phase 2 steps 9 and 12; Phase 3 step 13",
+          "text": "Shared room-projection and transition types are added in Phase 2, while the migration and the unresolved authoritative persistence owner are not addressed until Phase 3."
+        }
+      ],
+      "reasoning": "A central dependency—the authoritative owner of current Guard state and the progression authorization boundary—is unresolved until Phase 3, after Phase 0 freezes the transition/audit contracts and after Phase 2 creates shared projection types. The conditional fallback is sensible discovery work, but placing it after dependent contracts means the draft does not provide one settled feasible execution order. The active progression owner and migration target must be inspected and the projection decision fixed before the contract/type freeze.",
+      "counterevidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §2",
+          "text": "The plan explicitly permits a different authoritative owner if progression is session-owned, which contradicts the earlier sequencing premise that the room projection can be frozen before that inspection."
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "text": "Every imported contribution has a source and insertion point and is compatible with the backbone.",
+      "blocking": true,
+      "verdict": "insufficient_evidence",
+      "confidence": 0.94,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Expected files and ownership",
+          "text": "The section identifies likely insertion points and responsibilities, such as the shared type layer, RoomContext, component files, migrations, Promptfoo, and nearby documentation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Traceability",
+          "text": "The table maps high-level requirements to design locations and evidence required, for example mapping human mode control to the final-mode selector and manual override RPC."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Repository fit",
+          "text": "The plan lists asserted repository locations and responsibilities, but it does not cite an inspected source, source revision, imported-contribution inventory, or compatibility finding for each contribution incorporated into the draft."
+        }
+      ],
+      "reasoning": "Insertion points are mostly named, but the artifact does not identify what contributions were imported, their source artifacts, or evidence that each is compatible with the proposed backbone. Requirement-to-design traceability is not source provenance. The claim's source-and-compatibility portion therefore remains unestablished.",
+      "counterevidence": []
+    },
+    {
+      "id": "c5",
+      "text": "Every material risk has an adequate validation or mitigation.",
+      "blocking": true,
+      "verdict": "pass",
+      "confidence": 0.87,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls",
+          "text": "The draft names controls for false positives, superficial exits, counter leakage, invalid model output, state divergence, stale reviews, lock bypass, realtime ordering, student privacy, historical identity, audit completeness, tutoring regressions, and scope creep."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §4-§6",
+          "text": "Atomic reviewed-send RPCs, revision checks, rollback behavior, authoritative server-side progression rejection, and revision-aware realtime reconciliation directly mitigate persistence, stale-write, bypass, and synchronization risks."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Evaluation design — Critical behavior matrix; Phase 7 steps 32-38",
+          "text": "The plan assigns deterministic tests and 100% designated critical gates to false-positive, persistence, semantic-exit, structured-output, and safe-response behavior, then requires Promptfoo, live-Qwen, browser, migration/RLS, regression, type, build, and coverage validation."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Repository fit and Architecture decisions §2",
+          "text": "Historical schema variants and the possibility that progression is not room-owned are explicitly recognized; the draft requires targeting active migrations, validating the actual database, and confirming the authoritative progression owner before writing the migration."
+        }
+      ],
+      "reasoning": "The draft provides specific preventive controls and validation paths for the security, persistence, model-behavior, privacy, regression, and scope risks material to the request. The unresolved-owner risk creates the sequencing failure in c3, but it is explicitly identified with a required discovery/validation control; it does not establish an uncovered risk for this criterion.",
+      "counterevidence": []
+    },
+    {
+      "id": "c6",
+      "text": "The draft avoids unnecessary complexity.",
+      "blocking": false,
+      "verdict": "pass",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Repository fit and Architecture decisions §1-§2",
+          "text": "The plan extends the existing flow rather than a parallel chat system, uses one narrow pure state machine, and specifies a single typed active-state projection instead of both a mode and an independent `guard_active` Boolean."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Architecture decisions §4",
+          "text": "Reviewed sending is one atomic RPC with one transition implementation and one source of truth; the plan explicitly rejects hidden triggers that independently derive mode."
+        },
+        {
+          "kind": "quote",
+          "location": "draft_final_plan.md: Risks and controls — Overengineering",
+          "text": "The draft explicitly excludes a review dashboard, teacher-unavailable path, room-specific Guard profiles, event-sourcing replay system, second Guard Boolean, and unrelated tutoring refactor."
+        }
+      ],
+      "reasoning": "The plan adds persistence and audit mechanisms required by the request, while explicitly constraining state ownership, transition logic, and excluded product scope. The proposed complexity is proportionate to an auditable, human-reviewed, realtime Guard state rather than an unnecessary parallel subsystem.",
+      "counterevidence": []
+    }
+  ],
+  "open_questions": [
+    "Before Phase 0 step 4 freezes contracts, which existing table and mutation actually own student progression and the authoritative active Guard projection?",
+    "What source manifest or contribution-to-source record establishes provenance and backbone compatibility for every imported contribution referenced by the claim?"
+  ],
+  "disputed_points_if_any": []
+}

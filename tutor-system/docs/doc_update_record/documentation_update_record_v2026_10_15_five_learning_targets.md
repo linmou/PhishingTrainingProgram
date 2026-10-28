@@ -102,7 +102,7 @@ the current knowledge block against persisted arrays before replacing it; the
 privacy seeder initializes null or matching configurations and rejects drift.
 
 The unchanged comparison integration failure and baseline compiler diagnostics
-are recorded in [deferred work](../../../_bmad-output/implementation-artifacts/deferred-work.md).
+are recorded in [deferred work](../../../docs/archive/_bmad-output/implementation-artifacts/deferred-work.md).
 No Python files changed; mypy does not check the TypeScript implementation.
 
 ## Read-only hosted evidence

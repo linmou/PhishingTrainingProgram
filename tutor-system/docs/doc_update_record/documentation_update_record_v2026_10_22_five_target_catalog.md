@@ -2,7 +2,7 @@
 
 Intent: record why the scenario catalog now follows the five-target rule everywhere and what was retired.
 
-Updated: 2026-10-26. Original baseline: `9b90c84`. Recovery commits: `41eb8a1`, `319e472`. Issues: #34, #35. Release owner: root Codex agent.
+updated: 2026-10-26. Original baseline: `9b90c84`. Recovery commits: `41eb8a1`, `319e472`. Issues: #34, #35. Release owner: root Codex agent.
 
 ## Changes
 
@@ -11,6 +11,7 @@ Updated: 2026-10-26. Original baseline: `9b90c84`. Recovery commits: `41eb8a1`, 
 - The catalog has seven entries: six teaching scenarios plus `General Scam Indicators`. `detectionTemplates.test.ts` asserts five unique targets for each and that the retired name is absent.
 - The `Template system integration` BDD scenario and `features/checklist_management.feature` now expect the five new targets.
 - `src/services/README.md` and `docs/aiService.md` state the rule without the former exemption.
+- The AI settings "Scenario Template" dropdown is now generated from `SCENARIO_TEMPLATES`, grouped by `type`, so it can no longer drift from the catalog. This adds the missing `Movie Meetup Social Engineering`; a test asserts every catalog entry is offered.
 - Earlier commit `9b90c84` gave `Phone Number Phishing Training` its own image, `privacy_3.png`.
 
 ## Compatibility

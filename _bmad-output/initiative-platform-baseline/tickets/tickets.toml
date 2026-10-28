@@ -1,0 +1,80 @@
+# The baseline's capability epics, in build order. Each epic lists invariants of a capability that already exists.
+
+[[epic]]
+id = 1
+slug = "epic-platform-guarantees"
+title = "Platform guarantees"
+description = "The platform decides grades and progress on the server, repeats requests safely, keeps state across reloads, fails visibly, tells outdated clients to reload, and runs as a responsive web app."
+covers = ["R12", "R13"]
+
+[[epic]]
+id = 2
+slug = "epic-identity-and-access"
+title = "Identity and room access"
+description = "A person joins with a name and role, students find and enter rooms, the first student holds the learner seat for the room's life, and everyone else observes read-only."
+covers = ["R1", "R2"]
+after = [{ epic = 1, needs = "the server-authority and repeatable-request guarantees" }]
+
+[[epic]]
+id = 3
+slug = "epic-rooms-and-templates"
+title = "Rooms and templates"
+description = "A tutor creates a room of one practice type from a template or pinned scenario, test rooms stay out of teaching lists, and the owner manages and deletes their rooms."
+covers = ["R4"]
+after = [{ epic = 2, needs = "joined users and room roles" }]
+
+[[epic]]
+id = 4
+slug = "epic-conversation"
+title = "Live conversation and ratings"
+description = "Every participant sees the same live conversation, and the learner rates every tutor reply before writing again."
+covers = ["R5"]
+after = [{ epic = 3, needs = "rooms and sessions" }]
+
+[[epic]]
+id = 5
+slug = "epic-learning-progress"
+title = "Learning targets and progress"
+description = "Learners have learner-owned learning targets judged on the server, and progress moves only through the defined states, is shown to the owner, and can be corrected by hand."
+covers = ["R6", "R7"]
+after = [{ epic = 4, needs = "saved learner messages" }]
+
+[[epic]]
+id = 6
+slug = "epic-supervision-and-guard"
+title = "Owner supervision and Guard"
+description = "Only the room owner uses tutor controls and decides Guard, no AI text reaches a learner without the owner's send, and Guard pauses learning progress."
+covers = ["R3"]
+after = [{ epic = 5, needs = "learning progress that Guard can pause" }]
+
+[[epic]]
+id = 7
+slug = "epic-ai-suggestions"
+title = "AI suggestions and tutor review"
+description = "The room owner requests an AI suggestion, reviews, edits and sends it, sets the AI role, and changes to the model or prompt are re-evaluated before release."
+covers = ["R8"]
+after = [{ epic = 6, needs = "owner-only controls and the Guard state" }]
+
+[[epic]]
+id = 8
+slug = "epic-transfer-assessment"
+title = "Transfer assessment"
+description = "A transfer assessment becomes due, is reviewed and sent by the owner, answered and graded with two attempts, and its result messages and effect on progress are saved."
+covers = ["R9"]
+after = [{ epic = 5, needs = "learning progress transitions" }, { epic = 7, needs = "the review and send flow that an assessment draft replaces" }]
+
+[[epic]]
+id = 9
+slug = "epic-cyberbullying-rooms"
+title = "Cyberbullying rooms"
+description = "In a cyberbullying room the learner writes about a pinned scenario, the server judges against five shared targets, and the owner replies through reviewed character drafts."
+covers = ["R10"]
+after = [{ epic = 5, needs = "learning progress" }, { epic = 7, needs = "tutor review and send" }]
+
+[[epic]]
+id = 10
+slug = "epic-exports-and-records"
+title = "Exports and review records"
+description = "Every participant can download the room's export, and the owner's reviews of AI drafts are recorded for later analysis."
+covers = ["R11"]
+after = [{ epic = 7, needs = "AI review records" }, { epic = 8, needs = "assessment attempts" }, { epic = 9, needs = "character replies" }]
