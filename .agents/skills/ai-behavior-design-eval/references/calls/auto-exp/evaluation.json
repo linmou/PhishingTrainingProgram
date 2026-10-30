@@ -1,0 +1,11 @@
+{
+  "case": "Behavior evaluation with budget awaiting user input",
+  "request": {
+    "repository": "/work/PhishingTrainingProgram",
+    "task": "Evaluate the phishing tutor baseline and refine only where evidence supports a change. Follow ai-behavior-design-eval steps 0–7 and tutor-system/docs/ai-behaviors/tutor-behavior-evaluation-plan.md for metrics and gates, preserving canonical artifact paths. The research question is whether the tutor meets the adopted behavior requirements. Runtime and model/API/GPU budget remain missing user inputs. Return evidence for the caller's acceptance decision."
+  },
+  "provenance": {
+    "repository": "Inspected checkout root, as required by Experiment execution with auto-exp; this example uses a hypothetical checkout.",
+    "task": "User's evaluation request, recorded missing constraints, steps 0–7, and the canonical evaluation-plan path from references/promptfoo.md. Missing inputs are explicitly passed to the callee."
+  }
+}
