@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * File: src/pages/RoomPagePost.tsx
- * Purpose: verify the room UI's rating gate, unselected prompt, and persisted submission.
+ * Purpose: verify rating saves before automatic posting, including failures and retries.
  */
 
 import React from 'react';
@@ -24,7 +24,9 @@ jest.mock('../contexts/RoomContext', () => ({
 }));
 
 jest.mock('../components/RoomPost', () => () => <div data-testid="room-post">Room post</div>);
-jest.mock('../components/PostComment', () => () => <div data-testid="post-comment">Comment</div>);
+jest.mock('../components/PostComment', () => ({ message, onReply }: { message: Message; onReply: (id: string) => void }) => (
+  <button data-testid="post-comment" onClick={() => onReply(message.id)}>Reply to {message.id}</button>
+));
 jest.mock('../components/StudentAIToneControl', () => () => null);
 jest.mock('../components/ChecklistPanel', () => () => null);
 jest.mock('../components/AISuggestionBox', () => () => null);
@@ -155,7 +157,7 @@ describe('student Tutor-response rating gate', () => {
     });
   });
 
-  it('blocks the reply, animates a mandatory prompt for the latest response, and unlocks only after feedback succeeds', async () => {
+  it('blocks the reply and sends it exactly once after feedback succeeds', async () => {
     messages = [
       buildMessage('ai-old', 'student', 'Earlier AI response', true, '2026-01-01T00:01:00.000Z'),
       buildMessage('student-mid', 'student', 'Student follow-up', false, '2026-01-01T00:02:00.000Z'),
@@ -174,6 +176,7 @@ describe('student Tutor-response rating gate', () => {
     );
 
     renderRoom();
+    fireEvent.click(screen.getByRole('button', { name: 'Reply to tutor-latest' }));
     enterReplyAndSubmit('My preserved reply');
 
     expect(sendMessage).not.toHaveBeenCalled();
@@ -206,7 +209,7 @@ describe('student Tutor-response rating gate', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
     fireEvent.mouseEnter(within(dialog).getByRole('button', { name: '5 stars' }));
     expect(within(dialog).getByText('How helpful was this?')).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Submit rating' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Submit rating and send' })).toBeDisabled();
     fireEvent.click(within(dialog).getByRole('button', { name: '5 stars' }));
     fireEvent.mouseLeave(within(dialog).getByRole('button', { name: '5 stars' }));
     expect(within(dialog).getByText('Extremely helpful')).toBeInTheDocument();
@@ -243,12 +246,12 @@ describe('student Tutor-response rating gate', () => {
       '3 stars',
       '4 stars',
       '5 stars',
-      'Submit rating',
+      'Submit rating and send',
     ]);
     fireEvent.keyDown(dialog, { key: 'Escape' });
     fireEvent.click(screen.getByTestId('rating-reminder-backdrop'));
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
 
     await waitFor(() => {
       expect(submitMessageFeedback).toHaveBeenCalledWith('tutor-latest', 'like', 5);
@@ -266,7 +269,7 @@ describe('student Tutor-response rating gate', () => {
       '3 stars',
       '4 stars',
       '5 stars',
-      'Submit rating',
+      'Submit rating and send',
     ]);
     fireEvent.keyDown(dialog, { key: 'Escape' });
     fireEvent.click(screen.getByTestId('rating-reminder-backdrop'));
@@ -282,10 +285,11 @@ describe('student Tutor-response rating gate', () => {
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Send comment'));
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith('My preserved reply', { replyToMessageId: undefined });
+      expect(sendMessage).toHaveBeenCalledWith('My preserved reply', { replyToMessageId: 'tutor-latest' });
     });
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(screen.getByPlaceholderText('Write a comment...')).toHaveValue('');
   });
 
   it.each([
@@ -303,13 +307,13 @@ describe('student Tutor-response rating gate', () => {
     fireEvent.mouseEnter(star);
     expect(within(dialog).getByText(prompt)).toBeInTheDocument();
     expect(within(dialog).queryByText(level)).not.toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Submit rating' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Submit rating and send' })).toBeDisabled();
     expect(submitMessageFeedback).not.toHaveBeenCalled();
 
     fireEvent.click(star);
     fireEvent.mouseLeave(star);
     expect(within(dialog).getByText(level)).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
     await waitFor(() => expect(submitMessageFeedback).toHaveBeenCalledWith('tutor-latest', feedbackType, rating));
   });
 
@@ -325,6 +329,59 @@ describe('student Tutor-response rating gate', () => {
       expect(sendMessage).toHaveBeenCalledWith('Tutor follow-up', { replyToMessageId: undefined });
     });
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it('preserves the draft and retries the rating before sending when saving fails', async () => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    submitMessageFeedback.mockRejectedValueOnce(new Error('Rating unavailable'));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      renderRoom();
+      enterReplyAndSubmit('Retry my post');
+      const dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+      expect(sendMessage).not.toHaveBeenCalled();
+      expect(screen.getByDisplayValue('Retry my post')).toBeInTheDocument();
+      expect(dialog).toBeInTheDocument();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(submitMessageFeedback).toHaveBeenCalledTimes(2);
+      expect(sendMessage).toHaveBeenCalledWith('Retry my post', { replyToMessageId: undefined });
+    } finally {
+      alertSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('keeps the saved rating and draft if automatic sending fails, allowing a send retry', async () => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    sendMessage.mockRejectedValueOnce(new Error('Send unavailable'));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      renderRoom();
+      enterReplyAndSubmit('Keep my post');
+      const dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Not helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '2 stars' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getByDisplayValue('Keep my post')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTitle('Send comment'));
+      await waitFor(() => expect(screen.getByPlaceholderText('Write a comment...')).toHaveValue(''));
+      expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledTimes(2);
+    } finally {
+      alertSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
   });
 
   it('does not gate a student-authored row based on model diagnostics', async () => {

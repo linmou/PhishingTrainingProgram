@@ -306,7 +306,7 @@ const RoomPagePost: React.FC = () => {
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!messageText.trim() || sendingMessage || openAssessment) return;
+        if (!messageText.trim() || sendingMessage || openAssessment || ratingReminder || submittingRequiredRating) return;
 
 
         const unratedResponse = getUnratedResponse();
@@ -317,6 +317,10 @@ const RoomPagePost: React.FC = () => {
             return;
         }
 
+        await sendCurrentPost();
+    };
+
+    const sendCurrentPost = async () => {
         setSendingMessage(true);
         stopTyping(); // Stop typing when message is sent
         
@@ -345,6 +349,7 @@ const RoomPagePost: React.FC = () => {
             setRatingFeedbackType(null);
             setRatingValue(0);
             setRatingHoveredValue(0);
+            await sendCurrentPost();
         } catch (error) {
             console.error('Failed to submit required response rating:', error);
             alert('Failed to save your rating. Please try again.');
@@ -1066,7 +1071,7 @@ const RoomPagePost: React.FC = () => {
                                     disabled={ratingValue === 0 || submittingRequiredRating}
                                     onClick={handleRequiredRatingSubmit}
                                 >
-                                    Submit rating
+                                    Submit rating and send
                                 </button>
                             </div>
                         )}
