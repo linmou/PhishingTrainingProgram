@@ -9,7 +9,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import '@testing-library/jest-dom';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, Link } from 'react-router-dom';
 import RoomPagePost from '../pages/RoomPagePost';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
@@ -135,6 +135,7 @@ describe('student Tutor-response rating gate', () => {
 
   const roomView = () => (
       <MemoryRouter initialEntries={['/room/room-1']}>
+        <Link to="/room/room-2">Switch room</Link>
         <Routes>
           <Route path="/room/:roomId" element={<RoomPagePost />} />
         </Routes>
@@ -402,6 +403,25 @@ describe('student Tutor-response rating gate', () => {
       alertSpy.mockRestore();
       errorSpy.mockRestore();
     }
+  });
+
+  it.each(['unmount', 'room switch'] as const)('cancels automatic sending after %s during rating persistence', async (navigation) => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    let resolveFeedback: (() => void) | undefined;
+    submitMessageFeedback.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      resolveFeedback = resolve;
+    }));
+    const view = renderRoom();
+    enterReplyAndSubmit('Draft for the original room');
+    const dialog = screen.getByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+    if (navigation === 'unmount') view.unmount();
+    else fireEvent.click(screen.getByRole('link', { name: 'Switch room' }));
+    await act(async () => { resolveFeedback?.(); });
+    expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   it('keeps the saved rating and draft if automatic sending fails, allowing a send retry', async () => {

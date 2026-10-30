@@ -102,6 +102,12 @@ const RoomPagePost: React.FC = () => {
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
     const sendCurrentPostRef = useRef<((ratedMessageId: string) => Promise<void>) | null>(null);
+    const roomSessionRef = useRef<object | null>(null);
+
+    useEffect(() => {
+        roomSessionRef.current = {};
+        return () => { roomSessionRef.current = null; };
+    }, [roomId]);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -345,9 +351,11 @@ const RoomPagePost: React.FC = () => {
     const handleRequiredRatingSubmit = async () => {
         if (!ratingReminder || !ratingFeedbackType || ratingValue === 0 || submittingRequiredRating) return;
 
+        const roomSession = roomSessionRef.current;
         setSubmittingRequiredRating(true);
         try {
             await submitMessageFeedback(ratingReminder.id, ratingFeedbackType, ratingValue);
+            if (!roomSession || roomSessionRef.current !== roomSession) return;
             setCompletedRatingMessageId(ratingReminder.id);
             setRatingReminder(null);
             setRatingFeedbackType(null);
