@@ -63,10 +63,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--repo", default=".", help="Repository root.")
     parser.add_argument("--scope", nargs="+", default=["."], help="Files or directories to inspect, relative to repo.")
     parser.add_argument("--out", default="", help="Output directory. Defaults to .code-smell-monitor/<timestamp>.")
-    parser.add_argument("--install", choices=["missing", "never"], default="missing", help="Install missing common tools for detected stacks.")
+    parser.add_argument("--install", choices=["missing", "never"], default="never", help="Install missing common tools for detected stacks.")
     parser.add_argument("--changed-only", action="store_true", help="Replace scope with git changed files under the repo.")
     parser.add_argument("--fail-on-tool-error", action="store_true", help="Exit non-zero when any tool cannot run cleanly.")
+    parser.add_argument("--allow-project-execution", action="store_true",
+                        help="Allow repository scripts and config-loading analysis tools. ONLY use in an isolated, credential-free sandbox.")
     return parser.parse_args()
+
+
+def text_output(value: str | bytes | None) -> str:
+    """subprocess.TimeoutExpired output may be bytes even when text=True."""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value or ""
+
+
+def skipped_result(name: str, reason: str) -> dict[str, Any]:
+    """Unrun detectors are incomplete coverage, not passing checks."""
+    return {"name": name, "cmd": [name], "exit_code": 126, "stdout": "", "stderr": reason,
+            "duration_seconds": 0, "timed_out": False}
 
 
 def run_command(cmd: list[str], cwd: Path, timeout: int = 300) -> dict[str, Any]:
@@ -93,8 +108,8 @@ def run_command(cmd: list[str], cwd: Path, timeout: int = 300) -> dict[str, Any]
         return {
             "cmd": cmd,
             "exit_code": 124,
-            "stdout": exc.stdout or "",
-            "stderr": exc.stderr or f"Timed out after {timeout} seconds",
+            "stdout": text_output(exc.stdout),
+            "stderr": text_output(exc.stderr) + f"\nTimed out after {timeout} seconds",
             "duration_seconds": round(time.time() - started, 3),
             "timed_out": True,
         }
@@ -111,6 +126,10 @@ def repo_files(repo: Path, scope_paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for scope in scope_paths:
         if scope.is_file():
+            try:
+                scope.relative_to(repo)
+            except ValueError:
+                continue
             files.append(scope)
             continue
         if not scope.exists():
@@ -260,6 +279,18 @@ def audit_command(repo: Path) -> list[str]:
     return ["npm", "audit", "--json"]
 
 
+def trusted_path_executable(name: str, repo: Path) -> bool:
+    """Never execute a binary shipped by an untrusted PR checkout via PATH."""
+    resolved = shutil.which(name)
+    if not resolved:
+        return False
+    try:
+        Path(resolved).resolve().relative_to(repo)
+    except ValueError:
+        return True
+    return False
+
+
 def run_secret_check(repo: Path, raw_dir: Path) -> dict[str, Any]:
     command = [
         "gitleaks",
@@ -271,12 +302,12 @@ def run_secret_check(repo: Path, raw_dir: Path) -> dict[str, Any]:
         "--report-path",
         str(raw_dir / "gitleaks.json"),
     ]
-    if not executable_exists("gitleaks"):
+    if not trusted_path_executable("gitleaks", repo):
         result = {
             "cmd": command,
             "exit_code": 127,
             "stdout": "",
-            "stderr": "gitleaks not found",
+            "stderr": "gitleaks unavailable or resolves inside untrusted repository",
             "duration_seconds": 0,
             "timed_out": False,
         }
@@ -418,6 +449,8 @@ def write_report(out_dir: Path, summary: dict[str, Any], results: list[dict[str,
     lines.append(f"- scope: `{', '.join(summary['scope'])}`")
     lines.append(f"- detected stacks: `{', '.join(name for name, enabled in summary['stack'].items() if enabled) or 'none'}`")
     lines.append(f"- output: `{summary['out_dir']}`")
+    lines.append(f"- project execution enabled (caller-provided sandbox): `{summary['project_execution_enabled']}`")
+    lines.append(f"- detector coverage complete: `{summary['coverage_complete']}`")
     lines.append("")
     lines.append("## Headline Signals")
     if summary["headlines"]:
@@ -476,12 +509,27 @@ def main() -> int:
     install_results: list[dict[str, Any]] = []
     results: list[dict[str, Any]] = []
 
-    if stack["python"] and py_paths:
-        py_install_results, py_results = run_python_checks(repo, py_paths, raw_dir, args.install)
-        install_results.extend(py_install_results)
-        results.extend(py_results)
-    if stack["javascript"]:
-        results.extend(run_js_checks(repo, js_paths, raw_dir, stack["typescript"], args.install))
+    # Project scripts, executable node_modules/.bin files and dynamic tool config
+    # can run arbitrary PR-controlled code. Never run them on an untrusted checkout.
+    # The opt-in does not create a sandbox: the caller must provide one.
+    if not args.allow_project_execution:
+        skipped = []
+        if stack["python"] and py_paths:
+            skipped.extend(["ruff", "radon_cc", "radon_mi", "vulture", "bandit", "mypy"])
+        if stack["javascript"]:
+            skipped.extend(["package_lint", "eslint", "jscpd", "knip_dead_code",
+                            "madge_circular", "depcheck", "package_audit", "package_typecheck", "tsc_no_emit"])
+        for name in skipped:
+            result = skipped_result(name, "Untrusted project execution disabled; run in a credential-free sandbox with --allow-project-execution")
+            write_raw(raw_dir, name, result)
+            results.append(result)
+    else:
+        if stack["python"] and py_paths:
+            py_install_results, py_results = run_python_checks(repo, py_paths, raw_dir, args.install)
+            install_results.extend(py_install_results)
+            results.extend(py_results)
+        if stack["javascript"]:
+            results.extend(run_js_checks(repo, js_paths, raw_dir, stack["typescript"], args.install))
     if stack["javascript"] or stack["python"]:
         results.append(run_secret_check(repo, raw_dir))
 
@@ -491,6 +539,8 @@ def main() -> int:
         "out_dir": str(out_dir),
         "stack": stack,
         "install_mode": args.install,
+        "project_execution_enabled": args.allow_project_execution,
+        "coverage_complete": all(item["exit_code"] not in (124, 126, 127) and not item.get("timed_out") for item in results),
         "headlines": extract_headlines(raw_dir),
         "results": [{key: value for key, value in item.items() if key not in {"stdout", "stderr"}} for item in results],
         "install_results": [{key: value for key, value in item.items() if key not in {"stdout", "stderr"}} for item in install_results],
@@ -506,4 +556,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
