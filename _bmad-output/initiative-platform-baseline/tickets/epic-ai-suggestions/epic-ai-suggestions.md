@@ -61,3 +61,4 @@ Test paths are from the repository root.
 ## Notes
 
 - Source conflict: R2 — prd FR-25 allows only the room owner to request a suggestion; for phishing rooms this is a role check in the browser, with no server check.
+- Planned change (issue #46; PRD FR-43, FR-54; addendum EA-20, EA-21): while the temporary exit assessment is in force, the AI suggestion inputs of R2 leave out the learner's open transfer assessments, their answers and non-final results, and the assessment rules in the prompt change (no invitation to answer, no tutor-feedback gate). The prompt change falls under R3: rerun the existing evaluation cases. Not yet built; update R2 and R3 guards in the implementation PR.

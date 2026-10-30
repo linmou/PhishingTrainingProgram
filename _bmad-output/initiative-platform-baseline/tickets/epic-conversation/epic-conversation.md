@@ -51,3 +51,7 @@ Test paths are from the repository root.
 - parent — `_bmad-output/initiative-platform-baseline/initiative-platform-baseline.md`, Requirements R5
 - architecture — `_bmad-output/initiative-platform-baseline/architecture-tutor-platform/architecture-tutor-platform.md`, AD-7, AD-12
 - prd — `_bmad-output/initiative-platform-baseline/prd-tutor-platform/prd-tutor-platform.md`, section 4.3
+
+## Notes
+
+- Planned change (issue #46; PRD FR-16, FR-54): while the temporary exit assessment is in force, transfer assessment questions, open and hidden or ended and shown again, are not rating targets for R3. Not yet built; update R3 and its guard in the implementation PR.
