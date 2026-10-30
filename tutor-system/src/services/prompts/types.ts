@@ -3,6 +3,7 @@
  */
 
 import type { InteractionMode, StudentAIChoice } from '../../types';
+import type { ScenarioTemplate } from '../detectionTemplates';
 
 export interface StudentToneLock {
   locked: true;
@@ -23,6 +24,8 @@ export interface PromptComparisonMetadata {
 }
 
 export interface SystemPromptConfig {
+  /** Explicit scenario identity; null means intentional Custom / General. */
+  scenario?: ScenarioTemplate | null;
   role: {
     role: 'low' | 'high';
   };

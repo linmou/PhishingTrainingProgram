@@ -2,7 +2,7 @@
 
 Intent: describe the implemented AI-assistant runtime, persistence, context, and message-presentation boundaries.
 
-Last updated: 2026-10-14 (Quick Adjust display labels; baseline commit 83690fe)
+Last updated: 2026-10-30 (scenario identity persistence; baseline commit 764caf8)
 
 ## Overview
 
@@ -58,6 +58,8 @@ Runtime source of truth:
 - The tutor UI reads room-level AI fields for enablement and rendered prompt text
 - Structured controls such as `prompt_config`, `temperature`, and `max_tokens` are persisted in `ai_assistant_configs`
 - `getAIConfig()` merges room fields with `ai_assistant_configs` so Quick Adjust and settings screens can be rehydrated after reload
+
+Scenario selection uses `prompt_config.scenario`, persisted during template room creation and settings saves. Registry keys identify scenarios; `null` records an intentional Custom / General choice. Edited targets retain the selected scenario. Switching to Custom keeps the current targets; choosing another named scenario loads that scenario's targets. Older configurations without the field use exact target-array matching until their next settings save. Opening settings never replaces their saved target text. Template construction rejects unknown or missing registry references, including inherited object-property names.
 
 **messages** - Added tutor-turn metadata:
 - `user_role`: Establishes student, tutor, or observer conversation identity
