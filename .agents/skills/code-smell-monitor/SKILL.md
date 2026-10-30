@@ -10,16 +10,16 @@ Use this skill to produce reproducible code-quality evidence for a repository. T
 Run the bundled monitor from the target repository:
 
 ```bash
-python3 ~/.agents/skills/code-smell-monitor/scripts/code_smell_monitor.py --repo . --scope path/to/module path/to/file.py
+python3 .agents/skills/code-smell-monitor/scripts/code_smell_monitor.py --repo . --scope path/to/module path/to/file.py --install never
 ```
 
 For a full repository pass:
 
 ```bash
-python3 ~/.agents/skills/code-smell-monitor/scripts/code_smell_monitor.py --repo . --scope .
+python3 .agents/skills/code-smell-monitor/scripts/code_smell_monitor.py --repo . --scope . --install never
 ```
 
-Use `--install missing` by default. It installs missing common tools for detected stacks. Use `--install never` when the environment must not be changed.
+Security: untrusted PRs default to a non-executing scan with incomplete coverage. Only use `--allow-project-execution --install never` in a credential-free, isolated sandbox; the flag does NOT create isolation. Do not run PR-controlled package scripts or local binaries with privileged credentials.
 
 ## Dependencies and Installation
 
@@ -28,7 +28,7 @@ The monitor requires Python 3.10 or newer to run. It uses these external tools:
 - Python repositories: `ruff`, `radon`, `vulture`, `bandit`, and `mypy`.
 - JavaScript/TypeScript repositories: Node.js with `npm`/`npx`, plus the project's package manager when a lockfile or package script requires it. The application dependencies must already be installed for project-local lint, typecheck, and dependency resolution.
 
-By default, `--install missing` checks for the Python tools and installs missing ones with `python3 -m pip install --user`. For JavaScript/TypeScript tools, it uses a local `node_modules/.bin` tool first, then a tool on `PATH`, and otherwise fetches the tool through `npx --yes` for that run. This requires network access. The installation commands and their exit codes are recorded in the report.
+Only after opt-in to sandboxed project execution, `--install missing` checks for the Python tools and installs missing ones with `python3 -m pip install --user`. For JavaScript/TypeScript tools, it uses a local `node_modules/.bin` tool first, then a tool on `PATH`, and otherwise fetches the tool through `npx --yes` for that run. This requires network access. The installation commands and their exit codes are recorded in the report.
 
 The monitor does not install the target project's own dependencies. Install those before running checks when the project needs them:
 
