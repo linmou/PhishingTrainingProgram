@@ -54,4 +54,4 @@ Test paths are from the repository root.
 
 ## Notes
 
-- Planned change (issue #46; PRD FR-16, FR-54): while the temporary exit assessment is in force, transfer assessments hidden from the learner are not rating targets for R3. Not yet built; update R3 and its guard in the implementation PR.
+- Planned change (issue #46; PRD FR-16, FR-54): while the temporary exit assessment is in force, transfer assessment questions, open and hidden or ended and shown again, are not rating targets for R3. Not yet built; update R3 and its guard in the implementation PR.
