@@ -1,0 +1,52 @@
+# Exit-time transfer assessment (temporary)
+
+<!-- Intent: define the temporary exit-assessment replacement and how it integrates with the existing transfer-assessment system. Updated: 2026-10-30. Baseline commit: ebc03d1. -->
+
+Status: approved by the owner on 2026-10-29/30; not implemented (PRD gap G-78). Requirements: PRD FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-41. Decisions and their sources: PRD addendum §G (EA-1 to EA-19).
+
+## Purpose
+
+In-dialogue timing of transfer assessments was not accurate enough. The room owner still reviews and sends transfer assessments during the conversation, but the learner answers all of them in a pop-up when leaving the room. The mode is temporary and built with minimum changes.
+
+There is no runtime switch. Exit assessment replaces in-dialogue answering in place on `no_sign_up`. The in-dialogue implementation is archived unchanged on branch `assess-in-dialogue` (commit `ebc03d1`); restoring it means redeploying that branch's frontend and Edge function and re-applying its SQL definitions as a new migration.
+
+## What changes and what does not
+
+Unchanged: assessment generation and validation (T09.2), tutor review and send (T09.3), answer parsing and exact-set grading, two attempts, result messages and disclosure ([assessment result messages](assessment-result-messages.md)), progress outcomes of pass and fail, Guard holding of answers, cancellation on contradiction or target change, exports, and the room owner's and observers' views.
+
+| Area | In-dialogue rule (archived) | Exit-assessment rule |
+| --- | --- | --- |
+| Due | Partial → Covered by `demonstrated_understanding` only (T09.1) | Any learner-owned learning event that made the target Covered; a pass makes it due again at the learner's next visit |
+| Blockers | Guard, any open assessment, or outstanding tutor feedback | Guard only; a target with an open assessment, or one already sent in the current visit, is skipped |
+| Open per learner | One | One per learning target |
+| Learner chat | Question shown; composer locked until it closes | Questions, answers and results hidden from the learner; composer stays enabled |
+| Rating gate | Tutor messages without an assessment event | Also excludes hidden questions |
+| Answering | In the conversation | Exit pop-up, one question at a time |
+| Tutor feedback before the next assessment | Required (T09.6) | Not required |
+
+## Integration design
+
+The existing functions are changed in place, so each entity keeps one writer (architecture AD-1): assessments are still created only by `send_reviewed_tutor_response_v4`, graded only by `process_assessment_message_v2`, and cancelled only by the existing cancellation paths. One migration:
+
+- **`private.transfer_assessment_due_event(item_id)`** returns the learning event of the target's latest status or understanding change when that change made it `covered/good` through an applied, learner-owned event. Assessment rows no longer count as the latest change, so a pass leaves the target due. The function does not read visits: its value feeds `private.transfer_item_hash`, and an open question must keep the same hash across visits so it can still be graded at a later exit.
+- **Visits.** A new private table records `(room_id, student_id, started_at)`. A new function `start_learner_visit_v1`, service role only, inserts one row; the Edge `join_room` operation calls it after `join_room_v1` for the room's learner. `join_room_v1` itself is unchanged, because posting and answering also call it. The table holds visits, never due state (AD-3).
+- **`prepare_transfer_assessment_context_v1`** keeps its signature and return shape. Guard is the only blocker. A target is eligible when it is due, has no open assessment, and has no assessment created since the learner's latest visit start.
+- **`send_reviewed_tutor_response_v4`** refuses `ASSESSMENT_ALREADY_OPEN` only when the same learning target has an open assessment. `send_reviewed_transfer_assessment_v1` is unchanged; it rechecks eligibility through the prepare function.
+- **Edge function `assessment-api`.** Only `join_room` changes, to record the visit. `prepare_turn`, `send_reviewed` and `process_message` call the same functions as before.
+- **Browser.** For the learner, the conversation view filters out their transfer assessments, answers and results; the composer lock and rating gate ignore them; the room page shows the exit pop-up on in-app leave; and a `beforeunload` handler triggers the browser's own leave prompt while the learner has open questions. The tutor and observer views are not changed.
+
+## Grading consistency check
+
+Questions are graded only when their stored snapshot hash equals the current `private.transfer_item_hash`, which includes the due event. Two cases must be confirmed by SQL tests:
+
+- An exit question for a target reached from Pending, from Partial or by spontaneous transfer keeps a matching hash from delivery to grading, including across a new visit.
+- Questions already open under the in-dialogue rule when the migration is applied keep a matching hash: for them the old and new due rules return the same event, because no assessment row has been written for them yet.
+
+## Verification required
+
+Follow the [Supabase release workflow](supabase-release-workflow.md) and EA-19:
+
+- **SQL**, Red/Green against a restored baseline: due for every learner-owned route to Covered; not due for Partial, Needs review or a manual edit; one open question per target; no feedback gate; Guard blocks preparation and holds answers without using an attempt; a passed target is not due again in the same visit and is due at the next; a failed target is not due; the visit function's role permissions; hash consistency as above.
+- **Edge**: `join_room` records a visit for the learner and none for an observer.
+- **React**: hiding, composer and rating gates; the pop-up flow, retry, Next and Leave; Guard waiting text; `beforeunload`; unchanged tutor and observer views.
+- **Staging browser journeys** with controlled provider responses, and one manual real-model journey. No new semantic evaluation cases.

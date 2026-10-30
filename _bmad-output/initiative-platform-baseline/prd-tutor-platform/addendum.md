@@ -2,7 +2,7 @@
 
 Intent: keep the material the PRD needs but should not carry in its main text — where each requirement came from, the technical choices currently deployed, and the known differences between the PRD and current behavior.
 
-Updated: 2026-10-28 (G-11 reconciled against the template release and current guards; see §D). Earlier: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`; the operator switch and §D staging attack results follow the next `no_sign_up` merge). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
+Updated: 2026-10-30 (exit assessment decisions added as §G, FR-54 crosswalk and gap G-78). Earlier: 2026-10-28 (G-11 reconciled against the template release and current guards; see §D). Earlier: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`; the operator switch and §D staging attack results follow the next `no_sign_up` merge). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
 
 ## A. Legacy requirement crosswalk
 
@@ -62,6 +62,7 @@ Legacy IDs are cited with their source so colliding numbers stay distinct: `spec
 | FR-50 | feature:chat_history_download; spec-103 FR-013–FR-015; cb-request R8 |
 | FR-51 | feature:ai_suggestion_tracking; cb-request R7 |
 | FR-52 | Owner decision 2026-10-22 (OQ-8); ownership checks in cb-request R9 and the cyberbullying reviewed send |
+| FR-54 | Owner decisions 2026-10-29 and 2026-10-30 (§G); `tutor-system/docs/exit-time-assessment.md`. Also changes FR-16 and FR-31–FR-41 while exit assessment is on |
 | FR-53 | feature:checklist_management (manual status, notes); assessment-api `edit_learning_progress`; owner decision 2026-10-22 (OQ-14) |
 | NFR-1 | constitution P4; tutor-response-contract |
 | NFR-2 | `.specify/memory/constitution.md` II; spec-101–103 server-authority FRs |
@@ -156,6 +157,7 @@ Each open gap is a candidate backlog bug where current behavior differs from the
 | G-69 | Tests and the sending path apply the tutor's final Guard state to the room when a reply is sent, against the rule that sending never changes Guard; a non-owner Guard change is also untested. (Related to G-36.) | supervision epic guard map | FR-30 |
 | G-72 | Nothing enforces that a prompt or model change is released only after its evaluation suite runs: the pull-request workflow never runs the suite. Per-practice-type re-evaluation and human-only constitution changes are untested. | AI epic guard map | FR-26, NFR-9, NFR-10 |
 | G-76 | The room owner's JSON export has no summary of suggestion actions (a test asserts it is undefined), and cyberbullying exports carry one learner's progress, not every participant's. | exports epic guard map | FR-50 |
+| G-78 | Exit assessment (FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-41) is approved but not implemented. Close this gap when the implementation passes staging acceptance. | Owner, 2026-10-29 (§G) | FR-54 |
 | G-48 | Dependency-direction breaks in the client: a context imports a component, a hook imports a context, types and utils import services. | architecture sweep 2 | — |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
@@ -212,3 +214,35 @@ Opened 2026-10-24 from a review that sorted each failing test by the product con
 | OQ-22 | May the tutor's feedback before the next assessment, re-offering a rejected assessment and keeping an open assessment answerable after in-room assessment is turned off be handled by the room owner by hand? | Deferred | FR-31, FR-35, FR-41 |
 
 Identity and room passwords (FR-1, FR-2, FR-3, FR-10, NFR-4) are not asked again: OQ-1 already accepts them.
+
+## G. Exit assessment decisions (temporary)
+
+Decided by the owner in conversation on 2026-10-29 and 2026-10-30. The owner described the mode as a temporary solution to be built quickly with minimum changes (product constitution P6). "Owner" rows were stated by the owner. "Accepted inference" rows were proposed with the reasoning shown and accepted by the owner without objection; reopen any of them by owner decision. Built into FR-54 and the consequences marked "While exit assessment is in force".
+
+| ID | Question | Decision | Source | Related |
+| --- | --- | --- | --- | --- |
+| EA-1 | Replace or add to in-dialogue assessment? | Replace. The in-dialogue implementation is kept unchanged on branch `assess-in-dialogue` (commit `ebc03d1`, the `no_sign_up` head when the decision was made). | Owner (replace); owner 2026-10-30 (archive branch) | FR-32–FR-43, FR-54 |
+| EA-2 | Which learning targets are assessed? | Every learning target the learner's own learning event made Covered, including Pending → Covered and spontaneous transfer. This overrides the 2026-10-13 Partial → Covered-only rule (T09.1) while exit assessment is in force. A manual edit to Covered is not due: the question needs learner evidence. | Owner (all covered); accepted inference (manual edits) | FR-32 |
+| EA-3 | When are questions made, and who reviews them? | The room owner reviews and sends each question during the conversation, as before; the tutor's view does not change. Questions are saved as ordinary assessment messages. | Owner | FR-33, FR-35, FR-36 |
+| EA-4 | Attempts, grading, disclosure, failure? | Unchanged: two attempts, server grading, reveal after the second wrong attempt, failure to Needs review. | Owner | FR-38–FR-40 |
+| EA-5 | What counts as leaving? | The room's back and leave navigation, and closing the tab or browser. | Owner | FR-54 |
+| EA-6 | Is the quiz mandatory? | Mandatory when the learner has open questions. If the learner confirms the browser's own leave prompt, they leave without answering. | Owner | FR-54 |
+| EA-7 | Repeat on later visits? | Redo all assessments on every visit: a passed learning target becomes due again. | Owner | FR-40 |
+| EA-8 | Questions covered but not yet sent at exit? | Only sent questions are in the pop-up; the learner is not held waiting. | Owner (confirmed inference) | FR-54 |
+| EA-9 | How does the tutor get a normal reply when a question is due? | The AI-suggestion request returns one assessment draft per due learning target; the room owner clicks again for the next one, then for an AI suggestion. No new control. | Owner | FR-33 |
+| EA-10 | Guard at exit? | The quiz stays mandatory in Guard. Answers are held as today and the pop-up says "Waiting for your tutor to turn Guard off." until grading resumes. Rationale: Guard pauses assessment and must not become a way to skip it (tutoring constitution R4; FR-38). | Owner | FR-38, FR-54 |
+| EA-11 | Runtime switch? | None. Exit assessment replaces in-dialogue answering in place on `no_sign_up`; restoring the in-dialogue behavior means redeploying `assess-in-dialogue`. Supersedes the earlier same-day proposal of an `EXIT_ASSESSMENT_ENABLED` operator switch. | Owner, 2026-10-30 | FR-54 |
+| EA-12 | Does the learner see questions and results in the conversation? | No, only in the exit pop-up; ordinary messaging stays enabled. The room owner and observers see them as before; exports are unchanged. | Accepted inference | FR-37, FR-39 |
+| EA-13 | Several open questions at once? | Allowed, at most one open per learning target. | Accepted inference | FR-32, FR-36 |
+| EA-14 | Tutor feedback gate? | Not required, because answers happen at exit. | Accepted inference | FR-41 |
+| EA-15 | Rating gate for hidden questions? | Hidden questions are not rating targets. | Accepted inference | FR-16 |
+| EA-16 | A question cancelled by a later contradiction? | It leaves the pop-up (existing cancellation). | Accepted inference | FR-32, FR-54 |
+| EA-17 | Implementation boundary? | Do not discard existing logic: it is preserved on `assess-in-dialogue`. On `no_sign_up` the existing writers are changed in place, so assessments are still created only by `send_reviewed_tutor_response_v4` and graded only by `process_assessment_message_v2` (architecture AD-1: no new writer). Grading, attempts, disclosure and Guard holding are unchanged. | Owner, 2026-10-30; AD-1 | NFR-2 |
+| EA-18 | What is a visit, for "redo on every visit"? | A visit starts when the learner enters the room, and the server records it. A learning target is due again only at a later visit, so it is not re-offered in the visit where its transfer assessment was sent. The record holds visits, not due state (AD-3). | Owner (accepted recommendation), 2026-10-30 | FR-32, FR-40, FR-54 |
+| EA-19 | Test scope? | Follow the release workflow for a migration and an eligibility change: restored-baseline SQL Red/Green, Edge and React tests, staging browser journeys with controlled provider responses, and one manual real-model journey. No new semantic evaluation cases for the temporary mode. | Owner (accepted recommendation), 2026-10-30 | FR-54, NFR-9 |
+
+Points for review, not decided:
+
+- The learner job in §2.1 ("prove understanding without repetitive quizzing") and the 2026-10-13 rationale for T09.1 conflict with EA-2 and EA-7 while exit assessment is in force. The owner accepted this for the temporary mode; no constitution rule changes.
+- Replacing in place keeps one mechanism for the job (product constitution P7). The cost is that the in-dialogue behavior cannot be restored by a setting, only by redeploying `assess-in-dialogue`, and its SQL must be re-applied as a migration.
+- EA-2 still depends on learning-event judging to decide which learning targets are Covered. The 2026-10 analyzer benchmark scored 69.6 % against an 80 % gate (`tutor-system/docs/ai-behaviors/learning-progress-analyzer-evaluation-record.md`). Moving the check to exit changes its timing, not which learning targets are judged Covered.
