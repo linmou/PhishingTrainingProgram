@@ -101,6 +101,19 @@ const RoomPagePost: React.FC = () => {
     const [ratingHoveredValue, setRatingHoveredValue] = useState(0);
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
+    const sendCurrentPostRef = useRef<((ratedMessageId: string) => Promise<void>) | null>(null);
+    const roomSessionRef = useRef<object | null>(null);
+
+    useEffect(() => {
+        roomSessionRef.current = {};
+        setRatingReminder(null);
+        setRatingFeedbackType(null);
+        setRatingValue(0);
+        setRatingHoveredValue(0);
+        setSubmittingRequiredRating(false);
+        setCompletedRatingMessageId(null);
+        return () => { roomSessionRef.current = null; };
+    }, [roomId]);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -288,7 +301,7 @@ const RoomPagePost: React.FC = () => {
     // Find tutor from participants
     const tutor = participants?.find(p => p.current_role === 'tutor') || null;
 
-    const getUnratedResponse = () => {
+    const getUnratedResponse = (ratedMessageId?: string) => {
         if (user?.current_role !== 'student') return null;
 
         const latest = [...visibleMessages]
@@ -299,17 +312,21 @@ const RoomPagePost: React.FC = () => {
 
         if (!latest) return null;
 
-        if (completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
+        if (ratedMessageId === latest.id || completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
         return latest;
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (ratingReminder || submittingRequiredRating) return;
+        await sendCurrentPost();
+    };
+
+    const sendCurrentPost = async (ratedMessageId?: string) => {
         if (!messageText.trim() || sendingMessage || openAssessment) return;
 
-
-        const unratedResponse = getUnratedResponse();
+        const unratedResponse = getUnratedResponse(ratedMessageId);
         if (unratedResponse) {
             setRatingReminder(current => current?.id === unratedResponse.id
                 ? current
@@ -334,22 +351,29 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    // Resume with the latest room gates and draft after asynchronous rating persistence.
+    sendCurrentPostRef.current = sendCurrentPost;
+
     const handleRequiredRatingSubmit = async () => {
         if (!ratingReminder || !ratingFeedbackType || ratingValue === 0 || submittingRequiredRating) return;
 
+        const roomSession = roomSessionRef.current;
         setSubmittingRequiredRating(true);
         try {
             await submitMessageFeedback(ratingReminder.id, ratingFeedbackType, ratingValue);
+            if (!roomSession || roomSessionRef.current !== roomSession) return;
             setCompletedRatingMessageId(ratingReminder.id);
             setRatingReminder(null);
             setRatingFeedbackType(null);
             setRatingValue(0);
             setRatingHoveredValue(0);
+            await sendCurrentPostRef.current?.(ratingReminder.id);
         } catch (error) {
+            if (!roomSession || roomSessionRef.current !== roomSession) return;
             console.error('Failed to submit required response rating:', error);
             alert('Failed to save your rating. Please try again.');
         } finally {
-            setSubmittingRequiredRating(false);
+            if (roomSessionRef.current === roomSession) setSubmittingRequiredRating(false);
         }
     };
 
@@ -1066,7 +1090,7 @@ const RoomPagePost: React.FC = () => {
                                     disabled={ratingValue === 0 || submittingRequiredRating}
                                     onClick={handleRequiredRatingSubmit}
                                 >
-                                    Submit rating
+                                    Submit rating and send
                                 </button>
                             </div>
                         )}

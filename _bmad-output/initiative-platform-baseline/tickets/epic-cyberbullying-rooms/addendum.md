@@ -2,7 +2,7 @@
 
 Intent: hold the volatile facts about how well this epic's rules are guarded by tests, so the epic itself stays stable. Each row links up to a rule in `_bmad-output/initiative-platform-baseline/tickets/epic-cyberbullying-rooms/epic-cyberbullying-rooms.md`.
 
-Updated: 2026-10-27, R1 and G-74 follow the cyberbullying-template change in merge `617fe7c`. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_cyberbullying_rooms_*`, `guardp6_cyberbullying_rooms_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
+Updated: 2026-10-28 (G-11 evidence reconciliation in §D). Earlier: 2026-10-27, R1 and G-74 follow the cyberbullying-template change in merge `617fe7c`. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_cyberbullying_rooms_*`, `guardp6_cyberbullying_rooms_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
 
 ## A. Test debt needed for the pilot
 
@@ -33,3 +33,9 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 | --- | --- | --- |
 | G-74 | R1, R2, R3 | No test for edited dialogue keeping each comment's author, several tabs joining at once, the five target names, a tutor message giving no evidence, or Quick Adjust being refused by the server (FR-7, FR-44, FR-45). |
 | G-75 | R5, R6, R7 | No test that a character draft is refused with the AI off or with no learner message, that the chosen character and Guard state reach the provider, that a reply cannot be sent without a reviewed draft, or that sent character replies cannot be edited (FR-47, FR-48, FR-49). |
+
+## D. G-11 template scope and evidence
+
+R1 / FR-7: the four global Cyberbullying templates are seeded and production verified; there is no remaining "no seeded templates" gap. The [PRD addendum §D](../../prd-tutor-platform/addendum.md#g-11-template-evidence-and-guard-trace-2026-10-28) links the 2026-10-23 release, migration hash and current guards. Four-row readback covers the catalog; the browser workflow selects `copilot-1`, and the creation unit tests use two mocked Copilot scenarios. These checks do not prove every template's complete browser journey or a Tutor custom-template round trip.
+
+G-11 remains open only for the unsupported legacy custom-template round trip and its scope conflict with FR-6 / rooms epic R3 (read-only templates; tutor-made templates excluded). The existing no-save-control and no-template-insert tests guard the current boundary. No test demonstrates Tutor create/edit → save template → reload/list → reuse with complete scenario, assets, dialogue and author/persona identity. Keep that missing guard attached to G-11 pending explicit scope reconciliation; this is not a new epic acceptance rule or a reason to close G-11. Existing §B/§C test debt and pilot decisions remain unchanged.

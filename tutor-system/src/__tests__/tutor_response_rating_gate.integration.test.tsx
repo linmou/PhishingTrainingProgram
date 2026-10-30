@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * File: src/pages/RoomPagePost.tsx
- * Purpose: verify the room UI's rating gate, unselected prompt, and persisted submission.
+ * Purpose: verify rating saves before automatic posting, including failures and retries.
  */
 
 import React from 'react';
@@ -9,11 +9,13 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import '@testing-library/jest-dom';
 import { readFileSync } from 'fs';
 import * as path from 'path';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, Link } from 'react-router-dom';
 import RoomPagePost from '../pages/RoomPagePost';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
 import type { Message, MessageFeedbackStats, Room, User, UserRole } from '../types';
+import { projectRoomMessage } from '../contexts/transferAssessmentUiAdapter';
+import { deliveredQuestionRow, LEARNER_A_ID } from '../test-support/transferRoomFixtures';
 
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
@@ -24,7 +26,9 @@ jest.mock('../contexts/RoomContext', () => ({
 }));
 
 jest.mock('../components/RoomPost', () => () => <div data-testid="room-post">Room post</div>);
-jest.mock('../components/PostComment', () => () => <div data-testid="post-comment">Comment</div>);
+jest.mock('../components/PostComment', () => ({ message, onReply }: { message: Message; onReply: (id: string) => void }) => (
+  <button data-testid="post-comment" onClick={() => onReply(message.id)}>Reply to {message.id}</button>
+));
 jest.mock('../components/StudentAIToneControl', () => () => null);
 jest.mock('../components/ChecklistPanel', () => () => null);
 jest.mock('../components/AISuggestionBox', () => () => null);
@@ -126,14 +130,17 @@ describe('student Tutor-response rating gate', () => {
 
   const renderRoom = () => {
     bindContext();
-    return render(
+    return render(roomView());
+  };
+
+  const roomView = () => (
       <MemoryRouter initialEntries={['/room/room-1']}>
+        <Link to="/room/room-2">Switch room</Link>
         <Routes>
           <Route path="/room/:roomId" element={<RoomPagePost />} />
         </Routes>
       </MemoryRouter>
-    );
-  };
+  );
 
   const enterReplyAndSubmit = (reply: string) => {
     fireEvent.change(screen.getByPlaceholderText('Write a comment...'), {
@@ -155,7 +162,7 @@ describe('student Tutor-response rating gate', () => {
     });
   });
 
-  it('blocks the reply, animates a mandatory prompt for the latest response, and unlocks only after feedback succeeds', async () => {
+  it('blocks the reply and sends it exactly once after feedback succeeds', async () => {
     messages = [
       buildMessage('ai-old', 'student', 'Earlier AI response', true, '2026-01-01T00:01:00.000Z'),
       buildMessage('student-mid', 'student', 'Student follow-up', false, '2026-01-01T00:02:00.000Z'),
@@ -174,6 +181,7 @@ describe('student Tutor-response rating gate', () => {
     );
 
     renderRoom();
+    fireEvent.click(screen.getByRole('button', { name: 'Reply to tutor-latest' }));
     enterReplyAndSubmit('My preserved reply');
 
     expect(sendMessage).not.toHaveBeenCalled();
@@ -206,7 +214,7 @@ describe('student Tutor-response rating gate', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
     fireEvent.mouseEnter(within(dialog).getByRole('button', { name: '5 stars' }));
     expect(within(dialog).getByText('How helpful was this?')).toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Submit rating' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Submit rating and send' })).toBeDisabled();
     fireEvent.click(within(dialog).getByRole('button', { name: '5 stars' }));
     fireEvent.mouseLeave(within(dialog).getByRole('button', { name: '5 stars' }));
     expect(within(dialog).getByText('Extremely helpful')).toBeInTheDocument();
@@ -243,12 +251,12 @@ describe('student Tutor-response rating gate', () => {
       '3 stars',
       '4 stars',
       '5 stars',
-      'Submit rating',
+      'Submit rating and send',
     ]);
     fireEvent.keyDown(dialog, { key: 'Escape' });
     fireEvent.click(screen.getByTestId('rating-reminder-backdrop'));
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
 
     await waitFor(() => {
       expect(submitMessageFeedback).toHaveBeenCalledWith('tutor-latest', 'like', 5);
@@ -266,7 +274,7 @@ describe('student Tutor-response rating gate', () => {
       '3 stars',
       '4 stars',
       '5 stars',
-      'Submit rating',
+      'Submit rating and send',
     ]);
     fireEvent.keyDown(dialog, { key: 'Escape' });
     fireEvent.click(screen.getByTestId('rating-reminder-backdrop'));
@@ -282,10 +290,11 @@ describe('student Tutor-response rating gate', () => {
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Send comment'));
     await waitFor(() => {
-      expect(sendMessage).toHaveBeenCalledWith('My preserved reply', { replyToMessageId: undefined });
+      expect(sendMessage).toHaveBeenCalledWith('My preserved reply', { replyToMessageId: 'tutor-latest' });
     });
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(screen.getByPlaceholderText('Write a comment...')).toHaveValue('');
   });
 
   it.each([
@@ -303,13 +312,13 @@ describe('student Tutor-response rating gate', () => {
     fireEvent.mouseEnter(star);
     expect(within(dialog).getByText(prompt)).toBeInTheDocument();
     expect(within(dialog).queryByText(level)).not.toBeInTheDocument();
-    expect(within(dialog).getByRole('button', { name: 'Submit rating' })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Submit rating and send' })).toBeDisabled();
     expect(submitMessageFeedback).not.toHaveBeenCalled();
 
     fireEvent.click(star);
     fireEvent.mouseLeave(star);
     expect(within(dialog).getByText(level)).toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
     await waitFor(() => expect(submitMessageFeedback).toHaveBeenCalledWith('tutor-latest', feedbackType, rating));
   });
 
@@ -325,6 +334,162 @@ describe('student Tutor-response rating gate', () => {
       expect(sendMessage).toHaveBeenCalledWith('Tutor follow-up', { replyToMessageId: undefined });
     });
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['response', 'assessment'] as const)('rechecks a new %s arriving while the rating saves', async (incoming) => {
+    currentUser = { ...currentUser, id: LEARNER_A_ID };
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    let resolveFeedback: (() => void) | undefined;
+    submitMessageFeedback.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      resolveFeedback = resolve;
+    }));
+    const view = renderRoom();
+    enterReplyAndSubmit('Wait for the latest gate');
+    const dialog = screen.getByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+    messages = [...messages, incoming === 'response'
+      ? buildMessage('tutor-new', 'tutor', 'New response while saving')
+      : projectRoomMessage(deliveredQuestionRow)];
+    bindContext();
+    view.rerender(roomView());
+    await act(async () => { resolveFeedback?.(); });
+
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue('Wait for the latest gate')).toBeInTheDocument();
+    if (incoming === 'response') {
+      const newDialog = screen.getByRole('alertdialog');
+      expect(within(newDialog).getByText('New response while saving')).toBeInTheDocument();
+      fireEvent.click(within(newDialog).getByRole('button', { name: 'Helpful' }));
+      fireEvent.click(within(newDialog).getByRole('button', { name: '5 stars' }));
+      fireEvent.click(within(newDialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(submitMessageFeedback).toHaveBeenLastCalledWith('tutor-new', 'like', 5);
+    } else {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getByDisplayValue('Wait for the latest gate')).toBeDisabled();
+      messages = [messages[0]];
+      bindContext();
+      view.rerender(roomView());
+      fireEvent.click(screen.getByTitle('Send comment'));
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('preserves the draft and retries the rating before sending when saving fails', async () => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    submitMessageFeedback.mockRejectedValueOnce(new Error('Rating unavailable'));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      renderRoom();
+      enterReplyAndSubmit('Retry my post');
+      const dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+      expect(sendMessage).not.toHaveBeenCalled();
+      expect(screen.getByDisplayValue('Retry my post')).toBeInTheDocument();
+      expect(dialog).toBeInTheDocument();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(submitMessageFeedback).toHaveBeenCalledTimes(2);
+      expect(sendMessage).toHaveBeenCalledWith('Retry my post', { replyToMessageId: undefined });
+    } finally {
+      alertSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
+  });
+
+  it.each(['unmount', 'room switch'] as const)('cancels automatic sending after %s during rating persistence', async (navigation) => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    let resolveFeedback: (() => void) | undefined;
+    submitMessageFeedback.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      resolveFeedback = resolve;
+    }));
+    const view = renderRoom();
+    enterReplyAndSubmit('Draft for the original room');
+    const dialog = screen.getByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+    if (navigation === 'unmount') view.unmount();
+    else {
+      fireEvent.click(screen.getByRole('link', { name: 'Switch room' }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    }
+    await act(async () => { resolveFeedback?.(); });
+    expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it('keeps the saved rating and draft if automatic sending fails, allowing a send retry', async () => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    sendMessage.mockRejectedValueOnce(new Error('Send unavailable'));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      renderRoom();
+      enterReplyAndSubmit('Keep my post');
+      const dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Not helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '2 stars' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getByDisplayValue('Keep my post')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTitle('Send comment'));
+      await waitFor(() => expect(screen.getByPlaceholderText('Write a comment...')).toHaveValue(''));
+      expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledTimes(2);
+    } finally {
+      alertSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('ignores a failed old-room rating while the new room rating is saving', async () => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Old room response')];
+    let rejectOldRating: ((error: Error) => void) | undefined;
+    let resolveNewRating: (() => void) | undefined;
+    submitMessageFeedback
+      .mockImplementationOnce(() => new Promise<void>((_resolve, reject) => { rejectOldRating = reject; }))
+      .mockImplementationOnce(() => new Promise<void>((resolve) => { resolveNewRating = resolve; }));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    try {
+      const view = renderRoom();
+      enterReplyAndSubmit('Old room draft');
+      let dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+
+      fireEvent.click(screen.getByRole('link', { name: 'Switch room' }));
+      messages = [buildMessage('tutor-new-room', 'tutor', 'New room response')];
+      bindContext();
+      view.rerender(roomView());
+      enterReplyAndSubmit('New room draft');
+      dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Not helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '2 stars' }));
+      const submit = within(dialog).getByRole('button', { name: 'Submit rating and send' });
+      fireEvent.click(submit);
+
+      await act(async () => { rejectOldRating?.(new Error('Old room request failed')); });
+      expect(alertSpy).not.toHaveBeenCalled();
+      expect(submit).toBeDisabled();
+      expect(sendMessage).not.toHaveBeenCalled();
+      await act(async () => { resolveNewRating?.(); });
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledWith('New room draft', { replyToMessageId: undefined });
+    } finally {
+      alertSpy.mockRestore();
+    }
   });
 
   it('does not gate a student-authored row based on model diagnostics', async () => {

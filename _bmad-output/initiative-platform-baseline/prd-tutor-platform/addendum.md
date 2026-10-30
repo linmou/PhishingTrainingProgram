@@ -2,7 +2,7 @@
 
 Intent: keep the material the PRD needs but should not carry in its main text — where each requirement came from, the technical choices currently deployed, and the known differences between the PRD and current behavior.
 
-Updated: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`; the operator switch and §D staging attack results follow the next `no_sign_up` merge). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
+Updated: 2026-10-28 (G-11 reconciled against the template release and current guards; see §D). Earlier: 2026-10-27 (§B realtime and cyberbullying templates follow the `no_sign_up` merge `617fe7c`; the operator switch and §D staging attack results follow the next `no_sign_up` merge). Earlier: 2026-10-24 (test-only gaps retired from §C; P6 open questions added as §F). Earlier: 2026-10-22 (aligned with the owner's review and open-question decisions). Source baseline commit: `b671519`; extracts were taken at `565ac76`. Evidence: `extract-A-pedagogy-tutoring.md`, `extract-B-transfer-assessment.md`, `extract-C-cyberbullying-rooms-targets.md`, `extract-D-platform-tested-behavior.md` in this folder. Archived sources are under `docs/archive/`.
 
 ## A. Legacy requirement crosswalk
 
@@ -15,7 +15,7 @@ Legacy IDs are cited with their source so colliding numbers stay distinct: `spec
 | FR-3 | AuthContext sign-out behavior |
 | FR-4 | feature:room_management, room_op_configuration, tutor_view |
 | FR-5 | cb-request R1, R9 |
-| FR-6 | spec-global-room-template-read; cb-request R1 (round trips — see G-11) |
+| FR-6 | spec-global-room-template-read; cb-request R1 (global-template use delivered; custom-template round trips remain a legacy scope conflict — see G-11 and §D) |
 | FR-7 | cb-request R1, R5; cyberbullying-practise.md |
 | FR-8 | feature:room_discovery (behavior-test rooms) |
 | FR-9 | feature:tutor_room_persistence |
@@ -111,7 +111,7 @@ Each open gap is a candidate backlog bug where current behavior differs from the
 | G-8 | Generic AI failures show transfer-assessment wording ("The transfer request could not be completed"). | extract-A X6 | FR-25 |
 | G-9 | Editing an assessment question overwrites the recorded new situation with the question text. | extract-B X13 | FR-34, FR-35 |
 | G-10 | Retry result text differs between the saved message ("One attempt remaining"), the export ("1 attempt remaining") and the QA guide. | extract-B X9 | FR-39 |
-| G-11 | Cyberbullying request R1 asks for template round trips; tutors cannot save templates and no cyberbullying templates are seeded. | extract-C K-13 | FR-6 |
+| G-11 | **Open, narrowed to custom-template round trips / scope reconciliation.** The four global Cyberbullying templates are seeded and production verified (completed portion; §D). Tutor-created or edited configurations cannot be saved as custom templates and reloaded for reuse through TutorView. Legacy cb-request R1 asks for round trips, while current FR-6 and rooms epic R3 explicitly make templates read-only and exclude tutor-made templates. Preserve this unresolved legacy requirement and missing end-to-end guard until its scope is explicitly reconciled; do not close all of G-11 or treat saving as an existing FR-6 capability. | extract-C K-13; §D template evidence and guard trace | FR-6, FR-7; rooms epic R3; cyberbullying epic R1 |
 | G-12 | Silent fallbacks: offline local-only login when the database is unreachable; direct session insert when the trusted join fails; swallowed errors on the observer room list. | extract-D NFR-6 | NFR-7 |
 | G-13 | Observers see test rooms in their room list. (Observers receiving cyberbullying learning progress in exports is intended, OQ-10.) | extract-D C6 | FR-8, FR-13 |
 | G-14 | Any tutor-role user gets AI, Guard and learning-progress controls in rooms they do not own; the server checks ownership only for cyberbullying character drafts. The server also does not refuse a non-owner who sends tutor replies or deletes a room. It must refuse all of them. | extract-D §2; reconcile-CD CD-04 | FR-52 |
@@ -165,6 +165,17 @@ Stale documents found during extraction (to be consolidated in the documentation
 - 2026-10-22, production and staging, read-only: `public.messages` has no answer-key column; correct options and explanations exist only in `private.transfer_assessments`; staging has 5 second-failure results (all with the reveal template), 9 retries and 12 passes (neither reveals the answer); no other message mentions correct options. Production has no failed results yet.
 - `TRANSFER_ASSESSMENT_ENABLED` is on in both projects; since 2026-10-27 it is a `public.feature_flags` row, and the old Edge secret is removed from both.
 - 2026-10-27, staging attack run `staging-template-20261027202110-e1af075b` (`tutor-system/docs/transfer-assessment-wave105-audit.md`): cross-learner, cross-room, stale-question and legacy-RPC attacks were refused. Two failed: an anonymous caller using a copied tutor id read the private assessment review (forged identity), and anonymous or signed-in REST writes changed an existing assessment question's result, lifecycle, selected options and options in `messages` (direct write). Both are instances of G-2.
+
+### G-11 template evidence and guard trace (2026-10-28)
+
+Read-only repository review at `edb017d12a42b4da31583b26709b132bc35c8246`; no live environment changes or new live test run. Local `CI=true node_modules/.bin/react-scripts test --watchAll=false --runInBand --runTestsByPath src/__tests__/room_template_management.test.tsx` (from `tutor-system/`): 17/17 passed; existing React act/deprecation warnings were emitted. Relative documentation links and `git diff --check` passed.
+
+| Portion | Verified status and evidence | Requirement / test trace |
+| --- | --- | --- |
+| Seeded global templates | **Completed; removed from the open gap.** `copilot-1`, `copilot-2`, `screenshot-1`, `screenshot-2` are global Cyberbullying rows. The [2026-10-23 release record](../../../tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_23_cyberbullying_templates.md) records four-row readback on both Staging and Production, passing browser workflows and cleanup, integrated release `acc39879b6a20a554c883f0a3e83100d4a1f81b1` (PR #17). The archived seed's SHA-256 still matches that record: `7e6b8e6c993f0a825edc726f33cf7991b57508e8f05692796bc1f91850867b16`. | FR-6 / rooms epic R3; FR-7 / cyberbullying epic R1. `tutor-system/src/__tests__/room_template_management.test.tsx`: `creates $id from its template with its full scenario and edited post` uses two mocked Copilot scenarios; filtering and missing-selection guards are separate tests. `tutor-system/scripts/browser-e2e/workflows/cyberbullying.js` selects `copilot-1`, edits the room post and checks persisted scenario/image data. This is not individual browser coverage of all four templates. |
+| Tutor custom-template save and reuse | **Not implemented in the Tutor workflow; no production verification of a custom-template round trip.** `TutorView.tsx` removes template creation and comments out Save as template. `getRoomTemplatesByTutor` in `tutor-system/src/services/supabase.ts` reads only the global zero-UUID owner. The `createRoomTemplate` service helper exists but has no application caller; it does not establish a usable Tutor workflow. Editing a seeded template's values creates a room, not a saved custom template. | G-11 / legacy cb-request R1 / extract-C K-13 and Q-07. Current FR-6 and rooms epic R3 exclude saving. Existing tests `should not show "Save as template" controls in room creation form` and `should create room from selected template without saving a new template` guard that boundary. No guard demonstrates Tutor create/edit → save template → reload/list → reuse in a new room, preserving practice type, full scenario, image, dialogue and author/persona identities. Keep that missing acceptance trace with G-11; if custom templates are retained in scope, implementation and this end-to-end verification are still required. |
+
+This correction does not change FR-6, the epic boundaries or the pilot test deferrals. Production evidence for global templates cannot close the custom-template requirement or decide its scope.
 
 ## E. Resolved open questions
 

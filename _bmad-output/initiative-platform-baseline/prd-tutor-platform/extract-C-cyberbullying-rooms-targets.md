@@ -2,6 +2,8 @@
 
 Intent: brownfield PRD requirement extract for one scope slice. Built read-only on 2026-10-22 from worktree `rebuild_docs_by_BMAD` (HEAD 565ac76). Paths are relative to the repo root unless they start with `src/`, `supabase/` or `features/`; those are under `tutor-system/`.
 
+Reconciliation update: 2026-10-28, K-13 and C-04 status only, checked against `no_sign_up` `edb017d`. The original extraction date and other findings below remain historical. Current template evidence and test limits: [PRD addendum §D](addendum.md#g-11-template-evidence-and-guard-trace-2026-10-28).
+
 Citation keys:
 - **cb-request Rn**: `plan/cyberbullying-practise/request.md`.
 - **cb-plan**: `plan/cyberbullying-practise/final_plan.md`. R13 is the browser-draft amendment, released as `9c7364c`.
@@ -63,7 +65,7 @@ Citation keys:
   - For phishing only, a template's `ai_config_template` initializes the AI config, regenerated from `prompt_config` (`:267-318`).
 - Legacy IDs: spec-tplread; cb-request R1 ("template round trips").
 - Evidence: `room_template_management.test.tsx` (Template Selection/Usage/Management), `supabase/tests/global_room_template_read.sql`.
-- Status: current. The R1 "round trip" claim is partially unsupported; see Conflicts K-13.
+- Status: global-template prefill is delivered; the legacy R1 custom-template round trip remains unsupported and conflicts with current FR-6's read-only scope. See K-13 and G-11 in the PRD addendum.
 
 **C-05 Keep behavior/demo rooms away from teaching flows**
 - Requirement: A tutor can create behavior-demo or test rooms only from `/tutor/test-rooms`. These rooms are hidden from the main dashboard and from student discovery.
@@ -563,8 +565,9 @@ Citation keys:
   - The code has eight catalog entries; the "Contact Information Exposure" key is used by the "Phone Number Phishing Training" template (`detectionTemplates.ts:85`; `demoRoomTemplates.ts:586,605`).
 - **K-13 Template round trips.**
   - cb-request R1 and cb-plan:35 require preserving the scenario "through creation/copy/export" and template round trips.
-  - In code, tutors cannot save templates (`TutorView.tsx:320,692-711`), the loader ignores the tutor (`supabase.ts:893-901`), and seeds omit `practice_type` and contain no cyberbullying entries (`demoRoomTemplates.ts:652-664`).
-  - A cyberbullying template round trip exists only for DB-inserted rows (test "reuses the complete stored Cyberbullying template").
+  - Reconciled 2026-10-28: the old inference from `demoRoomTemplates.ts` that no Cyberbullying templates are seeded is superseded. `tutor-system/supabase/archived_migrations/20261023000000_seed_cyberbullying_templates.sql` seeds four global rows (`copilot-1`, `copilot-2`, `screenshot-1`, `screenshot-2`) with `practice_type` and complete scenarios. The 2026-10-23 release record confirms both environments' four-row readback and browser verification (PRD addendum §D).
+  - Tutors still cannot save custom templates through `TutorView.tsx`; the loader in `src/services/supabase.ts` reads only global templates. The insert helper has no application caller. Current FR-6 and rooms epic R3 explicitly exclude tutor-made templates, leaving a legacy requirement/scope conflict (G-11, Q-07).
+  - The old cited test "reuses the complete stored Cyberbullying template" is absent from the reviewed head. Current `room_template_management.test.tsx` tests seeded-template use with two mocked Copilot scenarios and asserts no save controls / no template creation; the browser workflow selects `copilot-1`. Neither proves Tutor create/edit → save template → reload → reuse. Preserve this missing guard under G-11; do not infer a custom-template round trip from database seed/readback or room creation.
 - **K-14 Template token budget.** Template AI configs set `max_tokens: 100` (`demoRoomTemplates.ts:74`; also `TutorView.tsx:311` falls back to 100). `src/services/README.md:14` says tutor requests use `max_tokens 600`. It is unconfirmed whether the runtime overrides the stored value.
 - **K-15 cb-doc dates.** Line 3 says "Updated 2026-10-22"; line 6 says "Updated: 2026-10-21". These are minor header drift.
 - **K-16 Focus selection.** The phishing `generateAIResponse(prompt, focusMessageId, overrides)` honours an explicit focus. Cyberbullying ignores both arguments and always targets the latest saved learner message (`RoomContext.tsx:966-970,1026-1028`). The docs say nothing on this.
