@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-24. Recovery synchronization baseline commit: 7762cbb. -->
+<!-- Updated: 2026-10-30. Rating auto-send baseline commit: a21d94a. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -217,6 +217,9 @@ Assessment candidates stay outside the legacy suggestion mode toggle.
 
 **Student reply gate**:
 - Before sending, students must rate the latest persisted AI-generated or Tutor response if they have not personally rated it yet.
+- Submitting the required rating also sends the drafted post, including its reply target, once the rating is saved. A failed rating keeps the dialog and draft for retry; a failed send keeps the draft and saved rating so the student can retry sending.
+- Automatic posting rechecks the current room state after the rating saves. A newer unrated response opens a fresh rating dialog; an assessment arriving during the save keeps the draft unsent until the assessment is completed.
+- Leaving or switching rooms while the rating saves cancels the automatic post.
 - Pre-populated dialogue is materialized in memory as `prepop-<roomId>-<index>` and has no `messages` row, so the gate skips those ids: a student can answer when the only tutor-role turn in the room is a pre-populated line, and when a pre-populated line sits beside a persisted unrated turn the gate still fires on the persisted turn.
 - The mandatory animated dialog preserves the draft and cannot be dismissed with Escape or the backdrop.
 - Sending remains blocked until feedback persistence succeeds; Tutors and rooms without a qualifying response are unaffected.
