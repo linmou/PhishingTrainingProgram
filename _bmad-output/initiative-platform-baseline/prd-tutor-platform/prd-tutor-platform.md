@@ -459,7 +459,7 @@ In-room assessment is on by default for every phishing room. The room owner can 
 - In-room assessment controls only transfer assessments. Learning targets, judging and learning progress work the same with it on or off.
 - With in-room assessment off, AI suggestions and Guard keep working.
 - Turning in-room assessment off does not close a transfer assessment that is already open: the learner can still answer it and it is graded. 
-- Exit assessment (FR-54) has effect only where transfer assessments are on.
+- Exit assessment (FR-54) creates new transfer assessments only where transfer assessments are on. Turning in-room assessment off while exit questions are open keeps the rule above: they stay hidden from the learner's conversation and are still answered and graded in the exit pop-up.
 
 #### FR-32: When a transfer assessment becomes due
 A transfer assessment becomes due for a learning target only when the learner moves it from Partial to Covered by demonstrating understanding.
@@ -587,7 +587,7 @@ While exit assessment is in force, a learner who leaves a room while any of thei
 
 **Consequences (testable):**
 - There is no runtime switch. Exit assessment replaces in-dialogue answering in place. The in-dialogue implementation of FR-32–FR-43 is archived unchanged on branch `assess-in-dialogue` (commit `ebc03d1`) as the reference. Restoring it is a forward change on `no_sign_up` that reverts only the exit-assessment changes, released through the normal merge and production gates; the archived branch itself is never deployed, so later unrelated changes are kept. Releasing either version never closes, regrades or deletes a transfer assessment.
-- Leaving includes the room's back and leave navigation, closing or reloading the tab, and navigating the browser away.
+- Leaving includes the room's back and leave navigation, the browser's Back button and any other in-app navigation away from the room (all treated like the room's own navigation: the pop-up opens), and closing or reloading the tab or navigating to another site (the browser's own leave prompt).
 - When the learner leaves through the room's own navigation, the pop-up lists their open transfer assessments in delivery order. Each uses the option controls of FR-37. After every attempt it shows the result message text: after a first wrong attempt the same question is answered again, and after a pass or a failure the learner moves to the next question. The learner leaves after the last one ends. A "Stay in room" control closes the pop-up and keeps the learner in the room.
 - When the learner closes the tab or the browser navigates away, the browser shows its own leave confirmation. If the learner stays, the pop-up opens. If the learner confirms leaving, they leave without answering, and their open transfer assessments stay open for their next exit.
 - While Guard is on, answers in the pop-up are held (FR-38) and the pop-up says "Waiting for your tutor to turn Guard off." The learner cannot leave through the room's navigation until grading resumes and the remaining transfer assessments end.

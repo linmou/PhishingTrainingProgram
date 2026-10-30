@@ -62,7 +62,7 @@ Legacy IDs are cited with their source so colliding numbers stay distinct: `spec
 | FR-50 | feature:chat_history_download; spec-103 FR-013–FR-015; cb-request R8 |
 | FR-51 | feature:ai_suggestion_tracking; cb-request R7 |
 | FR-52 | Owner decision 2026-10-22 (OQ-8); ownership checks in cb-request R9 and the cyberbullying reviewed send |
-| FR-54 | Owner decisions 2026-10-29 and 2026-10-30 (§G); `tutor-system/docs/exit-time-assessment.md`. Also changes FR-16 and FR-31–FR-41 while exit assessment is on |
+| FR-54 | Owner decisions 2026-10-29 and 2026-10-30 (§G); `tutor-system/docs/exit-time-assessment.md`. Also changes FR-16 and FR-31–FR-43 while exit assessment is in force |
 | FR-53 | feature:checklist_management (manual status, notes); assessment-api `edit_learning_progress`; owner decision 2026-10-22 (OQ-14) |
 | NFR-1 | constitution P4; tutor-response-contract |
 | NFR-2 | `.specify/memory/constitution.md` II; spec-101–103 server-authority FRs |
@@ -157,7 +157,7 @@ Each open gap is a candidate backlog bug where current behavior differs from the
 | G-69 | Tests and the sending path apply the tutor's final Guard state to the room when a reply is sent, against the rule that sending never changes Guard; a non-owner Guard change is also untested. (Related to G-36.) | supervision epic guard map | FR-30 |
 | G-72 | Nothing enforces that a prompt or model change is released only after its evaluation suite runs: the pull-request workflow never runs the suite. Per-practice-type re-evaluation and human-only constitution changes are untested. | AI epic guard map | FR-26, NFR-9, NFR-10 |
 | G-76 | The room owner's JSON export has no summary of suggestion actions (a test asserts it is undefined), and cyberbullying exports carry one learner's progress, not every participant's. | exports epic guard map | FR-50 |
-| G-78 | Exit assessment (FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-41) is approved but not implemented. Close this gap only after the implementation is production verified (release plan in `tutor-system/docs/exit-time-assessment.md`). | Owner, 2026-10-29 (§G) | FR-54 |
+| G-78 | Exit assessment (FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-43) is approved but not implemented. Close this gap only after the implementation is production verified (release plan in `tutor-system/docs/exit-time-assessment.md`). | Owner, 2026-10-29 (§G) | FR-54 |
 | G-48 | Dependency-direction breaks in the client: a context imports a component, a hook imports a context, types and utils import services. | architecture sweep 2 | — |
 
 Stale documents found during extraction (to be consolidated in the documentation migration): `ai-assistant-module.md`, `tutor-response-contract.md` (mode shape), `RoomContext.md` (Guard and history), `simplified-authentication.md`, `supabase-service.md` (export, models), `README.md` and `docs/README.md` (capacity, RLS, roadmap, migrations path), `plan/cyberbullying-practise/README.md`, `user_feedback_improvement_summary.md` (cites three missing tests), spec-101–104 status headers.
