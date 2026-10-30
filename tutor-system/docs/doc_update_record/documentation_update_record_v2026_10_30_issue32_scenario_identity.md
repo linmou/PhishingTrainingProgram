@@ -31,3 +31,11 @@ SHA-256 over sorted tracked paths plus NUL plus file bytes: frontend `src/` = `1
 ## Production acceptance still open
 
 Production: after integration into `no_sign_up` and matching frontend deployment, repeat the affected browser flow against `zgbufaxooqxeabewktzd` and record cleanup. Issue 32 remains open until this evidence is complete. Root Codex agent owns these checks.
+
+## Integrated candidate verification
+
+Merged current `no_sign_up` (through `bf282c8`, rating gate/room navigation repairs) into the feature branch as `808d7fb5d022f4db29de2288ded7861981a414fa`. Seven focused suites / 87 tests passed, including the inherited rating gate integration suite. Repeated the full Movie Meetup creation → edited targets → save/reload → retained scenario → Custom → save/reload journey on staging under a new exact-commit lease. Both reload assertions passed. Persisted configuration retained `scenario: null` and `detection_areas: ["Issue32 integrated edited target"]`.
+
+Integrated fixture room `3d3bc5d1-bc0d-4288-a048-fe881d655695`, temporary tutor `6a2cceb4-13e4-4426-a675-110a576c6a2c`. Navigated out, closed the browser, deleted only these tagged fixtures through management SQL, and verified zero rooms, messages, sessions, checklists, AI configs and users. Released the lease. Evidence: `output/playwright/issue32-integrated-staging-20261030/`, with `scenario-reload.png`, `custom-reload.png` and `coordination-lease.json`.
+
+Integrated frontend SHA-256: `b460cf228be8dd9fde6b6522bd6b354e2d1d6f5576010ac26eb33cabbc50dab5` (same hashing convention above). Public assets remain unchanged. PR #53 tracks CI and independent Codex review. Documentation-only evidence commits preserve these tested runtime artifacts.
