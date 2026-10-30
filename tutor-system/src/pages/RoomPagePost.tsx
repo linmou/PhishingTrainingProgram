@@ -101,6 +101,7 @@ const RoomPagePost: React.FC = () => {
     const [ratingHoveredValue, setRatingHoveredValue] = useState(0);
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
+    const sendCurrentPostRef = useRef<((ratedMessageId: string) => Promise<void>) | null>(null);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -288,7 +289,7 @@ const RoomPagePost: React.FC = () => {
     // Find tutor from participants
     const tutor = participants?.find(p => p.current_role === 'tutor') || null;
 
-    const getUnratedResponse = () => {
+    const getUnratedResponse = (ratedMessageId?: string) => {
         if (user?.current_role !== 'student') return null;
 
         const latest = [...visibleMessages]
@@ -299,17 +300,21 @@ const RoomPagePost: React.FC = () => {
 
         if (!latest) return null;
 
-        if (completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
+        if (ratedMessageId === latest.id || completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
         return latest;
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!messageText.trim() || sendingMessage || openAssessment || ratingReminder || submittingRequiredRating) return;
+        if (ratingReminder || submittingRequiredRating) return;
+        await sendCurrentPost();
+    };
 
+    const sendCurrentPost = async (ratedMessageId?: string) => {
+        if (!messageText.trim() || sendingMessage || openAssessment) return;
 
-        const unratedResponse = getUnratedResponse();
+        const unratedResponse = getUnratedResponse(ratedMessageId);
         if (unratedResponse) {
             setRatingReminder(current => current?.id === unratedResponse.id
                 ? current
@@ -317,10 +322,6 @@ const RoomPagePost: React.FC = () => {
             return;
         }
 
-        await sendCurrentPost();
-    };
-
-    const sendCurrentPost = async () => {
         setSendingMessage(true);
         stopTyping(); // Stop typing when message is sent
         
@@ -338,6 +339,9 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    // Resume with the latest room gates and draft after asynchronous rating persistence.
+    sendCurrentPostRef.current = sendCurrentPost;
+
     const handleRequiredRatingSubmit = async () => {
         if (!ratingReminder || !ratingFeedbackType || ratingValue === 0 || submittingRequiredRating) return;
 
@@ -349,7 +353,7 @@ const RoomPagePost: React.FC = () => {
             setRatingFeedbackType(null);
             setRatingValue(0);
             setRatingHoveredValue(0);
-            await sendCurrentPost();
+            await sendCurrentPostRef.current?.(ratingReminder.id);
         } catch (error) {
             console.error('Failed to submit required response rating:', error);
             alert('Failed to save your rating. Please try again.');

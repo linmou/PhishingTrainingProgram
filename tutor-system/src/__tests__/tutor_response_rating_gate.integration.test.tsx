@@ -14,6 +14,8 @@ import RoomPagePost from '../pages/RoomPagePost';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
 import type { Message, MessageFeedbackStats, Room, User, UserRole } from '../types';
+import { projectRoomMessage } from '../contexts/transferAssessmentUiAdapter';
+import { deliveredQuestionRow, LEARNER_A_ID } from '../test-support/transferRoomFixtures';
 
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
@@ -128,14 +130,16 @@ describe('student Tutor-response rating gate', () => {
 
   const renderRoom = () => {
     bindContext();
-    return render(
+    return render(roomView());
+  };
+
+  const roomView = () => (
       <MemoryRouter initialEntries={['/room/room-1']}>
         <Routes>
           <Route path="/room/:roomId" element={<RoomPagePost />} />
         </Routes>
       </MemoryRouter>
-    );
-  };
+  );
 
   const enterReplyAndSubmit = (reply: string) => {
     fireEvent.change(screen.getByPlaceholderText('Write a comment...'), {
@@ -329,6 +333,48 @@ describe('student Tutor-response rating gate', () => {
       expect(sendMessage).toHaveBeenCalledWith('Tutor follow-up', { replyToMessageId: undefined });
     });
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['response', 'assessment'] as const)('rechecks a new %s arriving while the rating saves', async (incoming) => {
+    currentUser = { ...currentUser, id: LEARNER_A_ID };
+    messages = [buildMessage('tutor-latest', 'tutor', 'Tutor response')];
+    let resolveFeedback: (() => void) | undefined;
+    submitMessageFeedback.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      resolveFeedback = resolve;
+    }));
+    const view = renderRoom();
+    enterReplyAndSubmit('Wait for the latest gate');
+    const dialog = screen.getByRole('alertdialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+    messages = [...messages, incoming === 'response'
+      ? buildMessage('tutor-new', 'tutor', 'New response while saving')
+      : projectRoomMessage(deliveredQuestionRow)];
+    bindContext();
+    view.rerender(roomView());
+    await act(async () => { resolveFeedback?.(); });
+
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue('Wait for the latest gate')).toBeInTheDocument();
+    if (incoming === 'response') {
+      const newDialog = screen.getByRole('alertdialog');
+      expect(within(newDialog).getByText('New response while saving')).toBeInTheDocument();
+      fireEvent.click(within(newDialog).getByRole('button', { name: 'Helpful' }));
+      fireEvent.click(within(newDialog).getByRole('button', { name: '5 stars' }));
+      fireEvent.click(within(newDialog).getByRole('button', { name: 'Submit rating and send' }));
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(submitMessageFeedback).toHaveBeenLastCalledWith('tutor-new', 'like', 5);
+    } else {
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getByDisplayValue('Wait for the latest gate')).toBeDisabled();
+      messages = [messages[0]];
+      bindContext();
+      view.rerender(roomView());
+      fireEvent.click(screen.getByTitle('Send comment'));
+      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
+    }
   });
 
   it('preserves the draft and retries the rating before sending when saving fails', async () => {
