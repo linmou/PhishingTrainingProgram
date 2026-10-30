@@ -53,3 +53,23 @@ Follow the [Supabase release workflow](supabase-release-workflow.md) and EA-19:
 - **AI context**: a lifecycle test in which the tutor sends a question, the learner sends an ordinary message, and the next AI request has no open question in its history and no invite-a-selection rule; ended results from an earlier exit remain. Rerun the existing assessment-dialogue evaluation cases and `npm run test:contract:tutor-behavior`, since the rule text changes.
 - **React**: hiding, composer and rating gates; the pop-up flow, retry, Next and Leave; Guard waiting text; `beforeunload`; unchanged tutor and observer views.
 - **Staging browser journeys** with controlled provider responses, and one manual real-model journey. No new semantic evaluation cases.
+
+## Release plan
+
+Exit assessment changes deployed server behavior, so it follows [Mandatory Server Delivery](../../AGENTS.md#mandatory-server-delivery) and the [Supabase release workflow](supabase-release-workflow.md) through production. Staging verification is an intermediate state; G-78 closes only after production verification.
+
+- **Release owner:** the agent implementing issue #46 (Claude), as for earlier batches. It holds the staging [project lease](agent-coordination.md) from deployment through staging acceptance, and owns repair through the [failure repair loop](supabase-release-workflow.md#failure-repair-loop).
+- **Batch record:** `doc_update_record/documentation_update_record_v<date>_exit_time_assessment.md`, created with the implementation PR. It records member commits, merge status, exact SQL, Edge and frontend artifact hashes, staging evidence, outstanding production checks and the release trigger.
+- **Changed contracts:** the eligibility functions and visit table (SQL); `join_room` with `visit_key` (Edge); the learner room view, exit pop-up and AI request context (frontend).
+- **Inherited dependencies, same owner:** `assessment-api` imports `src/services/ecologicalTutorCall.ts`, which also holds `ASSESSMENT_DIALOGUE_POLICY`. Changing the policy therefore changes the Edge bundle's inputs, and the Edge function is redeployed and hashed with this batch even where its own code is unchanged. Other imported shared modules (`transferAssessmentOrchestrator.ts`, `assessmentValidation.ts`, `assessmentAnswerParser.ts`, `assessmentRendering.ts`, `learningProgressTransitions.ts`, `aiModels.ts`) are not changed; their hashes are recorded to confirm it.
+- **Order:** SQL migration, then `assessment-api`, then the frontend, in both environments. The old frontend keeps working against the new SQL and Edge function: `visit_key` is optional, and without a recorded visit nothing is re-offered (see eligibility above).
+- **Staging acceptance:** the restored-baseline migration checks above, then live journeys on staging with persisted-row assertions and cleanup:
+  - tutor sends questions for two targets, one reached from Pending and one from Partial; the learner chats with no question visible and an unlocked composer;
+  - the learner leaves through the room navigation, answers one question correctly and one incorrectly twice, and sees the result texts;
+  - Guard on at exit holds the answer with the waiting text, and Guard off grades it;
+  - a reload starts a new visit and a passed target is offered again; within the same visit it is not;
+  - tab close shows the browser prompt;
+  - an observer's and the tutor's views are unchanged;
+  - an AI suggestion after an unseen question does not mention it.
+- **Production acceptance:** after the merge-before-production gate, apply the exact SQL and deploy the exact Edge and frontend artifacts. Verify the function definitions, the visit table and its permissions. Run one live learner journey: questions are hidden, answered in the exit pop-up, graded, the result messages are persisted, and the tutor's view is unchanged. Clean up fixtures and record both environments' versions and evidence in the batch record.
+- **Rollback:** redeploy `assess-in-dialogue`'s frontend and Edge function, and apply a migration that restores its function definitions. The visit table can stay; nothing reads it then. Under the restored due rule, open exit questions for targets reached from Pending or by spontaneous transfer no longer match their snapshot hash and could never be graded, so the restoring migration cancels every open question whose hash no longer matches, with one closure message each, as `20261014000000_final_assessment_after_understanding.sql` did. Questions whose hash still matches become in-dialogue questions again.
