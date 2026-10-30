@@ -17,7 +17,7 @@ Unchanged: assessment generation and validation (T09.2), tutor review and send (
 | Area | In-dialogue rule (archived) | Exit-assessment rule |
 | --- | --- | --- |
 | Due | Partial → Covered by `demonstrated_understanding` only (T09.1) | Any learner-owned learning event that made the target Covered; a pass makes it due again at the learner's next visit |
-| Blockers | Guard, any open assessment, or outstanding tutor feedback | Guard only; a target with an open assessment, or one already sent in the current visit, is skipped |
+| Blockers | Guard, any open assessment, or outstanding tutor feedback | Guard only; a target is skipped if it has an open assessment, or one sent (not cancelled) or ended as passed or failed in the current visit; a cancelled one may be replaced in the same visit |
 | Open per learner | One | One per learning target |
 | Learner chat | Question shown; composer locked until it closes | Questions, answers and results hidden from the learner; composer stays enabled |
 | Rating gate | Tutor messages without an assessment event | Also excludes hidden questions |
