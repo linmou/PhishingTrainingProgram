@@ -127,7 +127,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 - **Result message** — The automatic, fixed-text message the server saves for every accepted attempt.
 - **Tutor feedback** — The room owner's own tutor reply to the learner's final attempt, required before that learner can get another transfer assessment (not required while exit assessment is in force, FR-41).
 - **Exit assessment** — A temporary replacement for in-dialogue answering (FR-54). While it is in force, the learner answers their open transfer assessments in a pop-up when leaving the room, instead of in the conversation. There is no runtime switch: the in-dialogue implementation is archived unchanged on branch `assess-in-dialogue`, and restoring it means redeploying that branch.
-- **Visit** — One stay of the learner in a room, from entering it to leaving it. The server records the start of each visit when the learner enters the room.
+- **Visit** — One stay of the learner in a room, from entering it to leaving it. The server records the start of each visit, once per opening of the room page.
 
 # Part A — Shared Platform
 
@@ -470,7 +470,7 @@ A transfer assessment becomes due for a learning target only when the learner mo
 - While Guard is on, another transfer assessment is open, or tutor feedback is outstanding, the due transfer assessment waits without being lost.
 - A later contradiction cancels the due transfer assessment; changing the learning target's wording cancels an open one without using an attempt.
 - One Partial → Covered change never produces two transfer assessments.
-- While exit assessment is in force: a transfer assessment is due for every learning target the learner's own learning event made Covered — from Pending, from Partial or by spontaneous transfer — that has no open transfer assessment, and for which no transfer assessment has been delivered during the learner's current visit. A learning target set to Covered only by a manual edit (FR-53) is not due, because there is no learner evidence to build the question from.
+- While exit assessment is in force: a transfer assessment is due for every learning target the learner's own learning event made Covered — from Pending, from Partial or by spontaneous transfer — that has no open transfer assessment, and for which no transfer assessment was delivered (and not cancelled) or ended as passed or failed during the learner's current visit. A learning target set to Covered only by a manual edit (FR-53) is not due, because there is no learner evidence to build the question from.
 - While exit assessment is in force: only Guard makes a due transfer assessment wait. Another open transfer assessment and outstanding tutor feedback do not, so several can be due and open at once, at most one open per learning target.
 
 #### FR-33: Assessment draft instead of an AI suggestion (boundary)
@@ -594,7 +594,7 @@ While exit assessment is in force, a learner who leaves a room while any of thei
 - A transfer assessment cancelled while the pop-up is open leaves it. One delivered while the pop-up is open joins it.
 - A learner with no open transfer assessment leaves without a pop-up. A transfer assessment that is due but not yet delivered never holds the learner.
 - Only the learner sees the pop-up. The room owner and observers leave freely.
-- Each time the learner enters the room, the server records the start of a new visit. Which transfer assessments are due depends on it (FR-32, FR-40); due itself is still derived, never stored (AD-3).
+- Each time the learner opens the room page, the server records the start of one new visit; repeated or retried entry requests from the same page load record no extra visit. A reload or a second tab starts a new visit. Which transfer assessments are due depends on the latest visit (FR-32, FR-40); due itself is still derived, never stored (AD-3).
 - The pop-up is part of the room, not a separate quiz application or assessment mode (§9). It grades nothing in the browser; every grade, attempt and result comes from the server.
 
 # Part C — Cyberbullying Practice
