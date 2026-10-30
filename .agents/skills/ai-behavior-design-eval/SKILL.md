@@ -1,11 +1,15 @@
 ---
 name: ai-behavior-design-eval
 description: "Design AI behavior constitutions and grounded specs, prepare evaluations, refine prompts, or review candidates against a baseline."
+metadata:
+  requires: auto-exp@^1.0.0
 ---
 
 # AI Behavior Design and Evaluation
 
 Intent: ground observable behavior specs in shared principles and priorities before measuring them, then accept prompt changes only on comparable evidence.
+
+Updated: 2026-10-30. Source baseline: `ce02860`.
 
 ## Choose the endpoint
 
@@ -17,6 +21,16 @@ Intent: ground observable behavior specs in shared principles and priorities bef
 - **Release verification:** include the product checks in step 6.
 
 Discussion stays in conversation. Perform writes and live actions only within the requested endpoint. This workflow does not invoke a TDD skill.
+
+## Experiment execution with auto-exp
+
+Evaluation and prompt-refinement execution depend on `$auto-exp@^1.0.0`. Resolve the installed skill and read its `references/call-contract.md` and `contract.json`; a missing or incompatible dependency blocks execution. Earlier endpoints and saved-run review do not call it.
+
+Before invoking it, emit a `skill-request auto-exp@1.0.0` JSON block with `repository` from the inspected checkout root and `task` from the user's research question, recorded constraints, and this workflow's evaluation plan. Include references to steps 0–7 and the actual artifact paths, so grounding, frozen comparisons, independent audits, and acceptance remain this skill's responsibility. Missing user facts stay explicit for the callee to resolve. See [the call example](references/calls/auto-exp/evaluation.json).
+
+Send ledger findings through auto-exp's contract. This skill owns the design, contract, evaluation plan, and executed-run report at their canonical project paths; link those artifacts through the callee.
+
+Handle every returned status: `completed` → assess acceptance under step 6 using the returned evidence; `needs_input` → collect the named missing information before resubmitting; `incomplete` → preserve partial evidence and report the remaining work; `error` → diagnose the reported failure before retrying. Retry only with resolved inputs or a corrected cause and remaining authorized budget. A completed execution does not itself establish behavior acceptance. Link returned evidence and iteration commits in step 7.
 
 Keep one shared `constitution.md`. Use separate artifacts with one responsibility: a behavior design from [the design template](assets/behavior-design.md), a response/consumer contract when needed, an evaluation plan from [the plan template](assets/evaluation-plan.md), immutable harness cases/rubrics, and one executed-run report from [the run-record template](assets/behavior-record.md). The project index links them. Reuse the existing specification path; design and specification name the same artifact responsibility, so do not create a second active requirement source or retain a duplicate composite file as an archive. A retained old filename can contain only a pointer. Keep raw runs in immutable directories. For a Promptfoo project, read [the integration reference](references/promptfoo.md) before choosing project paths or changing the harness.
 
