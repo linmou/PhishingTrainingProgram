@@ -418,7 +418,10 @@ describe('student Tutor-response rating gate', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
     if (navigation === 'unmount') view.unmount();
-    else fireEvent.click(screen.getByRole('link', { name: 'Switch room' }));
+    else {
+      fireEvent.click(screen.getByRole('link', { name: 'Switch room' }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    }
     await act(async () => { resolveFeedback?.(); });
     expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
     expect(sendMessage).not.toHaveBeenCalled();
@@ -447,6 +450,45 @@ describe('student Tutor-response rating gate', () => {
     } finally {
       alertSpy.mockRestore();
       errorSpy.mockRestore();
+    }
+  });
+
+  it('ignores a failed old-room rating while the new room rating is saving', async () => {
+    messages = [buildMessage('tutor-latest', 'tutor', 'Old room response')];
+    let rejectOldRating: ((error: Error) => void) | undefined;
+    let resolveNewRating: (() => void) | undefined;
+    submitMessageFeedback
+      .mockImplementationOnce(() => new Promise<void>((_resolve, reject) => { rejectOldRating = reject; }))
+      .mockImplementationOnce(() => new Promise<void>((resolve) => { resolveNewRating = resolve; }));
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    try {
+      const view = renderRoom();
+      enterReplyAndSubmit('Old room draft');
+      let dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '4 stars' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Submit rating and send' }));
+
+      fireEvent.click(screen.getByRole('link', { name: 'Switch room' }));
+      messages = [buildMessage('tutor-new-room', 'tutor', 'New room response')];
+      bindContext();
+      view.rerender(roomView());
+      enterReplyAndSubmit('New room draft');
+      dialog = screen.getByRole('alertdialog');
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Not helpful' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: '2 stars' }));
+      const submit = within(dialog).getByRole('button', { name: 'Submit rating and send' });
+      fireEvent.click(submit);
+
+      await act(async () => { rejectOldRating?.(new Error('Old room request failed')); });
+      expect(alertSpy).not.toHaveBeenCalled();
+      expect(submit).toBeDisabled();
+      expect(sendMessage).not.toHaveBeenCalled();
+      await act(async () => { resolveNewRating?.(); });
+      expect(sendMessage).toHaveBeenCalledTimes(1);
+      expect(sendMessage).toHaveBeenCalledWith('New room draft', { replyToMessageId: undefined });
+    } finally {
+      alertSpy.mockRestore();
     }
   });
 
