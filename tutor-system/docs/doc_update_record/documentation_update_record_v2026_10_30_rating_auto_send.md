@@ -20,12 +20,14 @@ Focused Jest command, from tutor-system:
 rtk proxy env REACT_APP_SUPABASE_URL=http://127.0.0.1:1 REACT_APP_SUPABASE_ANON_KEY=local-test CI=true npm test -- --watchAll=false --maxWorkers=1 --silent --runTestsByPath src/__tests__/tutor_response_rating_gate.integration.test.tsx src/components/__tests__/PostComment.test.tsx src/__tests__/transfer_assessment.bdd.test.tsx
 ```
 
-All 47 tests pass, covering delayed feedback persistence before one automatic send, reply-target preservation, rating failure/retry, posting failure/retry, existing rating exemptions, and the assessment lifecycle. Additional race regressions deliver a new Tutor response or an assessment while feedback is pending, verify the draft remains unsent, then verify sending can resume through the appropriate gate. Navigation regressions verify unmounting and switching rooms cancel the pending automatic post. These UI integration tests render RoomPagePost with mocked context persistence; they do not mutate hosted projects.
+All 48 tests pass, covering delayed feedback persistence before one automatic send, reply-target preservation, rating failure/retry, posting failure/retry, existing rating exemptions, and the assessment lifecycle. Additional race regressions deliver a new Tutor response or an assessment while feedback is pending, verify the draft remains unsent, then verify sending can resume through the appropriate gate. Navigation regressions verify unmounting and switching rooms cancel the pending automatic post and clear the old dialog. An overlapping-request regression rejects the old room's rating while the new room's rating is saving: the old error stays silent, the new submit remains disabled, and only the new draft sends. These UI integration tests render RoomPagePost with mocked context persistence; they do not mutate hosted projects.
 
 ## Review repair
 
 Codex review on PR #50 found that the original continuation could bypass a response or assessment arriving during rating persistence. The continuation now calls the latest render's send handler through a ref; that handler rechecks both gates and receives only the ID of the response just rated. New response ratings begin unselected, and assessment-blocked drafts remain available after the assessment closes.
 
 Follow-up review identified navigation during persistence. A room-session token is invalidated on room changes and unmount, preventing a completed rating request from automatically posting after the learner leaves its originating room.
+
+Local adversarial and edge reviews found that cancellation left the old mandatory dialog in a reused room route. An added assertion reproduced the bug (one failing test). Room changes now reset rating UI state, and both failure and finalization callbacks verify the originating session before affecting the page. The expanded 48-test suite passes after repair.
 
 Production build passes with existing lint warnings. Repository-wide tsc reports 446 diagnostics in unrelated tests and mocks; a TypeScript compiler API check reports zero diagnostics in the two modified TSX files. GitHub checks and independent review are tracked on the PR.

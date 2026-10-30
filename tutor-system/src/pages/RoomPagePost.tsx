@@ -106,6 +106,12 @@ const RoomPagePost: React.FC = () => {
 
     useEffect(() => {
         roomSessionRef.current = {};
+        setRatingReminder(null);
+        setRatingFeedbackType(null);
+        setRatingValue(0);
+        setRatingHoveredValue(0);
+        setSubmittingRequiredRating(false);
+        setCompletedRatingMessageId(null);
         return () => { roomSessionRef.current = null; };
     }, [roomId]);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
@@ -363,10 +369,11 @@ const RoomPagePost: React.FC = () => {
             setRatingHoveredValue(0);
             await sendCurrentPostRef.current?.(ratingReminder.id);
         } catch (error) {
+            if (!roomSession || roomSessionRef.current !== roomSession) return;
             console.error('Failed to submit required response rating:', error);
             alert('Failed to save your rating. Please try again.');
         } finally {
-            setSubmittingRequiredRating(false);
+            if (roomSessionRef.current === roomSession) setSubmittingRequiredRating(false);
         }
     };
 
