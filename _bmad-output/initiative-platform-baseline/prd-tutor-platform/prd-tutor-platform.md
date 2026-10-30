@@ -577,6 +577,10 @@ Every participant sees the same transfer assessment, attempts, attempts left and
 The AI assistant gets transfer-assessment outcomes only from the saved conversation, and generates no AI suggestion while the learner's result messages are still being saved.
 **Grounding:** P4, P1.
 
+**Consequences (testable):**
+- While exit assessment is in force: the AI assistant's conversation history leaves out the learner's open transfer assessments, the answers to them and any results not yet final, because the learner cannot see them until exit. Ended transfer assessments from earlier exits, with their result messages, stay in the history as learning evidence.
+- While exit assessment is in force: the AI assistant's assessment rules tell it that the learner answers transfer assessments only at exit, so a suggestion never refers to an open one or invites the learner to answer it, and never reveals or hints at its answer. The rule requiring tutor feedback before another transfer assessment is removed (FR-41).
+
 #### FR-54: Exit assessment (temporary)
 While exit assessment is in force, a learner who leaves a room while any of their transfer assessments is open must first answer them in a pop-up, one at a time. Realizes UJ-1.
 **Grounding:** P1, P6, P4, C3, C5.

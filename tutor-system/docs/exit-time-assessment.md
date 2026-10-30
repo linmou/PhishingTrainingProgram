@@ -2,7 +2,7 @@
 
 <!-- Intent: define the temporary exit-assessment replacement and how it integrates with the existing transfer-assessment system. Updated: 2026-10-30. Baseline commit: ebc03d1. -->
 
-Status: approved by the owner on 2026-10-29/30; not implemented (PRD gap G-78). Requirements: PRD FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-41. Decisions and their sources: PRD addendum §G (EA-1 to EA-19).
+Status: approved by the owner on 2026-10-29/30; not implemented (PRD gap G-78). Requirements: PRD FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-41. Decisions and their sources: PRD addendum §G (EA-1 to EA-21).
 
 ## Purpose
 
@@ -23,6 +23,7 @@ Unchanged: assessment generation and validation (T09.2), tutor review and send (
 | Rating gate | Tutor messages without an assessment event | Also excludes hidden questions |
 | Answering | In the conversation | Exit pop-up, one question at a time |
 | Tutor feedback before the next assessment | Required (T09.6) | Not required |
+| AI suggestion history and rules | Every question, answer and result; invite a selection for each open question | Open questions, their answers and non-final results left out; never mention open questions |
 
 ## Integration design
 
@@ -33,6 +34,7 @@ The existing functions are changed in place, so each entity keeps one writer (ar
 - **`prepare_transfer_assessment_context_v1`** keeps its signature and return shape. Guard is the only blocker. A target is eligible when it is due, has no open assessment, and has no assessment created since the learner's latest visit start.
 - **`send_reviewed_tutor_response_v4`** refuses `ASSESSMENT_ALREADY_OPEN` only when the same learning target has an open assessment. `send_reviewed_transfer_assessment_v1` is unchanged; it rechecks eligibility through the prepare function.
 - **Edge function `assessment-api`.** Only `join_room` changes, to record the visit. `prepare_turn`, `send_reviewed` and `process_message` call the same functions as before.
+- **AI context** (EA-20, EA-21). The tutor's AI request is built in the browser by `simplifiedAIContext.ts` and `ecologicalTutorCall.ts`. The history leaves out the learner's open transfer assessments, the answers to them and non-final results; ended ones from earlier exits stay. `ASSESSMENT_DIALOGUE_POLICY` says the learner answers only at exit and must not be asked about open transfer assessments, drops the invite-a-selection and tutor-feedback rules, and keeps the never-reveal-or-hint rule. The history readiness check still waits for pending results before generating.
 - **Browser.** For the learner, the conversation view filters out their transfer assessments, answers and results; the composer lock and rating gate ignore them; the room page shows the exit pop-up on in-app leave; and a `beforeunload` handler triggers the browser's own leave prompt while the learner has open questions. The tutor and observer views are not changed.
 
 ## Grading consistency check
@@ -48,5 +50,6 @@ Follow the [Supabase release workflow](supabase-release-workflow.md) and EA-19:
 
 - **SQL**, Red/Green against a restored baseline: due for every learner-owned route to Covered; not due for Partial, Needs review or a manual edit; one open question per target; no feedback gate; Guard blocks preparation and holds answers without using an attempt; a passed target is not due again in the same visit and is due at the next; a failed target is not due; the visit function's role permissions; hash consistency as above.
 - **Edge**: `join_room` records a visit for the learner and none for an observer.
+- **AI context**: a lifecycle test in which the tutor sends a question, the learner sends an ordinary message, and the next AI request has no open question in its history and no invite-a-selection rule; ended results from an earlier exit remain. Rerun the existing assessment-dialogue evaluation cases and `npm run test:contract:tutor-behavior`, since the rule text changes.
 - **React**: hiding, composer and rating gates; the pop-up flow, retry, Next and Leave; Guard waiting text; `beforeunload`; unchanged tutor and observer views.
 - **Staging browser journeys** with controlled provider responses, and one manual real-model journey. No new semantic evaluation cases.
