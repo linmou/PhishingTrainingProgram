@@ -11,6 +11,7 @@ import { useRoom } from '../../contexts/RoomContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { SCENARIO_TEMPLATES } from '../../services/detectionTemplates';
 import { generateSystemPrompt } from '../../services/systemPrompts';
+import { buildCasualPeerAIConfig, getNormalTeachingTemplateSeeds } from '../../services/demoRoomTemplates';
 
 jest.mock('../../contexts/RoomContext', () => ({
     useRoom: jest.fn()
@@ -23,6 +24,62 @@ jest.mock('../../contexts/AuthContext', () => ({
 describe('AIAssistantSettings', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    // Covers AIAssistantSettings.tsx: creation config, edit, save and reopen for every teaching template.
+    it.each(getNormalTeachingTemplateSeeds())('retains $template_name identity after editing targets and reopening', async (seed) => {
+        const aiConfig = { ...seed.ai_config_template, temperature: 0.3, max_tokens: 100 };
+        const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
+        const roomContext = {
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: true },
+            aiConfig,
+            toggleAIAssistant,
+            setTransferLearningEnabled: jest.fn(),
+            loadingAI: false
+        };
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
+        (useRoom as jest.Mock).mockReturnValue(roomContext);
+        const view = render(<AIAssistantSettings onClose={jest.fn()} />);
+        const scenario = seed.ai_config_template.scenario;
+        expect(screen.getByDisplayValue(scenario)).toBeInTheDocument();
+        const targets = screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)');
+        expect(targets).toHaveValue(aiConfig.prompt_config.detection_areas.join('\n'));
+        fireEvent.change(targets, { target: { value: 'My edited target' } });
+        fireEvent.click(screen.getByText('Save Settings'));
+        await waitFor(() => expect(toggleAIAssistant).toHaveBeenCalledTimes(1));
+        const saved = toggleAIAssistant.mock.calls[0][1];
+        expect(saved.prompt_config.scenario).toBe(scenario);
+        expect(saved.prompt_config.detection_areas).toEqual(['My edited target']);
+        view.unmount();
+        (useRoom as jest.Mock).mockReturnValue({ ...roomContext, aiConfig: saved });
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+        expect(screen.getByDisplayValue(scenario)).toBeInTheDocument();
+        expect(screen.getByDisplayValue('My edited target')).toBeInTheDocument();
+    });
+
+    // Covers AIAssistantSettings.tsx: Custom is explicit even when its targets equal a registry entry.
+    it('keeps targets when switching to Custom and retains Custom after saving and reopening', async () => {
+        const aiConfig = buildCasualPeerAIConfig('Movie Meetup Social Engineering');
+        const toggleAIAssistant = jest.fn().mockResolvedValue(undefined);
+        const roomContext = {
+            currentRoom: { id: 'room-1', ai_assistant_enabled: true, transfer_learning_enabled: true },
+            aiConfig, toggleAIAssistant, setTransferLearningEnabled: jest.fn(), loadingAI: false
+        };
+        (useAuth as jest.Mock).mockReturnValue({ user: { id: 'tutor-1', current_role: 'tutor' } });
+        (useRoom as jest.Mock).mockReturnValue(roomContext);
+        const view = render(<AIAssistantSettings onClose={jest.fn()} />);
+        fireEvent.change(screen.getByDisplayValue('Movie Meetup Social Engineering'), { target: { value: '' } });
+        expect(screen.getByPlaceholderText('Red flags to watch for (optional - will use template if empty)'))
+            .toHaveValue(aiConfig.prompt_config.detection_areas.join('\n'));
+        fireEvent.click(screen.getByText('Save Settings'));
+        await waitFor(() => expect(toggleAIAssistant).toHaveBeenCalledTimes(1));
+        const saved = toggleAIAssistant.mock.calls[0][1];
+        expect(saved.prompt_config.scenario).toBeNull();
+        expect(saved.prompt_config.detection_areas).toEqual(aiConfig.prompt_config.detection_areas);
+        view.unmount();
+        (useRoom as jest.Mock).mockReturnValue({ ...roomContext, aiConfig: saved });
+        render(<AIAssistantSettings onClose={jest.fn()} />);
+        expect(screen.getByDisplayValue('Custom / General')).toBeInTheDocument();
     });
 
     it('defaults in-room assessment on when enabling AI in a new room', async () => {
