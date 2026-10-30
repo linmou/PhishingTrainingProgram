@@ -1,21 +1,25 @@
 name: Review Policy (trusted base)
+
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize, edited, ready_for_review]
+    types: [opened, reopened, synchronize, edited, ready_for_review, converted_to_draft]
   pull_request_review:
     types: [submitted, edited, dismissed]
   pull_request_review_comment:
     types: [created, edited, deleted]
   issue_comment:
     types: [created, edited, deleted]
+  issues:
+    types: [edited, closed, reopened, deleted, transferred]
   push:
     branches: [no_sign_up]
   workflow_dispatch:
-    inputs:
-      pr_number:
-        description: PR number (empty refreshes all)
-        required: false
-        type: string
+
+# Latest queued event must re-evaluate *all* open PRs, including any issue
+# authorization revoked while an earlier evaluation was running.
+concurrency:
+  group: review-policy-refresh-${{ github.repository }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -25,9 +29,9 @@ permissions:
 
 jobs:
   review-policy-evaluation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      # Never run PR-submitted code with these privileged permissions.
+      # Never run code from the proposed PR with this workflow's privileged token.
       - uses: actions/checkout@v4
         with:
           ref: no_sign_up
