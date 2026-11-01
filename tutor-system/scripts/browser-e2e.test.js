@@ -15,6 +15,8 @@ const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-f
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
 const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult, openExitAssessment, assertExitResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
+const exitAssessment = require('./browser-e2e/workflows/exit-assessment');
+const assessmentAnswer = require('./browser-e2e/workflows/assessment-answer');
 require('./browser-e2e/cleanup.test');
 const { runRoomSetupAnalysis, waitForTemplateSettings } = require('./browser-e2e/workflows/room-assessment-setup');
 
@@ -178,10 +180,49 @@ test('selects the transfer status workflow alongside the existing browser workfl
   assert.deepEqual(selectWorkflows(['--workflow=checklist-generation']), ['checklist-generation']);
   assert.deepEqual(selectWorkflows(['--workflow=room-assessment-setup']), ['room-assessment-setup']);
   assert.deepEqual(selectWorkflows(['--workflow=assessment-answer']), ['assessment-answer']);
+  assert.deepEqual(selectWorkflows(['--workflow=exit-assessment']), ['exit-assessment']);
   assert.deepEqual(selectWorkflows(['--workflow=transfer-status-events']), ['transfer-status-events']);
   assert.deepEqual(selectWorkflows(['--workflow=early-message-recheck']), ['early-message-recheck']);
   assert.throws(() => selectWorkflows(['--workflow=unknown']), /Unknown workflow/);
   assert.throws(() => selectWorkflows(['--workflow=tutor-response', '--workflow=assessment-answer']), /Use --workflow/);
+});
+
+// Responsibility: exit-assessment.js must reject queue identity, attempt and lifecycle mismatches.
+test('exit queue oracle verifies every delivered question and accepted attempt count', () => {
+  const delivered = [{ assessment_id: 'one', question_message_id: 'question-one' },
+    { assessment_id: 'two', question_message_id: 'question-two' }];
+  const rows = [{ id: 'one', question_message_id: 'question-one', lifecycle: 'passed', attempt_count: 1 },
+    { id: 'two', question_message_id: 'question-two', lifecycle: 'failed', attempt_count: 2 }];
+  const expected = [{ lifecycle: 'passed', attempts: 1 }, { lifecycle: 'failed', attempts: 2 }];
+  assert.doesNotThrow(() => exitAssessment.assertQueueState(rows, delivered, expected));
+  assert.throws(() => exitAssessment.assertQueueState(rows.slice(1), delivered, expected), /missing or extra/);
+  for (const mutation of [{ id: 'other' }, { question_message_id: 'other' }, { lifecycle: 'delivered' }, { attempt_count: 0 }]) {
+    assert.throws(() => exitAssessment.assertQueueState([{ ...rows[0], ...mutation }, rows[1]], delivered, expected));
+  }
+});
+
+// Responsibility: assessment-answer.js must verify a cancelled target is re-offered for tutor review without grading its answer.
+test('cancellation replacement oracle enforces target, ordinary focus, learner and review boundaries', () => {
+  const fixture = { room: { id: 'room' }, checklist: { id: 'checklist' },
+    focus: { id: 'ordinary', user_id: 'learner' }, items: [{ id: 'target' }] };
+  const request = { operation: 'prepare_turn', room_id: 'room', checklist_id: 'checklist', focus_student_message_id: 'ordinary' };
+  const data = { room_id: 'room', checklist_id: 'checklist', student_id: 'learner', item_id: 'target',
+    assessment_draft: { target_item_id: 'target', assessment: { stem: 'Controlled replacement' } } };
+  const prepared = { request, status: 200, response: { ok: true, data } };
+  const verify = calls => assessmentAnswer.assertCancellationReplacement(calls, fixture, 'assessment-answer');
+  assert.equal(verify([prepared]), data);
+  assert.equal(verify([{ request: { operation: 'analyze_message', message_id: 'earlier-ordinary' } }, prepared]), data);
+  assert.throws(() => verify([]), /exactly one/);
+  assert.throws(() => verify([prepared, prepared]), /exactly one/);
+  assert.throws(() => verify([{ ...prepared, status: 500 }]), /preparation failed/);
+  for (const field of ['room_id', 'checklist_id', 'focus_student_message_id']) {
+    assert.throws(() => verify([{ ...prepared, request: { ...request, [field]: 'other' } }]));
+  }
+  for (const field of ['room_id', 'student_id', 'checklist_id', 'item_id']) {
+    assert.throws(() => verify([{ ...prepared, response: { ok: true, data: { ...data, [field]: 'other' } } }]));
+  }
+  assert.throws(() => verify([prepared, { request: { operation: 'analyze_message', message_id: 'assessment-answer' } }]), /ordinary evidence/);
+  assert.throws(() => verify([prepared, { request: { operation: 'send_reviewed' } }]), /tutor review/);
 });
 
 test('a failed workflow does not stop another independent workflow', async () => {
