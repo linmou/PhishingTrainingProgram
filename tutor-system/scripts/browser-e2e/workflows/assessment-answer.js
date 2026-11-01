@@ -128,9 +128,15 @@ async function answer(ctx, label, selections, expectedStatus) {
   });
   const tutorCall = terminalTutor.function_calls.find(call => call.url.includes('/ai-api') && call.status === 200);
   assert(tutorCall?.response?.data?.content, 'Terminal assessment feedback did not reach the real tutor provider');
-  assert(terminalTutor.function_calls.filter(call => ['analyze_message', 'prepare_turn'].includes(call.request?.operation))
-    .every(call => (call.request.focus_student_message_id ?? call.request.message_id) === fixture.focus.id),
+  // Earlier ordinary messages may be replayed when the tutor rejoins. Only
+  // assessment answers are excluded from evidence; preparation keeps its focus.
+  const answerIds = new Set(answers.map(row => row.id));
+  assert(terminalTutor.function_calls.filter(call => call.request?.operation === 'analyze_message')
+    .every(call => !answerIds.has(call.request.message_id)),
     'Assessment answer was incorrectly treated as ordinary learning evidence');
+  assert(terminalTutor.function_calls.filter(call => call.request?.operation === 'prepare_turn')
+    .every(call => call.request.focus_student_message_id === fixture.focus.id),
+    'Assessment preparation lost the ordinary learner focus');
   assert(tutorCall.request.messages.every(message => !message.content.includes('VERIFIED ASSESSMENT STATE')),
     'Tutor request retained the removed assessment state section');
   const ecological = tutorCall.request.messages.flatMap(message => message.content.split('\n')).flatMap(line => {
