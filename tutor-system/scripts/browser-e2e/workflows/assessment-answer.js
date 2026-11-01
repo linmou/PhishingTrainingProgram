@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { openRoom, insert, query, requestId, waitForMatch, captureResponses, managementQuery, screenshot, writeJson, TIMEOUT, ROOMS } = require('../browser-e2e-support');
 const { assessmentRoom, deliverFixedAssessment } = require('./assessment-fixture');
-const { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers } = require('./assessment-browser-checks');
+const { assertAssessmentGate, assertBoundAnswers, openExitAssessment, assertExitResult, assertReadOnlyAssessment, reloadWithExitPrompt } = require('./assessment-browser-checks');
 const { tutoringStep } = require('./assessment-delivery');
 const { assertSavedResult } = require('./assessment-result-checks');
 
@@ -52,14 +52,15 @@ async function answer(ctx, label, selections, expectedStatus) {
   const delivered = await deliverFixedAssessment(ctx, fixture);
   const priorMessageIds = (await query(ctx.client, 'messages', 'id', 'room_id', fixture.room.id)).map(row => row.id);
   await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
-  const question = ctx.studentPage.locator(`[data-testid="public-assessment-${delivered.assessment_id}"]`);
-  await question.waitFor({ timeout: TIMEOUT });
-  const inputGates = [await assertBlockedOrdinaryReply(ctx, fixture.room.id)];
+  const inputGates = [await assertAssessmentGate(ctx.studentPage, false)];
+  assert.equal(await ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`).count(), 0,
+    'An open assessment appeared in the learner conversation');
+  await ctx.studentPage.locator('textarea.comment-input-field').click();
+  await reloadWithExitPrompt(ctx.studentPage);
+  const question = await openExitAssessment(ctx.studentPage, delivered.assessment_id);
   assert.equal(await question.getByRole('button', { name: 'Submit answer' }).isDisabled(), true,
     'Assessment accepted an empty selection');
-  await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
-  await question.waitFor({ timeout: TIMEOUT });
-  inputGates.push(await assertAssessmentGate(ctx.studentPage, true));
+  inputGates.push(await assertAssessmentGate(ctx.studentPage, false));
   const stop = await captureResponses(ctx.studentPage, (response) =>
     response.url().includes('/functions/v1/assessment-api') || response.url().includes('/functions/v1/ai-api'));
   const resultIds = [];
@@ -77,7 +78,7 @@ async function answer(ctx, label, selections, expectedStatus) {
       const result = saved.find(row => row.assessment_event?.assessment_id === delivered.assessment_id &&
         row.assessment_event.kind === 'result' && row.assessment_event.attempt_number === index + 1);
       resultIds.push(result.id);
-      await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
+      await assertExitResult(ctx.studentPage, result);
       const outcome = selected === 'B' ? 'passed' : index === 0 ? 'retry' : 'failed';
       assertSavedResult(result, outcome, index + 1, delivered.assessment);
       const progress = (await query(ctx.client, 'checklist_items', 'status,understanding_level', 'id', fixture.items[0].id))[0];
@@ -85,10 +86,7 @@ async function answer(ctx, label, selections, expectedStatus) {
       assert.equal(progress?.understanding_level, outcome === 'failed' ? 'basic' : 'good');
       if (index < selections.length - 1) {
         retryDrafts.push(await draftRetryFeedback(ctx, fixture.room.id, label));
-        inputGates.push(await assertBlockedOrdinaryReply(ctx, fixture.room.id));
-        await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
-        await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
-        inputGates.push(await assertAssessmentGate(ctx.studentPage, true));
+        inputGates.push(await assertAssessmentGate(ctx.studentPage, false));
       }
     }
   } finally { calls = await stop(); }
@@ -96,12 +94,6 @@ async function answer(ctx, label, selections, expectedStatus) {
   assert(calls.some((call) => call.request?.operation === 'process_message' && call.status === 200), 'Assessment answer did not reach the trusted API');
   assert(!calls.some(call => call.url.includes('/ai-api') || ['prepare_turn', 'analyze_message'].includes(call.request?.operation)),
     'Grading unexpectedly invoked an LLM-backed operation');
-  inputGates.push(await assertAssessmentGate(ctx.studentPage, false));
-  await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
-  const restored = ctx.studentPage.locator(`[data-testid="public-assessment-${delivered.assessment_id}"]`);
-  await restored.waitFor({ timeout: TIMEOUT });
-  await ctx.studentPage.getByTestId(`assessment-result-${resultIds.at(-1)}`).waitFor({ timeout: TIMEOUT });
-  assert.equal(await restored.getByRole('button', { name: 'Submit answer' }).isDisabled(), true);
   inputGates.push(await assertAssessmentGate(ctx.studentPage, false));
   const messages = await waitForMatch(
     () => query(ctx.client, 'messages', '*', 'room_id', fixture.room.id),
@@ -130,13 +122,14 @@ async function answer(ctx, label, selections, expectedStatus) {
   const terminalAnswer = answers.find(row => row.id === attempts.at(-1).answer_message_id);
   assert(terminalAnswer, 'Terminal accepted attempt has no bound learner answer');
   const terminalTutor = await tutoringStep(ctx, { room: fixture.room }, {
-    label: `answer-${label}-terminal-tutor`, focusMessageId: terminalAnswer.id,
+    label: `answer-${label}-terminal-tutor`, focusMessageId: fixture.focus.id,
     expectedAssessmentCount: 1,
-    terminalAssessment: { terminal_answer_message_id: terminalAnswer.id, closed_at: privateRows[0].closed_at }
+    terminalAssessment: null
   });
   const tutorCall = terminalTutor.function_calls.find(call => call.url.includes('/ai-api') && call.status === 200);
   assert(tutorCall?.response?.data?.content, 'Terminal assessment feedback did not reach the real tutor provider');
-  assert(!terminalTutor.function_calls.some(call => ['analyze_message', 'prepare_turn'].includes(call.request?.operation)),
+  assert(terminalTutor.function_calls.filter(call => ['analyze_message', 'prepare_turn'].includes(call.request?.operation))
+    .every(call => (call.request.focus_student_message_id ?? call.request.message_id) === fixture.focus.id),
     'Assessment answer was incorrectly treated as ordinary learning evidence');
   assert(tutorCall.request.messages.every(message => !message.content.includes('VERIFIED ASSESSMENT STATE')),
     'Tutor request retained the removed assessment state section');
@@ -154,6 +147,13 @@ async function answer(ctx, label, selections, expectedStatus) {
   const postTutorMessages = await query(ctx.client, 'messages', '*', 'room_id', fixture.room.id);
   assert.equal(postTutorMessages.filter(row => row.assessment_event?.assessment_id === delivered.assessment_id && row.assessment_event.kind === 'result').length,
     selections.length, 'Tutor response or duplicate processing created another result');
+  await ctx.studentPage.getByRole('dialog', { name: 'Before you leave' }).getByRole('button', { name: 'Leave', exact: true }).click();
+  await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
+  const restored = ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`);
+  await restored.waitFor({ timeout: TIMEOUT });
+  await ctx.studentPage.getByTestId(`assessment-result-${resultIds.at(-1)}`).waitFor({ timeout: TIMEOUT });
+  await assertReadOnlyAssessment(restored);
+  inputGates.push(await assertAssessmentGate(ctx.studentPage, false));
   return {
     room_id: fixture.room.id, question_message_id: delivered.question_message_id,
     assessment_id: delivered.assessment_id, selections, function_calls: calls,
@@ -274,8 +274,7 @@ async function cancellation(ctx, reusableRoomId) {
     row.assessment_event.kind === 'result'), 'Cancellation invented a grade');
   await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
   await ctx.studentPage.getByTestId(`assessment-result-${closure.id}`).waitFor({ timeout: TIMEOUT });
-  assert.equal(await ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`)
-    .getByRole('button', { name: 'Submit answer' }).isDisabled(), true);
+  await assertReadOnlyAssessment(ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`));
   return { room_id: fixture.room.id, delivered, answer, closure, function_calls: providerCalls,
     screenshot: await screenshot(ctx.studentPage, ctx.evidenceDir, 'assessment-cancellation') };
 }

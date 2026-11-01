@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows, shouldRetainLease } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
-const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
+const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult, openExitAssessment, assertExitResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
 require('./browser-e2e/cleanup.test');
 const { runRoomSetupAnalysis, waitForTemplateSettings } = require('./browser-e2e/workflows/room-assessment-setup');
@@ -394,6 +394,29 @@ test('assessment gate checks every generic Reply and restores terminal composer 
   } finally { await browser.close(); }
 });
 
+// Responsibility: assessment-browser-checks.js must open the exit surface and respect trusted terminal state.
+test('exit helper requires hidden questions and unlocked chat, then binds results to the popup lifecycle', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`<textarea class="comment-input-field"></textarea><button>Reply</button>
+      <a href="#dashboard" id="back">Back to Dashboard</a>
+      <script>document.querySelector('#back').onclick = event => {
+        event.preventDefault();
+        document.body.insertAdjacentHTML('beforeend', '<section role="dialog" aria-label="Before you leave"><section data-testid="public-assessment-one">Question one</section><p role="status">Try once more.</p><button disabled>Next</button></section>');
+      };</script>`);
+    const question = await openExitAssessment(page, 'one');
+    assert.equal(await question.count(), 1);
+    const retry = { content: 'Try once more.', assessment_event: { terminal: false } };
+    await assertExitResult(page, retry);
+    await assert.rejects(assertExitResult(page, { ...retry, assessment_event: { terminal: true } }), /trusted assessment lifecycle/);
+    await page.getByRole('dialog').getByRole('button').evaluate(button => { button.disabled = false; button.textContent = 'Leave'; });
+    await assertExitResult(page, { ...retry, assessment_event: { terminal: true } });
+    await page.setContent('<textarea class="comment-input-field"></textarea><button>Reply</button><section data-testid="public-assessment-one"></section>');
+    await assert.rejects(openExitAssessment(page, 'one'), /leaked/);
+  } finally { await browser.close(); }
+});
+
 test('two-target assessment delivery rejects old hosted scheduling before creating fixtures', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-e2e-policy-'));
   const originalFetch = global.fetch;
@@ -414,18 +437,13 @@ test('two-target assessment delivery rejects old hosted scheduling before creati
   }
 });
 
-test('assessment delivery requires feedback on the terminal answer after closure before the next target', () => {
-  const assessment = { terminal_answer_message_id: 'terminal-answer', closed_at: '2026-10-14T15:00:00.000Z' };
-  const feedback = { parent_message_id: 'terminal-answer', response_mode: 'tutoring', created_at: '2026-10-14T15:00:01.000Z' };
-  assert.doesNotThrow(() => assessmentDelivery.assertTutorFeedback(feedback, assessment));
-  assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, parent_message_id: 'support-observation' }, assessment),
-    /terminal learner answer/);
-  assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, response_mode: 'guard' }, assessment),
+test('assessment delivery binds tutoring to the ordinary learner focus after exit answers', () => {
+  const feedback = { parent_message_id: 'ordinary-observation', response_mode: 'tutoring' };
+  assert.doesNotThrow(() => assessmentDelivery.assertTutorFocus(feedback, 'ordinary-observation'));
+  assert.throws(() => assessmentDelivery.assertTutorFocus({ ...feedback, parent_message_id: 'terminal-answer' }, 'ordinary-observation'),
+    /ordinary learner focus/);
+  assert.throws(() => assessmentDelivery.assertTutorFocus({ ...feedback, response_mode: 'guard' }, 'ordinary-observation'),
     /wrong response mode/);
-  for (const created_at of ['2026-10-14T14:59:59.000Z', assessment.closed_at]) {
-    assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, created_at }, assessment),
-      /after the assessment closes/);
-  }
 });
 
 

@@ -340,8 +340,8 @@ export class TransferAssessmentService {
     });
   }
 
-  joinRoom(roomId: string): Promise<{ room_id: string; learner_id: string | null; room_role: 'student' | 'observer' }> {
-    return this.request('join_room', { room_id: roomId });
+  joinRoom(roomId: string, visitKey?: string): Promise<{ room_id: string; learner_id: string | null; room_role: 'student' | 'observer' }> {
+    return this.request('join_room', { room_id: roomId, ...(visitKey ? { visit_key: visitKey } : {}) });
   }
 
   readReview(roomId: string, assessmentId: string): Promise<TutorAssessmentReview> {

@@ -3,7 +3,54 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { query } = require('../browser-e2e-support');
+const { query, TIMEOUT } = require('../browser-e2e-support');
+
+async function openExitAssessment(page, assessmentId, { browserBack = false } = {}) {
+  const popup = page.getByRole('dialog', { name: 'Before you leave' });
+  if (!await popup.isVisible()) {
+    const hiddenQuestion = page.getByTestId(`public-assessment-${assessmentId}`);
+    assert.equal(await hiddenQuestion.count(), 0, 'Open exit question leaked into the conversation');
+    await assertAssessmentGate(page, false);
+    if (browserBack) await page.evaluate(() => window.history.back());
+    else await page.getByRole('link', { name: 'Back to Dashboard' }).click();
+  } else if (!await popup.getByTestId(`public-assessment-${assessmentId}`).isVisible()) {
+    await popup.getByRole('button', { name: 'Next', exact: true }).click();
+  }
+  await popup.waitFor({ timeout: TIMEOUT });
+  const question = popup.getByTestId(`public-assessment-${assessmentId}`);
+  await question.waitFor({ timeout: TIMEOUT });
+  return question;
+}
+
+async function assertExitResult(page, result) {
+  const popup = page.getByRole('dialog', { name: 'Before you leave' });
+  await popup.getByRole('status').filter({ hasText: result.content }).last().waitFor({ timeout: TIMEOUT });
+  const advance = popup.getByRole('button', { name: /^(Next|Leave)$/ });
+  assert.equal(await advance.isDisabled(), !result.assessment_event.terminal,
+    'Exit navigation does not match the trusted assessment lifecycle');
+}
+
+async function assertReadOnlyAssessment(question) {
+  assert.equal(await question.getByRole('button', { name: 'Submit answer' }).count(), 0,
+    'Ended assessment still has submission controls');
+  const options = question.locator('input');
+  assert.equal(await options.count(), 4, 'Ended assessment lost its public options');
+  for (const option of await options.all()) assert.equal(await option.isDisabled(), true,
+    'Ended assessment has an editable answer option');
+}
+
+async function reloadWithExitPrompt(page) {
+  let prompted = false;
+  const acceptLeave = async dialog => {
+    assert.equal(dialog.type(), 'beforeunload', 'Reload raised an unexpected browser dialog');
+    prompted = true;
+    await dialog.accept();
+  };
+  page.once('dialog', acceptLeave);
+  try { await page.reload({ waitUntil: 'domcontentloaded' }); }
+  finally { page.off('dialog', acceptLeave); }
+  assert(prompted, 'Reload did not warn about unfinished exit assessments');
+}
 
 async function assertAssessmentGate(page, gated) {
   const composer = page.locator('textarea.comment-input-field');
@@ -82,4 +129,5 @@ async function assertFirstPassResult(page, messages, studentId, delivered, prior
   return { answer, result };
 }
 
-module.exports = { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers, assertFirstPassResult };
+module.exports = { assertAssessmentGate, assertBlockedOrdinaryReply, assertBoundAnswers, assertFirstPassResult,
+  openExitAssessment, assertExitResult, assertReadOnlyAssessment, reloadWithExitPrompt };

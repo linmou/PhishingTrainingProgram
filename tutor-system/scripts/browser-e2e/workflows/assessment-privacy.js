@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 const { assertStaging } = require('./assessment-security');
 const { assessmentRoom, deliverFixedAssessment } = require('./assessment-fixture');
 const { assertSavedResult } = require('./assessment-result-checks');
+const { openExitAssessment, assertExitResult, reloadWithExitPrompt } = require('./assessment-browser-checks');
 const { captureLearnerData } = require('./assessment-privacy-checks');
 const { openRoom, query, waitForMatch, managementQuery, writeJson, requestId, TIMEOUT } = require('../browser-e2e-support');
 
@@ -91,9 +92,7 @@ async function privacyJourney(ctx, outcome) {
     evidence.stage = 'question_realtime';
     await waitForMatch(async () => capture.hasRealtimeRow(delivered.question_message_id), Boolean, 'actual delivered-question realtime event');
     evidence.stage = 'question_dom';
-    await openRoom(ctx.studentPage, ctx.appUrl, fixture.room.id);
-    const question = ctx.studentPage.getByTestId(`public-assessment-${delivered.assessment_id}`);
-    await question.waitFor({ timeout: TIMEOUT });
+    let question = await openExitAssessment(ctx.studentPage, delivered.assessment_id);
     // Exercise the real error boundary with the learner's own identity, not a fake error response.
     evidence.stage = 'learner_review_denial';
     const denied = await ctx.studentPage.evaluate(async ({ url, key, actor, room, assessment, request }) => {
@@ -133,11 +132,17 @@ async function privacyJourney(ctx, outcome) {
         approvedResults.push(result); // Both private grading authority and the exact saved message establish disclosure.
       }
       evidence.stage = `result_${index + 1}_dom_realtime`;
-      await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
+      await assertExitResult(ctx.studentPage, result);
       await waitForMatch(async () => capture.hasRealtimeRow(result.id), Boolean, 'actual saved-result realtime event');
       await checkpoint(expected);
-      await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
-      await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
+      if (expected === 'retry') {
+        await reloadWithExitPrompt(ctx.studentPage);
+        question = await openExitAssessment(ctx.studentPage, delivered.assessment_id);
+        await assertExitResult(ctx.studentPage, result);
+      } else {
+        await ctx.studentPage.reload({ waitUntil: 'domcontentloaded' });
+        await ctx.studentPage.getByTestId(`assessment-result-${result.id}`).waitFor({ timeout: TIMEOUT });
+      }
       await checkpoint(`${expected}-reload`);
     }
     evidence.stage = 'complete'; evidence.status = 'pass'; writeJson(file, evidence);

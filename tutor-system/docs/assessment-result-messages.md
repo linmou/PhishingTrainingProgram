@@ -2,7 +2,7 @@
 
 <!-- Intent: define the approved public result-message contract and its consumers. Updated: 2026-10-24. Ordering optimization baseline: 7762cbb; runtime release commit: 518a07d. -->
 
-Exit-assessment note (2026-10-30, temporary, not yet implemented): while exit assessment is in force, results are created, stored and exported exactly as below, but the learner sees their open questions and results only in the exit pop-up; ended ones reappear in the learner's conversation. Questions are not rating targets. See [exit-time assessment](exit-time-assessment.md).
+Exit-assessment implementation note (2026-10-31; baseline `d3bb45b`): results are created, stored and exported exactly as below, but the learner sees their open questions and results only in the exit pop-up; ended ones reappear read-only in the learner's conversation. Questions are not rating targets. Release acceptance remains open in the [delivery record](doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md). See [exit-time assessment](exit-time-assessment.md).
 
 ## Grading and publication
 

@@ -250,15 +250,14 @@ describe('RoomContext teacher transfer review lifecycle', () => {
     expect(generateTutorSuggestion).toHaveBeenCalledTimes(1);
   });
 
-  // RoomContext must route persisted graded answers to tutor feedback, including
-  // answers restored after reload, without running ordinary evidence analysis.
+  // RoomContext.tsx: exit answers never become the AI focus; ordinary evidence still prepares drafts.
   it.each([
     { answer: 'B', resolution: 'passed', lifecycle: 'passed', attemptCount: 1, feedbackRequired: true },
     { answer: 'A', resolution: 'failed', lifecycle: 'failed', attemptCount: 2, feedbackRequired: true },
     { answer: 'A', resolution: 'open', lifecycle: 'delivered', attemptCount: 1, feedbackRequired: false },
     { answer: 'B or D', resolution: 'open', lifecycle: 'delivered', attemptCount: 0, feedbackRequired: false },
     { answer: 'Please help', resolution: 'open', lifecycle: 'cancelled', attemptCount: 0, feedbackRequired: false },
-  ])('drafts feedback using persisted $resolution state after $attemptCount attempts', async ({
+  ])('focuses ordinary conversation after persisted $resolution state and $attemptCount attempts', async ({
     answer, resolution, lifecycle, attemptCount, feedbackRequired,
   }) => {
     (transferAssessmentService.readReview as jest.Mock).mockResolvedValue({
@@ -271,7 +270,7 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       deliveredQuestionRow,
       { ...deliveredAnswerRow, content: answer },
     ]);
-    (transferAssessmentService.analyzeMessage as jest.Mock).mockRejectedValue(new Error('INVALID_SCOPE'));
+    prepareAssessment.mockResolvedValue(null);
     (generateTutorSuggestion as jest.Mock).mockResolvedValue({
       success: true,
       suggestion: 'Tutor feedback',
@@ -282,15 +281,15 @@ describe('RoomContext teacher transfer review lifecycle', () => {
 
     await act(async () => { await room!.generateAIResponse(); });
 
-    expect(transferAssessmentService.analyzeMessage).not.toHaveBeenCalled();
-    expect(ChecklistService.analyzeStudentMessages).not.toHaveBeenCalled();
-    expect(prepareAssessment).not.toHaveBeenCalled();
+    expect(ChecklistService.analyzeStudentMessages).toHaveBeenCalledWith(TRANSFER_ROOM_ID,
+      learnerAMessageRow.user_id, learnerAMessageRow.id, 'tutor-1');
+    expect(prepareAssessment).toHaveBeenCalledWith(expect.objectContaining({ focusStudentMessageId: learnerAMessageRow.id }));
     expect(room!.transferDraft).toBeNull();
     expect(room!.aiDecision?.instruction).toBe('correction');
     expect(generateTutorSuggestion).toHaveBeenCalledWith(
       TRANSFER_ROOM_ID, 'tutor-1', undefined, {
-        focusStudentMessage: answer,
-        focusStudentId:deliveredAnswerRow.user_id,
+        focusStudentMessage: learnerAMessageRow.content,
+        focusStudentId:learnerAMessageRow.user_id,
         expectedAssessmentResultIds:['saved-result'],
       }
     );
@@ -300,11 +299,11 @@ describe('RoomContext teacher transfer review lifecycle', () => {
       messageInsertHandler!({ new: { ...deliveredAnswerRow, content: answer } });
       room!.clearAISuggestion();
     });
-    await act(async () => { await room!.generateAIResponse(undefined, deliveredAnswerRow.id); });
+    await expect(act(async () => { await room!.generateAIResponse(undefined, deliveredAnswerRow.id); }))
+      .rejects.toThrow('Selected learner message is no longer available');
     expect(room!.messages.filter(message => message.id === deliveredAnswerRow.id)).toHaveLength(1);
-    expect(transferAssessmentService.analyzeMessage).not.toHaveBeenCalled();
-    expect(prepareAssessment).not.toHaveBeenCalled();
-    expect(generateTutorSuggestion).toHaveBeenCalledTimes(2);
+    expect(prepareAssessment).toHaveBeenCalledTimes(1);
+    expect(generateTutorSuggestion).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(room!.messages)).not.toContain('correct_option_ids');
   });
 

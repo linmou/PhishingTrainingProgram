@@ -1,5 +1,9 @@
 # Browser E2E Testing
 
+<!-- Exit assessment implementation: updated 2026-11-01; baseline d3bb45b. -->
+
+Exit-assessment verification uses `assessment-answer` for hidden questions, the unlocked composer, exit pop-up retries/results, unload confirmation and read-only history on re-entry. `assessment-delivery` prepares the full due-target queue during conversation and answers it at one exit, so reloads do not accidentally create reassessment loops. The answer fixture uses deterministic reviewed questions with real Edge grading; the delivery workflow exercises real-provider generation. Fixed-room cleanup removes learner visits as well as generated assessment rows. See the [open release record](doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md) for current evidence; older in-dialogue descriptions below are historical.
+
 <!-- Cyberbullying workflow added 2026-10-21; implementation baseline 2807c52. -->
 
 The `cyberbullying` workflow creates a tagged situation through the tutor UI and verifies learner progress, character selection/regeneration, edited approval, rejection, ratings, observer access, reload and JSON export. Run it with `--workflow=cyberbullying` against the explicitly selected candidate app/project. Cleanup deletes the tagged room by cascade and checks its related rows. See [Cyberbullying practise](cyberbullying-practise.md) and its [cutover runbook](cyberbullying-cutover.md).

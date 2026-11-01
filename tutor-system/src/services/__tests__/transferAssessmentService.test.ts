@@ -19,6 +19,18 @@ const assessment = {
 };
 
 describe('transfer assessment DTO projections', () => {
+  it('records page visits with the same supplied key and leaves pre-navigation joins unkeyed', async () => {
+    const invoke = jest.fn().mockResolvedValue({ data: { ok: true, data: { room_role: 'student' } }, error: null });
+    const service = new TransferAssessmentService({ api: { invoke }, requestId: () => 'request-1' });
+    await service.joinRoom('room-1');
+    await service.joinRoom('room-1', 'visit-1');
+    await service.joinRoom('room-1', 'visit-1');
+    expect(invoke.mock.calls.map(call => call[0])).toEqual([
+      { operation: 'join_room', request_id: 'request-1', room_id: 'room-1' },
+      { operation: 'join_room', request_id: 'request-1', room_id: 'room-1', visit_key: 'visit-1' },
+      { operation: 'join_room', request_id: 'request-1', room_id: 'room-1', visit_key: 'visit-1' },
+    ]);
+  });
   it('preserves retryability from a non-2xx error envelope', async () => {
     const service = new TransferAssessmentService({ api: { invoke: async () => ({ data: null, error: {
       message: 'Edge Function returned a non-2xx status code',

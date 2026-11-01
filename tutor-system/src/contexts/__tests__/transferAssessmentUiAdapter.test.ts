@@ -71,7 +71,7 @@ describe('transferAssessmentUiAdapter projections', () => {
     expect(message.publicQuestion!.options).toHaveLength(4);
   });
 
-  it('shows answer controls only to the matching learner and sends no student identity as authority', () => {
+  it('keeps the conversation read-only even for the matching learner', () => {
     const message = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
     const onSubmitAssessment = jest.fn();
 
@@ -82,13 +82,10 @@ describe('transferAssessmentUiAdapter projections', () => {
       onSubmitAssessment,
     }));
 
-    expect(screen.getAllByRole('radio').every((radio) => !(radio as HTMLInputElement).disabled)).toBe(true);
+    expect(screen.getAllByRole('radio').every((radio) => (radio as HTMLInputElement).disabled)).toBe(true);
     fireEvent.click(screen.getByRole('radio', { name: /B\./ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Submit answer' }));
-
-    expect(onSubmitAssessment).toHaveBeenCalledWith(DELIVERED_QUESTION_ID, deliveredPublicAssessment.id, ['B']);
-    expect(onSubmitAssessment.mock.calls[0]).toHaveLength(3);
-    expect(JSON.stringify(onSubmitAssessment.mock.calls[0])).not.toContain(LEARNER_A_ID);
+    expect(screen.queryByRole('button', { name: 'Submit answer' })).not.toBeInTheDocument();
+    expect(onSubmitAssessment).not.toHaveBeenCalled();
   });
 
   it('fails closed when the target learner identity is missing', () => {
@@ -273,6 +270,7 @@ describe('transferAssessmentUiAdapter projections', () => {
     const withLifecycle = {
       ...answer,
       answerLifecycle: answerLifecycleFromProcessed({
+        result_message: null,
         message_id: 'answer-restore',
         assessment_id: DELIVERED_QUESTION_ID,
         processing_state: 'applied',
