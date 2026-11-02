@@ -2,14 +2,14 @@
 title: Product constitution
 status: final
 created: 2026-10-22
-updated: 2026-10-27
+updated: 2026-11-02
 ---
 
 # Product constitution
 
 Intent: define the principles, non-negotiable constraints and priority rules that every requirement of the Online Safety Tutor Platform must trace to, so that system contracts (the PRD) and AI behavior (AI behavior constitutions and specifications) answer to one root and conflicts between values are decided in one place.
 
-Updated: 2026-10-27. Repository baseline commit: `b671519`. Status: final — the owner approved principles, constraints and priority rules as a set on 2026-10-23, and added R9 on 2026-10-27.
+Updated: 2026-11-02. Repository baseline commit: `20658b3`. Status: final — the owner approved principles, constraints and priority rules as a set on 2026-10-23, added R9 on 2026-10-27, and retired C3 and C5 on 2026-11-02.
 
 ## Scope and layering
 
@@ -38,7 +38,7 @@ Layering rules:
 | P3 | **Learner safety and dignity.** Learners are protected from harm, including harm from the practice itself, and are never humiliated. | Protective priority when a learner is at risk; managing disruption without degrading the learner; the boundaries of practice content. | Wording and tone of individual replies (child constitutions). |
 | P4 | **A trustworthy learning record.** What the platform records about learning — messages, progress, attempts, results, reviews — is accurate, consistent for everyone, and kept. | Server authority, evidence behind every change, consistency across viewers and reloads, and retention of pilot data. | Whether AI judgments recorded in it are correct (child constitutions). |
 | P5 | **Ease of use with minimal cognitive burden.** Tutors, learners and observers can start and run a practice with minimal steps, and each sees only what they need. | Joining without accounts, simple room creation, single-use rooms, and keeping irrelevant items out of view (for example test rooms out of teaching lists). | How much is built (P6). |
-| P6 | **Quick implementation, without immediate harm.** At the pilot stage, a need is met with the smallest change that works, reusing existing mechanisms; known limitations are accepted and recorded instead of building ahead of need. A shortcut is never taken when its failure would cause immediate, uncontrolled harm, such as leaked AI provider credentials. | Scope cuts, reuse over new infrastructure, the list of accepted limitations, and the line between an acceptable limitation and an immediate harm. | Anything that would break C1–C6. |
+| P6 | **Quick implementation, without immediate harm.** At the pilot stage, a need is met with the smallest change that works, reusing existing mechanisms; known limitations are accepted and recorded instead of building ahead of need. A shortcut is never taken when its failure would cause immediate, uncontrolled harm, such as leaked AI provider credentials. | Scope cuts, reuse over new infrastructure, the list of accepted limitations, and the line between an acceptable limitation and an immediate harm. | Anything that would break C1, C2, C4 or C6. |
 | P7 | **Predictable behavior.** Each thing is done one way, and failures are visible. | One mechanism per job across rooms and practice types, closed sets of supported operations, no hidden fallbacks. | — |
 | P8 | **Meaningful data for continuous refinement.** The platform elicits and collects the data needed to evaluate and improve the tutoring approach. | Asking participants for feedback (ratings), recording how tutors handle AI drafts, and making the data available for analysis (exports). | Accuracy of the learning record (P4). |
 
@@ -47,10 +47,8 @@ Layering rules:
 | ID | Principle | Constraint |
 | --- | --- | --- |
 | C1 | P2 | No AI-generated text reaches a learner unless the room owner sends it. |
-| C2 | P1, P4 | Learning progress changes only from the learner's own contributions or the room owner's recorded manual edit. |
-| C3 | P4 | Grades, attempts and progress changes are decided on the server from recorded evidence; the browser never decides them. |
+| C2 | P1, P4 | Learning progress and assessment results change only from the learner's own recorded contributions, judged by the product's rules, or the room owner's recorded manual edit; no participant sets them directly. |
 | C4 | P4, P8 | Pilot data is deleted only by a tutor's explicit, confirmed deletion of a room they own, which removes their own and their students' data from it. No other action removes data: not clearing history, reusing a room or releasing the learner seat. |
-| C5 | P1, P4 | Private assessment material reaches participants only at its publication point, so a transfer assessment stays a valid check. |
 | C6 | P6 | AI provider credentials never reach the browser. A leak would cause immediate, uncontrolled cost and abuse, which no pilot shortcut may risk. |
 
 ## Conditional priority rules
@@ -59,13 +57,13 @@ Layering rules:
 | --- | --- | --- | --- |
 | R1 | P5 ease of use and P6 quick implementation vs P4 trustworthy attribution | Ease and speed win while learners use the platform under close adult supervision: no authentication is built, and the application identity identifies but does not authenticate. Attribution relies on that supervision. Revisit when use is no longer supervised. | 2026-10-22, OQ-1 |
 | R2 | P4 and P8 keeping the record vs P5 tidy, reusable rooms | Keeping the record wins: no clearing of chat history, no reuse of rooms, no release of the learner seat. The one exception is C4: a tutor may delete a room they own, because tutors have the right to remove their own and their students' data. | 2026-10-22, OQ-4 and FR-17 withdrawal |
-| R3 | P1 a valid check vs P1 learning from a mistake | Before a transfer assessment ends, the answer stays private (C5). After the second wrong attempt, learning wins: the correct answer and explanation are published to the whole room. | 2026-10-22, OQ-2 |
+| R3 | P1 a valid check vs P1 learning from a mistake | Before a transfer assessment ends, the answer stays private. After the second wrong attempt, learning wins: the correct answer and explanation are published to the whole room. | 2026-10-22, OQ-2 |
 | R4 | P2 supervision vs P5 speed | Supervision wins: every AI draft is reviewed by the room owner, who may reject it and write their own reply, even when that is slower. | 2026-10-22, OQ-7 |
 | R5 | P2 accountable supervision vs P5 shared tutoring | One accountable supervisor wins: only the room owner uses tutor controls in a room. | 2026-10-22, OQ-8 |
 | R6 | P3 safety vs P1 teaching flow | When a learner is about to take an unsafe action, protection comes before exploration; teaching resumes afterwards. | 2026-10-22; inherited from the tutoring constitution R2, confirmed as a root rule |
 | R7 | P7 one mechanism vs per-room or per-practice variation | One shared mechanism wins unless a practice type needs a different behavior for learning reasons: all new learning targets are learner-owned and judged the same way; transfer assessments accept option selections only. | 2026-10-22, OQ-6 and OQ-14 |
 | R8 | P8 collecting feedback vs P5 minimal burden on the learner | Collecting feedback wins: the learner rates every tutor reply before writing again. The rating stays one quick step (helpful or unhelpful plus stars). | 2026-10-22, OQ-9; confirmed as a root rule 2026-10-22 |
-| R9 | P6 quick implementation vs P2 and P4 enforced restrictions | Speed wins while use is closely supervised: a behavior restriction may be enforced by the screen alone, by hiding or disabling a control. The server still enforces it when a failure would cause immediate harm or break C1–C6: owner-only publication, server-decided grades and progress, private assessment material, keeping records and owner-only room deletion, and credentials. Revisit when use is no longer supervised. | 2026-10-24, OQ-16 to OQ-22 |
+| R9 | P6 quick implementation vs P2 and P4 enforced restrictions | Speed wins while use is closely supervised: a behavior restriction may be enforced by the screen alone, by hiding or disabling a control. The server still decides and keeps by design what C1, C2, C4 and C6 protect: owner-only publication, progress and assessment results decided by the product's rules, keeping records and owner-only room deletion, and credentials. Until use is no longer supervised, this design need not resist a deliberately forged identity or a direct database request (R1), unless the failure causes immediate harm, such as a credential leak (C6). Revisit when use is no longer supervised. | 2026-10-24, OQ-16 to OQ-22 |
 
 ## Children of this constitution
 
@@ -113,3 +111,5 @@ Only an explicit decision by the product owner adds, removes or reorders a princ
 | 2026-10-22 | Constraint IDs renamed H1–H6 → C1–C6 (the "H" came from "hard" in the AI tutoring constitution; "C" is for constraint). The tutoring constitution's own H1–H4 are unchanged. | C1–C6 |
 | 2026-10-23 | The owner approved the constitution as a set: P1–P8, C1–C6 and R1–R8. | all |
 | 2026-10-27 | New priority rule: at the pilot stage the screen may enforce behavior restrictions, except where failure causes immediate harm or breaks C1–C6. | R9, FR-30, FR-52 |
+| 2026-11-02 | C3 and C5 retired as feature-level rules. C3's value (results come from the learner's recorded work, not anyone's say-so) is folded into C2; where it is enforced (the server) belongs to PRD NFR-2 and the architecture. C5's privacy rule lives in R3 and PRD NFR-3. The IDs C3 and C5 are not reused. | C2, C3, C5, R3, R9 |
+| 2026-11-02 | R9 reworded: the server keeps what the constraints protect by design, but at the pilot stage need not resist a deliberately forged identity or direct database request unless the failure causes immediate harm. | R9, R1, P6 |

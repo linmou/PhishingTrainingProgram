@@ -39,7 +39,7 @@ For the people who plan and build the platform: before a new feature is built, t
 
 ## Constraints
 
-- The product constitution binds every epic: no AI text reaches a learner without the room owner's send (constitution C1); progress changes only from the learner's contributions or the owner's recorded edit (C2); the server decides grades and progress (C3); data is deleted only by an owner's confirmed room deletion (C4); private assessment material appears only at its publication point (C5); AI provider credentials never reach the browser (C6).
+- The product constitution binds every epic: no AI text reaches a learner without the room owner's send (constitution C1); progress and assessment results change only from the learner's recorded contributions, judged by the product's rules, or the owner's recorded edit (C2); data is deleted only by an owner's confirmed room deletion (C4); AI provider credentials never reach the browser (C6).
 - Conflicts between principles are decided by the constitution's priority rules R1 to R8, not inside an epic.
 - Every epic that touches shared state follows the architecture spine (AD-1 to AD-14), in particular one writer per progress and assessment entity (AD-1), the trusted judging path (AD-2), derived assessment due (AD-3), Guard defers progress (AD-5), roles from the room (AD-8) and no secrets in public tables (AD-12).
 

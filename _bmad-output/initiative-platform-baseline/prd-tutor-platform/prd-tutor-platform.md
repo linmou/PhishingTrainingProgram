@@ -12,7 +12,7 @@ updated: 2026-11-02
 
 This PRD states the system contracts of the deployed tutor platform: what the system guarantees, verified by code tests. It is a brownfield baseline — every requirement describes behavior intended for the platform as deployed on 2026-10-22 — so that new initiatives can be checked against it before they change shared behavior. It is written for the product owner, for whoever plans the next initiative, and for the skills that derive the architecture spine and the baseline epics from it.
 
-**Layering.** The root is the product constitution (`../constitution-product/constitution-product.md`): principles P1–P8, constraints C1–C6 and priority rules R1–R8. Every FR and NFR below carries a **Grounding** line citing them. AI behavior — how good an AI job's output is — is not specified here: it belongs to AI behavior constitutions and specifications, verified by evaluations. This PRD states only each AI job's boundary (inputs, output shape, audience, gates, failure handling) and points to its specification (§7).
+**Layering.** The root is the product constitution (`../constitution-product/constitution-product.md`): principles P1–P8, constraints C1, C2, C4 and C6 (C3 and C5 retired 2026-11-02) and priority rules R1–R9. Every FR and NFR below carries a **Grounding** line citing them. AI behavior — how good an AI job's output is — is not specified here: it belongs to AI behavior constitutions and specifications, verified by evaluations. This PRD states only each AI job's boundary (inputs, output shape, audience, gates, failure handling) and points to its specification (§7).
 
 **Structure.** Glossary; Part A, the shared platform (§4); Part B, phishing practice (§5); Part C, cyberbullying practice (§6); AI behavior boundaries (§7); cross-cutting NFRs (§8); Non-Goals (§9); Scope (§10); Open Questions and Decisions (§11); Assumptions Index (§12). FRs are numbered globally and keep their numbers when moved between parts. Terms are defined in §3.
 
@@ -303,7 +303,7 @@ The system has every learner message judged against each learning target separat
 
 #### FR-21: Progress states and transitions
 Learning targets move between progress states only in three ways: learning events as defined in the transfer-status response contract, a transfer assessment result (FR-40), and a manual edit (FR-53).
-**Grounding:** P4, P7, C3.
+**Grounding:** P4, P7, C2.
 
 **Consequences (testable):**
 - Pending → Partial on an initial signal; Pending or Partial → Covered on demonstrated understanding; Needs review → Partial on a post-repair signal; any state except Covered → Covered on spontaneous transfer; Partial or Covered → Needs review on contradiction.
@@ -509,7 +509,7 @@ The room owner can see the learning target, the new context, the question, the o
 
 #### FR-36: Deliver to the learner
 The room owner can send a reviewed assessment draft to the learner; the server rechecks it before saving.
-**Grounding:** P2, C3.
+**Grounding:** P2, P4.
 
 **Consequences (testable):**
 - If the transfer assessment is no longer due or Guard is on, delivery is refused.
@@ -531,7 +531,7 @@ The learner can answer only their own open transfer assessment, by selecting opt
 
 #### FR-38: Grading and two attempts
 The server grades each attempt by exact match with the correct options and allows at most two attempts.
-**Grounding:** P4, C3.
+**Grounding:** P4, C2.
 
 **Consequences (testable):**
 - While Guard is on, a learner's answer to an open transfer assessment is held: it is not graded and uses no attempt. It is graded after Guard ends. While exit assessment is in force, this applies to answers given in the exit pop-up too (FR-54).
@@ -542,7 +542,7 @@ The server grades each attempt by exact match with the correct options and allow
 
 #### FR-39: Result messages
 Every accepted attempt creates exactly one result message: "Correct.", "Incorrect. One attempt remaining." or, after the second wrong attempt, "Incorrect. No attempts remaining. Correct option(s): …" followed by the learner explanation.
-**Grounding:** P1, R3, C5.
+**Grounding:** P1, R3.
 
 **Consequences (testable):**
 - The correct answer and learner explanation are published only in the second-wrong-attempt result message.
@@ -585,7 +585,7 @@ The AI assistant gets transfer-assessment outcomes only from the saved conversat
 
 #### FR-54: Exit assessment (temporary)
 While exit assessment is in force, a learner who leaves a room while any of their transfer assessments is open must first answer them in a pop-up, one at a time. Realizes UJ-1.
-**Grounding:** P1, P6, P4, C3, C5.
+**Grounding:** P1, P6, P4, C2, R3.
 
 **Consequences (testable):**
 - There is no runtime switch. Exit assessment replaces in-dialogue answering in place. The in-dialogue implementation of FR-32–FR-43 is archived unchanged on branch `assess-in-dialogue` (commit `ebc03d1`) as the reference. Restoring it is a forward change on `no_sign_up` that reverts only the exit-assessment changes, released through the normal merge and production gates; the archived branch itself is never deployed, so later unrelated changes are kept. Releasing either version never regrades or deletes a transfer assessment, and closes one only on a rollback when it could never be graded again (its snapshot no longer matches under the restored rule); such a question is cancelled with one closure message and uses no attempt.
@@ -685,8 +685,8 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 ## 8. Cross-Cutting NFRs
 
 - **NFR-1 Human supervision.** No AI-generated text reaches a learner without the room owner's explicit send. The AI assistant never changes room state on its own. **Grounding:** P2, C1.
-- **NFR-2 Server authority.** Grading, attempt counting, whether a transfer assessment is due, learning progress changes, the learner seat and private transfer-assessment data are decided on the server. The browser never grades or changes learning progress directly. **Grounding:** P4, C3.
-- **NFR-3 Private material.** Correct answers and learner explanations stay private until a second wrong attempt (FR-39). The reasoning behind a transfer assessment and raw AI output are never visible to participants. Reasons and instruction labels are visible to the room owner only. AI provider credentials never reach the browser. **Grounding:** C5, P2, C6.
+- **NFR-2 Server authority.** Grading, attempt counting, whether a transfer assessment is due, learning progress changes, the learner seat and private transfer-assessment data are decided on the server. The browser never grades or changes learning progress directly. **Grounding:** P4, C2.
+- **NFR-3 Private material.** Correct answers and learner explanations stay private until a second wrong attempt (FR-39). The reasoning behind a transfer assessment and raw AI output are never visible to participants. Reasons and instruction labels are visible to the room owner only. AI provider credentials never reach the browser. **Grounding:** R3, P2, C6.
 - **NFR-4 Identity model and accepted risk.** The application identity identifies users but does not authenticate them, and room data is readable and writable by any client of the app, except the private material in NFR-3. This is accepted for the current small-scale pilot, in which students use the platform under close adult supervision and ease of use takes priority over authentication. Accepted consequences: anyone can act as any user by typing the same name and role, and any participant can read any room's messages and password. **Grounding:** P5, P6, R1.
 - **NFR-5 Reliable repetition.** Repeating any request (send, attempt, delivery, judging) produces no duplicate effect. Concurrent requests resolve to one outcome. **Grounding:** P4.
 - **NFR-6 Persistence.** The application identity, conversation, learning progress and transfer-assessment state survive reloads, reconnects and multiple tabs. Rooms are kept after use. **Grounding:** P4, P8, C4.
