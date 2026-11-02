@@ -2,7 +2,7 @@
 title: Online Safety Tutor Platform
 status: final
 created: 2026-10-22
-updated: 2026-10-30
+updated: 2026-11-02
 ---
 
 # PRD: Online Safety Tutor Platform
@@ -274,6 +274,7 @@ The learner must rate the most recent tutor reply before sending their next mess
 - Pre-populated dialogue and result messages are never rated. While exit assessment is in force, transfer assessment questions are never rated either, whether open and hidden from the learner (FR-37) or ended and shown again.
 - A learner has one rating per message; changing it replaces it. The room owner and observers see rating counts update live.
 - If saving the rating fails, the learner is told and their unsent message is kept.
+- Once the rating is saved, the learner's unsent message is sent once, without a second click, after the room's sending rules are checked again. If that send fails, the rating stays saved and the message is kept for another try. Leaving the room before the send cancels it.
 
 #### FR-17: (withdrawn 2026-10-22)
 Clearing chat history is not a supported feature.
@@ -400,6 +401,7 @@ The room owner can turn the AI assistant on or off for a room and set its AI rol
 **Consequences (testable):**
 - With the AI assistant off, no AI draft can be requested.
 - Reopening settings shows the saved values.
+- In phishing rooms the settings also keep which scenario preset the AI teaches from (its detection areas and verification steps), or Custom. Reopening shows that choice; switching to Custom keeps the current text; an unknown preset is refused.
 
 #### FR-25: Request an AI suggestion (boundary)
 The room owner can request an AI suggestion for a chosen learner message, or the latest one. Realizes UJ-1.

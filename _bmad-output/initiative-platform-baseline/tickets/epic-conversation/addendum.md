@@ -2,13 +2,13 @@
 
 Intent: hold the volatile facts about how well this epic's rules are guarded by tests, so the epic itself stays stable. Each row links up to a rule in `_bmad-output/initiative-platform-baseline/tickets/epic-conversation/epic-conversation.md`.
 
-Updated: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_conversation_*`, `guardp6_conversation_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
+Updated: 2026-11-02 (R3 guard follows the rating auto-send change). Earlier: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_conversation_*`, `guardp6_conversation_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
 
 ## A. Test debt needed for the pilot
 
 | Rule | Guard | Why the guard fails | Basis | Harm if the clause breaks |
 | --- | --- | --- | --- | --- |
-| R3 | `tutor-system/src/__tests__/tutor_response_rating_gate.integration.test.tsx` (blocks the reply, animates a mandatory prompt for the latest response, and unlocks only after feedback succeeds) | Mocks rating persistence (disputed); never rejects a save to check the error and retained draft. | P8, OQ-20 | Missing or wrong ratings leave the pilot's research data incomplete, and it cannot be recollected. |
+| R3 | `tutor-system/src/__tests__/tutor_response_rating_gate.integration.test.tsx` (blocks the reply and sends it exactly once after feedback succeeds; preserves the draft and retries the rating before sending when saving fails) | Mocks rating persistence (disputed). The failed-save case is now tested (merge of 2026-11-02), not yet re-audited. | P8, OQ-20 | Missing or wrong ratings leave the pilot's research data incomplete, and it cannot be recollected. |
 
 ## B. Guards that can wait under P6
 
