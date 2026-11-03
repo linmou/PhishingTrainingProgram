@@ -13,7 +13,7 @@ risk: high
 
 A transfer assessment becomes due, is reviewed and sent by the room owner, answered at exit and graded with two attempts, and its result messages and effect on progress are saved. A new feature that touches assessments, Guard, learning progress or tutor review checks itself against these invariants.
 
-Implementation update: 2026-10-31; baseline `d3bb45b`. Exit-assessment release acceptance is tracked in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md` and remains open until production verification.
+Implementation update: 2026-11-03; production release `4bb5b1b` / PR #54. Exit-assessment acceptance passed on staging and production; evidence and cleanup are tracked in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md`.
 
 ## Outcome
 
@@ -74,4 +74,4 @@ Test paths are from the repository root.
 ## Notes
 
 - Source conflict: R5 — prd FR-37 refuses any answer that is not an option selection; the code still grades typed text and cancels a free-text answer as "assisted" (spine AD-6 records the code's behavior).
-- Exit-assessment implementation (issue #46; PRD FR-54, gap G-78): the temporary replacement updates R1, R6, R9, R10, R11 and R15 above. R5 option controls are used in the exit pop-up; R8 result messages remain persisted for all participants, with unfinished results shown to the learner only in that pop-up. Production acceptance remains open in the dated release record. The earlier in-dialogue implementation is archived on branch `assess-in-dialogue` (`ebc03d1`).
+- Exit-assessment implementation (issue #46; PRD FR-54, gap G-78 closed): the temporary replacement updates R1, R6, R9, R10, R11 and R15 above. R5 option controls are used in the exit pop-up; R8 result messages remain persisted for all participants, with unfinished results shown to the learner only in that pop-up. Production acceptance passed on 2026-11-03 in release `4bb5b1b`; see the dated release record. The earlier in-dialogue implementation is archived on branch `assess-in-dialogue` (`ebc03d1`).
