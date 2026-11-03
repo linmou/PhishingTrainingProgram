@@ -24,6 +24,9 @@ jobs:
           node --test scripts/database/disposable-database.test.js
           node --test scripts/staging-coordination.test.js
 
+      - name: Test review approval policy (pure logic, no hosted state)
+        run: node --test .github/scripts/review-policy.test.cjs
+
       # Prevent the human-facing PR handoff from drifting away from CI check IDs.
       # Structural check only: PR results and review decisions are external gates.
       - name: Check PR template against CI job IDs

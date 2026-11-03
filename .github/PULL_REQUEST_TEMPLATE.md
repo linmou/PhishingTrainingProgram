@@ -18,10 +18,20 @@ Require human approval for new material decisions beyond recorded authorization:
 
 Routine changes within that trusted authorization may merge automatically after required CI, independent Codex review and applicable staging acceptance pass. Contributions without that authorization require independent trusted human maintainer approval on the current PR head. Changes to merge gates or reviewer/agent approval instructions always require that current-head approval under the existing target-branch rules; proposed relaxations apply only after approval and merge. Agents must not submit human approval on a person's behalf. Reassess after changes affecting risk or evidence. A missing assessment, pending review, unresolved blocking finding or missing required approval prevents merging; a clean code review alone does not establish merge authorization.
 
+### Code review protocol
+
+- **Code quality:** For applicable code changes, use the repository's `.agents/skills/code-smell-monitor/SKILL.md` (also exposed at `.claude/skills/code-smell-monitor`). Start with changed files, expand to affected modules when needed, and record the monitor's report, detector coverage, failures, and findings. The skill supplies evidence, not automatic proof of defects. For docs-only changes, mark N/A.
+- **Behavioral correctness and security:** Review the actual diff against affected BMAD requirements/invariants, architecture contracts, authorization, privacy and trust boundaries. Static code-smell checks do not replace domain tests or human judgment.
+- **Findings:** Blocking findings must be fixed and independently re-reviewed. Other actionable findings must be fixed, demonstrated false positive, or explicitly accepted by a trusted maintainer for the current head with a documented reason. Do not silently ignore incomplete detector coverage.
+- **Affected invariants:** <!-- Identifiers/links, or N/A with reason -->
+- **Code-smell evidence:** <!-- Report link + coverage / unresolved findings, or N/A for non-code changes -->
+
+The trusted `review-policy` check verifies current-head Codex review and risk-based merge authorization. It is an additional gate, not a substitute for the existing deterministic CI checks or applicable staging/production acceptance. For routine approval without a new human review, the linked issue must have been created by a trusted maintainer and contain `<!-- ptp-routine-authorization:v1 paths=tutor-system/src/,tutor-system/features/ -->` with appropriately narrow paths; the PR's own statements cannot confer authorization.
+
 ## Verification
 - **Local verification:** <!-- Commands and observed outcomes, or N/A with reason -->
 - **GitHub CI:** The [Verify PR (no hosted state)](https://github.com/linmou/PhishingTrainingProgram/blob/no_sign_up/.github/workflows/verify-pr.yml) workflow automatically reports `isolation-harness`, `frontend-jest`, and `frontend-build` in the PR **Checks** tab. Check the live statuses; do not self-certify a pass here.
-- **Code review:** <!-- Pending / reviewer or tool / findings and disposition. CI above does not perform AI code review. -->
+- **Code review:** <!-- Current-head Codex review link, findings/disposition, and any explicit trusted human acceptance. CI above does not perform AI code review. -->
 - **Staging acceptance:** <!-- Not applicable / Pending / Verified; include tested commit, project, evidence link when applicable -->
 - **Unverified behavior or blockers:** <!-- None or specifics -->
 
