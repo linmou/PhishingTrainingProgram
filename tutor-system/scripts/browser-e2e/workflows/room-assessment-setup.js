@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { joinAs, openRoom, query, waitForMatch, screenshot, writeJson, sendStudentMessage, captureResponses, requestId, TIMEOUT } = require('../browser-e2e-support');
 const { deliverFixedAssessment } = require('./assessment-fixture');
-const { assertFirstPassResult } = require('./assessment-browser-checks');
+const { assertFirstPassResult, openExitAssessment } = require('./assessment-browser-checks');
 
 async function waitForTemplateSettings(page, promptConfig) {
   await page.waitForFunction(expected => {
@@ -231,9 +231,7 @@ module.exports = async function roomAssessmentSetup(ctx) {
     room, checklist, items: [item], focus,
   });
   const priorMessageIds = (await query(client, 'messages', 'id', 'room_id', room.id)).map(row => row.id);
-  await studentPage.reload({ waitUntil: 'domcontentloaded' });
-  const question = studentPage.locator(`[data-testid="public-assessment-${delivered.assessment_id}"]`);
-  await question.waitFor({ timeout: TIMEOUT });
+  const question = await openExitAssessment(studentPage, delivered.assessment_id);
   await question.locator('input[value="B"]').check();
   await question.getByRole('button', { name: 'Submit answer' }).click();
   const saved = await waitForMatch(

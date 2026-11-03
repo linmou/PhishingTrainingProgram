@@ -1,8 +1,8 @@
 # Exit-time transfer assessment (temporary)
 
-<!-- Intent: define the temporary exit-assessment replacement and how it integrates with the existing transfer-assessment system. Updated: 2026-10-30. Baseline commit: ebc03d1. -->
+<!-- Intent: define the temporary exit-assessment replacement and how it integrates with the existing transfer-assessment system. Updated: 2026-10-31. Implementation baseline commit: d3bb45b; archived in-dialogue baseline: ebc03d1. -->
 
-Status: approved by the owner on 2026-10-29/30; not implemented (PRD gap G-78). Requirements: PRD FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-43. Decisions and their sources: PRD addendum §G (EA-1 to EA-21).
+Status: approved by the owner on 2026-10-29/30; implementation and verification in progress (PRD gap G-78 remains open). Delivery evidence: [2026-10-31 release record](doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md). Requirements: PRD FR-54 and the "While exit assessment is in force" consequences of FR-16 and FR-31–FR-43. Decisions and their sources: PRD addendum §G (EA-1 to EA-21).
 
 ## Purpose
 

@@ -356,9 +356,9 @@ describe('student Tutor-response rating gate', () => {
     view.rerender(roomView());
     await act(async () => { resolveFeedback?.(); });
 
-    expect(sendMessage).not.toHaveBeenCalled();
-    expect(screen.getByDisplayValue('Wait for the latest gate')).toBeInTheDocument();
     if (incoming === 'response') {
+      expect(sendMessage).not.toHaveBeenCalled();
+      expect(screen.getByDisplayValue('Wait for the latest gate')).toBeInTheDocument();
       const newDialog = screen.getByRole('alertdialog');
       expect(within(newDialog).getByText('New response while saving')).toBeInTheDocument();
       fireEvent.click(within(newDialog).getByRole('button', { name: 'Helpful' }));
@@ -368,12 +368,9 @@ describe('student Tutor-response rating gate', () => {
       expect(submitMessageFeedback).toHaveBeenLastCalledWith('tutor-new', 'like', 5);
     } else {
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-      expect(screen.getByDisplayValue('Wait for the latest gate')).toBeDisabled();
-      messages = [messages[0]];
-      bindContext();
-      view.rerender(roomView());
-      fireEvent.click(screen.getByTitle('Send comment'));
-      await waitFor(() => expect(sendMessage).toHaveBeenCalledTimes(1));
+      expect(screen.getByRole('textbox')).toBeEnabled();
+      expect(screen.getByRole('textbox')).toHaveValue('');
+      expect(sendMessage).toHaveBeenCalledWith('Wait for the latest gate', { replyToMessageId: undefined });
       expect(submitMessageFeedback).toHaveBeenCalledTimes(1);
     }
   });

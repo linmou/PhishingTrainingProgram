@@ -120,9 +120,10 @@ describe('PostComment transfer assessment rendering', () => {
     expect(question).toBeVisible();
   });
 
-  it('keeps each mounted participant view independent and preserves selection and retry feedback', () => {
+  it('keeps each mounted participant disclosure independent with read-only answer controls', () => {
     const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
     const message = withAnswerLifecycle(question, answerLifecycleFromProcessed({
+      result_message: null,
       message_id: DELIVERED_ANSWER_ID,
       assessment_id: deliveredQuestionRow.id,
       processing_state: 'applied',
@@ -165,7 +166,9 @@ describe('PostComment transfer assessment rendering', () => {
       .toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(within(firstView).getByRole('button', { name: 'Expand assessment question' }));
-    expect(within(firstView).getByRole('radio', { name: /B\./ })).toBeChecked();
+    expect(within(firstView).getByRole('radio', { name: /B\./ })).toBeDisabled();
+    expect(within(firstView).getByRole('radio', { name: /B\./ })).not.toBeChecked();
+    expect(within(firstView).queryByRole('button', { name: 'Submit answer' })).not.toBeInTheDocument();
     expect(within(firstView).queryByText('Incorrect. 1 attempt remaining.')).not.toBeInTheDocument();
     expect(within(secondView).queryByText('Incorrect. 1 attempt remaining.')).not.toBeInTheDocument();
   });
@@ -174,6 +177,7 @@ describe('PostComment transfer assessment rendering', () => {
     const explanation = 'Verify the request through an official channel.';
     const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
     const resolvedQuestion = withAnswerLifecycle(question, answerLifecycleFromProcessed({
+      result_message: null,
       message_id: DELIVERED_ANSWER_ID,
       assessment_id: deliveredPublicAssessment.id,
       processing_state: 'applied',
@@ -213,6 +217,7 @@ describe('PostComment transfer assessment rendering', () => {
       ...deliveredAnswerRow,
       user_id: LEARNER_A_ID,
     }), answerLifecycleFromProcessed({
+      result_message: null,
       message_id: DELIVERED_ANSWER_ID,
       assessment_id: deliveredPublicAssessment.id,
       processing_state: 'rejected',

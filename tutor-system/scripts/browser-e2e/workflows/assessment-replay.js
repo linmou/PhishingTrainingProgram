@@ -59,7 +59,8 @@ module.exports = async function assessmentReplay(ctx) {
     const delivered = await deliverFixedAssessment(ctx, fixture);
     await ctx.detachRooms();
     await openRoom(page, ctx.appUrl, fixture.room.id);
-    await page.getByTestId(`public-assessment-${delivered.assessment_id}`).waitFor({ timeout: TIMEOUT });
+    assert.equal(await page.getByTestId(`public-assessment-${delivered.assessment_id}`).count(), 0,
+      'Open exit question leaked into the learner conversation');
     await page.waitForFunction(() => window.__assessmentTestSockets.some(socket => socket.readyState === WebSocket.OPEN), undefined, { timeout: TIMEOUT });
     await context.setOffline(true);
     await page.evaluate(() => window.__assessmentTestSockets.forEach(socket => socket.close()));
