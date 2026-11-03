@@ -20,6 +20,24 @@ function assertQueueState(rows, delivered, expected) {
   }
 }
 
+function assertHeldAnswer(processed, answer, delivered, studentId) {
+  assert(answer, 'Guard submission did not persist an answer');
+  assert.equal(answer.user_id, studentId, 'Guard answer belongs to another learner');
+  assert.equal(answer.user_role, 'student');
+  assert.equal(answer.assessment_id, delivered.assessment_id, 'Guard answer belongs to another assessment');
+  assert.equal(answer.parent_message_id, delivered.question_message_id, 'Guard answer belongs to another question');
+  assert.deepEqual(answer.assessment_selected_option_ids, ['B'], 'Guard answer lost its selected options');
+  assert.equal(processed.message_id, answer.id, 'Guard processing refers to another answer');
+  assert.equal(processed.assessment_id, delivered.assessment_id, 'Guard processing refers to another assessment');
+  assert.equal(processed.processing_state, 'deferred', 'Guard submission was not held');
+  assert.equal(processed.code, 'guard_deferred', 'Submission was deferred for a different reason');
+  assert.equal(processed.attempts_used, 0, 'Guard submission consumed an attempt');
+  assert.equal(processed.attempt_number, null, 'Guard submission acquired an attempt number');
+  assert.equal(processed.answer_outcome, null, 'Guard submission acquired a grade');
+  assert.equal(processed.terminal, false, 'Guard submission closed its assessment');
+  assert.equal(processed.result_message, null, 'Guard submission published a grade');
+}
+
 module.exports = async function exitAssessment(ctx) {
   assertStaging(ctx.config);
   const evidence = { stage: 'fixture', operations: [], status: 'running' };
@@ -103,7 +121,27 @@ module.exports = async function exitAssessment(ctx) {
     const popup = ctx.studentPage.getByRole('dialog', { name: 'Before you leave' });
     assert((await popup.innerText()).includes('Question 1 of 2'), 'Browser Back did not open the ordered queue');
     await question.locator('input[value="B"]').check();
-    await question.getByRole('button', { name: 'Submit answer' }).click();
+    const [guardResponse] = await Promise.all([
+      ctx.studentPage.waitForResponse(response => response.url().includes('/functions/v1/assessment-api') &&
+        response.request().postDataJSON()?.operation === 'process_message' &&
+        response.request().postDataJSON()?.assessment_id === delivered[0].assessment_id, { timeout: TIMEOUT }),
+      question.getByRole('button', { name: 'Submit answer' }).click()
+    ]);
+    const guardBody = await guardResponse.json();
+    evidence.guard_processing = { request: guardResponse.request().postDataJSON(), status: guardResponse.status(), response: guardBody };
+    persist();
+    assert.equal(guardResponse.status(), 200, 'Guard answer processing failed');
+    assert.equal(guardBody.ok, true, 'Guard answer processing returned an error');
+    const guardMessages = await waitForMatch(() => query(ctx.client, 'messages', '*', 'room_id', fixture.room.id),
+      rows => rows.some(row => row.id === guardBody.data?.message_id), 'persisted Guard-held answer');
+    evidence.guard_answer = guardMessages.find(row => row.id === guardBody.data.message_id);
+    assertHeldAnswer(guardBody.data, evidence.guard_answer, delivered[0], ctx.student.id);
+    evidence.guard_processing_rows = await managementQuery(ctx.config,
+      `select answer_message_id,assessment_id,code,authoritative_result from private.transfer_assessment_processing
+       where answer_message_id='${evidence.guard_answer.id}'::uuid`);
+    assert.equal(evidence.guard_processing_rows.length, 1, 'Guard answer has no unique persisted processing record');
+    assert.equal(evidence.guard_processing_rows[0].code, 'guard_deferred');
+    assertHeldAnswer(evidence.guard_processing_rows[0].authoritative_result, evidence.guard_answer, delivered[0], ctx.student.id);
     await popup.getByRole('status').filter({ hasText: 'Waiting for your tutor to turn Guard off.' }).waitFor({ timeout: TIMEOUT });
     evidence.guard_rows = await privateRows();
     assertQueueState(evidence.guard_rows, delivered, [{ lifecycle: 'open', attempts: 0 }, { lifecycle: 'open', attempts: 0 }]);
@@ -118,6 +156,8 @@ module.exports = async function exitAssessment(ctx) {
       return rows.find(row => row.assessment_event?.assessment_id === assessmentId && row.assessment_event.attempt_number === attempt);
     };
     const firstResult = await savedResult(delivered[0].assessment_id, 1);
+    assert.equal(firstResult.assessment_event.answer_message_id, evidence.guard_answer.id,
+      'Guard recovery graded a different answer');
     await assertExitResult(ctx.studentPage, firstResult);
     question = await openExitAssessment(ctx.studentPage, delivered[1].assessment_id);
     assert((await popup.innerText()).includes('Question 2 of 2'));
@@ -159,3 +199,4 @@ module.exports = async function exitAssessment(ctx) {
 };
 
 module.exports.assertQueueState = assertQueueState;
+module.exports.assertHeldAnswer = assertHeldAnswer;

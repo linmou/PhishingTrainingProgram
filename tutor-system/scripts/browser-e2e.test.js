@@ -201,6 +201,27 @@ test('exit queue oracle verifies every delivered question and accepted attempt c
   }
 });
 
+// Responsibility: exit-assessment.js must prove the submitted, bound answer was held before releasing Guard.
+test('Guard oracle requires persisted answer identity, deferred processing and zero grading', () => {
+  const delivered = { assessment_id: 'assessment', question_message_id: 'question' };
+  const answer = { id: 'answer', user_id: 'learner', user_role: 'student', assessment_id: 'assessment',
+    parent_message_id: 'question', assessment_selected_option_ids: ['B'] };
+  const processed = { message_id: 'answer', assessment_id: 'assessment', processing_state: 'deferred',
+    code: 'guard_deferred', attempts_used: 0, attempt_number: null, answer_outcome: null, terminal: false, result_message: null };
+  const verify = (result = processed, row = answer) => exitAssessment.assertHeldAnswer(result, row, delivered, 'learner');
+  assert.doesNotThrow(() => verify());
+  assert.throws(() => verify(processed, null), /persist an answer/);
+  for (const mutation of [{ user_id: 'other' }, { user_role: 'tutor' }, { assessment_id: 'other' },
+    { parent_message_id: 'other' }, { assessment_selected_option_ids: ['A'] }]) {
+    assert.throws(() => verify(processed, { ...answer, ...mutation }));
+  }
+  for (const mutation of [{ message_id: 'other' }, { assessment_id: 'other' }, { processing_state: 'applied' },
+    { code: 'unresolved' }, { attempts_used: 1 }, { attempt_number: 1 }, { answer_outcome: 'passed' },
+    { terminal: true }, { result_message: { id: 'unexpected-grade' } }]) {
+    assert.throws(() => verify({ ...processed, ...mutation }));
+  }
+});
+
 // Responsibility: assessment-answer.js must verify a cancelled target is re-offered for tutor review without grading its answer.
 test('cancellation replacement oracle enforces target, ordinary focus, learner and review boundaries', () => {
   const fixture = { room: { id: 'room' }, checklist: { id: 'checklist' },
