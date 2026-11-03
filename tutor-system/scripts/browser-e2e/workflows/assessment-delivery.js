@@ -110,7 +110,7 @@ async function answerDeliveredAssessment(ctx, journey, delivered) {
   const assessmentEvents = await managementQuery(ctx.config,
     `select * from private.learning_event_inbox where room_id='${journey.room.id}'::uuid and event_kind='assessment_pass' and event_payload->>'assessment_id'='${questionMessage.assessment_id}'`);
   assert(assessmentEvents.some(row => row.processing_state === 'applied'), 'Assessment pass event was not applied');
-  assert(assessmentEvents.every(row => row.item_id === target.id && row.student_id === ctx.student.id),
+  assert(assessmentEvents.every(row => row.item_id === delivered.assessed_item.id && row.student_id === ctx.student.id),
     'Assessment outcome was applied to a different target or learner');
   const progress = (await query(ctx.client, 'checklist_items', 'status,understanding_level', 'id', assessedItem.id))[0];
   assert.equal(progress?.status, 'covered');
