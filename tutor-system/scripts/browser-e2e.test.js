@@ -288,15 +288,18 @@ test('cleanup runs after a workflow failure and its failure fails the workflow',
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('learner sends once with prior, prompted, consecutive, or no required ratings', async () => {
+test('learner sends once with prior, prompted, consecutive, or no ratings, including rating auto-send', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const { initiallyOpen, requiredRatings } of [
+    for (const { initiallyOpen, requiredRatings, autoResume } of [
       { initiallyOpen: true, requiredRatings: 1 },
       { initiallyOpen: false, requiredRatings: 1 },
       { initiallyOpen: false, requiredRatings: 0 },
       { initiallyOpen: false, requiredRatings: 2 },
-      { initiallyOpen: true, requiredRatings: 2 }
+      { initiallyOpen: true, requiredRatings: 2 },
+      { initiallyOpen: false, requiredRatings: 1, autoResume: true },
+      { initiallyOpen: false, requiredRatings: 2, autoResume: true },
+      { initiallyOpen: true, requiredRatings: 2, autoResume: true }
     ]) {
       const page = await browser.newPage();
       await page.setContent(`
@@ -321,9 +324,28 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
           window.submitAttempts = 0;
           window.ratingsRemaining = ${requiredRatings};
           window.rated = window.ratingsRemaining === 0;
+          window.autoResume = ${Boolean(autoResume)};
+          window.sendDraft = () => {
+            const input = document.querySelector('textarea');
+            if (!input.value) return;
+            const submit = document.querySelector('form button');
+            submit.disabled = true;
+            if (!window.rated) { window.showRating(); return; }
+            setTimeout(() => {
+              window.sent.push(input.value);
+              input.value = '';
+              submit.disabled = true;
+            }, 30);
+          };
+          document.querySelector('textarea').oninput = event => {
+            document.querySelector('form button').disabled = !event.target.value;
+          };
           window.showRating = () => {
             if (document.querySelector('[data-testid="rating-reminder-backdrop"]')) return;
             const reminder = document.querySelector('#reminder-template').content.firstElementChild.cloneNode(true);
+            const quote = document.createElement('blockquote');
+            quote.textContent = 'Response ' + window.ratingsRemaining;
+            reminder.prepend(quote);
             let useful = false;
             let stars = 0;
             reminder.querySelector('.rating-reminder-choice button').onclick = () => { useful = true; };
@@ -335,6 +357,7 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
                 window.ratingsRemaining -= 1;
                 window.rated = window.ratingsRemaining === 0;
                 reminder.remove();
+                if (window.autoResume) window.sendDraft();
               }
             };
             document.body.append(reminder);
@@ -343,6 +366,7 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
             event.preventDefault();
             window.submitAttempts += 1;
             if (!window.rated) { window.showRating(); return; }
+            if (window.autoResume) { window.sendDraft(); return; }
             const input = document.querySelector('textarea');
             window.sent.push(input.value);
             input.value = '';
@@ -354,7 +378,7 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
       const result = await page.evaluate(() => ({ sent: window.sent, rated: window.rated, attempts: window.submitAttempts }));
       assert.deepEqual(result.sent, ['Check the official app.']);
       assert.equal(result.rated, true);
-      assert.equal(result.attempts, requiredRatings + (initiallyOpen ? 0 : 1));
+      assert.equal(result.attempts, autoResume ? 1 : requiredRatings + (initiallyOpen ? 0 : 1));
       await page.close();
     }
   } finally { await browser.close(); }

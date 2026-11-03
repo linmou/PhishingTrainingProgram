@@ -139,17 +139,34 @@ async function sendStudentMessage(page, content) {
   const input = page.locator('textarea.comment-input-field');
   const send = page.locator('form.comment-input-form button[type="submit"]');
   const completeRating = async () => {
+    const quotedResponse = reminder.locator('blockquote');
+    const previousResponse = await quotedResponse.count() ? await quotedResponse.innerText() : null;
     await reminder.locator('.rating-reminder-choice button').first().click();
     await reminder.locator('.rating-reminder-stars button').nth(3).click();
     await reminder.locator('.rating-reminder-submit').click();
-    await reminder.waitFor({ state: 'hidden', timeout: TIMEOUT });
+    await page.waitForFunction(previous => {
+      const modal = document.querySelector('[data-testid="rating-reminder-backdrop"]');
+      return !modal || (previous !== null && modal.querySelector('blockquote')?.textContent !== previous);
+    }, previousResponse, { timeout: TIMEOUT });
   };
 
   if (await reminder.isVisible()) await completeRating();
   await input.fill(content);
   const deadline = Date.now() + TIMEOUT;
   while (Date.now() < deadline) {
-    if (await reminder.isVisible()) await completeRating();
+    if (await reminder.isVisible()) {
+      await completeRating();
+      // Saving a rating resumes the draft in the app. Wait for that send,
+      // another required rating, or a composer ready for manual submission.
+      await page.waitForFunction(() => {
+        const input = document.querySelector('textarea.comment-input-field');
+        const send = document.querySelector('form.comment-input-form button[type="submit"]');
+        return input?.value === '' || document.querySelector('[data-testid="rating-reminder-backdrop"]') !== null ||
+          (send && !send.disabled);
+      }, null, { timeout: Math.max(1, deadline - Date.now()) });
+      if (await input.inputValue() === '') return;
+      if (await reminder.isVisible()) continue;
+    }
     await send.click();
     await page.waitForFunction(() =>
       document.querySelector('textarea.comment-input-field')?.value === '' ||
