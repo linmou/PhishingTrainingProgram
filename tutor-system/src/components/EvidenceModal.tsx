@@ -15,12 +15,13 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
   item
 }) => {
   const dialogRef = React.useRef<HTMLDivElement>(null);
+  const activeItemId = isOpen ? item?.id : undefined;
   React.useEffect(() => {
-    if (!isOpen || !item) return;
+    if (!activeItemId) return;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
     return () => { if (opener?.isConnected) opener.focus(); };
-  }, [isOpen, item?.id]);
+  }, [activeItemId]);
 
   if (!isOpen || !item) return null;
 

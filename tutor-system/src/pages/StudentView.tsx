@@ -149,7 +149,8 @@ const StudentView: React.FC = () => {
         setHasLoaded(false);
         fetchRooms();
 
-        return () => { ++loadRequest.current; };
+        const requestCounter = loadRequest;
+        return () => { ++requestCounter.current; };
     }, [fetchRooms]);
 
     useEffect(() => {
