@@ -1,6 +1,17 @@
 # Service configuration
 
-<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-10-26. Baseline commit: 319e472. -->
+<!-- Intent: locate maintained scenario targets, AI configuration and their verification. Updated: 2026-11-08. Baseline commit: a69b836. -->
+
+The supported tutor/context path is `aiService.ts` → `simplifiedAIContext.ts`,
+with transport through the `ai-api` Edge Function. The application is private;
+its internal source modules are not a published package API. Retired alternatives
+are preserved as source references outside `src` in
+[`reference/legacy-ai`](../../reference/legacy-ai/README.md), with their consumer
+inventory and historical hashes. Existing evaluation run snapshots stay frozen.
+
+Room components use `useChecklist` directly and retain the live
+`RoomFeaturesService.checklist` facade. Components and hooks own their subscriptions
+and cleanup; the service facade does not expose lifecycle or health checks.
 
 `detectionTemplates.ts` defines five targets per scenario in one inventory: the six
 teaching scenarios plus `General Scam Indicators`, the checklist's template fallback.

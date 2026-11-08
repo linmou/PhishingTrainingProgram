@@ -1,7 +1,6 @@
 /**
- * Unified Room Features Service
- * Central hub for all room-related functionality including checklist, AI, and coverage detection.
- * Provides a clean abstraction layer for components to access room features.
+ * Room feature service access used by the application.
+ * Components and useChecklist own their effects and resource cleanup.
  */
 
 import { ChecklistService } from './checklistService';
@@ -40,38 +39,6 @@ export class RoomFeaturesService {
    */
   static readonly coverage = CoverageDetectionService;
 
-  /**
-   * Initialize all services for a room
-   * @param roomId - Room identifier
-   * @returns Promise resolving when all services are initialized
-   */
-  static async initializeRoom(roomId: string): Promise<void> {
-    // Initialize services that require setup
-    // Currently, services are stateless, but this provides extension point
-    console.log(`🏗️ Initializing room features for room: ${roomId}`);
-  }
-
-  /**
-   * Cleanup all services for a room
-   * @param roomId - Room identifier  
-   * @returns Promise resolving when cleanup is complete
-   */
-  static async cleanupRoom(roomId: string): Promise<void> {
-    // Cleanup any subscriptions or resources
-    console.log(`🧹 Cleaning up room features for room: ${roomId}`);
-  }
-
-  /**
-   * Get service health status
-   * @returns Object containing health status of all services
-   */
-  static getServiceHealth(): Record<string, boolean> {
-    return {
-      checklist: true, // ChecklistService is always available
-      ai: true,        // aiService is always available  
-      coverage: true   // CoverageDetectionService is always available
-    };
-  }
 }
 
 // Export for backward compatibility and direct access  

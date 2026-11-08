@@ -135,7 +135,7 @@ describe('AI service Edge Function boundary', () => {
 
     const servicePaths = [
       path.resolve(__dirname, '..', 'aiService.ts'),
-      path.resolve(__dirname, '..', 'aiService.original.ts'),
+      path.resolve(__dirname, '..', '..', '..', 'reference', 'legacy-ai', 'aiService.original.ts.txt'),
       path.resolve(__dirname, '..', 'llmExtractionService.ts'),
       path.resolve(__dirname, '..', '..', '..', '.env.example'),
     ];
