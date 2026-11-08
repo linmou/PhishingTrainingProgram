@@ -19,6 +19,7 @@ import { useChecklist } from '../hooks/useChecklist';
 import { ChecklistGenerationModal } from './ChecklistGenerationModal';
 import { ManualChecklistInput } from './ManualChecklistInput';
 import AddCustomAreaModal from './AddCustomAreaModal';
+import EvidenceModal from './EvidenceModal';
 import { RoomFeaturesService } from '../services/roomFeaturesService';
 import { transferAssessmentService } from '../services/transferAssessmentService';
 import { useOptionalAuth } from '../contexts/AuthContext';
@@ -352,6 +353,18 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   } = useChecklist(roomId, { enabled: transferEnabled, studentId });
 
   const [showAddCustomArea, setShowAddCustomArea] = useState(false);
+  const [evidenceSelection, setEvidenceSelection] = useState<{ scope: string; itemId: string } | null>(null);
+  const evidenceScope = JSON.stringify([
+    roomId, studentId, transferEnabled, auth?.user?.id,
+    checklist?.id, checklist?.student_id
+  ]);
+  const evidenceItem = evidenceSelection?.scope === evidenceScope
+    ? [...(checklist?.detection_areas || []), ...(checklist?.verification_steps || [])]
+      .find(item => item.id === evidenceSelection.itemId) || null
+    : null;
+  React.useEffect(() => {
+    if (!isVisible || loading || !evidenceItem) setEvidenceSelection(null);
+  }, [isVisible, loading, evidenceItem]);
   const transferPolicy = checklist?.progress_policy_version === 'transfer_v1';
   const setupRequired = transferEnabled && (!checklist ||
     checklist.detection_areas.length + checklist.verification_steps.length === 0);
@@ -389,8 +402,7 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
   };
 
   const handleViewEvidence = (itemId: string) => {
-    // TODO: Open evidence modal
-    console.log('View evidence for item:', itemId);
+    setEvidenceSelection({ scope: evidenceScope, itemId });
   };
 
   const handleExportReport = useCallback(() => {
@@ -805,7 +817,11 @@ const ChecklistPanel: React.FC<ChecklistPanelProps> = ({
         onAdd={handleAddCustomArea}
       />
       
-      {/* TODO: Add evidence viewing modal */}
+      <EvidenceModal
+        isOpen={evidenceItem !== null}
+        item={evidenceItem}
+        onClose={() => setEvidenceSelection(null)}
+      />
     </div>
   );
 };

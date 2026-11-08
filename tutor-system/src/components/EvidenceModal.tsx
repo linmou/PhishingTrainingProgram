@@ -77,7 +77,7 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
 
   return (
     <div className="evidence-modal-overlay" onClick={onClose}>
-      <div className="evidence-modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="evidence-modal-content" role="dialog" aria-modal="true" aria-label="Learning Evidence" onClick={(e) => e.stopPropagation()}>
         <div className="evidence-modal-header">
           <div className="evidence-modal-title">
             <h3>Learning Evidence</h3>
@@ -90,7 +90,7 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
               </span>
             </div>
           </div>
-          <button className="evidence-modal-close" onClick={onClose}>
+          <button className="evidence-modal-close" aria-label="Close evidence" onClick={onClose}>
             <X size={20} />
           </button>
         </div>

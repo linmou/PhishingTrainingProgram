@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Database } from '../types/database';
@@ -44,10 +44,15 @@ const StudentView: React.FC = () => {
     const [rooms, setRooms] = useState<RoomWithStatus[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [hasLoaded, setHasLoaded] = useState(false);
+    const loadRequest = useRef(0);
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
 
     const fetchRooms = useCallback(async () => {
+        const request = ++loadRequest.current;
+        const isCurrent = () => loadRequest.current === request;
         try {
             console.log('🔍 StudentView: Fetching rooms...');
             
@@ -68,6 +73,8 @@ const StudentView: React.FC = () => {
                         .eq('is_active', true)
                         .order('created_at', { ascending: false });
 
+                    if (!isCurrent()) return;
+
                     if (result.error) {
                         fetchError = result.error;
                         console.warn(`⚠️ StudentView: Fetch attempt ${attempt} failed:`, result.error);
@@ -77,6 +84,7 @@ const StudentView: React.FC = () => {
                         break;
                     }
                 } catch (err) {
+                    if (!isCurrent()) return;
                     fetchError = err;
                     console.warn(`⚠️ StudentView: Fetch attempt ${attempt} failed:`, err);
                 }
@@ -84,18 +92,20 @@ const StudentView: React.FC = () => {
                 // Wait before retry
                 if (attempt < 2) {
                     await new Promise(resolve => setTimeout(resolve, 2000));
+                    if (!isCurrent()) return;
                 }
             }
 
             if (!roomsData && fetchError) {
                 console.error('❌ StudentView: All fetch attempts failed, using offline mode');
-                setError('Unable to connect to server. Showing offline mode.');
+                setLoadError('Unable to connect to server. Showing offline mode.');
                 // Set empty rooms array in offline mode
                 setRooms([]);
                 return;
             }
 
             const { data: sessionsData, error: sessionsError } = await activeStudentSessions();
+            if (!isCurrent()) return;
             if (sessionsError) {
                 throw sessionsError;
             }
@@ -118,19 +128,34 @@ const StudentView: React.FC = () => {
             });
 
             setRooms(roomsWithStatus);
-            setError(null); // Clear any previous errors
+            setLoadError(null);
+            setHasLoaded(true);
             
         } catch (err) {
+            if (!isCurrent()) return;
             console.error('❌ StudentView: Unexpected error in fetchRooms:', err);
-            setError('Unable to load rooms. Please try again later.');
+            setLoadError('Unable to load rooms. Please try again later.');
             setRooms([]);
         } finally {
-            setLoading(false);
+            if (isCurrent()) setLoading(false);
         }
     }, [user?.id]);
 
     useEffect(() => {
+        setRooms([]);
+        setError(null);
+        setLoadError(null);
+        setLoading(true);
+        setHasLoaded(false);
         fetchRooms();
+
+        return () => { ++loadRequest.current; };
+    }, [fetchRooms]);
+
+    useEffect(() => {
+        // Initial offline loads wait for explicit retry. Once connected, keep listening
+        // through refresh failures so later room/session events can recover the list.
+        if (!hasLoaded) return;
 
         // Only set up real-time subscriptions if we're not in offline mode
         let roomSubscription: any = null;
@@ -138,7 +163,6 @@ const StudentView: React.FC = () => {
 
         // Add a delay before setting up subscriptions to see if the initial fetch works
         const setupSubscriptions = setTimeout(() => {
-            if (!error) { // Only setup subscriptions if no error occurred during fetch
                 try {
                     console.log('🔄 StudentView: Setting up real-time subscriptions...');
                     
@@ -182,9 +206,6 @@ const StudentView: React.FC = () => {
                 } catch (subscriptionError) {
                     console.warn('⚠️ StudentView: Failed to setup subscriptions:', subscriptionError);
                 }
-            } else {
-                console.log('📴 StudentView: Skipping subscriptions due to offline mode');
-            }
         }, 3000);
 
         return () => {
@@ -196,7 +217,7 @@ const StudentView: React.FC = () => {
                 sessionSubscription.unsubscribe();
             }
         };
-    }, [fetchRooms, error]);
+    }, [fetchRooms, hasLoaded]);
 
     const handleJoinRoom = async (roomId: string) => {
         try {
@@ -355,7 +376,7 @@ const StudentView: React.FC = () => {
 
 
                 <h2>Available Rooms</h2>
-                {error && (
+                {(error || loadError) && (
                     <div className="error-message" role="alert" style={{
                         color: 'red', 
                         marginBottom: '15px',
@@ -364,11 +385,12 @@ const StudentView: React.FC = () => {
                         border: '1px solid #ff9999',
                         borderRadius: '4px'
                     }}>
-                        {error}
+                        {error || loadError}
                         <br />
                         <button 
                             onClick={() => {
                                 setError(null);
+                                setLoadError(null);
                                 setLoading(true);
                                 fetchRooms();
                             }}
