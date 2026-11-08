@@ -25,8 +25,8 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 | --- | --- | --- |
 | G-65 | R3 | No test that result messages are never rated, or that one rating per message holds in the database; the gate for character replies is covered only by the cyberbullying browser test (FR-16). |
 
-## D. Planned changes
+## D. Released changes
 
 | Rule | Change | Source | Status |
 | --- | --- | --- | --- |
-| R3 | While the temporary exit assessment is in force, transfer assessment questions, open and hidden or ended and shown again, are not rating targets. Update R3 and its guard in the implementation PR. | PRD FR-16, FR-54; issue #46 | Approved, not built (G-78) |
+| R3 | While the temporary exit assessment is in force, transfer assessment questions, open and hidden or ended and shown again, are not rating targets. The epic's notes record the change and its guard. | PRD FR-16, FR-54; issue #46 | Released and production verified on 2026-11-03, release `4bb5b1b` / PR #54; G-78 closed |
