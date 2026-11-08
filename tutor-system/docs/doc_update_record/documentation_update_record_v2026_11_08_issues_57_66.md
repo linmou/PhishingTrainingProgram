@@ -5,9 +5,9 @@ Updated: 2026-11-08. Baseline commit: a69b836. -->
 
 - Owner: root Codex agent; four coding sub-agents own isolated worktrees.
 - Authorization: maintainer requested implementation, PR proposal and automatic merge unless blocked by high-risk operations on 2026-11-08.
-- Base: remote `no_sign_up`, `a69b836`; primary checkout's two local commits and pre-existing untracked files are outside this batch.
+- Original base: remote `no_sign_up`, `a69b836`; synchronized through `c74694b` (PRs #69/#70) in integration merge `9e38b79`. Primary checkout's two local commits and pre-existing untracked files are outside this batch.
 - Type: frontend implementation and documentation; no SQL, Edge or server configuration changes planned.
-- Status: local implementation and verification; review, CI and browser acceptance pending.
+- Status: implementation and staging acceptance passed; final synchronized-head review/CI and merge pending. Production release remains blocked by #68.
 
 ## Changed contracts and ownership
 
@@ -56,3 +56,15 @@ Production acceptance after approved merge: confirm Render's deployed commit, th
 - Visual inspection of the passing evidence screenshot identified the room container constraining the overlay. Root moved the modal into a document-body portal and added explicit full-viewport browser assertions; affected checks are being repeated for this final source change.
 - GitHub Codex completed code/security review. Its only code finding requested removing test shebangs. Root and independent images_timers reviewer adjudicated it non-actionable: direct maintainer instructions require them; these tests are outside the application module graph, and exact-head required build/Jest pass. The rationale is recorded in review thread `4505947641`, resolved. All actual independent review findings were fixed and rechecked. No approval requirement was changed.
 - Production remains incomplete under [release issue #68](https://github.com/linmou/PhishingTrainingProgram/issues/68), owned by the main integration/release agent. Reconcile Render's selected branch with PR #56's live temporary prompt before releasing this frontend batch; then run matching production acceptance. Do not change deployment composition silently.
+
+## Default-branch synchronization
+
+The maintainer requested importing the new default-branch merges on 2026-11-08. Fetched and merged `c74694b58a68529ccd7755039028e0a5366f25c1` (PRs #69/#70) into this integration branch as `9e38b79`, without conflicts. All 21 incoming files are baseline planning documents; runtime source, dependencies, CI, browser harness and hosted artifacts are unchanged by the merge.
+
+Reviewed the changed product constitution, PRD, architecture and affected learning-progress/AI/conversation epics against this batch. C3/C5 are retired IDs; C2 and R3 carry the relevant values, and NFR-2/AD-1/AD-2 retain server authority. This batch introduces no new progress writer, grading policy, permission rule or model/prompt change. FR-23 still requires current learner evidence; the modal satisfies it through the existing learner-owned projection. The rating auto-send and saved-scenario requirements are existing behavior and remain covered by their current suites. No runtime adaptation was necessary. Earlier dated code-sweep observations remain historical evidence.
+
+Portal candidate `7bb4caa` passed the staging UI smoke in `output/issues-57-66/ui-1794135572186/report.json`: evidence overlay x/y zero and width/height equal the viewport, persisted evidence and keyboard lifecycle, dashboard error/retry, both existing offline upload rejections, zero image/avatar mutations and fixture cleanup. Independent portal review found no actionable findings and reran two suites / 18 tests successfully. Documentation-only synchronization does not invalidate these unchanged frontend/backend artifacts.
+
+Two compact screenshots are retained in `docs/evidence/issues-57-66/` for PR review; full provider input/output, persisted IDs, command logs and failed-attempt evidence remain in the ignored run directories above.
+
+Post-synchronization targeted verification passed seven suites / 101 tests: evidence/dialog, dashboard lifecycle, checklist progress, AI room/history ownership, full conversation context, rating auto-send and saved AI settings. Log: `output/issues-57-66/post-default-merge-jest.log`. `git diff --check` passed. No application artifact changed during synchronization.
