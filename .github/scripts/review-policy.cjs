@@ -169,10 +169,34 @@ function assess({ pr, files, receipt, approvals, routine }) {
   return { ok: reasons.length === 0, humanRequired: needsHuman, reasons };
 }
 
+async function trustedRevision(github, owner, repo, pr) {
+  // Authorship fields alone are spoofable. Automatic authorization requires
+  // every commit in this PR to have a GitHub-verified signature associated
+  // with a currently trusted maintainer. Unsigned commits require human review.
+  if (lower(pr.head?.repo?.full_name) !== lower(`${owner}/${repo}`) || !pr.head?.sha || !pr.number) return false;
+  const commits = await github.paginate(github.rest.pulls.listCommits,
+    { owner, repo, pull_number: pr.number, per_page: 100 });
+  if (!commits.length || commits[commits.length - 1].sha !== pr.head.sha) return false;
+  for (const commit of commits) {
+    const verification = commit.commit?.verification;
+    if (verification?.verified !== true || verification.reason !== 'valid' ||
+        !commit.author?.login || !(await trustedMaintainer(github, owner, repo, commit.author.login))) return false;
+  }
+  return true;
+}
+
+async function trustedPrBody(github, owner, repo, pr) {
+  if (!(await trustedMaintainer(github, owner, repo, pr.user?.login))) return false;
+  // PR body is mutable independently of the head commit; authenticate edits.
+  return verifiedContent(github, pr.node_id, 'PullRequest', pr.user.login, pr.body,
+    login => trustedMaintainer(github, owner, repo, login));
+}
+
 async function routineAuthorized(github, owner, repo, pr, files) {
   // A public contributor cannot borrow an old standing authorization by
   // referencing its Issue while changing any in-scope source file.
-  if (files.some(isControl) || !(await trustedMaintainer(github, owner, repo, pr.user?.login))) return false;
+  if (files.some(isControl) || !(await trustedPrBody(github, owner, repo, pr))) return false;
+  if (!(await trustedRevision(github, owner, repo, pr))) return false;
   const issueNumber = issueReference(pr.body, owner, repo);
   if (!issueNumber) return false;
   const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
@@ -214,7 +238,8 @@ async function evaluate(github, owner, repo, number) {
   const result = assess({ pr, files, receipt, approvals, routine });
   // Do not publish a success for a superseded head or moved target branch.
   const { data: fresh } = await github.rest.pulls.get({ owner, repo, pull_number: number });
-  if (fresh.head.sha !== pr.head.sha || fresh.base.sha !== pr.base.sha || fresh.state !== 'open')
+  if (fresh.head.sha !== pr.head.sha || fresh.base.sha !== pr.base.sha ||
+      fresh.body !== pr.body || fresh.state !== 'open')
     throw new Error('PR head/base changed during review; retry against the new candidate');
   await publish(github, owner, repo, pr.head.sha, pr.base.sha, number, result);
   return result;
@@ -253,5 +278,5 @@ async function run({ github, context, core }) {
 module.exports = {
   isControl, authorizedPaths, isWithinPath, issueReference, verifiedContent,
   extractReceipt, authenticatedCodexReceipt, trustedApprovals, trustedMaintainer,
-  routineAuthorized, assess, refreshAll, publish, evaluate, run
+  routineAuthorized, trustedRevision, trustedPrBody, assess, refreshAll, publish, evaluate, run
 };
