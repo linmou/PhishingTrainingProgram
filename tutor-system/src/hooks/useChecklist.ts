@@ -245,25 +245,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       
       setChecklist(newChecklist);
       
-      // Update progress with immediate calculation for responsiveness
-      const allItems = [...newChecklist.detection_areas, ...newChecklist.verification_steps];
-      const covered = allItems.filter(item => item.status === 'covered').length;
-      const total = allItems.length;
-      const progress = total > 0 ? (covered / total) * 100 : 0;
-      
-      setProgress({
-        total_areas: total,
-        covered_areas: covered,
-        partially_covered_areas: allItems.filter(item => item.status === 'partially_covered').length,
-        pending_areas: allItems.filter(item => item.status === 'pending').length,
-        completion_percentage: Math.round(progress),
-        critical_pending: allItems.filter(item => item.priority === 'critical' && item.status !== 'covered').length,
-        critical_covered: allItems.filter(item => item.priority === 'critical' && item.status === 'covered').length,
-        important_pending: allItems.filter(item => item.priority === 'important' && item.status !== 'covered').length,
-        important_covered: allItems.filter(item => item.priority === 'important' && item.status === 'covered').length,
-        optional_pending: allItems.filter(item => item.priority === 'optional' && item.status !== 'covered').length,
-        optional_covered: allItems.filter(item => item.priority === 'optional' && item.status === 'covered').length
-      });
+      setProgress(progressForChecklist(newChecklist));
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate checklist';
@@ -376,25 +358,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
           
           setChecklist(newChecklist);
           
-          // Update progress with immediate calculation for responsiveness
-          const allItems = [...newChecklist.detection_areas, ...newChecklist.verification_steps];
-          const covered = allItems.filter(item => item.status === 'covered').length;
-          const total = allItems.length;
-          const progress = total > 0 ? (covered / total) * 100 : 0;
-          
-          setProgress({
-            total_areas: total,
-            covered_areas: covered,
-            partially_covered_areas: allItems.filter(item => item.status === 'partially_covered').length,
-            pending_areas: allItems.filter(item => item.status === 'pending').length,
-            completion_percentage: Math.round(progress),
-            critical_pending: allItems.filter(item => item.priority === 'critical' && item.status !== 'covered').length,
-            critical_covered: allItems.filter(item => item.priority === 'critical' && item.status === 'covered').length,
-            important_pending: allItems.filter(item => item.priority === 'important' && item.status !== 'covered').length,
-            important_covered: allItems.filter(item => item.priority === 'important' && item.status === 'covered').length,
-            optional_pending: allItems.filter(item => item.priority === 'optional' && item.status !== 'covered').length,
-            optional_covered: allItems.filter(item => item.priority === 'optional' && item.status === 'covered').length
-          });
+          setProgress(progressForChecklist(newChecklist));
           
           console.log('✅ Smart generation completed with system prompt extraction');
           break;
@@ -411,24 +375,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
           
           setChecklist(fallbackChecklist);
           
-          const fallbackItems = [...fallbackChecklist.detection_areas, ...fallbackChecklist.verification_steps];
-          const fallbackCovered = fallbackItems.filter(item => item.status === 'covered').length;
-          const fallbackTotal = fallbackItems.length;
-          const fallbackProgress = fallbackTotal > 0 ? (fallbackCovered / fallbackTotal) * 100 : 0;
-          
-          setProgress({
-            total_areas: fallbackTotal,
-            covered_areas: fallbackCovered,
-            partially_covered_areas: fallbackItems.filter(item => item.status === 'partially_covered').length,
-            pending_areas: fallbackItems.filter(item => item.status === 'pending').length,
-            completion_percentage: Math.round(fallbackProgress),
-            critical_pending: fallbackItems.filter(item => item.priority === 'critical' && item.status !== 'covered').length,
-            critical_covered: fallbackItems.filter(item => item.priority === 'critical' && item.status === 'covered').length,
-            important_pending: fallbackItems.filter(item => item.priority === 'important' && item.status !== 'covered').length,
-            important_covered: fallbackItems.filter(item => item.priority === 'important' && item.status === 'covered').length,
-            optional_pending: fallbackItems.filter(item => item.priority === 'optional' && item.status !== 'covered').length,
-            optional_covered: fallbackItems.filter(item => item.priority === 'optional' && item.status === 'covered').length
-          });
+          setProgress(progressForChecklist(fallbackChecklist));
           
           console.log('✅ Fallback template generation completed');
           break;
@@ -476,51 +423,6 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       }
       console.log('📝 Creating manual checklist:', { detectionAreas, verificationSteps });
       
-      // TODO: Implement manual checklist creation in ChecklistService
-      // For now, create a basic checklist structure
-      const manualChecklist: SessionChecklist = {
-        id: `manual-${roomId}-${Date.now()}`,
-        room_id: roomId,
-        template_name: 'Manual Input',
-        session_start: new Date(),
-        detection_areas: detectionAreas.map((text, index) => ({
-          id: `manual-detection-${index}`,
-          area_text: text,
-          item_type: 'detection_area' as const,
-          priority: 'important' as const,
-          status: 'pending' as const,
-          understanding_level: 'none' as const,
-          tutor_notes: '',
-          last_addressed: null,
-          attempts_count: 0,
-          original_template_area: false,
-          coverage_evidence: [],
-          created_at: new Date(),
-          updated_at: new Date()
-        })),
-        verification_steps: verificationSteps.map((text, index) => ({
-          id: `manual-verification-${index}`,
-          area_text: text,
-          item_type: 'verification_step' as const,
-          priority: 'important' as const,
-          status: 'pending' as const,
-          understanding_level: 'none' as const,
-          tutor_notes: '',
-          last_addressed: null,
-          attempts_count: 0,
-          original_template_area: false,
-          coverage_evidence: [],
-          created_at: new Date(),
-          updated_at: new Date()
-        })),
-        total_items: detectionAreas.length + verificationSteps.length,
-        completed_items: 0,
-        completion_percentage: 0,
-        created_at: new Date(),
-        updated_at: new Date(),
-        is_active: true
-      };
-
       // Save manual checklist to database to get proper UUIDs
       const savedChecklist = await RoomFeaturesService.checklist.createManual(
         roomId, 
@@ -536,7 +438,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
       setChecklist(savedChecklist);
       
       // Set initial progress for manual checklist
-      const total = manualChecklist.total_items;
+      const total = detectionAreas.length + verificationSteps.length;
       setProgress({
         total_areas: total,
         covered_areas: 0,
@@ -633,16 +535,7 @@ export function useChecklist(roomId: string, transfer?: { enabled: boolean; stud
             verification_steps: current.verification_steps.map(updateItemValue),
             updated_at: new Date(),
           };
-          const items = [...next.detection_areas, ...next.verification_steps];
-          const covered = items.filter(item => item.status === 'covered').length;
-          setProgress(previous => previous ? {
-            ...previous,
-            total_areas: items.length,
-            covered_areas: covered,
-            partially_covered_areas: items.filter(item => item.status === 'partially_covered').length,
-            pending_areas: items.filter(item => item.status === 'pending').length,
-            completion_percentage: items.length ? Math.round((covered / items.length) * 100) : 0,
-          } : previous);
+          setProgress(previous => previous ? progressForChecklist(next) : previous);
           return next;
         });
       } else {

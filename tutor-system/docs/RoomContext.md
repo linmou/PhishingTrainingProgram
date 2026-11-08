@@ -1,7 +1,7 @@
 # RoomContext.tsx - Real-time Messaging System
 
 <!-- Intent: explain room-message state, restore behavior, and learner assessment presentation. -->
-<!-- Updated: 2026-10-30. Rating auto-send baseline commit: a21d94a. -->
+<!-- Updated: 2026-11-08. Checklist state consolidation baseline commit: a69b836. -->
 
 ## Purpose
 Central orchestration layer for real-time room interactions, messaging, AI integration, and educational progress tracking. Manages the complete room lifecycle and user interactions.
@@ -136,6 +136,14 @@ server-selected active projection for a tutor. The returned transfer owner is ch
 scoped lookup and the legacy read fallback before progress reaches the UI; a missing or mismatched
 owner clears the view. Transfer lifecycle and progress controls stay limited to their authorized
 learner/tutor views, while ordinary legacy checklist reads and room text exports remain available.
+
+`useChecklist` computes generated, refreshed and trusted-edit progress with the same local
+calculation. Priority pending counts include both pending and partially covered items; only
+covered items contribute to the rounded completion percentage. A successful trusted edit
+recomputes every count from the resulting checklist, including priority changes, without a
+second read. Failed edits retain the saved checklist and progress. Legacy manual submission
+installs the service-returned checklist and initializes pending/important counts from the two
+input lengths; persistent item IDs and defaults remain owned by the checklist service.
 
 Tutor target setup resolves the sole active learner session when the checklist is opened, so a
 learner may join before posting a message. Enabling transfer assessment keeps the active legacy
