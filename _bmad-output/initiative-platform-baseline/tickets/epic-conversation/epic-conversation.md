@@ -13,7 +13,7 @@ risk: low
 
 Participants see the live conversation within about 2 seconds, with typing indicators. The learner rates ordinary tutor replies before writing again; open exit assessments stay hidden until exit and assessment questions are never rated.
 
-Implementation update: 2026-10-31; baseline `d3bb45b`. Exit-assessment release acceptance remains open in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md`.
+Implementation update: 2026-11-03; production release `4bb5b1b` / PR #54. Exit-assessment acceptance passed on staging and production; evidence and cleanup are tracked in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md`.
 
 ## Outcome
 
@@ -25,7 +25,7 @@ Test paths are from the repository root.
 
 - R1 (parent R5; prd FR-14, NFR-8): The room owner and the learner can exchange messages, and every participant sees new messages without refreshing. A sent message appears for every participant within about 2 seconds. Leaving and re-entering shows the full history in order, and messages sent while a participant was offline appear when they reconnect. Room lists and ratings update without refresh. Guard: `tutor-system/src/__tests__/real_time_chat.bdd.test.tsx` ("Messages appear immediately without page refresh"); `tutor-system/src/__tests__/room_discovery.test.tsx` ("should show new rooms without refreshing").
 - R2 (parent R5; prd FR-15): The room owner and the learner can see when the other is typing; the indicator clears when typing stops or after 3 seconds without input. Guard: `tutor-system/src/__tests__/real_time_chat.bdd.test.tsx` ("Typing indicators are shown between tutor and student").
-- R3 (parent R5; prd FR-16; R8): The learner must rate the most recent tutor reply before sending their next message. The gate applies to the learner only; tutors and observers are never gated. It covers every tutor reply in both practice types, including character replies and replies written without the AI assistant. Pre-populated dialogue and result messages are never rated. A learner has one rating per message, and changing it replaces it. The room owner and observers see rating counts update live. If saving the rating fails, the learner is told and their unsent message is kept. Guard: `tutor-system/src/__tests__/tutor_response_rating_gate.integration.test.tsx` ("blocks the reply, animates a mandatory prompt for the latest response, and unlocks only after feedback succeeds").
+- R3 (parent R5; prd FR-16; R8): The learner must rate the most recent tutor reply before sending their next message. The gate applies to the learner only; tutors and observers are never gated. It covers every tutor reply in both practice types, including character replies and replies written without the AI assistant. Pre-populated dialogue and result messages are never rated. A learner has one rating per message, and changing it replaces it. The room owner and observers see rating counts update live. If saving the rating fails, the learner is told and their unsent message is kept. Once the rating is saved, the unsent message is sent once without a second click, after the room's sending rules are checked again; if that send fails, the rating stays saved and the message is kept; leaving the room cancels the pending send. Guard: `tutor-system/src/__tests__/tutor_response_rating_gate.integration.test.tsx` ("blocks the reply and sends it exactly once after feedback succeeds"; "preserves the draft and retries the rating before sending when saving fails"; "keeps the saved rating and draft if automatic sending fails, allowing a send retry").
 
 ## Constraints
 
@@ -56,4 +56,4 @@ Test paths are from the repository root.
 
 ## Notes
 
-- Exit assessment (issue #46; PRD FR-16, FR-54): transfer assessment questions, whether open and hidden or ended and shown again, are excluded from R3's rating gate. The required-rating auto-send continues the ordinary drafted post even while a question is open. Guard: `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`. Production acceptance remains open in the dated release record.
+- Exit assessment (issue #46; PRD FR-16, FR-54): transfer assessment questions, whether open and hidden or ended and shown again, are excluded from R3's rating gate. The required-rating auto-send continues the ordinary drafted post even while a question is open. Guard: `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`. Production acceptance passed on 2026-11-03 in release `4bb5b1b`; see the dated release record.
