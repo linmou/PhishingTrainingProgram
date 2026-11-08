@@ -177,11 +177,27 @@ async function trustedRevision(github, owner, repo, pr) {
   if (lower(pr.head?.repo?.full_name) !== lower(`${owner}/${repo}`) || !pr.head?.sha || !pr.number) return false;
   const commits = await github.paginate(github.rest.pulls.listCommits,
     { owner, repo, pull_number: pr.number, per_page: 100 });
-  if (!commits.length || commits[commits.length - 1].sha !== pr.head.sha) return false;
+  if (!commits.length || commits.length > 250 || commits[commits.length - 1].sha !== pr.head.sha) return false;
   for (const commit of commits) {
     const verification = commit.commit?.verification;
     if (verification?.verified !== true || verification.reason !== 'valid' ||
         !commit.author?.login || !(await trustedMaintainer(github, owner, repo, commit.author.login))) return false;
+    // A verified signature plus a Git author name is insufficient: a signed
+    // commit may spoof another person's author email. Verify the *signer*.
+    const result = await github.graphql(`
+      query($owner: String!, $repo: String!, $oid: GitObjectID!) {
+        repository(owner: $owner, name: $repo) {
+          object(oid: $oid) {
+            ... on Commit {
+              oid
+              signature { isValid signer { login } }
+            }
+          }
+        }
+      }`, { owner, repo, oid: commit.sha });
+    const signed = result.repository?.object;
+    if (signed?.oid !== commit.sha || signed.signature?.isValid !== true ||
+        !(await trustedMaintainer(github, owner, repo, signed.signature.signer?.login))) return false;
   }
   return true;
 }
