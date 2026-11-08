@@ -29,7 +29,7 @@ Test paths are from the repository root.
 
 - No AI-generated text reaches a learner unless the room owner sends it (constitution C1).
 - Supervision wins over speed: every AI draft is reviewed by the room owner, who may reject it and write their own reply, even when that is slower (constitution priority rule R4); only the room owner uses tutor controls in a room (priority rule R5).
-- At the pilot stage the screen may enforce a tutor-only control alone, except where a failure causes immediate harm or breaks C1–C6 (priority rule R9).
+- At the pilot stage the screen may enforce a tutor-only control alone, except where a failure causes immediate harm or breaks C1, C2, C4 or C6 (priority rule R9).
 - The room's Guard flag is changed only by the room owner: through its confirmed operation, or by a reply send that applies the Guard state chosen in the composer (AD-5).
 - Publishing a tutor reply or reviewed AI text, editing learning progress, delivering or grading an assessment, and deleting a room are database functions that check the actor's room role; other tutor-only controls may be gated by the screen alone (AD-8). The owner of a room never holds its learner seat and never answers an assessment (AD-8).
 - AI text becomes a learner-visible message only through the reviewed-send function, which checks the actor is the room's owner (AD-13).

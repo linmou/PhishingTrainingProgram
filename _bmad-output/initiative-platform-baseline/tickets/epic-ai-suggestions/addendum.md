@@ -2,7 +2,7 @@
 
 Intent: hold the volatile facts about how well this epic's rules are guarded by tests, so the epic itself stays stable. Each row links up to a rule in `_bmad-output/initiative-platform-baseline/tickets/epic-ai-suggestions/epic-ai-suggestions.md`.
 
-Updated: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_ai_suggestions_*`, `guardp6_ai_suggestions_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
+Updated: 2026-11-02 (R1 Custom-preset guard added to §B from audit `guard_changed_20261102`; planned change moved here as §D). Earlier: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_ai_suggestions_*`, `guardp6_ai_suggestions_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
 
 ## A. Test debt needed for the pilot
 
@@ -18,6 +18,7 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 | Rule | Guard | Why the guard fails | Accepted limitation | Open question |
 | --- | --- | --- | --- | --- |
 | R1 | `tutor-system/src/__tests__/ai_assistant.bdd.test.tsx` (AI configuration persistence; Tutor disables AI assistant) | Fakes settings storage and never checks that disabling the assistant prevents draft requests (disputed). | An unwanted owner-visible draft or reset style is noticed and rejected. | OQ-16 |
+| R1 | `tutor-system/src/components/__tests__/AIAssistantSettings.test.tsx` (keeps targets when switching to Custom and retains Custom after saving and reopening) | Injects the saved configuration on reopen instead of reading it back from storage; the spine names no owner for settings persistence, so the audit could not settle whether it mocks the owner (audit `guard_changed_20261102`, 2026-11-02). | Same as the row above: a wrong scenario preset shows in the owner's settings and is corrected before teaching. | OQ-16 (deferred by the owner on 2026-11-02) |
 | R2 | `tutor-system/src/__tests__/ai_assistant.bdd.test.tsx` (AI handles no student messages gracefully); `tutor-system/src/contexts/__tests__/RoomContext.aiGenerationFailure.test.tsx` (rejects generateAIResponse when the AI service reports failure); `tutor-system/src/services/__tests__/aiService.guardMode.test.ts` (returns an independent semantic mode, reason, and response from the provider) | RoomContext.aiGenerationFailure.test.tsx mocks generation and tests provider failure, not conversation loading; aiService.guardMode.test.ts mocks the gateway and accepts a missing instruction label (disputed). | Incomplete drafts or errors stay under owner review; recovery is manual. | OQ-19 |
 | R3 | `tutor-system/scripts/check-promptfoo-quality-gate.test.js` (a failed assertion cannot become a pass by disappearing) | Checks missing assertion counts, without checking that release requires evaluation for each practice type (disputed). | Evaluation before release is run by hand. | OQ-21 |
 | R4 | `tutor-system/supabase/functions/ai-api/index.test.ts` (cyberbullying retries malformed role output and records both attempts without publishing) | Tests cyberbullying retries, leaving the required phishing repair-then-error path untested (disputed). | The owner rejects malformed suggestions and types a reply. | OQ-21 |
@@ -29,3 +30,9 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 | --- | --- | --- |
 | G-71 | R1, R2 | No test that, with the AI assistant off, a draft cannot be requested (client throw, hidden button, server refusal); never-auto-sent and a non-owner request are untested for phishing (FR-24, FR-25). |
 | G-73 | R4, R5 | No test that reasons and labels are absent from learner-visible payloads, that a phishing repair failure ends in an error, that an empty reply is refused, or that a failed send keeps the text in the interface (FR-27, FR-28). |
+
+## D. Planned changes
+
+| Rule | Change | Source | Status |
+| --- | --- | --- | --- |
+| R2, R3 | While the temporary exit assessment is in force, the AI suggestion inputs of R2 leave out the learner's open transfer assessments, their answers and non-final results, and the assessment rules in the prompt change (no invitation to answer, no tutor-feedback gate). The prompt change falls under R3: rerun the existing evaluation cases. Update the R2 and R3 guards in the implementation PR. | PRD FR-43, FR-54; PRD addendum EA-20, EA-21; issue #46 | Approved, not built (G-78) |

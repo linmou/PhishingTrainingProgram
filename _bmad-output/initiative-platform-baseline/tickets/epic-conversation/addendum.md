@@ -2,13 +2,13 @@
 
 Intent: hold the volatile facts about how well this epic's rules are guarded by tests, so the epic itself stays stable. Each row links up to a rule in `_bmad-output/initiative-platform-baseline/tickets/epic-conversation/epic-conversation.md`.
 
-Updated: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_conversation_*`, `guardp6_conversation_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
+Updated: 2026-11-02 (R3 guard follows the rating auto-send change). Earlier: 2026-10-27. Sources: the guard audit and the P6 triage audit in the git-ignored `audits/` folder (`guard_conversation_*`, `guardp6_conversation_*`). Tests were read, not run; the 'Why the guard fails' column comes from criteria c2 and c3 of the guard audit.
 
 ## A. Test debt needed for the pilot
 
 | Rule | Guard | Why the guard fails | Basis | Harm if the clause breaks |
 | --- | --- | --- | --- | --- |
-| R3 | `tutor-system/src/__tests__/tutor_response_rating_gate.integration.test.tsx` (blocks the reply, animates a mandatory prompt for the latest response, and unlocks only after feedback succeeds) | Mocks rating persistence (disputed); never rejects a save to check the error and retained draft. | P8, OQ-20 | Missing or wrong ratings leave the pilot's research data incomplete, and it cannot be recollected. |
+| R3 | `tutor-system/src/__tests__/tutor_response_rating_gate.integration.test.tsx` (blocks the reply and sends it exactly once after feedback succeeds; preserves the draft and retries the rating before sending when saving fails) | Re-audited 2026-11-02 (`guard_changed_20261102`): the real room page gates the send, keeps the draft on a failed save and sends once, but rating storage stays mocked, so durable recording and one rating per message are unchecked. | P8, OQ-20 | Missing or wrong ratings leave the pilot's research data incomplete, and it cannot be recollected. |
 
 ## B. Guards that can wait under P6
 
@@ -23,4 +23,10 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 
 | Former ID | Rule | Missing guard |
 | --- | --- | --- |
-| G-65 | R3 | No test that a failed rating keeps the unsent message, that result messages are never rated, or that one rating per message holds in the database; the gate for character replies is covered only by the cyberbullying browser test (FR-16). |
+| G-65 | R3 | No test that result messages are never rated, or that one rating per message holds in the database; the gate for character replies is covered only by the cyberbullying browser test (FR-16). |
+
+## D. Planned changes
+
+| Rule | Change | Source | Status |
+| --- | --- | --- | --- |
+| R3 | While the temporary exit assessment is in force, transfer assessment questions, open and hidden or ended and shown again, are not rating targets. Update R3 and its guard in the implementation PR. | PRD FR-16, FR-54; issue #46 | Approved, not built (G-78) |
