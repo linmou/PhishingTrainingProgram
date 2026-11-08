@@ -31,8 +31,8 @@ The owner deferred these on 2026-10-24 under the open question named in `_bmad-o
 | G-71 | R1, R2 | No test that, with the AI assistant off, a draft cannot be requested (client throw, hidden button, server refusal); never-auto-sent and a non-owner request are untested for phishing (FR-24, FR-25). |
 | G-73 | R4, R5 | No test that reasons and labels are absent from learner-visible payloads, that a phishing repair failure ends in an error, that an empty reply is refused, or that a failed send keeps the text in the interface (FR-27, FR-28). |
 
-## D. Planned changes
+## D. Released changes
 
 | Rule | Change | Source | Status |
 | --- | --- | --- | --- |
-| R2, R3 | While the temporary exit assessment is in force, the AI suggestion inputs of R2 leave out the learner's open transfer assessments, their answers and non-final results, and the assessment rules in the prompt change (no invitation to answer, no tutor-feedback gate). The prompt change falls under R3: rerun the existing evaluation cases. Update the R2 and R3 guards in the implementation PR. | PRD FR-43, FR-54; PRD addendum EA-20, EA-21; issue #46 | Approved, not built (G-78) |
+| R2, R3 | While the temporary exit assessment is in force, the AI suggestion inputs of R2 leave out the learner's open transfer assessments, their answers and non-final results, and the assessment rules in the prompt change (no invitation to answer, no tutor-feedback gate). The epic's R2 and its guards describe this behavior; the prompt change stays under R3, and the epic's notes record the limits of the historical evaluation cases. | PRD FR-43, FR-54; PRD addendum EA-20, EA-21; issue #46 | Released and production verified on 2026-11-03, release `4bb5b1b` / PR #54; G-78 closed |

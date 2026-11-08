@@ -13,7 +13,7 @@ risk: low
 
 Participants see the live conversation within about 2 seconds, with typing indicators. The learner rates ordinary tutor replies before writing again; open exit assessments stay hidden until exit and assessment questions are never rated.
 
-Implementation update: 2026-10-31; baseline `d3bb45b`. Exit-assessment release acceptance remains open in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md`.
+Implementation update: 2026-11-03; production release `4bb5b1b` / PR #54. Exit-assessment acceptance passed on staging and production; evidence and cleanup are tracked in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md`.
 
 ## Outcome
 
@@ -56,4 +56,4 @@ Test paths are from the repository root.
 
 ## Notes
 
-- Exit assessment (issue #46; PRD FR-16, FR-54): transfer assessment questions, whether open and hidden or ended and shown again, are excluded from R3's rating gate. The required-rating auto-send continues the ordinary drafted post even while a question is open. Guard: `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`. Production acceptance remains open in the dated release record.
+- Exit assessment (issue #46; PRD FR-16, FR-54): transfer assessment questions, whether open and hidden or ended and shown again, are excluded from R3's rating gate. The required-rating auto-send continues the ordinary drafted post even while a question is open. Guard: `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`. Production acceptance passed on 2026-11-03 in release `4bb5b1b`; see the dated release record.
