@@ -145,7 +145,8 @@ describe('Guard Mode AI decision contract', () => {
         expect(request.messages[0].content).toContain('pending');
         expect(request.messages[0].content).not.toContain('VERIFIED ASSESSMENT STATE');
         const {buildAIContextFromExistingData}=await import('../simplifiedAIContext');
-        expect(buildAIContextFromExistingData).toHaveBeenCalledWith('room-guard',['saved-result'],undefined);
+        expect(buildAIContextFromExistingData).toHaveBeenCalledWith('room-guard',['saved-result'],undefined,
+            expect.objectContaining({ id: 'room-guard', guard_mode: true }));
         expect(request.messages[0].content).toContain('RESPONSE CONTRACT (v3)');
         expect(request.messages[1].content).toContain(
             'I deliberately clicked the unsafe link again to test you.'
