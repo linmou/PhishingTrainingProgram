@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Brain, User, MessageSquare, Clock, TrendingUp, AlertCircle } from 'lucide-react';
 import { ChecklistItem, CoverageEvidence } from '../types/checklist';
 import './EvidenceModal.css';
@@ -14,7 +15,34 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
   onClose,
   item
 }) => {
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const activeItemId = isOpen ? item?.id : undefined;
+  React.useEffect(() => {
+    if (!activeItemId) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    return () => { if (opener?.isConnected) opener.focus(); };
+  }, [activeItemId]);
+
   if (!isOpen || !item) return null;
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose();
+    } else if (event.key === 'Tab') {
+      const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not([disabled])');
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+  };
 
   const getDetectionMethodIcon = (method: CoverageEvidence['detection_method']) => {
     switch (method) {
@@ -75,9 +103,9 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
   const statusBadge = getStatusBadge(item.status);
   const understandingLevel = getUnderstandingLevel(item.understanding_level);
 
-  return (
+  return createPortal(
     <div className="evidence-modal-overlay" onClick={onClose}>
-      <div className="evidence-modal-content" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} className="evidence-modal-content" role="dialog" aria-modal="true" aria-label="Learning Evidence" onKeyDown={handleKeyDown} onClick={(e) => e.stopPropagation()}>
         <div className="evidence-modal-header">
           <div className="evidence-modal-title">
             <h3>Learning Evidence</h3>
@@ -90,7 +118,7 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
               </span>
             </div>
           </div>
-          <button className="evidence-modal-close" onClick={onClose}>
+          <button className="evidence-modal-close" aria-label="Close evidence" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
@@ -271,7 +299,8 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

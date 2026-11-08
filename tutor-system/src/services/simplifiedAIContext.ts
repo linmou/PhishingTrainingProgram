@@ -4,7 +4,7 @@
  */
 
 import { supabase } from './supabase';
-import { ConversationMessage } from '../types';
+import { ConversationMessage, PrePopulatedMessage, Room } from '../types';
 import {
     formatRoomScenarioContext,
     prePopulatedToContextMessages
@@ -16,6 +16,10 @@ import { transferAssessmentService } from './transferAssessmentService';
 
 const HISTORY_COLUMNS='id, content, user_role, user_id, parent_message_id, response_mode, character, persona_id, persona_name, created_at, assessment_id, assessment_options, assessment_selection_type, assessment_student_id, assessment_event';
 
+export type AIContextRoom = Pick<Room, 'title' | 'description' | 'created_at'> & {
+    pre_populated_dialogue?: PrePopulatedMessage[] | { posts?: any[] } | null;
+};
+
 /**
  * Build AI conversation context directly from existing tables
  * No need for separate ai_conversation_contexts table!
@@ -24,17 +28,22 @@ const HISTORY_COLUMNS='id, content, user_role, user_id, parent_message_id, respo
  * rows are not yet in `messages`. Include it so the model sees the same
  * discussion the tutor sees when pressing ✨ AI.
  */
-export async function buildAIContextFromExistingData(roomId: string, expectedAssessmentResultIds: ReadonlyArray<string> = [], focusStudentId?:string): Promise<ConversationMessage[]> {
+export async function buildAIContextFromExistingData(roomId: string, expectedAssessmentResultIds: ReadonlyArray<string> = [], focusStudentId?:string, roomSnapshot?: AIContextRoom): Promise<ConversationMessage[]> {
     try {
         console.log('🔄 Building AI context from existing room and message data');
 
-        // Get room context (the phishing scenario being discussed)
-        const { data: room, error: roomError } = await supabase
-            .from('rooms')
-            .select('title, description, pre_populated_dialogue, created_at')
-            .eq('id', roomId)
-            .single();
-        if (roomError) throw roomError;
+        // Suggestion generation supplies its request snapshot; standalone callers
+        // acquire their own room context at this boundary.
+        let room = roomSnapshot;
+        if (!room) {
+            const { data, error } = await supabase
+                .from('rooms')
+                .select('title, description, pre_populated_dialogue, created_at')
+                .eq('id', roomId)
+                .single();
+            if (error) throw error;
+            room = data;
+        }
 
         // Read the full discussion in pages, including rooms beyond the server row cap.
         const pageSize = 1000;

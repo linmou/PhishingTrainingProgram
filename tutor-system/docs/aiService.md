@@ -1,6 +1,6 @@
 # aiService.ts - AI Assistant Functionality
 
-<!-- Assessment dialogue revision approved 2026-10-17; baseline commit c6d5129. -->
+<!-- Intent: explain the supported AI request boundary and its configuration/context contracts. Updated: 2026-11-08. Request-ownership baseline commit: a69b836. -->
 
 ## Assessment dialogue revision
 
@@ -283,6 +283,29 @@ import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
 ```typescript
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
 ```
+
+`generateTutorSuggestion` owns one room read at request entry. Its typed snapshot
+supplies AI enablement/model/prompt, prior Guard mode, scenario title/description,
+and pre-populated discussion to configuration merging and history construction.
+Those fields describe the same room state for that request; there is no later room
+revalidation before the provider call. A subsequent suggestion starts with a fresh
+snapshot. The cyberbullying branch returns after this validation and delegates its
+generation inputs to the server operation.
+
+Extended configuration, checklist progress, full paginated message history and
+learner-specific assessment readiness remain separate reads. In particular, the
+readiness check still recovers missing saved results and blocks incomplete
+assessment dialogue. Standalone `getAIConfig` and `buildAIContextFromExistingData`
+calls acquire their own room data; context callers can supply `AIContextRoom` as
+the fourth argument when they already own a room snapshot.
+
+Tutor history retains every input entry. The selected request branch alone
+serializes it: Phase 0 keeps literal role labels including system messages; the
+ecological format keeps its existing participant-label/system-message policy and
+repeats the explicit focused learner line, or infers the last user line when no
+nonblank focus is supplied. Neither branch mutates input history. This cleanup
+does not change prompts, provider settings, pagination or assessment policy.
+
 **Features**:
 - **Context building**: Automatic conversation history extraction
 - **Performance optimization**: Efficient database queries

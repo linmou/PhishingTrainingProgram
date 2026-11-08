@@ -117,6 +117,25 @@ describe('tutor image operations', () => {
     expect(storage.remove).toHaveBeenCalledWith([expect.stringMatching(/^tutor-1\//)]);
   });
 
+  it.each([
+    new File([], 'empty.jpg', { type: 'image/jpeg' }),
+    new File(['text'], 'file.txt', { type: 'text/plain' }),
+    new File(['image'], 'file.bmp', { type: 'image/jpeg' }),
+    new File(['x'.repeat(6 * 1024 * 1024)], 'large.jpg', { type: 'image/jpeg' })
+  ])('rejects invalid tutor-image files before touching storage', async invalid => {
+    expect((await uploadTutorImage(invalid, 'room-1')).success).toBe(false);
+    expect(storage.upload).not.toHaveBeenCalled();
+    expect(tables.tutor_images.insert).not.toHaveBeenCalled();
+  });
+
+  it.each(['response', 'rejection'])('does not persist tutor-image metadata after a storage %s failure', async failure => {
+    if (failure === 'response') storage.upload.mockResolvedValueOnce({ data: null, error: { message: 'storage unavailable' } });
+    else storage.upload.mockRejectedValueOnce(new Error('storage unavailable'));
+    expect(await uploadTutorImage(file, 'room-1')).toMatchObject({ success: false, error: expect.stringContaining('storage unavailable') });
+    expect(tables.tutor_images.insert).not.toHaveBeenCalled();
+    expect(storage.remove).not.toHaveBeenCalled();
+  });
+
   it('verifies ownership, deletes storage and soft-deletes image metadata', async () => {
     expect(await deleteTutorImage(image.id)).toEqual({ success: true });
     expect(tables.tutor_images.eq).toHaveBeenCalledWith('id', image.id);
@@ -131,6 +150,29 @@ describe('tutor image operations', () => {
     storage.remove.mockResolvedValue({ error: { message: 'storage unavailable' } });
     expect((await deleteTutorImage(image.id)).success).toBe(false);
     expect(tables.tutor_images.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects unauthenticated deletion before reading images', async () => {
+    client.auth.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
+    expect(await deleteTutorImage(image.id)).toMatchObject({ success: false });
+    expect(client.from).not.toHaveBeenCalled();
+    expect(storage.remove).not.toHaveBeenCalled();
+  });
+
+  it('does not delete another tutor image when the owner-scoped read is denied', async () => {
+    tables.tutor_images.single.mockResolvedValueOnce({ data: null, error: { message: 'access denied' } });
+    expect(await deleteTutorImage('other-tutor-image')).toMatchObject({ success: false });
+    expect(tables.tutor_images.eq).toHaveBeenCalledWith('tutor_id', user.id);
+    expect(storage.remove).not.toHaveBeenCalled();
+    expect(tables.tutor_images.update).not.toHaveBeenCalled();
+  });
+
+  it('reports a soft-delete database failure after storage removal without hard-deleting metadata', async () => {
+    tables.tutor_images.single.mockResolvedValueOnce({ data: image, error: null })
+      .mockResolvedValueOnce({ data: null, error: { message: 'metadata write failed' } });
+    expect(await deleteTutorImage(image.id)).toMatchObject({ success: false, error: expect.stringContaining('metadata write failed') });
+    expect(storage.remove).toHaveBeenCalledWith(['tutor-1/avatar.jpg']);
+    expect(tables.tutor_images.update).toHaveBeenCalledWith({ is_active: false });
   });
 });
 

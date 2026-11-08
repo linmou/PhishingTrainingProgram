@@ -206,7 +206,7 @@ export const GUARD_MODE_POLICY = [
   'Output only the required JSON object; do not add markdown, labels, or explanation outside it.'
 ].join('\n');
 
-/** Exact historical user turn from aiService.original.ts. */
+/** Historical user turn; source reference: reference/legacy-ai/aiService.original.ts.txt. */
 export function buildPhase0TutorUserTurn(conversationText: string): string {
   return 'Based on the recent conversation below, draft the next tutor response. '
     + "The suggested_response should be under 2 sentences, interactive, and focused on deepening the student's understanding.\n\n"
