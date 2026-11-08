@@ -1,5 +1,5 @@
 <!-- Intent: preserve integration, review and release evidence for issues #57 through #66.
-Updated: 2026-11-08. Baseline commit: a69b836. -->
+Updated: 2026-11-08. Baseline commit: a69b836. Locally reviewed candidate: 1b045b9. -->
 
 # Issues #57–#66 delivery record
 
@@ -7,7 +7,7 @@ Updated: 2026-11-08. Baseline commit: a69b836. -->
 - Authorization: maintainer requested implementation, PR proposal and automatic merge unless blocked by high-risk operations on 2026-11-08.
 - Original base: remote `no_sign_up`, `a69b836`; synchronized through `c74694b` (PRs #69/#70) in integration merge `9e38b79`. Primary checkout's two local commits and pre-existing untracked files are outside this batch.
 - Type: frontend implementation and documentation; no SQL, Edge or server configuration changes planned.
-- Status: implementation and staging acceptance passed; final synchronized-head review/CI and merge pending. Production release remains blocked by #68.
+- Status: implementation, staging acceptance, synchronized-head local review and CI passed; final documentation commit and merge pending. Production release remains blocked by #68.
 
 ## Changed contracts and ownership
 
@@ -68,3 +68,13 @@ Portal candidate `7bb4caa` passed the staging UI smoke in `output/issues-57-66/u
 Two compact screenshots are retained in `docs/evidence/issues-57-66/` for PR review; full provider input/output, persisted IDs, command logs and failed-attempt evidence remain in the ignored run directories above.
 
 Post-synchronization targeted verification passed seven suites / 101 tests: evidence/dialog, dashboard lifecycle, checklist progress, AI room/history ownership, full conversation context, rating auto-send and saved AI settings. Log: `output/issues-57-66/post-default-merge-jest.log`. `git diff --check` passed. No application artifact changed during synchronization.
+
+## Authorized local final review
+
+The final GitHub Codex review could not start because the account exhausted its review allowance. The maintainer explicitly instructed: “if GitHub Codex review could not start—the account has exhausted its review allowance, you review locally”. This authorizes the local replacement for this PR; repository approval rules are not edited.
+
+Reviewed the full diff from default `c74694b58a68529ccd7755039028e0a5366f25c1` to candidate `1b045b9ced19b59af5eaa6f2cd86791acad53c29` using the local `bmad-code-review` workflow. Three fresh reviewers ran independently without conversation history: `local_blind` received only the diff; `local_edges` inspected the diff and project; `local_acceptance` checked the ten issue bodies, ownership records, source, tests and staging evidence. All three returned no actionable findings. No review layer failed. Root also inspected the changed request, checklist, evidence, dashboard and timer ownership paths and found no concrete regression.
+
+The acceptance reviewer independently reran eight focused suites / 125 tests successfully. A hypothetical upload-success callback synchronously unmounting its component was investigated and dismissed as unsupported by the production callers; it does not establish an application defect. No runtime patch or weakened verification was needed.
+
+Required CI passed on reviewed candidate `1b045b9`: `isolation-harness`, `frontend-jest`, `frontend-build`, run `42475122392`. A fresh fetch confirmed no additional default commits were missing, and `git diff --check` passed. The only subsequent changes record this review. Main integration agent owns final documentation-head CI, merge and the #68 production handoff. No production release or issue completion is claimed from merge alone.
