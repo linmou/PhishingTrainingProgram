@@ -250,8 +250,8 @@ describe('buildAIContextFromExistingData', () => {
     expect(supabase.from).toHaveBeenCalledTimes(1);
   });
 
-  it('packages saved question options, learner answer and trusted result in causal dialogue order', async () => {
-    const result = assessmentResultMessage('retry',1,deliveredAnswerRow.id);
+  it('packages ended question options, learner answer and trusted result in causal dialogue order', async () => {
+    const result = assessmentResultMessage('passed',1,deliveredAnswerRow.id);
     mockRoom();
     mockPage([{...result,created_at:'2020-01-01T00:00:00Z'},deliveredAnswerRow,deliveredQuestionRow] as Message[]);
     mockPage([]);
@@ -270,14 +270,24 @@ describe('buildAIContextFromExistingData', () => {
     await expect(buildAIContextFromExistingData('room',['missing-result'])).rejects.toThrow('ASSESSMENT_RESULT_UNAVAILABLE');
   });
 
-  it('reads private readiness in disabled transfer rooms and identifies a handled response as unscored',async ()=>{
+  it('reads private readiness in disabled transfer rooms and hides unfinished exit responses',async ()=>{
     mockRoom({...room,transfer_learning_enabled:false});mockPage([deliveredQuestionRow,deliveredAnswerRow] as Message[]);mockPage([]);
     (transferAssessmentService.readReview as jest.Mock).mockResolvedValueOnce({history_readiness:{ready:true,result_message_ids:[],
       handled_answer_message_ids:[deliveredAnswerRow.id],pending_answer_message_ids:[],unavailable_assessment_ids:[]}});
     const context=await buildAIContextFromExistingData('room',[],deliveredAnswerRow.user_id);
     expect(transferAssessmentService.readReview).toHaveBeenCalledWith('room',deliveredAnswerRow.assessment_id);
-    expect(context[2].content).toContain('Unscored assessment response');
-    expect(context[2].content).not.toContain('Correct.');
+    expect(context).toHaveLength(1);
+  });
+
+  it('keeps ordinary conversation while hiding an open question, answer and retry result', async () => {
+    const result = assessmentResultMessage('retry', 1, deliveredAnswerRow.id);
+    const ordinary = { ...deliveredAnswerRow, id: 'ordinary', assessment_id: null,
+      parent_message_id: null, content: 'I checked the sender domain.' };
+    mockRoom(); mockPage([deliveredQuestionRow, deliveredAnswerRow, result, ordinary] as Message[]); mockPage([]);
+    const context = await buildAIContextFromExistingData('room', [result.id], deliveredAnswerRow.user_id);
+    expect(context.map(message => message.content)).toEqual([
+      expect.stringContaining('Training scenario:'), 'Student: I checked the sender domain.'
+    ]);
   });
 
   it('omits another learner unfinished answer without blocking the focused learner',async ()=>{

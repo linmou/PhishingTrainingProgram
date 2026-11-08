@@ -139,17 +139,34 @@ async function sendStudentMessage(page, content) {
   const input = page.locator('textarea.comment-input-field');
   const send = page.locator('form.comment-input-form button[type="submit"]');
   const completeRating = async () => {
+    const quotedResponse = reminder.locator('blockquote');
+    const previousResponse = await quotedResponse.count() ? await quotedResponse.innerText() : null;
     await reminder.locator('.rating-reminder-choice button').first().click();
     await reminder.locator('.rating-reminder-stars button').nth(3).click();
     await reminder.locator('.rating-reminder-submit').click();
-    await reminder.waitFor({ state: 'hidden', timeout: TIMEOUT });
+    await page.waitForFunction(previous => {
+      const modal = document.querySelector('[data-testid="rating-reminder-backdrop"]');
+      return !modal || (previous !== null && modal.querySelector('blockquote')?.textContent !== previous);
+    }, previousResponse, { timeout: TIMEOUT });
   };
 
   if (await reminder.isVisible()) await completeRating();
   await input.fill(content);
   const deadline = Date.now() + TIMEOUT;
   while (Date.now() < deadline) {
-    if (await reminder.isVisible()) await completeRating();
+    if (await reminder.isVisible()) {
+      await completeRating();
+      // Saving a rating resumes the draft in the app. Wait for that send,
+      // another required rating, or a composer ready for manual submission.
+      await page.waitForFunction(() => {
+        const input = document.querySelector('textarea.comment-input-field');
+        const send = document.querySelector('form.comment-input-form button[type="submit"]');
+        return input?.value === '' || document.querySelector('[data-testid="rating-reminder-backdrop"]') !== null ||
+          (send && !send.disabled);
+      }, null, { timeout: Math.max(1, deadline - Date.now()) });
+      if (await input.inputValue() === '') return;
+      if (await reminder.isVisible()) continue;
+    }
     await send.click();
     await page.waitForFunction(() =>
       document.querySelector('textarea.comment-input-field')?.value === '' ||
@@ -184,6 +201,12 @@ async function cleanupRoom(config, roomId) {
   assert(rows[0]?.description?.includes('[browser-e2e-template]'), `Refusing to clean non-template room ${roomId}`);
   await managementQuery(config, `do $$ begin
     perform set_config('app.transfer_operation', 'on', true);
+    if to_regclass('private.learner_visits') is not null then
+      delete from private.learner_visits where room_id='${roomId}'::uuid;
+      if exists(select 1 from private.learner_visits where room_id='${roomId}'::uuid) then
+        raise exception 'Cleanup left learner visits';
+      end if;
+    end if;
     update public.rooms set guard_mode=false,guard_mode_changed_at=null,guard_mode_change_source=null
       where id='${roomId}'::uuid;
     delete from private.transfer_assessment_attempts where assessment_id in
@@ -225,6 +248,11 @@ async function cleanupCreatedRoom(config, roomId, tutorId) {
       perform set_config('app.transfer_operation', 'on', true);
       delete from public.rooms where id='${roomId}'::uuid and tutor_id='${tutorId}'::uuid;
       if not found then raise exception 'Created fixture room was not deleted'; end if;
+      if to_regclass('private.learner_visits') is not null then
+        if exists(select 1 from private.learner_visits where room_id='${roomId}'::uuid) then
+          raise exception 'Cleanup left learner visits';
+        end if;
+      end if;
     end $$;`);
     const rooms = await managementQuery(config, `select count(*)::integer as count from public.rooms where id='${roomId}'::uuid`);
     assert.equal(rooms[0].count, 0, `Cleanup left created room ${roomId}`);
@@ -236,6 +264,12 @@ async function cleanupCreatedRoom(config, roomId, tutorId) {
   }
   await managementQuery(config, `do $$ begin
     perform set_config('app.transfer_operation', 'on', true);
+    if to_regclass('private.learner_visits') is not null then
+      delete from private.learner_visits where room_id='${roomId}'::uuid;
+      if exists(select 1 from private.learner_visits where room_id='${roomId}'::uuid) then
+        raise exception 'Cleanup left learner visits';
+      end if;
+    end if;
     delete from private.transfer_assessment_attempts where assessment_id in
       (select id from private.transfer_assessments where room_id='${roomId}'::uuid);
     delete from private.transfer_provider_attempts where room_id='${roomId}'::uuid;

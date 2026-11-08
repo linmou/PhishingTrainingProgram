@@ -19,10 +19,30 @@ import fs from 'fs';
 import path from 'path';
 import { RESPONSE_POLICY } from '../prompts/responsePolicy';
 import { ROLE_PARAMETERS } from '../prompts/pedagogy/parameters/roleParameters';
-import { SCENARIO_TEMPLATES } from '../detectionTemplates';
+import { SCENARIO_TEMPLATES, ScenarioTemplate, requireScenarioTemplate } from '../detectionTemplates';
 import phase0Prompt from '../prompts/phase0AccountSecurityAlertPrompt.json';
 
 describe('demoRoomTemplates', () => {
+  // Covers demoRoomTemplates.ts: all supported inventories and shared references.
+  it('retains valid explicit scenario identities across teaching, demo and comparison templates', () => {
+    const seeds = [
+      ...getNormalTeachingTemplateSeeds(),
+      ...getDemoRoomTemplateSeeds().filter((seed) => seed.test_only),
+      ...getPromptComparisonTemplateSeeds()
+    ];
+    for (const seed of seeds) {
+      const scenario = requireScenarioTemplate(seed.ai_config_template.scenario);
+      expect(seed.ai_config_template.prompt_config.scenario).toBe(scenario);
+      expect(toRoomTemplateInsertRow(seed).ai_config_template.prompt_config.scenario).toBe(scenario);
+    }
+    expect(seeds.filter((seed) => seed.ai_config_template.scenario === 'Account Security Alert').length).toBeGreaterThan(1);
+  });
+
+  // Covers detectionTemplates.ts / demoRoomTemplates.ts: reject malformed runtime references.
+  it.each([undefined, null, '', 'unknown', 'toString', '__proto__'])('rejects invalid or missing scenario %s', (scenario) => {
+    expect(() => buildCasualPeerAIConfig(scenario as ScenarioTemplate)).toThrow('Unknown or missing scenario reference');
+  });
+
   it('packages six teaching scenarios with the matching five-target inventory', () => {
     const expectedScenarios = [
       'Account Security Alert',

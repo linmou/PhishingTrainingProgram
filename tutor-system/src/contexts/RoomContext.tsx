@@ -25,7 +25,7 @@ import {
   answerLifecycleFromProcessed,
   assertDeliverableReview,
   createReviewCandidate,
-  findOpenLearnerAssessment,
+    findOpenLearnerAssessments,
   mergeRoomMessages,
     projectRoomMessage,
     publicAssessmentForDecision,
@@ -159,8 +159,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (user.current_role === 'student') {
-            const activeQuestion = findOpenLearnerAssessment(messages, user.id);
-            if (activeQuestion || options?.assessmentId || options?.selectedOptionIds) {
+            if (options?.assessmentId || options?.selectedOptionIds) {
+                const activeQuestion = findOpenLearnerAssessments(messages, user.id).find(message =>
+                    message.publicQuestion?.id === options.assessmentId && message.id === options.replyToMessageId);
                 const question = activeQuestion?.publicQuestion;
                 const selected = options?.selectedOptionIds;
                 const canonicalSelection = question?.options
@@ -516,7 +517,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
             let parentStudentId: string | undefined;
             let parentMessageContent: string = '';
             if (focusMessageId) {
-                const selectedMessage = messages.find(m => m.id === focusMessageId && m.user_role === 'student');
+                const selectedMessage = messages.find(m => m.id === focusMessageId && m.user_role === 'student' && !readAssessmentId(m));
                 if (!selectedMessage) throw new Error('Selected learner message is no longer available');
                 parentMessageId = selectedMessage.id;
                 parentStudentId = selectedMessage.user_id;
@@ -524,7 +525,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 prompt = selectedMessage.content;
             } else if (!prompt) {
                 const latestMessage = messages
-                    .filter(m => m.user_role === 'student')
+                    .filter(m => m.user_role === 'student' && !readAssessmentId(m))
                     .slice(-1)[0];
 
                 if (latestMessage) {
@@ -560,8 +561,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
                 const checklistOwnerId = transferChecklist.student_id;
                 const checklistOwnerMessage = focusMessageId
-                    ? messages.find(message => message.id === focusMessageId && message.user_id === checklistOwnerId)
-                    : messages.filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId).slice(-1)[0];
+                    ? messages.find(message => message.id === focusMessageId && message.user_role === 'student' && message.user_id === checklistOwnerId && !readAssessmentId(message))
+                    : messages.filter(message => message.user_role === 'student' && message.user_id === checklistOwnerId && !readAssessmentId(message)).slice(-1)[0];
                 if (!checklistOwnerMessage) {
                     throw createTransferPreparationError(
                         'WRONG_LEARNER',
@@ -571,11 +572,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 parentMessageId = checklistOwnerMessage.id;
                 parentStudentId = checklistOwnerMessage.user_id;
                 parentMessageContent = checklistOwnerMessage.content;
-                // Assessment answers already belong to the grading lifecycle. Re-analyzing
-                // them as ordinary learning evidence is rejected by the trusted API.
-                const assessmentId = readAssessmentId(checklistOwnerMessage);
-                const isAssessmentAnswer = Boolean(assessmentId);
-                const readinessAssessmentId = assessmentId ?? [...messages].reverse().map(message =>
+                // Exit answers stay in the grading lifecycle; focus only ordinary conversation.
+                const readinessAssessmentId = [...messages].reverse().map(message =>
                     (message as Partial<RoomMessageView>).publicQuestion
                 ).find(question => question?.studentId === checklistOwnerId)?.id;
                 if (readinessAssessmentId) {
@@ -592,10 +590,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     }
                     expectedAssessmentResultIds = readiness.result_message_ids;
                 }
-                if (!isAssessmentAnswer) {
-                    await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId, user.id);
-                }
-                const prepared = isAssessmentAnswer ? null : await transferAssessmentService.prepareAssessment({
+                await ChecklistService.analyzeStudentMessages(currentRoom.id, checklistOwnerMessage.user_id, parentMessageId, user.id);
+                const prepared = await transferAssessmentService.prepareAssessment({
                     roomId: currentRoom.id,
                     focusStudentMessageId: parentMessageId,
                   checklistId: transferChecklist.id,

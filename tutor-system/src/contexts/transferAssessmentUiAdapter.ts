@@ -326,10 +326,17 @@ export function readPublicQuestion(message: Message | null | undefined): PublicQ
 
 /** Find the learner's delivered question until its authoritative lifecycle closes it. */
 export function findOpenLearnerAssessment(messages: Message[], studentId: string): RoomMessageView | null {
-  return [...messages].reverse().find(message => {
+  return findOpenLearnerAssessments(messages, studentId).slice(-1)[0] ?? null;
+}
+
+/** Open exit questions in delivery order, including authoritative result events after reload. */
+export function findOpenLearnerAssessments(messages: Message[], studentId: string): RoomMessageView[] {
+  return orderAssessmentMessages(messages).filter(message => {
     const question = readPublicQuestion(message);
     if (question?.studentId !== studentId || question.lifecycle !== 'delivered') return false;
     return !messages.some(candidate => {
+      if (candidate.assessment_event?.question_message_id === message.id &&
+        candidate.assessment_event.assessment_id === question.id && candidate.assessment_event.terminal) return true;
       const lifecycle = readAnswerLifecycle(candidate);
       const belongsToQuestion = candidate.id === message.id ||
         (candidate.parent_message_id === message.id && candidate.user_id === studentId &&
@@ -337,7 +344,33 @@ export function findOpenLearnerAssessment(messages: Message[], studentId: string
       return belongsToQuestion && lifecycle &&
         (lifecycle.terminal || lifecycle.answerOutcome === 'passed' || lifecycle.answerOutcome === 'failed');
     });
-  }) as RoomMessageView | undefined ?? null;
+  }) as RoomMessageView[];
+}
+
+/** Hide unanswered exit questions and their attached records from the learner's discussion. */
+export function learnerConversationMessages(messages: Message[], studentId: string): Message[] {
+  const hiddenQuestions = new Set(messages.filter(message => {
+    const question = readPublicQuestion(message);
+    if (question?.studentId !== studentId) return false;
+    const lifecycle = readAnswerLifecycle(message);
+    if (question.lifecycle === 'passed' || question.lifecycle === 'failed' ||
+      lifecycle?.answerOutcome === 'passed' || lifecycle?.answerOutcome === 'failed' ||
+      messages.some(candidate => {
+        const outcome = readAnswerLifecycle(candidate)?.answerOutcome ?? candidate.assessment_event?.outcome;
+        return (outcome === 'passed' || outcome === 'failed') &&
+          ((candidate.parent_message_id === message.id && candidate.user_id === studentId) ||
+            candidate.assessment_event?.question_message_id === message.id);
+      })) return false;
+    const closedEvent = messages.some(candidate =>
+      candidate.assessment_event?.question_message_id === message.id && candidate.assessment_event.terminal);
+    if (question.lifecycle === 'delivered' && !lifecycle?.terminal && !closedEvent) return true;
+    return !messages.some(answer => answer.user_id === studentId &&
+      answer.parent_message_id === message.id && readAssessmentId(answer) === question.id);
+  }).map(message => message.id));
+  return messages.filter(message => !hiddenQuestions.has(message.id) &&
+    !(hiddenQuestions.has(message.parent_message_id ?? '') &&
+      Boolean(readAssessmentId(message) || readAnswerLifecycle(message))) &&
+    !hiddenQuestions.has(message.assessment_event?.question_message_id ?? ''));
 }
 
 /**

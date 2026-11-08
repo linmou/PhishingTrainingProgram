@@ -11,11 +11,12 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoomPagePost from '../RoomPagePost';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRoom } from '../../contexts/RoomContext';
 import { ChecklistService } from '../../services/checklistService';
+import { transferAssessmentService } from '../../services/transferAssessmentService';
 import {
   answerLifecycleFromProcessed,
   projectRoomMessage,
@@ -85,7 +86,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
   let downloadChatHistory: jest.Mock;
   let alertSpy: jest.SpyInstance;
 
-  const mount = (overrides: Record<string, unknown> = {}) => {
+  const mount = (overrides: Record<string, unknown> = {}, hashRouter = false) => {
     (useRoom as jest.Mock).mockReturnValue({
       currentRoom: { ...transferRoom, ai_assistant_enabled: true },
       messages: [learnerMessage],
@@ -112,13 +113,14 @@ describe('RoomPagePost transfer lifecycle states', () => {
       ...overrides,
     });
 
-    return render(
-      <MemoryRouter initialEntries={[`/room/${TRANSFER_ROOM_ID}`]}>
+    const content = (
         <Routes>
           <Route path="/room/:roomId" element={<RoomPagePost />} />
+          <Route path="/" element={<p>Dashboard destination</p>} />
         </Routes>
-      </MemoryRouter>
     );
+    return render(hashRouter ? <HashRouter>{content}</HashRouter>
+      : <MemoryRouter initialEntries={[`/room/${TRANSFER_ROOM_ID}`]}>{content}</MemoryRouter>);
   };
 
   beforeEach(() => {
@@ -127,6 +129,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
     generateAIResponse = jest.fn().mockResolvedValue(undefined);
+    jest.spyOn(transferAssessmentService, 'joinRoom').mockResolvedValue({ room_role: 'learner' } as never);
     downloadChatHistory = jest.fn();
     // The generate control is the room's AI button; it is enabled for a tutor in an AI room.
     (useAuth as jest.Mock).mockReturnValue({
@@ -278,12 +281,11 @@ describe('RoomPagePost transfer lifecycle states', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
     mount({ messages: [question], sendMessage });
 
-    expect(screen.getByRole('textbox')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
+    expect(screen.getByRole('textbox')).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Submit answer' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Back to Dashboard/ }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'A' } });
-    fireEvent.submit(screen.getByRole('textbox'));
-    expect(sendMessage).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('radio', { name: /A\./ }));
     await act(async () => {
@@ -297,10 +299,118 @@ describe('RoomPagePost transfer lifecycle states', () => {
     });
   });
 
+  // RoomPagePost.tsx: browser navigation and reload cannot silently skip an open exit question.
+  it('intercepts browser Back and prompts before unloading only while questions remain open', () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const { unmount } = mount({ messages: [projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment)] });
+    const beforeUnload = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(beforeUnload);
+    expect(beforeUnload.defaultPrevented).toBe(true);
+    fireEvent(window, new PopStateEvent('popstate'));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    unmount();
+    const afterUnmount = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(afterUnmount);
+    expect(afterUnmount.defaultPrevented).toBe(false);
+  });
+
+  // RoomPagePost.tsx: exercise real hash-history traversal and resume its blocked destination after completion.
+  it('resumes actual HashRouter Back navigation after the last question closes', async () => {
+    const originalUrl = window.location.href;
+    window.history.replaceState(null, '', '#/');
+    window.history.pushState(null, '', `#/room/${TRANSFER_ROOM_ID}`);
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const question = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    const view = mount({ messages: [question] }, true);
+    act(() => window.history.back());
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    expect(window.location.hash).toBe(`#/room/${TRANSFER_ROOM_ID}`);
+    (useRoom as jest.Mock).mockReturnValue({ ...(useRoom as jest.Mock).mock.results.slice(-1)[0].value,
+      messages: [{ ...question, publicQuestion: { ...question.publicQuestion!, lifecycle: 'passed' } }] });
+    view.rerender(<HashRouter><Routes>
+      <Route path="/room/:roomId" element={<RoomPagePost />} />
+      <Route path="/" element={<p>Dashboard destination</p>} />
+    </Routes></HashRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+    await waitFor(() => expect(screen.getByText('Dashboard destination')).toBeInTheDocument());
+    view.unmount();
+    window.history.replaceState(null, '', originalUrl);
+  });
+
+  // RoomPagePost.tsx: hidden exit questions do not block either ordinary posting or rating's resumed send.
+  it('resumes a rated draft while an unseen exit question is open', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    const submitMessageFeedback = jest.fn().mockResolvedValue(undefined);
+    mount({ messages: [{ ...learnerMessage, id: 'tutor-response', user_id: 'tutor-1', user_role: 'tutor', content: 'Tutor response' },
+      projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment)], sendMessage, submitMessageFeedback });
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'My ordinary reply' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send comment' }));
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Tutor response');
+    expect(screen.getByRole('alertdialog')).not.toHaveTextContent(deliveredPublicAssessment.stem);
+    fireEvent.click(screen.getByRole('button', { name: 'Helpful' }));
+    fireEvent.click(screen.getByRole('button', { name: '4 stars' }));
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Submit rating and send' })));
+    expect(submitMessageFeedback).toHaveBeenCalledWith('tutor-response', 'like', 4);
+    expect(sendMessage).toHaveBeenCalledWith('My ordinary reply', { replyToMessageId: undefined });
+  });
+
+  // RoomPagePost.tsx: failed transport leaves the quiz open and lets the learner retry under Guard.
+  it('keeps Guard waiting and allows retry after an answer transport error', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const sendMessage = jest.fn().mockRejectedValueOnce(new Error('Network unavailable')).mockResolvedValue(undefined);
+    mount({ currentRoom: { ...transferRoom, guard_mode: true }, messages: [projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment)], sendMessage });
+    fireEvent.click(screen.getByRole('link', { name: /Back to Dashboard/ }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Waiting for your tutor to turn Guard off.');
+    fireEvent.click(screen.getByRole('radio', { name: /A\./ }));
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Submit answer' })));
+    expect(screen.getByRole('alert')).toHaveTextContent('Your answer could not be submitted.');
+    expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Submit answer' })));
+    expect(sendMessage).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  // RoomPagePost.tsx: an exit asks every open question in delivery order and retains final feedback until Next.
+  it('answers two exit questions in delivery order before allowing Leave', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
+    const first = projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment);
+    const second = projectRoomMessage({ ...deliveredQuestionRow, id: 'question-2', created_at: '2026-09-12T09:20:00Z' },
+      { ...deliveredPublicAssessment, id: 'assessment-2', stem: 'Second exit question' });
+    const sendMessage = jest.fn().mockResolvedValue(undefined);
+    const view = mount({ messages: [second, first], sendMessage });
+    fireEvent.click(screen.getByRole('link', { name: /Back to Dashboard/ }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Question 1 of 2');
+    expect(screen.getByRole('dialog')).not.toHaveTextContent('Second exit question');
+    fireEvent.click(screen.getByRole('radio', { name: /A\./ }));
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Submit answer' })));
+    expect(sendMessage).toHaveBeenCalledWith('A', expect.objectContaining({ assessmentId: DELIVERED_QUESTION_ID }));
+    const updateMessages = (messages: Message[]) => {
+      (useRoom as jest.Mock).mockReturnValue({ ...(useRoom as jest.Mock).mock.results.slice(-1)[0].value, messages });
+      view.rerender(<MemoryRouter initialEntries={[`/room/${TRANSFER_ROOM_ID}`]}><Routes>
+        <Route path="/room/:roomId" element={<RoomPagePost />} />
+        <Route path="/" element={<p>Dashboard destination</p>} />
+      </Routes></MemoryRouter>);
+    };
+    const passed = { ...first, publicQuestion: { ...first.publicQuestion!, lifecycle: 'passed' as const } };
+    updateMessages([passed, second]);
+    expect(screen.getByRole('button', { name: 'Next' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Second exit question');
+    expect(screen.getByRole('dialog')).toHaveTextContent('Question 2 of 2');
+    const failed = { ...second, publicQuestion: { ...second.publicQuestion!, lifecycle: 'failed' as const } };
+    updateMessages([passed, failed]);
+    fireEvent.click(screen.getByRole('button', { name: 'Leave' }));
+    expect(screen.getByText('Dashboard destination')).toBeInTheDocument();
+  });
+
   it('renders persisted remaining chances after the page is mounted from saved messages', () => {
     const question = withAnswerLifecycle(
       projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment),
       answerLifecycleFromProcessed({
+        result_message: null,
         message_id: DELIVERED_ANSWER_ID,
         assessment_id: DELIVERED_QUESTION_ID,
         processing_state: 'applied',
@@ -320,10 +430,11 @@ describe('RoomPagePost transfer lifecycle states', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
     mount({ messages: [question,projectRoomMessage(assessmentResultMessage('retry',1,DELIVERED_ANSWER_ID) as unknown as Record<string,unknown>)] });
 
+    expect(screen.queryByText('Incorrect. One attempt remaining.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Back to Dashboard/ }));
     expect(screen.getByText('Incorrect. One attempt remaining.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
-    expect(screen.getByRole('textbox')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
+    expect(screen.getByRole('textbox')).toBeEnabled();
     expect(screen.getAllByRole('radio')[0]).toBeEnabled();
   });
 
@@ -334,7 +445,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     });
     mount({ messages: [projectRoomMessage(deliveredQuestionRow, deliveredPublicAssessment)] });
     expect(screen.getByRole('textbox')).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
+    if (role === 'student') expect(screen.queryByRole('button', { name: 'Submit answer' })).not.toBeInTheDocument();
   });
 
   // RoomPagePost.tsx: persisted terminal question state releases discussion after a reload.
@@ -343,8 +454,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
       (useAuth as jest.Mock).mockReturnValue({ user: learnerAUser, loading: false });
       mount({ messages: [projectRoomMessage({ ...deliveredQuestionRow, assessment_lifecycle: lifecycle }, deliveredPublicAssessment)] });
       expect(screen.getByRole('textbox')).toBeEnabled();
-      expect(screen.getByRole('button', { name: 'Reply' })).toBeEnabled();
-      expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
+      expect(screen.queryByRole('button', { name: 'Submit answer' })).not.toBeInTheDocument();
     }
   );
 
@@ -353,6 +463,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     const first = withAnswerLifecycle(
       projectRoomMessage({ ...deliveredAnswerRow, content: 'A' }),
       answerLifecycleFromProcessed({
+        result_message: null,
         message_id: DELIVERED_ANSWER_ID,
         assessment_id: DELIVERED_QUESTION_ID,
         processing_state: 'applied',
@@ -372,6 +483,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     const second = withAnswerLifecycle(
       projectRoomMessage({ ...deliveredAnswerRow, id: 'answer-2', content: 'B', created_at: '2026-09-12T09:16:00Z' }),
       answerLifecycleFromProcessed({
+        result_message: null,
         message_id: 'answer-2',
         assessment_id: DELIVERED_QUESTION_ID,
         processing_state: 'applied',
@@ -397,7 +509,7 @@ describe('RoomPagePost transfer lifecycle states', () => {
     expect(screen.getByText('Answer 2 of 2')).toBeInTheDocument();
     expect(screen.getByText('Correct.')).toBeInTheDocument();
     expect(screen.getByRole('textbox')).toBeEnabled();
-    expect(screen.getAllByRole('button', { name: 'Reply' }).every(button=>!button.hasAttribute('disabled'))).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Reply' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Previous answer' }));
     expect(screen.getByText('Incorrect. One attempt remaining.')).toBeInTheDocument();
   });
@@ -421,12 +533,12 @@ describe('RoomPagePost transfer lifecycle states', () => {
     mount({ messages: [question, reply, pendingAnswer] });
 
     expect(screen.getByText('Can you explain this question?')).toBeInTheDocument();
-    expect(screen.getByText(/Discussion \(2 messages\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Discussion \(1 message\)/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Back to Dashboard/ }));
     expect(screen.getByText('Answer 1 of 1')).toBeInTheDocument();
     expect(screen.getByText('Your answer is still processing.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Submit answer' })).toBeDisabled();
-    expect(screen.getByRole('textbox')).toBeDisabled();
-    expect(screen.getAllByRole('button', { name: 'Reply' }).every(button => (button as HTMLButtonElement).disabled)).toBe(true);
+    expect(screen.getByRole('textbox')).toBeEnabled();
   });
 
   it('clears a previous lifecycle state when a new preparation starts and succeeds', async () => {

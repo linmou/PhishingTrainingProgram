@@ -11,7 +11,9 @@ risk: low
 
 ## Description
 
-Every participant sees the same live conversation within about 2 seconds, with typing indicators. The learner rates every tutor reply before writing again.
+Participants see the live conversation within about 2 seconds, with typing indicators. The learner rates ordinary tutor replies before writing again; open exit assessments stay hidden until exit and assessment questions are never rated.
+
+Implementation update: 2026-10-31; baseline `d3bb45b`. Exit-assessment release acceptance remains open in `tutor-system/docs/doc_update_record/documentation_update_record_v2026_10_31_exit_time_assessment.md`.
 
 ## Outcome
 
@@ -51,3 +53,7 @@ Test paths are from the repository root.
 - parent — `_bmad-output/initiative-platform-baseline/initiative-platform-baseline.md`, Requirements R5
 - architecture — `_bmad-output/initiative-platform-baseline/architecture-tutor-platform/architecture-tutor-platform.md`, AD-7, AD-12
 - prd — `_bmad-output/initiative-platform-baseline/prd-tutor-platform/prd-tutor-platform.md`, section 4.3
+
+## Notes
+
+- Exit assessment (issue #46; PRD FR-16, FR-54): transfer assessment questions, whether open and hidden or ended and shown again, are excluded from R3's rating gate. The required-rating auto-send continues the ordinary drafted post even while a question is open. Guard: `tutor-system/src/pages/__tests__/RoomPagePost.transferLifecycle.test.tsx`. Production acceptance remains open in the dated release record.

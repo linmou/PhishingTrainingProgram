@@ -187,7 +187,7 @@ describe('RoomPagePost structured decision consumption', () => {
     await waitFor(() => expect(clearAISuggestion).toHaveBeenCalledTimes(1));
   });
 
-  it('renders and submits a public assessment projection through the page message list', async () => {
+  it('renders and submits a public assessment projection at exit', async () => {
     const projectedQuestion = projectRoomMessage({
       ...deliveredQuestionRow,
       content: 'Legacy copy-only text must not replace the public projection.',
@@ -206,6 +206,8 @@ describe('RoomPagePost structured decision consumption', () => {
     });
     mount({ messages: [projectedQuestion as unknown as Message], sendMessage });
 
+    expect(screen.queryByText(deliveredQuestionRow.assessment.stem)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Back to Dashboard/ }));
     expect(screen.getByText(deliveredQuestionRow.assessment.stem)).toBeInTheDocument();
     expect(screen.getAllByText(/^(A|B|C|D)\./)).toHaveLength(4);
     expect(screen.queryByText('Legacy copy-only text must not replace the public projection.')).not.toBeInTheDocument();

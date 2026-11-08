@@ -5,7 +5,7 @@
  */
 
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
-import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
+import { SCENARIO_TEMPLATES, ScenarioTemplate, requireScenarioTemplate } from './detectionTemplates';
 import { PrePopulatedMessage } from '../types';
 import {
   PromptComparisonMetadata,
@@ -60,9 +60,10 @@ export function buildCasualPeerAIConfig(
   scenario: ScenarioTemplate,
   options?: { model_name?: string; temperature?: number; max_tokens?: number }
 ): DemoAIConfigTemplate {
-  const scenarioData = SCENARIO_TEMPLATES[scenario];
+  const scenarioData = SCENARIO_TEMPLATES[requireScenarioTemplate(scenario)];
   const prompt_config: SystemPromptConfig = {
     ...PRESET_CONFIGS.casual_peer,
+    scenario,
     detection_areas: scenarioData.detection_areas,
     verification_steps: []
   };

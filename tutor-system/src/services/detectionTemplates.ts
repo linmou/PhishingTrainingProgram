@@ -84,6 +84,18 @@ export const SCENARIO_TEMPLATES = {
 
 export type ScenarioTemplate = keyof typeof SCENARIO_TEMPLATES;
 
+export function isScenarioTemplate(value: unknown): value is ScenarioTemplate {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(SCENARIO_TEMPLATES, value);
+}
+
+/** Reject invalid template references before materializing a room configuration. */
+export function requireScenarioTemplate(value: unknown): ScenarioTemplate {
+  if (!isScenarioTemplate(value)) {
+    throw new Error(`Unknown or missing scenario reference: ${String(value)}`);
+  }
+  return value;
+}
+
 /** One shared target inventory for every Cyberbullying scenario. */
 export const CYBERBULLYING_TARGET_VERSION = 'cyberbullying_v1';
 export const CYBERBULLYING_LEARNING_TARGETS = [

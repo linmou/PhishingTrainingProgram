@@ -123,6 +123,12 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
             }
         }
         const context: ConversationMessage[] = [];
+        // Only ended assessments belong to the learner's conversation. Determine
+        // completion from trusted persisted events, after checking result readiness.
+        const endedAssessmentIds = new Set(messages.flatMap(message => {
+            const event = message.assessment_event;
+            return event?.terminal ? [event.assessment_id] : [];
+        }));
 
         // Add room context as system message
         if (room) {
@@ -149,6 +155,8 @@ export async function buildAIContextFromExistingData(roomId: string, expectedAss
         // Add the complete saved discussion.
         if (messages && messages.length > 0) {
             orderAssessmentMessages(messages).forEach(msg => {
+                const assessmentId = msg.assessment_event?.assessment_id ?? msg.assessment_id;
+                if (assessmentId && !endedAssessmentIds.has(assessmentId)) return;
                 if (msg.response_mode==='assessment' && msg.assessment_student_id!==learnerId && !msg.assessment_options) return;
                 if (msg.assessment_event) {
                     const event = msg.assessment_event;

@@ -13,8 +13,10 @@ const { chromium } = require('playwright');
 const { configFromEnv, guardProject, assertProjectTraffic, extractedTargets, existingRoom, sendStudentMessage, PROJECT_URL, ROOMS, selectWorkflows, runWorkflows, shouldRetainLease } = require('./browser-e2e');
 const { deliverFixedAssessment } = require('./browser-e2e/workflows/assessment-fixture');
 const { templateChecklistItems } = require('./browser-e2e/workflows/transfer-status-events');
-const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult } = require('./browser-e2e/workflows/assessment-browser-checks');
+const { assertAssessmentGate, assertBoundAnswers, assertFirstPassResult, openExitAssessment, assertExitResult } = require('./browser-e2e/workflows/assessment-browser-checks');
 const assessmentDelivery = require('./browser-e2e/workflows/assessment-delivery');
+const exitAssessment = require('./browser-e2e/workflows/exit-assessment');
+const assessmentAnswer = require('./browser-e2e/workflows/assessment-answer');
 require('./browser-e2e/cleanup.test');
 const { runRoomSetupAnalysis, waitForTemplateSettings } = require('./browser-e2e/workflows/room-assessment-setup');
 
@@ -178,10 +180,70 @@ test('selects the transfer status workflow alongside the existing browser workfl
   assert.deepEqual(selectWorkflows(['--workflow=checklist-generation']), ['checklist-generation']);
   assert.deepEqual(selectWorkflows(['--workflow=room-assessment-setup']), ['room-assessment-setup']);
   assert.deepEqual(selectWorkflows(['--workflow=assessment-answer']), ['assessment-answer']);
+  assert.deepEqual(selectWorkflows(['--workflow=exit-assessment']), ['exit-assessment']);
   assert.deepEqual(selectWorkflows(['--workflow=transfer-status-events']), ['transfer-status-events']);
   assert.deepEqual(selectWorkflows(['--workflow=early-message-recheck']), ['early-message-recheck']);
   assert.throws(() => selectWorkflows(['--workflow=unknown']), /Unknown workflow/);
   assert.throws(() => selectWorkflows(['--workflow=tutor-response', '--workflow=assessment-answer']), /Use --workflow/);
+});
+
+// Responsibility: exit-assessment.js must reject queue identity, attempt and lifecycle mismatches.
+test('exit queue oracle verifies every delivered question and accepted attempt count', () => {
+  const delivered = [{ assessment_id: 'one', question_message_id: 'question-one' },
+    { assessment_id: 'two', question_message_id: 'question-two' }];
+  const rows = [{ id: 'one', question_message_id: 'question-one', lifecycle: 'passed', attempt_count: 1 },
+    { id: 'two', question_message_id: 'question-two', lifecycle: 'failed', attempt_count: 2 }];
+  const expected = [{ lifecycle: 'passed', attempts: 1 }, { lifecycle: 'failed', attempts: 2 }];
+  assert.doesNotThrow(() => exitAssessment.assertQueueState(rows, delivered, expected));
+  assert.throws(() => exitAssessment.assertQueueState(rows.slice(1), delivered, expected), /missing or extra/);
+  for (const mutation of [{ id: 'other' }, { question_message_id: 'other' }, { lifecycle: 'delivered' }, { attempt_count: 0 }]) {
+    assert.throws(() => exitAssessment.assertQueueState([{ ...rows[0], ...mutation }, rows[1]], delivered, expected));
+  }
+});
+
+// Responsibility: exit-assessment.js must prove the submitted, bound answer was held before releasing Guard.
+test('Guard oracle requires persisted answer identity, deferred processing and zero grading', () => {
+  const delivered = { assessment_id: 'assessment', question_message_id: 'question' };
+  const answer = { id: 'answer', user_id: 'learner', user_role: 'student', assessment_id: 'assessment',
+    parent_message_id: 'question', assessment_selected_option_ids: ['B'] };
+  const processed = { message_id: 'answer', assessment_id: 'assessment', processing_state: 'deferred',
+    code: 'guard_deferred', attempts_used: 0, attempt_number: null, answer_outcome: null, terminal: false, result_message: null };
+  const verify = (result = processed, row = answer) => exitAssessment.assertHeldAnswer(result, row, delivered, 'learner');
+  assert.doesNotThrow(() => verify());
+  assert.throws(() => verify(processed, null), /persist an answer/);
+  for (const mutation of [{ user_id: 'other' }, { user_role: 'tutor' }, { assessment_id: 'other' },
+    { parent_message_id: 'other' }, { assessment_selected_option_ids: ['A'] }]) {
+    assert.throws(() => verify(processed, { ...answer, ...mutation }));
+  }
+  for (const mutation of [{ message_id: 'other' }, { assessment_id: 'other' }, { processing_state: 'applied' },
+    { code: 'unresolved' }, { attempts_used: 1 }, { attempt_number: 1 }, { answer_outcome: 'passed' },
+    { terminal: true }, { result_message: { id: 'unexpected-grade' } }]) {
+    assert.throws(() => verify({ ...processed, ...mutation }));
+  }
+});
+
+// Responsibility: assessment-answer.js must verify a cancelled target is re-offered for tutor review without grading its answer.
+test('cancellation replacement oracle enforces target, ordinary focus, learner and review boundaries', () => {
+  const fixture = { room: { id: 'room' }, checklist: { id: 'checklist' },
+    focus: { id: 'ordinary', user_id: 'learner' }, items: [{ id: 'target' }] };
+  const request = { operation: 'prepare_turn', room_id: 'room', checklist_id: 'checklist', focus_student_message_id: 'ordinary' };
+  const data = { room_id: 'room', checklist_id: 'checklist', student_id: 'learner', item_id: 'target',
+    assessment_draft: { target_item_id: 'target', assessment: { stem: 'Controlled replacement' } } };
+  const prepared = { request, status: 200, response: { ok: true, data } };
+  const verify = calls => assessmentAnswer.assertCancellationReplacement(calls, fixture, 'assessment-answer');
+  assert.equal(verify([prepared]), data);
+  assert.equal(verify([{ request: { operation: 'analyze_message', message_id: 'earlier-ordinary' } }, prepared]), data);
+  assert.throws(() => verify([]), /exactly one/);
+  assert.throws(() => verify([prepared, prepared]), /exactly one/);
+  assert.throws(() => verify([{ ...prepared, status: 500 }]), /preparation failed/);
+  for (const field of ['room_id', 'checklist_id', 'focus_student_message_id']) {
+    assert.throws(() => verify([{ ...prepared, request: { ...request, [field]: 'other' } }]));
+  }
+  for (const field of ['room_id', 'student_id', 'checklist_id', 'item_id']) {
+    assert.throws(() => verify([{ ...prepared, response: { ok: true, data: { ...data, [field]: 'other' } } }]));
+  }
+  assert.throws(() => verify([prepared, { request: { operation: 'analyze_message', message_id: 'assessment-answer' } }]), /ordinary evidence/);
+  assert.throws(() => verify([prepared, { request: { operation: 'send_reviewed' } }]), /tutor review/);
 });
 
 test('a failed workflow does not stop another independent workflow', async () => {
@@ -226,15 +288,18 @@ test('cleanup runs after a workflow failure and its failure fails the workflow',
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
 
-test('learner sends once with prior, prompted, consecutive, or no required ratings', async () => {
+test('learner sends once with prior, prompted, consecutive, or no ratings, including rating auto-send', async () => {
   const browser = await chromium.launch({ headless: true });
   try {
-    for (const { initiallyOpen, requiredRatings } of [
+    for (const { initiallyOpen, requiredRatings, autoResume } of [
       { initiallyOpen: true, requiredRatings: 1 },
       { initiallyOpen: false, requiredRatings: 1 },
       { initiallyOpen: false, requiredRatings: 0 },
       { initiallyOpen: false, requiredRatings: 2 },
-      { initiallyOpen: true, requiredRatings: 2 }
+      { initiallyOpen: true, requiredRatings: 2 },
+      { initiallyOpen: false, requiredRatings: 1, autoResume: true },
+      { initiallyOpen: false, requiredRatings: 2, autoResume: true },
+      { initiallyOpen: true, requiredRatings: 2, autoResume: true }
     ]) {
       const page = await browser.newPage();
       await page.setContent(`
@@ -259,9 +324,28 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
           window.submitAttempts = 0;
           window.ratingsRemaining = ${requiredRatings};
           window.rated = window.ratingsRemaining === 0;
+          window.autoResume = ${Boolean(autoResume)};
+          window.sendDraft = () => {
+            const input = document.querySelector('textarea');
+            if (!input.value) return;
+            const submit = document.querySelector('form button');
+            submit.disabled = true;
+            if (!window.rated) { window.showRating(); return; }
+            setTimeout(() => {
+              window.sent.push(input.value);
+              input.value = '';
+              submit.disabled = true;
+            }, 30);
+          };
+          document.querySelector('textarea').oninput = event => {
+            document.querySelector('form button').disabled = !event.target.value;
+          };
           window.showRating = () => {
             if (document.querySelector('[data-testid="rating-reminder-backdrop"]')) return;
             const reminder = document.querySelector('#reminder-template').content.firstElementChild.cloneNode(true);
+            const quote = document.createElement('blockquote');
+            quote.textContent = 'Response ' + window.ratingsRemaining;
+            reminder.prepend(quote);
             let useful = false;
             let stars = 0;
             reminder.querySelector('.rating-reminder-choice button').onclick = () => { useful = true; };
@@ -273,6 +357,7 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
                 window.ratingsRemaining -= 1;
                 window.rated = window.ratingsRemaining === 0;
                 reminder.remove();
+                if (window.autoResume) window.sendDraft();
               }
             };
             document.body.append(reminder);
@@ -281,6 +366,7 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
             event.preventDefault();
             window.submitAttempts += 1;
             if (!window.rated) { window.showRating(); return; }
+            if (window.autoResume) { window.sendDraft(); return; }
             const input = document.querySelector('textarea');
             window.sent.push(input.value);
             input.value = '';
@@ -292,7 +378,7 @@ test('learner sends once with prior, prompted, consecutive, or no required ratin
       const result = await page.evaluate(() => ({ sent: window.sent, rated: window.rated, attempts: window.submitAttempts }));
       assert.deepEqual(result.sent, ['Check the official app.']);
       assert.equal(result.rated, true);
-      assert.equal(result.attempts, requiredRatings + (initiallyOpen ? 0 : 1));
+      assert.equal(result.attempts, autoResume ? 1 : requiredRatings + (initiallyOpen ? 0 : 1));
       await page.close();
     }
   } finally { await browser.close(); }
@@ -394,6 +480,29 @@ test('assessment gate checks every generic Reply and restores terminal composer 
   } finally { await browser.close(); }
 });
 
+// Responsibility: assessment-browser-checks.js must open the exit surface and respect trusted terminal state.
+test('exit helper requires hidden questions and unlocked chat, then binds results to the popup lifecycle', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`<textarea class="comment-input-field"></textarea><button>Reply</button>
+      <a href="#dashboard" id="back">Back to Dashboard</a>
+      <script>document.querySelector('#back').onclick = event => {
+        event.preventDefault();
+        document.body.insertAdjacentHTML('beforeend', '<section role="dialog" aria-label="Before you leave"><section data-testid="public-assessment-one">Question one</section><p role="status">Try once more.</p><button disabled>Next</button></section>');
+      };</script>`);
+    const question = await openExitAssessment(page, 'one');
+    assert.equal(await question.count(), 1);
+    const retry = { content: 'Try once more.', assessment_event: { terminal: false } };
+    await assertExitResult(page, retry);
+    await assert.rejects(assertExitResult(page, { ...retry, assessment_event: { terminal: true } }), /trusted assessment lifecycle/);
+    await page.getByRole('dialog').getByRole('button').evaluate(button => { button.disabled = false; button.textContent = 'Leave'; });
+    await assertExitResult(page, { ...retry, assessment_event: { terminal: true } });
+    await page.setContent('<textarea class="comment-input-field"></textarea><button>Reply</button><section data-testid="public-assessment-one"></section>');
+    await assert.rejects(openExitAssessment(page, 'one'), /leaked/);
+  } finally { await browser.close(); }
+});
+
 test('two-target assessment delivery rejects old hosted scheduling before creating fixtures', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'browser-e2e-policy-'));
   const originalFetch = global.fetch;
@@ -414,18 +523,13 @@ test('two-target assessment delivery rejects old hosted scheduling before creati
   }
 });
 
-test('assessment delivery requires feedback on the terminal answer after closure before the next target', () => {
-  const assessment = { terminal_answer_message_id: 'terminal-answer', closed_at: '2026-10-14T15:00:00.000Z' };
-  const feedback = { parent_message_id: 'terminal-answer', response_mode: 'tutoring', created_at: '2026-10-14T15:00:01.000Z' };
-  assert.doesNotThrow(() => assessmentDelivery.assertTutorFeedback(feedback, assessment));
-  assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, parent_message_id: 'support-observation' }, assessment),
-    /terminal learner answer/);
-  assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, response_mode: 'guard' }, assessment),
+test('assessment delivery binds tutoring to the ordinary learner focus after exit answers', () => {
+  const feedback = { parent_message_id: 'ordinary-observation', response_mode: 'tutoring' };
+  assert.doesNotThrow(() => assessmentDelivery.assertTutorFocus(feedback, 'ordinary-observation'));
+  assert.throws(() => assessmentDelivery.assertTutorFocus({ ...feedback, parent_message_id: 'terminal-answer' }, 'ordinary-observation'),
+    /ordinary learner focus/);
+  assert.throws(() => assessmentDelivery.assertTutorFocus({ ...feedback, response_mode: 'guard' }, 'ordinary-observation'),
     /wrong response mode/);
-  for (const created_at of ['2026-10-14T14:59:59.000Z', assessment.closed_at]) {
-    assert.throws(() => assessmentDelivery.assertTutorFeedback({ ...feedback, created_at }, assessment),
-      /after the assessment closes/);
-  }
 });
 
 

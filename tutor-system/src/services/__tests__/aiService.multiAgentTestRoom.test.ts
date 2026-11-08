@@ -63,6 +63,7 @@ describe('initializeAIAssistant peer test room', () => {
     );
 
     const insertCall = from.mock.results[3].value.insert.mock.calls[0][0];
+    expect(insertCall.prompt_config.scenario).toBe('Account Security Alert');
     expect(insertCall.prompt_config.interaction_mode).toBe('single_agent');
   });
 });

@@ -84,7 +84,7 @@ describe('RoomPagePost direct learner entry', () => {
         mount('student');
 
         await waitFor(() => expect(joinRoom).toHaveBeenCalledWith('room-1', undefined));
-        await waitFor(() => expect(transferAssessmentService.joinRoom).toHaveBeenCalledWith('room-1'));
+        await waitFor(() => expect(transferAssessmentService.joinRoom).toHaveBeenCalledWith('room-1', expect.any(String)));
     });
 
     it('does not claim the learner seat for an observer opening the room URL', async () => {

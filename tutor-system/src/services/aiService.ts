@@ -11,7 +11,7 @@
 import { AIConfigChangeLog, AIResponse, ConversationMessage, AIAssistantConfig, AIAssistantConfigSnapshot, InteractionMode, TutorActionDecision, TutorDecisionMode, TutorInstruction, TutorResponseMode } from '../types';
 import { supabase } from './supabase';
 import { generateSystemPrompt, PRESET_CONFIGS } from './systemPrompts';
-import { SCENARIO_TEMPLATES, ScenarioTemplate } from './detectionTemplates';
+import { SCENARIO_TEMPLATES, ScenarioTemplate, requireScenarioTemplate } from './detectionTemplates';
 import { buildAIContextFromExistingData } from './simplifiedAIContext';
 import {
     buildPhase0ChatCompletionMessages,
@@ -1113,11 +1113,13 @@ export const initializeAIAssistant = async (
 
     // Materialize the extended config even when callers provide a prebuilt prompt.
     if (promptConfig) {
-        const scenario = promptConfig.scenario ? SCENARIO_TEMPLATES[promptConfig.scenario] : null;
+        const scenarioId = promptConfig.scenario === undefined ? null : requireScenarioTemplate(promptConfig.scenario);
+        const scenario = scenarioId ? SCENARIO_TEMPLATES[scenarioId] : null;
         const detectionAreas = promptConfig.custom_detection_areas || scenario?.detection_areas || [];
         const verificationSteps = promptConfig.custom_verification_steps || scenario?.verification_steps || [];
 
         finalPromptConfig = {
+            scenario: scenarioId,
             role: {
                 role: (promptConfig.role === 'peer' ? 'low' : 'high') as 'low' | 'high'
             },

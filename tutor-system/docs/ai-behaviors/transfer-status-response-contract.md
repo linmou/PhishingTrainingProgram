@@ -94,7 +94,7 @@ stateDiagram-v2
     Assessing --> Review: assessment_fail on second incorrect answer
 ```
 
-An eligible teacher request prepares the assessment draft; teacher delivery opens it. Guard, another open assessment, or required feedback can delay preparation while the assessment remains due. No qualifying evidence leaves progress unchanged. A later contradiction can reopen even a completed item. Same-situation recovery follows `needs_review` → `partially_covered` → `covered` before a new assessment.
+An eligible teacher request prepares the assessment draft; teacher delivery opens it. Guard, another open assessment, or required feedback can delay preparation while the assessment remains due. While the temporary exit assessment is in force, every learner-owned Covered target is due, only Guard delays it, and a pass makes it due again at the learner's next visit; event kinds and transitions in this contract are unchanged ([exit-time assessment](../exit-time-assessment.md)). No qualifying evidence leaves progress unchanged. A later contradiction can reopen even a completed item. Same-situation recovery follows `needs_review` → `partially_covered` → `covered` before a new assessment.
 
 ## Assessment after full understanding
 

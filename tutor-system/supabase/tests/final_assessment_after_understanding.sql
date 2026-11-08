@@ -108,7 +108,7 @@ BEGIN
     IF scenario IN ('existing_knowledge', 'spontaneous') THEN
       focus := pg_temp.analyze_final_target(room, student, tutor, item,
         CASE WHEN scenario = 'existing_knowledge' THEN 'demonstrated_understanding' ELSE 'spontaneous_transfer' END);
-      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, scenario);
+      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, scenario);
       IF NOT EXISTS (SELECT 1 FROM public.checklist_items WHERE id = item AND status = 'covered' AND understanding_level = 'good') THEN
         RAISE EXCEPTION '% did not complete directly', scenario;
       END IF;
@@ -206,7 +206,7 @@ BEGIN
       focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'repair alone does not resurrect old readiness');
       focus := pg_temp.analyze_final_target(room, student, tutor, item, 'spontaneous_transfer');
-      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'spontaneous recovery bypasses final assessment');
+      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'spontaneous recovery offers exit assessment');
       RAISE NOTICE 'PASS: contradiction';
       CONTINUE;
     END IF;
@@ -349,7 +349,9 @@ BEGIN
       focus := pg_temp.analyze_final_target(room, student, tutor, item, 'post_repair_signal');
       PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'repair continues tutoring');
       focus := pg_temp.analyze_final_target(room, student, tutor, item, 'demonstrated_understanding');
-      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'later full understanding starts a new assessment cycle');
+      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, NULL, 'same-visit failure suppresses a repaired target');
+      PERFORM public.start_learner_visit_v1(room, student, gen_random_uuid());
+      PERFORM pg_temp.expect_final_due(room, focus, checklist, tutor, item, 'later visit starts a repaired assessment cycle');
       denied := false;
       BEGIN
         PERFORM pg_temp.deliver_final_assessment(room, student, checklist, item, focus, focus, tutor, 'Payment warning text');

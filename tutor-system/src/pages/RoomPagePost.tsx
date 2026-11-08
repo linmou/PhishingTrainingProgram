@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoom } from '../contexts/RoomContext';
 import RoomPost from '../components/RoomPost';
@@ -21,8 +21,9 @@ import { isTutorRoleLocked } from '../utils/studentAITone';
 import '../components/RoomPagePost.css';
 import type { AssessmentOptionId } from '../types/assessment';
 import type { AssessmentAnswerAttempt } from '../components/PublicAssessmentQuestion';
+import PublicAssessmentQuestion from '../components/PublicAssessmentQuestion';
 import type { Message } from '../types';
-import { findOpenLearnerAssessment, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
+import { findOpenLearnerAssessments, learnerConversationMessages, readAnswerLifecycle, readAssessmentId, readPublicQuestion } from '../contexts/transferAssessmentUiAdapter';
 
 const COMPARISON_PAIR_LABELS = {
     lock_icon: 'Lock Icon Myth',
@@ -49,6 +50,9 @@ export const resolveTransferLearnerId = (
 
 const RoomPagePost: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
+    const navigate = useNavigate();
+    const visitKey = useRef<string | null>(null);
+    if (visitKey.current === null) visitKey.current = crypto.randomUUID();
     const { user, loading: authLoading } = useAuth();
     const {
         currentRoom,
@@ -101,6 +105,19 @@ const RoomPagePost: React.FC = () => {
     const [ratingHoveredValue, setRatingHoveredValue] = useState(0);
     const [submittingRequiredRating, setSubmittingRequiredRating] = useState(false);
     const [completedRatingMessageId, setCompletedRatingMessageId] = useState<string | null>(null);
+    const sendCurrentPostRef = useRef<((ratedMessageId: string) => Promise<void>) | null>(null);
+    const roomSessionRef = useRef<object | null>(null);
+
+    useEffect(() => {
+        roomSessionRef.current = {};
+        setRatingReminder(null);
+        setRatingFeedbackType(null);
+        setRatingValue(0);
+        setRatingHoveredValue(0);
+        setSubmittingRequiredRating(false);
+        setCompletedRatingMessageId(null);
+        return () => { roomSessionRef.current = null; };
+    }, [roomId]);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
     const [roomPassword, setRoomPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
@@ -145,17 +162,60 @@ const RoomPagePost: React.FC = () => {
         userDisliked: boolean;
     }>>({});
 
-    const visibleMessages = messages;
-    const openAssessment = user?.current_role === 'student'
-        ? findOpenLearnerAssessment(messages, user.id)
-        : null;
+    const isLearner = user?.current_role === 'student' && !roomObserver;
+    const visibleMessages = isLearner ? learnerConversationMessages(messages, user.id) : messages;
+    const openAssessments = isLearner ? findOpenLearnerAssessments(messages, user.id) : [];
+    const [exitQuestionIds, setExitQuestionIds] = useState<string[] | null>(null);
+    const [exitQuestionIndex, setExitQuestionIndex] = useState(0);
+    const [exitError, setExitError] = useState<string | null>(null);
+    const pendingExit = useRef<() => void>(() => navigate('/'));
+    const historyGuardActive = useRef(false);
+    const completingExit = useRef(false);
+    const openAssessmentsRef = useRef(openAssessments);
+    openAssessmentsRef.current = openAssessments;
+    const requestExit = useCallback((action: () => void) => {
+        if (!openAssessmentsRef.current.length) { action(); return; }
+        pendingExit.current = action;
+        setExitQuestionIds(openAssessmentsRef.current.map(message => message.id));
+        setExitQuestionIndex(0);
+        setExitError(null);
+    }, []);
+    const hasExitQuestions = openAssessments.length > 0 || exitQuestionIds !== null;
+    useEffect(() => {
+        if (!hasExitQuestions) {
+            if (historyGuardActive.current && !completingExit.current) {
+                historyGuardActive.current = false;
+                window.history.back();
+            }
+            return;
+        }
+        const roomUrl = window.location.href;
+        window.history.pushState(window.history.state, '', roomUrl);
+        historyGuardActive.current = true;
+        const blockBack = (event: PopStateEvent) => {
+            event.stopImmediatePropagation();
+            window.history.pushState(window.history.state, '', roomUrl);
+            requestExit(() => window.history.go(-2));
+        };
+        const blockUnload = (event: BeforeUnloadEvent) => {
+            if (!openAssessmentsRef.current.length) return;
+            event.preventDefault();
+            event.returnValue = '';
+        };
+        window.addEventListener('popstate', blockBack, true);
+        window.addEventListener('beforeunload', blockUnload);
+        return () => {
+            window.removeEventListener('popstate', blockBack, true);
+            window.removeEventListener('beforeunload', blockUnload);
+        };
+    }, [hasExitQuestions, requestExit]);
     const assessmentAttempts = new Map<string, AssessmentAnswerAttempt[]>();
     const embeddedAnswerIds = new Set<string>();
     if (user?.current_role === 'student') {
-        const questions = new Map(visibleMessages
+        const questions = new Map(messages
             .filter(message => readPublicQuestion(message)?.studentId === user.id)
             .map(message => [message.id, readPublicQuestion(message)!]));
-        visibleMessages.forEach(message => {
+        messages.forEach(message => {
             const question = message.parent_message_id && questions.get(message.parent_message_id);
             const lifecycle = readAnswerLifecycle(message);
             if (!question || message.user_role !== 'student' || message.user_id !== user.id
@@ -168,6 +228,24 @@ const RoomPagePost: React.FC = () => {
         });
     }
     const discussionMessages = visibleMessages.filter(message => !embeddedAnswerIds.has(message.id));
+    const exitMessage = exitQuestionIds ? messages.find(message => message.id === exitQuestionIds[exitQuestionIndex]) : null;
+    const exitQuestion = readPublicQuestion(exitMessage);
+    const exitQuestionOpen = Boolean(exitMessage && openAssessments.some(message => message.id === exitMessage.id));
+    const exitResults = exitMessage ? messages.filter(message =>
+        message.assessment_event?.question_message_id === exitMessage.id) : [];
+    const advanceExit = () => {
+        if (exitQuestionOpen) return;
+        if (exitQuestionIds && exitQuestionIndex < exitQuestionIds.length - 1) {
+            setExitQuestionIndex(index => index + 1);
+        } else if (openAssessments.length) {
+            setExitQuestionIds(openAssessments.map(message => message.id));
+            setExitQuestionIndex(0);
+        } else {
+            completingExit.current = true;
+            setExitQuestionIds(null);
+            pendingExit.current();
+        }
+    };
     // Join after the stored identity has been restored so saved learner results can be replayed.
     useEffect(() => {
         if (roomId && !authLoading) {
@@ -249,7 +327,7 @@ const RoomPagePost: React.FC = () => {
             setPasswordError('');
             await joinRoom(roomId!, password);
             if (user?.current_role === 'student') {
-                const result = await transferAssessmentService.joinRoom(roomId!);
+                const result = await transferAssessmentService.joinRoom(roomId!, visitKey.current!);
                 if (result.room_role === 'observer' && typeof window !== 'undefined') {
                     setRoomObserver(true);
                     window.sessionStorage.setItem(`room-observer:${roomId}`, 'true');
@@ -288,28 +366,33 @@ const RoomPagePost: React.FC = () => {
     // Find tutor from participants
     const tutor = participants?.find(p => p.current_role === 'tutor') || null;
 
-    const getUnratedResponse = () => {
+    const getUnratedResponse = (ratedMessageId?: string) => {
         if (user?.current_role !== 'student') return null;
 
         const latest = [...visibleMessages]
             .reverse()
             .find(message => (message.is_ai_generated || message.user_role === 'tutor')
                 && !message.assessment_event
+                && !readPublicQuestion(message)
                 && !message.id.startsWith('prepop-'));
 
         if (!latest) return null;
 
-        if (completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
+        if (ratedMessageId === latest.id || completedRatingMessageId === latest.id || messageFeedbackStats[latest.id]?.user_feedback) return null;
         return latest;
     };
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!messageText.trim() || sendingMessage || openAssessment) return;
+        if (ratingReminder || submittingRequiredRating) return;
+        await sendCurrentPost();
+    };
 
+    const sendCurrentPost = async (ratedMessageId?: string) => {
+        if (!messageText.trim() || sendingMessage) return;
 
-        const unratedResponse = getUnratedResponse();
+        const unratedResponse = getUnratedResponse(ratedMessageId);
         if (unratedResponse) {
             setRatingReminder(current => current?.id === unratedResponse.id
                 ? current
@@ -334,22 +417,29 @@ const RoomPagePost: React.FC = () => {
         }
     };
 
+    // Resume with the latest room gates and draft after asynchronous rating persistence.
+    sendCurrentPostRef.current = sendCurrentPost;
+
     const handleRequiredRatingSubmit = async () => {
         if (!ratingReminder || !ratingFeedbackType || ratingValue === 0 || submittingRequiredRating) return;
 
+        const roomSession = roomSessionRef.current;
         setSubmittingRequiredRating(true);
         try {
             await submitMessageFeedback(ratingReminder.id, ratingFeedbackType, ratingValue);
+            if (!roomSession || roomSessionRef.current !== roomSession) return;
             setCompletedRatingMessageId(ratingReminder.id);
             setRatingReminder(null);
             setRatingFeedbackType(null);
             setRatingValue(0);
             setRatingHoveredValue(0);
+            await sendCurrentPostRef.current?.(ratingReminder.id);
         } catch (error) {
+            if (!roomSession || roomSessionRef.current !== roomSession) return;
             console.error('Failed to submit required response rating:', error);
             alert('Failed to save your rating. Please try again.');
         } finally {
-            setSubmittingRequiredRating(false);
+            if (roomSessionRef.current === roomSession) setSubmittingRequiredRating(false);
         }
     };
 
@@ -480,7 +570,6 @@ const RoomPagePost: React.FC = () => {
     };
 
     const handleMessageReply = (messageId: string) => {
-        if (openAssessment) return;
         const message = messages.find(m => m.id === messageId);
         if (message) {
             setReplyingTo({
@@ -722,10 +811,48 @@ const RoomPagePost: React.FC = () => {
 
     return (
         <div className={`room-post-layout${user?.current_role === 'tutor' && showChecklist ? ' room-post-layout-with-checklist' : ''}`}>
+            {exitQuestionIds && (
+                <div className="modal-overlay">
+                    <section className="modal-content exit-assessment-dialog" role="dialog" aria-modal="true" aria-labelledby="exit-assessment-title">
+                        <h2 id="exit-assessment-title">Before you leave</h2>
+                        <p>Question {exitQuestionIndex + 1} of {exitQuestionIds.length}</p>
+                        {exitQuestion && exitMessage && (
+                            <PublicAssessmentQuestion
+                                key={exitMessage.id}
+                                question={exitQuestion}
+                                answerLifecycle={readAnswerLifecycle(exitMessage)}
+                                attempts={assessmentAttempts.get(exitMessage.id)}
+                                canAnswer={exitQuestionOpen}
+                                onSubmit={async selectedOptionIds => {
+                                    setExitError(null);
+                                    try {
+                                        await handleAssessmentSubmit(exitMessage.id, exitQuestion.id, selectedOptionIds);
+                                    } catch (error) {
+                                        setExitError('Your answer could not be submitted. Please try again.');
+                                    }
+                                }}
+                            />
+                        )}
+                        {exitResults.map(result => <p key={result.id} role="status">{result.content}</p>)}
+                        {exitQuestionOpen && currentRoom.guard_mode && (
+                            <p role="status">Waiting for your tutor to turn Guard off.</p>
+                        )}
+                        {exitError && <p role="alert">{exitError}</p>}
+                        <button type="button" disabled={exitQuestionOpen} onClick={advanceExit}>
+                            {exitQuestionIndex < exitQuestionIds.length - 1 || openAssessments.length ? 'Next' : 'Leave'}
+                        </button>
+                    </section>
+                </div>
+            )}
             {/* Navigation Header */}
             <div className="room-post-nav">
                 <div className="room-post-nav-content">
-                    <Link to="/" className="room-post-nav-back">
+                    <Link to="/" className="room-post-nav-back" onClick={event => {
+                        if (openAssessments.length) {
+                            event.preventDefault();
+                            requestExit(() => navigate('/', { replace: true }));
+                        }
+                    }}>
                         <ArrowLeft size={20} />
                         <span>Back to Dashboard</span>
                     </Link>
@@ -844,7 +971,7 @@ const RoomPagePost: React.FC = () => {
                                         message={message}
                                         onLike={handleMessageLike}
                                         onReply={handleMessageReply}
-                                        replyDisabled={Boolean(openAssessment)}
+                                        replyDisabled={false}
                                         likeCount={engagement.likeCount}
                                         dislikeCount={engagement.dislikeCount}
                                         isLiked={engagement.userLiked}
@@ -941,9 +1068,6 @@ const RoomPagePost: React.FC = () => {
                 {/* Comment Input with AI Button */}
                 {canSendMessages ? (
                     <div className="comment-composer">
-                        {openAssessment && (
-                            <p role="status">Choose an option in your assessment and submit your answer to continue the discussion.</p>
-                        )}
                         {currentRoom.practice_type !== 'cyberbullying' && <StudentAIToneControl />}
                         <div className="comment-input-with-ai">
                             <CommentInput
@@ -954,10 +1078,8 @@ const RoomPagePost: React.FC = () => {
                                 onSubmit={handleSendMessage}
                                 onTyping={startTyping}
                                 onStopTyping={stopTyping}
-                                placeholder={openAssessment
-                                    ? 'select the correct option(s) to finish the assessments first'
-                                    : 'Write a comment...'}
-                                disabled={sendingMessage || Boolean(openAssessment)}
+                                placeholder="Write a comment..."
+                                disabled={sendingMessage}
                                 isLoading={sendingMessage}
                                 replyingTo={replyingTo}
                                 onCancelReply={() => setReplyingTo(null)}
@@ -1066,7 +1188,7 @@ const RoomPagePost: React.FC = () => {
                                     disabled={ratingValue === 0 || submittingRequiredRating}
                                     onClick={handleRequiredRatingSubmit}
                                 >
-                                    Submit rating
+                                    Submit rating and send
                                 </button>
                             </div>
                         )}

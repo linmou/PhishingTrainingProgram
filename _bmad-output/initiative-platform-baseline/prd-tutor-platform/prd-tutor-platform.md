@@ -2,7 +2,7 @@
 title: Online Safety Tutor Platform
 status: final
 created: 2026-10-22
-updated: 2026-10-27
+updated: 2026-10-30
 ---
 
 # PRD: Online Safety Tutor Platform
@@ -22,6 +22,7 @@ Companion documents cited, not restated:
 - `tutor-system/docs/ai-behaviors/tutor-behavior-specification.md` — tutor behavior requirements T01–T09.6 and G01–G03.
 - `tutor-system/docs/ai-behaviors/tutor-response-contract.md` and `transfer-status-response-contract.md` — AI output and learning-event contracts.
 - `tutor-system/docs/assessment-result-messages.md` — result-message publication.
+- `tutor-system/docs/exit-time-assessment.md` — temporary exit assessment (FR-54).
 - `tutor-system/docs/cyberbullying-practise.md` — cyberbullying scenarios, learning targets and characters.
 
 Legacy requirement IDs are mapped to these FRs in `addendum.md` §A. Source extracts with code and test evidence sit beside this file (`extract-A…D`).
@@ -51,7 +52,7 @@ The platform currently runs as a small-scale pilot: students use it under close 
 
 ### 2.3 Key User Journeys
 
-- **UJ-1. Ms. Rivera runs a phishing practice room.** Ms. Rivera joins as a tutor, creates a room from the "account alert" template, and keeps in-room assessment on. Jamie joins as the learner, rates each of Ms. Rivera's replies, and writes about the post. For each of Jamie's messages Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five learning targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a learning target after being Partial, a transfer assessment becomes due and Ms. Rivera's next request for an AI suggestion returns an assessment draft; Ms. Rivera reviews it and sends it. Jamie answers wrong once, then right; a result message records each attempt. **Edge case:** Jamie writes "I'd just click it to check" — the AI suggestion leads with protective instruction before any question.
+- **UJ-1. Ms. Rivera runs a phishing practice room.** Ms. Rivera joins as a tutor, creates a room from the "account alert" template, and keeps in-room assessment on. Jamie joins as the learner, rates each of Ms. Rivera's replies, and writes about the post. For each of Jamie's messages Ms. Rivera asks for an AI suggestion, edits it, and sends it. The Learning Progress panel shows Jamie's five learning targets moving from Pending to Partial to Covered. When Jamie reaches Covered on a learning target after being Partial, a transfer assessment becomes due and Ms. Rivera's next request for an AI suggestion returns an assessment draft; Ms. Rivera reviews it and sends it. Jamie answers wrong once, then right; a result message records each attempt. **Edge case:** Jamie writes "I'd just click it to check" — the AI suggestion leads with protective instruction before any question. **While exit assessment is in force (temporary):** Ms. Rivera reviews and sends a transfer assessment for each learning target Jamie reaches Covered, clicking again for her normal AI suggestion; Jamie keeps chatting and does not see them while they are open. When Jamie clicks back to the dashboard, a pop-up asks each question in turn, and Jamie leaves after the last one; when Jamie returns, the ended questions and their results appear in the conversation.
 - **UJ-2. Mr. Okafor supervises a cyberbullying role-play.** He creates a cyberbullying room from one of the cyberbullying templates and edits one line of its pre-populated dialogue. When Lina joins, her five shared learning targets are set up automatically. Lina writes a message; Mr. Okafor requests a character draft, switches the character from "bully" to "victim", shortens the text, and sends it. Lina sees the character reply under the character's persona name and rates it before writing again.
 - **UJ-3. Dana observes and exports.** Dana joins as an observer, opens a running room read-only, and watches messages appear live. At the end she downloads the JSON export, which contains the conversation, ratings and result messages but no private assessment material.
 - **UJ-4. A learner tests limits.** Sam repeatedly posts insults instead of answering. The AI suggestion recommends Guard; Ms. Rivera accepts it, and her tutor reply names the behavior and what needs to change without insulting Sam. Sam's learning progress does not advance while Guard is on. When Sam makes a real attempt, the next AI suggestion recommends turning Guard off and Ms. Rivera does so.
@@ -113,18 +114,20 @@ The platform currently runs as a small-scale pilot: students use it under close 
 - **Progress state** — The state of one learning target: **Pending**, **Partial**, **Needs review** or **Covered**.
 - **Learning event** — A judged change to one learning target caused by one learner message (for example `demonstrated_understanding`, `contradiction`), as defined in the transfer-status response contract.
 - **Evidence** — The quoted part of a learner message that a learning event is based on, or a note recorded with a room owner's manual change.
-- **Complete** — A learning target that is Covered with no transfer assessment due for it. Where transfer assessments are not available (cyberbullying rooms, and phishing rooms with in-room assessment off), Covered means complete. Not a separate progress state.
+- **Complete** — A learning target that is Covered with no transfer assessment due for it. Where transfer assessments are not available (cyberbullying rooms, and phishing rooms with in-room assessment off), Covered means complete. While exit assessment is in force, a learning target is never complete: every Covered learning target is checked again on each visit (FR-40). Not a separate progress state.
 
 **Transfer assessment** (phishing only)
 
 - **Transfer assessment** — A four-option question that checks whether the learner can apply a learning target in a new context: a concrete case meaningfully different from the scenario the learner discussed.
 - **In-room assessment** — The per-room setting that allows transfer assessments.
-- **Due** — A transfer assessment is due for a learning target after the learner moves it from Partial to Covered by demonstrating understanding, until it is delivered, cancelled or completed. Rejecting an assessment draft does not change this.
+- **Due** — A transfer assessment is due for a learning target after the learner moves it from Partial to Covered by demonstrating understanding, until it is delivered, cancelled or completed. Rejecting an assessment draft does not change this. While exit assessment is in force, the rule in FR-32 applies instead.
 - **Assessment draft** — An AI draft of a transfer assessment.
 - **Attempt** — One valid answer to an open transfer assessment. A learner gets at most two.
 - **Learner explanation** — The explanation of the correct answer that is published after a second wrong attempt.
 - **Result message** — The automatic, fixed-text message the server saves for every accepted attempt.
-- **Tutor feedback** — The room owner's own tutor reply to the learner's final attempt, required before that learner can get another transfer assessment.
+- **Tutor feedback** — The room owner's own tutor reply to the learner's final attempt, required before that learner can get another transfer assessment (not required while exit assessment is in force, FR-41).
+- **Exit assessment** — A temporary replacement for in-dialogue answering (FR-54). While it is in force, the learner answers their open transfer assessments in a pop-up when leaving the room, instead of in the conversation. There is no runtime switch: the in-dialogue implementation is archived unchanged on branch `assess-in-dialogue` as a reference; restoring it is a forward change on `no_sign_up` that reverts only the exit-assessment changes.
+- **Visit** — One stay of the learner in a room, from entering it to leaving it. The server records the start of each visit, once per opening of the room page.
 
 # Part A — Shared Platform
 
@@ -268,7 +271,7 @@ The learner must rate the most recent tutor reply before sending their next mess
 **Consequences (testable):**
 - The gate applies to the learner only; tutors and observers are never gated.
 - The gate covers every tutor reply in both practice types, including character replies and replies written without the AI assistant.
-- Pre-populated dialogue and result messages are never rated.
+- Pre-populated dialogue and result messages are never rated. While exit assessment is in force, transfer assessment questions are never rated either, whether open and hidden from the learner (FR-37) or ended and shown again.
 - A learner has one rating per message; changing it replaces it. The room owner and observers see rating counts update live.
 - If saving the rating fails, the learner is told and their unsent message is kept.
 
@@ -446,6 +449,8 @@ The room owner can choose the AI role and its style parameters, including throug
 
 **Description:** When a learner moves a learning target from Partial to Covered, a transfer assessment becomes due: a short four-option question in a new context. The room owner reviews and sends it, or rejects it; the learner answers with option controls; the server grades it with two attempts and saves a result message. `assessment-result-messages.md` is the detailed source for result publication. Realizes UJ-1.
 
+**Exit assessment (temporary, approved 2026-10-29).** In-dialogue timing of transfer assessments was not accurate enough, so the owner approved a temporary replacement. While exit assessment is in force, every Covered learning target gets a transfer assessment, the room owner still reviews and sends each one during the conversation, and the learner answers all of them in a pop-up when leaving the room (FR-54). Each affected FR states its change in a consequence starting "While exit assessment is in force"; that consequence replaces the conflicting rule of the same FR. Grading, attempts, result messages, private material and Guard holding are unchanged. The in-dialogue rules stay written here because they describe the implementation archived on branch `assess-in-dialogue` (commit `ebc03d1`); a forward revert of the exit-assessment changes on `no_sign_up` restores them. `tutor-system/docs/exit-time-assessment.md` is the detailed source.
+
 #### FR-31: In-room assessment setting
 In-room assessment is on by default for every phishing room. The room owner can turn it off for a room, and the operator can turn transfer assessments off everywhere.
 **Grounding:** P2, P6.
@@ -454,6 +459,7 @@ In-room assessment is on by default for every phishing room. The room owner can 
 - In-room assessment controls only transfer assessments. Learning targets, judging and learning progress work the same with it on or off.
 - With in-room assessment off, AI suggestions and Guard keep working.
 - Turning in-room assessment off does not close a transfer assessment that is already open: the learner can still answer it and it is graded. 
+- Exit assessment (FR-54) creates new transfer assessments only where transfer assessments are on. Turning in-room assessment off while exit questions are open keeps the rule above: they stay hidden from the learner's conversation and are still answered and graded in the exit pop-up.
 
 #### FR-32: When a transfer assessment becomes due
 A transfer assessment becomes due for a learning target only when the learner moves it from Partial to Covered by demonstrating understanding.
@@ -464,6 +470,8 @@ A transfer assessment becomes due for a learning target only when the learner mo
 - While Guard is on, another transfer assessment is open, or tutor feedback is outstanding, the due transfer assessment waits without being lost.
 - A later contradiction cancels the due transfer assessment; changing the learning target's wording cancels an open one without using an attempt.
 - One Partial → Covered change never produces two transfer assessments.
+- While exit assessment is in force: a transfer assessment is due for every learning target the learner's own learning event made Covered — from Pending, from Partial or by spontaneous transfer — that has no open transfer assessment, and for which no transfer assessment was delivered (and not cancelled) or ended as passed or failed during the learner's current visit. A learning target set to Covered only by a manual edit (FR-53) is not due, because there is no learner evidence to build the question from.
+- While exit assessment is in force: only Guard makes a due transfer assessment wait. Another open transfer assessment and outstanding tutor feedback do not, so several can be due and open at once, at most one open per learning target.
 
 #### FR-33: Assessment draft instead of an AI suggestion (boundary)
 When a transfer assessment is due, the room owner's next request for an AI suggestion returns one assessment draft instead.
@@ -475,6 +483,7 @@ When a transfer assessment is due, the room owner's next request for an AI sugge
 - Audience: the room owner only; no AI suggestion is generated by that request.
 - Generation problems are shown as errors; no placeholder question and no fallback AI suggestion are produced.
 - The quality of assessment drafts is governed by T09.1–T09.6 (§7).
+- While exit assessment is in force: when several are due, each request returns one assessment draft. The room owner requests again for the next draft, and gets an AI suggestion once none is due.
 
 #### FR-34: Valid transfer assessments
 Every assessment draft — generated or edited — must pass the structural checks before it can be sent.
@@ -504,6 +513,7 @@ The room owner can send a reviewed assessment draft to the learner; the server r
 - If the transfer assessment is no longer due or Guard is on, delivery is refused.
 - Retrying a delivery never creates a second question.
 - Delivering a transfer assessment does not change Guard; there is no assessment mode.
+- While exit assessment is in force: delivery is refused if the learning target already has an open transfer assessment. Open transfer assessments for other learning targets do not block it.
 
 #### FR-37: Answer with option controls
 The learner can answer only their own open transfer assessment, by selecting options and submitting.
@@ -515,13 +525,14 @@ The learner can answer only their own open transfer assessment, by selecting opt
 - While the transfer assessment is open, the learner's ordinary messaging is disabled with an explanation; it reopens when the transfer assessment closes.
 - Observers and other students cannot answer.
 - Each transfer assessment shows the learner's saved attempts.
+- While exit assessment is in force: the learner does not see their open transfer assessments, the answers to them or their result messages in the conversation, and the learner's ordinary messaging stays enabled while transfer assessments are open. The learner answers them only in the exit pop-up (FR-54). Once a transfer assessment has ended as passed or failed, it appears in the learner's conversation where it was sent, with the learner's attempts and result messages, read-only, so results stay visible after reload (FR-39, FR-42). A cancelled one stays hidden unless the learner had already answered it. The room owner and observers see all of them in the conversation as before.
 
 #### FR-38: Grading and two attempts
 The server grades each attempt by exact match with the correct options and allows at most two attempts.
 **Grounding:** P4, C3.
 
 **Consequences (testable):**
-- While Guard is on, a learner's answer to an open transfer assessment is held: it is not graded and uses no attempt. It is graded after Guard ends.
+- While Guard is on, a learner's answer to an open transfer assessment is held: it is not graded and uses no attempt. It is graded after Guard ends. While exit assessment is in force, this applies to answers given in the exit pop-up too (FR-54).
 - First wrong attempt: one attempt left, learning progress unchanged.
 - Right attempt on either try: passed, once.
 - Second wrong attempt: failed, once.
@@ -533,7 +544,7 @@ Every accepted attempt creates exactly one result message: "Correct.", "Incorrec
 
 **Consequences (testable):**
 - The correct answer and learner explanation are published only in the second-wrong-attempt result message.
-- Result messages are visible to every room participant and included in exports.
+- Result messages are visible to every room participant and included in exports. While exit assessment is in force, the learner sees results first in the exit pop-up, and in the conversation once the transfer assessment has ended (FR-37, FR-54).
 - Result messages are written by the server, cannot be edited by participants, and survive reload.
 
 #### FR-40: Effect on learning progress
@@ -543,6 +554,7 @@ A passed transfer assessment makes the learning target complete; a failed one mo
 **Consequences (testable):**
 - After failure the learner can recover through Partial and Covered again, which makes a new transfer assessment in another new context due.
 - A complete learning target is not assessed again unless a later contradiction reopens it.
+- While exit assessment is in force: a passed learning target stays Covered and becomes due again at the learner's next visit, so the room owner can send a new transfer assessment for it then, which the learner answers at that visit's exit. Every Covered learning target is therefore checked once per visit. A failed one moves to Needs review as before and is due again only after the learner reaches Covered again.
 - Failure alone never turns on Guard.
 
 #### FR-41: Tutor feedback before the next transfer assessment
@@ -552,6 +564,7 @@ After a transfer assessment ends, the room owner must send tutor feedback before
 **Consequences (testable):**
 - Result messages, accepted AI suggestions and ratings are not tutor feedback.
 - When several transfer assessments are due, they are offered one at a time.
+- While exit assessment is in force: tutor feedback is not required before another transfer assessment, because the learner answers at exit. Several are still offered one assessment draft per request (FR-33).
 
 #### FR-42: Same state for everyone, after any reload
 Every participant sees the same transfer assessment, attempts, attempts left and outcome after joining, reloading, reconnecting or using several tabs.
@@ -563,6 +576,26 @@ Every participant sees the same transfer assessment, attempts, attempts left and
 #### FR-43: AI suggestions after transfer assessments
 The AI assistant gets transfer-assessment outcomes only from the saved conversation, and generates no AI suggestion while the learner's result messages are still being saved.
 **Grounding:** P4, P1.
+
+**Consequences (testable):**
+- While exit assessment is in force: the AI assistant's conversation history leaves out the learner's open transfer assessments, the answers to them and any results not yet final, because the learner cannot see them until exit. Ended transfer assessments from earlier exits, with their result messages, stay in the history as learning evidence.
+- While exit assessment is in force: the AI assistant's assessment rules tell it that the learner answers transfer assessments only at exit, so a suggestion never refers to an open one or invites the learner to answer it, and never reveals or hints at its answer. The rule requiring tutor feedback before another transfer assessment is removed (FR-41).
+
+#### FR-54: Exit assessment (temporary)
+While exit assessment is in force, a learner who leaves a room while any of their transfer assessments is open must first answer them in a pop-up, one at a time. Realizes UJ-1.
+**Grounding:** P1, P6, P4, C3, C5.
+
+**Consequences (testable):**
+- There is no runtime switch. Exit assessment replaces in-dialogue answering in place. The in-dialogue implementation of FR-32–FR-43 is archived unchanged on branch `assess-in-dialogue` (commit `ebc03d1`) as the reference. Restoring it is a forward change on `no_sign_up` that reverts only the exit-assessment changes, released through the normal merge and production gates; the archived branch itself is never deployed, so later unrelated changes are kept. Releasing either version never regrades or deletes a transfer assessment, and closes one only on a rollback when it could never be graded again (its snapshot no longer matches under the restored rule); such a question is cancelled with one closure message and uses no attempt.
+- Leaving includes the room's back and leave navigation, the browser's Back button and any other in-app navigation away from the room (all treated like the room's own navigation: the pop-up opens), and closing or reloading the tab or navigating to another site (the browser's own leave prompt).
+- When the learner leaves through the room's own navigation, the pop-up lists their open transfer assessments in delivery order. Each uses the option controls of FR-37. After every attempt it shows the result message text: after a first wrong attempt the same question is answered again, and after a pass or a failure the learner moves to the next question. The learner leaves after the last one ends. A "Stay in room" control closes the pop-up and keeps the learner in the room.
+- When the learner closes the tab or the browser navigates away, the browser shows its own leave confirmation. If the learner stays, the pop-up opens. If the learner confirms leaving, they leave without answering, and their open transfer assessments stay open for their next exit.
+- While Guard is on, answers in the pop-up are held (FR-38) and the pop-up says "Waiting for your tutor to turn Guard off." The learner cannot leave through the room's navigation until grading resumes and the remaining transfer assessments end.
+- A transfer assessment cancelled while the pop-up is open leaves it. One delivered while the pop-up is open joins it.
+- A learner with no open transfer assessment leaves without a pop-up. A transfer assessment that is due but not yet delivered never holds the learner.
+- Only the learner sees the pop-up. The room owner and observers leave freely.
+- Each time the learner opens the room page, the server records the start of one new visit; repeated or retried entry requests from the same page load record no extra visit. A reload or a second tab starts a new visit. Which transfer assessments are due depends on the latest visit (FR-32, FR-40); due itself is still derived, never stored (AD-3).
+- The pop-up is part of the room, not a separate quiz application or assessment mode (§9). It grades nothing in the browser; every grade, attempt and result comes from the server.
 
 # Part C — Cyberbullying Practice
 
@@ -666,7 +699,7 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 
 - No accounts, passwords or email sign-in. No authentication product.
 - No AI that speaks to learners directly or enforces anything automatically.
-- No room-level "assessment mode", no separate quiz application, and no transfer assessments in cyberbullying rooms.
+- No room-level "assessment mode", no separate quiz application, and no transfer assessments in cyberbullying rooms. The exit pop-up (FR-54) answers transfer assessments inside the room and changes no room mode.
 - No permanent mastery claim; the platform does not measure long-term retention or real-world behavior.
 - No multi-agent or simulated peer characters in phishing rooms (the retired "Riley").
 - No scenario-specific cyberbullying learning targets.
@@ -692,6 +725,8 @@ Each AI job's boundary FR states what the system guarantees around it. The quali
 ## 11. Open Questions and Decisions
 
 Open: none.
+
+Exit assessment decisions of 2026-10-29 and 2026-10-30 are recorded in `addendum.md` §G.
 
 Questions OQ-1 to OQ-15 were all resolved on 2026-10-22. Each decision is built into the requirements; the list is in `addendum.md` §E.
 

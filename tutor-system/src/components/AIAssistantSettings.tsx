@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRoom } from '../contexts/RoomContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AI_MODELS, AIModelName, DEFAULT_AI_MODEL } from '../services/aiService';
-import { ScenarioTemplate, SCENARIO_TEMPLATES } from '../services/detectionTemplates';
+import { ScenarioTemplate, SCENARIO_TEMPLATES, isScenarioTemplate } from '../services/detectionTemplates';
 import { PRESET_CONFIGS, generateSystemPrompt } from '../services/systemPrompts';
 import { SystemPromptConfig } from '../services/prompts/types';
 import { isTutorRoleLocked, roleIntensityToTone } from '../utils/studentAITone';
@@ -26,6 +26,10 @@ const getPresetFromPromptConfig = (
 const getScenarioFromPromptConfig = (
     promptConfig: SystemPromptConfig
 ): ScenarioTemplate | '' => {
+    if (promptConfig.scenario !== undefined) {
+        return isScenarioTemplate(promptConfig.scenario) ? promptConfig.scenario : '';
+    }
+    // Older rooms have no identity field. Never infer over an explicit Custom choice.
     const matchedScenario = (Object.entries(SCENARIO_TEMPLATES) as Array<[ScenarioTemplate, typeof SCENARIO_TEMPLATES[ScenarioTemplate]]>)
         .find(([, template]) =>
             JSON.stringify(template.detection_areas) === JSON.stringify(promptConfig.detection_areas) &&
@@ -86,8 +90,6 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
         setSelectedScenario(scenario);
 
         if (!scenario) {
-            setCustomDetectionAreas('');
-            setCustomVerificationSteps('');
             return;
         }
 
@@ -269,6 +271,7 @@ const AIAssistantSettings: React.FC<AIAssistantSettingsProps> = ({ onClose }) =>
                       : ('high' as const);
 
             const promptConfig = useModularPrompts ? {
+                scenario: selectedScenario || null,
                 role: {
                     role: effectiveRole
                 },
