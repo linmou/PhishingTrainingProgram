@@ -12,7 +12,7 @@ const receipt = { complete: true, unresolved: false };
 const assess = overrides => policy.assess({
   pr: pr(), files: ['tutor-system/src/App.tsx'], receipt, approvals: [], routine: false, ...overrides
 });
-const trustedPr = (body) => ({ ...pr(body), user: { login: 'linmou' } });
+const trustedPr = (body) => ({ ...pr(body), number: 52, node_id: 'pr-node', head: { sha, repo: { full_name: 'linmou/PhishingTrainingProgram' } }, user: { login: 'linmou' } });
 const created = '2026-10-30T08:00:00Z';
 const actor = login => ({login: login === BOT ? 'chatgpt-codex-connector' : login,
   __typename: login === BOT ? 'Bot' : 'User'});
@@ -90,7 +90,18 @@ test('trusted issue needs author and edit provenance (forged scope must fail)',a
   const body=marker+'\nOriginal authorization';
   function github(editors) {
     const api=graph({type:'Issue',author:'linmou',body,editors});
-    api.rest={issues:{get:async()=>({data:{node_id:'issue-node',user:{login:'linmou'},body}})}};
+    const originalGraph=api.graphql;
+    const commits=()=>{};
+    api.rest={
+      issues:{get:async()=>({data:{node_id:'issue-node',user:{login:'linmou'},body}})},
+      pulls:{listCommits:commits}
+    };
+    api.paginate=async()=>[{sha,author:{login:'linmou'},commit:{verification:{verified:true,reason:'valid'}}}];
+    api.graphql=async (query,vars)=>{
+      if(query.includes('repository(owner:')) return {repository:{object:{oid:sha,signature:{isValid:true,signer:{login:'linmou'}}}}};
+      if(vars.id==='pr-node') return graph({type:'PullRequest',author:'linmou',body:trustedPr().body}).graphql(query,vars);
+      return originalGraph(query,vars);
+    };
     return api;
   }
   assert.equal(await policy.routineAuthorized(github([]),'linmou','PhishingTrainingProgram',trustedPr(),['tutor-system/src/App.tsx']),true);
@@ -127,20 +138,27 @@ test('an issue authorization revocation turns a previously passing PR check into
   const listFiles = () => {};
   const listComments = () => {};
   const listReviews = () => {};
+  const listCommits = () => {};
   const api = {
     rest: {
-      pulls: {get: async () => ({data:trustedPr()}),listFiles,listReviews},
+      pulls: {get: async () => ({data:trustedPr()}),listFiles,listReviews,listCommits},
       issues: {get:async () => ({data: {node_id:'issue',body:issueBody,user:{login:'linmou'}}}),listComments},
       checks: {create:async x => checks.push(x)}
     },
     paginate: async (endpoint) => {
       if (endpoint===listFiles) return [{filename:'tutor-system/src/App.tsx'}];
+      if (endpoint===listCommits) return [{sha, author:{login:'linmou'},commit:{verification:{verified:true,reason:'valid'}}}];
       if (endpoint===listComments) return [{node_id:'codex',user:{login:BOT},body:receiptBody,updated_at:created}];
       if (endpoint===listReviews) return [];
       throw Error('Unknown paginate endpoint');
     },
-    graphql: async (_query, vars) => ({node:vars.id==='codex' ? {
+    graphql: async (_query, vars) => _query.includes('repository(owner:') ?
+      {repository:{object:{oid:sha,signature:{isValid:true,signer:{login:'linmou'}}}}} :
+      ({node:vars.id==='codex' ? {
       __typename:'IssueComment',author:actor(BOT),body:receiptBody,lastEditedAt:null,
+      userContentEdits:{nodes:[],pageInfo:{hasNextPage:false,endCursor:null}}
+    } : vars.id==='pr-node' ? {
+      __typename:'PullRequest',author:actor('linmou'),body:trustedPr().body,lastEditedAt:null,
       userContentEdits:{nodes:[],pageInfo:{hasNextPage:false,endCursor:null}}
     } : {
       __typename:'Issue',author:actor('linmou'),body:issueBody,lastEditedAt:null,
@@ -154,4 +172,44 @@ test('an issue authorization revocation turns a previously passing PR check into
   const second=await policy.evaluate(api,'linmou','PhishingTrainingProgram',52);
   assert.equal(second.ok,false);
   assert.equal(checks.at(-1).conclusion,'failure');
+});
+
+
+test('routine commits reject unsigned, untrusted signer, stale head, and foreign forks',async()=>{
+  const marker='<!-- ptp-routine-authorization:v1 paths=tutor-system/src/ -->';
+  const body=marker+'\nAuthorization';
+  const good=trustedPr();
+  const api=graph({type:'Issue',author:'linmou',body});
+  const commits=()=>{};
+  api.rest={
+    pulls:{listCommits:commits},
+    issues:{get:async()=>({data:{node_id:'issue',user:{login:'linmou'},body}})}
+  };
+  let signed=true, signer='linmou', author='linmou', oid=sha;
+  api.paginate=async()=>[{sha:oid,author:{login:author},
+    commit:{verification:{verified:signed,reason:signed?'valid':'unsigned'}}}];
+  api.graphql=async(query,vars)=>{
+    if(query.includes('repository(owner:')) return {repository:{object:{oid,
+      signature:{isValid:true,signer:{login:signer}}}}};
+    return {node:{__typename: vars.id==='pr-node'?'PullRequest':'Issue',
+      author:actor('linmou'),body:vars.id==='pr-node'?good.body:body,
+      lastEditedAt:null,userContentEdits:{nodes:[],pageInfo:{hasNextPage:false,endCursor:null}}}};
+  };
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),true);
+  signed=false;
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),false);
+  signed=true; signer='contributor';
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),false);
+  signer='linmou';oid='c'.repeat(40);
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',good,['tutor-system/src/App.tsx']),false);
+  oid=sha;
+  assert.equal(await policy.routineAuthorized(api,'linmou','PhishingTrainingProgram',
+    {...good,head:{...good.head,repo:{full_name:'stranger/fork'}}},['tutor-system/src/App.tsx']),false);
+});
+test('PR body edit provenance blocks a forged routine reference',async()=>{
+  const original=trustedPr();
+  const {graphql}=graph({type:'PullRequest',author:'linmou',
+    body:original.body,editors:['contributor']});
+  const github={graphql};
+  assert.equal(await policy.trustedPrBody(github,'linmou','PhishingTrainingProgram',original),false);
 });
