@@ -49,7 +49,8 @@ function issueReference(body, owner, repo) {
  * Never accept missing/inaccessible edit histories: GraphQL errors fail closed.
  */
 async function verifiedContent(github, nodeId, expectedType, expectedAuthor, expectedBody, editorAllowed) {
-  if (!nodeId || !expectedAuthor) return false;
+  if (!nodeId || !expectedAuthor ||
+      !['Issue', 'IssueComment', 'PullRequest', 'PullRequestReview'].includes(expectedType)) return false;
   let cursor = null;
   let total = 0;
   let edited = false;
@@ -57,7 +58,7 @@ async function verifiedContent(github, nodeId, expectedType, expectedAuthor, exp
     const response = await github.graphql(`
       query($id: ID!, $cursor: String) {
         node(id: $id) {
-          ... on Comment {
+          ... on ${expectedType} {
             __typename
             author { login __typename }
             body
