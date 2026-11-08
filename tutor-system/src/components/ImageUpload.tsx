@@ -55,6 +55,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     showPreview = true
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const mountedRef = useRef(true);
     const [dragActive, setDragActive] = useState(false);
     const [uploadState, setUploadState] = useState<UploadState>({
         isUploading: false,
@@ -64,6 +67,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         validationErrors: [],
         uploadError: null
     });
+
+    React.useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+            if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+        };
+    }, []);
 
     // Validate tutor image uploads have roomId
     React.useEffect(() => {
@@ -154,6 +166,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
     const handleUpload = useCallback(async () => {
         if (!uploadState.selectedFile || uploadState.isUploading) return;
+        if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
 
         setUploadState(prev => ({
             ...prev,
@@ -162,15 +175,16 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             uploadError: null
         }));
 
-        try {
-            // Simulate progress
-            const progressInterval = setInterval(() => {
-                setUploadState(prev => ({
-                    ...prev,
-                    uploadProgress: Math.min(prev.uploadProgress + 10, 90)
-                }));
-            }, 100);
+        // Simulate progress until the upload settles; capped ticks retain state identity.
+        const progressInterval = setInterval(() => {
+            setUploadState(prev => prev.uploadProgress >= 90 ? prev : {
+                ...prev,
+                uploadProgress: Math.min(prev.uploadProgress + 10, 90)
+            });
+        }, 100);
+        progressIntervalRef.current = progressInterval;
 
+        try {
             let result: ImageUploadResult;
             
             if (uploadType === 'avatar') {
@@ -179,7 +193,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 result = await uploadTutorImage(uploadState.selectedFile, roomId!);
             }
 
-            clearInterval(progressInterval);
+            if (!mountedRef.current) return;
 
             if (result.success) {
                 setUploadState(prev => ({
@@ -191,7 +205,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 onUploadSuccess?.(result);
                 
                 // Reset after success
-                setTimeout(resetUploadState, 1000);
+                resetTimeoutRef.current = setTimeout(resetUploadState, 1000);
             } else {
                 setUploadState(prev => ({
                     ...prev,
@@ -204,6 +218,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             }
 
         } catch (error) {
+            if (!mountedRef.current) return;
             const errorMessage = error instanceof Error ? error.message : 'Upload failed';
             
             setUploadState(prev => ({
@@ -214,6 +229,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             }));
 
             onUploadError?.(errorMessage);
+        } finally {
+            clearInterval(progressInterval);
+            progressIntervalRef.current = null;
         }
     }, [uploadState.selectedFile, uploadState.isUploading, uploadType, roomId, onUploadSuccess, onUploadError, resetUploadState]);
 

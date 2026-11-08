@@ -3,6 +3,7 @@
  * 
  * Tests the integration of image upload/delete functions in the services layer
  */
+export {};
 
 describe('Image Services Integration', () => {
     // Mock file for testing
@@ -24,12 +25,12 @@ describe('Image Services Integration', () => {
         });
 
         it('should export uploadTutorImage function', async () => {
-            const module = await import('../supabase');
+            const module = await import('../imageUpload');
             expect(typeof module.uploadTutorImage).toBe('function');
         });
 
         it('should export deleteTutorImage function', async () => {
-            const module = await import('../supabase');
+            const module = await import('../imageUpload');
             expect(typeof module.deleteTutorImage).toBe('function');
         });
 
@@ -224,7 +225,7 @@ describe('Image Services Integration', () => {
             expect(avatarOptions.cacheControl).toBe('3600');
             expect(avatarOptions.upsert).toBe(true);
             expect(tutorImageOptions.cacheControl).toBe('3600');
-            expect(tutorImageOptions.upsert).toBeUndefined();
+            expect('upsert' in tutorImageOptions).toBe(false);
         });
     });
 });
