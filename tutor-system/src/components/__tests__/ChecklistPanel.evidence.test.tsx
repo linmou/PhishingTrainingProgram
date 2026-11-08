@@ -66,6 +66,24 @@ it('uses current item evidence on refresh including an empty history', () => {
   expect(screen.queryByText('"Learner evidence a"')).not.toBeInTheDocument();
 });
 
+it('focuses the dialog, cycles its buttons, closes with Escape and restores the opener', () => {
+  render(view());
+  const opener = screen.getAllByTitle('View evidence')[0];
+  opener.focus();
+  openFirst();
+  const dialog = screen.getByRole('dialog');
+  const first = within(dialog).getByRole('button', { name: 'Close evidence' });
+  const last = within(dialog).getByRole('button', { name: 'Close' });
+  expect(first).toHaveFocus();
+  fireEvent.keyDown(first, { key: 'Tab', shiftKey: true });
+  expect(last).toHaveFocus();
+  fireEvent.keyDown(last, { key: 'Tab' });
+  expect(first).toHaveFocus();
+  fireEvent.keyDown(first, { key: 'Escape' });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(opener).toHaveFocus();
+});
+
 it('clears a removed selection so it cannot reappear when the same ID returns', () => {
   const rendered = render(view());
   openFirst();

@@ -9,4 +9,6 @@ The viewer uses the current checklist item rather than a copied evidence snapsho
 
 The modal only displays data already returned through the existing checklist access path. Opening requires the returned checklist's room and requested learner to match the current selection, including while a refresh retains the previous checklist. It makes no independent data request. Checklist export and other evidence rendering retain their existing contracts.
 
-Focused integration verification is in `src/components/__tests__/ChecklistPanel.evidence.test.tsx`, alongside the existing checklist export and transfer suites. Check detection and verification evidence, closing/reopening, refreshed empty evidence, removed items and scope changes.
+The modal focuses its close control on opening, cycles keyboard focus within its buttons, supports Escape and restores the connected opener on close.
+
+Focused integration verification is in `src/components/__tests__/ChecklistPanel.evidence.test.tsx`, alongside the existing checklist export and transfer suites. Check detection and verification evidence, closing/reopening, refreshed empty evidence, removed items, scope changes and keyboard focus.

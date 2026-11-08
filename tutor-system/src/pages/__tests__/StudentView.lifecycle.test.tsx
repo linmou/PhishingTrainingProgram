@@ -42,7 +42,7 @@ beforeEach(() => {
     return query;
   });
   (supabase.channel as jest.Mock).mockImplementation(() => {
-    const channel = { callback: () => {}, unsubscribe: jest.fn(),
+    const channel: { callback: () => void; unsubscribe: jest.Mock; on: jest.Mock; subscribe: jest.Mock } = { callback: () => {}, unsubscribe: jest.fn(),
       on: jest.fn((_event, _filter, callback) => { channel.callback = callback; return channel; }),
       subscribe: jest.fn(() => channel),
     };
